@@ -6,6 +6,26 @@ The app is a Flutter-first mobile application for FLINX door-control devices. Fl
 
 Read `docs/flutter_architecture.md` before making architecture-level changes.
 
+## Git Flow
+
+This repository follows Git Flow.
+
+Branch roles:
+
+- `main`: production-ready code only. Do not develop directly on `main`.
+- `develop`: integration branch for ongoing development. New feature branches must start from `develop`.
+- `feature/<short-name>`: normal feature work. Merge back into `develop`.
+- `release/<version>`: release stabilization. Start from `develop`, then merge into `main` and back into `develop`.
+- `hotfix/<short-name>`: urgent production fixes. Start from `main`, then merge into `main` and back into `develop`.
+
+Agent workflow:
+
+- Before editing, check the current branch and working tree.
+- If the task is normal development, work from `develop` or create a `feature/<short-name>` branch from `develop`.
+- Do not commit directly to `main` unless the user explicitly requests a release or hotfix action.
+- Keep commits focused and use clear messages such as `feat: ...`, `fix: ...`, `chore: ...`, `docs: ...`, or `test: ...`.
+- Do not rewrite shared branch history unless the user explicitly asks for it.
+
 ## Product Context
 
 FLINX supports these major areas:
