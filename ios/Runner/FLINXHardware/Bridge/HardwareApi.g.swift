@@ -296,52 +296,67 @@ struct BleScanFilterDto: Hashable {
 
 /// Generated class from Pigeon that represents data sent in messages.
 struct BleDeviceDto: Hashable {
+  var requestId: String
+  var scanSessionId: String
   var id: String
   var name: String? = nil
   var rssi: Int64
   var advertisementServiceUuids: [String]
   var manufacturerData: FlutterStandardTypedData
+  var seenAtMillis: Int64
 
 
   // swift-format-ignore: AlwaysUseLowerCamelCase
   static func fromList(_ pigeonVar_list: [Any?]) -> BleDeviceDto? {
-    let id = pigeonVar_list[0] as! String
-    let name: String? = nilOrValue(pigeonVar_list[1])
-    let rssi = pigeonVar_list[2] as! Int64
-    let advertisementServiceUuids = pigeonVar_list[3] as! [String]
-    let manufacturerData = pigeonVar_list[4] as! FlutterStandardTypedData
+    let requestId = pigeonVar_list[0] as! String
+    let scanSessionId = pigeonVar_list[1] as! String
+    let id = pigeonVar_list[2] as! String
+    let name: String? = nilOrValue(pigeonVar_list[3])
+    let rssi = pigeonVar_list[4] as! Int64
+    let advertisementServiceUuids = pigeonVar_list[5] as! [String]
+    let manufacturerData = pigeonVar_list[6] as! FlutterStandardTypedData
+    let seenAtMillis = pigeonVar_list[7] as! Int64
 
     return BleDeviceDto(
+      requestId: requestId,
+      scanSessionId: scanSessionId,
       id: id,
       name: name,
       rssi: rssi,
       advertisementServiceUuids: advertisementServiceUuids,
-      manufacturerData: manufacturerData
+      manufacturerData: manufacturerData,
+      seenAtMillis: seenAtMillis
     )
   }
   func toList() -> [Any?] {
     return [
+      requestId,
+      scanSessionId,
       id,
       name,
       rssi,
       advertisementServiceUuids,
       manufacturerData,
+      seenAtMillis,
     ]
   }
   static func == (lhs: BleDeviceDto, rhs: BleDeviceDto) -> Bool {
     if Swift.type(of: lhs) != Swift.type(of: rhs) {
       return false
     }
-    return deepEqualsHardwareApi(lhs.id, rhs.id) && deepEqualsHardwareApi(lhs.name, rhs.name) && deepEqualsHardwareApi(lhs.rssi, rhs.rssi) && deepEqualsHardwareApi(lhs.advertisementServiceUuids, rhs.advertisementServiceUuids) && deepEqualsHardwareApi(lhs.manufacturerData, rhs.manufacturerData)
+    return deepEqualsHardwareApi(lhs.requestId, rhs.requestId) && deepEqualsHardwareApi(lhs.scanSessionId, rhs.scanSessionId) && deepEqualsHardwareApi(lhs.id, rhs.id) && deepEqualsHardwareApi(lhs.name, rhs.name) && deepEqualsHardwareApi(lhs.rssi, rhs.rssi) && deepEqualsHardwareApi(lhs.advertisementServiceUuids, rhs.advertisementServiceUuids) && deepEqualsHardwareApi(lhs.manufacturerData, rhs.manufacturerData) && deepEqualsHardwareApi(lhs.seenAtMillis, rhs.seenAtMillis)
   }
 
   func hash(into hasher: inout Hasher) {
     hasher.combine("BleDeviceDto")
+    deepHashHardwareApi(value: requestId, hasher: &hasher)
+    deepHashHardwareApi(value: scanSessionId, hasher: &hasher)
     deepHashHardwareApi(value: id, hasher: &hasher)
     deepHashHardwareApi(value: name, hasher: &hasher)
     deepHashHardwareApi(value: rssi, hasher: &hasher)
     deepHashHardwareApi(value: advertisementServiceUuids, hasher: &hasher)
     deepHashHardwareApi(value: manufacturerData, hasher: &hasher)
+    deepHashHardwareApi(value: seenAtMillis, hasher: &hasher)
   }
 }
 
@@ -633,93 +648,123 @@ struct BleWriteResultDto: Hashable {
 
 /// Generated class from Pigeon that represents data sent in messages.
 struct BleNotificationDto: Hashable {
+  var requestId: String? = nil
   var deviceId: String
   var serviceUuid: String
   var characteristicUuid: String
   var payload: FlutterStandardTypedData
+  var timestampMillis: Int64
+  var sequenceNumber: Int64
 
 
   // swift-format-ignore: AlwaysUseLowerCamelCase
   static func fromList(_ pigeonVar_list: [Any?]) -> BleNotificationDto? {
-    let deviceId = pigeonVar_list[0] as! String
-    let serviceUuid = pigeonVar_list[1] as! String
-    let characteristicUuid = pigeonVar_list[2] as! String
-    let payload = pigeonVar_list[3] as! FlutterStandardTypedData
+    let requestId: String? = nilOrValue(pigeonVar_list[0])
+    let deviceId = pigeonVar_list[1] as! String
+    let serviceUuid = pigeonVar_list[2] as! String
+    let characteristicUuid = pigeonVar_list[3] as! String
+    let payload = pigeonVar_list[4] as! FlutterStandardTypedData
+    let timestampMillis = pigeonVar_list[5] as! Int64
+    let sequenceNumber = pigeonVar_list[6] as! Int64
 
     return BleNotificationDto(
+      requestId: requestId,
       deviceId: deviceId,
       serviceUuid: serviceUuid,
       characteristicUuid: characteristicUuid,
-      payload: payload
+      payload: payload,
+      timestampMillis: timestampMillis,
+      sequenceNumber: sequenceNumber
     )
   }
   func toList() -> [Any?] {
     return [
+      requestId,
       deviceId,
       serviceUuid,
       characteristicUuid,
       payload,
+      timestampMillis,
+      sequenceNumber,
     ]
   }
   static func == (lhs: BleNotificationDto, rhs: BleNotificationDto) -> Bool {
     if Swift.type(of: lhs) != Swift.type(of: rhs) {
       return false
     }
-    return deepEqualsHardwareApi(lhs.deviceId, rhs.deviceId) && deepEqualsHardwareApi(lhs.serviceUuid, rhs.serviceUuid) && deepEqualsHardwareApi(lhs.characteristicUuid, rhs.characteristicUuid) && deepEqualsHardwareApi(lhs.payload, rhs.payload)
+    return deepEqualsHardwareApi(lhs.requestId, rhs.requestId) && deepEqualsHardwareApi(lhs.deviceId, rhs.deviceId) && deepEqualsHardwareApi(lhs.serviceUuid, rhs.serviceUuid) && deepEqualsHardwareApi(lhs.characteristicUuid, rhs.characteristicUuid) && deepEqualsHardwareApi(lhs.payload, rhs.payload) && deepEqualsHardwareApi(lhs.timestampMillis, rhs.timestampMillis) && deepEqualsHardwareApi(lhs.sequenceNumber, rhs.sequenceNumber)
   }
 
   func hash(into hasher: inout Hasher) {
     hasher.combine("BleNotificationDto")
+    deepHashHardwareApi(value: requestId, hasher: &hasher)
     deepHashHardwareApi(value: deviceId, hasher: &hasher)
     deepHashHardwareApi(value: serviceUuid, hasher: &hasher)
     deepHashHardwareApi(value: characteristicUuid, hasher: &hasher)
     deepHashHardwareApi(value: payload, hasher: &hasher)
+    deepHashHardwareApi(value: timestampMillis, hasher: &hasher)
+    deepHashHardwareApi(value: sequenceNumber, hasher: &hasher)
   }
 }
 
 /// Generated class from Pigeon that represents data sent in messages.
 struct NativeErrorDto: Hashable {
   var code: String
+  var domainCode: String
   var message: String? = nil
   var requestId: String? = nil
   var deviceId: String? = nil
+  var retryable: Bool
+  var timestampMillis: Int64
 
 
   // swift-format-ignore: AlwaysUseLowerCamelCase
   static func fromList(_ pigeonVar_list: [Any?]) -> NativeErrorDto? {
     let code = pigeonVar_list[0] as! String
-    let message: String? = nilOrValue(pigeonVar_list[1])
-    let requestId: String? = nilOrValue(pigeonVar_list[2])
-    let deviceId: String? = nilOrValue(pigeonVar_list[3])
+    let domainCode = pigeonVar_list[1] as! String
+    let message: String? = nilOrValue(pigeonVar_list[2])
+    let requestId: String? = nilOrValue(pigeonVar_list[3])
+    let deviceId: String? = nilOrValue(pigeonVar_list[4])
+    let retryable = pigeonVar_list[5] as! Bool
+    let timestampMillis = pigeonVar_list[6] as! Int64
 
     return NativeErrorDto(
       code: code,
+      domainCode: domainCode,
       message: message,
       requestId: requestId,
-      deviceId: deviceId
+      deviceId: deviceId,
+      retryable: retryable,
+      timestampMillis: timestampMillis
     )
   }
   func toList() -> [Any?] {
     return [
       code,
+      domainCode,
       message,
       requestId,
       deviceId,
+      retryable,
+      timestampMillis,
     ]
   }
   static func == (lhs: NativeErrorDto, rhs: NativeErrorDto) -> Bool {
     if Swift.type(of: lhs) != Swift.type(of: rhs) {
       return false
     }
-    return deepEqualsHardwareApi(lhs.code, rhs.code) && deepEqualsHardwareApi(lhs.message, rhs.message) && deepEqualsHardwareApi(lhs.requestId, rhs.requestId) && deepEqualsHardwareApi(lhs.deviceId, rhs.deviceId)
+    return deepEqualsHardwareApi(lhs.code, rhs.code) && deepEqualsHardwareApi(lhs.domainCode, rhs.domainCode) && deepEqualsHardwareApi(lhs.message, rhs.message) && deepEqualsHardwareApi(lhs.requestId, rhs.requestId) && deepEqualsHardwareApi(lhs.deviceId, rhs.deviceId) && deepEqualsHardwareApi(lhs.retryable, rhs.retryable) && deepEqualsHardwareApi(lhs.timestampMillis, rhs.timestampMillis)
   }
 
   func hash(into hasher: inout Hasher) {
     hasher.combine("NativeErrorDto")
     deepHashHardwareApi(value: code, hasher: &hasher)
+    deepHashHardwareApi(value: domainCode, hasher: &hasher)
     deepHashHardwareApi(value: message, hasher: &hasher)
     deepHashHardwareApi(value: requestId, hasher: &hasher)
     deepHashHardwareApi(value: deviceId, hasher: &hasher)
+    deepHashHardwareApi(value: retryable, hasher: &hasher)
+    deepHashHardwareApi(value: timestampMillis, hasher: &hasher)
   }
 }
 

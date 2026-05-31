@@ -50,18 +50,24 @@ class BleScanFilterDto {
 
 class BleDeviceDto {
   BleDeviceDto({
+    required this.requestId,
+    required this.scanSessionId,
     required this.id,
     this.name,
     required this.rssi,
     required this.advertisementServiceUuids,
     required this.manufacturerData,
+    required this.seenAtMillis,
   });
 
+  final String requestId;
+  final String scanSessionId;
   final String id;
   final String? name;
   final int rssi;
   final List<String> advertisementServiceUuids;
   final Uint8List manufacturerData;
+  final int seenAtMillis;
 }
 
 class BleConnectionEventDto {
@@ -151,30 +157,42 @@ class BleWriteResultDto {
 
 class BleNotificationDto {
   BleNotificationDto({
+    this.requestId,
     required this.deviceId,
     required this.serviceUuid,
     required this.characteristicUuid,
     required this.payload,
+    required this.timestampMillis,
+    required this.sequenceNumber,
   });
 
+  final String? requestId;
   final String deviceId;
   final String serviceUuid;
   final String characteristicUuid;
   final Uint8List payload;
+  final int timestampMillis;
+  final int sequenceNumber;
 }
 
 class NativeErrorDto {
   NativeErrorDto({
     required this.code,
+    required this.domainCode,
     this.message,
     this.requestId,
     this.deviceId,
+    required this.retryable,
+    required this.timestampMillis,
   });
 
   final String code;
+  final String domainCode;
   final String? message;
   final String? requestId;
   final String? deviceId;
+  final bool retryable;
+  final int timestampMillis;
 }
 
 class CommandResultDto {

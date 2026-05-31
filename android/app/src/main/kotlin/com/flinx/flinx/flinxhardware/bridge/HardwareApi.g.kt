@@ -337,30 +337,39 @@ data class BleScanFilterDto (
 
 /** Generated class from Pigeon that represents data sent in messages. */
 data class BleDeviceDto (
+  val requestId: String,
+  val scanSessionId: String,
   val id: String,
   val name: String? = null,
   val rssi: Long,
   val advertisementServiceUuids: List<String>,
-  val manufacturerData: ByteArray
+  val manufacturerData: ByteArray,
+  val seenAtMillis: Long
 )
  {
   companion object {
     fun fromList(pigeonVar_list: List<Any?>): BleDeviceDto {
-      val id = pigeonVar_list[0] as String
-      val name = pigeonVar_list[1] as String?
-      val rssi = pigeonVar_list[2] as Long
-      val advertisementServiceUuids = pigeonVar_list[3] as List<String>
-      val manufacturerData = pigeonVar_list[4] as ByteArray
-      return BleDeviceDto(id, name, rssi, advertisementServiceUuids, manufacturerData)
+      val requestId = pigeonVar_list[0] as String
+      val scanSessionId = pigeonVar_list[1] as String
+      val id = pigeonVar_list[2] as String
+      val name = pigeonVar_list[3] as String?
+      val rssi = pigeonVar_list[4] as Long
+      val advertisementServiceUuids = pigeonVar_list[5] as List<String>
+      val manufacturerData = pigeonVar_list[6] as ByteArray
+      val seenAtMillis = pigeonVar_list[7] as Long
+      return BleDeviceDto(requestId, scanSessionId, id, name, rssi, advertisementServiceUuids, manufacturerData, seenAtMillis)
     }
   }
   fun toList(): List<Any?> {
     return listOf(
+      requestId,
+      scanSessionId,
       id,
       name,
       rssi,
       advertisementServiceUuids,
       manufacturerData,
+      seenAtMillis,
     )
   }
   override fun equals(other: Any?): Boolean {
@@ -371,16 +380,19 @@ data class BleDeviceDto (
       return true
     }
     val other = other as BleDeviceDto
-    return HardwareApiPigeonUtils.deepEquals(this.id, other.id) && HardwareApiPigeonUtils.deepEquals(this.name, other.name) && HardwareApiPigeonUtils.deepEquals(this.rssi, other.rssi) && HardwareApiPigeonUtils.deepEquals(this.advertisementServiceUuids, other.advertisementServiceUuids) && HardwareApiPigeonUtils.deepEquals(this.manufacturerData, other.manufacturerData)
+    return HardwareApiPigeonUtils.deepEquals(this.requestId, other.requestId) && HardwareApiPigeonUtils.deepEquals(this.scanSessionId, other.scanSessionId) && HardwareApiPigeonUtils.deepEquals(this.id, other.id) && HardwareApiPigeonUtils.deepEquals(this.name, other.name) && HardwareApiPigeonUtils.deepEquals(this.rssi, other.rssi) && HardwareApiPigeonUtils.deepEquals(this.advertisementServiceUuids, other.advertisementServiceUuids) && HardwareApiPigeonUtils.deepEquals(this.manufacturerData, other.manufacturerData) && HardwareApiPigeonUtils.deepEquals(this.seenAtMillis, other.seenAtMillis)
   }
 
   override fun hashCode(): Int {
     var result = javaClass.hashCode()
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.requestId)
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.scanSessionId)
     result = 31 * result + HardwareApiPigeonUtils.deepHash(this.id)
     result = 31 * result + HardwareApiPigeonUtils.deepHash(this.name)
     result = 31 * result + HardwareApiPigeonUtils.deepHash(this.rssi)
     result = 31 * result + HardwareApiPigeonUtils.deepHash(this.advertisementServiceUuids)
     result = 31 * result + HardwareApiPigeonUtils.deepHash(this.manufacturerData)
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.seenAtMillis)
     return result
   }
 }
@@ -671,27 +683,36 @@ data class BleWriteResultDto (
 
 /** Generated class from Pigeon that represents data sent in messages. */
 data class BleNotificationDto (
+  val requestId: String? = null,
   val deviceId: String,
   val serviceUuid: String,
   val characteristicUuid: String,
-  val payload: ByteArray
+  val payload: ByteArray,
+  val timestampMillis: Long,
+  val sequenceNumber: Long
 )
  {
   companion object {
     fun fromList(pigeonVar_list: List<Any?>): BleNotificationDto {
-      val deviceId = pigeonVar_list[0] as String
-      val serviceUuid = pigeonVar_list[1] as String
-      val characteristicUuid = pigeonVar_list[2] as String
-      val payload = pigeonVar_list[3] as ByteArray
-      return BleNotificationDto(deviceId, serviceUuid, characteristicUuid, payload)
+      val requestId = pigeonVar_list[0] as String?
+      val deviceId = pigeonVar_list[1] as String
+      val serviceUuid = pigeonVar_list[2] as String
+      val characteristicUuid = pigeonVar_list[3] as String
+      val payload = pigeonVar_list[4] as ByteArray
+      val timestampMillis = pigeonVar_list[5] as Long
+      val sequenceNumber = pigeonVar_list[6] as Long
+      return BleNotificationDto(requestId, deviceId, serviceUuid, characteristicUuid, payload, timestampMillis, sequenceNumber)
     }
   }
   fun toList(): List<Any?> {
     return listOf(
+      requestId,
       deviceId,
       serviceUuid,
       characteristicUuid,
       payload,
+      timestampMillis,
+      sequenceNumber,
     )
   }
   override fun equals(other: Any?): Boolean {
@@ -702,15 +723,18 @@ data class BleNotificationDto (
       return true
     }
     val other = other as BleNotificationDto
-    return HardwareApiPigeonUtils.deepEquals(this.deviceId, other.deviceId) && HardwareApiPigeonUtils.deepEquals(this.serviceUuid, other.serviceUuid) && HardwareApiPigeonUtils.deepEquals(this.characteristicUuid, other.characteristicUuid) && HardwareApiPigeonUtils.deepEquals(this.payload, other.payload)
+    return HardwareApiPigeonUtils.deepEquals(this.requestId, other.requestId) && HardwareApiPigeonUtils.deepEquals(this.deviceId, other.deviceId) && HardwareApiPigeonUtils.deepEquals(this.serviceUuid, other.serviceUuid) && HardwareApiPigeonUtils.deepEquals(this.characteristicUuid, other.characteristicUuid) && HardwareApiPigeonUtils.deepEquals(this.payload, other.payload) && HardwareApiPigeonUtils.deepEquals(this.timestampMillis, other.timestampMillis) && HardwareApiPigeonUtils.deepEquals(this.sequenceNumber, other.sequenceNumber)
   }
 
   override fun hashCode(): Int {
     var result = javaClass.hashCode()
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.requestId)
     result = 31 * result + HardwareApiPigeonUtils.deepHash(this.deviceId)
     result = 31 * result + HardwareApiPigeonUtils.deepHash(this.serviceUuid)
     result = 31 * result + HardwareApiPigeonUtils.deepHash(this.characteristicUuid)
     result = 31 * result + HardwareApiPigeonUtils.deepHash(this.payload)
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.timestampMillis)
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.sequenceNumber)
     return result
   }
 }
@@ -718,26 +742,35 @@ data class BleNotificationDto (
 /** Generated class from Pigeon that represents data sent in messages. */
 data class NativeErrorDto (
   val code: String,
+  val domainCode: String,
   val message: String? = null,
   val requestId: String? = null,
-  val deviceId: String? = null
+  val deviceId: String? = null,
+  val retryable: Boolean,
+  val timestampMillis: Long
 )
  {
   companion object {
     fun fromList(pigeonVar_list: List<Any?>): NativeErrorDto {
       val code = pigeonVar_list[0] as String
-      val message = pigeonVar_list[1] as String?
-      val requestId = pigeonVar_list[2] as String?
-      val deviceId = pigeonVar_list[3] as String?
-      return NativeErrorDto(code, message, requestId, deviceId)
+      val domainCode = pigeonVar_list[1] as String
+      val message = pigeonVar_list[2] as String?
+      val requestId = pigeonVar_list[3] as String?
+      val deviceId = pigeonVar_list[4] as String?
+      val retryable = pigeonVar_list[5] as Boolean
+      val timestampMillis = pigeonVar_list[6] as Long
+      return NativeErrorDto(code, domainCode, message, requestId, deviceId, retryable, timestampMillis)
     }
   }
   fun toList(): List<Any?> {
     return listOf(
       code,
+      domainCode,
       message,
       requestId,
       deviceId,
+      retryable,
+      timestampMillis,
     )
   }
   override fun equals(other: Any?): Boolean {
@@ -748,15 +781,18 @@ data class NativeErrorDto (
       return true
     }
     val other = other as NativeErrorDto
-    return HardwareApiPigeonUtils.deepEquals(this.code, other.code) && HardwareApiPigeonUtils.deepEquals(this.message, other.message) && HardwareApiPigeonUtils.deepEquals(this.requestId, other.requestId) && HardwareApiPigeonUtils.deepEquals(this.deviceId, other.deviceId)
+    return HardwareApiPigeonUtils.deepEquals(this.code, other.code) && HardwareApiPigeonUtils.deepEquals(this.domainCode, other.domainCode) && HardwareApiPigeonUtils.deepEquals(this.message, other.message) && HardwareApiPigeonUtils.deepEquals(this.requestId, other.requestId) && HardwareApiPigeonUtils.deepEquals(this.deviceId, other.deviceId) && HardwareApiPigeonUtils.deepEquals(this.retryable, other.retryable) && HardwareApiPigeonUtils.deepEquals(this.timestampMillis, other.timestampMillis)
   }
 
   override fun hashCode(): Int {
     var result = javaClass.hashCode()
     result = 31 * result + HardwareApiPigeonUtils.deepHash(this.code)
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.domainCode)
     result = 31 * result + HardwareApiPigeonUtils.deepHash(this.message)
     result = 31 * result + HardwareApiPigeonUtils.deepHash(this.requestId)
     result = 31 * result + HardwareApiPigeonUtils.deepHash(this.deviceId)
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.retryable)
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.timestampMillis)
     return result
   }
 }

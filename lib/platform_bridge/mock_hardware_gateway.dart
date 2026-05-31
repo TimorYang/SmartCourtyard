@@ -53,9 +53,12 @@ class MockHardwareGateway implements HardwareGateway {
     BleScanFilter filter = const BleScanFilter(),
   }) async {
     final device = BleDevice(
+      requestId: requestId,
+      scanSessionId: '$requestId-mock-session',
       id: 'mock-ble-device',
       name: filter.exactName ?? 'FLINX Mock Device',
       rssi: -52,
+      seenAtMillis: DateTime.now().millisecondsSinceEpoch,
       advertisementServiceUuids: filter.serviceUuids,
       manufacturerData: Uint8List.fromList(<int>[0x46, 0x4c, 0x49, 0x4e, 0x58]),
     );
@@ -153,10 +156,13 @@ class MockHardwareGateway implements HardwareGateway {
   }) async {
     _notificationController.add(
       BleNotification(
+        requestId: requestId,
         deviceId: deviceId,
         serviceUuid: serviceUuid,
         characteristicUuid: characteristicUuid,
         payload: Uint8List.fromList(payload),
+        timestampMillis: DateTime.now().millisecondsSinceEpoch,
+        sequenceNumber: 1,
       ),
     );
 

@@ -1,6 +1,8 @@
 import 'dart:async';
-import 'dart:typed_data';
 
+import 'package:flutter/services.dart';
+
+import '../core/errors/app_error.dart';
 import 'hardware_gateway.dart';
 import 'hardware_models.dart';
 import 'pigeon/generated/hardware_api.g.dart' as pigeon;
@@ -38,12 +40,18 @@ class PigeonHardwareGateway implements HardwareGateway {
     required String requestId,
     BleScanFilter filter = const BleScanFilter(),
   }) {
-    return _hostApi.startBleScan(requestId, filter.toDto());
+    return _mapPigeonCall(
+      () => _hostApi.startBleScan(requestId, filter.toDto()),
+      requestId: requestId,
+    );
   }
 
   @override
   Future<void> stopBleScan({required String requestId}) {
-    return _hostApi.stopBleScan(requestId);
+    return _mapPigeonCall(
+      () => _hostApi.stopBleScan(requestId),
+      requestId: requestId,
+    );
   }
 
   @override
@@ -51,7 +59,11 @@ class PigeonHardwareGateway implements HardwareGateway {
     required String requestId,
     required String deviceId,
   }) async {
-    final dto = await _hostApi.connectBleDevice(requestId, deviceId);
+    final dto = await _mapPigeonCall(
+      () => _hostApi.connectBleDevice(requestId, deviceId),
+      requestId: requestId,
+      deviceId: deviceId,
+    );
     return dto.toModel();
   }
 
@@ -60,7 +72,11 @@ class PigeonHardwareGateway implements HardwareGateway {
     required String requestId,
     required String deviceId,
   }) async {
-    final dto = await _hostApi.disconnectBleDevice(requestId, deviceId);
+    final dto = await _mapPigeonCall(
+      () => _hostApi.disconnectBleDevice(requestId, deviceId),
+      requestId: requestId,
+      deviceId: deviceId,
+    );
     return dto.toModel();
   }
 
@@ -69,7 +85,11 @@ class PigeonHardwareGateway implements HardwareGateway {
     required String requestId,
     required String deviceId,
   }) async {
-    final dto = await _hostApi.discoverServices(requestId, deviceId);
+    final dto = await _mapPigeonCall(
+      () => _hostApi.discoverServices(requestId, deviceId),
+      requestId: requestId,
+      deviceId: deviceId,
+    );
     return dto.toModel();
   }
 
@@ -80,11 +100,15 @@ class PigeonHardwareGateway implements HardwareGateway {
     required String serviceUuid,
     required String characteristicUuid,
   }) async {
-    final dto = await _hostApi.readCharacteristic(
-      requestId,
-      deviceId,
-      serviceUuid,
-      characteristicUuid,
+    final dto = await _mapPigeonCall(
+      () => _hostApi.readCharacteristic(
+        requestId,
+        deviceId,
+        serviceUuid,
+        characteristicUuid,
+      ),
+      requestId: requestId,
+      deviceId: deviceId,
     );
     return dto.toModel();
   }
@@ -98,13 +122,17 @@ class PigeonHardwareGateway implements HardwareGateway {
     required Uint8List payload,
     BleWriteType writeType = BleWriteType.withResponse,
   }) async {
-    final dto = await _hostApi.writeCharacteristic(
-      requestId,
-      deviceId,
-      serviceUuid,
-      characteristicUuid,
-      payload,
-      writeType.toDto(),
+    final dto = await _mapPigeonCall(
+      () => _hostApi.writeCharacteristic(
+        requestId,
+        deviceId,
+        serviceUuid,
+        characteristicUuid,
+        payload,
+        writeType.toDto(),
+      ),
+      requestId: requestId,
+      deviceId: deviceId,
     );
     return dto.toModel();
   }
@@ -117,12 +145,16 @@ class PigeonHardwareGateway implements HardwareGateway {
     required String characteristicUuid,
     required bool enabled,
   }) async {
-    final dto = await _hostApi.setCharacteristicNotify(
-      requestId,
-      deviceId,
-      serviceUuid,
-      characteristicUuid,
-      enabled,
+    final dto = await _mapPigeonCall(
+      () => _hostApi.setCharacteristicNotify(
+        requestId,
+        deviceId,
+        serviceUuid,
+        characteristicUuid,
+        enabled,
+      ),
+      requestId: requestId,
+      deviceId: deviceId,
     );
     return dto.toModel();
   }
@@ -133,10 +165,10 @@ class PigeonHardwareGateway implements HardwareGateway {
     required String deviceId,
     required DoorCommand command,
   }) async {
-    final dto = await _hostApi.sendDoorCommand(
-      requestId,
-      deviceId,
-      command.toDto(),
+    final dto = await _mapPigeonCall(
+      () => _hostApi.sendDoorCommand(requestId, deviceId, command.toDto()),
+      requestId: requestId,
+      deviceId: deviceId,
     );
     return CommandResult(
       requestId: dto.requestId,
@@ -144,6 +176,22 @@ class PigeonHardwareGateway implements HardwareGateway {
       command: command,
       accepted: dto.accepted,
     );
+  }
+
+  Future<T> _mapPigeonCall<T>(
+    FutureOr<T> Function() call, {
+    required String requestId,
+    String? deviceId,
+  }) async {
+    try {
+      return await Future<T>.sync(call);
+    } on PlatformException catch (error) {
+      throw _platformExceptionToAppError(
+        error,
+        requestId: requestId,
+        deviceId: deviceId,
+      );
+    }
   }
 }
 
@@ -224,9 +272,12 @@ extension _BleWriteTypeMapper on BleWriteType {
 extension _BleDeviceDtoMapper on pigeon.BleDeviceDto {
   BleDevice toModel() {
     return BleDevice(
+      requestId: requestId,
+      scanSessionId: scanSessionId,
       id: id,
       name: name,
       rssi: rssi,
+      seenAtMillis: seenAtMillis,
       advertisementServiceUuids: advertisementServiceUuids,
       manufacturerData: manufacturerData,
     );
@@ -317,10 +368,13 @@ extension _BleWriteResultDtoMapper on pigeon.BleWriteResultDto {
 extension _BleNotificationDtoMapper on pigeon.BleNotificationDto {
   BleNotification toModel() {
     return BleNotification(
+      requestId: requestId,
       deviceId: deviceId,
       serviceUuid: serviceUuid,
       characteristicUuid: characteristicUuid,
       payload: payload,
+      timestampMillis: timestampMillis,
+      sequenceNumber: sequenceNumber,
     );
   }
 }
@@ -329,9 +383,58 @@ extension _NativeErrorDtoMapper on pigeon.NativeErrorDto {
   NativeHardwareError toModel() {
     return NativeHardwareError(
       code: code,
+      domainCode: _parseAppErrorCode(domainCode),
       message: message,
       requestId: requestId,
       deviceId: deviceId,
+      retryable: retryable,
+      timestampMillis: timestampMillis,
     );
   }
+}
+
+AppError _platformExceptionToAppError(
+  PlatformException error, {
+  required String requestId,
+  String? deviceId,
+}) {
+  final code = switch (error.code) {
+    'bluetooth_unavailable' => AppErrorCode.bluetoothUnavailable,
+    'bluetooth_unauthorized' => AppErrorCode.permissionDenied,
+    'peripheral_unavailable' => AppErrorCode.bluetoothDisconnected,
+    'operation_in_progress' => AppErrorCode.deviceBusy,
+    'operation_timeout' => AppErrorCode.commandTimeout,
+    'bluetooth_disconnected' => AppErrorCode.bluetoothDisconnected,
+    _ => AppErrorCode.unknown,
+  };
+  return AppError(
+    code: code,
+    messageKey: 'hardware.${error.code}',
+    action: _recommendedAction(code),
+    nativeCode: error.code,
+    requestId: requestId,
+    deviceId: deviceId,
+    retryable:
+        code != AppErrorCode.permissionDenied &&
+        code != AppErrorCode.bluetoothUnavailable,
+  );
+}
+
+AppErrorCode _parseAppErrorCode(String domainCode) {
+  return AppErrorCode.values.firstWhere(
+    (code) => code.name == domainCode,
+    orElse: () => AppErrorCode.unknown,
+  );
+}
+
+AppErrorAction _recommendedAction(AppErrorCode code) {
+  return switch (code) {
+    AppErrorCode.permissionDenied => AppErrorAction.openSettings,
+    AppErrorCode.bluetoothUnavailable ||
+    AppErrorCode.bluetoothDisconnected => AppErrorAction.connectBluetooth,
+    AppErrorCode.commandTimeout ||
+    AppErrorCode.deviceBusy ||
+    AppErrorCode.unknown => AppErrorAction.retry,
+    _ => AppErrorAction.none,
+  };
 }

@@ -1,5 +1,7 @@
 import 'dart:typed_data';
 
+import '../core/errors/app_error.dart';
+
 enum DoorCommand { open, stop, close }
 
 enum DoorState { open, opening, stopped, closing, closed, unknown }
@@ -62,16 +64,22 @@ class BleScanFilter {
 
 class BleDevice {
   BleDevice({
+    required this.requestId,
+    required this.scanSessionId,
     required this.id,
     required this.rssi,
+    required this.seenAtMillis,
     this.name,
     this.advertisementServiceUuids = const [],
     Uint8List? manufacturerData,
   }) : manufacturerData = manufacturerData ?? Uint8List(0);
 
+  final String requestId;
+  final String scanSessionId;
   final String id;
   final String? name;
   final int rssi;
+  final int seenAtMillis;
   final List<String> advertisementServiceUuids;
   final Uint8List manufacturerData;
 }
@@ -163,28 +171,60 @@ class BleWriteResult {
 
 class BleNotification {
   const BleNotification({
+    this.requestId,
     required this.deviceId,
     required this.serviceUuid,
     required this.characteristicUuid,
     required this.payload,
+    required this.timestampMillis,
+    required this.sequenceNumber,
   });
 
+  final String? requestId;
   final String deviceId;
   final String serviceUuid;
   final String characteristicUuid;
   final Uint8List payload;
+  final int timestampMillis;
+  final int sequenceNumber;
 }
 
 class NativeHardwareError {
   const NativeHardwareError({
     required this.code,
+    required this.domainCode,
     this.message,
     this.requestId,
     this.deviceId,
+    required this.retryable,
+    required this.timestampMillis,
   });
 
   final String code;
+  final AppErrorCode domainCode;
   final String? message;
   final String? requestId;
   final String? deviceId;
+  final bool retryable;
+  final int timestampMillis;
+
+  AppError toAppError() {
+    return AppError(
+      code: domainCode,
+      messageKey: 'hardware.$code',
+      action: switch (domainCode) {
+        AppErrorCode.permissionDenied => AppErrorAction.openSettings,
+        AppErrorCode.bluetoothUnavailable ||
+        AppErrorCode.bluetoothDisconnected => AppErrorAction.connectBluetooth,
+        AppErrorCode.commandTimeout ||
+        AppErrorCode.deviceBusy ||
+        AppErrorCode.unknown => AppErrorAction.retry,
+        _ => AppErrorAction.none,
+      },
+      nativeCode: code,
+      requestId: requestId,
+      deviceId: deviceId,
+      retryable: retryable,
+    );
+  }
 }

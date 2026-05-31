@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flinx/core/errors/app_error.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
 import 'package:flinx/platform_bridge/mock_hardware_gateway.dart';
 
@@ -12,7 +13,13 @@ void main() {
       emits(
         isA<BleDevice>()
             .having((device) => device.id, 'id', 'mock-ble-device')
-            .having((device) => device.name, 'name', 'FLINX Mock Device'),
+            .having((device) => device.name, 'name', 'FLINX Mock Device')
+            .having((device) => device.requestId, 'requestId', 'scan-1')
+            .having(
+              (device) => device.scanSessionId,
+              'scanSessionId',
+              'scan-1-mock-session',
+            ),
       ),
     );
 
@@ -65,11 +72,17 @@ void main() {
       final notificationEvent = expectLater(
         gateway.bleNotifications,
         emits(
-          isA<BleNotification>().having(
-            (notification) => notification.payload.toList(),
-            'payload',
-            <int>[0x0a],
-          ),
+          isA<BleNotification>()
+              .having(
+                (notification) => notification.payload.toList(),
+                'payload',
+                <int>[0x0a],
+              )
+              .having(
+                (notification) => notification.requestId,
+                'requestId',
+                'write-1',
+              ),
         ),
       );
 
@@ -105,4 +118,22 @@ void main() {
       await notificationEvent;
     },
   );
+
+  test('maps native hardware errors into AppError', () {
+    final appError = NativeHardwareError(
+      code: 'operation_timeout',
+      domainCode: AppErrorCode.commandTimeout,
+      requestId: 'read-1',
+      deviceId: 'mock-ble-device',
+      retryable: true,
+      timestampMillis: 1,
+    ).toAppError();
+
+    expect(appError.code, AppErrorCode.commandTimeout);
+    expect(appError.nativeCode, 'operation_timeout');
+    expect(appError.requestId, 'read-1');
+    expect(appError.deviceId, 'mock-ble-device');
+    expect(appError.retryable, isTrue);
+    expect(appError.action, AppErrorAction.retry);
+  });
 }

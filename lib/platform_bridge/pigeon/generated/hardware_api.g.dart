@@ -234,12 +234,19 @@ class BleScanFilterDto {
 
 class BleDeviceDto {
   BleDeviceDto({
+    required this.requestId,
+    required this.scanSessionId,
     required this.id,
     this.name,
     required this.rssi,
     required this.advertisementServiceUuids,
     required this.manufacturerData,
+    required this.seenAtMillis,
   });
+
+  String requestId;
+
+  String scanSessionId;
 
   String id;
 
@@ -251,13 +258,18 @@ class BleDeviceDto {
 
   Uint8List manufacturerData;
 
+  int seenAtMillis;
+
   List<Object?> _toList() {
     return <Object?>[
+      requestId,
+      scanSessionId,
       id,
       name,
       rssi,
       advertisementServiceUuids,
       manufacturerData,
+      seenAtMillis,
     ];
   }
 
@@ -268,11 +280,14 @@ class BleDeviceDto {
   static BleDeviceDto decode(Object result) {
     result as List<Object?>;
     return BleDeviceDto(
-      id: result[0]! as String,
-      name: result[1] as String?,
-      rssi: result[2]! as int,
-      advertisementServiceUuids: (result[3]! as List<Object?>).cast<String>(),
-      manufacturerData: result[4]! as Uint8List,
+      requestId: result[0]! as String,
+      scanSessionId: result[1]! as String,
+      id: result[2]! as String,
+      name: result[3] as String?,
+      rssi: result[4]! as int,
+      advertisementServiceUuids: (result[5]! as List<Object?>).cast<String>(),
+      manufacturerData: result[6]! as Uint8List,
+      seenAtMillis: result[7]! as int,
     );
   }
 
@@ -285,14 +300,17 @@ class BleDeviceDto {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(id, other.id) &&
+    return _deepEquals(requestId, other.requestId) &&
+        _deepEquals(scanSessionId, other.scanSessionId) &&
+        _deepEquals(id, other.id) &&
         _deepEquals(name, other.name) &&
         _deepEquals(rssi, other.rssi) &&
         _deepEquals(
           advertisementServiceUuids,
           other.advertisementServiceUuids,
         ) &&
-        _deepEquals(manufacturerData, other.manufacturerData);
+        _deepEquals(manufacturerData, other.manufacturerData) &&
+        _deepEquals(seenAtMillis, other.seenAtMillis);
   }
 
   @override
@@ -654,11 +672,16 @@ class BleWriteResultDto {
 
 class BleNotificationDto {
   BleNotificationDto({
+    this.requestId,
     required this.deviceId,
     required this.serviceUuid,
     required this.characteristicUuid,
     required this.payload,
+    required this.timestampMillis,
+    required this.sequenceNumber,
   });
+
+  String? requestId;
 
   String deviceId;
 
@@ -668,8 +691,20 @@ class BleNotificationDto {
 
   Uint8List payload;
 
+  int timestampMillis;
+
+  int sequenceNumber;
+
   List<Object?> _toList() {
-    return <Object?>[deviceId, serviceUuid, characteristicUuid, payload];
+    return <Object?>[
+      requestId,
+      deviceId,
+      serviceUuid,
+      characteristicUuid,
+      payload,
+      timestampMillis,
+      sequenceNumber,
+    ];
   }
 
   Object encode() {
@@ -679,10 +714,13 @@ class BleNotificationDto {
   static BleNotificationDto decode(Object result) {
     result as List<Object?>;
     return BleNotificationDto(
-      deviceId: result[0]! as String,
-      serviceUuid: result[1]! as String,
-      characteristicUuid: result[2]! as String,
-      payload: result[3]! as Uint8List,
+      requestId: result[0] as String?,
+      deviceId: result[1]! as String,
+      serviceUuid: result[2]! as String,
+      characteristicUuid: result[3]! as String,
+      payload: result[4]! as Uint8List,
+      timestampMillis: result[5]! as int,
+      sequenceNumber: result[6]! as int,
     );
   }
 
@@ -695,10 +733,13 @@ class BleNotificationDto {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(deviceId, other.deviceId) &&
+    return _deepEquals(requestId, other.requestId) &&
+        _deepEquals(deviceId, other.deviceId) &&
         _deepEquals(serviceUuid, other.serviceUuid) &&
         _deepEquals(characteristicUuid, other.characteristicUuid) &&
-        _deepEquals(payload, other.payload);
+        _deepEquals(payload, other.payload) &&
+        _deepEquals(timestampMillis, other.timestampMillis) &&
+        _deepEquals(sequenceNumber, other.sequenceNumber);
   }
 
   @override
@@ -709,12 +750,17 @@ class BleNotificationDto {
 class NativeErrorDto {
   NativeErrorDto({
     required this.code,
+    required this.domainCode,
     this.message,
     this.requestId,
     this.deviceId,
+    required this.retryable,
+    required this.timestampMillis,
   });
 
   String code;
+
+  String domainCode;
 
   String? message;
 
@@ -722,8 +768,20 @@ class NativeErrorDto {
 
   String? deviceId;
 
+  bool retryable;
+
+  int timestampMillis;
+
   List<Object?> _toList() {
-    return <Object?>[code, message, requestId, deviceId];
+    return <Object?>[
+      code,
+      domainCode,
+      message,
+      requestId,
+      deviceId,
+      retryable,
+      timestampMillis,
+    ];
   }
 
   Object encode() {
@@ -734,9 +792,12 @@ class NativeErrorDto {
     result as List<Object?>;
     return NativeErrorDto(
       code: result[0]! as String,
-      message: result[1] as String?,
-      requestId: result[2] as String?,
-      deviceId: result[3] as String?,
+      domainCode: result[1]! as String,
+      message: result[2] as String?,
+      requestId: result[3] as String?,
+      deviceId: result[4] as String?,
+      retryable: result[5]! as bool,
+      timestampMillis: result[6]! as int,
     );
   }
 
@@ -750,9 +811,12 @@ class NativeErrorDto {
       return true;
     }
     return _deepEquals(code, other.code) &&
+        _deepEquals(domainCode, other.domainCode) &&
         _deepEquals(message, other.message) &&
         _deepEquals(requestId, other.requestId) &&
-        _deepEquals(deviceId, other.deviceId);
+        _deepEquals(deviceId, other.deviceId) &&
+        _deepEquals(retryable, other.retryable) &&
+        _deepEquals(timestampMillis, other.timestampMillis);
   }
 
   @override
