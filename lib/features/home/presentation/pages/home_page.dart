@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../features/hardware_debug/presentation/pages/ble_debug_page.dart';
 import '../../../../platform_bridge/hardware_models.dart';
 import '../../application/providers.dart';
 
@@ -14,7 +16,16 @@ class HomePage extends ConsumerWidget {
     final devices = ref.watch(homeDevicesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('FLINX')),
+      appBar: AppBar(
+        title: const Text('FLINX'),
+        actions: [
+          TextButton.icon(
+            onPressed: () => context.push(BleDebugPage.routePath),
+            icon: const Icon(Icons.bluetooth_searching),
+            label: const Text('BLE Debug'),
+          ),
+        ],
+      ),
       body: devices.when(
         data: (items) {
           if (items.isEmpty) {

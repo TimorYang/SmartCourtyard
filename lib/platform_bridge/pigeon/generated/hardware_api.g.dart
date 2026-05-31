@@ -10,9 +10,9 @@ import 'package:flutter/services.dart';
 import 'package:meta/meta.dart' show immutable, protected, visibleForTesting;
 
 Object? _extractReplyValueOrThrow(
-    List<Object?>? replyList,
-    String channelName, {
-    required bool isNullValid,
+  List<Object?>? replyList,
+  String channelName, {
+  required bool isNullValid,
 }) {
   if (replyList == null) {
     throw PlatformException(
@@ -34,6 +34,20 @@ Object? _extractReplyValueOrThrow(
   return replyList.firstOrNull;
 }
 
+List<Object?> wrapResponse({
+  Object? result,
+  PlatformException? error,
+  bool empty = false,
+}) {
+  if (empty) {
+    return <Object?>[];
+  }
+  if (error == null) {
+    return <Object?>[result];
+  }
+  return <Object?>[error.code, error.message, error.details];
+}
+
 bool _deepEquals(Object? a, Object? b) {
   if (identical(a, b)) {
     return true;
@@ -46,8 +60,9 @@ bool _deepEquals(Object? a, Object? b) {
   }
   if (a is List && b is List) {
     return a.length == b.length &&
-        a.indexed
-            .every(((int, dynamic) item) => _deepEquals(item.$2, b[item.$1]));
+        a.indexed.every(
+          ((int, dynamic) item) => _deepEquals(item.$2, b[item.$1]),
+        );
   }
   if (a is Map && b is Map) {
     if (a.length != b.length) {
@@ -96,19 +111,13 @@ int _deepHash(Object? value) {
   return value.hashCode;
 }
 
+enum PermissionKindDto { bluetooth, camera, localNetwork, notification }
 
-enum PermissionKindDto {
-  bluetooth,
-  camera,
-  localNetwork,
-  notification,
-}
+enum DoorCommandDto { open, stop, close }
 
-enum DoorCommandDto {
-  open,
-  stop,
-  close,
-}
+enum BleConnectionStateDto { disconnected, connecting, connected }
+
+enum BleWriteTypeDto { withResponse, withoutResponse }
 
 class PermissionSnapshotDto {
   PermissionSnapshotDto({
@@ -136,7 +145,8 @@ class PermissionSnapshotDto {
   }
 
   Object encode() {
-    return _toList();  }
+    return _toList();
+  }
 
   static PermissionSnapshotDto decode(Object result) {
     result as List<Object?>;
@@ -157,7 +167,592 @@ class PermissionSnapshotDto {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(bluetoothGranted, other.bluetoothGranted) && _deepEquals(cameraGranted, other.cameraGranted) && _deepEquals(localNetworkGranted, other.localNetworkGranted) && _deepEquals(notificationGranted, other.notificationGranted);
+    return _deepEquals(bluetoothGranted, other.bluetoothGranted) &&
+        _deepEquals(cameraGranted, other.cameraGranted) &&
+        _deepEquals(localNetworkGranted, other.localNetworkGranted) &&
+        _deepEquals(notificationGranted, other.notificationGranted);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+}
+
+class BleScanFilterDto {
+  BleScanFilterDto({
+    required this.serviceUuids,
+    this.namePrefix,
+    this.exactName,
+    required this.allowDuplicates,
+  });
+
+  List<String> serviceUuids;
+
+  String? namePrefix;
+
+  String? exactName;
+
+  bool allowDuplicates;
+
+  List<Object?> _toList() {
+    return <Object?>[serviceUuids, namePrefix, exactName, allowDuplicates];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static BleScanFilterDto decode(Object result) {
+    result as List<Object?>;
+    return BleScanFilterDto(
+      serviceUuids: (result[0]! as List<Object?>).cast<String>(),
+      namePrefix: result[1] as String?,
+      exactName: result[2] as String?,
+      allowDuplicates: result[3]! as bool,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! BleScanFilterDto || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(serviceUuids, other.serviceUuids) &&
+        _deepEquals(namePrefix, other.namePrefix) &&
+        _deepEquals(exactName, other.exactName) &&
+        _deepEquals(allowDuplicates, other.allowDuplicates);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+}
+
+class BleDeviceDto {
+  BleDeviceDto({
+    required this.id,
+    this.name,
+    required this.rssi,
+    required this.advertisementServiceUuids,
+    required this.manufacturerData,
+  });
+
+  String id;
+
+  String? name;
+
+  int rssi;
+
+  List<String> advertisementServiceUuids;
+
+  Uint8List manufacturerData;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      id,
+      name,
+      rssi,
+      advertisementServiceUuids,
+      manufacturerData,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static BleDeviceDto decode(Object result) {
+    result as List<Object?>;
+    return BleDeviceDto(
+      id: result[0]! as String,
+      name: result[1] as String?,
+      rssi: result[2]! as int,
+      advertisementServiceUuids: (result[3]! as List<Object?>).cast<String>(),
+      manufacturerData: result[4]! as Uint8List,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! BleDeviceDto || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(id, other.id) &&
+        _deepEquals(name, other.name) &&
+        _deepEquals(rssi, other.rssi) &&
+        _deepEquals(
+          advertisementServiceUuids,
+          other.advertisementServiceUuids,
+        ) &&
+        _deepEquals(manufacturerData, other.manufacturerData);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+}
+
+class BleConnectionEventDto {
+  BleConnectionEventDto({
+    required this.requestId,
+    required this.deviceId,
+    required this.state,
+    this.nativeCode,
+  });
+
+  String requestId;
+
+  String deviceId;
+
+  BleConnectionStateDto state;
+
+  String? nativeCode;
+
+  List<Object?> _toList() {
+    return <Object?>[requestId, deviceId, state, nativeCode];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static BleConnectionEventDto decode(Object result) {
+    result as List<Object?>;
+    return BleConnectionEventDto(
+      requestId: result[0]! as String,
+      deviceId: result[1]! as String,
+      state: result[2]! as BleConnectionStateDto,
+      nativeCode: result[3] as String?,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! BleConnectionEventDto || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(requestId, other.requestId) &&
+        _deepEquals(deviceId, other.deviceId) &&
+        _deepEquals(state, other.state) &&
+        _deepEquals(nativeCode, other.nativeCode);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+}
+
+class BleCharacteristicDto {
+  BleCharacteristicDto({
+    required this.serviceUuid,
+    required this.characteristicUuid,
+    required this.canRead,
+    required this.canWriteWithResponse,
+    required this.canWriteWithoutResponse,
+    required this.canNotify,
+  });
+
+  String serviceUuid;
+
+  String characteristicUuid;
+
+  bool canRead;
+
+  bool canWriteWithResponse;
+
+  bool canWriteWithoutResponse;
+
+  bool canNotify;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      serviceUuid,
+      characteristicUuid,
+      canRead,
+      canWriteWithResponse,
+      canWriteWithoutResponse,
+      canNotify,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static BleCharacteristicDto decode(Object result) {
+    result as List<Object?>;
+    return BleCharacteristicDto(
+      serviceUuid: result[0]! as String,
+      characteristicUuid: result[1]! as String,
+      canRead: result[2]! as bool,
+      canWriteWithResponse: result[3]! as bool,
+      canWriteWithoutResponse: result[4]! as bool,
+      canNotify: result[5]! as bool,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! BleCharacteristicDto || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(serviceUuid, other.serviceUuid) &&
+        _deepEquals(characteristicUuid, other.characteristicUuid) &&
+        _deepEquals(canRead, other.canRead) &&
+        _deepEquals(canWriteWithResponse, other.canWriteWithResponse) &&
+        _deepEquals(canWriteWithoutResponse, other.canWriteWithoutResponse) &&
+        _deepEquals(canNotify, other.canNotify);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+}
+
+class BleServiceDto {
+  BleServiceDto({required this.serviceUuid, required this.characteristics});
+
+  String serviceUuid;
+
+  List<BleCharacteristicDto> characteristics;
+
+  List<Object?> _toList() {
+    return <Object?>[serviceUuid, characteristics];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static BleServiceDto decode(Object result) {
+    result as List<Object?>;
+    return BleServiceDto(
+      serviceUuid: result[0]! as String,
+      characteristics: (result[1]! as List<Object?>)
+          .cast<BleCharacteristicDto>(),
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! BleServiceDto || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(serviceUuid, other.serviceUuid) &&
+        _deepEquals(characteristics, other.characteristics);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+}
+
+class BleServicesDto {
+  BleServicesDto({
+    required this.requestId,
+    required this.deviceId,
+    required this.services,
+  });
+
+  String requestId;
+
+  String deviceId;
+
+  List<BleServiceDto> services;
+
+  List<Object?> _toList() {
+    return <Object?>[requestId, deviceId, services];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static BleServicesDto decode(Object result) {
+    result as List<Object?>;
+    return BleServicesDto(
+      requestId: result[0]! as String,
+      deviceId: result[1]! as String,
+      services: (result[2]! as List<Object?>).cast<BleServiceDto>(),
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! BleServicesDto || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(requestId, other.requestId) &&
+        _deepEquals(deviceId, other.deviceId) &&
+        _deepEquals(services, other.services);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+}
+
+class BleReadResultDto {
+  BleReadResultDto({
+    required this.requestId,
+    required this.deviceId,
+    required this.serviceUuid,
+    required this.characteristicUuid,
+    required this.payload,
+  });
+
+  String requestId;
+
+  String deviceId;
+
+  String serviceUuid;
+
+  String characteristicUuid;
+
+  Uint8List payload;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      requestId,
+      deviceId,
+      serviceUuid,
+      characteristicUuid,
+      payload,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static BleReadResultDto decode(Object result) {
+    result as List<Object?>;
+    return BleReadResultDto(
+      requestId: result[0]! as String,
+      deviceId: result[1]! as String,
+      serviceUuid: result[2]! as String,
+      characteristicUuid: result[3]! as String,
+      payload: result[4]! as Uint8List,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! BleReadResultDto || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(requestId, other.requestId) &&
+        _deepEquals(deviceId, other.deviceId) &&
+        _deepEquals(serviceUuid, other.serviceUuid) &&
+        _deepEquals(characteristicUuid, other.characteristicUuid) &&
+        _deepEquals(payload, other.payload);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+}
+
+class BleWriteResultDto {
+  BleWriteResultDto({
+    required this.requestId,
+    required this.deviceId,
+    required this.serviceUuid,
+    required this.characteristicUuid,
+    required this.accepted,
+    this.nativeCode,
+  });
+
+  String requestId;
+
+  String deviceId;
+
+  String serviceUuid;
+
+  String characteristicUuid;
+
+  bool accepted;
+
+  String? nativeCode;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      requestId,
+      deviceId,
+      serviceUuid,
+      characteristicUuid,
+      accepted,
+      nativeCode,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static BleWriteResultDto decode(Object result) {
+    result as List<Object?>;
+    return BleWriteResultDto(
+      requestId: result[0]! as String,
+      deviceId: result[1]! as String,
+      serviceUuid: result[2]! as String,
+      characteristicUuid: result[3]! as String,
+      accepted: result[4]! as bool,
+      nativeCode: result[5] as String?,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! BleWriteResultDto || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(requestId, other.requestId) &&
+        _deepEquals(deviceId, other.deviceId) &&
+        _deepEquals(serviceUuid, other.serviceUuid) &&
+        _deepEquals(characteristicUuid, other.characteristicUuid) &&
+        _deepEquals(accepted, other.accepted) &&
+        _deepEquals(nativeCode, other.nativeCode);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+}
+
+class BleNotificationDto {
+  BleNotificationDto({
+    required this.deviceId,
+    required this.serviceUuid,
+    required this.characteristicUuid,
+    required this.payload,
+  });
+
+  String deviceId;
+
+  String serviceUuid;
+
+  String characteristicUuid;
+
+  Uint8List payload;
+
+  List<Object?> _toList() {
+    return <Object?>[deviceId, serviceUuid, characteristicUuid, payload];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static BleNotificationDto decode(Object result) {
+    result as List<Object?>;
+    return BleNotificationDto(
+      deviceId: result[0]! as String,
+      serviceUuid: result[1]! as String,
+      characteristicUuid: result[2]! as String,
+      payload: result[3]! as Uint8List,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! BleNotificationDto || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(deviceId, other.deviceId) &&
+        _deepEquals(serviceUuid, other.serviceUuid) &&
+        _deepEquals(characteristicUuid, other.characteristicUuid) &&
+        _deepEquals(payload, other.payload);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+}
+
+class NativeErrorDto {
+  NativeErrorDto({
+    required this.code,
+    this.message,
+    this.requestId,
+    this.deviceId,
+  });
+
+  String code;
+
+  String? message;
+
+  String? requestId;
+
+  String? deviceId;
+
+  List<Object?> _toList() {
+    return <Object?>[code, message, requestId, deviceId];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static NativeErrorDto decode(Object result) {
+    result as List<Object?>;
+    return NativeErrorDto(
+      code: result[0]! as String,
+      message: result[1] as String?,
+      requestId: result[2] as String?,
+      deviceId: result[3] as String?,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! NativeErrorDto || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(code, other.code) &&
+        _deepEquals(message, other.message) &&
+        _deepEquals(requestId, other.requestId) &&
+        _deepEquals(deviceId, other.deviceId);
   }
 
   @override
@@ -185,17 +780,12 @@ class CommandResultDto {
   String? domainCode;
 
   List<Object?> _toList() {
-    return <Object?>[
-      requestId,
-      deviceId,
-      accepted,
-      nativeCode,
-      domainCode,
-    ];
+    return <Object?>[requestId, deviceId, accepted, nativeCode, domainCode];
   }
 
   Object encode() {
-    return _toList();  }
+    return _toList();
+  }
 
   static CommandResultDto decode(Object result) {
     result as List<Object?>;
@@ -217,14 +807,17 @@ class CommandResultDto {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(requestId, other.requestId) && _deepEquals(deviceId, other.deviceId) && _deepEquals(accepted, other.accepted) && _deepEquals(nativeCode, other.nativeCode) && _deepEquals(domainCode, other.domainCode);
+    return _deepEquals(requestId, other.requestId) &&
+        _deepEquals(deviceId, other.deviceId) &&
+        _deepEquals(accepted, other.accepted) &&
+        _deepEquals(nativeCode, other.nativeCode) &&
+        _deepEquals(domainCode, other.domainCode);
   }
 
   @override
   // ignore: avoid_equals_and_hash_code_on_mutable_classes
   int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
 }
-
 
 class _PigeonCodec extends StandardMessageCodec {
   const _PigeonCodec();
@@ -233,17 +826,53 @@ class _PigeonCodec extends StandardMessageCodec {
     if (value is int) {
       buffer.putUint8(4);
       buffer.putInt64(value);
-    }    else if (value is PermissionKindDto) {
+    } else if (value is PermissionKindDto) {
       buffer.putUint8(129);
       writeValue(buffer, value.index);
-    }    else if (value is DoorCommandDto) {
+    } else if (value is DoorCommandDto) {
       buffer.putUint8(130);
       writeValue(buffer, value.index);
-    }    else if (value is PermissionSnapshotDto) {
+    } else if (value is BleConnectionStateDto) {
       buffer.putUint8(131);
-      writeValue(buffer, value.encode());
-    }    else if (value is CommandResultDto) {
+      writeValue(buffer, value.index);
+    } else if (value is BleWriteTypeDto) {
       buffer.putUint8(132);
+      writeValue(buffer, value.index);
+    } else if (value is PermissionSnapshotDto) {
+      buffer.putUint8(133);
+      writeValue(buffer, value.encode());
+    } else if (value is BleScanFilterDto) {
+      buffer.putUint8(134);
+      writeValue(buffer, value.encode());
+    } else if (value is BleDeviceDto) {
+      buffer.putUint8(135);
+      writeValue(buffer, value.encode());
+    } else if (value is BleConnectionEventDto) {
+      buffer.putUint8(136);
+      writeValue(buffer, value.encode());
+    } else if (value is BleCharacteristicDto) {
+      buffer.putUint8(137);
+      writeValue(buffer, value.encode());
+    } else if (value is BleServiceDto) {
+      buffer.putUint8(138);
+      writeValue(buffer, value.encode());
+    } else if (value is BleServicesDto) {
+      buffer.putUint8(139);
+      writeValue(buffer, value.encode());
+    } else if (value is BleReadResultDto) {
+      buffer.putUint8(140);
+      writeValue(buffer, value.encode());
+    } else if (value is BleWriteResultDto) {
+      buffer.putUint8(141);
+      writeValue(buffer, value.encode());
+    } else if (value is BleNotificationDto) {
+      buffer.putUint8(142);
+      writeValue(buffer, value.encode());
+    } else if (value is NativeErrorDto) {
+      buffer.putUint8(143);
+      writeValue(buffer, value.encode());
+    } else if (value is CommandResultDto) {
+      buffer.putUint8(144);
       writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
@@ -260,8 +889,34 @@ class _PigeonCodec extends StandardMessageCodec {
         final value = readValue(buffer) as int?;
         return value == null ? null : DoorCommandDto.values[value];
       case 131:
-        return PermissionSnapshotDto.decode(readValue(buffer)!);
+        final value = readValue(buffer) as int?;
+        return value == null ? null : BleConnectionStateDto.values[value];
       case 132:
+        final value = readValue(buffer) as int?;
+        return value == null ? null : BleWriteTypeDto.values[value];
+      case 133:
+        return PermissionSnapshotDto.decode(readValue(buffer)!);
+      case 134:
+        return BleScanFilterDto.decode(readValue(buffer)!);
+      case 135:
+        return BleDeviceDto.decode(readValue(buffer)!);
+      case 136:
+        return BleConnectionEventDto.decode(readValue(buffer)!);
+      case 137:
+        return BleCharacteristicDto.decode(readValue(buffer)!);
+      case 138:
+        return BleServiceDto.decode(readValue(buffer)!);
+      case 139:
+        return BleServicesDto.decode(readValue(buffer)!);
+      case 140:
+        return BleReadResultDto.decode(readValue(buffer)!);
+      case 141:
+        return BleWriteResultDto.decode(readValue(buffer)!);
+      case 142:
+        return BleNotificationDto.decode(readValue(buffer)!);
+      case 143:
+        return NativeErrorDto.decode(readValue(buffer)!);
+      case 144:
         return CommandResultDto.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
@@ -273,9 +928,13 @@ class HardwareHostApi {
   /// Constructor for [HardwareHostApi].  The [binaryMessenger] named argument is
   /// available for dependency injection.  If it is left null, the default
   /// BinaryMessenger will be used which routes to the host platform.
-  HardwareHostApi({BinaryMessenger? binaryMessenger, String messageChannelSuffix = ''})
-      : pigeonVar_binaryMessenger = binaryMessenger,
-        pigeonVar_messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
+  HardwareHostApi({
+    BinaryMessenger? binaryMessenger,
+    String messageChannelSuffix = '',
+  }) : pigeonVar_binaryMessenger = binaryMessenger,
+       pigeonVar_messageChannelSuffix = messageChannelSuffix.isNotEmpty
+           ? '.$messageChannelSuffix'
+           : '';
   final BinaryMessenger? pigeonVar_binaryMessenger;
 
   static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
@@ -283,7 +942,8 @@ class HardwareHostApi {
   final String pigeonVar_messageChannelSuffix;
 
   Future<PermissionSnapshotDto> getPermissionSnapshot() async {
-    final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.getPermissionSnapshot$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.flinx.HardwareHostApi.getPermissionSnapshot$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -293,49 +953,382 @@ class HardwareHostApi {
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-        pigeonVar_replyList,
-        pigeonVar_channelName,
-        isNullValid: false,
-    )
-    ;
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: false,
+    );
     return pigeonVar_replyValue! as PermissionSnapshotDto;
   }
 
-  Future<PermissionSnapshotDto> requestPermissions(List<PermissionKindDto> permissions) async {
-    final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.requestPermissions$pigeonVar_messageChannelSuffix';
+  Future<PermissionSnapshotDto> requestPermissions(
+    List<PermissionKindDto> permissions,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.flinx.HardwareHostApi.requestPermissions$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[permissions]);
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[permissions],
+    );
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-        pigeonVar_replyList,
-        pigeonVar_channelName,
-        isNullValid: false,
-    )
-    ;
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: false,
+    );
     return pigeonVar_replyValue! as PermissionSnapshotDto;
   }
 
-  Future<CommandResultDto> sendDoorCommand(String requestId, String deviceId, DoorCommandDto command) async {
-    final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.sendDoorCommand$pigeonVar_messageChannelSuffix';
+  Future<void> startBleScan(String requestId, BleScanFilterDto filter) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.flinx.HardwareHostApi.startBleScan$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[requestId, deviceId, command]);
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[requestId, filter],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  Future<void> stopBleScan(String requestId) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.flinx.HardwareHostApi.stopBleScan$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[requestId],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  Future<BleConnectionEventDto> connectBleDevice(
+    String requestId,
+    String deviceId,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.flinx.HardwareHostApi.connectBleDevice$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[requestId, deviceId],
+    );
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-        pigeonVar_replyList,
-        pigeonVar_channelName,
-        isNullValid: false,
-    )
-    ;
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: false,
+    );
+    return pigeonVar_replyValue! as BleConnectionEventDto;
+  }
+
+  Future<BleConnectionEventDto> disconnectBleDevice(
+    String requestId,
+    String deviceId,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.flinx.HardwareHostApi.disconnectBleDevice$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[requestId, deviceId],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: false,
+    );
+    return pigeonVar_replyValue! as BleConnectionEventDto;
+  }
+
+  Future<BleServicesDto> discoverServices(
+    String requestId,
+    String deviceId,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.flinx.HardwareHostApi.discoverServices$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[requestId, deviceId],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: false,
+    );
+    return pigeonVar_replyValue! as BleServicesDto;
+  }
+
+  Future<BleReadResultDto> readCharacteristic(
+    String requestId,
+    String deviceId,
+    String serviceUuid,
+    String characteristicUuid,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.flinx.HardwareHostApi.readCharacteristic$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[requestId, deviceId, serviceUuid, characteristicUuid],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: false,
+    );
+    return pigeonVar_replyValue! as BleReadResultDto;
+  }
+
+  Future<BleWriteResultDto> writeCharacteristic(
+    String requestId,
+    String deviceId,
+    String serviceUuid,
+    String characteristicUuid,
+    Uint8List payload,
+    BleWriteTypeDto writeType,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.flinx.HardwareHostApi.writeCharacteristic$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[
+        requestId,
+        deviceId,
+        serviceUuid,
+        characteristicUuid,
+        payload,
+        writeType,
+      ],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: false,
+    );
+    return pigeonVar_replyValue! as BleWriteResultDto;
+  }
+
+  Future<BleWriteResultDto> setCharacteristicNotify(
+    String requestId,
+    String deviceId,
+    String serviceUuid,
+    String characteristicUuid,
+    bool enabled,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.flinx.HardwareHostApi.setCharacteristicNotify$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[requestId, deviceId, serviceUuid, characteristicUuid, enabled],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: false,
+    );
+    return pigeonVar_replyValue! as BleWriteResultDto;
+  }
+
+  Future<CommandResultDto> sendDoorCommand(
+    String requestId,
+    String deviceId,
+    DoorCommandDto command,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.flinx.HardwareHostApi.sendDoorCommand$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[requestId, deviceId, command],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: false,
+    );
     return pigeonVar_replyValue! as CommandResultDto;
+  }
+}
+
+abstract class HardwareFlutterApi {
+  static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
+
+  void onBleScanResult(BleDeviceDto device);
+
+  void onBleConnectionChanged(BleConnectionEventDto event);
+
+  void onBleNotification(BleNotificationDto notification);
+
+  void onNativeError(NativeErrorDto error);
+
+  static void setUp(
+    HardwareFlutterApi? api, {
+    BinaryMessenger? binaryMessenger,
+    String messageChannelSuffix = '',
+  }) {
+    messageChannelSuffix = messageChannelSuffix.isNotEmpty
+        ? '.$messageChannelSuffix'
+        : '';
+    {
+      final pigeonVar_channel = BasicMessageChannel<Object?>(
+        'dev.flutter.pigeon.flinx.HardwareFlutterApi.onBleScanResult$messageChannelSuffix',
+        pigeonChannelCodec,
+        binaryMessenger: binaryMessenger,
+      );
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          final List<Object?> args = message! as List<Object?>;
+          final BleDeviceDto arg_device = args[0]! as BleDeviceDto;
+          try {
+            api.onBleScanResult(arg_device);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          } catch (e) {
+            return wrapResponse(
+              error: PlatformException(code: 'error', message: e.toString()),
+            );
+          }
+        });
+      }
+    }
+    {
+      final pigeonVar_channel = BasicMessageChannel<Object?>(
+        'dev.flutter.pigeon.flinx.HardwareFlutterApi.onBleConnectionChanged$messageChannelSuffix',
+        pigeonChannelCodec,
+        binaryMessenger: binaryMessenger,
+      );
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          final List<Object?> args = message! as List<Object?>;
+          final BleConnectionEventDto arg_event =
+              args[0]! as BleConnectionEventDto;
+          try {
+            api.onBleConnectionChanged(arg_event);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          } catch (e) {
+            return wrapResponse(
+              error: PlatformException(code: 'error', message: e.toString()),
+            );
+          }
+        });
+      }
+    }
+    {
+      final pigeonVar_channel = BasicMessageChannel<Object?>(
+        'dev.flutter.pigeon.flinx.HardwareFlutterApi.onBleNotification$messageChannelSuffix',
+        pigeonChannelCodec,
+        binaryMessenger: binaryMessenger,
+      );
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          final List<Object?> args = message! as List<Object?>;
+          final BleNotificationDto arg_notification =
+              args[0]! as BleNotificationDto;
+          try {
+            api.onBleNotification(arg_notification);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          } catch (e) {
+            return wrapResponse(
+              error: PlatformException(code: 'error', message: e.toString()),
+            );
+          }
+        });
+      }
+    }
+    {
+      final pigeonVar_channel = BasicMessageChannel<Object?>(
+        'dev.flutter.pigeon.flinx.HardwareFlutterApi.onNativeError$messageChannelSuffix',
+        pigeonChannelCodec,
+        binaryMessenger: binaryMessenger,
+      );
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          final List<Object?> args = message! as List<Object?>;
+          final NativeErrorDto arg_error = args[0]! as NativeErrorDto;
+          try {
+            api.onNativeError(arg_error);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          } catch (e) {
+            return wrapResponse(
+              error: PlatformException(code: 'error', message: e.toString()),
+            );
+          }
+        });
+      }
+    }
   }
 }

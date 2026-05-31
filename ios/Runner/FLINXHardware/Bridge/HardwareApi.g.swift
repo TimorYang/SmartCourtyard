@@ -55,6 +55,10 @@ private func wrapError(_ error: Any) -> [Any?] {
   ]
 }
 
+private func createConnectionError(withChannelName channelName: String) -> PigeonError {
+  return PigeonError(code: "channel-error", message: "Unable to establish connection on channel: '\(channelName)'.", details: "")
+}
+
 private func isNullish(_ value: Any?) -> Bool {
   return value is NSNull || value == nil
 }
@@ -187,6 +191,17 @@ enum DoorCommandDto: Int {
   case close = 2
 }
 
+enum BleConnectionStateDto: Int {
+  case disconnected = 0
+  case connecting = 1
+  case connected = 2
+}
+
+enum BleWriteTypeDto: Int {
+  case withResponse = 0
+  case withoutResponse = 1
+}
+
 /// Generated class from Pigeon that represents data sent in messages.
 struct PermissionSnapshotDto: Hashable {
   var bluetoothGranted: Bool
@@ -230,6 +245,481 @@ struct PermissionSnapshotDto: Hashable {
     deepHashHardwareApi(value: cameraGranted, hasher: &hasher)
     deepHashHardwareApi(value: localNetworkGranted, hasher: &hasher)
     deepHashHardwareApi(value: notificationGranted, hasher: &hasher)
+  }
+}
+
+/// Generated class from Pigeon that represents data sent in messages.
+struct BleScanFilterDto: Hashable {
+  var serviceUuids: [String]
+  var namePrefix: String? = nil
+  var exactName: String? = nil
+  var allowDuplicates: Bool
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> BleScanFilterDto? {
+    let serviceUuids = pigeonVar_list[0] as! [String]
+    let namePrefix: String? = nilOrValue(pigeonVar_list[1])
+    let exactName: String? = nilOrValue(pigeonVar_list[2])
+    let allowDuplicates = pigeonVar_list[3] as! Bool
+
+    return BleScanFilterDto(
+      serviceUuids: serviceUuids,
+      namePrefix: namePrefix,
+      exactName: exactName,
+      allowDuplicates: allowDuplicates
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      serviceUuids,
+      namePrefix,
+      exactName,
+      allowDuplicates,
+    ]
+  }
+  static func == (lhs: BleScanFilterDto, rhs: BleScanFilterDto) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return deepEqualsHardwareApi(lhs.serviceUuids, rhs.serviceUuids) && deepEqualsHardwareApi(lhs.namePrefix, rhs.namePrefix) && deepEqualsHardwareApi(lhs.exactName, rhs.exactName) && deepEqualsHardwareApi(lhs.allowDuplicates, rhs.allowDuplicates)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("BleScanFilterDto")
+    deepHashHardwareApi(value: serviceUuids, hasher: &hasher)
+    deepHashHardwareApi(value: namePrefix, hasher: &hasher)
+    deepHashHardwareApi(value: exactName, hasher: &hasher)
+    deepHashHardwareApi(value: allowDuplicates, hasher: &hasher)
+  }
+}
+
+/// Generated class from Pigeon that represents data sent in messages.
+struct BleDeviceDto: Hashable {
+  var id: String
+  var name: String? = nil
+  var rssi: Int64
+  var advertisementServiceUuids: [String]
+  var manufacturerData: FlutterStandardTypedData
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> BleDeviceDto? {
+    let id = pigeonVar_list[0] as! String
+    let name: String? = nilOrValue(pigeonVar_list[1])
+    let rssi = pigeonVar_list[2] as! Int64
+    let advertisementServiceUuids = pigeonVar_list[3] as! [String]
+    let manufacturerData = pigeonVar_list[4] as! FlutterStandardTypedData
+
+    return BleDeviceDto(
+      id: id,
+      name: name,
+      rssi: rssi,
+      advertisementServiceUuids: advertisementServiceUuids,
+      manufacturerData: manufacturerData
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      id,
+      name,
+      rssi,
+      advertisementServiceUuids,
+      manufacturerData,
+    ]
+  }
+  static func == (lhs: BleDeviceDto, rhs: BleDeviceDto) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return deepEqualsHardwareApi(lhs.id, rhs.id) && deepEqualsHardwareApi(lhs.name, rhs.name) && deepEqualsHardwareApi(lhs.rssi, rhs.rssi) && deepEqualsHardwareApi(lhs.advertisementServiceUuids, rhs.advertisementServiceUuids) && deepEqualsHardwareApi(lhs.manufacturerData, rhs.manufacturerData)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("BleDeviceDto")
+    deepHashHardwareApi(value: id, hasher: &hasher)
+    deepHashHardwareApi(value: name, hasher: &hasher)
+    deepHashHardwareApi(value: rssi, hasher: &hasher)
+    deepHashHardwareApi(value: advertisementServiceUuids, hasher: &hasher)
+    deepHashHardwareApi(value: manufacturerData, hasher: &hasher)
+  }
+}
+
+/// Generated class from Pigeon that represents data sent in messages.
+struct BleConnectionEventDto: Hashable {
+  var requestId: String
+  var deviceId: String
+  var state: BleConnectionStateDto
+  var nativeCode: String? = nil
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> BleConnectionEventDto? {
+    let requestId = pigeonVar_list[0] as! String
+    let deviceId = pigeonVar_list[1] as! String
+    let state = pigeonVar_list[2] as! BleConnectionStateDto
+    let nativeCode: String? = nilOrValue(pigeonVar_list[3])
+
+    return BleConnectionEventDto(
+      requestId: requestId,
+      deviceId: deviceId,
+      state: state,
+      nativeCode: nativeCode
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      requestId,
+      deviceId,
+      state,
+      nativeCode,
+    ]
+  }
+  static func == (lhs: BleConnectionEventDto, rhs: BleConnectionEventDto) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return deepEqualsHardwareApi(lhs.requestId, rhs.requestId) && deepEqualsHardwareApi(lhs.deviceId, rhs.deviceId) && deepEqualsHardwareApi(lhs.state, rhs.state) && deepEqualsHardwareApi(lhs.nativeCode, rhs.nativeCode)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("BleConnectionEventDto")
+    deepHashHardwareApi(value: requestId, hasher: &hasher)
+    deepHashHardwareApi(value: deviceId, hasher: &hasher)
+    deepHashHardwareApi(value: state, hasher: &hasher)
+    deepHashHardwareApi(value: nativeCode, hasher: &hasher)
+  }
+}
+
+/// Generated class from Pigeon that represents data sent in messages.
+struct BleCharacteristicDto: Hashable {
+  var serviceUuid: String
+  var characteristicUuid: String
+  var canRead: Bool
+  var canWriteWithResponse: Bool
+  var canWriteWithoutResponse: Bool
+  var canNotify: Bool
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> BleCharacteristicDto? {
+    let serviceUuid = pigeonVar_list[0] as! String
+    let characteristicUuid = pigeonVar_list[1] as! String
+    let canRead = pigeonVar_list[2] as! Bool
+    let canWriteWithResponse = pigeonVar_list[3] as! Bool
+    let canWriteWithoutResponse = pigeonVar_list[4] as! Bool
+    let canNotify = pigeonVar_list[5] as! Bool
+
+    return BleCharacteristicDto(
+      serviceUuid: serviceUuid,
+      characteristicUuid: characteristicUuid,
+      canRead: canRead,
+      canWriteWithResponse: canWriteWithResponse,
+      canWriteWithoutResponse: canWriteWithoutResponse,
+      canNotify: canNotify
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      serviceUuid,
+      characteristicUuid,
+      canRead,
+      canWriteWithResponse,
+      canWriteWithoutResponse,
+      canNotify,
+    ]
+  }
+  static func == (lhs: BleCharacteristicDto, rhs: BleCharacteristicDto) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return deepEqualsHardwareApi(lhs.serviceUuid, rhs.serviceUuid) && deepEqualsHardwareApi(lhs.characteristicUuid, rhs.characteristicUuid) && deepEqualsHardwareApi(lhs.canRead, rhs.canRead) && deepEqualsHardwareApi(lhs.canWriteWithResponse, rhs.canWriteWithResponse) && deepEqualsHardwareApi(lhs.canWriteWithoutResponse, rhs.canWriteWithoutResponse) && deepEqualsHardwareApi(lhs.canNotify, rhs.canNotify)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("BleCharacteristicDto")
+    deepHashHardwareApi(value: serviceUuid, hasher: &hasher)
+    deepHashHardwareApi(value: characteristicUuid, hasher: &hasher)
+    deepHashHardwareApi(value: canRead, hasher: &hasher)
+    deepHashHardwareApi(value: canWriteWithResponse, hasher: &hasher)
+    deepHashHardwareApi(value: canWriteWithoutResponse, hasher: &hasher)
+    deepHashHardwareApi(value: canNotify, hasher: &hasher)
+  }
+}
+
+/// Generated class from Pigeon that represents data sent in messages.
+struct BleServiceDto: Hashable {
+  var serviceUuid: String
+  var characteristics: [BleCharacteristicDto]
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> BleServiceDto? {
+    let serviceUuid = pigeonVar_list[0] as! String
+    let characteristics = pigeonVar_list[1] as! [BleCharacteristicDto]
+
+    return BleServiceDto(
+      serviceUuid: serviceUuid,
+      characteristics: characteristics
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      serviceUuid,
+      characteristics,
+    ]
+  }
+  static func == (lhs: BleServiceDto, rhs: BleServiceDto) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return deepEqualsHardwareApi(lhs.serviceUuid, rhs.serviceUuid) && deepEqualsHardwareApi(lhs.characteristics, rhs.characteristics)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("BleServiceDto")
+    deepHashHardwareApi(value: serviceUuid, hasher: &hasher)
+    deepHashHardwareApi(value: characteristics, hasher: &hasher)
+  }
+}
+
+/// Generated class from Pigeon that represents data sent in messages.
+struct BleServicesDto: Hashable {
+  var requestId: String
+  var deviceId: String
+  var services: [BleServiceDto]
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> BleServicesDto? {
+    let requestId = pigeonVar_list[0] as! String
+    let deviceId = pigeonVar_list[1] as! String
+    let services = pigeonVar_list[2] as! [BleServiceDto]
+
+    return BleServicesDto(
+      requestId: requestId,
+      deviceId: deviceId,
+      services: services
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      requestId,
+      deviceId,
+      services,
+    ]
+  }
+  static func == (lhs: BleServicesDto, rhs: BleServicesDto) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return deepEqualsHardwareApi(lhs.requestId, rhs.requestId) && deepEqualsHardwareApi(lhs.deviceId, rhs.deviceId) && deepEqualsHardwareApi(lhs.services, rhs.services)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("BleServicesDto")
+    deepHashHardwareApi(value: requestId, hasher: &hasher)
+    deepHashHardwareApi(value: deviceId, hasher: &hasher)
+    deepHashHardwareApi(value: services, hasher: &hasher)
+  }
+}
+
+/// Generated class from Pigeon that represents data sent in messages.
+struct BleReadResultDto: Hashable {
+  var requestId: String
+  var deviceId: String
+  var serviceUuid: String
+  var characteristicUuid: String
+  var payload: FlutterStandardTypedData
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> BleReadResultDto? {
+    let requestId = pigeonVar_list[0] as! String
+    let deviceId = pigeonVar_list[1] as! String
+    let serviceUuid = pigeonVar_list[2] as! String
+    let characteristicUuid = pigeonVar_list[3] as! String
+    let payload = pigeonVar_list[4] as! FlutterStandardTypedData
+
+    return BleReadResultDto(
+      requestId: requestId,
+      deviceId: deviceId,
+      serviceUuid: serviceUuid,
+      characteristicUuid: characteristicUuid,
+      payload: payload
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      requestId,
+      deviceId,
+      serviceUuid,
+      characteristicUuid,
+      payload,
+    ]
+  }
+  static func == (lhs: BleReadResultDto, rhs: BleReadResultDto) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return deepEqualsHardwareApi(lhs.requestId, rhs.requestId) && deepEqualsHardwareApi(lhs.deviceId, rhs.deviceId) && deepEqualsHardwareApi(lhs.serviceUuid, rhs.serviceUuid) && deepEqualsHardwareApi(lhs.characteristicUuid, rhs.characteristicUuid) && deepEqualsHardwareApi(lhs.payload, rhs.payload)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("BleReadResultDto")
+    deepHashHardwareApi(value: requestId, hasher: &hasher)
+    deepHashHardwareApi(value: deviceId, hasher: &hasher)
+    deepHashHardwareApi(value: serviceUuid, hasher: &hasher)
+    deepHashHardwareApi(value: characteristicUuid, hasher: &hasher)
+    deepHashHardwareApi(value: payload, hasher: &hasher)
+  }
+}
+
+/// Generated class from Pigeon that represents data sent in messages.
+struct BleWriteResultDto: Hashable {
+  var requestId: String
+  var deviceId: String
+  var serviceUuid: String
+  var characteristicUuid: String
+  var accepted: Bool
+  var nativeCode: String? = nil
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> BleWriteResultDto? {
+    let requestId = pigeonVar_list[0] as! String
+    let deviceId = pigeonVar_list[1] as! String
+    let serviceUuid = pigeonVar_list[2] as! String
+    let characteristicUuid = pigeonVar_list[3] as! String
+    let accepted = pigeonVar_list[4] as! Bool
+    let nativeCode: String? = nilOrValue(pigeonVar_list[5])
+
+    return BleWriteResultDto(
+      requestId: requestId,
+      deviceId: deviceId,
+      serviceUuid: serviceUuid,
+      characteristicUuid: characteristicUuid,
+      accepted: accepted,
+      nativeCode: nativeCode
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      requestId,
+      deviceId,
+      serviceUuid,
+      characteristicUuid,
+      accepted,
+      nativeCode,
+    ]
+  }
+  static func == (lhs: BleWriteResultDto, rhs: BleWriteResultDto) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return deepEqualsHardwareApi(lhs.requestId, rhs.requestId) && deepEqualsHardwareApi(lhs.deviceId, rhs.deviceId) && deepEqualsHardwareApi(lhs.serviceUuid, rhs.serviceUuid) && deepEqualsHardwareApi(lhs.characteristicUuid, rhs.characteristicUuid) && deepEqualsHardwareApi(lhs.accepted, rhs.accepted) && deepEqualsHardwareApi(lhs.nativeCode, rhs.nativeCode)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("BleWriteResultDto")
+    deepHashHardwareApi(value: requestId, hasher: &hasher)
+    deepHashHardwareApi(value: deviceId, hasher: &hasher)
+    deepHashHardwareApi(value: serviceUuid, hasher: &hasher)
+    deepHashHardwareApi(value: characteristicUuid, hasher: &hasher)
+    deepHashHardwareApi(value: accepted, hasher: &hasher)
+    deepHashHardwareApi(value: nativeCode, hasher: &hasher)
+  }
+}
+
+/// Generated class from Pigeon that represents data sent in messages.
+struct BleNotificationDto: Hashable {
+  var deviceId: String
+  var serviceUuid: String
+  var characteristicUuid: String
+  var payload: FlutterStandardTypedData
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> BleNotificationDto? {
+    let deviceId = pigeonVar_list[0] as! String
+    let serviceUuid = pigeonVar_list[1] as! String
+    let characteristicUuid = pigeonVar_list[2] as! String
+    let payload = pigeonVar_list[3] as! FlutterStandardTypedData
+
+    return BleNotificationDto(
+      deviceId: deviceId,
+      serviceUuid: serviceUuid,
+      characteristicUuid: characteristicUuid,
+      payload: payload
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      deviceId,
+      serviceUuid,
+      characteristicUuid,
+      payload,
+    ]
+  }
+  static func == (lhs: BleNotificationDto, rhs: BleNotificationDto) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return deepEqualsHardwareApi(lhs.deviceId, rhs.deviceId) && deepEqualsHardwareApi(lhs.serviceUuid, rhs.serviceUuid) && deepEqualsHardwareApi(lhs.characteristicUuid, rhs.characteristicUuid) && deepEqualsHardwareApi(lhs.payload, rhs.payload)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("BleNotificationDto")
+    deepHashHardwareApi(value: deviceId, hasher: &hasher)
+    deepHashHardwareApi(value: serviceUuid, hasher: &hasher)
+    deepHashHardwareApi(value: characteristicUuid, hasher: &hasher)
+    deepHashHardwareApi(value: payload, hasher: &hasher)
+  }
+}
+
+/// Generated class from Pigeon that represents data sent in messages.
+struct NativeErrorDto: Hashable {
+  var code: String
+  var message: String? = nil
+  var requestId: String? = nil
+  var deviceId: String? = nil
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> NativeErrorDto? {
+    let code = pigeonVar_list[0] as! String
+    let message: String? = nilOrValue(pigeonVar_list[1])
+    let requestId: String? = nilOrValue(pigeonVar_list[2])
+    let deviceId: String? = nilOrValue(pigeonVar_list[3])
+
+    return NativeErrorDto(
+      code: code,
+      message: message,
+      requestId: requestId,
+      deviceId: deviceId
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      code,
+      message,
+      requestId,
+      deviceId,
+    ]
+  }
+  static func == (lhs: NativeErrorDto, rhs: NativeErrorDto) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return deepEqualsHardwareApi(lhs.code, rhs.code) && deepEqualsHardwareApi(lhs.message, rhs.message) && deepEqualsHardwareApi(lhs.requestId, rhs.requestId) && deepEqualsHardwareApi(lhs.deviceId, rhs.deviceId)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("NativeErrorDto")
+    deepHashHardwareApi(value: code, hasher: &hasher)
+    deepHashHardwareApi(value: message, hasher: &hasher)
+    deepHashHardwareApi(value: requestId, hasher: &hasher)
+    deepHashHardwareApi(value: deviceId, hasher: &hasher)
   }
 }
 
@@ -300,8 +790,40 @@ private class HardwareApiPigeonCodecReader: FlutterStandardReader {
       }
       return nil
     case 131:
-      return PermissionSnapshotDto.fromList(self.readValue() as! [Any?])
+      let enumResultAsInt: Int? = nilOrValue(self.readValue() as! Int?)
+      if let enumResultAsInt = enumResultAsInt {
+        return BleConnectionStateDto(rawValue: enumResultAsInt)
+      }
+      return nil
     case 132:
+      let enumResultAsInt: Int? = nilOrValue(self.readValue() as! Int?)
+      if let enumResultAsInt = enumResultAsInt {
+        return BleWriteTypeDto(rawValue: enumResultAsInt)
+      }
+      return nil
+    case 133:
+      return PermissionSnapshotDto.fromList(self.readValue() as! [Any?])
+    case 134:
+      return BleScanFilterDto.fromList(self.readValue() as! [Any?])
+    case 135:
+      return BleDeviceDto.fromList(self.readValue() as! [Any?])
+    case 136:
+      return BleConnectionEventDto.fromList(self.readValue() as! [Any?])
+    case 137:
+      return BleCharacteristicDto.fromList(self.readValue() as! [Any?])
+    case 138:
+      return BleServiceDto.fromList(self.readValue() as! [Any?])
+    case 139:
+      return BleServicesDto.fromList(self.readValue() as! [Any?])
+    case 140:
+      return BleReadResultDto.fromList(self.readValue() as! [Any?])
+    case 141:
+      return BleWriteResultDto.fromList(self.readValue() as! [Any?])
+    case 142:
+      return BleNotificationDto.fromList(self.readValue() as! [Any?])
+    case 143:
+      return NativeErrorDto.fromList(self.readValue() as! [Any?])
+    case 144:
       return CommandResultDto.fromList(self.readValue() as! [Any?])
     default:
       return super.readValue(ofType: type)
@@ -317,11 +839,47 @@ private class HardwareApiPigeonCodecWriter: FlutterStandardWriter {
     } else if let value = value as? DoorCommandDto {
       super.writeByte(130)
       super.writeValue(value.rawValue)
-    } else if let value = value as? PermissionSnapshotDto {
+    } else if let value = value as? BleConnectionStateDto {
       super.writeByte(131)
+      super.writeValue(value.rawValue)
+    } else if let value = value as? BleWriteTypeDto {
+      super.writeByte(132)
+      super.writeValue(value.rawValue)
+    } else if let value = value as? PermissionSnapshotDto {
+      super.writeByte(133)
+      super.writeValue(value.toList())
+    } else if let value = value as? BleScanFilterDto {
+      super.writeByte(134)
+      super.writeValue(value.toList())
+    } else if let value = value as? BleDeviceDto {
+      super.writeByte(135)
+      super.writeValue(value.toList())
+    } else if let value = value as? BleConnectionEventDto {
+      super.writeByte(136)
+      super.writeValue(value.toList())
+    } else if let value = value as? BleCharacteristicDto {
+      super.writeByte(137)
+      super.writeValue(value.toList())
+    } else if let value = value as? BleServiceDto {
+      super.writeByte(138)
+      super.writeValue(value.toList())
+    } else if let value = value as? BleServicesDto {
+      super.writeByte(139)
+      super.writeValue(value.toList())
+    } else if let value = value as? BleReadResultDto {
+      super.writeByte(140)
+      super.writeValue(value.toList())
+    } else if let value = value as? BleWriteResultDto {
+      super.writeByte(141)
+      super.writeValue(value.toList())
+    } else if let value = value as? BleNotificationDto {
+      super.writeByte(142)
+      super.writeValue(value.toList())
+    } else if let value = value as? NativeErrorDto {
+      super.writeByte(143)
       super.writeValue(value.toList())
     } else if let value = value as? CommandResultDto {
-      super.writeByte(132)
+      super.writeByte(144)
       super.writeValue(value.toList())
     } else {
       super.writeValue(value)
@@ -343,10 +901,19 @@ class HardwareApiPigeonCodec: FlutterStandardMessageCodec, @unchecked Sendable {
   static let shared = HardwareApiPigeonCodec(readerWriter: HardwareApiPigeonCodecReaderWriter())
 }
 
+
 /// Generated protocol from Pigeon that represents a handler of messages from Flutter.
 protocol HardwareHostApi {
   func getPermissionSnapshot() throws -> PermissionSnapshotDto
   func requestPermissions(permissions: [PermissionKindDto]) throws -> PermissionSnapshotDto
+  func startBleScan(requestId: String, filter: BleScanFilterDto) throws
+  func stopBleScan(requestId: String) throws
+  func connectBleDevice(requestId: String, deviceId: String, completion: @escaping (Result<BleConnectionEventDto, Error>) -> Void)
+  func disconnectBleDevice(requestId: String, deviceId: String, completion: @escaping (Result<BleConnectionEventDto, Error>) -> Void)
+  func discoverServices(requestId: String, deviceId: String, completion: @escaping (Result<BleServicesDto, Error>) -> Void)
+  func readCharacteristic(requestId: String, deviceId: String, serviceUuid: String, characteristicUuid: String, completion: @escaping (Result<BleReadResultDto, Error>) -> Void)
+  func writeCharacteristic(requestId: String, deviceId: String, serviceUuid: String, characteristicUuid: String, payload: FlutterStandardTypedData, writeType: BleWriteTypeDto, completion: @escaping (Result<BleWriteResultDto, Error>) -> Void)
+  func setCharacteristicNotify(requestId: String, deviceId: String, serviceUuid: String, characteristicUuid: String, enabled: Bool, completion: @escaping (Result<BleWriteResultDto, Error>) -> Void)
   func sendDoorCommand(requestId: String, deviceId: String, command: DoorCommandDto) throws -> CommandResultDto
 }
 
@@ -384,6 +951,154 @@ class HardwareHostApiSetup {
     } else {
       requestPermissionsChannel.setMessageHandler(nil)
     }
+    let startBleScanChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flinx.HardwareHostApi.startBleScan\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      startBleScanChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let requestIdArg = args[0] as! String
+        let filterArg = args[1] as! BleScanFilterDto
+        do {
+          try api.startBleScan(requestId: requestIdArg, filter: filterArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      startBleScanChannel.setMessageHandler(nil)
+    }
+    let stopBleScanChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flinx.HardwareHostApi.stopBleScan\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      stopBleScanChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let requestIdArg = args[0] as! String
+        do {
+          try api.stopBleScan(requestId: requestIdArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      stopBleScanChannel.setMessageHandler(nil)
+    }
+    let connectBleDeviceChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flinx.HardwareHostApi.connectBleDevice\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      connectBleDeviceChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let requestIdArg = args[0] as! String
+        let deviceIdArg = args[1] as! String
+        api.connectBleDevice(requestId: requestIdArg, deviceId: deviceIdArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      connectBleDeviceChannel.setMessageHandler(nil)
+    }
+    let disconnectBleDeviceChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flinx.HardwareHostApi.disconnectBleDevice\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      disconnectBleDeviceChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let requestIdArg = args[0] as! String
+        let deviceIdArg = args[1] as! String
+        api.disconnectBleDevice(requestId: requestIdArg, deviceId: deviceIdArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      disconnectBleDeviceChannel.setMessageHandler(nil)
+    }
+    let discoverServicesChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flinx.HardwareHostApi.discoverServices\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      discoverServicesChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let requestIdArg = args[0] as! String
+        let deviceIdArg = args[1] as! String
+        api.discoverServices(requestId: requestIdArg, deviceId: deviceIdArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      discoverServicesChannel.setMessageHandler(nil)
+    }
+    let readCharacteristicChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flinx.HardwareHostApi.readCharacteristic\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      readCharacteristicChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let requestIdArg = args[0] as! String
+        let deviceIdArg = args[1] as! String
+        let serviceUuidArg = args[2] as! String
+        let characteristicUuidArg = args[3] as! String
+        api.readCharacteristic(requestId: requestIdArg, deviceId: deviceIdArg, serviceUuid: serviceUuidArg, characteristicUuid: characteristicUuidArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      readCharacteristicChannel.setMessageHandler(nil)
+    }
+    let writeCharacteristicChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flinx.HardwareHostApi.writeCharacteristic\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      writeCharacteristicChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let requestIdArg = args[0] as! String
+        let deviceIdArg = args[1] as! String
+        let serviceUuidArg = args[2] as! String
+        let characteristicUuidArg = args[3] as! String
+        let payloadArg = args[4] as! FlutterStandardTypedData
+        let writeTypeArg = args[5] as! BleWriteTypeDto
+        api.writeCharacteristic(requestId: requestIdArg, deviceId: deviceIdArg, serviceUuid: serviceUuidArg, characteristicUuid: characteristicUuidArg, payload: payloadArg, writeType: writeTypeArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      writeCharacteristicChannel.setMessageHandler(nil)
+    }
+    let setCharacteristicNotifyChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flinx.HardwareHostApi.setCharacteristicNotify\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      setCharacteristicNotifyChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let requestIdArg = args[0] as! String
+        let deviceIdArg = args[1] as! String
+        let serviceUuidArg = args[2] as! String
+        let characteristicUuidArg = args[3] as! String
+        let enabledArg = args[4] as! Bool
+        api.setCharacteristicNotify(requestId: requestIdArg, deviceId: deviceIdArg, serviceUuid: serviceUuidArg, characteristicUuid: characteristicUuidArg, enabled: enabledArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      setCharacteristicNotifyChannel.setMessageHandler(nil)
+    }
     let sendDoorCommandChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flinx.HardwareHostApi.sendDoorCommand\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       sendDoorCommandChannel.setMessageHandler { message, reply in
@@ -400,6 +1115,96 @@ class HardwareHostApiSetup {
       }
     } else {
       sendDoorCommandChannel.setMessageHandler(nil)
+    }
+  }
+}
+/// Generated protocol from Pigeon that represents Flutter messages that can be called from Swift.
+protocol HardwareFlutterApiProtocol {
+  func onBleScanResult(device deviceArg: BleDeviceDto, completion: @escaping (Result<Void, PigeonError>) -> Void)
+  func onBleConnectionChanged(event eventArg: BleConnectionEventDto, completion: @escaping (Result<Void, PigeonError>) -> Void)
+  func onBleNotification(notification notificationArg: BleNotificationDto, completion: @escaping (Result<Void, PigeonError>) -> Void)
+  func onNativeError(error errorArg: NativeErrorDto, completion: @escaping (Result<Void, PigeonError>) -> Void)
+}
+class HardwareFlutterApi: HardwareFlutterApiProtocol {
+  private let binaryMessenger: FlutterBinaryMessenger
+  private let messageChannelSuffix: String
+  init(binaryMessenger: FlutterBinaryMessenger, messageChannelSuffix: String = "") {
+    self.binaryMessenger = binaryMessenger
+    self.messageChannelSuffix = messageChannelSuffix.count > 0 ? ".\(messageChannelSuffix)" : ""
+  }
+  var codec: HardwareApiPigeonCodec {
+    return HardwareApiPigeonCodec.shared
+  }
+  func onBleScanResult(device deviceArg: BleDeviceDto, completion: @escaping (Result<Void, PigeonError>) -> Void) {
+    let channelName: String = "dev.flutter.pigeon.flinx.HardwareFlutterApi.onBleScanResult\(messageChannelSuffix)"
+    let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
+    channel.sendMessage([deviceArg] as [Any?]) { response in
+      guard let listResponse = response as? [Any?] else {
+        completion(.failure(createConnectionError(withChannelName: channelName)))
+        return
+      }
+      if listResponse.count > 1 {
+        let code: String = listResponse[0] as! String
+        let message: String? = nilOrValue(listResponse[1])
+        let details: String? = nilOrValue(listResponse[2])
+        completion(.failure(PigeonError(code: code, message: message, details: details)))
+      } else {
+        completion(.success(()))
+      }
+    }
+  }
+  func onBleConnectionChanged(event eventArg: BleConnectionEventDto, completion: @escaping (Result<Void, PigeonError>) -> Void) {
+    let channelName: String = "dev.flutter.pigeon.flinx.HardwareFlutterApi.onBleConnectionChanged\(messageChannelSuffix)"
+    let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
+    channel.sendMessage([eventArg] as [Any?]) { response in
+      guard let listResponse = response as? [Any?] else {
+        completion(.failure(createConnectionError(withChannelName: channelName)))
+        return
+      }
+      if listResponse.count > 1 {
+        let code: String = listResponse[0] as! String
+        let message: String? = nilOrValue(listResponse[1])
+        let details: String? = nilOrValue(listResponse[2])
+        completion(.failure(PigeonError(code: code, message: message, details: details)))
+      } else {
+        completion(.success(()))
+      }
+    }
+  }
+  func onBleNotification(notification notificationArg: BleNotificationDto, completion: @escaping (Result<Void, PigeonError>) -> Void) {
+    let channelName: String = "dev.flutter.pigeon.flinx.HardwareFlutterApi.onBleNotification\(messageChannelSuffix)"
+    let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
+    channel.sendMessage([notificationArg] as [Any?]) { response in
+      guard let listResponse = response as? [Any?] else {
+        completion(.failure(createConnectionError(withChannelName: channelName)))
+        return
+      }
+      if listResponse.count > 1 {
+        let code: String = listResponse[0] as! String
+        let message: String? = nilOrValue(listResponse[1])
+        let details: String? = nilOrValue(listResponse[2])
+        completion(.failure(PigeonError(code: code, message: message, details: details)))
+      } else {
+        completion(.success(()))
+      }
+    }
+  }
+  func onNativeError(error errorArg: NativeErrorDto, completion: @escaping (Result<Void, PigeonError>) -> Void) {
+    let channelName: String = "dev.flutter.pigeon.flinx.HardwareFlutterApi.onNativeError\(messageChannelSuffix)"
+    let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
+    channel.sendMessage([errorArg] as [Any?]) { response in
+      guard let listResponse = response as? [Any?] else {
+        completion(.failure(createConnectionError(withChannelName: channelName)))
+        return
+      }
+      if listResponse.count > 1 {
+        let code: String = listResponse[0] as! String
+        let message: String? = nilOrValue(listResponse[1])
+        let details: String? = nilOrValue(listResponse[2])
+        completion(.failure(PigeonError(code: code, message: message, details: details)))
+      } else {
+        completion(.success(()))
+      }
     }
   }
 }

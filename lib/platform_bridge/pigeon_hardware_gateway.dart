@@ -1,0 +1,337 @@
+import 'dart:async';
+import 'dart:typed_data';
+
+import 'hardware_gateway.dart';
+import 'hardware_models.dart';
+import 'pigeon/generated/hardware_api.g.dart' as pigeon;
+
+class PigeonHardwareGateway implements HardwareGateway {
+  PigeonHardwareGateway({pigeon.HardwareHostApi? hostApi})
+    : _hostApi = hostApi ?? pigeon.HardwareHostApi(),
+      _flutterApi = _HardwareFlutterApiHandler() {
+    pigeon.HardwareFlutterApi.setUp(_flutterApi);
+  }
+
+  final pigeon.HardwareHostApi _hostApi;
+  final _HardwareFlutterApiHandler _flutterApi;
+
+  @override
+  Stream<BleDevice> get bleScanResults => _flutterApi.bleScanResults;
+
+  @override
+  Stream<BleConnectionEvent> get bleConnectionEvents =>
+      _flutterApi.bleConnectionEvents;
+
+  @override
+  Stream<BleNotification> get bleNotifications => _flutterApi.bleNotifications;
+
+  @override
+  Stream<NativeHardwareError> get nativeErrors => _flutterApi.nativeErrors;
+
+  @override
+  Future<List<DeviceSummary>> readDevices() async {
+    return const <DeviceSummary>[];
+  }
+
+  @override
+  Future<void> startBleScan({
+    required String requestId,
+    BleScanFilter filter = const BleScanFilter(),
+  }) {
+    return _hostApi.startBleScan(requestId, filter.toDto());
+  }
+
+  @override
+  Future<void> stopBleScan({required String requestId}) {
+    return _hostApi.stopBleScan(requestId);
+  }
+
+  @override
+  Future<BleConnectionEvent> connectBleDevice({
+    required String requestId,
+    required String deviceId,
+  }) async {
+    final dto = await _hostApi.connectBleDevice(requestId, deviceId);
+    return dto.toModel();
+  }
+
+  @override
+  Future<BleConnectionEvent> disconnectBleDevice({
+    required String requestId,
+    required String deviceId,
+  }) async {
+    final dto = await _hostApi.disconnectBleDevice(requestId, deviceId);
+    return dto.toModel();
+  }
+
+  @override
+  Future<BleServices> discoverServices({
+    required String requestId,
+    required String deviceId,
+  }) async {
+    final dto = await _hostApi.discoverServices(requestId, deviceId);
+    return dto.toModel();
+  }
+
+  @override
+  Future<BleReadResult> readCharacteristic({
+    required String requestId,
+    required String deviceId,
+    required String serviceUuid,
+    required String characteristicUuid,
+  }) async {
+    final dto = await _hostApi.readCharacteristic(
+      requestId,
+      deviceId,
+      serviceUuid,
+      characteristicUuid,
+    );
+    return dto.toModel();
+  }
+
+  @override
+  Future<BleWriteResult> writeCharacteristic({
+    required String requestId,
+    required String deviceId,
+    required String serviceUuid,
+    required String characteristicUuid,
+    required Uint8List payload,
+    BleWriteType writeType = BleWriteType.withResponse,
+  }) async {
+    final dto = await _hostApi.writeCharacteristic(
+      requestId,
+      deviceId,
+      serviceUuid,
+      characteristicUuid,
+      payload,
+      writeType.toDto(),
+    );
+    return dto.toModel();
+  }
+
+  @override
+  Future<BleWriteResult> setCharacteristicNotify({
+    required String requestId,
+    required String deviceId,
+    required String serviceUuid,
+    required String characteristicUuid,
+    required bool enabled,
+  }) async {
+    final dto = await _hostApi.setCharacteristicNotify(
+      requestId,
+      deviceId,
+      serviceUuid,
+      characteristicUuid,
+      enabled,
+    );
+    return dto.toModel();
+  }
+
+  @override
+  Future<CommandResult> sendDoorCommand({
+    required String requestId,
+    required String deviceId,
+    required DoorCommand command,
+  }) async {
+    final dto = await _hostApi.sendDoorCommand(
+      requestId,
+      deviceId,
+      command.toDto(),
+    );
+    return CommandResult(
+      requestId: dto.requestId,
+      deviceId: dto.deviceId,
+      command: command,
+      accepted: dto.accepted,
+    );
+  }
+}
+
+class _HardwareFlutterApiHandler implements pigeon.HardwareFlutterApi {
+  _HardwareFlutterApiHandler()
+    : _scanController = StreamController<BleDevice>.broadcast(),
+      _connectionController = StreamController<BleConnectionEvent>.broadcast(),
+      _notificationController = StreamController<BleNotification>.broadcast(),
+      _nativeErrorController =
+          StreamController<NativeHardwareError>.broadcast();
+
+  final StreamController<BleDevice> _scanController;
+  final StreamController<BleConnectionEvent> _connectionController;
+  final StreamController<BleNotification> _notificationController;
+  final StreamController<NativeHardwareError> _nativeErrorController;
+
+  Stream<BleDevice> get bleScanResults => _scanController.stream;
+
+  Stream<BleConnectionEvent> get bleConnectionEvents =>
+      _connectionController.stream;
+
+  Stream<BleNotification> get bleNotifications =>
+      _notificationController.stream;
+
+  Stream<NativeHardwareError> get nativeErrors => _nativeErrorController.stream;
+
+  @override
+  void onBleScanResult(pigeon.BleDeviceDto device) {
+    _scanController.add(device.toModel());
+  }
+
+  @override
+  void onBleConnectionChanged(pigeon.BleConnectionEventDto event) {
+    _connectionController.add(event.toModel());
+  }
+
+  @override
+  void onBleNotification(pigeon.BleNotificationDto notification) {
+    _notificationController.add(notification.toModel());
+  }
+
+  @override
+  void onNativeError(pigeon.NativeErrorDto error) {
+    _nativeErrorController.add(error.toModel());
+  }
+}
+
+extension _BleScanFilterMapper on BleScanFilter {
+  pigeon.BleScanFilterDto toDto() {
+    return pigeon.BleScanFilterDto(
+      serviceUuids: serviceUuids,
+      namePrefix: namePrefix,
+      exactName: exactName,
+      allowDuplicates: allowDuplicates,
+    );
+  }
+}
+
+extension _DoorCommandMapper on DoorCommand {
+  pigeon.DoorCommandDto toDto() {
+    return switch (this) {
+      DoorCommand.open => pigeon.DoorCommandDto.open,
+      DoorCommand.stop => pigeon.DoorCommandDto.stop,
+      DoorCommand.close => pigeon.DoorCommandDto.close,
+    };
+  }
+}
+
+extension _BleWriteTypeMapper on BleWriteType {
+  pigeon.BleWriteTypeDto toDto() {
+    return switch (this) {
+      BleWriteType.withResponse => pigeon.BleWriteTypeDto.withResponse,
+      BleWriteType.withoutResponse => pigeon.BleWriteTypeDto.withoutResponse,
+    };
+  }
+}
+
+extension _BleDeviceDtoMapper on pigeon.BleDeviceDto {
+  BleDevice toModel() {
+    return BleDevice(
+      id: id,
+      name: name,
+      rssi: rssi,
+      advertisementServiceUuids: advertisementServiceUuids,
+      manufacturerData: manufacturerData,
+    );
+  }
+}
+
+extension _BleConnectionEventDtoMapper on pigeon.BleConnectionEventDto {
+  BleConnectionEvent toModel() {
+    return BleConnectionEvent(
+      requestId: requestId,
+      deviceId: deviceId,
+      state: state.toModel(),
+      nativeCode: nativeCode,
+    );
+  }
+}
+
+extension _BleConnectionStateDtoMapper on pigeon.BleConnectionStateDto {
+  BleConnectionState toModel() {
+    return switch (this) {
+      pigeon.BleConnectionStateDto.disconnected =>
+        BleConnectionState.disconnected,
+      pigeon.BleConnectionStateDto.connecting => BleConnectionState.connecting,
+      pigeon.BleConnectionStateDto.connected => BleConnectionState.connected,
+    };
+  }
+}
+
+extension _BleServicesDtoMapper on pigeon.BleServicesDto {
+  BleServices toModel() {
+    return BleServices(
+      requestId: requestId,
+      deviceId: deviceId,
+      services: services.map((service) => service.toModel()).toList(),
+    );
+  }
+}
+
+extension _BleServiceDtoMapper on pigeon.BleServiceDto {
+  BleService toModel() {
+    return BleService(
+      serviceUuid: serviceUuid,
+      characteristics: characteristics
+          .map((characteristic) => characteristic.toModel())
+          .toList(),
+    );
+  }
+}
+
+extension _BleCharacteristicDtoMapper on pigeon.BleCharacteristicDto {
+  BleCharacteristic toModel() {
+    return BleCharacteristic(
+      serviceUuid: serviceUuid,
+      characteristicUuid: characteristicUuid,
+      canRead: canRead,
+      canWriteWithResponse: canWriteWithResponse,
+      canWriteWithoutResponse: canWriteWithoutResponse,
+      canNotify: canNotify,
+    );
+  }
+}
+
+extension _BleReadResultDtoMapper on pigeon.BleReadResultDto {
+  BleReadResult toModel() {
+    return BleReadResult(
+      requestId: requestId,
+      deviceId: deviceId,
+      serviceUuid: serviceUuid,
+      characteristicUuid: characteristicUuid,
+      payload: payload,
+    );
+  }
+}
+
+extension _BleWriteResultDtoMapper on pigeon.BleWriteResultDto {
+  BleWriteResult toModel() {
+    return BleWriteResult(
+      requestId: requestId,
+      deviceId: deviceId,
+      serviceUuid: serviceUuid,
+      characteristicUuid: characteristicUuid,
+      accepted: accepted,
+      nativeCode: nativeCode,
+    );
+  }
+}
+
+extension _BleNotificationDtoMapper on pigeon.BleNotificationDto {
+  BleNotification toModel() {
+    return BleNotification(
+      deviceId: deviceId,
+      serviceUuid: serviceUuid,
+      characteristicUuid: characteristicUuid,
+      payload: payload,
+    );
+  }
+}
+
+extension _NativeErrorDtoMapper on pigeon.NativeErrorDto {
+  NativeHardwareError toModel() {
+    return NativeHardwareError(
+      code: code,
+      message: message,
+      requestId: requestId,
+      deviceId: deviceId,
+    );
+  }
+}

@@ -16,6 +16,10 @@ enum PermissionKindDto { bluetooth, camera, localNetwork, notification }
 
 enum DoorCommandDto { open, stop, close }
 
+enum BleConnectionStateDto { disconnected, connecting, connected }
+
+enum BleWriteTypeDto { withResponse, withoutResponse }
+
 class PermissionSnapshotDto {
   PermissionSnapshotDto({
     required this.bluetoothGranted,
@@ -28,6 +32,149 @@ class PermissionSnapshotDto {
   final bool cameraGranted;
   final bool localNetworkGranted;
   final bool notificationGranted;
+}
+
+class BleScanFilterDto {
+  BleScanFilterDto({
+    required this.serviceUuids,
+    this.namePrefix,
+    this.exactName,
+    required this.allowDuplicates,
+  });
+
+  final List<String> serviceUuids;
+  final String? namePrefix;
+  final String? exactName;
+  final bool allowDuplicates;
+}
+
+class BleDeviceDto {
+  BleDeviceDto({
+    required this.id,
+    this.name,
+    required this.rssi,
+    required this.advertisementServiceUuids,
+    required this.manufacturerData,
+  });
+
+  final String id;
+  final String? name;
+  final int rssi;
+  final List<String> advertisementServiceUuids;
+  final Uint8List manufacturerData;
+}
+
+class BleConnectionEventDto {
+  BleConnectionEventDto({
+    required this.requestId,
+    required this.deviceId,
+    required this.state,
+    this.nativeCode,
+  });
+
+  final String requestId;
+  final String deviceId;
+  final BleConnectionStateDto state;
+  final String? nativeCode;
+}
+
+class BleCharacteristicDto {
+  BleCharacteristicDto({
+    required this.serviceUuid,
+    required this.characteristicUuid,
+    required this.canRead,
+    required this.canWriteWithResponse,
+    required this.canWriteWithoutResponse,
+    required this.canNotify,
+  });
+
+  final String serviceUuid;
+  final String characteristicUuid;
+  final bool canRead;
+  final bool canWriteWithResponse;
+  final bool canWriteWithoutResponse;
+  final bool canNotify;
+}
+
+class BleServiceDto {
+  BleServiceDto({required this.serviceUuid, required this.characteristics});
+
+  final String serviceUuid;
+  final List<BleCharacteristicDto> characteristics;
+}
+
+class BleServicesDto {
+  BleServicesDto({
+    required this.requestId,
+    required this.deviceId,
+    required this.services,
+  });
+
+  final String requestId;
+  final String deviceId;
+  final List<BleServiceDto> services;
+}
+
+class BleReadResultDto {
+  BleReadResultDto({
+    required this.requestId,
+    required this.deviceId,
+    required this.serviceUuid,
+    required this.characteristicUuid,
+    required this.payload,
+  });
+
+  final String requestId;
+  final String deviceId;
+  final String serviceUuid;
+  final String characteristicUuid;
+  final Uint8List payload;
+}
+
+class BleWriteResultDto {
+  BleWriteResultDto({
+    required this.requestId,
+    required this.deviceId,
+    required this.serviceUuid,
+    required this.characteristicUuid,
+    required this.accepted,
+    this.nativeCode,
+  });
+
+  final String requestId;
+  final String deviceId;
+  final String serviceUuid;
+  final String characteristicUuid;
+  final bool accepted;
+  final String? nativeCode;
+}
+
+class BleNotificationDto {
+  BleNotificationDto({
+    required this.deviceId,
+    required this.serviceUuid,
+    required this.characteristicUuid,
+    required this.payload,
+  });
+
+  final String deviceId;
+  final String serviceUuid;
+  final String characteristicUuid;
+  final Uint8List payload;
+}
+
+class NativeErrorDto {
+  NativeErrorDto({
+    required this.code,
+    this.message,
+    this.requestId,
+    this.deviceId,
+  });
+
+  final String code;
+  final String? message;
+  final String? requestId;
+  final String? deviceId;
 }
 
 class CommandResultDto {
@@ -52,9 +199,60 @@ abstract class HardwareHostApi {
 
   PermissionSnapshotDto requestPermissions(List<PermissionKindDto> permissions);
 
+  void startBleScan(String requestId, BleScanFilterDto filter);
+
+  void stopBleScan(String requestId);
+
+  @async
+  BleConnectionEventDto connectBleDevice(String requestId, String deviceId);
+
+  @async
+  BleConnectionEventDto disconnectBleDevice(String requestId, String deviceId);
+
+  @async
+  BleServicesDto discoverServices(String requestId, String deviceId);
+
+  @async
+  BleReadResultDto readCharacteristic(
+    String requestId,
+    String deviceId,
+    String serviceUuid,
+    String characteristicUuid,
+  );
+
+  @async
+  BleWriteResultDto writeCharacteristic(
+    String requestId,
+    String deviceId,
+    String serviceUuid,
+    String characteristicUuid,
+    Uint8List payload,
+    BleWriteTypeDto writeType,
+  );
+
+  @async
+  BleWriteResultDto setCharacteristicNotify(
+    String requestId,
+    String deviceId,
+    String serviceUuid,
+    String characteristicUuid,
+    bool enabled,
+  );
+
   CommandResultDto sendDoorCommand(
     String requestId,
     String deviceId,
     DoorCommandDto command,
   );
+}
+
+@FlutterApi()
+abstract class HardwareFlutterApi {
+  void onBleScanResult(BleDeviceDto device);
+
+  void onBleConnectionChanged(BleConnectionEventDto event);
+
+  void onBleNotification(BleNotificationDto notification);
+
+  void onNativeError(NativeErrorDto error);
 }
