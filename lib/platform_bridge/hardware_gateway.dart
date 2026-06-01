@@ -11,6 +11,12 @@ abstract interface class HardwareGateway {
 
   Stream<NativeHardwareError> get nativeErrors;
 
+  Future<PermissionSnapshot> getPermissionSnapshot();
+
+  Future<PermissionSnapshot> requestPermissions({
+    required List<PermissionKind> permissions,
+  });
+
   Future<List<DeviceSummary>> readDevices();
 
   Future<void> startBleScan({

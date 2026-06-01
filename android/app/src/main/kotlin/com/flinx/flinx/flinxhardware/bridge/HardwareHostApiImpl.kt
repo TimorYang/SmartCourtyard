@@ -1,9 +1,13 @@
 package com.flinx.flinx.flinxhardware.bridge
 
+import com.flinx.flinx.flinxhardware.bluetooth.BleManager
 import com.flinx.flinx.flinxhardware.permissions.PermissionManager
 
+/** Pigeon HostApi 实现：承接 Flutter 调用并编排权限与 BLE 能力。 */
 class HardwareHostApiImpl(
   private val permissionManager: PermissionManager,
+  private val bleManager: BleManager,
+  private val hardwareFlutterApi: HardwareFlutterApi,
 ) : HardwareHostApi {
 
   /** 获取当前权限状态快照。 */
@@ -13,17 +17,31 @@ class HardwareHostApiImpl(
 
   /** 请求权限（当前为骨架实现：直接返回现有快照）。 */
   override fun requestPermissions(permissions: List<PermissionKindDto>): PermissionSnapshotDto {
-    return permissionManager.getPermissionSnapshot()
+    return permissionManager.requestPermissions(permissions)
   }
 
-  /** 启动 BLE 扫描（待实现）。 */
+  /** 启动 BLE 扫描并通过 FlutterApi 回推扫描结果。 */
   override fun startBleScan(requestId: String, filter: BleScanFilterDto) {
-    throw notImplemented("startBleScan", requestId)
+    bleManager.startScan(
+      requestId = requestId,
+      filter = filter,
+      onDeviceFound = { device ->
+        hardwareFlutterApi.onBleScanResult(device) {}
+      },
+      onError = { error ->
+        emitNativeError(
+          code = error.code,
+          message = error.message,
+          requestId = requestId,
+          retryable = true,
+        )
+      },
+    )
   }
 
-  /** 停止 BLE 扫描（待实现）。 */
+  /** 停止 BLE 扫描。 */
   override fun stopBleScan(requestId: String) {
-    throw notImplemented("stopBleScan", requestId)
+    bleManager.stopScan(requestId)
   }
 
   /** 连接 BLE 设备（待实现）。 */
@@ -115,5 +133,25 @@ class HardwareHostApiImpl(
       message = "Android BLE module is not implemented yet.",
       details = details,
     )
+  }
+
+  /** 发送统一 NativeError 事件给 Flutter，便于页面层做错误状态映射。 */
+  private fun emitNativeError(
+    code: String,
+    message: String?,
+    requestId: String? = null,
+    deviceId: String? = null,
+    retryable: Boolean = false,
+  ) {
+    val error = NativeErrorDto(
+      code = code,
+      domainCode = "Unknown",
+      message = message,
+      requestId = requestId,
+      deviceId = deviceId,
+      retryable = retryable,
+      timestampMillis = System.currentTimeMillis(),
+    )
+    hardwareFlutterApi.onNativeError(error) {}
   }
 }

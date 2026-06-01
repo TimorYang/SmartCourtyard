@@ -31,6 +31,26 @@ class PigeonHardwareGateway implements HardwareGateway {
   Stream<NativeHardwareError> get nativeErrors => _flutterApi.nativeErrors;
 
   @override
+  Future<PermissionSnapshot> getPermissionSnapshot() async {
+    final dto = await _mapPigeonCall(
+      () => _hostApi.getPermissionSnapshot(),
+      requestId: 'permission-snapshot',
+    );
+    return dto.toModel();
+  }
+
+  @override
+  Future<PermissionSnapshot> requestPermissions({
+    required List<PermissionKind> permissions,
+  }) async {
+    final dto = await _mapPigeonCall(
+      () => _hostApi.requestPermissions(permissions.map((e) => e.toDto()).toList()),
+      requestId: 'permission-request',
+    );
+    return dto.toModel();
+  }
+
+  @override
   Future<List<DeviceSummary>> readDevices() async {
     return const <DeviceSummary>[];
   }
@@ -260,12 +280,34 @@ extension _DoorCommandMapper on DoorCommand {
   }
 }
 
+extension _PermissionKindMapper on PermissionKind {
+  pigeon.PermissionKindDto toDto() {
+    return switch (this) {
+      PermissionKind.bluetooth => pigeon.PermissionKindDto.bluetooth,
+      PermissionKind.camera => pigeon.PermissionKindDto.camera,
+      PermissionKind.localNetwork => pigeon.PermissionKindDto.localNetwork,
+      PermissionKind.notification => pigeon.PermissionKindDto.notification,
+    };
+  }
+}
+
 extension _BleWriteTypeMapper on BleWriteType {
   pigeon.BleWriteTypeDto toDto() {
     return switch (this) {
       BleWriteType.withResponse => pigeon.BleWriteTypeDto.withResponse,
       BleWriteType.withoutResponse => pigeon.BleWriteTypeDto.withoutResponse,
     };
+  }
+}
+
+extension _PermissionSnapshotDtoMapper on pigeon.PermissionSnapshotDto {
+  PermissionSnapshot toModel() {
+    return PermissionSnapshot(
+      bluetoothGranted: bluetoothGranted,
+      cameraGranted: cameraGranted,
+      localNetworkGranted: localNetworkGranted,
+      notificationGranted: notificationGranted,
+    );
   }
 }
 
@@ -401,6 +443,8 @@ AppError _platformExceptionToAppError(
   final code = switch (error.code) {
     'bluetooth_unavailable' => AppErrorCode.bluetoothUnavailable,
     'bluetooth_unauthorized' => AppErrorCode.permissionDenied,
+    'SecurityException' => AppErrorCode.permissionDenied,
+    'permission_denied' => AppErrorCode.permissionDenied,
     'peripheral_unavailable' => AppErrorCode.bluetoothDisconnected,
     'operation_in_progress' => AppErrorCode.deviceBusy,
     'operation_timeout' => AppErrorCode.commandTimeout,

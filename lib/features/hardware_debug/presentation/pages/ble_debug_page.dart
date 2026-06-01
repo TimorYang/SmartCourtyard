@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -137,14 +138,13 @@ class _BleDebugPageState extends ConsumerState<BleDebugPage> {
     try {
       final requestId = _nextRequestId('permission');
       _appendLog('request bluetooth permission: $requestId');
-      await _gateway.startBleScan(
-        requestId: requestId,
-        filter: const BleScanFilter(allowDuplicates: false),
+      final snapshot = await _gateway.requestPermissions(
+        permissions: const [PermissionKind.bluetooth],
       );
-      await _gateway.stopBleScan(requestId: _nextRequestId('stop'));
       setState(() {
-        _scanning = false;
-        _appendLog('permission request completed');
+        _appendLog(
+          'permission snapshot: bluetooth=${snapshot.bluetoothGranted}',
+        );
       });
     } catch (error) {
       setState(() {
@@ -155,6 +155,7 @@ class _BleDebugPageState extends ConsumerState<BleDebugPage> {
 
   Future<void> _startScan() async {
     try {
+      await _ensureBluetoothPermission();
       setState(() {
         _devices.clear();
         _services.clear();
@@ -170,6 +171,20 @@ class _BleDebugPageState extends ConsumerState<BleDebugPage> {
         _scanning = false;
         _appendLog('start scan failed: $error');
       });
+    }
+  }
+
+  Future<void> _ensureBluetoothPermission() async {
+    final current = await _gateway.getPermissionSnapshot();
+    if (current.bluetoothGranted) {
+      return;
+    }
+    _appendLog('bluetooth permission missing, requesting...');
+    final requested = await _gateway.requestPermissions(
+      permissions: const [PermissionKind.bluetooth],
+    );
+    if (!requested.bluetoothGranted) {
+      throw StateError('bluetooth permission denied');
     }
   }
 
@@ -244,6 +259,7 @@ class _BleDebugPageState extends ConsumerState<BleDebugPage> {
   }
 
   void _appendLog(String message) {
+    print('ble log--------$message');
     _log.add('${DateTime.now().toIso8601String()}  $message');
     if (_log.length > 80) {
       _log.removeRange(0, _log.length - 80);
