@@ -3,7 +3,6 @@
 **/.DS_Store
 .codex_tmp/
 **/.codex_tmp/
-*.iml
 *.class
 *.lock
 *.log
