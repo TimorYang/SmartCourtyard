@@ -1,156 +1,123 @@
-# macOS
+# Miscellaneous
 .DS_Store
-.AppleDouble
-.LSOverride
-Icon?
-._*
-.Spotlight-V100
-.Trashes
-
-# Windows / Linux noise
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-*~
-
-# Editor / IDE
-.idea/
-*.iml
-*.ipr
-*.iws
-.vscode/*
-!.vscode/extensions.json
-!.vscode/launch.json
-!.vscode/settings.json
-!.vscode/tasks.json
-*.swp
-*.swo
-
-# Environment and secrets
-.env
-.env.*
-!.env.example
-*.pem
-*.p12
-*.mobileprovision
-*.provisionprofile
-*.keystore
-*.jks
-key.properties
-local.properties
-secrets.properties
-firebase_options.local.dart
-GoogleService-Info.plist
-google-services.json
-
-# Logs
+**/.DS_Store
+.codex_tmp/
+**/.codex_tmp/
+*.class
+*.lock
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+*.pyc
+*.swp
+.buildlog/
+.history
 
-# Dart / Flutter
+
+
+# Flutter repo-specific
+/bin/cache/
+/bin/internal/bootstrap.bat
+/bin/internal/bootstrap.sh
+/bin/mingit/
+/dev/benchmarks/mega_gallery/
+/dev/bots/.recipe_deps
+/dev/bots/android_tools/
+/dev/devicelab/ABresults*.json
+/dev/docs/doc/
+/dev/docs/flutter.docs.zip
+/dev/docs/lib/
+/dev/docs/pubspec.yaml
+/dev/integration_tests/**/xcuserdata
+/dev/integration_tests/**/Pods
+/packages/flutter/coverage/
+version
+analysis_benchmark.json
+
+# packages file containing multi-root paths
+.packages.generated
+
+# Flutter/Dart/Pub related
+**/doc/api/
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
+**/generated_plugin_registrant.dart
 .packages
-.pub-cache/
+.pub-preload-cache/
 .pub/
 build/
+flutter_*.png
+linked_*.ds
+unlinked.ds
+unlinked_spec.ds
+
+# Android related
+**/android/**/gradle-wrapper.jar
+.gradle/
+**/android/captures/
+**/android/gradlew
+**/android/gradlew.bat
+**/android/local.properties
+**/android/**/GeneratedPluginRegistrant.java
+**/android/key.properties
+*.jks
+
+# iOS/XCode related
+**/ios/**/*.mode1v3
+**/ios/**/*.mode2v3
+**/ios/**/*.moved-aside
+**/ios/**/*.pbxuser
+**/ios/**/*.perspectivev3
+**/ios/**/*sync/
+**/ios/**/.sconsign.dblite
+**/ios/**/.tags*
+**/ios/**/.vagrant/
+**/ios/**/DerivedData/
+**/ios/**/Icon?
+**/ios/**/Pods/
+**/ios/**/.symlinks/
+**/ios/**/profile
+**/ios/**/xcuserdata
+**/ios/.generated/
+**/ios/Flutter/.last_build_id
+**/ios/Flutter/App.framework
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/ephemeral
+**/ios/Flutter/app.flx
+**/ios/Flutter/app.zip
+**/ios/Flutter/flutter_assets/
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/ServiceDefinitions.json
+**/ios/Runner/GeneratedPluginRegistrant.*
+
+# macOS
+**/Flutter/ephemeral/
+**/Pods/
+**/macos/Flutter/GeneratedPluginRegistrant.swift
+**/macos/Flutter/ephemeral
+**/xcuserdata/
+
+# Windows
+**/windows/flutter/generated_plugin_registrant.cc
+**/windows/flutter/generated_plugin_registrant.h
+**/windows/flutter/generated_plugins.cmake
+
+# Linux
+**/linux/flutter/generated_plugin_registrant.cc
+**/linux/flutter/generated_plugin_registrant.h
+**/linux/flutter/generated_plugins.cmake
+
+# Coverage
 coverage/
 
-# Keep dependency lock files for reproducible app builds
-# pubspec.lock should be committed for Flutter applications.
+# Symbols
+app.*.symbols
 
-# Flutter generated files
-lib/generated_plugin_registrant.dart
-
-# FVM
-.fvm/*
-!.fvm/
-!.fvm/fvm_config.json
-
-# Android / Gradle
-.gradle/
-**/build/
-android/.gradle/
-android/app/debug/
-android/app/profile/
-android/app/release/
-android/app/*.apk
-android/app/*.aab
-android/app/outputs/
-android/app/intermediates/
-android/local.properties
-android/key.properties
-android/captures/
-android/.idea/
-
-# Android Studio generated files
-*.hprof
-
-# iOS / Xcode
-ios/Flutter/App.framework
-ios/Flutter/Flutter.framework
-ios/Flutter/Flutter.podspec
-ios/Flutter/Generated.xcconfig
-ios/Flutter/ephemeral/
-ios/Flutter/flutter_export_environment.sh
-ios/Flutter/.last_build_id
-ios/Pods/
-ios/.symlinks/
-ios/build/
-ios/Runner/GeneratedPluginRegistrant.*
-ios/Runner.xcworkspace/xcuserdata/
-ios/Runner.xcodeproj/xcuserdata/
-ios/Runner.xcodeproj/project.xcworkspace/xcuserdata/
-
-# Xcode user and build data
-DerivedData/
-*.xcuserstate
-*.xcscmblueprint
-*.xccheckout
-*.moved-aside
-*.xcuserdatad/
-*.mode1v3
-*.mode2v3
-*.perspectivev3
-
-# CocoaPods
-Pods/
-
-# Swift Package Manager
-.build/
-.swiftpm/
-
-# Fastlane
-fastlane/report.xml
-fastlane/Preview.html
-fastlane/screenshots/**/*.png
-fastlane/test_output/
-
-# Test artifacts
-*.lcov
-test-results/
-reports/
-
-# Generated documentation / temporary workspace files
-.codex_tmp/
-.tmp/
-tmp/
-temp/
-
-# Archives and binaries
-*.zip
-*.tar
-*.tar.gz
-*.tgz
-*.rar
-*.7z
-*.ipa
-*.dSYM.zip
-*.dSYM
-
-# Misc generated assets
-*.pyc
-__pycache__/
+# Exceptions to above rules.
+!**/ios/**/default.mode1v3
+!**/ios/**/default.mode2v3
+!**/ios/**/default.pbxuser
+!**/ios/**/default.perspectivev3
+!/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
+!/dev/ci/**/Gemfile.lock
