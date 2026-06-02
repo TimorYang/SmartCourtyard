@@ -29,6 +29,7 @@ class _BleDebugPageState extends ConsumerState<BleDebugPage> {
 
   int _requestCounter = 0;
   bool _scanning = false;
+  String? _activeScanRequestId;
 
   HardwareGateway get _gateway => ref.read(nativeHardwareGatewayProvider);
 
@@ -68,6 +69,10 @@ class _BleDebugPageState extends ConsumerState<BleDebugPage> {
 
   @override
   void dispose() {
+    final activeScanRequestId = _activeScanRequestId;
+    if (activeScanRequestId != null) {
+      _gateway.stopBleScan(requestId: activeScanRequestId);
+    }
     for (final subscription in _subscriptions) {
       subscription.cancel();
     }
@@ -162,12 +167,15 @@ class _BleDebugPageState extends ConsumerState<BleDebugPage> {
         _scanning = true;
         _appendLog('start scan');
       });
+      final requestId = _nextRequestId('scan');
+      _activeScanRequestId = requestId;
       await _gateway.startBleScan(
-        requestId: _nextRequestId('scan'),
+        requestId: requestId,
         filter: const BleScanFilter(allowDuplicates: true),
       );
     } catch (error) {
       setState(() {
+        _activeScanRequestId = null;
         _scanning = false;
         _appendLog('start scan failed: $error');
       });
@@ -189,9 +197,18 @@ class _BleDebugPageState extends ConsumerState<BleDebugPage> {
   }
 
   Future<void> _stopScan() async {
-    try {
-      await _gateway.stopBleScan(requestId: _nextRequestId('stop'));
+    final activeScanRequestId = _activeScanRequestId;
+    if (activeScanRequestId == null) {
       setState(() {
+        _scanning = false;
+        _appendLog('stop scan ignored: no active scan');
+      });
+      return;
+    }
+    try {
+      await _gateway.stopBleScan(requestId: activeScanRequestId);
+      setState(() {
+        _activeScanRequestId = null;
         _scanning = false;
         _appendLog('stop scan');
       });

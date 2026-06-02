@@ -77,9 +77,22 @@ class BleManager(
   @SuppressLint("MissingPermission")
   fun stopScan(requestId: String) {
     cancelNoResultLog()
-    val callback = activeScanCallback ?: return
-    val currentScanner = scanner ?: return
+    val currentRequestId = activeRequestId
+    val callback = activeScanCallback
+    val currentScanner = scanner
+    if (callback == null || currentScanner == null) {
+      Log.d(TAG, "stopScan ignored requestId=$requestId activeRequestId=$currentRequestId active=false")
+      activeScanCallback = null
+      scanner = null
+      activeRequestId = null
+      hasScanResult = false
+      onDeviceFound = null
+      onError = null
+      return
+    }
+    Log.d(TAG, "stopScan requestId=$requestId activeRequestId=$currentRequestId")
     currentScanner.stopScan(callback)
+    Log.d(TAG, "stopScan completed requestId=$requestId activeRequestId=$currentRequestId")
     activeScanCallback = null
     scanner = null
     activeRequestId = null
