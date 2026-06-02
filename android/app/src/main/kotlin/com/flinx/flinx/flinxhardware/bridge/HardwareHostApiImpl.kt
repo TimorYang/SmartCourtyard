@@ -22,6 +22,7 @@ class HardwareHostApiImpl(
 
   /** 启动 BLE 扫描并通过 FlutterApi 回推扫描结果。 */
   override fun startBleScan(requestId: String, filter: BleScanFilterDto) {
+    permissionManager.ensureBleScanPreconditions()
     bleManager.startScan(
       requestId = requestId,
       filter = filter,

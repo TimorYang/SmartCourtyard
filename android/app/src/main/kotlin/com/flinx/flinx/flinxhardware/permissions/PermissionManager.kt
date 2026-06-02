@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
+import android.location.LocationManager
 import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -52,11 +53,34 @@ class PermissionManager(
     return getPermissionSnapshot()
   }
 
+  /** 判断当前系统是否满足 BLE 扫描所需前置条件。 */
+  fun ensureBleScanPreconditions() {
+    if (!hasBluetoothPermission()) {
+      throw com.flinx.flinx.flinxhardware.bridge.FlutterError(
+        "permission_denied",
+        "Bluetooth scan permission is not granted.",
+      )
+    }
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S && !isLocationServiceEnabled()) {
+      throw com.flinx.flinx.flinxhardware.bridge.FlutterError(
+        "location_services_disabled",
+        "Location services must be enabled for BLE scanning on this Android version.",
+      )
+    }
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !isLocationServiceEnabled()) {
+      throw com.flinx.flinx.flinxhardware.bridge.FlutterError(
+        "location_services_disabled",
+        "Location services must be enabled for reliable BLE scanning on this device.",
+      )
+    }
+  }
+
   /** 判断蓝牙相关权限是否满足，按 Android 版本区分权限模型。 */
   private fun hasBluetoothPermission(): Boolean {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
       isGranted(Manifest.permission.BLUETOOTH_SCAN) &&
-        isGranted(Manifest.permission.BLUETOOTH_CONNECT)
+        isGranted(Manifest.permission.BLUETOOTH_CONNECT) &&
+        isGranted(Manifest.permission.ACCESS_FINE_LOCATION)
     } else {
       isGranted(Manifest.permission.ACCESS_FINE_LOCATION)
     }
@@ -67,12 +91,23 @@ class PermissionManager(
     return ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
   }
 
+  /** 检查系统定位开关是否开启，Android 11 及以下 BLE 扫描依赖它。 */
+  private fun isLocationServiceEnabled(): Boolean {
+    val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+    return locationManager?.isProviderEnabled(LocationManager.GPS_PROVIDER) == true ||
+      locationManager?.isProviderEnabled(LocationManager.NETWORK_PROVIDER) == true
+  }
+
   /** 将 Pigeon 权限类型映射为 Android 运行时权限列表。 */
   private fun mapPermissionKind(kind: PermissionKindDto): List<String> {
     return when (kind) {
       PermissionKindDto.BLUETOOTH -> {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-          listOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT)
+          listOf(
+            Manifest.permission.BLUETOOTH_SCAN,
+            Manifest.permission.BLUETOOTH_CONNECT,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+          )
         } else {
           listOf(Manifest.permission.ACCESS_FINE_LOCATION)
         }
