@@ -75,6 +75,16 @@ class PermissionManager(
     }
   }
 
+  /** 判断当前系统是否满足 BLE 连接所需前置条件。 */
+  fun ensureBleConnectPreconditions() {
+    if (!hasBluetoothPermission()) {
+      throw com.flinx.flinx.flinxhardware.bridge.FlutterError(
+        "permission_denied",
+        "Bluetooth connection permission is not granted.",
+      )
+    }
+  }
+
   /** 判断蓝牙相关权限是否满足，按 Android 版本区分权限模型。 */
   private fun hasBluetoothPermission(): Boolean {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {

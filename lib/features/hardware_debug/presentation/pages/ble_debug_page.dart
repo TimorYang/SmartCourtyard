@@ -297,6 +297,7 @@ class _DeviceTile extends StatelessWidget {
     final services =
         state._services[device.id]?.services ?? const <BleService>[];
     final connected = connectionState == BleConnectionState.connected;
+    final connecting = connectionState == BleConnectionState.connecting;
 
     return Card(
       child: ExpansionTile(
@@ -311,11 +312,13 @@ class _DeviceTile extends StatelessWidget {
             runSpacing: 8,
             children: [
               FilledButton(
-                onPressed: connected ? null : () => state._connect(device),
-                child: const Text('Connect'),
+                onPressed: connected || connecting ? null : () => state._connect(device),
+                child: Text(connecting ? 'Connecting...' : 'Connect'),
               ),
               OutlinedButton(
-                onPressed: connected ? () => state._disconnect(device) : null,
+                onPressed: connected || connecting
+                    ? () => state._disconnect(device)
+                    : null,
                 child: const Text('Disconnect'),
               ),
               OutlinedButton(

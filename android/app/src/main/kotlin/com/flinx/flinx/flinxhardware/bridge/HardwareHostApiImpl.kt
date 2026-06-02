@@ -1,7 +1,10 @@
 package com.flinx.flinx.flinxhardware.bridge
 
+import android.os.Handler
+import android.os.Looper
 import com.flinx.flinx.flinxhardware.bluetooth.BleManager
 import com.flinx.flinx.flinxhardware.permissions.PermissionManager
+import com.flinx.flinx.flinxhardware.protocol.TestProvisioningProtocolConfig
 
 /** Pigeon HostApi 实现：承接 Flutter 调用并编排权限与 BLE 能力。 */
 class HardwareHostApiImpl(
@@ -9,6 +12,7 @@ class HardwareHostApiImpl(
   private val bleManager: BleManager,
   private val hardwareFlutterApi: HardwareFlutterApi,
 ) : HardwareHostApi {
+  private val mainHandler = Handler(Looper.getMainLooper())
 
   /** 获取当前权限状态快照。 */
   override fun getPermissionSnapshot(): PermissionSnapshotDto {
@@ -27,7 +31,9 @@ class HardwareHostApiImpl(
       requestId = requestId,
       filter = filter,
       onDeviceFound = { device ->
-        hardwareFlutterApi.onBleScanResult(device) {}
+        runOnMainThread {
+          hardwareFlutterApi.onBleScanResult(device) {}
+        }
       },
       onError = { error ->
         emitNativeError(
@@ -51,7 +57,13 @@ class HardwareHostApiImpl(
     deviceId: String,
     callback: (Result<BleConnectionEventDto>) -> Unit,
   ) {
-    callback(Result.failure(notImplemented("connectBleDevice", requestId, deviceId)))
+    permissionManager.ensureBleConnectPreconditions()
+    bleManager.connectDevice(
+      requestId = requestId,
+      deviceId = deviceId,
+      onConnectionChanged = ::emitConnectionChanged,
+      callback = callback,
+    )
   }
 
   /** 断开 BLE 设备连接（待实现）。 */
@@ -60,7 +72,13 @@ class HardwareHostApiImpl(
     deviceId: String,
     callback: (Result<BleConnectionEventDto>) -> Unit,
   ) {
-    callback(Result.failure(notImplemented("disconnectBleDevice", requestId, deviceId)))
+    permissionManager.ensureBleConnectPreconditions()
+    bleManager.disconnectDevice(
+      requestId = requestId,
+      deviceId = deviceId,
+      onConnectionChanged = ::emitConnectionChanged,
+      callback = callback,
+    )
   }
 
   /** 发现 GATT 服务（待实现）。 */
@@ -69,7 +87,29 @@ class HardwareHostApiImpl(
     deviceId: String,
     callback: (Result<BleServicesDto>) -> Unit,
   ) {
-    callback(Result.failure(notImplemented("discoverServices", requestId, deviceId)))
+    permissionManager.ensureBleConnectPreconditions()
+    bleManager.discoverServices(
+      requestId = requestId,
+      deviceId = deviceId,
+      callback = { result ->
+        result.onSuccess { services ->
+          val hasProvisioningService = services.services.any {
+            it.serviceUuid.equals(
+              TestProvisioningProtocolConfig.communicationServiceUuid.toString(),
+              ignoreCase = true,
+            )
+          }
+          emitNativeError(
+            code = "service_discovery_summary",
+            message = "discoverServices matchedProvisioningService=$hasProvisioningService count=${services.services.size}",
+            requestId = requestId,
+            deviceId = deviceId,
+            retryable = false,
+          )
+        }
+        callback(result)
+      },
+    )
   }
 
   /** 读取特征值（待实现）。 */
@@ -153,6 +193,24 @@ class HardwareHostApiImpl(
       retryable = retryable,
       timestampMillis = System.currentTimeMillis(),
     )
-    hardwareFlutterApi.onNativeError(error) {}
+    runOnMainThread {
+      hardwareFlutterApi.onNativeError(error) {}
+    }
+  }
+
+  /** 发送 BLE 连接状态变化事件给 Flutter。 */
+  private fun emitConnectionChanged(event: BleConnectionEventDto) {
+    runOnMainThread {
+      hardwareFlutterApi.onBleConnectionChanged(event) {}
+    }
+  }
+
+  /** 确保 Flutter 通道消息总是在主线程发送。 */
+  private fun runOnMainThread(action: () -> Unit) {
+    if (Looper.myLooper() == Looper.getMainLooper()) {
+      action()
+    } else {
+      mainHandler.post(action)
+    }
   }
 }
