@@ -37,6 +37,8 @@ class BleManager(
   companion object {
     private const val TAG = "BleManager"
     private const val NO_RESULT_LOG_DELAY_MS = 5_000L
+    private const val MAX_RECONNECT_ATTEMPTS = 3
+    private const val RECONNECT_DELAY_MS = 2_000L
   }
 
   private val mainHandler = Handler(Looper.getMainLooper())
@@ -53,6 +55,9 @@ class BleManager(
   private val discoverServicesCallbacks = ConcurrentHashMap<String, (Result<BleServicesDto>) -> Unit>()
   private val authSessions = ConcurrentHashMap<String, TestProvisioningAuthSession>()
   private val requestIdsByDevice = ConcurrentHashMap<String, String>()
+  private val reconnectAttempts = ConcurrentHashMap<String, Int>()
+  private val reconnectRunnables = ConcurrentHashMap<String, Runnable>()
+  private val explicitDisconnects = ConcurrentHashMap.newKeySet<String>()
   private val scanDeviceCache = ConcurrentHashMap<String, BleDeviceDto>()
 
   /** 启动 BLE 扫描并通过回调输出扫描结果。 */
@@ -65,7 +70,7 @@ class BleManager(
   ) {
     Log.d(
       TAG,
-      "startScan requestId=$requestId manufacturer=${Build.MANUFACTURER} model=${Build.MODEL} sdk=${Build.VERSION.SDK_INT} serviceUuids=${filter.serviceUuids} namePrefix=${filter.namePrefix} exactName=${filter.exactName} allowDuplicates=${filter.allowDuplicates}",
+      "开始扫描 requestId=$requestId manufacturer=${Build.MANUFACTURER} model=${Build.MODEL} sdk=${Build.VERSION.SDK_INT} serviceUuids=${filter.serviceUuids} namePrefix=${filter.namePrefix} exactName=${filter.exactName} allowDuplicates=${filter.allowDuplicates}",
     )
     stopScan(requestId)
     val bluetoothAdapter = context.bluetoothAdapterOrNull()
@@ -86,9 +91,9 @@ class BleManager(
     this.hasScanResult = false
     this.onDeviceFound = onDeviceFound
     this.onError = onError
-    Log.d(TAG, "startScan invoking scanner requestId=$requestId filterCount=${filters.size}")
+    Log.d(TAG, "准备调用扫描器 requestId=$requestId filterCount=${filters.size}")
     bleScanner.startScan(filters, settings, callback)
-    Log.d(TAG, "startScan invoked scanner requestId=$requestId")
+    Log.d(TAG, "已调用扫描器 requestId=$requestId")
     scheduleNoResultLog(requestId)
   }
 
@@ -100,7 +105,7 @@ class BleManager(
     val callback = activeScanCallback
     val currentScanner = scanner
     if (callback == null || currentScanner == null) {
-      Log.d(TAG, "stopScan ignored requestId=$requestId activeRequestId=$currentRequestId active=false")
+      Log.d(TAG, "忽略停止扫描 requestId=$requestId activeRequestId=$currentRequestId active=false")
       activeScanCallback = null
       scanner = null
       activeRequestId = null
@@ -109,9 +114,9 @@ class BleManager(
       onError = null
       return
     }
-    Log.d(TAG, "stopScan requestId=$requestId activeRequestId=$currentRequestId")
+    Log.d(TAG, "停止扫描 requestId=$requestId activeRequestId=$currentRequestId")
     currentScanner.stopScan(callback)
-    Log.d(TAG, "stopScan completed requestId=$requestId activeRequestId=$currentRequestId")
+    Log.d(TAG, "停止扫描完成 requestId=$requestId activeRequestId=$currentRequestId")
     activeScanCallback = null
     scanner = null
     activeRequestId = null
@@ -136,6 +141,8 @@ class BleManager(
     val device = runCatching { bluetoothAdapter.getRemoteDevice(deviceId) }.getOrNull()
       ?: throw FlutterError("peripheral_unavailable", "BLE device not found.")
     gattMap.remove(deviceId)?.close()
+    explicitDisconnects.remove(deviceId)
+    cancelPendingReconnect(deviceId, resetAttempts = true)
     requestIdsByDevice[deviceId] = requestId
     connectCallbacks[deviceId] = callback
     val connectingEvent = BleConnectionEventDto(
@@ -144,14 +151,12 @@ class BleManager(
       state = BleConnectionStateDto.CONNECTING,
     )
     onConnectionChanged(connectingEvent)
-    Log.d(TAG, "connectDevice requestId=$requestId deviceId=$deviceId")
-    val gatt = device.connectGatt(
-      context,
-      false,
-      createGattCallback(device, onConnectionChanged),
-      BluetoothDevice.TRANSPORT_LE,
+    startGattConnection(
+      requestId = requestId,
+      device = device,
+      onConnectionChanged = onConnectionChanged,
+      reconnectAttempt = null,
     )
-    gattMap[deviceId] = gatt
   }
 
   /** 断开 BLE 设备连接，并在断开完成时回调结果。 */
@@ -162,8 +167,13 @@ class BleManager(
     onConnectionChanged: (BleConnectionEventDto) -> Unit,
     callback: (Result<BleConnectionEventDto>) -> Unit,
   ) {
+    explicitDisconnects.add(deviceId)
+    cancelPendingReconnect(deviceId, resetAttempts = true)
     val gatt = gattMap[deviceId]
       ?: run {
+        requestIdsByDevice.remove(deviceId)
+        connectCallbacks.remove(deviceId)
+        authSessions.remove(deviceId)?.close()
         callback(
           Result.success(
             BleConnectionEventDto(
@@ -174,10 +184,10 @@ class BleManager(
           ),
         )
         return
-      }
+    }
     requestIdsByDevice[deviceId] = requestId
     disconnectCallbacks[deviceId] = callback
-    Log.d(TAG, "disconnectDevice requestId=$requestId deviceId=$deviceId")
+    Log.d(TAG, "主动断开设备 requestId=$requestId deviceId=$deviceId")
     gatt.disconnect()
     val disconnectedEvent = BleConnectionEventDto(
       requestId = requestId,
@@ -198,7 +208,7 @@ class BleManager(
       ?: throw FlutterError("bluetooth_disconnected", "BLE device is not connected.")
     requestIdsByDevice[deviceId] = requestId
     discoverServicesCallbacks[deviceId] = callback
-    Log.d(TAG, "discoverServices requestId=$requestId deviceId=$deviceId")
+    Log.d(TAG, "发现服务 requestId=$requestId deviceId=$deviceId")
     val started = gatt.discoverServices()
     if (!started) {
       discoverServicesCallbacks.remove(deviceId)
@@ -214,16 +224,16 @@ class BleManager(
       }
 
       override fun onBatchScanResults(results: MutableList<ScanResult>) {
-        Log.d(TAG, "batch scan results requestId=$requestId count=${results.size}")
+        Log.d(TAG, "批量扫描结果 requestId=$requestId count=${results.size}")
         results.forEach { emitScanResult(requestId, it) }
       }
 
       override fun onScanFailed(errorCode: Int) {
-        Log.e(TAG, "scan failed requestId=$requestId errorCode=$errorCode")
+        Log.e(TAG, "扫描失败 requestId=$requestId errorCode=$errorCode")
         onError?.invoke(
           FlutterError(
             code = "ble_scan_failed",
-            message = "BLE scan failed.",
+            message = "BLE 扫描失败。",
             details = "requestId=$requestId,errorCode=$errorCode",
           ),
         )
@@ -237,7 +247,7 @@ class BleManager(
     if (deviceName.isNullOrBlank() || deviceName.equals("unnamed", ignoreCase = true)) {
       Log.d(
         TAG,
-        "scan result ignored requestId=$requestId address=${result.device?.address ?: ""} name=$deviceName",
+        "忽略扫描结果 requestId=$requestId address=${result.device?.address ?: ""} name=$deviceName",
       )
       return
     }
@@ -254,10 +264,84 @@ class BleManager(
     )
     Log.d(
       TAG,
-      "scan result requestId=$requestId address=${device.id} name=${device.name} rssi=${device.rssi} uuids=${device.advertisementServiceUuids}",
+      "扫描结果 requestId=$requestId address=${device.id} name=${device.name} rssi=${device.rssi} uuids=${device.advertisementServiceUuids}",
     )
     scanDeviceCache[device.id] = device
     onDeviceFound?.invoke(device)
+  }
+
+  /** 发起一次真实的 GATT 建连，支持初次连接与自动重连共用。 */
+  @SuppressLint("MissingPermission")
+  private fun startGattConnection(
+    requestId: String,
+    device: BluetoothDevice,
+    onConnectionChanged: (BleConnectionEventDto) -> Unit,
+    reconnectAttempt: Int?,
+  ) {
+    val reconnectSuffix = reconnectAttempt?.let { " reconnectAttempt=$it" } ?: ""
+    Log.d(TAG, "发起连接 requestId=$requestId deviceId=${device.address}$reconnectSuffix")
+    val gatt = device.connectGatt(
+      context,
+      false,
+      createGattCallback(device, onConnectionChanged),
+      BluetoothDevice.TRANSPORT_LE,
+    )
+    gattMap[device.address] = gatt
+  }
+
+  /** 取消挂起中的自动重连任务，必要时同时清空已累计的重连次数。 */
+  private fun cancelPendingReconnect(deviceId: String, resetAttempts: Boolean) {
+    reconnectRunnables.remove(deviceId)?.let(mainHandler::removeCallbacks)
+    if (resetAttempts) {
+      reconnectAttempts.remove(deviceId)
+    }
+  }
+
+  /** 在非主动断开时，延迟触发下一次自动重连。 */
+  private fun scheduleReconnect(
+    requestId: String,
+    device: BluetoothDevice,
+    onConnectionChanged: (BleConnectionEventDto) -> Unit,
+  ) {
+    val deviceId = device.address
+    val nextAttempt = (reconnectAttempts[deviceId] ?: 0) + 1
+    reconnectAttempts[deviceId] = nextAttempt
+    val runnable = Runnable {
+      reconnectRunnables.remove(deviceId)
+      val bluetoothAdapter = context.bluetoothAdapterOrNull()
+      if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled) {
+        Log.w(
+          TAG,
+          "取消重连 requestId=$requestId deviceId=$deviceId reason=bluetooth_unavailable attempt=$nextAttempt",
+        )
+        return@Runnable
+      }
+      requestIdsByDevice[deviceId] = requestId
+      val connectingEvent = BleConnectionEventDto(
+        requestId = requestId,
+        deviceId = deviceId,
+        state = BleConnectionStateDto.CONNECTING,
+        nativeCode = "reconnect_attempt_$nextAttempt",
+      )
+      onConnectionChanged(connectingEvent)
+      Log.w(
+        TAG,
+        "开始重连 requestId=$requestId deviceId=$deviceId attempt=$nextAttempt/$MAX_RECONNECT_ATTEMPTS",
+      )
+      startGattConnection(
+        requestId = requestId,
+        device = device,
+        onConnectionChanged = onConnectionChanged,
+        reconnectAttempt = nextAttempt,
+      )
+    }
+    cancelPendingReconnect(deviceId, resetAttempts = false)
+    reconnectRunnables[deviceId] = runnable
+    Log.w(
+      TAG,
+      "已计划重连 requestId=$requestId deviceId=$deviceId attempt=$nextAttempt/$MAX_RECONNECT_ATTEMPTS delayMs=$RECONNECT_DELAY_MS",
+    )
+    mainHandler.postDelayed(runnable, RECONNECT_DELAY_MS)
   }
 
   /** 创建 GATT 连接回调，并将原生状态变化映射为桥接事件。 */
@@ -272,10 +356,12 @@ class BleManager(
         val requestId = requestIdsByDevice[deviceId] ?: "unknown"
         Log.d(
           TAG,
-          "onConnectionStateChange requestId=$requestId deviceId=$deviceId status=$status newState=$newState",
+          "连接状态变化 requestId=$requestId deviceId=$deviceId status=$status newState=$newState",
         )
         when (newState) {
           BluetoothProfile.STATE_CONNECTED -> {
+            explicitDisconnects.remove(deviceId)
+            cancelPendingReconnect(deviceId, resetAttempts = true)
             val event = BleConnectionEventDto(
               requestId = requestId,
               deviceId = deviceId,
@@ -288,10 +374,10 @@ class BleManager(
             prepareTestProvisioningAuth(requestId, deviceId, gatt)
             val discoverStarted = gatt.discoverServices()
             if (!discoverStarted) {
-              Log.w(TAG, "auto discoverServices failed requestId=$requestId deviceId=$deviceId")
-              authSessions.remove(deviceId)?.fail("auto discoverServices failed")
+              Log.w(TAG, "自动发现服务失败 requestId=$requestId deviceId=$deviceId")
+              authSessions.remove(deviceId)?.fail("自动发现服务失败")
             } else {
-              Log.d(TAG, "auto discoverServices started requestId=$requestId deviceId=$deviceId")
+              Log.d(TAG, "已启动自动发现服务 requestId=$requestId deviceId=$deviceId")
             }
           }
           BluetoothProfile.STATE_DISCONNECTED -> {
@@ -306,12 +392,24 @@ class BleManager(
               nativeCode = status.toString(),
             )
             onConnectionChanged(event)
+            val explicitDisconnect = explicitDisconnects.remove(deviceId)
+            val reconnectAttempt = reconnectAttempts[deviceId] ?: 0
+            val shouldReconnect =
+              !explicitDisconnect &&
+              disconnectCallbacks[deviceId] == null &&
+              reconnectAttempt < MAX_RECONNECT_ATTEMPTS
+            if (shouldReconnect) {
+              scheduleReconnect(requestId, device, onConnectionChanged)
+              return
+            }
+            cancelPendingReconnect(deviceId, resetAttempts = true)
             val disconnectCallback = disconnectCallbacks.remove(deviceId)
             if (disconnectCallback != null) {
               disconnectCallback(Result.success(event))
             } else {
               connectCallbacks.remove(deviceId)?.invoke(Result.success(event))
             }
+            requestIdsByDevice.remove(deviceId)
           }
         }
       }
@@ -322,7 +420,7 @@ class BleManager(
         val requestId = requestIdsByDevice[deviceId] ?: "unknown"
         Log.d(
           TAG,
-          "onServicesDiscovered requestId=$requestId deviceId=$deviceId status=$status serviceCount=${gatt.services.size}",
+          "服务发现回调 requestId=$requestId deviceId=$deviceId status=$status serviceCount=${gatt.services.size}",
         )
         logDiscoveredServices(requestId, deviceId, gatt)
         val callback = discoverServicesCallbacks.remove(deviceId)
@@ -331,12 +429,12 @@ class BleManager(
             Result.failure(
               FlutterError(
                 "service_discovery_failed",
-                "GATT service discovery failed.",
+                "GATT 服务发现失败。",
                 "status=$status,deviceId=$deviceId",
               ),
             ),
           )
-          authSessions[deviceId]?.fail("service discovery failed status=$status")
+          authSessions[deviceId]?.fail("服务发现失败 status=$status")
           return
         }
         callback?.invoke(Result.success(mapServices(requestId, deviceId, gatt)))
@@ -353,7 +451,7 @@ class BleManager(
         val requestId = requestIdsByDevice[deviceId] ?: "unknown"
         Log.d(
           TAG,
-          "onCharacteristicChanged requestId=$requestId deviceId=$deviceId service=${characteristic.service.uuid} characteristic=${characteristic.uuid}",
+          "特征通知变化 requestId=$requestId deviceId=$deviceId service=${characteristic.service.uuid} characteristic=${characteristic.uuid}",
         )
       }
 
@@ -368,7 +466,7 @@ class BleManager(
         val requestId = requestIdsByDevice[deviceId] ?: "unknown"
         Log.d(
           TAG,
-          "onCharacteristicRead requestId=$requestId deviceId=$deviceId service=${characteristic.service.uuid} characteristic=${characteristic.uuid} status=$status",
+          "特征读取回调 requestId=$requestId deviceId=$deviceId service=${characteristic.service.uuid} characteristic=${characteristic.uuid} status=$status",
         )
         authSessions[deviceId]?.handleCharacteristicRead(characteristic, status)
       }
@@ -384,7 +482,7 @@ class BleManager(
         val requestId = requestIdsByDevice[deviceId] ?: "unknown"
         Log.d(
           TAG,
-          "onCharacteristicWrite requestId=$requestId deviceId=$deviceId service=${characteristic.service.uuid} characteristic=${characteristic.uuid} status=$status",
+          "特征写入回调 requestId=$requestId deviceId=$deviceId service=${characteristic.service.uuid} characteristic=${characteristic.uuid} status=$status",
         )
         authSessions[deviceId]?.handleCharacteristicWrite(characteristic, status)
       }
@@ -401,12 +499,12 @@ class BleManager(
     gatt.services.forEach { service ->
       Log.d(
         TAG,
-        "discovered service requestId=$requestId deviceId=$deviceId service=${service.uuid} characteristicCount=${service.characteristics.size}",
+        "发现服务详情 requestId=$requestId deviceId=$deviceId service=${service.uuid} characteristicCount=${service.characteristics.size}",
       )
       service.characteristics.forEach { characteristic ->
         Log.d(
           TAG,
-          "discovered characteristic requestId=$requestId deviceId=$deviceId service=${service.uuid} characteristic=${characteristic.uuid} properties=${characteristic.properties}",
+          "发现特征详情 requestId=$requestId deviceId=$deviceId service=${service.uuid} characteristic=${characteristic.uuid} properties=${characteristic.properties}",
         )
       }
     }
@@ -442,7 +540,7 @@ class BleManager(
       onResult = { success, message ->
         Log.d(
           TAG,
-          "protocol auth result requestId=$requestId deviceId=$deviceId success=$success message=$message",
+          "协议鉴权结果 requestId=$requestId deviceId=$deviceId success=$success message=$message",
         )
       },
     )
@@ -469,10 +567,10 @@ class BleManager(
       if (started || finished) return
       started = true
       onDiagnostic(
-        "protocol auth start requestId=$requestId deviceId=$deviceId productName=$productName serial=${TestProvisioningProtocolConfig.toHex(serialBytes)} keyData=${TestProvisioningProtocolConfig.toHex(keyData)}",
+        "协议鉴权开始 requestId=$requestId deviceId=$deviceId productName=$productName serial=${TestProvisioningProtocolConfig.toHex(serialBytes)} keyData=${TestProvisioningProtocolConfig.toHex(keyData)}",
       )
       if (!writeKeyExchange()) {
-        finish(false, "write key exchange failed")
+        finish(false, "写入密钥交换数据失败")
       }
     }
 
@@ -486,14 +584,14 @@ class BleManager(
       if (finished) return
       if (characteristic.uuid != TestProvisioningProtocolConfig.authenticationCharacteristicUuid) return
       onDiagnostic(
-        "protocol auth key write status=$status requestId=$requestId deviceId=$deviceId",
+        "协议鉴权写入密钥回调 status=$status requestId=$requestId deviceId=$deviceId",
       )
       if (status != BluetoothGatt.GATT_SUCCESS) {
-        finish(false, "key exchange write failed status=$status")
+        finish(false, "写入密钥交换数据失败 status=$status")
         return
       }
       if (!readVerificationValue()) {
-        finish(false, "read verification value failed")
+        finish(false, "读取校验值失败")
       }
     }
 
@@ -502,12 +600,12 @@ class BleManager(
       if (finished) return
       if (characteristic.uuid != TestProvisioningProtocolConfig.authenticationCharacteristicUuid) return
       if (status != BluetoothGatt.GATT_SUCCESS) {
-        finish(false, "key validation read failed status=$status")
+        finish(false, "读取密钥校验数据失败 status=$status")
         return
       }
       val value = characteristic.value ?: ByteArray(0)
       onDiagnostic(
-        "protocol auth read raw=${TestProvisioningProtocolConfig.toHex(value)} requestId=$requestId deviceId=$deviceId",
+        "协议鉴权读取原始数据 raw=${TestProvisioningProtocolConfig.toHex(value)} requestId=$requestId deviceId=$deviceId",
       )
       val decrypted = runCatching {
         TestProvisioningProtocolConfig.decrypt(value.dropHeaderIfPresent(), sessionKey)
@@ -515,14 +613,14 @@ class BleManager(
         TestProvisioningProtocolConfig.decrypt(value, sessionKey)
       }.getOrNull()
       if (decrypted == null) {
-        finish(false, "decrypt failed")
+        finish(false, "解密失败")
         return
       }
       val matches = decrypted.contentEquals(keyData)
       onDiagnostic(
-        "protocol auth decrypted=${TestProvisioningProtocolConfig.toHex(decrypted)} expected=${TestProvisioningProtocolConfig.toHex(keyData)} match=$matches requestId=$requestId deviceId=$deviceId",
+        "协议鉴权解密结果 decrypted=${TestProvisioningProtocolConfig.toHex(decrypted)} expected=${TestProvisioningProtocolConfig.toHex(keyData)} match=$matches requestId=$requestId deviceId=$deviceId",
       )
-      finish(matches, if (matches) "key validation success" else "key validation mismatch")
+      finish(matches, if (matches) "密钥校验成功" else "密钥校验不匹配")
     }
 
     /** 结束当前鉴权会话，避免重复处理后续回包。 */
@@ -535,7 +633,7 @@ class BleManager(
       val characteristic = resolveAuthenticationCharacteristic() ?: return false
       val started = gatt.readCharacteristic(characteristic)
       onDiagnostic(
-        "protocol auth readCharacteristic requestId=$requestId deviceId=$deviceId characteristic=${characteristic.uuid} started=$started",
+        "协议鉴权发起读取 requestId=$requestId deviceId=$deviceId characteristic=${characteristic.uuid} started=$started",
       )
       return started
     }
@@ -545,19 +643,19 @@ class BleManager(
       val service = gatt.getService(TestProvisioningProtocolConfig.communicationServiceUuid)
         ?: run {
           onDiagnostic(
-            "protocol auth service missing requestId=$requestId deviceId=$deviceId service=${TestProvisioningProtocolConfig.communicationServiceUuid}",
+            "协议鉴权缺少服务 requestId=$requestId deviceId=$deviceId service=${TestProvisioningProtocolConfig.communicationServiceUuid}",
           )
           return null
         }
       val characteristic = service.getCharacteristic(TestProvisioningProtocolConfig.authenticationCharacteristicUuid)
         ?: run {
           onDiagnostic(
-            "protocol auth characteristic missing requestId=$requestId deviceId=$deviceId service=${service.uuid} characteristic=${TestProvisioningProtocolConfig.authenticationCharacteristicUuid}",
+            "协议鉴权缺少特征 requestId=$requestId deviceId=$deviceId service=${service.uuid} characteristic=${TestProvisioningProtocolConfig.authenticationCharacteristicUuid}",
           )
           return null
         }
       onDiagnostic(
-        "protocol auth pipe resolved requestId=$requestId deviceId=$deviceId service=${service.uuid} characteristic=${characteristic.uuid} properties=${characteristic.properties}",
+        "协议鉴权管道已定位 requestId=$requestId deviceId=$deviceId service=${service.uuid} characteristic=${characteristic.uuid} properties=${characteristic.properties}",
       )
       return characteristic
     }
@@ -569,7 +667,7 @@ class BleManager(
       characteristic.value = TestProvisioningProtocolConfig.buildKeyExchangePacket(keyData)
       val started = gatt.writeCharacteristic(characteristic)
       onDiagnostic(
-        "protocol auth writeCharacteristic requestId=$requestId deviceId=$deviceId characteristic=${characteristic.uuid} started=$started",
+        "协议鉴权发起写入 requestId=$requestId deviceId=$deviceId characteristic=${characteristic.uuid} started=$started",
       )
       return started
     }
@@ -581,7 +679,7 @@ class BleManager(
       onResult(success, message)
       Log.d(
         TAG,
-        "protocol auth finish requestId=$requestId deviceId=$deviceId success=$success message=$message",
+        "协议鉴权结束 requestId=$requestId deviceId=$deviceId success=$success message=$message",
       )
     }
   }
@@ -629,7 +727,7 @@ class BleManager(
       if (activeRequestId == requestId && !hasScanResult) {
         Log.w(
           TAG,
-          "no scan result within ${NO_RESULT_LOG_DELAY_MS}ms requestId=$requestId bluetooth likely scanning but no advertisements received",
+          "${NO_RESULT_LOG_DELAY_MS}ms 内没有扫描结果 requestId=$requestId 可能蓝牙正在扫描但未收到广播",
         )
       }
     }
