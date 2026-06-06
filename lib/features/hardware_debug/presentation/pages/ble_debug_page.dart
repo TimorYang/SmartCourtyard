@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:math';
+import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -37,15 +37,13 @@ String? normalizedBleDeviceNameForMatch(String? name) {
   return normalizedBleDeviceName(name)?.toLowerCase();
 }
 
-String bleDebugHexPreview(List<int> bytes, {int maxBytes = 8}) {
+String bleDebugHexString(List<int> bytes) {
   if (bytes.isEmpty) {
     return 'none';
   }
-  final preview = bytes
-      .take(maxBytes)
-      .map((byte) => byte.toRadixString(16).padLeft(2, '0').toUpperCase());
-  final suffix = bytes.length > maxBytes ? ' ...' : '';
-  return '${preview.join(' ')}$suffix';
+  return bytes
+      .map((byte) => byte.toRadixString(16).padLeft(2, '0').toUpperCase())
+      .join(' ');
 }
 
 String bleDebugServiceSummary(BleDevice device) {
@@ -53,6 +51,26 @@ String bleDebugServiceSummary(BleDevice device) {
     return 'none';
   }
   return device.advertisementServiceUuids.join(', ');
+}
+
+String bleDebugDiscoveredServiceSummary(BleService service) {
+  final characteristics = service.characteristics
+      .map(
+        (item) =>
+            '${item.characteristicUuid}[${bleDebugCharacteristicCapabilities(item)}]',
+      )
+      .join(', ');
+  return '${service.serviceUuid}: ${characteristics.isEmpty ? 'no characteristics' : characteristics}';
+}
+
+String bleDebugCharacteristicCapabilities(BleCharacteristic characteristic) {
+  final capabilities = <String>[
+    if (characteristic.canRead) 'read',
+    if (characteristic.canWriteWithResponse) 'write',
+    if (characteristic.canWriteWithoutResponse) 'writeNoRsp',
+    if (characteristic.canNotify) 'notify',
+  ];
+  return capabilities.isEmpty ? 'none' : capabilities.join('+');
 }
 
 bool isBleDeviceFresh(
@@ -102,28 +120,41 @@ class _BleDebugPageState extends ConsumerState<BleDebugPage> {
             'scan: ${device.name ?? '(unnamed)'} ${device.id} '
             'services=[${bleDebugServiceSummary(device)}] '
             'manufacturer=${device.manufacturerData.length}B '
-            '${bleDebugHexPreview(device.manufacturerData)}',
+            '${bleDebugHexString(device.manufacturerData)}',
           );
         });
       }),
       gateway.bleConnectionEvents.listen((event) {
         setState(() {
           _connectionStates[event.deviceId] = event.state;
-          _appendLog('connection: ${event.deviceId} ${event.state.name}');
+          _appendLog(
+            'connection: requestId=${event.requestId} '
+            'device=${event.deviceId} state=${event.state.name} '
+            'nativeCode=${event.nativeCode ?? '-'}',
+          );
         });
       }),
       gateway.bleNotifications.listen((notification) {
         setState(() {
           _appendLog(
-            'notify: ${notification.deviceId} '
-            '${notification.serviceUuid}/${notification.characteristicUuid} '
-            '${notification.payload.length} bytes',
+            'notify: requestId=${notification.requestId ?? '-'} '
+            'device=${notification.deviceId} '
+            'service=${notification.serviceUuid} '
+            'characteristic=${notification.characteristicUuid} '
+            'sequence=${notification.sequenceNumber} '
+            '${notification.payload.length}B '
+            'payload=${bleDebugHexString(notification.payload)}',
           );
         });
       }),
       gateway.nativeErrors.listen((error) {
         setState(() {
-          _appendLog('error: ${error.code} ${error.message ?? ''}');
+          _appendLog(
+            'error: requestId=${error.requestId ?? '-'} '
+            'device=${error.deviceId ?? '-'} code=${error.code} '
+            'domain=${error.domainCode} retryable=${error.retryable} '
+            '${error.message ?? ''}',
+          );
         });
       }),
     ]);
@@ -333,7 +364,11 @@ class _BleDebugPageState extends ConsumerState<BleDebugPage> {
       );
       setState(() {
         _connectionStates[device.id] = event.state;
-        _appendLog('connect result: ${device.id} ${event.state.name}');
+        _appendLog(
+          'connect result: requestId=${event.requestId} '
+          'device=${device.id} state=${event.state.name} '
+          'nativeCode=${event.nativeCode ?? '-'}',
+        );
       });
     } catch (error) {
       setState(() {
@@ -350,7 +385,11 @@ class _BleDebugPageState extends ConsumerState<BleDebugPage> {
       );
       setState(() {
         _connectionStates[device.id] = event.state;
-        _appendLog('disconnect result: ${device.id} ${event.state.name}');
+        _appendLog(
+          'disconnect result: requestId=${event.requestId} '
+          'device=${device.id} state=${event.state.name} '
+          'nativeCode=${event.nativeCode ?? '-'}',
+        );
       });
     } catch (error) {
       setState(() {
@@ -367,7 +406,11 @@ class _BleDebugPageState extends ConsumerState<BleDebugPage> {
       );
       setState(() {
         _services[device.id] = services;
-        _appendLog('services: ${device.id} ${services.services.length}');
+        _appendLog(
+          'services: requestId=${services.requestId} '
+          'device=${device.id} count=${services.services.length} '
+          '${services.services.map(bleDebugDiscoveredServiceSummary).join(' | ')}',
+        );
       });
     } catch (error) {
       setState(() {
@@ -382,7 +425,7 @@ class _BleDebugPageState extends ConsumerState<BleDebugPage> {
   }
 
   void _appendLog(String message) {
-    print('ble log--------$message');
+    developer.log('ble log--------$message', name: 'FLINX.BLE');
     _log.add('${DateTime.now().toIso8601String()}  $message');
     if (_log.length > 80) {
       _log.removeRange(0, _log.length - 80);
@@ -404,7 +447,7 @@ class _DeviceTile extends StatelessWidget {
         state._services[device.id]?.services ?? const <BleService>[];
     final connected = connectionState == BleConnectionState.connected;
     final isTargetMatch = matchesBleDebugTargetName(device.name);
-    final manufacturerPreview = bleDebugHexPreview(device.manufacturerData);
+    final manufacturerPreview = bleDebugHexString(device.manufacturerData);
     final serviceSummary = bleDebugServiceSummary(device);
     final connecting = connectionState == BleConnectionState.connecting;
 
@@ -462,10 +505,7 @@ class _DeviceTile extends StatelessWidget {
             for (final service in services)
               Align(
                 alignment: Alignment.centerLeft,
-                child: Text(
-                  '${service.serviceUuid}: '
-                  '${service.characteristics.map((item) => item.characteristicUuid).join(', ')}',
-                ),
+                child: Text(bleDebugDiscoveredServiceSummary(service)),
               ),
         ],
       ),

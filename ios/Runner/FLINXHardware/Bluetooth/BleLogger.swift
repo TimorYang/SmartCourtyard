@@ -12,7 +12,8 @@ final class BleLogger {
     state: String? = nil,
     nativeCode: String? = nil,
     durationMs: Int? = nil,
-    payloadBytes: Int? = nil
+    payloadBytes: Int? = nil,
+    details: String? = nil
   ) {
     log(
       level: .info,
@@ -22,7 +23,8 @@ final class BleLogger {
       state: state,
       nativeCode: nativeCode,
       durationMs: durationMs,
-      payloadBytes: payloadBytes
+      payloadBytes: payloadBytes,
+      details: details
     )
   }
 
@@ -33,7 +35,8 @@ final class BleLogger {
     state: String? = nil,
     nativeCode: String? = nil,
     durationMs: Int? = nil,
-    payloadBytes: Int? = nil
+    payloadBytes: Int? = nil,
+    details: String? = nil
   ) {
     log(
       level: .default,
@@ -43,7 +46,8 @@ final class BleLogger {
       state: state,
       nativeCode: nativeCode,
       durationMs: durationMs,
-      payloadBytes: payloadBytes
+      payloadBytes: payloadBytes,
+      details: details
     )
   }
 
@@ -52,7 +56,8 @@ final class BleLogger {
     requestId: String? = nil,
     deviceId: String? = nil,
     nativeCode: String? = nil,
-    durationMs: Int? = nil
+    durationMs: Int? = nil,
+    details: String? = nil
   ) {
     log(
       level: .error,
@@ -62,7 +67,8 @@ final class BleLogger {
       state: nil,
       nativeCode: nativeCode,
       durationMs: durationMs,
-      payloadBytes: nil
+      payloadBytes: nil,
+      details: details
     )
   }
 
@@ -74,9 +80,10 @@ final class BleLogger {
     state: String?,
     nativeCode: String?,
     durationMs: Int?,
-    payloadBytes: Int?
+    payloadBytes: Int?,
+    details: String?
   ) {
-    let message = [
+    var parts = [
       "operation=\(operation)",
       "requestId=\(requestId ?? "-")",
       "deviceId=\(deviceId ?? "-")",
@@ -84,7 +91,11 @@ final class BleLogger {
       "nativeCode=\(nativeCode ?? "-")",
       "durationMs=\(durationMs.map(String.init) ?? "-")",
       "payloadBytes=\(payloadBytes.map(String.init) ?? "-")",
-    ].joined(separator: " ")
+    ]
+    if let details, !details.isEmpty {
+      parts.append("details=\(details)")
+    }
+    let message = parts.joined(separator: " ")
 
     if #available(iOS 14.0, *) {
       let logger = Logger(subsystem: subsystem, category: category)

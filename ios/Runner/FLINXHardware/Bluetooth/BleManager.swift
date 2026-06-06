@@ -58,7 +58,12 @@ final class BleManager: NSObject {
       "scan_start",
       requestId: requestId,
       state: "started",
-      nativeCode: session.sessionId
+      nativeCode: session.sessionId,
+      details:
+        "serviceUuids=\(filter.serviceUuids.isEmpty ? "none" : filter.serviceUuids.joined(separator: ",")) " +
+        "namePrefix=\(filter.namePrefix ?? "none") " +
+        "exactName=\(filter.exactName ?? "none") " +
+        "allowDuplicates=\(filter.allowDuplicates)"
     )
     centralManager.scanForPeripherals(
       withServices: serviceUuids.isEmpty ? nil : serviceUuids,
@@ -68,9 +73,15 @@ final class BleManager: NSObject {
 
   func stopScan(requestId: String) {
     centralManager.stopScan()
-    let sessionId = currentScan?.sessionId
+    let session = currentScan
     currentScan = nil
-    logger.info("scan_stop", requestId: requestId, state: "stopped", nativeCode: sessionId)
+    logger.info(
+      "scan_stop",
+      requestId: requestId,
+      state: "stopped",
+      nativeCode: session?.sessionId,
+      details: "discoveredDevices=\(session?.devices.count ?? 0)"
+    )
   }
 
   func connect(
@@ -94,7 +105,13 @@ final class BleManager: NSObject {
       deviceId: deviceId,
       completion: completion
     )
-    logger.info("connect", requestId: requestId, deviceId: deviceId, state: "started")
+    logger.info(
+      "connect",
+      requestId: requestId,
+      deviceId: deviceId,
+      state: "started",
+      details: "peripheralState=\(peripheralStateSummary(peripheral.state)) name=\(peripheral.name ?? "none")"
+    )
     emitConnection(requestId: requestId, deviceId: deviceId, state: .connecting)
     centralManager.connect(peripheral)
   }
@@ -131,7 +148,13 @@ final class BleManager: NSObject {
       deviceId: deviceId,
       completion: completion
     )
-    logger.info("disconnect", requestId: requestId, deviceId: deviceId, state: "started")
+    logger.info(
+      "disconnect",
+      requestId: requestId,
+      deviceId: deviceId,
+      state: "started",
+      details: "peripheralState=\(peripheralStateSummary(peripheral.state))"
+    )
     centralManager.cancelPeripheralConnection(peripheral)
   }
 
@@ -199,7 +222,13 @@ final class BleManager: NSObject {
       deviceId: deviceId,
       completion: completion
     )
-    logger.info("read_characteristic", requestId: requestId, deviceId: deviceId, state: "started")
+    logger.info(
+      "read_characteristic",
+      requestId: requestId,
+      deviceId: deviceId,
+      state: "started",
+      details: characteristicDetails(characteristic)
+    )
     peripheral.readValue(for: characteristic)
   }
 
@@ -245,7 +274,8 @@ final class BleManager: NSObject {
       requestId: requestId,
       deviceId: deviceId,
       state: "started",
-      payloadBytes: payload.count
+      payloadBytes: payload.count,
+      details: "\(characteristicDetails(characteristic)) writeType=\(writeType == .withoutResponse ? "withoutResponse" : "withResponse") payloadHex=\(diagnosticPayloadHex(payload))"
     )
     peripheral.writeValue(payload, for: characteristic, type: cbWriteType)
 
@@ -306,7 +336,13 @@ final class BleManager: NSObject {
       },
       completion: completion
     )
-    logger.info("set_notify", requestId: requestId, deviceId: deviceId, state: enabled ? "enable" : "disable")
+    logger.info(
+      "set_notify",
+      requestId: requestId,
+      deviceId: deviceId,
+      state: enabled ? "enable" : "disable",
+      details: characteristicDetails(characteristic)
+    )
     peripheral.setNotifyValue(enabled, for: characteristic)
   }
 
@@ -379,7 +415,10 @@ final class BleManager: NSObject {
       requestId: pending.requestId,
       deviceId: deviceId,
       state: "success",
-      durationMs: pending.durationMs
+      durationMs: pending.durationMs,
+      details: services.map { service in
+        "\(service.serviceUuid)[\(service.characteristics.map(\.characteristicUuid).joined(separator: ","))]"
+      }.joined(separator: " ")
     )
     pending.completion(
       .success(
@@ -524,10 +563,129 @@ final class BleManager: NSObject {
     Array(Set(uuids.map { $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() }
       .filter { !$0.isEmpty })).sorted()
   }
+
+  private func hexString(_ data: Data) -> String {
+    guard !data.isEmpty else {
+      return "none"
+    }
+    return data.map { String(format: "%02X", $0) }.joined(separator: " ")
+  }
+
+  private func diagnosticPayloadHex(_ data: Data) -> String {
+    let lowercaseText = String(data: data, encoding: .utf8)?.lowercased() ?? ""
+    let sensitiveMarkers = ["password", "\"pwd\"", "token", "secret", "sessionkey", "key_data"]
+    if sensitiveMarkers.contains(where: lowercaseText.contains) {
+      return "<redacted sensitive payload>"
+    }
+    return hexString(data)
+  }
+
+  private func advertisementKeysSummary(_ advertisementData: [String: Any]) -> String {
+    if advertisementData.isEmpty {
+      return "none"
+    }
+    return advertisementData.keys.sorted().joined(separator: ",")
+  }
+
+  private func boolSummary(_ value: Any?) -> String {
+    if let value = value as? NSNumber {
+      return value.boolValue ? "true" : "false"
+    }
+    if let value = value as? Bool {
+      return value ? "true" : "false"
+    }
+    return "none"
+  }
+
+  private func intSummary(_ value: Any?) -> String {
+    if let value = value as? NSNumber {
+      return value.stringValue
+    }
+    if let value = value as? Int {
+      return String(value)
+    }
+    return "none"
+  }
+
+  private func uuidArraySummary(_ value: Any?) -> String {
+    guard let uuids = value as? [CBUUID], !uuids.isEmpty else {
+      return "none"
+    }
+    return normalizedUuids(uuids.map(\.uuidString)).joined(separator: ",")
+  }
+
+  private func serviceDataSummary(_ value: Any?) -> String {
+    guard let serviceData = value as? [CBUUID: Data], !serviceData.isEmpty else {
+      return "none"
+    }
+    let items = serviceData
+      .map { uuid, data in "\(uuid.uuidString.uppercased()):\(hexString(data))" }
+      .sorted()
+    return items.joined(separator: ",")
+  }
+
+  private func peripheralStateSummary(_ state: CBPeripheralState) -> String {
+    switch state {
+    case .disconnected:
+      return "disconnected"
+    case .connecting:
+      return "connecting"
+    case .connected:
+      return "connected"
+    case .disconnecting:
+      return "disconnecting"
+    @unknown default:
+      return "unknown"
+    }
+  }
+
+  private func centralStateSummary(_ state: CBManagerState) -> String {
+    switch state {
+    case .unknown:
+      return "unknown"
+    case .resetting:
+      return "resetting"
+    case .unsupported:
+      return "unsupported"
+    case .unauthorized:
+      return "unauthorized"
+    case .poweredOff:
+      return "poweredOff"
+    case .poweredOn:
+      return "poweredOn"
+    @unknown default:
+      return "unknown"
+    }
+  }
+
+  private func characteristicPropertiesSummary(_ properties: CBCharacteristicProperties) -> String {
+    var items: [String] = []
+    if properties.contains(.read) { items.append("read") }
+    if properties.contains(.write) { items.append("write") }
+    if properties.contains(.writeWithoutResponse) { items.append("writeWithoutResponse") }
+    if properties.contains(.notify) { items.append("notify") }
+    if properties.contains(.indicate) { items.append("indicate") }
+    if properties.contains(.authenticatedSignedWrites) { items.append("authenticatedSignedWrites") }
+    if properties.contains(.extendedProperties) { items.append("extendedProperties") }
+    return items.isEmpty ? "none" : items.joined(separator: ",")
+  }
+
+  private func characteristicDetails(_ characteristic: CBCharacteristic) -> String {
+    "service=\(characteristic.service?.uuid.uuidString.uppercased() ?? "none") " +
+      "characteristic=\(characteristic.uuid.uuidString.uppercased()) " +
+      "properties=\(characteristicPropertiesSummary(characteristic.properties)) " +
+      "isNotifying=\(characteristic.isNotifying)"
+  }
 }
 
 extension BleManager: CBCentralManagerDelegate {
   func centralManagerDidUpdateState(_ central: CBCentralManager) {
+    logger.info(
+      "central_state",
+      requestId: currentScan?.requestId,
+      state: centralStateSummary(central.state),
+      nativeCode: "\(central.state.rawValue)"
+    )
     if central.state != .poweredOn {
       emitNativeError(.bluetoothUnavailable, requestId: currentScan?.requestId, deviceId: nil)
     }
@@ -543,7 +701,8 @@ extension BleManager: CBCentralManagerDelegate {
       return
     }
 
-    let rawName = peripheral.name ?? advertisementData[CBAdvertisementDataLocalNameKey] as? String
+    let localName = advertisementData[CBAdvertisementDataLocalNameKey] as? String
+    let rawName = localName ?? peripheral.name
     let name = rawName?.trimmingCharacters(in: .whitespacesAndNewlines)
     let normalizedName = name?.isEmpty == true ? nil : name
     if let exactName = scan.filter.exactName, normalizedName != exactName {
@@ -562,6 +721,17 @@ extension BleManager: CBCentralManagerDelegate {
     )
     let manufacturerData =
       advertisementData[CBAdvertisementDataManufacturerDataKey] as? Data ?? Data()
+    let overflowServiceUuids = uuidArraySummary(
+      advertisementData[CBAdvertisementDataOverflowServiceUUIDsKey]
+    )
+    let solicitedServiceUuids = uuidArraySummary(
+      advertisementData[CBAdvertisementDataSolicitedServiceUUIDsKey]
+    )
+    let serviceData = serviceDataSummary(
+      advertisementData[CBAdvertisementDataServiceDataKey]
+    )
+    let txPower = intSummary(advertisementData[CBAdvertisementDataTxPowerLevelKey])
+    let isConnectable = boolSummary(advertisementData[CBAdvertisementDataIsConnectable])
     let previous = scan.devices[deviceId]
     let rssi = previous.map { Int((Double($0.rssi) * 0.7 + Double(RSSI.intValue) * 0.3).rounded()) }
       ?? RSSI.intValue
@@ -588,7 +758,20 @@ extension BleManager: CBCentralManagerDelegate {
       requestId: scan.requestId,
       deviceId: deviceId,
       nativeCode: scan.sessionId,
-      payloadBytes: manufacturerData.count
+      payloadBytes: manufacturerData.count,
+      details:
+        "name=\(normalizedName ?? "(unnamed)") " +
+        "peripheralName=\(peripheral.name ?? "none") " +
+        "localName=\(localName ?? "none") " +
+        "rssi=\(rssi) " +
+        "services=\(serviceUuids.isEmpty ? "none" : serviceUuids.joined(separator: ",")) " +
+        "manufacturer=\(hexString(manufacturerData)) " +
+        "serviceData=\(serviceData) " +
+        "overflowServices=\(overflowServiceUuids) " +
+        "solicitedServices=\(solicitedServiceUuids) " +
+        "txPower=\(txPower) " +
+        "isConnectable=\(isConnectable) " +
+        "advKeys=\(advertisementKeysSummary(advertisementData))"
     )
     delegate?.bleManager(self, didDiscover: device)
   }
@@ -606,7 +789,14 @@ extension BleManager: CBCentralManagerDelegate {
       state: .connected,
       nativeCode: nil
     )
-    logger.info(pending.operation, requestId: pending.requestId, deviceId: deviceId, state: "success", durationMs: pending.durationMs)
+    logger.info(
+      pending.operation,
+      requestId: pending.requestId,
+      deviceId: deviceId,
+      state: "success",
+      durationMs: pending.durationMs,
+      details: "name=\(peripheral.name ?? "none")"
+    )
     delegate?.bleManager(self, didChangeConnection: event)
     pending.completion(.success(event))
   }
@@ -620,6 +810,13 @@ extension BleManager: CBCentralManagerDelegate {
     let pending = pendingConnects.removeValue(forKey: deviceId)
     pending?.timeout.cancel()
     let managerError = BleManagerError.operationFailed("connect_failed")
+    logger.error(
+      "connect",
+      requestId: pending?.requestId,
+      deviceId: deviceId,
+      nativeCode: managerError.nativeCode,
+      details: "error=\(error?.localizedDescription ?? "none")"
+    )
     emitNativeError(managerError, requestId: pending?.requestId, deviceId: deviceId)
     pending?.completion(.failure(error ?? managerError))
   }
@@ -643,7 +840,14 @@ extension BleManager: CBCentralManagerDelegate {
       state: .disconnected,
       nativeCode: nativeCode
     )
-    logger.warning("disconnect_event", requestId: requestId, deviceId: deviceId, state: "disconnected", nativeCode: nativeCode)
+    logger.warning(
+      "disconnect_event",
+      requestId: requestId,
+      deviceId: deviceId,
+      state: "disconnected",
+      nativeCode: nativeCode,
+      details: "error=\(error?.localizedDescription ?? "none")"
+    )
     delegate?.bleManager(self, didChangeConnection: event)
 
     pendingDisconnect?.completion(.success(event))
@@ -671,11 +875,25 @@ extension BleManager: CBPeripheralDelegate {
       let pending = pendingDiscoveries.removeValue(forKey: deviceId)
       pending?.timeout.cancel()
       pending?.completion(.failure(error))
+      logger.error(
+        "discover_services",
+        requestId: pending?.requestId,
+        deviceId: deviceId,
+        nativeCode: "discover_services_failed",
+        details: "error=\(error.localizedDescription)"
+      )
       emitNativeError(.operationFailed("discover_services_failed"), requestId: pending?.requestId, deviceId: deviceId)
       return
     }
 
     let services = peripheral.services ?? []
+    logger.info(
+      "discover_services_callback",
+      requestId: pendingDiscoveries[deviceId]?.requestId,
+      deviceId: deviceId,
+      state: "services_discovered",
+      details: "serviceCount=\(services.count) services=\(services.map { $0.uuid.uuidString.uppercased() }.joined(separator: ","))"
+    )
     guard !services.isEmpty else {
       completeDiscovery(for: peripheral)
       return
@@ -698,6 +916,13 @@ extension BleManager: CBPeripheralDelegate {
       let pending = pendingDiscoveries.removeValue(forKey: deviceId)
       pending?.timeout.cancel()
       pending?.completion(.failure(error))
+      logger.error(
+        "discover_characteristics",
+        requestId: pending?.requestId,
+        deviceId: deviceId,
+        nativeCode: "discover_characteristics_failed",
+        details: "service=\(service.uuid.uuidString.uppercased()) error=\(error.localizedDescription)"
+      )
       emitNativeError(.operationFailed("discover_characteristics_failed"), requestId: pending?.requestId, deviceId: deviceId)
       return
     }
@@ -705,6 +930,13 @@ extension BleManager: CBPeripheralDelegate {
     guard var pending = pendingDiscoveries[deviceId] else {
       return
     }
+    logger.info(
+      "discover_characteristics_callback",
+      requestId: pending.requestId,
+      deviceId: deviceId,
+      state: "characteristics_discovered",
+      details: "service=\(service.uuid.uuidString.uppercased()) characteristics=\((service.characteristics ?? []).map { "\($0.uuid.uuidString.uppercased())[\(characteristicPropertiesSummary($0.properties))]" }.joined(separator: ","))"
+    )
     pending.remainingServices -= 1
     if pending.remainingServices <= 0 {
       pendingDiscoveries[deviceId] = pending
@@ -734,7 +966,8 @@ extension BleManager: CBPeripheralDelegate {
         deviceId: deviceId,
         state: "success",
         durationMs: pending.durationMs,
-        payloadBytes: characteristic.value?.count ?? 0
+        payloadBytes: characteristic.value?.count ?? 0,
+        details: "\(characteristicDetails(characteristic)) payloadHex=\(diagnosticPayloadHex(characteristic.value ?? Data()))"
       )
       pending.completion(
         .success(
@@ -764,7 +997,12 @@ extension BleManager: CBPeripheralDelegate {
           sequenceNumber: notificationSequence
         )
       )
-      logger.info("notification", deviceId: deviceId, payloadBytes: characteristic.value?.count ?? 0)
+      logger.info(
+        "notification",
+        deviceId: deviceId,
+        payloadBytes: characteristic.value?.count ?? 0,
+        details: "\(characteristicDetails(characteristic)) sequenceNumber=\(notificationSequence) payloadHex=\(diagnosticPayloadHex(characteristic.value ?? Data()))"
+      )
     } else {
       emitNativeError(.operationFailed("notification_failed"), requestId: nil, deviceId: deviceId)
     }
@@ -786,7 +1024,14 @@ extension BleManager: CBPeripheralDelegate {
       pending.completion(.failure(error))
       return
     }
-    logger.info(pending.operation, requestId: pending.requestId, deviceId: deviceId, state: "success", durationMs: pending.durationMs)
+    logger.info(
+      pending.operation,
+      requestId: pending.requestId,
+      deviceId: deviceId,
+      state: "success",
+      durationMs: pending.durationMs,
+      details: characteristicDetails(characteristic)
+    )
     pending.completion(
       .success(
         BleWriteResult(
@@ -817,7 +1062,14 @@ extension BleManager: CBPeripheralDelegate {
       pending.completion(.failure(error))
       return
     }
-    logger.info(pending.operation, requestId: pending.requestId, deviceId: deviceId, state: "success", durationMs: pending.durationMs)
+    logger.info(
+      pending.operation,
+      requestId: pending.requestId,
+      deviceId: deviceId,
+      state: "success",
+      durationMs: pending.durationMs,
+      details: "\(characteristicDetails(characteristic)) expectedEnabled=\(pending.enabled)"
+    )
     pending.completion(
       .success(
         BleWriteResult(

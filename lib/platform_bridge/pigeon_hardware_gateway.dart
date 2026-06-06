@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 
 import 'package:flutter/services.dart';
 
@@ -284,22 +285,91 @@ class _HardwareFlutterApiHandler implements pigeon.HardwareFlutterApi {
 
   @override
   void onBleScanResult(pigeon.BleDeviceDto device) {
-    _scanController.add(device.toModel());
+    final model = device.toModel();
+    _printBleLog(
+      'scan_result',
+      requestId: model.requestId,
+      deviceId: model.id,
+      payloadBytes: model.manufacturerData.length,
+      details:
+          'name=${model.name ?? '(unnamed)'} rssi=${model.rssi} '
+          'services=${model.advertisementServiceUuids.isEmpty ? 'none' : model.advertisementServiceUuids.join(',')} '
+          'manufacturer=${_hexString(model.manufacturerData)}',
+    );
+    _scanController.add(model);
   }
 
   @override
   void onBleConnectionChanged(pigeon.BleConnectionEventDto event) {
-    _connectionController.add(event.toModel());
+    final model = event.toModel();
+    _printBleLog(
+      'connection_state',
+      requestId: model.requestId,
+      deviceId: model.deviceId,
+      state: model.state.name,
+      nativeCode: model.nativeCode,
+    );
+    _connectionController.add(model);
   }
 
   @override
   void onBleNotification(pigeon.BleNotificationDto notification) {
-    _notificationController.add(notification.toModel());
+    final model = notification.toModel();
+    _printBleLog(
+      'notification',
+      requestId: model.requestId,
+      deviceId: model.deviceId,
+      payloadBytes: model.payload.length,
+      details:
+          'service=${model.serviceUuid} characteristic=${model.characteristicUuid} '
+          'sequence=${model.sequenceNumber} payload=${_hexString(model.payload)}',
+    );
+    _notificationController.add(model);
   }
 
   @override
   void onNativeError(pigeon.NativeErrorDto error) {
-    _nativeErrorController.add(error.toModel());
+    final model = error.toModel();
+    _printBleLog(
+      'native_error',
+      requestId: model.requestId,
+      deviceId: model.deviceId,
+      nativeCode: model.code,
+      details:
+          'domain=${model.domainCode} retryable=${model.retryable} '
+          'message=${model.message ?? ''}',
+    );
+    _nativeErrorController.add(model);
+  }
+
+  void _printBleLog(
+    String operation, {
+    String? requestId,
+    String? deviceId,
+    String? state,
+    String? nativeCode,
+    int? payloadBytes,
+    String? details,
+  }) {
+    final parts = <String>[
+      'operation=$operation',
+      'requestId=${requestId ?? '-'}',
+      'deviceId=${deviceId ?? '-'}',
+      'state=${state ?? '-'}',
+      'nativeCode=${nativeCode ?? '-'}',
+      'payloadBytes=${payloadBytes ?? '-'}',
+      if (details != null && details.isNotEmpty) 'details=$details',
+    ];
+    developer.log('ble log--------${parts.join(' ')}', name: 'FLINX.BLE');
+  }
+
+  String _hexString(List<int> bytes) {
+    if (bytes.isEmpty) {
+      return 'none';
+    }
+    return bytes
+        .map((byte) => byte.toRadixString(16).padLeft(2, '0').toUpperCase())
+        .join(' ');
   }
 }
 
@@ -529,6 +599,15 @@ AppError _platformExceptionToAppError(
     'peripheral_unavailable' => AppErrorCode.bluetoothDisconnected,
     'operation_in_progress' => AppErrorCode.deviceBusy,
     'operation_timeout' => AppErrorCode.commandTimeout,
+    'provisioning_response_timeout' => AppErrorCode.commandTimeout,
+    'provisioning_characteristic_not_found' => AppErrorCode.provisioningFailed,
+    'encrypted_provisioning_frame_unsupported' =>
+      AppErrorCode.provisioningFailed,
+    'encrypted_provisioning_frame_decrypt_failed' =>
+      AppErrorCode.provisioningFailed,
+    'invalid_auth_response' => AppErrorCode.pairingFailed,
+    'invalid_wifi_scan_response' => AppErrorCode.provisioningFailed,
+    'invalid_wifi_provision_response' => AppErrorCode.provisioningFailed,
     'bluetooth_disconnected' => AppErrorCode.bluetoothDisconnected,
     _ => AppErrorCode.unknown,
   };

@@ -31,6 +31,28 @@ struct BleConnectionEvent {
   let nativeCode: String?
 }
 
+struct BleAuthenticationResult {
+  let requestId: String
+  let deviceId: String
+  let authenticated: Bool
+  let bindingState: Int64?
+  let nativeCode: String?
+}
+
+struct WifiScanResult {
+  let requestId: String
+  let deviceId: String
+  let ssids: [String]
+}
+
+struct WifiProvisionResult {
+  let requestId: String
+  let deviceId: String
+  let ssid: String
+  let success: Bool
+  let nativeCode: String?
+}
+
 struct BleCharacteristic {
   let serviceUuid: String
   let characteristicUuid: String
