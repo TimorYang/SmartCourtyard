@@ -7,6 +7,62 @@ import '../../../../platform_bridge/hardware_gateway.dart';
 import '../../../../platform_bridge/hardware_models.dart';
 import '../../../../platform_bridge/providers.dart';
 
+const String bleDebugTargetName = 'HEMS_Controller';
+const Duration bleDebugDeviceStaleAfter = Duration(seconds: 12);
+const Duration bleDebugDevicePruneInterval = Duration(seconds: 1);
+
+bool matchesBleDebugTargetName(
+  String? name, {
+  String targetName = bleDebugTargetName,
+}) {
+  final normalizedName = normalizedBleDeviceNameForMatch(name);
+  final normalizedTarget = targetName.trim().toLowerCase();
+  if (normalizedName == null || normalizedName.isEmpty) {
+    return false;
+  }
+  return normalizedName == normalizedTarget ||
+      normalizedName.startsWith(normalizedTarget);
+}
+
+String? normalizedBleDeviceName(String? name) {
+  final normalizedName = name?.trim();
+  if (normalizedName == null || normalizedName.isEmpty) {
+    return null;
+  }
+  return normalizedName;
+}
+
+String? normalizedBleDeviceNameForMatch(String? name) {
+  return normalizedBleDeviceName(name)?.toLowerCase();
+}
+
+String bleDebugHexPreview(List<int> bytes, {int maxBytes = 8}) {
+  if (bytes.isEmpty) {
+    return 'none';
+  }
+  final preview = bytes
+      .take(maxBytes)
+      .map((byte) => byte.toRadixString(16).padLeft(2, '0').toUpperCase());
+  final suffix = bytes.length > maxBytes ? ' ...' : '';
+  return '${preview.join(' ')}$suffix';
+}
+
+String bleDebugServiceSummary(BleDevice device) {
+  if (device.advertisementServiceUuids.isEmpty) {
+    return 'none';
+  }
+  return device.advertisementServiceUuids.join(', ');
+}
+
+bool isBleDeviceFresh(
+  BleDevice device, {
+  required DateTime now,
+  Duration staleAfter = bleDebugDeviceStaleAfter,
+}) {
+  final age = now.millisecondsSinceEpoch - device.seenAtMillis;
+  return age <= staleAfter.inMilliseconds;
+}
+
 class BleDebugPage extends ConsumerStatefulWidget {
   const BleDebugPage({super.key});
 
@@ -25,6 +81,7 @@ class _BleDebugPageState extends ConsumerState<BleDebugPage> {
   final Map<String, BleServices> _services = <String, BleServices>{};
   final List<StreamSubscription<Object?>> _subscriptions =
       <StreamSubscription<Object?>>[];
+  Timer? _pruneTimer;
 
   int _requestCounter = 0;
   bool _scanning = false;
@@ -39,7 +96,12 @@ class _BleDebugPageState extends ConsumerState<BleDebugPage> {
       gateway.bleScanResults.listen((device) {
         setState(() {
           _devices[device.id] = device;
-          _appendLog('scan: ${device.name ?? '(unnamed)'} ${device.id}');
+          _appendLog(
+            'scan: ${device.name ?? '(unnamed)'} ${device.id} '
+            'services=[${bleDebugServiceSummary(device)}] '
+            'manufacturer=${device.manufacturerData.length}B '
+            '${bleDebugHexPreview(device.manufacturerData)}',
+          );
         });
       }),
       gateway.bleConnectionEvents.listen((event) {
@@ -63,10 +125,31 @@ class _BleDebugPageState extends ConsumerState<BleDebugPage> {
         });
       }),
     ]);
+    _pruneTimer = Timer.periodic(bleDebugDevicePruneInterval, (_) {
+      if (!mounted) {
+        return;
+      }
+      final now = DateTime.now();
+      final staleDeviceIds = _devices.entries
+          .where((entry) => !isBleDeviceFresh(entry.value, now: now))
+          .map((entry) => entry.key)
+          .toList();
+      if (staleDeviceIds.isEmpty) {
+        return;
+      }
+      setState(() {
+        for (final deviceId in staleDeviceIds) {
+          _devices.remove(deviceId);
+          _connectionStates.remove(deviceId);
+          _services.remove(deviceId);
+        }
+      });
+    });
   }
 
   @override
   void dispose() {
+    _pruneTimer?.cancel();
     for (final subscription in _subscriptions) {
       subscription.cancel();
     }
@@ -75,8 +158,23 @@ class _BleDebugPageState extends ConsumerState<BleDebugPage> {
 
   @override
   Widget build(BuildContext context) {
-    final devices = _devices.values.toList()
-      ..sort((a, b) => b.rssi.compareTo(a.rssi));
+    final now = DateTime.now();
+    final devices =
+        _devices.values
+            .where((device) => isBleDeviceFresh(device, now: now))
+            .where((device) => normalizedBleDeviceName(device.name) != null)
+            .toList()
+          ..sort((a, b) {
+            final aMatches = matchesBleDebugTargetName(a.name);
+            final bMatches = matchesBleDebugTargetName(b.name);
+            if (aMatches != bMatches) {
+              return aMatches ? -1 : 1;
+            }
+            return b.rssi.compareTo(a.rssi);
+          });
+    final matchedDevices = devices.where(
+      (device) => matchesBleDebugTargetName(device.name),
+    );
 
     return Scaffold(
       appBar: AppBar(title: const Text('BLE Debug')),
@@ -85,6 +183,14 @@ class _BleDebugPageState extends ConsumerState<BleDebugPage> {
         children: [
           const Text(
             'Use this page on a physical iPhone. iOS Simulator cannot scan real BLE devices.',
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Target name: $bleDebugTargetName. This page now scans all devices first and marks name matches locally to avoid missing devices whose advertisement name is delayed or formatted differently.',
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Devices disappear automatically if no advertisement is received for ${bleDebugDeviceStaleAfter.inSeconds}s.',
           ),
           const SizedBox(height: 12),
           Wrap(
@@ -110,6 +216,10 @@ class _BleDebugPageState extends ConsumerState<BleDebugPage> {
           ),
           const SizedBox(height: 16),
           Text('Devices (${devices.length})'),
+          const SizedBox(height: 8),
+          Text('Hidden unnamed devices: ${_devices.length - devices.length}'),
+          const SizedBox(height: 8),
+          Text('Matched target name: ${matchedDevices.length}'),
           const SizedBox(height: 8),
           for (final device in devices)
             _DeviceTile(device: device, state: this),
@@ -163,7 +273,10 @@ class _BleDebugPageState extends ConsumerState<BleDebugPage> {
       });
       await _gateway.startBleScan(
         requestId: _nextRequestId('scan'),
-        filter: const BleScanFilter(allowDuplicates: true),
+        filter: const BleScanFilter(
+          namePrefix: 'HEMS_Controller',
+          allowDuplicates: false,
+        ),
       );
     } catch (error) {
       setState(() {
@@ -264,12 +377,27 @@ class _DeviceTile extends StatelessWidget {
     final services =
         state._services[device.id]?.services ?? const <BleService>[];
     final connected = connectionState == BleConnectionState.connected;
+    final isTargetMatch = matchesBleDebugTargetName(device.name);
+    final manufacturerPreview = bleDebugHexPreview(device.manufacturerData);
+    final serviceSummary = bleDebugServiceSummary(device);
 
     return Card(
       child: ExpansionTile(
-        title: Text(device.name ?? '(unnamed)'),
+        title: Row(
+          children: [
+            Expanded(child: Text(device.name ?? '(unnamed)')),
+            if (isTargetMatch)
+              const Padding(
+                padding: EdgeInsets.only(left: 8),
+                child: Chip(label: Text('Target match')),
+              ),
+          ],
+        ),
         subtitle: Text(
-          '${device.id}\nRSSI ${device.rssi}  ${connectionState.name}',
+          '${device.id}\n'
+          'RSSI ${device.rssi}  ${connectionState.name}\n'
+          'Adv services: $serviceSummary\n'
+          'Manufacturer: ${device.manufacturerData.length}B  $manufacturerPreview',
         ),
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         children: [
