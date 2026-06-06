@@ -7,7 +7,7 @@ import '../../../platform_bridge/hardware_models.dart';
 import 'providers.dart';
 
 const String addDeviceBleNamePrefix = 'opener_';
-const String defaultBleAuthToken = '1BEE89494F466512FF584DDF85B39AA6';
+const String defaultBleAuthToken = 'AF035A47A6ABB06B884F28409EFB8E44';
 
 class AddDeviceState {
   const AddDeviceState({

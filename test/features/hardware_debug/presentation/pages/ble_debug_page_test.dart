@@ -21,16 +21,16 @@ void main() {
     });
   });
 
-  group('bleDebugHexPreview', () {
+  group('bleDebugHexString', () {
     test('shows none for empty bytes', () {
-      expect(bleDebugHexPreview(const <int>[]), 'none');
+      expect(bleDebugHexString(const <int>[]), 'none');
     });
 
-    test('renders uppercase hex and truncates long payloads', () {
-      expect(bleDebugHexPreview(const <int>[0x12, 0xab, 0x00]), '12 AB 00');
+    test('renders full uppercase hex payloads', () {
+      expect(bleDebugHexString(const <int>[0x12, 0xab, 0x00]), '12 AB 00');
       expect(
-        bleDebugHexPreview(const <int>[0, 1, 2, 3, 4, 5, 6, 7, 8], maxBytes: 4),
-        '00 01 02 03 ...',
+        bleDebugHexString(const <int>[0, 1, 2, 3, 4, 5, 6, 7, 8]),
+        '00 01 02 03 04 05 06 07 08',
       );
     });
   });
