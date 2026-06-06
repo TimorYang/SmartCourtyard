@@ -84,6 +84,50 @@ class BleConnectionEventDto {
   final String? nativeCode;
 }
 
+class BleAuthenticationResultDto {
+  BleAuthenticationResultDto({
+    required this.requestId,
+    required this.deviceId,
+    required this.authenticated,
+    this.bindingState,
+    this.nativeCode,
+  });
+
+  final String requestId;
+  final String deviceId;
+  final bool authenticated;
+  final int? bindingState;
+  final String? nativeCode;
+}
+
+class WifiScanResultDto {
+  WifiScanResultDto({
+    required this.requestId,
+    required this.deviceId,
+    required this.ssids,
+  });
+
+  final String requestId;
+  final String deviceId;
+  final List<String> ssids;
+}
+
+class WifiProvisionResultDto {
+  WifiProvisionResultDto({
+    required this.requestId,
+    required this.deviceId,
+    required this.ssid,
+    required this.success,
+    this.nativeCode,
+  });
+
+  final String requestId;
+  final String deviceId;
+  final String ssid;
+  final bool success;
+  final String? nativeCode;
+}
+
 class BleCharacteristicDto {
   BleCharacteristicDto({
     required this.serviceUuid,
@@ -223,6 +267,24 @@ abstract class HardwareHostApi {
 
   @async
   BleConnectionEventDto connectBleDevice(String requestId, String deviceId);
+
+  @async
+  BleAuthenticationResultDto authenticateBleDevice(
+    String requestId,
+    String deviceId,
+    String token,
+  );
+
+  @async
+  WifiScanResultDto scanWifiNetworks(String requestId, String deviceId);
+
+  @async
+  WifiProvisionResultDto configureWifi(
+    String requestId,
+    String deviceId,
+    String ssid,
+    String password,
+  );
 
   @async
   BleConnectionEventDto disconnectBleDevice(String requestId, String deviceId);

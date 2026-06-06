@@ -12,6 +12,56 @@ enum BleConnectionState { disconnected, connecting, connected }
 
 enum BleWriteType { withResponse, withoutResponse }
 
+class BleAuthenticationResult {
+  const BleAuthenticationResult({
+    required this.requestId,
+    required this.deviceId,
+    required this.authenticated,
+    this.bindingState,
+    this.nativeCode,
+  });
+
+  final String requestId;
+  final String deviceId;
+  final bool authenticated;
+  final int? bindingState;
+  final String? nativeCode;
+}
+
+class WifiNetwork {
+  const WifiNetwork({required this.ssid});
+
+  final String ssid;
+}
+
+class WifiScanResult {
+  const WifiScanResult({
+    required this.requestId,
+    required this.deviceId,
+    required this.networks,
+  });
+
+  final String requestId;
+  final String deviceId;
+  final List<WifiNetwork> networks;
+}
+
+class WifiProvisionResult {
+  const WifiProvisionResult({
+    required this.requestId,
+    required this.deviceId,
+    required this.ssid,
+    required this.success,
+    this.nativeCode,
+  });
+
+  final String requestId;
+  final String deviceId;
+  final String ssid;
+  final bool success;
+  final String? nativeCode;
+}
+
 enum PermissionKind { bluetooth, camera, localNetwork, notification }
 
 class PermissionSnapshot {

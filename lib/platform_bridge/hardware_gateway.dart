@@ -31,6 +31,24 @@ abstract interface class HardwareGateway {
     required String deviceId,
   });
 
+  Future<BleAuthenticationResult> authenticateBleDevice({
+    required String requestId,
+    required String deviceId,
+    required String token,
+  });
+
+  Future<WifiScanResult> scanWifiNetworks({
+    required String requestId,
+    required String deviceId,
+  });
+
+  Future<WifiProvisionResult> configureWifi({
+    required String requestId,
+    required String deviceId,
+    required String ssid,
+    required String password,
+  });
+
   Future<BleConnectionEvent> disconnectBleDevice({
     required String requestId,
     required String deviceId,

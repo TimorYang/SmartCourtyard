@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../add_device/presentation/pages/add_device_page.dart';
 import '../../../../features/hardware_debug/presentation/pages/ble_debug_page.dart';
 import '../../../../platform_bridge/hardware_models.dart';
 import '../../application/providers.dart';
@@ -19,6 +20,11 @@ class HomePage extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('FLINX'),
         actions: [
+          TextButton.icon(
+            onPressed: () => context.push(AddDevicePage.routePath),
+            icon: const Icon(Icons.add_circle_outline),
+            label: const Text('Add Device'),
+          ),
           TextButton.icon(
             onPressed: () => context.push(BleDebugPage.routePath),
             icon: const Icon(Icons.bluetooth_searching),
