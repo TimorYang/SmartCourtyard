@@ -4,7 +4,7 @@ import android.os.Handler
 import android.os.Looper
 import com.flinx.flinx.flinxhardware.bluetooth.BleManager
 import com.flinx.flinx.flinxhardware.permissions.PermissionManager
-import com.flinx.flinx.flinxhardware.protocol.TestProvisioningProtocolConfig
+import com.flinx.flinx.flinxhardware.protocol.DeviceBleProtocolConfig
 
 /** Pigeon HostApi 实现：承接 Flutter 调用并编排权限与 BLE 能力。 */
 class HardwareHostApiImpl(
@@ -13,6 +13,10 @@ class HardwareHostApiImpl(
   private val hardwareFlutterApi: HardwareFlutterApi,
 ) : HardwareHostApi {
   private val mainHandler = Handler(Looper.getMainLooper())
+
+  init {
+    bleManager.onNotification = ::emitNotification
+  }
 
   /** 获取当前权限状态快照。 */
   override fun getPermissionSnapshot(): PermissionSnapshotDto {
@@ -51,7 +55,7 @@ class HardwareHostApiImpl(
     bleManager.stopScan(requestId)
   }
 
-  /** 连接 BLE 设备（待实现）。 */
+  /** 连接 BLE 设备。 */
   override fun connectBleDevice(
     requestId: String,
     deviceId: String,
@@ -66,7 +70,7 @@ class HardwareHostApiImpl(
     )
   }
 
-  /** 断开 BLE 设备连接（待实现）。 */
+  /** 断开 BLE 设备连接。 */
   override fun disconnectBleDevice(
     requestId: String,
     deviceId: String,
@@ -81,7 +85,7 @@ class HardwareHostApiImpl(
     )
   }
 
-  /** 发现 GATT 服务（待实现）。 */
+  /** 发现 GATT 服务。 */
   override fun discoverServices(
     requestId: String,
     deviceId: String,
@@ -93,15 +97,15 @@ class HardwareHostApiImpl(
       deviceId = deviceId,
       callback = { result ->
         result.onSuccess { services ->
-          val hasProvisioningService = services.services.any {
+          val hasProtocolService = services.services.any {
             it.serviceUuid.equals(
-              TestProvisioningProtocolConfig.communicationServiceUuid.toString(),
+              DeviceBleProtocolConfig.communicationServiceUuid.toString(),
               ignoreCase = true,
             )
           }
           emitNativeError(
             code = "service_discovery_summary",
-            message = "discoverServices matchedProvisioningService=$hasProvisioningService count=${services.services.size}",
+            message = "discoverServices matchedProtocolService=$hasProtocolService count=${services.services.size}",
             requestId = requestId,
             deviceId = deviceId,
             retryable = false,
@@ -112,7 +116,7 @@ class HardwareHostApiImpl(
     )
   }
 
-  /** 读取特征值（待实现）。 */
+  /** 读取特征值。 */
   override fun readCharacteristic(
     requestId: String,
     deviceId: String,
@@ -120,10 +124,17 @@ class HardwareHostApiImpl(
     characteristicUuid: String,
     callback: (Result<BleReadResultDto>) -> Unit,
   ) {
-    callback(Result.failure(notImplemented("readCharacteristic", requestId, deviceId)))
+    permissionManager.ensureBleConnectPreconditions()
+    bleManager.readCharacteristic(
+      requestId = requestId,
+      deviceId = deviceId,
+      serviceUuid = serviceUuid,
+      characteristicUuid = characteristicUuid,
+      callback = callback,
+    )
   }
 
-  /** 写入特征值（待实现）。 */
+  /** 写入特征值。 */
   override fun writeCharacteristic(
     requestId: String,
     deviceId: String,
@@ -133,10 +144,19 @@ class HardwareHostApiImpl(
     writeType: BleWriteTypeDto,
     callback: (Result<BleWriteResultDto>) -> Unit,
   ) {
-    callback(Result.failure(notImplemented("writeCharacteristic", requestId, deviceId)))
+    permissionManager.ensureBleConnectPreconditions()
+    bleManager.writeCharacteristic(
+      requestId = requestId,
+      deviceId = deviceId,
+      serviceUuid = serviceUuid,
+      characteristicUuid = characteristicUuid,
+      payload = payload,
+      writeType = writeType,
+      callback = callback,
+    )
   }
 
-  /** 开关特征通知（待实现）。 */
+  /** 开关特征通知。 */
   override fun setCharacteristicNotify(
     requestId: String,
     deviceId: String,
@@ -145,7 +165,15 @@ class HardwareHostApiImpl(
     enabled: Boolean,
     callback: (Result<BleWriteResultDto>) -> Unit,
   ) {
-    callback(Result.failure(notImplemented("setCharacteristicNotify", requestId, deviceId)))
+    permissionManager.ensureBleConnectPreconditions()
+    bleManager.setCharacteristicNotify(
+      requestId = requestId,
+      deviceId = deviceId,
+      serviceUuid = serviceUuid,
+      characteristicUuid = characteristicUuid,
+      enabled = enabled,
+      callback = callback,
+    )
   }
 
   /** 发送门控命令（待实现）。 */
@@ -202,6 +230,13 @@ class HardwareHostApiImpl(
   private fun emitConnectionChanged(event: BleConnectionEventDto) {
     runOnMainThread {
       hardwareFlutterApi.onBleConnectionChanged(event) {}
+    }
+  }
+
+  /** 发送 BLE 特征通知给 Flutter。 */
+  private fun emitNotification(notification: BleNotificationDto) {
+    runOnMainThread {
+      hardwareFlutterApi.onBleNotification(notification) {}
     }
   }
 
