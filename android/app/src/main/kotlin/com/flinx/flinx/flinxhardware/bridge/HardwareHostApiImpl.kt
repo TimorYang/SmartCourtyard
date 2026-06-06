@@ -76,7 +76,13 @@ class HardwareHostApiImpl(
     token: String,
     callback: (Result<BleAuthenticationResultDto>) -> Unit,
   ) {
-    callback(Result.failure(notImplemented("authenticateBleDevice", requestId, deviceId)))
+    permissionManager.ensureBleConnectPreconditions()
+    bleManager.authenticateDevice(
+      requestId = requestId,
+      deviceId = deviceId,
+      token = token,
+      callback = callback,
+    )
   }
 
   override fun scanWifiNetworks(
