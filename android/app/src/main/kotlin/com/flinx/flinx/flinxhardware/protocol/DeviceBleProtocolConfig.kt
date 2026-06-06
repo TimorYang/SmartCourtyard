@@ -3,7 +3,6 @@ package com.flinx.flinx.flinxhardware.protocol
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.charset.StandardCharsets
-import java.security.GeneralSecurityException
 import java.util.UUID
 import javax.crypto.Cipher
 import javax.crypto.spec.SecretKeySpec
@@ -46,22 +45,34 @@ object DeviceBleProtocolConfig {
     sequence: Int,
     utcTimestampSeconds: Long,
     tokenMd5: String = fixedCommunicationTokenMd5,
-    cryptoType: Int = cryptoNone,
+    cryptoType: Int = cryptoAes128,
   ): ByteArray {
     require(tokenMd5.length == authTokenLengthBytes) {
       "Authentication token must be a 32-byte MD5 hex string."
+    }
+    val keyBytes = requireNotNull(hexToBytesOrNull(fixedCommunicationTokenMd5)) {
+      "Authentication key must be a valid 16-byte hex string."
     }
     val timestampBytes = ByteBuffer.allocate(4)
       .order(ByteOrder.BIG_ENDIAN)
       .putInt(utcTimestampSeconds.toInt())
       .array()
     val tokenBytes = tokenMd5.toByteArray(Charsets.UTF_8)
-    return buildFrame(
+    val plainTypeToData = ByteBuffer.allocate(1 + 2 + 2 + authPayloadLengthBytes)
+      .order(ByteOrder.BIG_ENDIAN)
+      .put(frameTypeRequest.toByte())
+      .putShort(sequence.toShort())
+      .putShort(commandAuthenticate.toShort())
+      .put(timestampBytes)
+      .put(tokenBytes)
+      .array()
+    val encryptedTypeToData = encryptAesEcbPkcs7(
+      plainBytes = plainTypeToData,
+      keyBytes = keyBytes,
+    )
+    return buildFramedCipherPayload(
       cryptoType = cryptoType,
-      frameType = frameTypeRequest,
-      sequence = sequence,
-      command = commandAuthenticate,
-      data = timestampBytes + tokenBytes,
+      cipherPayload = encryptedTypeToData,
     )
   }
 
@@ -82,6 +93,22 @@ object DeviceBleProtocolConfig {
     buffer.putShort(command.toShort())
     buffer.put(data)
 
+    val bcc = calculateBcc(buffer.array(), buffer.position())
+    buffer.put(bcc.toByte())
+    buffer.putShort(frameFooter.toShort())
+    return buffer.array()
+  }
+
+  private fun buildFramedCipherPayload(
+    cryptoType: Int,
+    cipherPayload: ByteArray,
+  ): ByteArray {
+    val frameLength = 2 + 2 + 1 + cipherPayload.size + 1 + 2
+    val buffer = ByteBuffer.allocate(frameLength).order(ByteOrder.BIG_ENDIAN)
+    buffer.putShort(frameHeader.toShort())
+    buffer.putShort(frameLength.toShort())
+    buffer.put(cryptoType.toByte())
+    buffer.put(cipherPayload)
     val bcc = calculateBcc(buffer.array(), buffer.position())
     buffer.put(bcc.toByte())
     buffer.putShort(frameFooter.toShort())
@@ -180,6 +207,15 @@ object DeviceBleProtocolConfig {
       cipher.init(Cipher.DECRYPT_MODE, SecretKeySpec(keyBytes, "AES"))
       cipher.doFinal(cipherBytes)
     }.getOrNull()
+  }
+
+  private fun encryptAesEcbPkcs7(
+    plainBytes: ByteArray,
+    keyBytes: ByteArray,
+  ): ByteArray {
+    val cipher = Cipher.getInstance("AES/ECB/PKCS5Padding")
+    cipher.init(Cipher.ENCRYPT_MODE, SecretKeySpec(keyBytes, "AES"))
+    return cipher.doFinal(plainBytes)
   }
 
   private fun hexToBytesOrNull(hex: String): ByteArray? {
