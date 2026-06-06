@@ -32,6 +32,23 @@ class MockHardwareGateway implements HardwareGateway {
   Stream<NativeHardwareError> get nativeErrors => _nativeErrorController.stream;
 
   @override
+  Future<PermissionSnapshot> getPermissionSnapshot() async {
+    return const PermissionSnapshot(
+      bluetoothGranted: true,
+      cameraGranted: true,
+      localNetworkGranted: true,
+      notificationGranted: true,
+    );
+  }
+
+  @override
+  Future<PermissionSnapshot> requestPermissions({
+    required List<PermissionKind> permissions,
+  }) async {
+    return getPermissionSnapshot();
+  }
+
+  @override
   Future<List<DeviceSummary>> readDevices() async {
     return [
       DeviceSummary(

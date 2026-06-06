@@ -15,13 +15,16 @@ import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 private object HardwareApiPigeonUtils {
 
+  /** 创建通道连接失败时返回给 Flutter 的标准错误对象。 */
   fun createConnectionError(channelName: String): FlutterError {
     return FlutterError("channel-error",  "Unable to establish connection on channel: '$channelName'.", "")  }
 
+  /** 将正常结果按 Pigeon 约定包装为单元素列表。 */
   fun wrapResult(result: Any?): List<Any?> {
     return listOf(result)
   }
 
+  /** 将异常转换为 Pigeon 错误返回结构，优先保留 FlutterError 的字段。 */
   fun wrapError(exception: Throwable): List<Any?> {
     return if (exception is FlutterError) {
       listOf(
@@ -37,16 +40,19 @@ private object HardwareApiPigeonUtils {
       )
     }
   }
+  /** 比较 Double 是否深度相等：统一 -0.0/0.0，并把 NaN 视为相等。 */
   fun doubleEquals(a: Double, b: Double): Boolean {
     // Normalize -0.0 to 0.0 and handle NaN equality.
     return (if (a == 0.0) 0.0 else a) == (if (b == 0.0) 0.0 else b) || (a.isNaN() && b.isNaN())
   }
 
+  /** 比较 Float 是否深度相等：统一 -0.0f/0.0f，并把 NaN 视为相等。 */
   fun floatEquals(a: Float, b: Float): Boolean {
     // Normalize -0.0 to 0.0 and handle NaN equality.
     return (if (a == 0.0f) 0.0f else a) == (if (b == 0.0f) 0.0f else b) || (a.isNaN() && b.isNaN())
   }
 
+  /** 计算 Double 的稳定哈希：归一化 -0.0 并保证与 equals 语义一致。 */
   fun doubleHash(d: Double): Int {
     // Normalize -0.0 to 0.0 and handle NaN to ensure consistent hash codes.
     val normalized = if (d == 0.0) 0.0 else d
@@ -54,12 +60,14 @@ private object HardwareApiPigeonUtils {
     return (bits xor (bits ushr 32)).toInt()
   }
 
+  /** 计算 Float 的稳定哈希：归一化 -0.0f 并保证与 equals 语义一致。 */
   fun floatHash(f: Float): Int {
     // Normalize -0.0 to 0.0 and handle NaN to ensure consistent hash codes.
     val normalized = if (f == 0.0f) 0.0f else f
     return java.lang.Float.floatToIntBits(normalized)
   }
 
+  /** 递归比较任意值（数组/列表/映射/浮点等）是否深度相等。 */
   fun deepEquals(a: Any?, b: Any?): Boolean {
     if (a === b) {
       return true
@@ -134,6 +142,7 @@ private object HardwareApiPigeonUtils {
     return a == b
   }
 
+  /** 递归计算任意值的深度哈希，需与 deepEquals 语义保持一致。 */
   fun deepHash(value: Any?): Int {
     return when (value) {
       null -> 0

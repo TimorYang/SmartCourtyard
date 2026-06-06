@@ -62,6 +62,22 @@ class WifiProvisionResult {
   final String? nativeCode;
 }
 
+enum PermissionKind { bluetooth, camera, localNetwork, notification }
+
+class PermissionSnapshot {
+  const PermissionSnapshot({
+    required this.bluetoothGranted,
+    required this.cameraGranted,
+    required this.localNetworkGranted,
+    required this.notificationGranted,
+  });
+
+  final bool bluetoothGranted;
+  final bool cameraGranted;
+  final bool localNetworkGranted;
+  final bool notificationGranted;
+}
+
 class DeviceSummary {
   const DeviceSummary({
     required this.id,
