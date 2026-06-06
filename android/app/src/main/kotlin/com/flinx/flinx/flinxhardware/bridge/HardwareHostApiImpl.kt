@@ -70,6 +70,33 @@ class HardwareHostApiImpl(
     )
   }
 
+  override fun authenticateBleDevice(
+    requestId: String,
+    deviceId: String,
+    token: String,
+    callback: (Result<BleAuthenticationResultDto>) -> Unit,
+  ) {
+    callback(Result.failure(notImplemented("authenticateBleDevice", requestId, deviceId)))
+  }
+
+  override fun scanWifiNetworks(
+    requestId: String,
+    deviceId: String,
+    callback: (Result<WifiScanResultDto>) -> Unit,
+  ) {
+    callback(Result.failure(notImplemented("scanWifiNetworks", requestId, deviceId)))
+  }
+
+  override fun configureWifi(
+    requestId: String,
+    deviceId: String,
+    ssid: String,
+    password: String,
+    callback: (Result<WifiProvisionResultDto>) -> Unit,
+  ) {
+    callback(Result.failure(notImplemented("configureWifi", requestId, deviceId)))
+  }
+
   /** 断开 BLE 设备连接。 */
   override fun disconnectBleDevice(
     requestId: String,
