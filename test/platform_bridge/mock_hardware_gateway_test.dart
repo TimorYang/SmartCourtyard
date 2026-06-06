@@ -65,6 +65,32 @@ void main() {
     await connectionEvents;
   });
 
+  test('supports ble authentication and wifi provisioning workflow', () async {
+    final gateway = MockHardwareGateway();
+
+    final auth = await gateway.authenticateBleDevice(
+      requestId: 'auth-1',
+      deviceId: 'mock-ble-device',
+      token: '0123456789abcdef0123456789abcdef',
+    );
+    final wifiList = await gateway.scanWifiNetworks(
+      requestId: 'wifi-scan-1',
+      deviceId: 'mock-ble-device',
+    );
+    final provision = await gateway.configureWifi(
+      requestId: 'wifi-provision-1',
+      deviceId: 'mock-ble-device',
+      ssid: 'FLINX Office',
+      password: '12345678',
+    );
+
+    expect(auth.authenticated, isTrue);
+    expect(auth.bindingState, 0xF1);
+    expect(wifiList.networks.map((network) => network.ssid), isNotEmpty);
+    expect(provision.success, isTrue);
+    expect(provision.ssid, 'FLINX Office');
+  });
+
   test(
     'supports service discovery, read, write, and notify simulation',
     () async {

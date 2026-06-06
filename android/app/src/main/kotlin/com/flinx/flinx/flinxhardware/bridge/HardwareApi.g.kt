@@ -444,6 +444,148 @@ data class BleConnectionEventDto (
 }
 
 /** Generated class from Pigeon that represents data sent in messages. */
+data class BleAuthenticationResultDto (
+  val requestId: String,
+  val deviceId: String,
+  val authenticated: Boolean,
+  val bindingState: Long? = null,
+  val nativeCode: String? = null
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): BleAuthenticationResultDto {
+      val requestId = pigeonVar_list[0] as String
+      val deviceId = pigeonVar_list[1] as String
+      val authenticated = pigeonVar_list[2] as Boolean
+      val bindingState = pigeonVar_list[3] as Long?
+      val nativeCode = pigeonVar_list[4] as String?
+      return BleAuthenticationResultDto(requestId, deviceId, authenticated, bindingState, nativeCode)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      requestId,
+      deviceId,
+      authenticated,
+      bindingState,
+      nativeCode,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as BleAuthenticationResultDto
+    return HardwareApiPigeonUtils.deepEquals(this.requestId, other.requestId) && HardwareApiPigeonUtils.deepEquals(this.deviceId, other.deviceId) && HardwareApiPigeonUtils.deepEquals(this.authenticated, other.authenticated) && HardwareApiPigeonUtils.deepEquals(this.bindingState, other.bindingState) && HardwareApiPigeonUtils.deepEquals(this.nativeCode, other.nativeCode)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.requestId)
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.deviceId)
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.authenticated)
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.bindingState)
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.nativeCode)
+    return result
+  }
+}
+
+/** Generated class from Pigeon that represents data sent in messages. */
+data class WifiScanResultDto (
+  val requestId: String,
+  val deviceId: String,
+  val ssids: List<String>
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): WifiScanResultDto {
+      val requestId = pigeonVar_list[0] as String
+      val deviceId = pigeonVar_list[1] as String
+      val ssids = pigeonVar_list[2] as List<String>
+      return WifiScanResultDto(requestId, deviceId, ssids)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      requestId,
+      deviceId,
+      ssids,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as WifiScanResultDto
+    return HardwareApiPigeonUtils.deepEquals(this.requestId, other.requestId) && HardwareApiPigeonUtils.deepEquals(this.deviceId, other.deviceId) && HardwareApiPigeonUtils.deepEquals(this.ssids, other.ssids)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.requestId)
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.deviceId)
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.ssids)
+    return result
+  }
+}
+
+/** Generated class from Pigeon that represents data sent in messages. */
+data class WifiProvisionResultDto (
+  val requestId: String,
+  val deviceId: String,
+  val ssid: String,
+  val success: Boolean,
+  val nativeCode: String? = null
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): WifiProvisionResultDto {
+      val requestId = pigeonVar_list[0] as String
+      val deviceId = pigeonVar_list[1] as String
+      val ssid = pigeonVar_list[2] as String
+      val success = pigeonVar_list[3] as Boolean
+      val nativeCode = pigeonVar_list[4] as String?
+      return WifiProvisionResultDto(requestId, deviceId, ssid, success, nativeCode)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      requestId,
+      deviceId,
+      ssid,
+      success,
+      nativeCode,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as WifiProvisionResultDto
+    return HardwareApiPigeonUtils.deepEquals(this.requestId, other.requestId) && HardwareApiPigeonUtils.deepEquals(this.deviceId, other.deviceId) && HardwareApiPigeonUtils.deepEquals(this.ssid, other.ssid) && HardwareApiPigeonUtils.deepEquals(this.success, other.success) && HardwareApiPigeonUtils.deepEquals(this.nativeCode, other.nativeCode)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.requestId)
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.deviceId)
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.ssid)
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.success)
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.nativeCode)
+    return result
+  }
+}
+
+/** Generated class from Pigeon that represents data sent in messages. */
 data class BleCharacteristicDto (
   val serviceUuid: String,
   val characteristicUuid: String,
@@ -891,40 +1033,55 @@ private open class HardwareApiPigeonCodec : StandardMessageCodec() {
       }
       137.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          BleCharacteristicDto.fromList(it)
+          BleAuthenticationResultDto.fromList(it)
         }
       }
       138.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          BleServiceDto.fromList(it)
+          WifiScanResultDto.fromList(it)
         }
       }
       139.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          BleServicesDto.fromList(it)
+          WifiProvisionResultDto.fromList(it)
         }
       }
       140.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          BleReadResultDto.fromList(it)
+          BleCharacteristicDto.fromList(it)
         }
       }
       141.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          BleWriteResultDto.fromList(it)
+          BleServiceDto.fromList(it)
         }
       }
       142.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          BleNotificationDto.fromList(it)
+          BleServicesDto.fromList(it)
         }
       }
       143.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          NativeErrorDto.fromList(it)
+          BleReadResultDto.fromList(it)
         }
       }
       144.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          BleWriteResultDto.fromList(it)
+        }
+      }
+      145.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          BleNotificationDto.fromList(it)
+        }
+      }
+      146.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          NativeErrorDto.fromList(it)
+        }
+      }
+      147.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
           CommandResultDto.fromList(it)
         }
@@ -966,36 +1123,48 @@ private open class HardwareApiPigeonCodec : StandardMessageCodec() {
         stream.write(136)
         writeValue(stream, value.toList())
       }
-      is BleCharacteristicDto -> {
+      is BleAuthenticationResultDto -> {
         stream.write(137)
         writeValue(stream, value.toList())
       }
-      is BleServiceDto -> {
+      is WifiScanResultDto -> {
         stream.write(138)
         writeValue(stream, value.toList())
       }
-      is BleServicesDto -> {
+      is WifiProvisionResultDto -> {
         stream.write(139)
         writeValue(stream, value.toList())
       }
-      is BleReadResultDto -> {
+      is BleCharacteristicDto -> {
         stream.write(140)
         writeValue(stream, value.toList())
       }
-      is BleWriteResultDto -> {
+      is BleServiceDto -> {
         stream.write(141)
         writeValue(stream, value.toList())
       }
-      is BleNotificationDto -> {
+      is BleServicesDto -> {
         stream.write(142)
         writeValue(stream, value.toList())
       }
-      is NativeErrorDto -> {
+      is BleReadResultDto -> {
         stream.write(143)
         writeValue(stream, value.toList())
       }
-      is CommandResultDto -> {
+      is BleWriteResultDto -> {
         stream.write(144)
+        writeValue(stream, value.toList())
+      }
+      is BleNotificationDto -> {
+        stream.write(145)
+        writeValue(stream, value.toList())
+      }
+      is NativeErrorDto -> {
+        stream.write(146)
+        writeValue(stream, value.toList())
+      }
+      is CommandResultDto -> {
+        stream.write(147)
         writeValue(stream, value.toList())
       }
       else -> super.writeValue(stream, value)
@@ -1011,6 +1180,9 @@ interface HardwareHostApi {
   fun startBleScan(requestId: String, filter: BleScanFilterDto)
   fun stopBleScan(requestId: String)
   fun connectBleDevice(requestId: String, deviceId: String, callback: (Result<BleConnectionEventDto>) -> Unit)
+  fun authenticateBleDevice(requestId: String, deviceId: String, token: String, callback: (Result<BleAuthenticationResultDto>) -> Unit)
+  fun scanWifiNetworks(requestId: String, deviceId: String, callback: (Result<WifiScanResultDto>) -> Unit)
+  fun configureWifi(requestId: String, deviceId: String, ssid: String, password: String, callback: (Result<WifiProvisionResultDto>) -> Unit)
   fun disconnectBleDevice(requestId: String, deviceId: String, callback: (Result<BleConnectionEventDto>) -> Unit)
   fun discoverServices(requestId: String, deviceId: String, callback: (Result<BleServicesDto>) -> Unit)
   fun readCharacteristic(requestId: String, deviceId: String, serviceUuid: String, characteristicUuid: String, callback: (Result<BleReadResultDto>) -> Unit)
@@ -1104,6 +1276,72 @@ interface HardwareHostApi {
             val requestIdArg = args[0] as String
             val deviceIdArg = args[1] as String
             api.connectBleDevice(requestIdArg, deviceIdArg) { result: Result<BleConnectionEventDto> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(HardwareApiPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(HardwareApiPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flinx.HardwareHostApi.authenticateBleDevice$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val requestIdArg = args[0] as String
+            val deviceIdArg = args[1] as String
+            val tokenArg = args[2] as String
+            api.authenticateBleDevice(requestIdArg, deviceIdArg, tokenArg) { result: Result<BleAuthenticationResultDto> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(HardwareApiPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(HardwareApiPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flinx.HardwareHostApi.scanWifiNetworks$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val requestIdArg = args[0] as String
+            val deviceIdArg = args[1] as String
+            api.scanWifiNetworks(requestIdArg, deviceIdArg) { result: Result<WifiScanResultDto> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(HardwareApiPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(HardwareApiPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flinx.HardwareHostApi.configureWifi$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val requestIdArg = args[0] as String
+            val deviceIdArg = args[1] as String
+            val ssidArg = args[2] as String
+            val passwordArg = args[3] as String
+            api.configureWifi(requestIdArg, deviceIdArg, ssidArg, passwordArg) { result: Result<WifiProvisionResultDto> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(HardwareApiPigeonUtils.wrapError(error))

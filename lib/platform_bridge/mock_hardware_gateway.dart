@@ -90,6 +90,55 @@ class MockHardwareGateway implements HardwareGateway {
   }
 
   @override
+  Future<BleAuthenticationResult> authenticateBleDevice({
+    required String requestId,
+    required String deviceId,
+    required String token,
+  }) async {
+    return BleAuthenticationResult(
+      requestId: requestId,
+      deviceId: deviceId,
+      authenticated: token.isNotEmpty,
+      bindingState: 0xF1,
+      nativeCode: token.isNotEmpty ? null : 'mock_missing_token',
+    );
+  }
+
+  @override
+  Future<WifiScanResult> scanWifiNetworks({
+    required String requestId,
+    required String deviceId,
+  }) async {
+    return WifiScanResult(
+      requestId: requestId,
+      deviceId: deviceId,
+      networks: const <WifiNetwork>[
+        WifiNetwork(ssid: 'FLINX Office'),
+        WifiNetwork(ssid: 'FLINX Lab 5G'),
+        WifiNetwork(ssid: 'Guest WiFi'),
+      ],
+    );
+  }
+
+  @override
+  Future<WifiProvisionResult> configureWifi({
+    required String requestId,
+    required String deviceId,
+    required String ssid,
+    required String password,
+  }) async {
+    return WifiProvisionResult(
+      requestId: requestId,
+      deviceId: deviceId,
+      ssid: ssid,
+      success: ssid.isNotEmpty && password.isNotEmpty,
+      nativeCode: ssid.isNotEmpty && password.isNotEmpty
+          ? null
+          : 'mock_invalid_wifi_credentials',
+    );
+  }
+
+  @override
   Future<BleConnectionEvent> disconnectBleDevice({
     required String requestId,
     required String deviceId,

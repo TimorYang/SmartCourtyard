@@ -68,6 +68,48 @@ class PigeonHardwareGateway implements HardwareGateway {
   }
 
   @override
+  Future<BleAuthenticationResult> authenticateBleDevice({
+    required String requestId,
+    required String deviceId,
+    required String token,
+  }) async {
+    final dto = await _mapPigeonCall(
+      () => _hostApi.authenticateBleDevice(requestId, deviceId, token),
+      requestId: requestId,
+      deviceId: deviceId,
+    );
+    return dto.toModel();
+  }
+
+  @override
+  Future<WifiScanResult> scanWifiNetworks({
+    required String requestId,
+    required String deviceId,
+  }) async {
+    final dto = await _mapPigeonCall(
+      () => _hostApi.scanWifiNetworks(requestId, deviceId),
+      requestId: requestId,
+      deviceId: deviceId,
+    );
+    return dto.toModel();
+  }
+
+  @override
+  Future<WifiProvisionResult> configureWifi({
+    required String requestId,
+    required String deviceId,
+    required String ssid,
+    required String password,
+  }) async {
+    final dto = await _mapPigeonCall(
+      () => _hostApi.configureWifi(requestId, deviceId, ssid, password),
+      requestId: requestId,
+      deviceId: deviceId,
+    );
+    return dto.toModel();
+  }
+
+  @override
   Future<BleConnectionEvent> disconnectBleDevice({
     required String requestId,
     required String deviceId,
@@ -257,6 +299,40 @@ extension _DoorCommandMapper on DoorCommand {
       DoorCommand.stop => pigeon.DoorCommandDto.stop,
       DoorCommand.close => pigeon.DoorCommandDto.close,
     };
+  }
+}
+
+extension _BleAuthenticationResultMapper on pigeon.BleAuthenticationResultDto {
+  BleAuthenticationResult toModel() {
+    return BleAuthenticationResult(
+      requestId: requestId,
+      deviceId: deviceId,
+      authenticated: authenticated,
+      bindingState: bindingState?.toInt(),
+      nativeCode: nativeCode,
+    );
+  }
+}
+
+extension _WifiScanResultMapper on pigeon.WifiScanResultDto {
+  WifiScanResult toModel() {
+    return WifiScanResult(
+      requestId: requestId,
+      deviceId: deviceId,
+      networks: ssids.map((ssid) => WifiNetwork(ssid: ssid)).toList(),
+    );
+  }
+}
+
+extension _WifiProvisionResultMapper on pigeon.WifiProvisionResultDto {
+  WifiProvisionResult toModel() {
+    return WifiProvisionResult(
+      requestId: requestId,
+      deviceId: deviceId,
+      ssid: ssid,
+      success: success,
+      nativeCode: nativeCode,
+    );
   }
 }
 
