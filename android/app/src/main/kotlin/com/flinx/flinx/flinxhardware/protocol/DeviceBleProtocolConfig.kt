@@ -35,6 +35,8 @@ object DeviceBleProtocolConfig {
   const val frameTypeRequest: Int = 0x03
   const val frameTypeResponse: Int = 0x04
 
+  const val commandScanWifi: Int = 0x0E01
+  const val commandConfigureWifi: Int = 0x0E02
   const val commandAuthenticate: Int = 0x0E03
   const val commandQueryAttributes: Int = 0x0002
   const val commandControlDoor: Int = 0x0005
@@ -72,6 +74,32 @@ object DeviceBleProtocolConfig {
       .putShort(commandAuthenticate.toShort())
       .put(timestampBytes)
       .put(tokenBytes)
+      .array()
+    val encryptedTypeToData = encryptAesEcbPkcs7(
+      plainBytes = plainTypeToData,
+      keyBytes = keyBytes,
+    )
+    return buildFramedCipherPayload(
+      cryptoType = cryptoType,
+      cipherPayload = encryptedTypeToData,
+    )
+  }
+
+  fun buildEncryptedCommandFrame(
+    sequence: Int,
+    command: Int,
+    data: ByteArray = ByteArray(0),
+    cryptoType: Int = cryptoAes128,
+  ): ByteArray {
+    val keyBytes = requireNotNull(hexToBytesOrNull(fixedAesKeyHex)) {
+      "Authentication key must be a valid 16-byte hex string."
+    }
+    val plainTypeToData = ByteBuffer.allocate(1 + 2 + 2 + data.size)
+      .order(ByteOrder.BIG_ENDIAN)
+      .put(frameTypeRequest.toByte())
+      .putShort(sequence.toShort())
+      .putShort(command.toShort())
+      .put(data)
       .array()
     val encryptedTypeToData = encryptAesEcbPkcs7(
       plainBytes = plainTypeToData,

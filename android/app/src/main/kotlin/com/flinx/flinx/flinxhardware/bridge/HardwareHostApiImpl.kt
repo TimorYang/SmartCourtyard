@@ -90,7 +90,12 @@ class HardwareHostApiImpl(
     deviceId: String,
     callback: (Result<WifiScanResultDto>) -> Unit,
   ) {
-    callback(Result.failure(notImplemented("scanWifiNetworks", requestId, deviceId)))
+    permissionManager.ensureBleConnectPreconditions()
+    bleManager.scanWifiNetworks(
+      requestId = requestId,
+      deviceId = deviceId,
+      callback = callback,
+    )
   }
 
   override fun configureWifi(
