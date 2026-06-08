@@ -105,7 +105,14 @@ class HardwareHostApiImpl(
     password: String,
     callback: (Result<WifiProvisionResultDto>) -> Unit,
   ) {
-    callback(Result.failure(notImplemented("configureWifi", requestId, deviceId)))
+    permissionManager.ensureBleConnectPreconditions()
+    bleManager.configureWifi(
+      requestId = requestId,
+      deviceId = deviceId,
+      ssid = ssid,
+      password = password,
+      callback = callback,
+    )
   }
 
   /** 断开 BLE 设备连接。 */
