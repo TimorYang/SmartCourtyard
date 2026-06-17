@@ -425,7 +425,7 @@ class _BleDebugPageState extends ConsumerState<BleDebugPage> {
   }
 
   void _appendLog(String message) {
-    developer.log('ble log--------$message', name: 'FLINX.BLE');
+    // developer.log('ble log--------$message', name: 'FLINX.BLE');
     _log.add('${DateTime.now().toIso8601String()}  $message');
     if (_log.length > 80) {
       _log.removeRange(0, _log.length - 80);

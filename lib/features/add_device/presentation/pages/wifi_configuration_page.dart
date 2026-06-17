@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../application/providers.dart';
+import '../../../device_control/presentation/pages/device_command_page.dart';
 
 class WifiConfigurationPage extends ConsumerStatefulWidget {
   const WifiConfigurationPage({super.key});
@@ -149,7 +150,12 @@ class _WifiConfigurationPageState extends ConsumerState<WifiConfigurationPage> {
                       if (!context.mounted || !success) {
                         return;
                       }
-                      context.go('/');
+                      final deviceId = Uri.encodeQueryComponent(
+                        selectedDevice.id,
+                      );
+                      context.go(
+                        '${DeviceCommandPage.routePath}?deviceId=$deviceId',
+                      );
                     },
               child: Text(state.isProvisioningWifi ? '连接中...' : '开始连接'),
             ),

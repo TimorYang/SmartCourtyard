@@ -360,7 +360,7 @@ class _HardwareFlutterApiHandler implements pigeon.HardwareFlutterApi {
       'payloadBytes=${payloadBytes ?? '-'}',
       if (details != null && details.isNotEmpty) 'details=$details',
     ];
-    developer.log('ble log--------${parts.join(' ')}', name: 'FLINX.BLE');
+    // developer.log('ble log--------${parts.join(' ')}', name: 'FLINX.BLE');
   }
 
   String _hexString(List<int> bytes) {
