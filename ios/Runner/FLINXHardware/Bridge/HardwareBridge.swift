@@ -145,6 +145,13 @@ final class HardwareBridge: HardwareHostApi {
         deviceId: String,
         completion: @escaping (Result<WifiScanResultDto, Error>) -> Void
     ) {
+        logger.info(
+            "wifi_scan",
+            requestId: requestId,
+            deviceId: deviceId,
+            state: "started",
+            details: "command=\(BleProvisioningCommand.scanWifi.hexCode)"
+        )
         ensureProvisioningChannel(requestId: requestId, deviceId: deviceId) { [weak self] result in
             guard let self else { return }
             switch result {
@@ -499,11 +506,12 @@ private extension HardwareBridge {
         }
         
         let sequence = nextProvisioningSequence(for: deviceId)
+        let encryptRequest = command.requiresEncryptedRequest
         guard let frame = Self.makeFrame(
             sequence: sequence,
             command: command.rawValue,
             payload: payload,
-            encrypted: command == .authenticate
+            encrypted: encryptRequest
         ) else {
             logger.error(
                 "provisioning_request",
@@ -531,7 +539,7 @@ private extension HardwareBridge {
                 deviceId: pending.deviceId,
                 state: "timeout",
                 nativeCode: "provisioning_response_timeout",
-                details: "command=\(pending.command.rawValue)"
+                details: "command=\(pending.command.hexCode) commandDecimal=\(pending.command.rawValue)"
             )
             failure(
                 PigeonError(
@@ -559,7 +567,7 @@ private extension HardwareBridge {
             deviceId: deviceId,
             state: "sending",
             payloadBytes: frame.count,
-            details: "command=\(command.rawValue) sequence=\(sequence) crypto=\(command == .authenticate ? 1 : 0) payloadBytes=\(payload.count) frame=\(Self.hexString(frame))"
+            details: "command=\(command.hexCode) commandDecimal=\(command.rawValue) sequence=\(sequence) crypto=\(encryptRequest ? 1 : 0) payloadBytes=\(payload.count) frame=\(Self.hexString(frame))"
         )
         bleManager.writeCharacteristic(
             requestId: requestId,
@@ -577,7 +585,7 @@ private extension HardwareBridge {
                     requestId: requestId,
                     deviceId: deviceId,
                     nativeCode: "write_failed",
-                    details: "command=\(command.rawValue) error=\(error.localizedDescription)"
+                    details: "command=\(command.hexCode) commandDecimal=\(command.rawValue) error=\(error.localizedDescription)"
                 )
                 failure(error)
             }
@@ -681,9 +689,10 @@ private extension HardwareBridge {
         
         guard frame.type == 0x04,
               pending.command.rawValue == frame.command,
-              pending.sequence == frame.sequence else {
+              pending.command.matchesResponseSequence(frame.sequence, pendingSequence: pending.sequence) else {
             logger.warning(
                 "provisioning_response",
+                requestId: pending.requestId,
                 deviceId: deviceId,
                 state: "unmatched",
                 details: "type=\(frame.type) command=\(frame.command) sequence=\(frame.sequence) pendingCommand=\(pending.command.rawValue) pendingSequence=\(pending.sequence)"
@@ -770,7 +779,7 @@ private extension HardwareBridge {
                     state: "candidate_unmatched",
                     details: "mode=\(mode.name) type=\(decryptedFrame.type) sequence=\(decryptedFrame.sequence) command=\(decryptedFrame.command) pendingSequence=\(pending.sequence) pendingCommand=\(pending.command.rawValue)"
                 )
-                continue
+                return decryptedFrame
             }
             logger.info(
                 "provisioning_decrypt",
@@ -1269,6 +1278,23 @@ private enum BleProvisioningCommand: UInt16 {
     static let writeCharacteristicUuid = "02362A10-CF3A-11E1-EFDC-000215D5C51B"
     static let notifyCharacteristicUuid = "02362A11-CF3A-11E1-EFDC-000215D5C51B"
     static let candidateAesKey = Data(hexString: "1BEE89494F466512FF584DDF85B39AA6") ?? Data()
+    
+    var hexCode: String {
+        String(format: "0x%04X", Int(rawValue))
+    }
+    
+    var requiresEncryptedRequest: Bool {
+        switch self {
+        case .authenticate, .scanWifi:
+            return true
+        case .configureWifi:
+            return false
+        }
+    }
+    
+    func matchesResponseSequence(_ responseSequence: UInt16, pendingSequence: UInt16) -> Bool {
+        responseSequence == pendingSequence || (self == .scanWifi && responseSequence == 0)
+    }
 }
 
 private struct BleAesMode {
