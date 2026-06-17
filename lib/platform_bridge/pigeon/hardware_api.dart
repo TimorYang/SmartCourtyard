@@ -14,7 +14,7 @@ import 'package:pigeon/pigeon.dart';
 )
 enum PermissionKindDto { bluetooth, camera, localNetwork, notification }
 
-enum DoorCommandDto { open, stop, close }
+enum DoorCommandDto { open, stop, close, partialOpen, lightOn, lightOff, pb }
 
 enum BleConnectionStateDto { disconnected, connecting, connected }
 

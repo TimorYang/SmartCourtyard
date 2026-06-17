@@ -33,6 +33,10 @@ enum DeviceCommandAction {
       DeviceCommandAction.openDoor => DoorCommand.open,
       DeviceCommandAction.closeDoor => DoorCommand.close,
       DeviceCommandAction.stopDoor => DoorCommand.stop,
+      DeviceCommandAction.partialOpenDoor => DoorCommand.partialOpen,
+      DeviceCommandAction.turnLightOn => DoorCommand.lightOn,
+      DeviceCommandAction.turnLightOff => DoorCommand.lightOff,
+      DeviceCommandAction.pb => DoorCommand.pb,
       _ => null,
     };
   }

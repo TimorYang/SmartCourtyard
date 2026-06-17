@@ -40,6 +40,13 @@ object DeviceBleProtocolConfig {
   const val commandAuthenticate: Int = 0x0E03
   const val commandQueryAttributes: Int = 0x0002
   const val commandControlDoor: Int = 0x0005
+  const val controlOpenDoor: Int = 0x1001
+  const val controlCloseDoor: Int = 0x1002
+  const val controlStopDoor: Int = 0x1003
+  const val controlPartialOpenDoor: Int = 0x1004
+  const val controlLightOn: Int = 0x1005
+  const val controlLightOff: Int = 0x1006
+  const val controlPb: Int = 0x1007
 
   const val authTokenHexLength: Int = 32
   const val authTokenBinaryLengthBytes: Int = 16

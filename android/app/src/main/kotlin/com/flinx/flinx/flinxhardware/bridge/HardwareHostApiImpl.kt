@@ -221,13 +221,27 @@ class HardwareHostApiImpl(
     )
   }
 
-  /** 发送门控命令（待实现）。 */
+  /** 发送门控命令。 */
   override fun sendDoorCommand(
     requestId: String,
     deviceId: String,
     command: DoorCommandDto,
   ): CommandResultDto {
-    throw notImplemented("sendDoorCommand", requestId, deviceId)
+    permissionManager.ensureBleConnectPreconditions()
+    val control = when (command) {
+      DoorCommandDto.OPEN -> DeviceBleProtocolConfig.controlOpenDoor
+      DoorCommandDto.CLOSE -> DeviceBleProtocolConfig.controlCloseDoor
+      DoorCommandDto.STOP -> DeviceBleProtocolConfig.controlStopDoor
+      DoorCommandDto.PARTIAL_OPEN -> DeviceBleProtocolConfig.controlPartialOpenDoor
+      DoorCommandDto.LIGHT_ON -> DeviceBleProtocolConfig.controlLightOn
+      DoorCommandDto.LIGHT_OFF -> DeviceBleProtocolConfig.controlLightOff
+      DoorCommandDto.PB -> DeviceBleProtocolConfig.controlPb
+    }
+    return bleManager.sendDoorCommand(
+      requestId = requestId,
+      deviceId = deviceId,
+      control = control,
+    )
   }
 
   /** 生成统一的“未实现”错误，附带方法与请求上下文信息。 */

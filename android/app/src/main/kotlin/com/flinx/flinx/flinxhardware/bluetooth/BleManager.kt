@@ -32,6 +32,7 @@ import com.flinx.flinx.flinxhardware.bridge.BleServiceDto
 import com.flinx.flinx.flinxhardware.bridge.BleServicesDto
 import com.flinx.flinx.flinxhardware.bridge.BleWriteResultDto
 import com.flinx.flinx.flinxhardware.bridge.BleWriteTypeDto
+import com.flinx.flinx.flinxhardware.bridge.CommandResultDto
 import com.flinx.flinx.flinxhardware.bridge.FlutterError
 import com.flinx.flinx.flinxhardware.bridge.WifiProvisionResultDto
 import com.flinx.flinx.flinxhardware.bridge.WifiScanResultDto
@@ -631,6 +632,55 @@ class BleManager(
         ),
       )
     }
+  }
+
+  /** 发送门控命令。0x0005 Data 为 2 字节大端 Controls。 */
+  @SuppressLint("MissingPermission")
+  fun sendDoorCommand(
+    requestId: String,
+    deviceId: String,
+    control: Int,
+  ): CommandResultDto {
+    val gatt = gattMap[deviceId]
+      ?: throw FlutterError("bluetooth_disconnected", "BLE device is not connected.")
+    val service = gatt.getService(DeviceBleProtocolConfig.communicationServiceUuid)
+      ?: throw FlutterError(
+        "service_not_found",
+        "BLE provisioning service was not discovered.",
+        "deviceId=$deviceId",
+      )
+    val writeCharacteristic = service.getCharacteristic(DeviceBleProtocolConfig.writeCharacteristicUuid)
+      ?: throw FlutterError(
+        "characteristic_not_found",
+        "BLE provisioning write characteristic was not found.",
+        "deviceId=$deviceId",
+      )
+    val sequence = nextProtocolSequence()
+    val payload = DeviceBleProtocolConfig.buildEncryptedCommandFrame(
+      sequence = sequence,
+      command = DeviceBleProtocolConfig.commandControlDoor,
+      data = byteArrayOf((control shr 8).toByte(), control.toByte()),
+    )
+
+    requestIdsByDevice[deviceId] = requestId
+    writeCharacteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+    writeCharacteristic.value = payload
+    logBlePayload(
+      direction = "DOOR_COMMAND_WRITE_REQUEST",
+      requestId = requestId,
+      deviceId = deviceId,
+      serviceUuid = service.uuid.toString(),
+      characteristicUuid = writeCharacteristic.uuid.toString(),
+      payload = payload,
+    )
+    val accepted = gatt.writeCharacteristic(writeCharacteristic)
+    return CommandResultDto(
+      requestId = requestId,
+      deviceId = deviceId,
+      accepted = accepted,
+      nativeCode = "command=0x0005,control=0x${control.toString(16).padStart(4, '0')},sequence=0x${sequence.toString(16).padStart(4, '0')}",
+      domainCode = if (accepted) null else "write_characteristic_failed",
+    )
   }
 
   @SuppressLint("MissingPermission")

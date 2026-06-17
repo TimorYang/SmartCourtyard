@@ -390,6 +390,10 @@ extension _DoorCommandMapper on DoorCommand {
       DoorCommand.open => pigeon.DoorCommandDto.open,
       DoorCommand.stop => pigeon.DoorCommandDto.stop,
       DoorCommand.close => pigeon.DoorCommandDto.close,
+      DoorCommand.partialOpen => pigeon.DoorCommandDto.partialOpen,
+      DoorCommand.lightOn => pigeon.DoorCommandDto.lightOn,
+      DoorCommand.lightOff => pigeon.DoorCommandDto.lightOff,
+      DoorCommand.pb => pigeon.DoorCommandDto.pb,
     };
   }
 }

@@ -118,6 +118,10 @@ enum DoorCommandDto {
   open,
   stop,
   close,
+  partialOpen,
+  lightOn,
+  lightOff,
+  pb,
 }
 
 enum BleConnectionStateDto {
