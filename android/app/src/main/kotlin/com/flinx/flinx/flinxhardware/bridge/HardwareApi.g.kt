@@ -220,7 +220,11 @@ enum class PermissionKindDto(val raw: Int) {
 enum class DoorCommandDto(val raw: Int) {
   OPEN(0),
   STOP(1),
-  CLOSE(2);
+  CLOSE(2),
+  PARTIAL_OPEN(3),
+  LIGHT_ON(4),
+  LIGHT_OFF(5),
+  PB(6);
 
   companion object {
     fun ofRaw(raw: Int): DoorCommandDto? {

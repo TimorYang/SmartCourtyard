@@ -70,6 +70,51 @@ class HardwareHostApiImpl(
     )
   }
 
+  override fun authenticateBleDevice(
+    requestId: String,
+    deviceId: String,
+    token: String,
+    callback: (Result<BleAuthenticationResultDto>) -> Unit,
+  ) {
+    permissionManager.ensureBleConnectPreconditions()
+    bleManager.authenticateDevice(
+      requestId = requestId,
+      deviceId = deviceId,
+      token = token,
+      callback = callback,
+    )
+  }
+
+  override fun scanWifiNetworks(
+    requestId: String,
+    deviceId: String,
+    callback: (Result<WifiScanResultDto>) -> Unit,
+  ) {
+    permissionManager.ensureBleConnectPreconditions()
+    bleManager.scanWifiNetworks(
+      requestId = requestId,
+      deviceId = deviceId,
+      callback = callback,
+    )
+  }
+
+  override fun configureWifi(
+    requestId: String,
+    deviceId: String,
+    ssid: String,
+    password: String,
+    callback: (Result<WifiProvisionResultDto>) -> Unit,
+  ) {
+    permissionManager.ensureBleConnectPreconditions()
+    bleManager.configureWifi(
+      requestId = requestId,
+      deviceId = deviceId,
+      ssid = ssid,
+      password = password,
+      callback = callback,
+    )
+  }
+
   /** 断开 BLE 设备连接。 */
   override fun disconnectBleDevice(
     requestId: String,
@@ -176,13 +221,27 @@ class HardwareHostApiImpl(
     )
   }
 
-  /** 发送门控命令（待实现）。 */
+  /** 发送门控命令。 */
   override fun sendDoorCommand(
     requestId: String,
     deviceId: String,
     command: DoorCommandDto,
   ): CommandResultDto {
-    throw notImplemented("sendDoorCommand", requestId, deviceId)
+    permissionManager.ensureBleConnectPreconditions()
+    val control = when (command) {
+      DoorCommandDto.OPEN -> DeviceBleProtocolConfig.controlOpenDoor
+      DoorCommandDto.CLOSE -> DeviceBleProtocolConfig.controlCloseDoor
+      DoorCommandDto.STOP -> DeviceBleProtocolConfig.controlStopDoor
+      DoorCommandDto.PARTIAL_OPEN -> DeviceBleProtocolConfig.controlPartialOpenDoor
+      DoorCommandDto.LIGHT_ON -> DeviceBleProtocolConfig.controlLightOn
+      DoorCommandDto.LIGHT_OFF -> DeviceBleProtocolConfig.controlLightOff
+      DoorCommandDto.PB -> DeviceBleProtocolConfig.controlPb
+    }
+    return bleManager.sendDoorCommand(
+      requestId = requestId,
+      deviceId = deviceId,
+      control = control,
+    )
   }
 
   /** 生成统一的“未实现”错误，附带方法与请求上下文信息。 */

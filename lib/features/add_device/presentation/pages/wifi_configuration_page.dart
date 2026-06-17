@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../application/providers.dart';
+import '../../../device_control/presentation/pages/device_command_page.dart';
 
 class WifiConfigurationPage extends ConsumerStatefulWidget {
   const WifiConfigurationPage({super.key});
@@ -74,10 +75,32 @@ class _WifiConfigurationPageState extends ConsumerState<WifiConfigurationPage> {
             FilledButton.tonalIcon(
               onPressed: state.isScanningWifi
                   ? null
-                  : () => _openWifiPicker(context),
+                  : () => controller.scanWifiNetworks(),
               icon: const Icon(Icons.wifi_find_outlined),
-              label: const Text('扫描附近 Wi‑Fi'),
+              label: Text(
+                state.isScanningWifi ? '正在扫描 Wi‑Fi...' : '扫描附近 Wi‑Fi',
+              ),
             ),
+            if (state.wifiNetworks.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Text('扫描到的 Wi‑Fi', style: Theme.of(context).textTheme.titleSmall),
+              const SizedBox(height: 8),
+              Card(
+                child: Column(
+                  children: [
+                    for (final network in state.wifiNetworks)
+                      ListTile(
+                        leading: const Icon(Icons.wifi),
+                        title: Text(network.ssid),
+                        trailing: state.wifiSsid == network.ssid
+                            ? const Icon(Icons.check)
+                            : null,
+                        onTap: () => controller.selectWifiNetwork(network.ssid),
+                      ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 12),
             TextField(
               controller: _ssidController,
@@ -117,53 +140,28 @@ class _WifiConfigurationPageState extends ConsumerState<WifiConfigurationPage> {
             ],
             const SizedBox(height: 20),
             FilledButton(
-              onPressed: state.isProvisioningWifi
+              onPressed:
+                  state.isProvisioningWifi ||
+                      state.wifiSsid.trim().isEmpty ||
+                      state.wifiPassword.isEmpty
                   ? null
                   : () async {
                       final success = await controller.configureWifi();
                       if (!context.mounted || !success) {
                         return;
                       }
-                      context.go('/');
+                      final deviceId = Uri.encodeQueryComponent(
+                        selectedDevice.id,
+                      );
+                      context.go(
+                        '${DeviceCommandPage.routePath}?deviceId=$deviceId',
+                      );
                     },
               child: Text(state.isProvisioningWifi ? '连接中...' : '开始连接'),
             ),
           ],
         ],
       ),
-    );
-  }
-
-  Future<void> _openWifiPicker(BuildContext context) async {
-    final controller = ref.read(addDeviceControllerProvider.notifier);
-    final networks = await controller.scanWifiNetworks();
-    if (!context.mounted || networks.isEmpty) {
-      return;
-    }
-
-    await showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      builder: (context) {
-        return SafeArea(
-          child: ListView.separated(
-            shrinkWrap: true,
-            itemCount: networks.length,
-            separatorBuilder: (_, _) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final network = networks[index];
-              return ListTile(
-                leading: const Icon(Icons.wifi),
-                title: Text(network.ssid),
-                onTap: () {
-                  controller.selectWifiNetwork(network.ssid);
-                  Navigator.of(context).pop();
-                },
-              );
-            },
-          ),
-        );
-      },
     );
   }
 }

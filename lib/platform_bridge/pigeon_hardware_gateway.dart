@@ -360,7 +360,7 @@ class _HardwareFlutterApiHandler implements pigeon.HardwareFlutterApi {
       'payloadBytes=${payloadBytes ?? '-'}',
       if (details != null && details.isNotEmpty) 'details=$details',
     ];
-    developer.log('ble log--------${parts.join(' ')}', name: 'FLINX.BLE');
+    // developer.log('ble log--------${parts.join(' ')}', name: 'FLINX.BLE');
   }
 
   String _hexString(List<int> bytes) {
@@ -390,6 +390,10 @@ extension _DoorCommandMapper on DoorCommand {
       DoorCommand.open => pigeon.DoorCommandDto.open,
       DoorCommand.stop => pigeon.DoorCommandDto.stop,
       DoorCommand.close => pigeon.DoorCommandDto.close,
+      DoorCommand.partialOpen => pigeon.DoorCommandDto.partialOpen,
+      DoorCommand.lightOn => pigeon.DoorCommandDto.lightOn,
+      DoorCommand.lightOff => pigeon.DoorCommandDto.lightOff,
+      DoorCommand.pb => pigeon.DoorCommandDto.pb,
     };
   }
 }

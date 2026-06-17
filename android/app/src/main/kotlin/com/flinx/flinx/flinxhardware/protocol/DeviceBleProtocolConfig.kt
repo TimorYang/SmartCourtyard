@@ -3,7 +3,6 @@ package com.flinx.flinx.flinxhardware.protocol
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.charset.StandardCharsets
-import java.security.GeneralSecurityException
 import java.util.UUID
 import javax.crypto.Cipher
 import javax.crypto.spec.SecretKeySpec
@@ -13,7 +12,8 @@ import javax.crypto.spec.SecretKeySpec
  * 统一收口 BLE Service/Characteristic、固定 token，以及 APP <-> Device 业务帧编解码约定。
  */
 object DeviceBleProtocolConfig {
-  const val fixedCommunicationTokenMd5 = "1BEE89494F466512FF584DDF85B39AA6"
+  const val fixedCommunicationTokenMd5 = "AF035A47A6ABB06B884F28409EFB8E44"
+  const val fixedAesKeyHex = "1BEE89494F466512FF584DDF85B39AA6"
 
   val communicationServiceUuid: UUID =
     UUID.fromString("02362AF7-CF3A-11E1-EFDC-000215D5C51B")
@@ -35,33 +35,86 @@ object DeviceBleProtocolConfig {
   const val frameTypeRequest: Int = 0x03
   const val frameTypeResponse: Int = 0x04
 
+  const val commandScanWifi: Int = 0x0E01
+  const val commandConfigureWifi: Int = 0x0E02
   const val commandAuthenticate: Int = 0x0E03
   const val commandQueryAttributes: Int = 0x0002
   const val commandControlDoor: Int = 0x0005
+  const val controlOpenDoor: Int = 0x1001
+  const val controlCloseDoor: Int = 0x1002
+  const val controlStopDoor: Int = 0x1003
+  const val controlPartialOpenDoor: Int = 0x1004
+  const val controlLightOn: Int = 0x1005
+  const val controlLightOff: Int = 0x1006
+  const val controlPb: Int = 0x1007
 
-  const val authTokenLengthBytes: Int = 32
-  const val authPayloadLengthBytes: Int = 36
+  const val authTokenHexLength: Int = 32
+  const val authTokenBinaryLengthBytes: Int = 16
+  const val authPayloadLengthBytes: Int = 20
 
   fun buildAuthenticationFrame(
     sequence: Int,
     utcTimestampSeconds: Long,
     tokenMd5: String = fixedCommunicationTokenMd5,
-    cryptoType: Int = cryptoNone,
+    cryptoType: Int = cryptoAes128,
   ): ByteArray {
-    require(tokenMd5.length == authTokenLengthBytes) {
+    require(tokenMd5.length == authTokenHexLength) {
       "Authentication token must be a 32-byte MD5 hex string."
+    }
+    val keyBytes = requireNotNull(hexToBytesOrNull(fixedAesKeyHex)) {
+      "Authentication key must be a valid 16-byte hex string."
+    }
+    val tokenBytes = requireNotNull(hexToBytesOrNull(tokenMd5)) {
+      "Authentication token must be valid hex."
+    }
+    require(tokenBytes.size == authTokenBinaryLengthBytes) {
+      "Authentication token must decode to 16 bytes."
     }
     val timestampBytes = ByteBuffer.allocate(4)
       .order(ByteOrder.BIG_ENDIAN)
       .putInt(utcTimestampSeconds.toInt())
       .array()
-    val tokenBytes = tokenMd5.toByteArray(Charsets.UTF_8)
-    return buildFrame(
+    val plainTypeToData = ByteBuffer.allocate(1 + 2 + 2 + authPayloadLengthBytes)
+      .order(ByteOrder.BIG_ENDIAN)
+      .put(frameTypeRequest.toByte())
+      .putShort(sequence.toShort())
+      .putShort(commandAuthenticate.toShort())
+      .put(timestampBytes)
+      .put(tokenBytes)
+      .array()
+    val encryptedTypeToData = encryptAesEcbPkcs7(
+      plainBytes = plainTypeToData,
+      keyBytes = keyBytes,
+    )
+    return buildFramedCipherPayload(
       cryptoType = cryptoType,
-      frameType = frameTypeRequest,
-      sequence = sequence,
-      command = commandAuthenticate,
-      data = timestampBytes + tokenBytes,
+      cipherPayload = encryptedTypeToData,
+    )
+  }
+
+  fun buildEncryptedCommandFrame(
+    sequence: Int,
+    command: Int,
+    data: ByteArray = ByteArray(0),
+    cryptoType: Int = cryptoAes128,
+  ): ByteArray {
+    val keyBytes = requireNotNull(hexToBytesOrNull(fixedAesKeyHex)) {
+      "Authentication key must be a valid 16-byte hex string."
+    }
+    val plainTypeToData = ByteBuffer.allocate(1 + 2 + 2 + data.size)
+      .order(ByteOrder.BIG_ENDIAN)
+      .put(frameTypeRequest.toByte())
+      .putShort(sequence.toShort())
+      .putShort(command.toShort())
+      .put(data)
+      .array()
+    val encryptedTypeToData = encryptAesEcbPkcs7(
+      plainBytes = plainTypeToData,
+      keyBytes = keyBytes,
+    )
+    return buildFramedCipherPayload(
+      cryptoType = cryptoType,
+      cipherPayload = encryptedTypeToData,
     )
   }
 
@@ -82,6 +135,22 @@ object DeviceBleProtocolConfig {
     buffer.putShort(command.toShort())
     buffer.put(data)
 
+    val bcc = calculateBcc(buffer.array(), buffer.position())
+    buffer.put(bcc.toByte())
+    buffer.putShort(frameFooter.toShort())
+    return buffer.array()
+  }
+
+  private fun buildFramedCipherPayload(
+    cryptoType: Int,
+    cipherPayload: ByteArray,
+  ): ByteArray {
+    val frameLength = 2 + 2 + 1 + cipherPayload.size + 1 + 2
+    val buffer = ByteBuffer.allocate(frameLength).order(ByteOrder.BIG_ENDIAN)
+    buffer.putShort(frameHeader.toShort())
+    buffer.putShort(frameLength.toShort())
+    buffer.put(cryptoType.toByte())
+    buffer.put(cipherPayload)
     val bcc = calculateBcc(buffer.array(), buffer.position())
     buffer.put(bcc.toByte())
     buffer.putShort(frameFooter.toShort())
@@ -116,6 +185,20 @@ object DeviceBleProtocolConfig {
     )
   }
 
+  fun hasValidEnvelope(payload: ByteArray): Boolean {
+    if (payload.size < 8) return false
+    val header = ((payload[0].toInt() and 0xFF) shl 8) or (payload[1].toInt() and 0xFF)
+    if (header != frameHeader) return false
+    val length = ((payload[2].toInt() and 0xFF) shl 8) or (payload[3].toInt() and 0xFF)
+    if (length != payload.size) return false
+    val footer = ((payload[payload.size - 2].toInt() and 0xFF) shl 8) or
+      (payload[payload.size - 1].toInt() and 0xFF)
+    if (footer != frameFooter) return false
+    val bcc = payload[payload.size - 3].toInt() and 0xFF
+    val expectedBcc = calculateBcc(payload, payload.size - 3)
+    return bcc == expectedBcc
+  }
+
   fun supportsService(serviceUuid: String): Boolean {
     return serviceUuid.equals(communicationServiceUuid.toString(), ignoreCase = true) ||
       serviceUuid.equals(logServiceUuid.toString(), ignoreCase = true)
@@ -126,8 +209,8 @@ object DeviceBleProtocolConfig {
   }
 
   fun candidateAesKeys(): List<DeviceBleAesKeyCandidate> {
-    val tokenHexBytes = hexToBytesOrNull(fixedCommunicationTokenMd5)
-    val tokenAsciiBytes = fixedCommunicationTokenMd5.toByteArray(StandardCharsets.UTF_8)
+    val tokenHexBytes = hexToBytesOrNull(fixedAesKeyHex)
+    val tokenAsciiBytes = fixedAesKeyHex.toByteArray(StandardCharsets.UTF_8)
     val candidates = mutableListOf<DeviceBleAesKeyCandidate>()
     if (tokenHexBytes != null && tokenHexBytes.size == 16) {
       candidates += DeviceBleAesKeyCandidate(
@@ -162,6 +245,40 @@ object DeviceBleProtocolConfig {
     return decrypt("AES/ECB/NoPadding", cipherBytes, keyBytes)
   }
 
+  fun tryDecryptAesCbcPkcs7ZeroIv(
+    cipherBytes: ByteArray,
+    keyBytes: ByteArray,
+  ): ByteArray? {
+    return decrypt(
+      transformation = "AES/CBC/PKCS5Padding",
+      cipherBytes = cipherBytes,
+      keyBytes = keyBytes,
+      ivBytes = ByteArray(16),
+    )
+  }
+
+  fun parseDecryptedPayload(
+    plaintext: ByteArray,
+    cryptoType: Int,
+  ): DeviceBleFrame? {
+    if (plaintext.size < 5) {
+      return null
+    }
+    val buffer = ByteBuffer.wrap(plaintext).order(ByteOrder.BIG_ENDIAN)
+    val frameType = buffer.get().toInt() and 0xFF
+    val sequence = buffer.short.toInt() and 0xFFFF
+    val command = buffer.short.toInt() and 0xFFFF
+    val data = ByteArray(plaintext.size - 5)
+    buffer.get(data)
+    return DeviceBleFrame(
+      cryptoType = cryptoType,
+      frameType = frameType,
+      sequence = sequence,
+      command = command,
+      data = data,
+    )
+  }
+
   private fun calculateBcc(bytes: ByteArray, endExclusive: Int): Int {
     var sum = 0
     for (index in 0 until endExclusive) {
@@ -174,12 +291,30 @@ object DeviceBleProtocolConfig {
     transformation: String,
     cipherBytes: ByteArray,
     keyBytes: ByteArray,
+    ivBytes: ByteArray? = null,
   ): ByteArray? {
     return runCatching {
       val cipher = Cipher.getInstance(transformation)
-      cipher.init(Cipher.DECRYPT_MODE, SecretKeySpec(keyBytes, "AES"))
+      if (ivBytes != null) {
+        cipher.init(
+          Cipher.DECRYPT_MODE,
+          SecretKeySpec(keyBytes, "AES"),
+          javax.crypto.spec.IvParameterSpec(ivBytes),
+        )
+      } else {
+        cipher.init(Cipher.DECRYPT_MODE, SecretKeySpec(keyBytes, "AES"))
+      }
       cipher.doFinal(cipherBytes)
     }.getOrNull()
+  }
+
+  private fun encryptAesEcbPkcs7(
+    plainBytes: ByteArray,
+    keyBytes: ByteArray,
+  ): ByteArray {
+    val cipher = Cipher.getInstance("AES/ECB/PKCS5Padding")
+    cipher.init(Cipher.ENCRYPT_MODE, SecretKeySpec(keyBytes, "AES"))
+    return cipher.doFinal(plainBytes)
   }
 
   private fun hexToBytesOrNull(hex: String): ByteArray? {

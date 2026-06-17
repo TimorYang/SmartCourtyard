@@ -21,6 +21,7 @@ import android.os.Looper
 import android.os.ParcelUuid
 import android.util.Log
 import com.flinx.flinx.flinxhardware.bridge.BleCharacteristicDto
+import com.flinx.flinx.flinxhardware.bridge.BleAuthenticationResultDto
 import com.flinx.flinx.flinxhardware.bridge.BleConnectionEventDto
 import com.flinx.flinx.flinxhardware.bridge.BleConnectionStateDto
 import com.flinx.flinx.flinxhardware.bridge.BleDeviceDto
@@ -31,14 +32,20 @@ import com.flinx.flinx.flinxhardware.bridge.BleServiceDto
 import com.flinx.flinx.flinxhardware.bridge.BleServicesDto
 import com.flinx.flinx.flinxhardware.bridge.BleWriteResultDto
 import com.flinx.flinx.flinxhardware.bridge.BleWriteTypeDto
+import com.flinx.flinx.flinxhardware.bridge.CommandResultDto
 import com.flinx.flinx.flinxhardware.bridge.FlutterError
+import com.flinx.flinx.flinxhardware.bridge.WifiProvisionResultDto
+import com.flinx.flinx.flinxhardware.bridge.WifiScanResultDto
 import com.flinx.flinx.flinxhardware.protocol.DeviceBleAesKeyCandidate
 import com.flinx.flinx.flinxhardware.protocol.DeviceBleFrame
 import com.flinx.flinx.flinxhardware.protocol.DeviceBleProtocolConfig
+import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
+import org.json.JSONArray
+import org.json.JSONObject
 
 /** BLE 管理器：负责扫描、连接以及 GATT 读写通知的生命周期。 */
 class BleManager(
@@ -49,6 +56,11 @@ class BleManager(
     private const val NO_RESULT_LOG_DELAY_MS = 5_000L
     private const val MAX_RECONNECT_ATTEMPTS = 3
     private const val RECONNECT_DELAY_MS = 2_000L
+    private const val AUTH_TIMEOUT_MS = 10_000L
+    private const val AUTH_SERVICE_DISCOVERY_TIMEOUT_MS = 8_000L
+    private const val PROVISIONING_COMMAND_TIMEOUT_MS = 15_000L
+    private const val DESIRED_MTU = 185
+    private const val MTU_FALLBACK_DISCOVERY_DELAY_MS = 1_500L
     private val cccdUuid: UUID =
       UUID.fromString("00002902-0000-1000-8000-00805F9B34FB")
   }
@@ -81,10 +93,20 @@ class BleManager(
     ConcurrentHashMap<String, PendingNotifyChange>()
   private val authSessions =
     ConcurrentHashMap<String, PendingAuthentication>()
+  private val pendingAuthDiscoveries =
+    ConcurrentHashMap<String, PendingAuthenticationDiscovery>()
+  private val wifiScanSessions =
+    ConcurrentHashMap<String, PendingWifiScan>()
+  private val wifiProvisionSessions =
+    ConcurrentHashMap<String, PendingWifiProvision>()
+  private val notificationBuffers =
+    ConcurrentHashMap<String, ByteArray>()
   private val requestIdsByDevice = ConcurrentHashMap<String, String>()
   private val reconnectAttempts = ConcurrentHashMap<String, Int>()
   private val reconnectRunnables = ConcurrentHashMap<String, Runnable>()
   private val explicitDisconnects = ConcurrentHashMap.newKeySet<String>()
+  private val serviceDiscoveryInProgress = ConcurrentHashMap.newKeySet<String>()
+  private val mtuFallbackRunnables = ConcurrentHashMap<String, Runnable>()
 
   /** 启动 BLE 扫描并通过回调输出扫描结果。 */
   @SuppressLint("MissingPermission")
@@ -157,7 +179,9 @@ class BleManager(
     gattMap.remove(deviceId)?.close()
     explicitDisconnects.remove(deviceId)
     cancelPendingReconnect(deviceId, resetAttempts = true)
-    authSessions.remove(deviceId)
+    cancelMtuFallbackDiscovery(deviceId)
+    removeAuthSession(deviceId)
+    removePendingAuthDiscovery(deviceId)
     requestIdsByDevice[deviceId] = requestId
     connectCallbacks[deviceId] = callback
     onConnectionChanged(
@@ -185,11 +209,13 @@ class BleManager(
   ) {
     explicitDisconnects.add(deviceId)
     cancelPendingReconnect(deviceId, resetAttempts = true)
+    cancelMtuFallbackDiscovery(deviceId)
     val gatt = gattMap[deviceId]
       ?: run {
         requestIdsByDevice.remove(deviceId)
         connectCallbacks.remove(deviceId)
-        authSessions.remove(deviceId)
+        removeAuthSession(deviceId)
+        removePendingAuthDiscovery(deviceId)
         callback(
           Result.success(
             BleConnectionEventDto(
@@ -203,7 +229,8 @@ class BleManager(
       }
     requestIdsByDevice[deviceId] = requestId
     disconnectCallbacks[deviceId] = callback
-    authSessions.remove(deviceId)
+    removeAuthSession(deviceId)
+    removePendingAuthDiscovery(deviceId)
     Log.d(TAG, "主动断开设备 requestId=$requestId deviceId=$deviceId")
     gatt.disconnect()
     onConnectionChanged(
@@ -227,7 +254,7 @@ class BleManager(
     requestIdsByDevice[deviceId] = requestId
     discoverServicesCallbacks[deviceId] = callback
     Log.d(TAG, "开始发现服务 requestId=$requestId deviceId=$deviceId")
-    if (!gatt.discoverServices()) {
+    if (!startServiceDiscovery(requestId, deviceId, gatt, "manual")) {
       discoverServicesCallbacks.remove(deviceId)
       throw FlutterError("service_discovery_failed", "Failed to start GATT service discovery.")
     }
@@ -391,6 +418,358 @@ class BleManager(
     }
   }
 
+  /** 显式发起设备协议鉴权。连接成功后由 Flutter 调用，避免连接生命周期里隐式发送 0x0E03。 */
+  @SuppressLint("MissingPermission")
+  fun authenticateDevice(
+    requestId: String,
+    deviceId: String,
+    token: String,
+    callback: (Result<BleAuthenticationResultDto>) -> Unit,
+  ) {
+    val gatt = gattMap[deviceId]
+      ?: throw FlutterError("bluetooth_disconnected", "BLE device is not connected.")
+    requestIdsByDevice[deviceId] = requestId
+    if (gatt.getService(DeviceBleProtocolConfig.communicationServiceUuid) == null) {
+      waitForAuthenticationServiceDiscovery(
+        requestId = requestId,
+        deviceId = deviceId,
+        gatt = gatt,
+        token = token,
+        callback = callback,
+      )
+      return
+    }
+    startAuthentication(
+      requestId = requestId,
+      deviceId = deviceId,
+      gatt = gatt,
+      token = token,
+      callback = callback,
+    )
+  }
+
+  /** 扫描设备附近 Wi-Fi。请求按 BLE 协议加密发送，设备回包按明文帧解析。 */
+  @SuppressLint("MissingPermission")
+  fun scanWifiNetworks(
+    requestId: String,
+    deviceId: String,
+    callback: (Result<WifiScanResultDto>) -> Unit,
+  ) {
+    val gatt = gattMap[deviceId]
+      ?: throw FlutterError("bluetooth_disconnected", "BLE device is not connected.")
+    if (wifiScanSessions.containsKey(deviceId)) {
+      callback(
+        Result.failure(
+          FlutterError(
+            "operation_in_progress",
+            "BLE Wi-Fi scan is already in progress.",
+            "deviceId=$deviceId",
+          ),
+        ),
+      )
+      return
+    }
+    val service = gatt.getService(DeviceBleProtocolConfig.communicationServiceUuid)
+      ?: throw FlutterError(
+        "service_not_found",
+        "BLE provisioning service was not discovered.",
+        "deviceId=$deviceId",
+      )
+    val writeCharacteristic = service.getCharacteristic(DeviceBleProtocolConfig.writeCharacteristicUuid)
+      ?: throw FlutterError(
+        "characteristic_not_found",
+        "BLE provisioning write characteristic was not found.",
+        "deviceId=$deviceId",
+      )
+    val sequence = nextProtocolSequence()
+    val payload = DeviceBleProtocolConfig.buildEncryptedCommandFrame(
+      sequence = sequence,
+      command = DeviceBleProtocolConfig.commandScanWifi,
+    )
+    val pending = PendingWifiScan(
+      requestId = requestId,
+      deviceId = deviceId,
+      sequence = sequence,
+      serviceUuid = service.uuid.toString(),
+      notifyCharacteristicUuid = DeviceBleProtocolConfig.notifyCharacteristicUuid.toString(),
+      writeCharacteristicUuid = writeCharacteristic.uuid.toString(),
+      callback = callback,
+    )
+    val timeoutRunnable = Runnable {
+      val removed = wifiScanSessions.remove(deviceId) ?: return@Runnable
+      removed.callback(
+        Result.failure(
+          FlutterError(
+            "command_timeout",
+            "BLE Wi-Fi scan timed out.",
+            "requestId=${removed.requestId},deviceId=$deviceId,sequence=${removed.sequence}",
+          ),
+        ),
+      )
+    }
+    pending.timeoutRunnable = timeoutRunnable
+    wifiScanSessions[deviceId] = pending
+    mainHandler.postDelayed(timeoutRunnable, PROVISIONING_COMMAND_TIMEOUT_MS)
+    requestIdsByDevice[deviceId] = requestId
+    writeCharacteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+    writeCharacteristic.value = payload
+    logBlePayload(
+      direction = "WIFI_SCAN_WRITE_REQUEST",
+      requestId = requestId,
+      deviceId = deviceId,
+      serviceUuid = service.uuid.toString(),
+      characteristicUuid = writeCharacteristic.uuid.toString(),
+      payload = payload,
+    )
+    if (!gatt.writeCharacteristic(writeCharacteristic)) {
+      removeWifiScanSession(deviceId)
+      callback(
+        Result.failure(
+          FlutterError(
+            "write_characteristic_failed",
+            "Failed to send BLE Wi-Fi scan frame.",
+            "deviceId=$deviceId",
+          ),
+        ),
+      )
+    }
+  }
+
+  /** 下发 Wi-Fi 配置。协议要求 0x0E02 使用明文帧，Data 为 UTF-8 JSON 对象。 */
+  @SuppressLint("MissingPermission")
+  fun configureWifi(
+    requestId: String,
+    deviceId: String,
+    ssid: String,
+    password: String,
+    callback: (Result<WifiProvisionResultDto>) -> Unit,
+  ) {
+    val gatt = gattMap[deviceId]
+      ?: throw FlutterError("bluetooth_disconnected", "BLE device is not connected.")
+    if (wifiProvisionSessions.containsKey(deviceId)) {
+      callback(
+        Result.failure(
+          FlutterError(
+            "operation_in_progress",
+            "BLE Wi-Fi provision is already in progress.",
+            "deviceId=$deviceId",
+          ),
+        ),
+      )
+      return
+    }
+    val service = gatt.getService(DeviceBleProtocolConfig.communicationServiceUuid)
+      ?: throw FlutterError(
+        "service_not_found",
+        "BLE provisioning service was not discovered.",
+        "deviceId=$deviceId",
+      )
+    val writeCharacteristic = service.getCharacteristic(DeviceBleProtocolConfig.writeCharacteristicUuid)
+      ?: throw FlutterError(
+        "characteristic_not_found",
+        "BLE provisioning write characteristic was not found.",
+        "deviceId=$deviceId",
+      )
+    val sequence = nextProtocolSequence()
+    val wifiPayload = JSONObject()
+      .put("ssid", ssid)
+      .put("pwd", password)
+      .toString()
+      .toByteArray(StandardCharsets.UTF_8)
+    val payload = DeviceBleProtocolConfig.buildFrame(
+      cryptoType = DeviceBleProtocolConfig.cryptoNone,
+      frameType = DeviceBleProtocolConfig.frameTypeRequest,
+      sequence = sequence,
+      command = DeviceBleProtocolConfig.commandConfigureWifi,
+      data = wifiPayload,
+    )
+    val pending = PendingWifiProvision(
+      requestId = requestId,
+      deviceId = deviceId,
+      sequence = sequence,
+      ssid = ssid,
+      serviceUuid = service.uuid.toString(),
+      notifyCharacteristicUuid = DeviceBleProtocolConfig.notifyCharacteristicUuid.toString(),
+      writeCharacteristicUuid = writeCharacteristic.uuid.toString(),
+      callback = callback,
+    )
+    val timeoutRunnable = Runnable {
+      val removed = wifiProvisionSessions.remove(deviceId) ?: return@Runnable
+      removed.callback(
+        Result.failure(
+          FlutterError(
+            "command_timeout",
+            "BLE Wi-Fi provision timed out.",
+            "requestId=${removed.requestId},deviceId=$deviceId,sequence=${removed.sequence}",
+          ),
+        ),
+      )
+    }
+    pending.timeoutRunnable = timeoutRunnable
+    wifiProvisionSessions[deviceId] = pending
+    mainHandler.postDelayed(timeoutRunnable, PROVISIONING_COMMAND_TIMEOUT_MS)
+    requestIdsByDevice[deviceId] = requestId
+    writeCharacteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+    writeCharacteristic.value = payload
+    logBlePayload(
+      direction = "WIFI_PROVISION_WRITE_REQUEST",
+      requestId = requestId,
+      deviceId = deviceId,
+      serviceUuid = service.uuid.toString(),
+      characteristicUuid = writeCharacteristic.uuid.toString(),
+      payload = payload,
+      redactPayload = true,
+    )
+    if (!gatt.writeCharacteristic(writeCharacteristic)) {
+      removeWifiProvisionSession(deviceId)
+      callback(
+        Result.failure(
+          FlutterError(
+            "write_characteristic_failed",
+            "Failed to send BLE Wi-Fi provision frame.",
+            "deviceId=$deviceId",
+          ),
+        ),
+      )
+    }
+  }
+
+  /** 发送门控命令。0x0005 Data 为 2 字节大端 Controls。 */
+  @SuppressLint("MissingPermission")
+  fun sendDoorCommand(
+    requestId: String,
+    deviceId: String,
+    control: Int,
+  ): CommandResultDto {
+    val gatt = gattMap[deviceId]
+      ?: throw FlutterError("bluetooth_disconnected", "BLE device is not connected.")
+    val service = gatt.getService(DeviceBleProtocolConfig.communicationServiceUuid)
+      ?: throw FlutterError(
+        "service_not_found",
+        "BLE provisioning service was not discovered.",
+        "deviceId=$deviceId",
+      )
+    val writeCharacteristic = service.getCharacteristic(DeviceBleProtocolConfig.writeCharacteristicUuid)
+      ?: throw FlutterError(
+        "characteristic_not_found",
+        "BLE provisioning write characteristic was not found.",
+        "deviceId=$deviceId",
+      )
+    val sequence = nextProtocolSequence()
+    val payload = DeviceBleProtocolConfig.buildEncryptedCommandFrame(
+      sequence = sequence,
+      command = DeviceBleProtocolConfig.commandControlDoor,
+      data = byteArrayOf((control shr 8).toByte(), control.toByte()),
+    )
+
+    requestIdsByDevice[deviceId] = requestId
+    writeCharacteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+    writeCharacteristic.value = payload
+    logBlePayload(
+      direction = "DOOR_COMMAND_WRITE_REQUEST",
+      requestId = requestId,
+      deviceId = deviceId,
+      serviceUuid = service.uuid.toString(),
+      characteristicUuid = writeCharacteristic.uuid.toString(),
+      payload = payload,
+    )
+    val accepted = gatt.writeCharacteristic(writeCharacteristic)
+    return CommandResultDto(
+      requestId = requestId,
+      deviceId = deviceId,
+      accepted = accepted,
+      nativeCode = "command=0x0005,control=0x${control.toString(16).padStart(4, '0')},sequence=0x${sequence.toString(16).padStart(4, '0')}",
+      domainCode = if (accepted) null else "write_characteristic_failed",
+    )
+  }
+
+  @SuppressLint("MissingPermission")
+  private fun waitForAuthenticationServiceDiscovery(
+    requestId: String,
+    deviceId: String,
+    gatt: BluetoothGatt,
+    token: String,
+    callback: (Result<BleAuthenticationResultDto>) -> Unit,
+  ) {
+    if (pendingAuthDiscoveries.containsKey(deviceId)) {
+      callback(
+        Result.failure(
+          FlutterError(
+            "operation_in_progress",
+            "BLE authentication is waiting for service discovery.",
+            "deviceId=$deviceId",
+          ),
+        ),
+      )
+      return
+    }
+    val pending = PendingAuthenticationDiscovery(
+      requestId = requestId,
+      deviceId = deviceId,
+      token = token,
+      callback = callback,
+    )
+    val timeoutRunnable = Runnable {
+      val removed = pendingAuthDiscoveries.remove(deviceId) ?: return@Runnable
+      removed.callback(
+        Result.failure(
+          FlutterError(
+            "service_discovery_timeout",
+            "BLE provisioning service discovery timed out.",
+            "requestId=${removed.requestId},deviceId=$deviceId",
+          ),
+        ),
+      )
+    }
+    pending.timeoutRunnable = timeoutRunnable
+    pendingAuthDiscoveries[deviceId] = pending
+    mainHandler.postDelayed(timeoutRunnable, AUTH_SERVICE_DISCOVERY_TIMEOUT_MS)
+    Log.d(TAG, "鉴权等待服务发现 requestId=$requestId deviceId=$deviceId")
+    if (!startServiceDiscovery(requestId, deviceId, gatt, "auth")) {
+      removePendingAuthDiscovery(deviceId)
+      callback(
+        Result.failure(
+          FlutterError(
+            "service_discovery_failed",
+            "Failed to start GATT service discovery.",
+            "deviceId=$deviceId",
+          ),
+        ),
+      )
+    }
+  }
+
+  @SuppressLint("MissingPermission")
+  private fun startServiceDiscovery(
+    requestId: String,
+    deviceId: String,
+    gatt: BluetoothGatt,
+    reason: String,
+  ): Boolean {
+    if (!serviceDiscoveryInProgress.add(deviceId)) {
+      Log.d(TAG, "等待已有服务发现流程 requestId=$requestId deviceId=$deviceId reason=$reason")
+      return true
+    }
+    if (!gatt.discoverServices()) {
+      serviceDiscoveryInProgress.remove(deviceId)
+      return false
+    }
+    return true
+  }
+
+  @SuppressLint("MissingPermission")
+  private fun startInitialServiceDiscovery(
+    requestId: String,
+    deviceId: String,
+    gatt: BluetoothGatt,
+    reason: String,
+  ) {
+    Log.d(TAG, "开始发现服务 requestId=$requestId deviceId=$deviceId reason=$reason")
+    if (!startServiceDiscovery(requestId, deviceId, gatt, reason)) {
+      Log.w(TAG, "发现服务启动失败 requestId=$requestId deviceId=$deviceId reason=$reason")
+    }
+  }
+
   @SuppressLint("MissingPermission")
   private fun startGattConnection(
     requestId: String,
@@ -417,6 +796,28 @@ class BleManager(
     if (resetAttempts) {
       reconnectAttempts.remove(deviceId)
     }
+  }
+
+  private fun scheduleMtuFallbackDiscovery(
+    requestId: String,
+    deviceId: String,
+    gatt: BluetoothGatt,
+  ) {
+    cancelMtuFallbackDiscovery(deviceId)
+    val runnable = Runnable {
+      mtuFallbackRunnables.remove(deviceId)
+      if (!gattMap.containsKey(deviceId)) {
+        return@Runnable
+      }
+      Log.w(TAG, "请求MTU未收到回调，兜底发现服务 requestId=$requestId deviceId=$deviceId")
+      startInitialServiceDiscovery(requestId, deviceId, gatt, reason = "mtu_timeout")
+    }
+    mtuFallbackRunnables[deviceId] = runnable
+    mainHandler.postDelayed(runnable, MTU_FALLBACK_DISCOVERY_DELAY_MS)
+  }
+
+  private fun cancelMtuFallbackDiscovery(deviceId: String) {
+    mtuFallbackRunnables.remove(deviceId)?.let(mainHandler::removeCallbacks)
   }
 
   private fun scheduleReconnect(
@@ -481,16 +882,20 @@ class BleManager(
             gattMap[deviceId] = gatt
             onConnectionChanged(event)
             connectCallbacks.remove(deviceId)?.invoke(Result.success(event))
-            Log.d(TAG, "蓝牙连接成功，开始发现服务 requestId=$requestId deviceId=$deviceId")
-            if (!gatt.discoverServices()) {
-              Log.w(TAG, "发现服务启动失败 requestId=$requestId deviceId=$deviceId")
+            Log.d(TAG, "蓝牙连接成功，开始请求MTU requestId=$requestId deviceId=$deviceId mtu=$DESIRED_MTU")
+            if (!gatt.requestMtu(DESIRED_MTU)) {
+              Log.w(TAG, "请求MTU启动失败，直接发现服务 requestId=$requestId deviceId=$deviceId mtu=$DESIRED_MTU")
+              startInitialServiceDiscovery(requestId, deviceId, gatt, reason = "connect_mtu_start_failed")
+            } else {
+              scheduleMtuFallbackDiscovery(requestId, deviceId, gatt)
             }
           }
           BluetoothProfile.STATE_DISCONNECTED -> {
             gatt.close()
             gattMap.remove(deviceId)
+            cancelMtuFallbackDiscovery(deviceId)
+            serviceDiscoveryInProgress.remove(deviceId)
             discoverServicesCallbacks.remove(deviceId)
-            authSessions.remove(deviceId)
             failPendingOperations(deviceId, status)
             val event = BleConnectionEventDto(
               requestId = requestId,
@@ -521,15 +926,33 @@ class BleManager(
         }
       }
 
+      override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
+        val deviceId = device.address
+        val requestId = requestIdsByDevice[deviceId] ?: "unknown"
+        cancelMtuFallbackDiscovery(deviceId)
+        Log.d(TAG, "蓝牙MTU变更 requestId=$requestId deviceId=$deviceId mtu=$mtu status=$status")
+        startInitialServiceDiscovery(requestId, deviceId, gatt, reason = "mtu_changed")
+      }
+
       override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
         val deviceId = device.address
         val requestId = requestIdsByDevice[deviceId] ?: "unknown"
+        serviceDiscoveryInProgress.remove(deviceId)
         val callback = discoverServicesCallbacks.remove(deviceId)
         Log.d(
           TAG,
           "蓝牙服务发现完成 requestId=$requestId deviceId=$deviceId status=$status serviceCount=${gatt.services.size}",
         )
         if (status != BluetoothGatt.GATT_SUCCESS) {
+          removePendingAuthDiscovery(deviceId)?.callback(
+            Result.failure(
+              FlutterError(
+                "service_discovery_failed",
+                "GATT 服务发现失败。",
+                "status=$status,deviceId=$deviceId",
+              ),
+            ),
+          )
           callback?.invoke(
             Result.failure(
               FlutterError(
@@ -542,7 +965,15 @@ class BleManager(
           return
         }
         logDiscoveredServices(requestId, deviceId, gatt)
-        maybeStartAuthentication(requestId, deviceId, gatt)
+        removePendingAuthDiscovery(deviceId)?.let { pendingAuth ->
+          startAuthentication(
+            requestId = pendingAuth.requestId,
+            deviceId = deviceId,
+            gatt = gatt,
+            token = pendingAuth.token,
+            callback = pendingAuth.callback,
+          )
+        }
         callback?.invoke(Result.success(mapServices(requestId, deviceId, gatt)))
       }
 
@@ -551,38 +982,84 @@ class BleManager(
         gatt: BluetoothGatt,
         characteristic: BluetoothGattCharacteristic,
       ) {
+        handleCharacteristicChanged(gatt, characteristic, characteristic.value ?: ByteArray(0))
+      }
+
+      override fun onCharacteristicChanged(
+        gatt: BluetoothGatt,
+        characteristic: BluetoothGattCharacteristic,
+        value: ByteArray,
+      ) {
+        handleCharacteristicChanged(gatt, characteristic, value)
+      }
+
+      private fun handleCharacteristicChanged(
+        gatt: BluetoothGatt,
+        characteristic: BluetoothGattCharacteristic,
+        payload: ByteArray,
+      ) {
         val deviceId = device.address
         val requestId = requestIdsByDevice[deviceId]
-        val payload = characteristic.value ?: ByteArray(0)
-        logBlePayload(
-          direction = "NOTIFY",
-          requestId = requestId,
+        val serviceUuid = characteristic.service.uuid.toString()
+        val characteristicUuid = characteristic.uuid.toString()
+        val reassembledPayloads = reassembleNotificationPayloads(
           deviceId = deviceId,
-          serviceUuid = characteristic.service.uuid.toString(),
-          characteristicUuid = characteristic.uuid.toString(),
+          serviceUuid = serviceUuid,
+          characteristicUuid = characteristicUuid,
           payload = payload,
         )
-        handleAuthenticationNotification(
-          requestId = requestId,
-          deviceId = deviceId,
-          serviceUuid = characteristic.service.uuid.toString(),
-          characteristicUuid = characteristic.uuid.toString(),
-          payload = payload,
-        )
-        logEncryptedPayloadAnalysis(
-          requestId = requestId,
-          deviceId = deviceId,
-          serviceUuid = characteristic.service.uuid.toString(),
-          characteristicUuid = characteristic.uuid.toString(),
-          payload = payload,
-        )
-        emitNotification(
-          requestId = requestId,
-          deviceId = deviceId,
-          serviceUuid = characteristic.service.uuid.toString(),
-          characteristicUuid = characteristic.uuid.toString(),
-          payload = payload,
-        )
+        if (reassembledPayloads.isEmpty()) {
+          Log.d(
+            TAG,
+            "蓝牙接收分片 requestId=${requestId ?: "unknown"} deviceId=$deviceId service=$serviceUuid characteristic=$characteristicUuid chunkLen=${payload.size} chunkHex=${toHexOrEmpty(payload)}",
+          )
+          return
+        }
+        reassembledPayloads.forEach { framePayload ->
+          logBlePayload(
+            direction = "NOTIFY",
+            requestId = requestId,
+            deviceId = deviceId,
+            serviceUuid = serviceUuid,
+            characteristicUuid = characteristicUuid,
+            payload = framePayload,
+          )
+          handleAuthenticationNotification(
+            requestId = requestId,
+            deviceId = deviceId,
+            serviceUuid = serviceUuid,
+            characteristicUuid = characteristicUuid,
+            payload = framePayload,
+          )
+          handleWifiScanNotification(
+            requestId = requestId,
+            deviceId = deviceId,
+            serviceUuid = serviceUuid,
+            characteristicUuid = characteristicUuid,
+            payload = framePayload,
+          )
+          handleWifiProvisionNotification(
+            requestId = requestId,
+            deviceId = deviceId,
+            serviceUuid = serviceUuid,
+            characteristicUuid = characteristicUuid,
+            payload = framePayload,
+          )
+          logEncryptedPayloadAnalysis(
+            requestId = requestId,
+            deviceId = deviceId,
+            serviceUuid = serviceUuid,
+            characteristicUuid = characteristicUuid,
+            payload = framePayload,
+          )
+          emitNotification(
+            requestId = requestId,
+            deviceId = deviceId,
+            serviceUuid = serviceUuid,
+            characteristicUuid = characteristicUuid,
+            payload = framePayload,
+          )
+        }
       }
 
       @SuppressLint("MissingPermission")
@@ -726,50 +1203,87 @@ class BleManager(
     if (!serviceUuid.equals(DeviceBleProtocolConfig.communicationServiceUuid.toString(), ignoreCase = true)) {
       return
     }
-    if (payload.size != 20) {
-      return
-    }
-    val prefix = payload.copyOfRange(0, 4)
-    val cipherBytes = payload.copyOfRange(4, payload.size)
+    val encryptedPayload = extractEncryptedPayload(payload) ?: return
     val candidates = DeviceBleProtocolConfig.candidateAesKeys()
     val analyses = candidates.joinToString(separator = " | ") { candidate ->
-      describeAesCandidate(candidate, cipherBytes)
+      describeAesCandidate(candidate, encryptedPayload)
     }
     Log.d(
       TAG,
-      "蓝牙接收密文分析 requestId=${requestId ?: "unknown"} deviceId=$deviceId service=$serviceUuid characteristic=$characteristicUuid prefixHex=${toHexOrEmpty(prefix)} cipherHex=${toHexOrEmpty(cipherBytes)} analyses=$analyses",
+      "蓝牙接收密文分析 requestId=${requestId ?: "unknown"} deviceId=$deviceId service=$serviceUuid characteristic=$characteristicUuid cipherLen=${encryptedPayload.size} cipherHex=${toHexOrEmpty(encryptedPayload)} analyses=$analyses",
     )
+  }
+
+  private fun extractEncryptedPayload(payload: ByteArray): ByteArray? {
+    if (payload.size < 8) {
+      return null
+    }
+    val header = ((payload[0].toInt() and 0xFF) shl 8) or (payload[1].toInt() and 0xFF)
+    if (header != DeviceBleProtocolConfig.frameHeader) {
+      return null
+    }
+    val cryptoType = payload[4].toInt() and 0xFF
+    if (cryptoType != DeviceBleProtocolConfig.cryptoAes128) {
+      return null
+    }
+    val hasFooter =
+      payload.size >= 8 &&
+      payload[payload.size - 2] == 0xAA.toByte() &&
+      payload[payload.size - 1] == 0xAA.toByte()
+    val payloadEndExclusive = if (hasFooter) payload.size - 3 else payload.size
+    if (payloadEndExclusive <= 5) {
+      return null
+    }
+    return payload.copyOfRange(5, payloadEndExclusive)
   }
 
   private fun describeAesCandidate(
     candidate: DeviceBleAesKeyCandidate,
     cipherBytes: ByteArray,
   ): String {
-    val pkcs7 = DeviceBleProtocolConfig.tryDecryptAesEcbPkcs7(cipherBytes, candidate.keyBytes)
-    val noPadding = DeviceBleProtocolConfig.tryDecryptAesEcbNoPadding(cipherBytes, candidate.keyBytes)
+    val ecbPkcs7 = DeviceBleProtocolConfig.tryDecryptAesEcbPkcs7(cipherBytes, candidate.keyBytes)
+    val cbcPkcs7 = DeviceBleProtocolConfig.tryDecryptAesCbcPkcs7ZeroIv(cipherBytes, candidate.keyBytes)
     return buildString {
       append(candidate.label)
-      append("{pkcs7=")
-      append(pkcs7?.let(::toHexOrEmpty) ?: "fail")
-      append(", noPadding=")
-      append(noPadding?.let(::toHexOrEmpty) ?: "fail")
+      append("{ecbPkcs7=")
+      append(ecbPkcs7?.let(::toHexOrEmpty) ?: "fail")
+      append(", cbcPkcs7ZeroIv=")
+      append(cbcPkcs7?.let(::toHexOrEmpty) ?: "fail")
       append("}")
     }
   }
 
   @SuppressLint("MissingPermission")
-  private fun maybeStartAuthentication(
+  private fun startAuthentication(
     requestId: String,
     deviceId: String,
     gatt: BluetoothGatt,
+    token: String,
+    callback: (Result<BleAuthenticationResultDto>) -> Unit,
   ) {
     if (authSessions.containsKey(deviceId)) {
-      Log.d(TAG, "跳过自动鉴权 requestId=$requestId deviceId=$deviceId reason=已有鉴权会话")
+      callback(
+        Result.failure(
+          FlutterError(
+            "operation_in_progress",
+            "BLE authentication is already in progress.",
+            "deviceId=$deviceId",
+          ),
+        ),
+      )
       return
     }
     val service = gatt.getService(DeviceBleProtocolConfig.communicationServiceUuid)
     if (service == null) {
-      Log.d(TAG, "跳过自动鉴权 requestId=$requestId deviceId=$deviceId reason=未发现协议服务")
+      callback(
+        Result.failure(
+          FlutterError(
+            "service_not_found",
+            "BLE provisioning service was not discovered.",
+            "deviceId=$deviceId",
+          ),
+        ),
+      )
       return
     }
     val notifyCharacteristic = service.getCharacteristic(DeviceBleProtocolConfig.notifyCharacteristicUuid)
@@ -777,15 +1291,38 @@ class BleManager(
     if (notifyCharacteristic == null || writeCharacteristic == null) {
       Log.w(
         TAG,
-        "跳过自动鉴权 requestId=$requestId deviceId=$deviceId reason=协议特征缺失 hasNotify=${notifyCharacteristic != null} hasWrite=${writeCharacteristic != null}",
+        "鉴权失败 requestId=$requestId deviceId=$deviceId reason=协议特征缺失 hasNotify=${notifyCharacteristic != null} hasWrite=${writeCharacteristic != null}",
+      )
+      callback(
+        Result.failure(
+          FlutterError(
+            "characteristic_not_found",
+            "BLE provisioning characteristics were not discovered.",
+            "deviceId=$deviceId",
+          ),
+        ),
       )
       return
     }
     val sequence = nextProtocolSequence()
-    val payload = DeviceBleProtocolConfig.buildAuthenticationFrame(
-      sequence = sequence,
-      utcTimestampSeconds = Instant.now().epochSecond,
-    )
+    val payload = runCatching {
+      DeviceBleProtocolConfig.buildAuthenticationFrame(
+        sequence = sequence,
+        utcTimestampSeconds = Instant.now().epochSecond,
+        tokenMd5 = token.trim(),
+      )
+    }.getOrElse { error ->
+      callback(
+        Result.failure(
+          FlutterError(
+            "invalid_auth_token",
+            error.message ?: "BLE auth token is invalid.",
+            "deviceId=$deviceId",
+          ),
+        ),
+      )
+      return
+    }
     val auth = PendingAuthentication(
       requestId = requestId,
       deviceId = deviceId,
@@ -794,32 +1331,74 @@ class BleManager(
       notifyCharacteristicUuid = notifyCharacteristic.uuid.toString(),
       writeCharacteristicUuid = writeCharacteristic.uuid.toString(),
       payload = payload,
+      callback = callback,
     )
     authSessions[deviceId] = auth
+    val timeoutRunnable = Runnable {
+      val pending = authSessions.remove(deviceId) ?: return@Runnable
+      pending.callback(
+        Result.failure(
+          FlutterError(
+            "command_timeout",
+            "BLE authentication timed out.",
+            "requestId=${pending.requestId},deviceId=$deviceId,sequence=${pending.sequence}",
+          ),
+        ),
+      )
+    }
+    auth.timeoutRunnable = timeoutRunnable
+    mainHandler.postDelayed(timeoutRunnable, AUTH_TIMEOUT_MS)
     Log.d(
       TAG,
-      "自动鉴权准备 requestId=$requestId deviceId=$deviceId seq=0x${sequence.toString(16).padStart(4, '0')}",
+      "鉴权准备 requestId=$requestId deviceId=$deviceId seq=0x${sequence.toString(16).padStart(4, '0')}",
     )
     val localEnabled = gatt.setCharacteristicNotification(notifyCharacteristic, true)
     if (!localEnabled) {
-      Log.w(TAG, "自动鉴权失败 requestId=$requestId deviceId=$deviceId step=开启本地通知失败")
-      authSessions.remove(deviceId)
+      Log.w(TAG, "鉴权失败 requestId=$requestId deviceId=$deviceId step=开启本地通知失败")
+      removeAuthSession(deviceId)
+      callback(
+        Result.failure(
+          FlutterError(
+            "set_notify_failed",
+            "Failed to change local notification state.",
+            "deviceId=$deviceId",
+          ),
+        ),
+      )
       return
     }
     val descriptor = notifyCharacteristic.getDescriptor(cccdUuid)
     if (descriptor == null) {
-      Log.w(TAG, "自动鉴权失败 requestId=$requestId deviceId=$deviceId step=缺少CCCD描述符")
-      authSessions.remove(deviceId)
+      Log.w(TAG, "鉴权失败 requestId=$requestId deviceId=$deviceId step=缺少CCCD描述符")
+      removeAuthSession(deviceId)
+      callback(
+        Result.failure(
+          FlutterError(
+            "descriptor_not_found",
+            "BLE notification CCCD descriptor was not found.",
+            "deviceId=$deviceId",
+          ),
+        ),
+      )
       return
     }
     descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
     Log.d(
       TAG,
-      "自动鉴权开启通知 requestId=$requestId deviceId=$deviceId service=${auth.serviceUuid} characteristic=${auth.notifyCharacteristicUuid}",
+      "鉴权开启通知 requestId=$requestId deviceId=$deviceId service=${auth.serviceUuid} characteristic=${auth.notifyCharacteristicUuid}",
     )
     if (!gatt.writeDescriptor(descriptor)) {
-      Log.w(TAG, "自动鉴权失败 requestId=$requestId deviceId=$deviceId step=写入CCCD失败")
-      authSessions.remove(deviceId)
+      Log.w(TAG, "鉴权失败 requestId=$requestId deviceId=$deviceId step=写入CCCD失败")
+      removeAuthSession(deviceId)
+      callback(
+        Result.failure(
+          FlutterError(
+            "set_notify_failed",
+            "Failed to write CCCD descriptor.",
+            "deviceId=$deviceId",
+          ),
+        ),
+      )
     }
   }
 
@@ -839,9 +1418,18 @@ class BleManager(
     if (status != BluetoothGatt.GATT_SUCCESS) {
       Log.w(
         TAG,
-        "自动鉴权失败 requestId=${auth.requestId} deviceId=$deviceId step=通知配置回调失败 status=$status",
+        "鉴权失败 requestId=${auth.requestId} deviceId=$deviceId step=通知配置回调失败 status=$status",
       )
-      authSessions.remove(deviceId)
+      removeAuthSession(deviceId)
+      auth.callback(
+        Result.failure(
+          FlutterError(
+            "set_notify_failed",
+            "Failed to update characteristic notify state.",
+            "status=$status,deviceId=$deviceId",
+          ),
+        ),
+      )
       return
     }
     val writeCharacteristic = gatt.getService(UUID.fromString(auth.serviceUuid))
@@ -849,9 +1437,18 @@ class BleManager(
     if (writeCharacteristic == null) {
       Log.w(
         TAG,
-        "自动鉴权失败 requestId=${auth.requestId} deviceId=$deviceId step=鉴权写特征不存在",
+        "鉴权失败 requestId=${auth.requestId} deviceId=$deviceId step=鉴权写特征不存在",
       )
-      authSessions.remove(deviceId)
+      removeAuthSession(deviceId)
+      auth.callback(
+        Result.failure(
+          FlutterError(
+            "characteristic_not_found",
+            "BLE authentication write characteristic was not found.",
+            "deviceId=$deviceId",
+          ),
+        ),
+      )
       return
     }
     writeCharacteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
@@ -867,14 +1464,23 @@ class BleManager(
     if (!gatt.writeCharacteristic(writeCharacteristic)) {
       Log.w(
         TAG,
-        "自动鉴权失败 requestId=${auth.requestId} deviceId=$deviceId step=发送鉴权帧失败",
+        "鉴权失败 requestId=${auth.requestId} deviceId=$deviceId step=发送鉴权帧失败",
       )
-      authSessions.remove(deviceId)
+      removeAuthSession(deviceId)
+      auth.callback(
+        Result.failure(
+          FlutterError(
+            "write_characteristic_failed",
+            "Failed to send BLE authentication frame.",
+            "deviceId=$deviceId",
+          ),
+        ),
+      )
       return
     }
     Log.d(
       TAG,
-      "自动鉴权已发送 requestId=${auth.requestId} deviceId=$deviceId seq=0x${auth.sequence.toString(16).padStart(4, '0')}",
+      "鉴权已发送 requestId=${auth.requestId} deviceId=$deviceId seq=0x${auth.sequence.toString(16).padStart(4, '0')}",
     )
   }
 
@@ -891,24 +1497,223 @@ class BleManager(
     ) {
       return
     }
-    val frame = DeviceBleProtocolConfig.parseFrame(payload)
-    if (frame == null || frame.command != DeviceBleProtocolConfig.commandAuthenticate) {
+    val frame = parseProvisioningFrame(payload)
+    if (frame == null ||
+      frame.command != DeviceBleProtocolConfig.commandAuthenticate ||
+      frame.sequence != auth.sequence ||
+      frame.frameType != DeviceBleProtocolConfig.frameTypeResponse
+    ) {
       return
     }
     val result = frame.data.firstOrNull()?.toInt()?.and(0xFF)
     val bindState = frame.data.getOrNull(1)?.toInt()?.and(0xFF)
-    val success = frame.frameType == DeviceBleProtocolConfig.frameTypeResponse &&
-      frame.sequence == auth.sequence &&
-      result == 0x00
+    val success = result == 0x00
     Log.d(
       TAG,
-      "自动鉴权结果 requestId=${auth.requestId} callbackRequestId=${requestId ?: "unknown"} deviceId=$deviceId success=$success resultHex=${result?.toString(16)?.padStart(2, '0') ?: ""} bindStateHex=${bindState?.toString(16)?.padStart(2, '0') ?: ""} seq=0x${frame.sequence.toString(16).padStart(4, '0')}",
+      "鉴权结果 requestId=${auth.requestId} callbackRequestId=${requestId ?: "unknown"} deviceId=$deviceId success=$success resultHex=${result?.toString(16)?.padStart(2, '0') ?: ""} bindStateHex=${bindState?.toString(16)?.padStart(2, '0') ?: ""} seq=0x${frame.sequence.toString(16).padStart(4, '0')}",
     )
+    removeAuthSession(deviceId)
     if (success) {
       auth.completed = true
+      auth.callback(
+        Result.success(
+          BleAuthenticationResultDto(
+            requestId = auth.requestId,
+            deviceId = deviceId,
+            authenticated = true,
+            bindingState = bindState?.toLong(),
+            nativeCode = "result=0x${result.toString(16).padStart(2, '0')}",
+          ),
+        ),
+      )
     } else {
-      authSessions.remove(deviceId)
+      auth.callback(
+        Result.failure(
+          FlutterError(
+            "authentication_failed",
+            "BLE authentication was rejected by device.",
+            "result=$result,bindState=$bindState,deviceId=$deviceId",
+          ),
+        ),
+      )
     }
+  }
+
+  private fun removeAuthSession(deviceId: String): PendingAuthentication? {
+    val auth = authSessions.remove(deviceId) ?: return null
+    auth.timeoutRunnable?.let(mainHandler::removeCallbacks)
+    return auth
+  }
+
+  private fun removePendingAuthDiscovery(deviceId: String): PendingAuthenticationDiscovery? {
+    val pending = pendingAuthDiscoveries.remove(deviceId) ?: return null
+    pending.timeoutRunnable?.let(mainHandler::removeCallbacks)
+    return pending
+  }
+
+  private fun removeWifiScanSession(deviceId: String): PendingWifiScan? {
+    val pending = wifiScanSessions.remove(deviceId) ?: return null
+    pending.timeoutRunnable?.let(mainHandler::removeCallbacks)
+    return pending
+  }
+
+  private fun removeWifiProvisionSession(deviceId: String): PendingWifiProvision? {
+    val pending = wifiProvisionSessions.remove(deviceId) ?: return null
+    pending.timeoutRunnable?.let(mainHandler::removeCallbacks)
+    return pending
+  }
+
+  private fun handleWifiScanNotification(
+    requestId: String?,
+    deviceId: String,
+    serviceUuid: String,
+    characteristicUuid: String,
+    payload: ByteArray,
+  ) {
+    val pending = wifiScanSessions[deviceId] ?: return
+    if (!serviceUuid.equals(pending.serviceUuid, ignoreCase = true) ||
+      !characteristicUuid.equals(pending.notifyCharacteristicUuid, ignoreCase = true)
+    ) {
+      return
+    }
+    val frame = parseProvisioningFrame(payload)
+    if (frame == null ||
+      frame.command != DeviceBleProtocolConfig.commandScanWifi ||
+      frame.frameType != DeviceBleProtocolConfig.frameTypeResponse
+    ) {
+      return
+    }
+    removeWifiScanSession(deviceId)
+    val ssids = runCatching { parseWifiSsids(frame.data) }.getOrElse { error ->
+      pending.callback(
+        Result.failure(
+          FlutterError(
+            "invalid_wifi_scan_response",
+            error.message ?: "Wifi list response is invalid.",
+            "requestId=${pending.requestId},callbackRequestId=${requestId ?: "unknown"},deviceId=$deviceId,dataHex=${toHexOrEmpty(frame.data)}",
+          ),
+        ),
+      )
+      return
+    }
+    Log.d(
+      TAG,
+      "WiFi扫描结果 requestId=${pending.requestId} callbackRequestId=${requestId ?: "unknown"} deviceId=$deviceId seq=0x${frame.sequence.toString(16).padStart(4, '0')} count=${ssids.size} ssids=$ssids",
+    )
+    pending.callback(
+      Result.success(
+        WifiScanResultDto(
+          requestId = pending.requestId,
+          deviceId = deviceId,
+          ssids = ssids,
+        ),
+      ),
+    )
+  }
+
+  private fun parseWifiSsids(data: ByteArray): List<String> {
+    val jsonBytes = if (
+      data.size > 1 &&
+      (data[0] == 0x00.toByte() || data[0] == 0x01.toByte()) &&
+      data[1] == '['.code.toByte()
+    ) {
+      data.copyOfRange(1, data.size)
+    } else {
+      data
+    }
+    val json = String(jsonBytes, StandardCharsets.UTF_8).trim()
+    val array = JSONArray(json)
+    val ssids = mutableListOf<String>()
+    for (index in 0 until array.length()) {
+      val ssid = array.optString(index).trim()
+      if (ssid.isNotEmpty()) {
+        ssids += ssid
+      }
+    }
+    return ssids
+  }
+
+  private fun handleWifiProvisionNotification(
+    requestId: String?,
+    deviceId: String,
+    serviceUuid: String,
+    characteristicUuid: String,
+    payload: ByteArray,
+  ) {
+    val pending = wifiProvisionSessions[deviceId] ?: return
+    if (!serviceUuid.equals(pending.serviceUuid, ignoreCase = true) ||
+      !characteristicUuid.equals(pending.notifyCharacteristicUuid, ignoreCase = true)
+    ) {
+      return
+    }
+    val frame = parseProvisioningFrame(payload)
+    if (frame == null ||
+      frame.command != DeviceBleProtocolConfig.commandConfigureWifi ||
+      frame.frameType != DeviceBleProtocolConfig.frameTypeResponse
+    ) {
+      return
+    }
+    removeWifiProvisionSession(deviceId)
+    val result = frame.data.firstOrNull()?.toInt()?.and(0xFF)
+    if (result == null) {
+      pending.callback(
+        Result.failure(
+          FlutterError(
+            "invalid_wifi_provision_response",
+            "BLE Wi-Fi provision response is empty.",
+            "requestId=${pending.requestId},callbackRequestId=${requestId ?: "unknown"},deviceId=$deviceId",
+          ),
+        ),
+      )
+      return
+    }
+    val success = result == 0x00
+    Log.d(
+      TAG,
+      "WiFi配网结果 requestId=${pending.requestId} callbackRequestId=${requestId ?: "unknown"} deviceId=$deviceId seq=0x${frame.sequence.toString(16).padStart(4, '0')} success=$success resultHex=${result.toString(16).padStart(2, '0')}",
+    )
+    pending.callback(
+      Result.success(
+        WifiProvisionResultDto(
+          requestId = pending.requestId,
+          deviceId = deviceId,
+          ssid = pending.ssid,
+          success = success,
+          nativeCode = if (success) null else "wifi_provision_failed_$result",
+        ),
+      ),
+    )
+  }
+
+  private fun parseProvisioningFrame(payload: ByteArray): DeviceBleFrame? {
+    val parsedFrame = DeviceBleProtocolConfig.parseFrame(payload)
+    if (parsedFrame != null && parsedFrame.cryptoType == DeviceBleProtocolConfig.cryptoNone) {
+      return parsedFrame
+    }
+    val encryptedPayload = extractEncryptedPayload(payload) ?: return null
+    for (candidate in DeviceBleProtocolConfig.candidateAesKeys()) {
+      val ecbPlaintext = DeviceBleProtocolConfig.tryDecryptAesEcbPkcs7(encryptedPayload, candidate.keyBytes)
+      val ecbFrame = ecbPlaintext?.let {
+        DeviceBleProtocolConfig.parseDecryptedPayload(
+          plaintext = it,
+          cryptoType = DeviceBleProtocolConfig.cryptoAes128,
+        )
+      }
+      if (ecbFrame != null) {
+        return ecbFrame
+      }
+      val cbcPlaintext = DeviceBleProtocolConfig.tryDecryptAesCbcPkcs7ZeroIv(encryptedPayload, candidate.keyBytes)
+      val cbcFrame = cbcPlaintext?.let {
+        DeviceBleProtocolConfig.parseDecryptedPayload(
+          plaintext = it,
+          cryptoType = DeviceBleProtocolConfig.cryptoAes128,
+        )
+      }
+      if (cbcFrame != null) {
+        return cbcFrame
+      }
+    }
+    return null
   }
 
   private fun emitNotification(
@@ -936,18 +1741,18 @@ class BleManager(
     deviceId: String,
     gatt: BluetoothGatt,
   ) {
-    gatt.services.forEach { service ->
-      Log.d(
-        TAG,
-        "蓝牙服务详情 requestId=$requestId deviceId=$deviceId service=${service.uuid} matchedProtocol=${DeviceBleProtocolConfig.supportsService(service.uuid.toString())} characteristicCount=${service.characteristics.size}",
-      )
-      service.characteristics.forEach { characteristic ->
-        Log.d(
-          TAG,
-          "蓝牙特征详情 requestId=$requestId deviceId=$deviceId service=${service.uuid} characteristic=${characteristic.uuid} properties=${describeProperties(characteristic.properties)}",
-        )
-      }
-    }
+//    gatt.services.forEach { service ->
+//      Log.d(
+//        TAG,
+//        "蓝牙服务详情 requestId=$requestId deviceId=$deviceId service=${service.uuid} matchedProtocol=${DeviceBleProtocolConfig.supportsService(service.uuid.toString())} characteristicCount=${service.characteristics.size}",
+//      )
+//      service.characteristics.forEach { characteristic ->
+//        Log.d(
+//          TAG,
+//          "蓝牙特征详情 requestId=$requestId deviceId=$deviceId service=${service.uuid} characteristic=${characteristic.uuid} properties=${describeProperties(characteristic.properties)}",
+//        )
+//      }
+//    }
   }
 
   private fun logBlePayload(
@@ -958,9 +1763,19 @@ class BleManager(
     characteristicUuid: String,
     payload: ByteArray = ByteArray(0),
     status: Int? = null,
+    redactPayload: Boolean = false,
   ) {
-    val frameSummary = describeProtocolFrame(serviceUuid, payload)
+    val frameSummary = if (redactPayload) {
+      " protocolFrame=<redacted sensitive payload>"
+    } else {
+      describeProtocolFrame(serviceUuid, payload)
+    }
     val statusPart = status?.let { " status=$it" } ?: ""
+    val payloadHex = if (redactPayload && payload.isNotEmpty()) {
+      "<redacted sensitive payload>"
+    } else {
+      toHexOrEmpty(payload)
+    }
     val trafficType = when {
       direction.contains("REQUEST") -> "蓝牙传输"
       direction.contains("RESPONSE") || direction == "NOTIFY" -> "蓝牙接收"
@@ -968,6 +1783,8 @@ class BleManager(
     }
     val directionLabel = when (direction) {
       "AUTH_WRITE_REQUEST" -> "鉴权发送"
+      "WIFI_SCAN_WRITE_REQUEST" -> "WiFi扫描发送"
+      "WIFI_PROVISION_WRITE_REQUEST" -> "WiFi配网发送"
       "WRITE_REQUEST" -> "写入请求"
       "WRITE_RESPONSE" -> "写入回调"
       "READ_REQUEST" -> "读取请求"
@@ -977,7 +1794,7 @@ class BleManager(
     }
     Log.d(
       TAG,
-      "$trafficType type=$directionLabel requestId=${requestId ?: "unknown"} deviceId=$deviceId service=$serviceUuid characteristic=$characteristicUuid payloadLen=${payload.size} payloadHex=${toHexOrEmpty(payload)}$statusPart$frameSummary",
+      "$trafficType type=$directionLabel requestId=${requestId ?: "unknown"} deviceId=$deviceId service=$serviceUuid characteristic=$characteristicUuid payloadLen=${payload.size} payloadHex=$payloadHex$statusPart$frameSummary",
     )
   }
 
@@ -985,8 +1802,59 @@ class BleManager(
     if (!DeviceBleProtocolConfig.supportsService(serviceUuid) || payload.isEmpty()) {
       return ""
     }
+    describeCipherFrame(payload)?.let { return " protocolCipherFrame=$it" }
     val frame = DeviceBleProtocolConfig.parseFrame(payload) ?: return " protocolFrame=未解析"
     return " protocolFrame=${describeFrame(frame)}"
+  }
+
+  private fun describeCipherFrame(payload: ByteArray): String? {
+    if (payload.size < 8) {
+      return null
+    }
+    val header = ((payload[0].toInt() and 0xFF) shl 8) or (payload[1].toInt() and 0xFF)
+    if (header != DeviceBleProtocolConfig.frameHeader) {
+      return null
+    }
+    val declaredLength =
+      ((payload[2].toInt() and 0xFF) shl 8) or (payload[3].toInt() and 0xFF)
+    val cryptoType = payload[4].toInt() and 0xFF
+    if (cryptoType != DeviceBleProtocolConfig.cryptoAes128) {
+      return null
+    }
+    val footerMatches =
+      payload.size >= 2 &&
+      payload[payload.size - 2].toInt() and 0xFF == 0xAA &&
+      payload[payload.size - 1].toInt() and 0xFF == 0xAA
+    val cipherStartIndex = 5
+    val cipherEndExclusive = if (footerMatches && payload.size >= 8) payload.size - 3 else payload.size
+    if (cipherEndExclusive <= cipherStartIndex) {
+      return null
+    }
+    val cipherPayload = payload.copyOfRange(cipherStartIndex, cipherEndExclusive)
+    val bccHex = if (footerMatches && payload.size >= 8) {
+      "%02X".format(payload[payload.size - 3].toInt() and 0xFF)
+    } else {
+      ""
+    }
+    return buildString {
+      append("{crypto=0x")
+      append(cryptoType.toString(16).padStart(2, '0'))
+      append(", declaredLen=0x")
+      append(declaredLength.toString(16).padStart(4, '0'))
+      append(", actualLen=")
+      append(payload.size)
+      append(", cipherLen=")
+      append(cipherPayload.size)
+      append(", cipherHex=")
+      append(toHexOrEmpty(cipherPayload))
+      if (bccHex.isNotEmpty()) {
+        append(", bcc=0x")
+        append(bccHex)
+      }
+      append(", footer=")
+      append(if (footerMatches) "AAAA" else "missing")
+      append("}")
+    }
   }
 
   private fun describeFrame(frame: DeviceBleFrame): String {
@@ -1032,12 +1900,103 @@ class BleManager(
     return DeviceBleProtocolConfig.toHex(bytes)
   }
 
+  private fun reassembleNotificationPayloads(
+    deviceId: String,
+    serviceUuid: String,
+    characteristicUuid: String,
+    payload: ByteArray,
+  ): List<ByteArray> {
+    val isProtocolNotify =
+      serviceUuid.equals(DeviceBleProtocolConfig.communicationServiceUuid.toString(), ignoreCase = true) &&
+      characteristicUuid.equals(DeviceBleProtocolConfig.notifyCharacteristicUuid.toString(), ignoreCase = true)
+    if (!isProtocolNotify || payload.isEmpty()) {
+      return listOf(payload)
+    }
+
+    val bufferKey = "$deviceId/$serviceUuid/$characteristicUuid"
+    val merged = (notificationBuffers.remove(bufferKey) ?: ByteArray(0)) + payload
+    val frames = mutableListOf<ByteArray>()
+    var working = merged
+
+    while (working.isNotEmpty()) {
+      val headerIndex = indexOfFrameHeader(working)
+      if (headerIndex < 0) {
+        return listOf(payload)
+      }
+      if (headerIndex > 0) {
+        Log.d(
+          TAG,
+          "蓝牙接收丢弃帧头前数据 deviceId=$deviceId service=$serviceUuid characteristic=$characteristicUuid discardLen=$headerIndex discardHex=${toHexOrEmpty(working.copyOfRange(0, headerIndex))}",
+        )
+        working = working.copyOfRange(headerIndex, working.size)
+      }
+      if (working.size < 4) {
+        notificationBuffers[bufferKey] = working
+        return frames
+      }
+      val header = ((working[0].toInt() and 0xFF) shl 8) or (working[1].toInt() and 0xFF)
+      if (header != DeviceBleProtocolConfig.frameHeader) {
+        break
+      }
+      val declaredLength = ((working[2].toInt() and 0xFF) shl 8) or (working[3].toInt() and 0xFF)
+      if (declaredLength < 8) {
+        Log.w(
+          TAG,
+          "蓝牙接收帧长度非法 deviceId=$deviceId service=$serviceUuid characteristic=$characteristicUuid declaredLength=$declaredLength bufferHex=${toHexOrEmpty(working)}",
+        )
+        working = working.copyOfRange(1, working.size)
+        continue
+      }
+      if (working.size < declaredLength) {
+        notificationBuffers[bufferKey] = working
+        return frames
+      }
+      val candidate = working.copyOfRange(0, declaredLength)
+      if (!DeviceBleProtocolConfig.hasValidEnvelope(candidate)) {
+        Log.w(
+          TAG,
+          "蓝牙接收帧校验失败 deviceId=$deviceId service=$serviceUuid characteristic=$characteristicUuid declaredLength=$declaredLength candidateLen=${candidate.size} candidateHex=${toHexOrEmpty(candidate)}",
+        )
+        working = working.copyOfRange(1, working.size)
+        continue
+      }
+      frames += candidate
+      working = working.copyOfRange(declaredLength, working.size)
+    }
+
+    if (frames.isEmpty()) {
+      if (merged.size >= 4 && merged[0] == 0x55.toByte() && merged[1] == 0x55.toByte()) {
+        notificationBuffers[bufferKey] = merged
+        return emptyList()
+      }
+      return listOf(payload)
+    }
+
+    if (working.isNotEmpty()) {
+      notificationBuffers[bufferKey] = working
+    }
+    return frames
+  }
+
+  private fun indexOfFrameHeader(bytes: ByteArray): Int {
+    for (index in 0 until bytes.size - 1) {
+      if (bytes[index] == 0x55.toByte() && bytes[index + 1] == 0x55.toByte()) {
+        return index
+      }
+    }
+    return -1
+  }
+
   private fun failPendingOperations(deviceId: String, status: Int) {
     val disconnectError = FlutterError(
       "bluetooth_disconnected",
       "BLE device disconnected during operation.",
       "status=$status,deviceId=$deviceId",
     )
+    removePendingAuthDiscovery(deviceId)?.callback(Result.failure(disconnectError))
+    removeAuthSession(deviceId)?.callback(Result.failure(disconnectError))
+    removeWifiScanSession(deviceId)?.callback(Result.failure(disconnectError))
+    removeWifiProvisionSession(deviceId)?.callback(Result.failure(disconnectError))
     readCallbacks.entries.removeIf { entry ->
       if (entry.value.deviceId != deviceId) return@removeIf false
       entry.value.callback(Result.failure(disconnectError))
@@ -1227,7 +2186,40 @@ private data class PendingAuthentication(
   val notifyCharacteristicUuid: String,
   val writeCharacteristicUuid: String,
   val payload: ByteArray,
+  val callback: (Result<BleAuthenticationResultDto>) -> Unit,
   var completed: Boolean = false,
+  var timeoutRunnable: Runnable? = null,
+)
+
+private data class PendingAuthenticationDiscovery(
+  val requestId: String,
+  val deviceId: String,
+  val token: String,
+  val callback: (Result<BleAuthenticationResultDto>) -> Unit,
+  var timeoutRunnable: Runnable? = null,
+)
+
+private data class PendingWifiScan(
+  val requestId: String,
+  val deviceId: String,
+  val sequence: Int,
+  val serviceUuid: String,
+  val notifyCharacteristicUuid: String,
+  val writeCharacteristicUuid: String,
+  val callback: (Result<WifiScanResultDto>) -> Unit,
+  var timeoutRunnable: Runnable? = null,
+)
+
+private data class PendingWifiProvision(
+  val requestId: String,
+  val deviceId: String,
+  val sequence: Int,
+  val ssid: String,
+  val serviceUuid: String,
+  val notifyCharacteristicUuid: String,
+  val writeCharacteristicUuid: String,
+  val callback: (Result<WifiProvisionResultDto>) -> Unit,
+  var timeoutRunnable: Runnable? = null,
 )
 
 private fun Context.bluetoothAdapterOrNull(): BluetoothAdapter? {

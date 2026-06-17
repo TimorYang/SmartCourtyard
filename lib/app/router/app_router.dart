@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/add_device/presentation/pages/add_device_page.dart';
 import '../../features/add_device/presentation/pages/wifi_configuration_page.dart';
+import '../../features/device_control/presentation/pages/device_command_page.dart';
 import '../../features/hardware_debug/presentation/pages/ble_debug_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 
@@ -24,6 +25,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: WifiConfigurationPage.routePath,
         name: WifiConfigurationPage.routeName,
         builder: (context, state) => const WifiConfigurationPage(),
+      ),
+      GoRoute(
+        path: DeviceCommandPage.routePath,
+        name: DeviceCommandPage.routeName,
+        builder: (context, state) => DeviceCommandPage(
+          deviceId: state.uri.queryParameters['deviceId'] ?? '',
+        ),
       ),
       GoRoute(
         path: BleDebugPage.routePath,

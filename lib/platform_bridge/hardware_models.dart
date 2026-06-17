@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import '../core/errors/app_error.dart';
 
-enum DoorCommand { open, stop, close }
+enum DoorCommand { open, stop, close, partialOpen, lightOn, lightOff, pb }
 
 enum DoorState { open, opening, stopped, closing, closed, unknown }
 
