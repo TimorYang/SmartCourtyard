@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../application/providers.dart';
 import '../../../../platform_bridge/hardware_models.dart';
-import 'wifi_configuration_page.dart';
+import '../../../device_control/presentation/pages/device_command_page.dart';
 
 class AddDevicePage extends ConsumerStatefulWidget {
   const AddDevicePage({super.key});
@@ -47,7 +47,7 @@ class _AddDevicePageState extends ConsumerState<AddDevicePage> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const Text('先扫描并连接蓝牙设备，鉴权成功后进入 Wi‑Fi 配置页面。'),
+          const Text('先扫描并连接蓝牙设备，鉴权成功后进入设备控制页面。'),
           const SizedBox(height: 16),
           TextField(
             controller: _authTokenController,
@@ -114,7 +114,16 @@ class _AddDevicePageState extends ConsumerState<AddDevicePage> {
                 if (!context.mounted || !success) {
                   return;
                 }
-                context.push(WifiConfigurationPage.routePath);
+                await controller.stopScan();
+                if (!context.mounted) {
+                  return;
+                }
+                context.push(
+                  Uri(
+                    path: DeviceCommandPage.routePath,
+                    queryParameters: {'deviceId': device.id},
+                  ).toString(),
+                );
               },
             ),
             const SizedBox(height: 12),

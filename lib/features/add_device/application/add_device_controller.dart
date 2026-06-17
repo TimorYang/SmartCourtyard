@@ -260,7 +260,7 @@ class AddDeviceController extends Notifier<AddDeviceState> {
 
       state = state.copyWith(
         isAuthenticating: false,
-        infoMessage: '鉴权成功，准备配置 Wi‑Fi',
+        infoMessage: '鉴权成功，准备进入设备控制',
       );
       return true;
     } catch (error) {

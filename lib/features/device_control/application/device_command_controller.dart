@@ -14,32 +14,22 @@ final deviceCommandControllerProvider =
     );
 
 enum DeviceCommandAction {
-  queryAttributes('属性查询上报'),
-  openDoor('开门'),
-  closeDoor('关门'),
-  stopDoor('暂停'),
-  partialOpenDoor('半开门'),
-  turnLightOn('开灯'),
-  turnLightOff('关灯'),
-  pb('PB'),
-  queryCurrent('电流查询');
+  openDoor('开门', 0x1001, DoorCommand.open),
+  closeDoor('关门', 0x1002, DoorCommand.close),
+  stopDoor('暂停', 0x1003, DoorCommand.stop),
+  partialOpenDoor('半开门', 0x1004, DoorCommand.partialOpen),
+  turnLightOn('开灯', 0x1005, DoorCommand.lightOn),
+  turnLightOff('关灯', 0x1006, DoorCommand.lightOff),
+  pb('PB', 0x1007, DoorCommand.pb);
 
-  const DeviceCommandAction(this.label);
+  const DeviceCommandAction(this.label, this.controlCode, this.doorCommand);
 
   final String label;
+  final int controlCode;
+  final DoorCommand doorCommand;
 
-  DoorCommand? get doorCommand {
-    return switch (this) {
-      DeviceCommandAction.openDoor => DoorCommand.open,
-      DeviceCommandAction.closeDoor => DoorCommand.close,
-      DeviceCommandAction.stopDoor => DoorCommand.stop,
-      DeviceCommandAction.partialOpenDoor => DoorCommand.partialOpen,
-      DeviceCommandAction.turnLightOn => DoorCommand.lightOn,
-      DeviceCommandAction.turnLightOff => DoorCommand.lightOff,
-      DeviceCommandAction.pb => DoorCommand.pb,
-      _ => null,
-    };
-  }
+  String get controlCodeLabel =>
+      '0x${controlCode.toRadixString(16).padLeft(4, '0').toUpperCase()}';
 }
 
 class DeviceCommandState {
@@ -65,9 +55,7 @@ class DeviceCommandState {
       pendingAction: clearPendingAction
           ? null
           : pendingAction ?? this.pendingAction,
-      infoMessage: clearInfoMessage
-          ? null
-          : infoMessage ?? this.infoMessage,
+      infoMessage: clearInfoMessage ? null : infoMessage ?? this.infoMessage,
       errorMessage: clearErrorMessage
           ? null
           : errorMessage ?? this.errorMessage,
@@ -97,18 +85,9 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
       return;
     }
 
-    final doorCommand = action.doorCommand;
-    if (doorCommand == null) {
-      state = state.copyWith(
-        infoMessage: '${action.label} 的硬件指令尚未接入。',
-        clearErrorMessage: true,
-      );
-      return;
-    }
-
     state = state.copyWith(
       pendingAction: action,
-      infoMessage: '正在发送${action.label}指令...',
+      infoMessage: '正在发送${action.label}指令（${action.controlCodeLabel}）...',
       clearErrorMessage: true,
     );
 
@@ -116,13 +95,13 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
       final result = await _gateway.sendDoorCommand(
         requestId: _nextRequestId(action),
         deviceId: deviceId,
-        command: doorCommand,
+        command: action.doorCommand,
       );
       state = state.copyWith(
         clearPendingAction: true,
         infoMessage: result.accepted
-            ? '${action.label}指令已接收。'
-            : '${action.label}指令未被接收。',
+            ? '${action.label}指令已发送（${action.controlCodeLabel}）。'
+            : '${action.label}指令未被接收（${action.controlCodeLabel}）。',
         errorMessage: result.accepted ? null : 'device_command_rejected',
         clearErrorMessage: result.accepted,
       );

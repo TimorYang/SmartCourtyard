@@ -189,6 +189,10 @@ enum DoorCommandDto: Int {
   case open = 0
   case stop = 1
   case close = 2
+  case partialOpen = 3
+  case lightOn = 4
+  case lightOff = 5
+  case pb = 6
 }
 
 enum BleConnectionStateDto: Int {
@@ -1120,7 +1124,7 @@ protocol HardwareHostApi {
   func readCharacteristic(requestId: String, deviceId: String, serviceUuid: String, characteristicUuid: String, completion: @escaping (Result<BleReadResultDto, Error>) -> Void)
   func writeCharacteristic(requestId: String, deviceId: String, serviceUuid: String, characteristicUuid: String, payload: FlutterStandardTypedData, writeType: BleWriteTypeDto, completion: @escaping (Result<BleWriteResultDto, Error>) -> Void)
   func setCharacteristicNotify(requestId: String, deviceId: String, serviceUuid: String, characteristicUuid: String, enabled: Bool, completion: @escaping (Result<BleWriteResultDto, Error>) -> Void)
-  func sendDoorCommand(requestId: String, deviceId: String, command: DoorCommandDto) throws -> CommandResultDto
+  func sendDoorCommand(requestId: String, deviceId: String, command: DoorCommandDto, completion: @escaping (Result<CommandResultDto, Error>) -> Void)
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
@@ -1369,11 +1373,13 @@ class HardwareHostApiSetup {
         let requestIdArg = args[0] as! String
         let deviceIdArg = args[1] as! String
         let commandArg = args[2] as! DoorCommandDto
-        do {
-          let result = try api.sendDoorCommand(requestId: requestIdArg, deviceId: deviceIdArg, command: commandArg)
-          reply(wrapResult(result))
-        } catch {
-          reply(wrapError(error))
+        api.sendDoorCommand(requestId: requestIdArg, deviceId: deviceIdArg, command: commandArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
         }
       }
     } else {

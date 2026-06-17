@@ -319,6 +319,7 @@ abstract class HardwareHostApi {
     bool enabled,
   );
 
+  @async
   CommandResultDto sendDoorCommand(
     String requestId,
     String deviceId,

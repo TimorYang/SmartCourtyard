@@ -25,30 +25,43 @@ class DeviceCommandPage extends ConsumerWidget {
           Text('当前设备', style: Theme.of(context).textTheme.titleSmall),
           const SizedBox(height: 4),
           SelectableText(deviceId.isEmpty ? '未选择设备' : deviceId),
+          const SizedBox(height: 12),
+          Text('控制命令：Cmd 0x0005，Data 为 2 字节 Controls。'),
           const SizedBox(height: 16),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 180,
-              mainAxisExtent: 56,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
+          AbsorbPointer(
+            absorbing: state.pendingAction != null,
+            child: GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 180,
+                mainAxisExtent: 56,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+              ),
+              itemCount: actions.length,
+              itemBuilder: (context, index) {
+                final action = actions[index];
+                final isPending = state.pendingAction == action;
+                return FilledButton(
+                  onPressed: () =>
+                      controller.runAction(deviceId: deviceId, action: action),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(isPending ? '发送中...' : action.label),
+                      const SizedBox(height: 2),
+                      Text(
+                        action.controlCodeLabel,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
-            itemCount: actions.length,
-            itemBuilder: (context, index) {
-              final action = actions[index];
-              final isPending = state.pendingAction == action;
-              return FilledButton(
-                onPressed: state.pendingAction == null
-                    ? () => controller.runAction(
-                        deviceId: deviceId,
-                        action: action,
-                      )
-                    : null,
-                child: Text(isPending ? '发送中...' : action.label),
-              );
-            },
           ),
           if (state.infoMessage != null) ...[
             const SizedBox(height: 16),

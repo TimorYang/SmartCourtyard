@@ -321,16 +321,59 @@ final class HardwareBridge: HardwareHostApi {
     func sendDoorCommand(
         requestId: String,
         deviceId: String,
-        command: DoorCommandDto
-    ) throws -> CommandResultDto {
-        _ = command
-        return CommandResultDto(
+        command: DoorCommandDto,
+        completion: @escaping (Result<CommandResultDto, Error>) -> Void
+    ) {
+        let control = command.doorControlCode
+        let sequence = nextProvisioningSequence(for: deviceId)
+        guard let frame = Self.makeFrame(
+            sequence: sequence,
+            command: DoorControlCommand.commandControlDoor,
+            payload: Data(Self.bigEndianBytes(control)),
+            encrypted: true
+        ) else {
+            completion(
+                .failure(
+                    PigeonError(
+                        code: "door_command_encrypt_failed",
+                        message: "Failed to encrypt BLE door control request.",
+                        details: nil
+                    )
+                )
+            )
+            return
+        }
+
+        logger.info(
+            "door_command",
             requestId: requestId,
             deviceId: deviceId,
-            accepted: false,
-            nativeCode: "not_implemented",
-            domainCode: "hardware_command_not_implemented"
+            state: "sending",
+            payloadBytes: frame.count,
+            details: "command=\(DoorControlCommand.hexCode) control=\(DoorControlCommand.hex(control)) sequence=\(DoorControlCommand.hex(sequence)) frame=\(Self.hexString(frame))"
         )
+        bleManager.writeCharacteristic(
+            requestId: requestId,
+            deviceId: deviceId,
+            serviceUuid: BleProvisioningCommand.serviceUuid,
+            characteristicUuid: BleProvisioningCommand.writeCharacteristicUuid,
+            payload: frame,
+            writeType: .withResponse
+        ) { result in
+            completion(
+                result
+                    .map { writeResult in
+                        CommandResultDto(
+                            requestId: requestId,
+                            deviceId: deviceId,
+                            accepted: writeResult.accepted,
+                            nativeCode: "command=\(DoorControlCommand.hexCode),control=\(DoorControlCommand.hex(control)),sequence=\(DoorControlCommand.hex(sequence))",
+                            domainCode: writeResult.accepted ? nil : "write_characteristic_failed"
+                        )
+                    }
+                    .mapError(Self.toPigeonError)
+            )
+        }
     }
     
     private static func toPigeonError(_ error: Error) -> PigeonError {
@@ -1294,6 +1337,39 @@ private enum BleProvisioningCommand: UInt16 {
     
     func matchesResponseSequence(_ responseSequence: UInt16, pendingSequence: UInt16) -> Bool {
         responseSequence == pendingSequence || (self == .scanWifi && responseSequence == 0)
+    }
+}
+
+private enum DoorControlCommand {
+    static let commandControlDoor: UInt16 = 0x0005
+    
+    static var hexCode: String {
+        hex(commandControlDoor)
+    }
+    
+    static func hex<T: FixedWidthInteger>(_ value: T) -> String {
+        String(format: "0x%04X", Int(value))
+    }
+}
+
+private extension DoorCommandDto {
+    var doorControlCode: UInt16 {
+        switch self {
+        case .open:
+            return 0x1001
+        case .close:
+            return 0x1002
+        case .stop:
+            return 0x1003
+        case .partialOpen:
+            return 0x1004
+        case .lightOn:
+            return 0x1005
+        case .lightOff:
+            return 0x1006
+        case .pb:
+            return 0x1007
+        }
     }
 }
 
