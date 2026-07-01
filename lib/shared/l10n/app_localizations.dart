@@ -103,6 +103,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'FLINX'**
   String get appTitle;
+
+  /// Headline shown on the unauthenticated welcome page
+  ///
+  /// In en, this message translates to:
+  /// **'Start your\nsmart life'**
+  String get welcomeHeadline;
+
+  /// Subtitle shown on the unauthenticated welcome page
+  ///
+  /// In en, this message translates to:
+  /// **'Make your life comfortable'**
+  String get welcomeSubtitle;
+
+  /// Primary login button label
+  ///
+  /// In en, this message translates to:
+  /// **'Login'**
+  String get loginAction;
+
+  /// Secondary register button label
+  ///
+  /// In en, this message translates to:
+  /// **'Register'**
+  String get registerAction;
+
+  /// Placeholder text for the login page
+  ///
+  /// In en, this message translates to:
+  /// **'Login page coming soon'**
+  String get loginComingSoon;
+
+  /// Placeholder text for the register page
+  ///
+  /// In en, this message translates to:
+  /// **'Register page coming soon'**
+  String get registerComingSoon;
 }
 
 class _AppLocalizationsDelegate

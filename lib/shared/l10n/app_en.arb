@@ -1,4 +1,28 @@
 {
   "@@locale": "en",
-  "appTitle": "FLINX"
+  "appTitle": "FLINX",
+  "welcomeHeadline": "Start your\nsmart life",
+  "@welcomeHeadline": {
+    "description": "Headline shown on the unauthenticated welcome page"
+  },
+  "welcomeSubtitle": "Make your life comfortable",
+  "@welcomeSubtitle": {
+    "description": "Subtitle shown on the unauthenticated welcome page"
+  },
+  "loginAction": "Login",
+  "@loginAction": {
+    "description": "Primary login button label"
+  },
+  "registerAction": "Register",
+  "@registerAction": {
+    "description": "Secondary register button label"
+  },
+  "loginComingSoon": "Login page coming soon",
+  "@loginComingSoon": {
+    "description": "Placeholder text for the login page"
+  },
+  "registerComingSoon": "Register page coming soon",
+  "@registerComingSoon": {
+    "description": "Placeholder text for the register page"
+  }
 }

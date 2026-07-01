@@ -10,4 +10,22 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get appTitle => 'FLINX';
+
+  @override
+  String get welcomeHeadline => '开启您的\n智慧生活';
+
+  @override
+  String get welcomeSubtitle => '让生活更加舒适便捷';
+
+  @override
+  String get loginAction => '登录';
+
+  @override
+  String get registerAction => '注册';
+
+  @override
+  String get loginComingSoon => '登录页即将上线';
+
+  @override
+  String get registerComingSoon => '注册页即将上线';
 }

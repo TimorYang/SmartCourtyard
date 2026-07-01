@@ -2,17 +2,56 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/add_device/presentation/pages/add_device_page.dart';
+import '../../features/auth/application/providers.dart';
+import '../../features/auth/presentation/pages/login_page.dart';
+import '../../features/auth/presentation/pages/register_page.dart';
+import '../../features/auth/presentation/pages/welcome_page.dart';
 import '../../features/add_device/presentation/pages/wifi_configuration_page.dart';
 import '../../features/device_control/presentation/pages/device_command_page.dart';
 import '../../features/hardware_debug/presentation/pages/ble_debug_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
+  final session = ref.watch(authSessionProvider);
+
   return GoRouter(
-    initialLocation: '/',
+    initialLocation: WelcomePage.routePath,
+    redirect: (context, state) {
+      final isSignedIn = session.isAuthenticated;
+      final location = state.matchedLocation;
+      final isAuthRoute =
+          location == WelcomePage.routePath ||
+          location == LoginPage.routePath ||
+          location == RegisterPage.routePath;
+
+      if (!isSignedIn && !isAuthRoute) {
+        return WelcomePage.routePath;
+      }
+
+      if (isSignedIn && isAuthRoute) {
+        return HomePage.routePath;
+      }
+
+      return null;
+    },
     routes: [
       GoRoute(
-        path: '/',
+        path: WelcomePage.routePath,
+        name: WelcomePage.routeName,
+        builder: (context, state) => const WelcomePage(),
+      ),
+      GoRoute(
+        path: LoginPage.routePath,
+        name: LoginPage.routeName,
+        builder: (context, state) => const LoginPage(),
+      ),
+      GoRoute(
+        path: RegisterPage.routePath,
+        name: RegisterPage.routeName,
+        builder: (context, state) => const RegisterPage(),
+      ),
+      GoRoute(
+        path: HomePage.routePath,
         name: HomePage.routeName,
         builder: (context, state) => const HomePage(),
       ),

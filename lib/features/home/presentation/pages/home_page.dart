@@ -11,6 +11,7 @@ class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
   static const routeName = 'home';
+  static const routePath = '/home';
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

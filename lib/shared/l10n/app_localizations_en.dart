@@ -10,4 +10,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appTitle => 'FLINX';
+
+  @override
+  String get welcomeHeadline => 'Start your\nsmart life';
+
+  @override
+  String get welcomeSubtitle => 'Make your life comfortable';
+
+  @override
+  String get loginAction => 'Login';
+
+  @override
+  String get registerAction => 'Register';
+
+  @override
+  String get loginComingSoon => 'Login page coming soon';
+
+  @override
+  String get registerComingSoon => 'Register page coming soon';
 }

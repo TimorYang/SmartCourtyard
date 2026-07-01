@@ -1,4 +1,10 @@
 {
   "@@locale": "zh",
-  "appTitle": "FLINX"
+  "appTitle": "FLINX",
+  "welcomeHeadline": "开启您的\n智慧生活",
+  "welcomeSubtitle": "让生活更加舒适便捷",
+  "loginAction": "登录",
+  "registerAction": "注册",
+  "loginComingSoon": "登录页即将上线",
+  "registerComingSoon": "注册页即将上线"
 }
