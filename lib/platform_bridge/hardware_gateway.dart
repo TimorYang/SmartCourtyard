@@ -88,4 +88,28 @@ abstract interface class HardwareGateway {
     required String deviceId,
     required DoorCommand command,
   });
+
+  Future<RemotePairingResult> pairRemote({
+    required String requestId,
+    required String deviceId,
+    required RemotePairingAction action,
+  });
+
+  Future<RemoteControlListResult> queryRemotes({
+    required String requestId,
+    required String deviceId,
+  });
+
+  Future<RemoteOperationResult> deleteRemote({
+    required String requestId,
+    required String deviceId,
+    int? serialNumber,
+  });
+
+  Future<RemoteOperationResult> renameRemote({
+    required String requestId,
+    required String deviceId,
+    required int serialNumber,
+    required String name,
+  });
 }

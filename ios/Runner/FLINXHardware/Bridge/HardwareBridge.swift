@@ -375,6 +375,228 @@ final class HardwareBridge: HardwareHostApi {
             )
         }
     }
+
+    func pairRemote(
+        requestId: String,
+        deviceId: String,
+        action: RemotePairingActionDto,
+        completion: @escaping (Result<RemotePairingResultDto, Error>) -> Void
+    ) {
+        let control = action.remotePairingControlCode
+        logger.info(
+            "remote_pairing",
+            requestId: requestId,
+            deviceId: deviceId,
+            state: "started",
+            details: "command=\(BleProvisioningCommand.remotePairing.hexCode) control=\(DoorControlCommand.hex(control))"
+        )
+
+        ensureProvisioningChannel(requestId: requestId, deviceId: deviceId) { [weak self] result in
+            guard let self else { return }
+            switch result {
+            case .failure(let error):
+                completion(.failure(Self.toPigeonError(error)))
+            case .success:
+                self.sendProvisioningRequest(
+                    requestId: requestId,
+                    deviceId: deviceId,
+                    command: .remotePairing,
+                    payload: Data(Self.bigEndianBytes(control))
+                ) { response in
+                    guard response.data.count >= 1 else {
+                        completion(
+                            .failure(
+                                PigeonError(
+                                    code: "invalid_remote_pairing_response",
+                                    message: "Remote pairing response is empty.",
+                                    details: nil
+                                )
+                            )
+                        )
+                        return
+                    }
+
+                    let resultCode = response.data[0]
+                    let reasonCode = Self.parseUInt32(
+                        response.data.count >= 5
+                            ? response.data.dropFirst().prefix(4).asData
+                            : Data()
+                    )
+                    let status = RemotePairingStatusDto(resultCode: resultCode)
+                    self.logger.info(
+                        "remote_pairing",
+                        requestId: requestId,
+                        deviceId: deviceId,
+                        state: status.logState,
+                        nativeCode: status == .success ? nil : "remote_pairing_result_\(resultCode)",
+                        payloadBytes: response.data.count,
+                        details: "control=\(DoorControlCommand.hex(control)) result=0x\(String(format: "%02X", resultCode)) reason=\(DoorControlCommand.hex(reasonCode))"
+                    )
+                    completion(
+                        .success(
+                            RemotePairingResultDto(
+                                requestId: requestId,
+                                deviceId: deviceId,
+                                status: status,
+                                reasonCode: Int64(reasonCode),
+                                nativeCode: "command=\(BleProvisioningCommand.remotePairing.hexCode),control=\(DoorControlCommand.hex(control)),result=0x\(String(format: "%02X", resultCode)),reason=\(DoorControlCommand.hex(reasonCode))",
+                                domainCode: status == .success ? nil : "pairing_failed"
+                            )
+                        )
+                    )
+                } failure: { error in
+                    completion(.failure(Self.toPigeonError(error)))
+                }
+            }
+        }
+    }
+
+    func queryRemotes(
+        requestId: String,
+        deviceId: String,
+        completion: @escaping (Result<RemoteControlListResultDto, Error>) -> Void
+    ) {
+        logger.info(
+            "remote_query",
+            requestId: requestId,
+            deviceId: deviceId,
+            state: "started",
+            details: "command=\(BleProvisioningCommand.remoteQuery.hexCode)"
+        )
+
+        ensureProvisioningChannel(requestId: requestId, deviceId: deviceId) { [weak self] result in
+            guard let self else { return }
+            switch result {
+            case .failure(let error):
+                completion(.failure(Self.toPigeonError(error)))
+            case .success:
+                self.sendProvisioningRequest(
+                    requestId: requestId,
+                    deviceId: deviceId,
+                    command: .remoteQuery,
+                    payload: Data()
+                ) { response in
+                    do {
+                        let parsed = try Self.parseRemoteControlList(
+                            requestId: requestId,
+                            deviceId: deviceId,
+                            payload: response.data
+                        )
+                        self.logger.info(
+                            "remote_query",
+                            requestId: requestId,
+                            deviceId: deviceId,
+                            state: "success",
+                            payloadBytes: response.data.count,
+                            details: "count=\(parsed.totalCount) page=\(parsed.currentPage)/\(parsed.totalPages) hasMore=\(parsed.hasMore)"
+                        )
+                        completion(.success(parsed))
+                    } catch {
+                        completion(.failure(Self.toPigeonError(error)))
+                    }
+                } failure: { error in
+                    completion(.failure(Self.toPigeonError(error)))
+                }
+            }
+        }
+    }
+
+    func deleteRemote(
+        requestId: String,
+        deviceId: String,
+        serialNumber: Int64?,
+        completion: @escaping (Result<RemoteOperationResultDto, Error>) -> Void
+    ) {
+        let deleteAll = serialNumber == nil
+        let serial = UInt32(truncatingIfNeeded: serialNumber ?? 0)
+        var payload = Data()
+        payload.append(deleteAll ? 0xFF : 0x01)
+        payload.append(contentsOf: Self.bigEndianBytes(serial))
+        logger.info(
+            "remote_delete",
+            requestId: requestId,
+            deviceId: deviceId,
+            state: "started",
+            details: "command=\(BleProvisioningCommand.remoteDelete.hexCode) type=\(deleteAll ? "0xFF" : "0x01") serial=\(DoorControlCommand.hex(serial))"
+        )
+
+        ensureProvisioningChannel(requestId: requestId, deviceId: deviceId) { [weak self] result in
+            guard let self else { return }
+            switch result {
+            case .failure(let error):
+                completion(.failure(Self.toPigeonError(error)))
+            case .success:
+                self.sendProvisioningRequest(
+                    requestId: requestId,
+                    deviceId: deviceId,
+                    command: .remoteDelete,
+                    payload: payload
+                ) { response in
+                    do {
+                        let parsed = try Self.parseRemoteOperationResult(
+                            requestId: requestId,
+                            deviceId: deviceId,
+                            payload: response.data,
+                            command: .remoteDelete
+                        )
+                        completion(.success(parsed))
+                    } catch {
+                        completion(.failure(Self.toPigeonError(error)))
+                    }
+                } failure: { error in
+                    completion(.failure(Self.toPigeonError(error)))
+                }
+            }
+        }
+    }
+
+    func renameRemote(
+        requestId: String,
+        deviceId: String,
+        serialNumber: Int64,
+        name: String,
+        completion: @escaping (Result<RemoteOperationResultDto, Error>) -> Void
+    ) {
+        let serial = UInt32(truncatingIfNeeded: serialNumber)
+        var payload = Self.makeRemoteNamePayload(name)
+        payload.append(contentsOf: Self.bigEndianBytes(serial))
+        logger.info(
+            "remote_rename",
+            requestId: requestId,
+            deviceId: deviceId,
+            state: "started",
+            details: "command=\(BleProvisioningCommand.remoteRename.hexCode) serial=\(DoorControlCommand.hex(serial)) nameBytes=8"
+        )
+
+        ensureProvisioningChannel(requestId: requestId, deviceId: deviceId) { [weak self] result in
+            guard let self else { return }
+            switch result {
+            case .failure(let error):
+                completion(.failure(Self.toPigeonError(error)))
+            case .success:
+                self.sendProvisioningRequest(
+                    requestId: requestId,
+                    deviceId: deviceId,
+                    command: .remoteRename,
+                    payload: payload
+                ) { response in
+                    do {
+                        let parsed = try Self.parseRemoteOperationResult(
+                            requestId: requestId,
+                            deviceId: deviceId,
+                            payload: response.data,
+                            command: .remoteRename
+                        )
+                        completion(.success(parsed))
+                    } catch {
+                        completion(.failure(Self.toPigeonError(error)))
+                    }
+                } failure: { error in
+                    completion(.failure(Self.toPigeonError(error)))
+                }
+            }
+        }
+    }
     
     private static func toPigeonError(_ error: Error) -> PigeonError {
         if let pigeonError = error as? PigeonError {
@@ -887,6 +1109,105 @@ private extension HardwareBridge {
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
     }
+
+    static func parseRemoteControlList(
+        requestId: String,
+        deviceId: String,
+        payload: Data
+    ) throws -> RemoteControlListResultDto {
+        guard payload.count >= 4 else {
+            throw PigeonError(
+                code: "invalid_remote_query_response",
+                message: "Remote query response is shorter than the required 4-byte header.",
+                details: nil
+            )
+        }
+
+        let totalCount = Int64(payload[payload.startIndex])
+        let totalPages = Int64(payload[payload.index(payload.startIndex, offsetBy: 1)])
+        let currentPage = Int64(payload[payload.index(payload.startIndex, offsetBy: 2)])
+        let packetFlag = payload[payload.index(payload.startIndex, offsetBy: 3)]
+        let entryBytes = payload.dropFirst(4).asData
+        let entrySize = 12
+        var remotes: [RemoteControlDto] = []
+        var offset = 0
+        while offset + entrySize <= entryBytes.count {
+            let nameData = entryBytes.subdata(in: offset..<(offset + 8))
+            let serialData = entryBytes.subdata(in: (offset + 8)..<(offset + 12))
+            remotes.append(
+                RemoteControlDto(
+                    name: parseRemoteName(nameData),
+                    serialNumber: Int64(parseUInt32(serialData))
+                )
+            )
+            offset += entrySize
+        }
+
+        return RemoteControlListResultDto(
+            requestId: requestId,
+            deviceId: deviceId,
+            totalCount: totalCount,
+            totalPages: totalPages,
+            currentPage: currentPage,
+            hasMore: packetFlag == 0x01,
+            remotes: remotes
+        )
+    }
+
+    static func parseRemoteOperationResult(
+        requestId: String,
+        deviceId: String,
+        payload: Data,
+        command: BleProvisioningCommand
+    ) throws -> RemoteOperationResultDto {
+        guard payload.count >= 1 else {
+            throw PigeonError(
+                code: "invalid_remote_operation_response",
+                message: "Remote operation response is empty.",
+                details: nil
+            )
+        }
+        let resultCode = payload[payload.startIndex]
+        let reasonCode = parseUInt32(
+            payload.count >= 5
+                ? payload.dropFirst().prefix(4).asData
+                : Data()
+        )
+        let status = RemoteOperationStatusDto(resultCode: resultCode)
+        return RemoteOperationResultDto(
+            requestId: requestId,
+            deviceId: deviceId,
+            status: status,
+            reasonCode: Int64(reasonCode),
+            nativeCode: "command=\(command.hexCode),result=0x\(String(format: "%02X", resultCode)),reason=\(DoorControlCommand.hex(reasonCode))",
+            domainCode: status == .success ? nil : "remote_operation_failed"
+        )
+    }
+
+    static func parseRemoteName(_ data: Data) -> String {
+        let trimmed = data.prefix { byte in
+            byte != 0x00
+        }
+        guard let name = String(data: Data(trimmed), encoding: .utf8) else {
+            return hexString(data)
+        }
+        return name.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    static func makeRemoteNamePayload(_ name: String) -> Data {
+        var payload = Data()
+        for character in name.trimmingCharacters(in: .whitespacesAndNewlines) {
+            let bytes = String(character).data(using: .utf8) ?? Data()
+            if payload.count + bytes.count > 8 {
+                break
+            }
+            payload.append(bytes)
+        }
+        if payload.count < 8 {
+            payload.append(contentsOf: Array(repeating: UInt8(0), count: 8 - payload.count))
+        }
+        return payload
+    }
     
     static func makeFrame(
         sequence: UInt16,
@@ -1130,6 +1451,16 @@ private extension HardwareBridge {
             Array(buffer)
         }
     }
+
+    static func parseUInt32(_ data: Data) -> UInt32 {
+        guard data.count >= 4 else {
+            return 0
+        }
+        return UInt32(data[data.startIndex]) << 24
+        | UInt32(data[data.index(data.startIndex, offsetBy: 1)]) << 16
+        | UInt32(data[data.index(data.startIndex, offsetBy: 2)]) << 8
+        | UInt32(data[data.index(data.startIndex, offsetBy: 3)])
+    }
 }
 
 private extension BleScanFilterDto {
@@ -1313,6 +1644,10 @@ private extension BleNativeError {
 }
 
 private enum BleProvisioningCommand: UInt16 {
+    case remotePairing = 0x0007
+    case remoteQuery = 0x0008
+    case remoteDelete = 0x0009
+    case remoteRename = 0x000A
     case scanWifi = 0x0E01
     case configureWifi = 0x0E02
     case authenticate = 0x0E03
@@ -1328,7 +1663,7 @@ private enum BleProvisioningCommand: UInt16 {
     
     var requiresEncryptedRequest: Bool {
         switch self {
-        case .authenticate, .scanWifi:
+        case .authenticate, .scanWifi, .remotePairing, .remoteQuery, .remoteDelete, .remoteRename:
             return true
         case .configureWifi:
             return false
@@ -1369,6 +1704,58 @@ private extension DoorCommandDto {
             return 0x1006
         case .pb:
             return 0x1007
+        }
+    }
+}
+
+private extension RemotePairingActionDto {
+    var remotePairingControlCode: UInt16 {
+        switch self {
+        case .start:
+            return 0x1008
+        case .cancel:
+            return 0x1009
+        }
+    }
+}
+
+private extension RemotePairingStatusDto {
+    init(resultCode: UInt8) {
+        switch resultCode {
+        case 0x01:
+            self = .success
+        case 0x02:
+            self = .failure
+        case 0x03:
+            self = .timeout
+        default:
+            self = .unknown
+        }
+    }
+
+    var logState: String {
+        switch self {
+        case .success:
+            return "success"
+        case .failure:
+            return "failed"
+        case .timeout:
+            return "timeout"
+        case .unknown:
+            return "unknown"
+        }
+    }
+}
+
+private extension RemoteOperationStatusDto {
+    init(resultCode: UInt8) {
+        switch resultCode {
+        case 0x01:
+            self = .success
+        case 0xFF:
+            self = .failure
+        default:
+            self = .unknown
         }
     }
 }

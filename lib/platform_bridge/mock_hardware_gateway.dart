@@ -271,4 +271,74 @@ class MockHardwareGateway implements HardwareGateway {
       accepted: true,
     );
   }
+
+  @override
+  Future<RemotePairingResult> pairRemote({
+    required String requestId,
+    required String deviceId,
+    required RemotePairingAction action,
+  }) async {
+    return RemotePairingResult(
+      requestId: requestId,
+      deviceId: deviceId,
+      action: action,
+      status: RemotePairingStatus.success,
+      reasonCode: 0x00000000,
+      nativeCode: action == RemotePairingAction.start
+          ? 'command=0x0007,control=0x1008'
+          : 'command=0x0007,control=0x1009',
+    );
+  }
+
+  @override
+  Future<RemoteControlListResult> queryRemotes({
+    required String requestId,
+    required String deviceId,
+  }) async {
+    return RemoteControlListResult(
+      requestId: requestId,
+      deviceId: deviceId,
+      totalCount: 2,
+      totalPages: 1,
+      currentPage: 1,
+      hasMore: false,
+      remotes: const <RemoteControl>[
+        RemoteControl(name: '遥控器1', serialNumber: 0x00000003),
+        RemoteControl(name: '遥控器2', serialNumber: 0x00000004),
+      ],
+    );
+  }
+
+  @override
+  Future<RemoteOperationResult> deleteRemote({
+    required String requestId,
+    required String deviceId,
+    int? serialNumber,
+  }) async {
+    return RemoteOperationResult(
+      requestId: requestId,
+      deviceId: deviceId,
+      status: RemoteOperationStatus.success,
+      reasonCode: 0x00000000,
+      nativeCode: serialNumber == null
+          ? 'command=0x0009,type=0xFF'
+          : 'command=0x0009,type=0x01',
+    );
+  }
+
+  @override
+  Future<RemoteOperationResult> renameRemote({
+    required String requestId,
+    required String deviceId,
+    required int serialNumber,
+    required String name,
+  }) async {
+    return RemoteOperationResult(
+      requestId: requestId,
+      deviceId: deviceId,
+      status: RemoteOperationStatus.success,
+      reasonCode: 0x00000000,
+      nativeCode: 'command=0x000A',
+    );
+  }
 }

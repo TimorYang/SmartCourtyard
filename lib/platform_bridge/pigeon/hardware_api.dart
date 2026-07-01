@@ -16,6 +16,12 @@ enum PermissionKindDto { bluetooth, camera, localNetwork, notification }
 
 enum DoorCommandDto { open, stop, close, partialOpen, lightOn, lightOff, pb }
 
+enum RemotePairingActionDto { start, cancel }
+
+enum RemotePairingStatusDto { success, failure, timeout, unknown }
+
+enum RemoteOperationStatusDto { success, failure, unknown }
+
 enum BleConnectionStateDto { disconnected, connecting, connected }
 
 enum BleWriteTypeDto { withResponse, withoutResponse }
@@ -255,6 +261,69 @@ class CommandResultDto {
   final String? domainCode;
 }
 
+class RemotePairingResultDto {
+  RemotePairingResultDto({
+    required this.requestId,
+    required this.deviceId,
+    required this.status,
+    required this.reasonCode,
+    this.nativeCode,
+    this.domainCode,
+  });
+
+  final String requestId;
+  final String deviceId;
+  final RemotePairingStatusDto status;
+  final int reasonCode;
+  final String? nativeCode;
+  final String? domainCode;
+}
+
+class RemoteControlDto {
+  RemoteControlDto({required this.name, required this.serialNumber});
+
+  final String name;
+  final int serialNumber;
+}
+
+class RemoteControlListResultDto {
+  RemoteControlListResultDto({
+    required this.requestId,
+    required this.deviceId,
+    required this.totalCount,
+    required this.totalPages,
+    required this.currentPage,
+    required this.hasMore,
+    required this.remotes,
+  });
+
+  final String requestId;
+  final String deviceId;
+  final int totalCount;
+  final int totalPages;
+  final int currentPage;
+  final bool hasMore;
+  final List<RemoteControlDto> remotes;
+}
+
+class RemoteOperationResultDto {
+  RemoteOperationResultDto({
+    required this.requestId,
+    required this.deviceId,
+    required this.status,
+    required this.reasonCode,
+    this.nativeCode,
+    this.domainCode,
+  });
+
+  final String requestId;
+  final String deviceId;
+  final RemoteOperationStatusDto status;
+  final int reasonCode;
+  final String? nativeCode;
+  final String? domainCode;
+}
+
 @HostApi()
 abstract class HardwareHostApi {
   PermissionSnapshotDto getPermissionSnapshot();
@@ -324,6 +393,31 @@ abstract class HardwareHostApi {
     String requestId,
     String deviceId,
     DoorCommandDto command,
+  );
+
+  @async
+  RemotePairingResultDto pairRemote(
+    String requestId,
+    String deviceId,
+    RemotePairingActionDto action,
+  );
+
+  @async
+  RemoteControlListResultDto queryRemotes(String requestId, String deviceId);
+
+  @async
+  RemoteOperationResultDto deleteRemote(
+    String requestId,
+    String deviceId,
+    int? serialNumber,
+  );
+
+  @async
+  RemoteOperationResultDto renameRemote(
+    String requestId,
+    String deviceId,
+    int serialNumber,
+    String name,
   );
 }
 

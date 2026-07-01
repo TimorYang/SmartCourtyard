@@ -4,6 +4,12 @@ import '../core/errors/app_error.dart';
 
 enum DoorCommand { open, stop, close, partialOpen, lightOn, lightOff, pb }
 
+enum RemotePairingAction { start, cancel }
+
+enum RemotePairingStatus { success, failure, timeout, unknown }
+
+enum RemoteOperationStatus { success, failure, unknown }
+
 enum DoorState { open, opening, stopped, closing, closed, unknown }
 
 enum DeviceOnlineState { online, offline, unknown }
@@ -112,6 +118,74 @@ class CommandResult {
   final String deviceId;
   final DoorCommand command;
   final bool accepted;
+}
+
+class RemotePairingResult {
+  const RemotePairingResult({
+    required this.requestId,
+    required this.deviceId,
+    required this.action,
+    required this.status,
+    required this.reasonCode,
+    this.nativeCode,
+  });
+
+  final String requestId;
+  final String deviceId;
+  final RemotePairingAction action;
+  final RemotePairingStatus status;
+  final int reasonCode;
+  final String? nativeCode;
+
+  bool get successful => status == RemotePairingStatus.success;
+}
+
+class RemoteControl {
+  const RemoteControl({required this.name, required this.serialNumber});
+
+  final String name;
+  final int serialNumber;
+
+  String get serialNumberLabel =>
+      '0x${serialNumber.toRadixString(16).padLeft(8, '0').toUpperCase()}';
+}
+
+class RemoteControlListResult {
+  const RemoteControlListResult({
+    required this.requestId,
+    required this.deviceId,
+    required this.totalCount,
+    required this.totalPages,
+    required this.currentPage,
+    required this.hasMore,
+    required this.remotes,
+  });
+
+  final String requestId;
+  final String deviceId;
+  final int totalCount;
+  final int totalPages;
+  final int currentPage;
+  final bool hasMore;
+  final List<RemoteControl> remotes;
+}
+
+class RemoteOperationResult {
+  const RemoteOperationResult({
+    required this.requestId,
+    required this.deviceId,
+    required this.status,
+    required this.reasonCode,
+    this.nativeCode,
+  });
+
+  final String requestId;
+  final String deviceId;
+  final RemoteOperationStatus status;
+  final int reasonCode;
+  final String? nativeCode;
+
+  bool get successful => status == RemoteOperationStatus.success;
 }
 
 class BleScanFilter {

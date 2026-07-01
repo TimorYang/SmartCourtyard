@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer' as developer;
 
 import 'package:flutter/services.dart';
 
@@ -243,6 +242,62 @@ class PigeonHardwareGateway implements HardwareGateway {
     );
   }
 
+  @override
+  Future<RemotePairingResult> pairRemote({
+    required String requestId,
+    required String deviceId,
+    required RemotePairingAction action,
+  }) async {
+    final dto = await _mapPigeonCall(
+      () => _hostApi.pairRemote(requestId, deviceId, action.toDto()),
+      requestId: requestId,
+      deviceId: deviceId,
+    );
+    return dto.toModel(action);
+  }
+
+  @override
+  Future<RemoteControlListResult> queryRemotes({
+    required String requestId,
+    required String deviceId,
+  }) async {
+    final dto = await _mapPigeonCall(
+      () => _hostApi.queryRemotes(requestId, deviceId),
+      requestId: requestId,
+      deviceId: deviceId,
+    );
+    return dto.toModel();
+  }
+
+  @override
+  Future<RemoteOperationResult> deleteRemote({
+    required String requestId,
+    required String deviceId,
+    int? serialNumber,
+  }) async {
+    final dto = await _mapPigeonCall(
+      () => _hostApi.deleteRemote(requestId, deviceId, serialNumber),
+      requestId: requestId,
+      deviceId: deviceId,
+    );
+    return dto.toModel();
+  }
+
+  @override
+  Future<RemoteOperationResult> renameRemote({
+    required String requestId,
+    required String deviceId,
+    required int serialNumber,
+    required String name,
+  }) async {
+    final dto = await _mapPigeonCall(
+      () => _hostApi.renameRemote(requestId, deviceId, serialNumber, name),
+      requestId: requestId,
+      deviceId: deviceId,
+    );
+    return dto.toModel();
+  }
+
   Future<T> _mapPigeonCall<T>(
     FutureOr<T> Function() call, {
     required String requestId,
@@ -350,18 +405,7 @@ class _HardwareFlutterApiHandler implements pigeon.HardwareFlutterApi {
     String? nativeCode,
     int? payloadBytes,
     String? details,
-  }) {
-    final parts = <String>[
-      'operation=$operation',
-      'requestId=${requestId ?? '-'}',
-      'deviceId=${deviceId ?? '-'}',
-      'state=${state ?? '-'}',
-      'nativeCode=${nativeCode ?? '-'}',
-      'payloadBytes=${payloadBytes ?? '-'}',
-      if (details != null && details.isNotEmpty) 'details=$details',
-    ];
-    // developer.log('ble log--------${parts.join(' ')}', name: 'FLINX.BLE');
-  }
+  }) {}
 
   String _hexString(List<int> bytes) {
     if (bytes.isEmpty) {
@@ -394,6 +438,81 @@ extension _DoorCommandMapper on DoorCommand {
       DoorCommand.lightOn => pigeon.DoorCommandDto.lightOn,
       DoorCommand.lightOff => pigeon.DoorCommandDto.lightOff,
       DoorCommand.pb => pigeon.DoorCommandDto.pb,
+    };
+  }
+}
+
+extension _RemotePairingActionMapper on RemotePairingAction {
+  pigeon.RemotePairingActionDto toDto() {
+    return switch (this) {
+      RemotePairingAction.start => pigeon.RemotePairingActionDto.start,
+      RemotePairingAction.cancel => pigeon.RemotePairingActionDto.cancel,
+    };
+  }
+}
+
+extension _RemotePairingResultMapper on pigeon.RemotePairingResultDto {
+  RemotePairingResult toModel(RemotePairingAction action) {
+    return RemotePairingResult(
+      requestId: requestId,
+      deviceId: deviceId,
+      action: action,
+      status: status.toModel(),
+      reasonCode: reasonCode,
+      nativeCode: nativeCode,
+    );
+  }
+}
+
+extension _RemotePairingStatusMapper on pigeon.RemotePairingStatusDto {
+  RemotePairingStatus toModel() {
+    return switch (this) {
+      pigeon.RemotePairingStatusDto.success => RemotePairingStatus.success,
+      pigeon.RemotePairingStatusDto.failure => RemotePairingStatus.failure,
+      pigeon.RemotePairingStatusDto.timeout => RemotePairingStatus.timeout,
+      pigeon.RemotePairingStatusDto.unknown => RemotePairingStatus.unknown,
+    };
+  }
+}
+
+extension _RemoteControlListResultMapper on pigeon.RemoteControlListResultDto {
+  RemoteControlListResult toModel() {
+    return RemoteControlListResult(
+      requestId: requestId,
+      deviceId: deviceId,
+      totalCount: totalCount,
+      totalPages: totalPages,
+      currentPage: currentPage,
+      hasMore: hasMore,
+      remotes: remotes.map((remote) => remote.toModel()).toList(),
+    );
+  }
+}
+
+extension _RemoteControlMapper on pigeon.RemoteControlDto {
+  RemoteControl toModel() {
+    return RemoteControl(name: name, serialNumber: serialNumber);
+  }
+}
+
+extension _RemoteOperationResultMapper on pigeon.RemoteOperationResultDto {
+  RemoteOperationResult toModel() {
+    return RemoteOperationResult(
+      requestId: requestId,
+      deviceId: deviceId,
+      status: status.toModel(),
+      reasonCode: reasonCode,
+      nativeCode: nativeCode,
+    );
+  }
+}
+
+extension _RemoteOperationStatusMapper on pigeon.RemoteOperationStatusDto {
+  RemoteOperationStatus toModel() {
+    return switch (this) {
+      pigeon.RemoteOperationStatusDto.success => RemoteOperationStatus.success,
+      pigeon.RemoteOperationStatusDto.failure => RemoteOperationStatus.failure,
+      pigeon.RemoteOperationStatusDto.unknown => RemoteOperationStatus.unknown,
     };
   }
 }
@@ -604,6 +723,10 @@ AppError _platformExceptionToAppError(
     'operation_in_progress' => AppErrorCode.deviceBusy,
     'operation_timeout' => AppErrorCode.commandTimeout,
     'provisioning_response_timeout' => AppErrorCode.commandTimeout,
+    'remote_pairing_response_timeout' => AppErrorCode.commandTimeout,
+    'invalid_remote_pairing_response' => AppErrorCode.pairingFailed,
+    'invalid_remote_query_response' => AppErrorCode.pairingFailed,
+    'invalid_remote_operation_response' => AppErrorCode.pairingFailed,
     'provisioning_characteristic_not_found' => AppErrorCode.provisioningFailed,
     'encrypted_provisioning_frame_unsupported' =>
       AppErrorCode.provisioningFailed,
