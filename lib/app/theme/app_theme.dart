@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 
+import 'app_design_tokens.dart';
+
 class AppTheme {
   const AppTheme._();
 
   static ThemeData light() {
-    final colorScheme = ColorScheme.fromSeed(
-      seedColor: const Color(0xFF176CFF),
-    );
+    final colorScheme = ColorScheme.fromSeed(seedColor: AppColors.brandPrimary);
 
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
+      scaffoldBackgroundColor: AppColors.backgroundPrimary,
       appBarTheme: const AppBarTheme(centerTitle: false),
     );
   }

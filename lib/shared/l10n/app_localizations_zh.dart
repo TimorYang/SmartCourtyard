@@ -28,4 +28,46 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get registerComingSoon => '注册页即将上线';
+
+  @override
+  String get forgotPasswordComingSoon => '忘记密码页面即将上线';
+
+  @override
+  String get loginTitle => '登录';
+
+  @override
+  String get loginAccountPlaceholder => '请输入账号';
+
+  @override
+  String get loginPasswordPlaceholder => '请输入密码';
+
+  @override
+  String get loginAgreementPrefix => '我已阅读并同意';
+
+  @override
+  String get loginAgreementMiddle => '和';
+
+  @override
+  String get userAgreementLabel => '用户协议';
+
+  @override
+  String get privacyPolicyLabel => '隐私政策';
+
+  @override
+  String get signInAction => '登录';
+
+  @override
+  String get forgotPasswordAction => '忘记密码';
+
+  @override
+  String get continueWithApple => '使用 Apple 继续登录';
+
+  @override
+  String get continueWithGoogle => '使用 Google 继续登录';
+
+  @override
+  String get continueWithAlexa => '使用 Alexa 继续登录';
+
+  @override
+  String get loginSubmitPending => '登录功能暂未接入';
 }

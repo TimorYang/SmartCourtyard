@@ -6,5 +6,19 @@
   "loginAction": "登录",
   "registerAction": "注册",
   "loginComingSoon": "登录页即将上线",
-  "registerComingSoon": "注册页即将上线"
+  "registerComingSoon": "注册页即将上线",
+  "forgotPasswordComingSoon": "忘记密码页面即将上线",
+  "loginTitle": "登录",
+  "loginAccountPlaceholder": "请输入账号",
+  "loginPasswordPlaceholder": "请输入密码",
+  "loginAgreementPrefix": "我已阅读并同意",
+  "loginAgreementMiddle": "和",
+  "userAgreementLabel": "用户协议",
+  "privacyPolicyLabel": "隐私政策",
+  "signInAction": "登录",
+  "forgotPasswordAction": "忘记密码",
+  "continueWithApple": "使用 Apple 继续登录",
+  "continueWithGoogle": "使用 Google 继续登录",
+  "continueWithAlexa": "使用 Alexa 继续登录",
+  "loginSubmitPending": "登录功能暂未接入"
 }

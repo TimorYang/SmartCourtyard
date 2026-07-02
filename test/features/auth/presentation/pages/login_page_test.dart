@@ -1,0 +1,82 @@
+import 'package:flinx/app/flinx_app.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  Future<void> openLoginPage(WidgetTester tester) async {
+    await tester.pumpWidget(const ProviderScope(child: FlinxApp()));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Login'));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('renders the login form and third-party sign-in options', (
+    tester,
+  ) async {
+    await openLoginPage(tester);
+
+    expect(find.text('Enter account number'), findsOneWidget);
+    expect(find.text('Enter password'), findsOneWidget);
+    expect(find.text('Sign in'), findsOneWidget);
+    expect(find.text('Continue Sign in with Apple'), findsOneWidget);
+    expect(find.text('Continue Sign in with Google'), findsOneWidget);
+    expect(find.text('Continue Sign in with Alexa'), findsOneWidget);
+  });
+
+  testWidgets('keeps third-party sign-in fixed when keyboard insets change', (
+    tester,
+  ) async {
+    addTearDown(tester.view.resetViewInsets);
+    await openLoginPage(tester);
+
+    final appleButton = find.text('Continue Sign in with Apple');
+    final initialTop = tester.getTopLeft(appleButton).dy;
+
+    tester.view.viewInsets = const FakeViewPadding(bottom: 320);
+    await tester.pump();
+
+    expect(tester.getTopLeft(appleButton).dy, initialTop);
+  });
+
+  testWidgets('enables sign in after filling the form and agreeing to terms', (
+    tester,
+  ) async {
+    await openLoginPage(tester);
+
+    final button = tester.widget<FilledButton>(find.byType(FilledButton));
+    expect(button.onPressed, isNull);
+
+    await tester.enterText(find.byType(TextField).at(0), 'demo-account');
+    await tester.enterText(find.byType(TextField).at(1), 'demo-password');
+    await tester.tap(find.textContaining('I have read and agreed'));
+    await tester.pumpAndSettle();
+
+    final enabledButton = tester.widget<FilledButton>(
+      find.byType(FilledButton),
+    );
+    expect(enabledButton.onPressed, isNotNull);
+
+    await tester.tap(find.text('Sign in'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Login is not connected yet'), findsOneWidget);
+  });
+
+  testWidgets('navigates to register and forgot password placeholders', (
+    tester,
+  ) async {
+    await openLoginPage(tester);
+
+    await tester.tap(find.text('Register'));
+    await tester.pumpAndSettle();
+    expect(find.text('Register page coming soon'), findsOneWidget);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Forgot password'));
+    await tester.pumpAndSettle();
+    expect(find.text('Forgot password page coming soon'), findsOneWidget);
+  });
+}

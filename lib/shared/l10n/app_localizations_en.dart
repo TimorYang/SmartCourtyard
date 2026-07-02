@@ -28,4 +28,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get registerComingSoon => 'Register page coming soon';
+
+  @override
+  String get forgotPasswordComingSoon => 'Forgot password page coming soon';
+
+  @override
+  String get loginTitle => 'Login';
+
+  @override
+  String get loginAccountPlaceholder => 'Enter account number';
+
+  @override
+  String get loginPasswordPlaceholder => 'Enter password';
+
+  @override
+  String get loginAgreementPrefix => 'I have read and agreed ';
+
+  @override
+  String get loginAgreementMiddle => ' and ';
+
+  @override
+  String get userAgreementLabel => 'User Agreement';
+
+  @override
+  String get privacyPolicyLabel => 'Privacy Policy';
+
+  @override
+  String get signInAction => 'Sign in';
+
+  @override
+  String get forgotPasswordAction => 'Forgot password';
+
+  @override
+  String get continueWithApple => 'Continue Sign in with Apple';
+
+  @override
+  String get continueWithGoogle => 'Continue Sign in with Google';
+
+  @override
+  String get continueWithAlexa => 'Continue Sign in with Alexa';
+
+  @override
+  String get loginSubmitPending => 'Login is not connected yet';
 }

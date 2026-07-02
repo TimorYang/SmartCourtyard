@@ -218,6 +218,27 @@ features/<feature_name>/
 
 Small features may be leaner, but do not invert dependencies.
 
+## UI Asset Rule
+
+This is a hard requirement for all UI implementation work:
+
+- Do not hand-draw, approximate, or recreate final UI cut assets in Flutter code when the user intends to provide them.
+- Use user-provided UI cut images/assets whenever available.
+- If the final asset has not been provided yet, use a clear placeholder asset name and wire the UI to that placeholder instead of drawing the asset manually.
+- Placeholder asset names should be descriptive and implementation-ready, for example `login_header_bg`, `welcome_hero_image`, or `auth_google_button_art`.
+- When replacing placeholders with final assets later, preserve layout structure and naming consistency as much as possible.
+
+## Theme Token Rule
+
+This is a hard requirement for all UI styling work:
+
+- Fonts, font sizes, font weights, text colors, button colors, background colors, border colors, radii, and other reusable visual styling values must be extracted into shared theme tokens instead of being left as inline magic values.
+- Always implement new UI with the assumption that multiple themes or visual variants will be needed later.
+- Even if the token system is incomplete today, new UI work must still go through the current shared theme or token layer first, then extend that layer as needed.
+- When touching existing UI, proactively extract hard-coded typography and color values that are directly related to the work you are doing.
+- Prefer semantic names such as `authPrimaryButtonColor`, `loginTitleStyle`, `inputBorderColor`, or `surfaceBackground` over raw design-only names that are hard to reuse.
+- Do not introduce new repeated visual constants directly inside page widgets when they can live in the shared theme or token layer.
+
 ## Native Bridge Rules
 
 Long-term hardware APIs should be defined with Pigeon.
@@ -448,6 +469,8 @@ Recommended implementation order:
 - Do not put hardware protocol code in Flutter widgets.
 - Do not expose native channel models directly to UI.
 - Do not let native code depend on Flutter page concepts.
+- Do not manually draw or recreate UI cut assets in code when they should come from provided design assets; use provided assets or descriptive placeholder asset names instead.
+- Do not leave reusable font, color, border, or button styling values hard-coded inside page widgets; extract them into shared theme tokens.
 - Do not bypass precondition guards for hardware actions.
 - Do not use raw strings for device commands when typed enums are available.
 - Do not show raw native error codes to users.

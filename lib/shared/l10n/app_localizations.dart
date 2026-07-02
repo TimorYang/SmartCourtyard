@@ -139,6 +139,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Register page coming soon'**
   String get registerComingSoon;
+
+  /// Placeholder text for the forgot password page
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password page coming soon'**
+  String get forgotPasswordComingSoon;
+
+  /// Login page heading
+  ///
+  /// In en, this message translates to:
+  /// **'Login'**
+  String get loginTitle;
+
+  /// Login account input placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'Enter account number'**
+  String get loginAccountPlaceholder;
+
+  /// Login password input placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'Enter password'**
+  String get loginPasswordPlaceholder;
+
+  /// Agreement prefix text on the login page
+  ///
+  /// In en, this message translates to:
+  /// **'I have read and agreed '**
+  String get loginAgreementPrefix;
+
+  /// Agreement middle text on the login page
+  ///
+  /// In en, this message translates to:
+  /// **' and '**
+  String get loginAgreementMiddle;
+
+  /// User agreement link label
+  ///
+  /// In en, this message translates to:
+  /// **'User Agreement'**
+  String get userAgreementLabel;
+
+  /// Privacy policy link label
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicyLabel;
+
+  /// Login submit button label
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get signInAction;
+
+  /// Forgot password action label
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password'**
+  String get forgotPasswordAction;
+
+  /// Third-party sign in with Apple label
+  ///
+  /// In en, this message translates to:
+  /// **'Continue Sign in with Apple'**
+  String get continueWithApple;
+
+  /// Third-party sign in with Google label
+  ///
+  /// In en, this message translates to:
+  /// **'Continue Sign in with Google'**
+  String get continueWithGoogle;
+
+  /// Third-party sign in with Alexa label
+  ///
+  /// In en, this message translates to:
+  /// **'Continue Sign in with Alexa'**
+  String get continueWithAlexa;
+
+  /// Temporary message shown when the user submits the login form
+  ///
+  /// In en, this message translates to:
+  /// **'Login is not connected yet'**
+  String get loginSubmitPending;
 }
 
 class _AppLocalizationsDelegate

@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import 'login_page.dart';
 import 'register_page.dart';
@@ -29,9 +30,9 @@ class WelcomePage extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.black.withValues(alpha: 0.48),
-                  Colors.black.withValues(alpha: 0.64),
-                  Colors.black.withValues(alpha: 0.34),
+                  AppColors.overlayStrong,
+                  AppColors.overlayMedium,
+                  AppColors.overlaySoft,
                 ],
               ),
             ),
@@ -47,19 +48,12 @@ class WelcomePage extends StatelessWidget {
                   const SizedBox(height: 40),
                   Text(
                     l10n.welcomeHeadline,
-                    style: theme.textTheme.displaySmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      height: 1.06,
-                    ),
+                    style: AppTextTokens.welcomeHeadline(theme.textTheme),
                   ),
                   const SizedBox(height: 10),
                   Text(
                     l10n.welcomeSubtitle,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: Colors.white.withValues(alpha: 0.88),
-                      fontWeight: FontWeight.w500,
-                    ),
+                    style: AppTextTokens.welcomeSubtitle(theme.textTheme),
                   ),
                   const Spacer(),
                   SizedBox(
@@ -67,12 +61,12 @@ class WelcomePage extends StatelessWidget {
                     child: FilledButton(
                       onPressed: () => context.push(LoginPage.routePath),
                       style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF176CFF),
-                        foregroundColor: Colors.white,
+                        backgroundColor: AppColors.brandPrimary,
+                        foregroundColor: AppColors.backgroundPrimary,
                         minimumSize: const Size.fromHeight(62),
                         shape: const StadiumBorder(),
-                        textStyle: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
+                        textStyle: AppTextTokens.welcomePrimaryButton(
+                          theme.textTheme,
                         ),
                       ),
                       child: Text(l10n.loginAction),
@@ -84,12 +78,12 @@ class WelcomePage extends StatelessWidget {
                     child: FilledButton(
                       onPressed: () => context.push(RegisterPage.routePath),
                       style: FilledButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: const Color(0xFF5B5B60),
+                        backgroundColor: AppColors.backgroundPrimary,
+                        foregroundColor: AppColors.textMuted,
                         minimumSize: const Size.fromHeight(62),
                         shape: const StadiumBorder(),
-                        textStyle: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
+                        textStyle: AppTextTokens.welcomeSecondaryButton(
+                          theme.textTheme,
                         ),
                       ),
                       child: Text(l10n.registerAction),
@@ -116,7 +110,11 @@ class _WelcomeBackground extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFF0D1B30), Color(0xFF14253D), Color(0xFF1B1D24)],
+          colors: [
+            AppColors.backgroundDarkTop,
+            AppColors.backgroundDarkMiddle,
+            AppColors.backgroundDarkBottom,
+          ],
         ),
       ),
       child: Stack(
@@ -127,7 +125,7 @@ class _WelcomeBackground extends StatelessWidget {
             right: -30,
             child: _GlowOrb(
               size: 240,
-              color: const Color(0xFF2055D8),
+              color: AppColors.glowPrimary,
               opacity: 0.24,
             ),
           ),
@@ -136,7 +134,7 @@ class _WelcomeBackground extends StatelessWidget {
             left: -50,
             child: _GlowOrb(
               size: 160,
-              color: const Color(0xFF1A3C7A),
+              color: AppColors.glowSecondary,
               opacity: 0.18,
             ),
           ),
@@ -147,11 +145,11 @@ class _WelcomeBackground extends StatelessWidget {
               height: 320,
               margin: const EdgeInsets.symmetric(horizontal: 18),
               decoration: BoxDecoration(
-                color: const Color(0xFF15171E),
+                color: AppColors.surfaceGarage,
                 borderRadius: BorderRadius.circular(2),
                 boxShadow: const [
                   BoxShadow(
-                    color: Color(0x99000000),
+                    color: AppColors.shadowStrong,
                     blurRadius: 30,
                     offset: Offset(0, 24),
                   ),
@@ -165,7 +163,9 @@ class _WelcomeBackground extends StatelessWidget {
               width: double.infinity,
               height: 82,
               margin: const EdgeInsets.symmetric(horizontal: 2),
-              decoration: const BoxDecoration(color: Color(0xFF2A2D35)),
+              decoration: const BoxDecoration(
+                color: AppColors.surfaceGarageTrim,
+              ),
             ),
           ),
           Positioned(
@@ -178,7 +178,10 @@ class _WelcomeBackground extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Color(0xFF263327), Color(0xFF121813)],
+                  colors: [
+                    AppColors.surfacePlantDark,
+                    AppColors.surfacePlantDarker,
+                  ],
                 ),
               ),
             ),
@@ -190,7 +193,7 @@ class _WelcomeBackground extends StatelessWidget {
               width: 18,
               height: 72,
               decoration: BoxDecoration(
-                color: const Color(0xFF384A37),
+                color: AppColors.surfacePlantMid,
                 borderRadius: BorderRadius.circular(18),
               ),
             ),
@@ -202,7 +205,7 @@ class _WelcomeBackground extends StatelessWidget {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: const Color(0xFF4E6550),
+                color: AppColors.surfacePlantLight,
                 borderRadius: BorderRadius.circular(28),
               ),
             ),
@@ -252,11 +255,7 @@ class _FlinxLogo extends StatelessWidget {
         children: [
           RichText(
             text: TextSpan(
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -1.4,
-              ),
+              style: AppTextTokens.flinxLogo(Theme.of(context).textTheme),
               children: const [
                 TextSpan(text: 'f'),
                 TextSpan(text: '.'),
@@ -272,7 +271,7 @@ class _FlinxLogo extends StatelessWidget {
               angle: -0.15,
               child: const Icon(
                 Icons.wifi_rounded,
-                color: Color(0xFFD9E100),
+                color: AppColors.accentWifi,
                 size: 20,
               ),
             ),

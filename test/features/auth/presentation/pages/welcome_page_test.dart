@@ -15,7 +15,7 @@ class _FakeAuthSessionRepository implements AuthSessionRepository {
 }
 
 void main() {
-  testWidgets('opens login placeholder from welcome page', (tester) async {
+  testWidgets('opens login page from welcome page', (tester) async {
     await tester.pumpWidget(const ProviderScope(child: FlinxApp()));
 
     await tester.pumpAndSettle();
@@ -23,7 +23,7 @@ void main() {
     await tester.tap(find.text('Login'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Login page coming soon'), findsOneWidget);
+    expect(find.text('Enter account number'), findsOneWidget);
   });
 
   testWidgets('redirects authenticated users to the home page', (tester) async {

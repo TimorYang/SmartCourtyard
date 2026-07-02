@@ -24,5 +24,61 @@
   "registerComingSoon": "Register page coming soon",
   "@registerComingSoon": {
     "description": "Placeholder text for the register page"
+  },
+  "forgotPasswordComingSoon": "Forgot password page coming soon",
+  "@forgotPasswordComingSoon": {
+    "description": "Placeholder text for the forgot password page"
+  },
+  "loginTitle": "Login",
+  "@loginTitle": {
+    "description": "Login page heading"
+  },
+  "loginAccountPlaceholder": "Enter account number",
+  "@loginAccountPlaceholder": {
+    "description": "Login account input placeholder"
+  },
+  "loginPasswordPlaceholder": "Enter password",
+  "@loginPasswordPlaceholder": {
+    "description": "Login password input placeholder"
+  },
+  "loginAgreementPrefix": "I have read and agreed ",
+  "@loginAgreementPrefix": {
+    "description": "Agreement prefix text on the login page"
+  },
+  "loginAgreementMiddle": " and ",
+  "@loginAgreementMiddle": {
+    "description": "Agreement middle text on the login page"
+  },
+  "userAgreementLabel": "User Agreement",
+  "@userAgreementLabel": {
+    "description": "User agreement link label"
+  },
+  "privacyPolicyLabel": "Privacy Policy",
+  "@privacyPolicyLabel": {
+    "description": "Privacy policy link label"
+  },
+  "signInAction": "Sign in",
+  "@signInAction": {
+    "description": "Login submit button label"
+  },
+  "forgotPasswordAction": "Forgot password",
+  "@forgotPasswordAction": {
+    "description": "Forgot password action label"
+  },
+  "continueWithApple": "Continue Sign in with Apple",
+  "@continueWithApple": {
+    "description": "Third-party sign in with Apple label"
+  },
+  "continueWithGoogle": "Continue Sign in with Google",
+  "@continueWithGoogle": {
+    "description": "Third-party sign in with Google label"
+  },
+  "continueWithAlexa": "Continue Sign in with Alexa",
+  "@continueWithAlexa": {
+    "description": "Third-party sign in with Alexa label"
+  },
+  "loginSubmitPending": "Login is not connected yet",
+  "@loginSubmitPending": {
+    "description": "Temporary message shown when the user submits the login form"
   }
 }
