@@ -171,6 +171,33 @@ class AppTextTokens {
     );
   }
 
+  static TextStyle registerPasswordTitle(TextTheme textTheme) {
+    return (textTheme.displaySmall ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontWeight: FontWeight.w700,
+    );
+  }
+
+  static TextStyle registerPasswordDescription(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textAuthBody,
+      fontWeight: FontWeight.w400,
+      height: 1.35,
+    );
+  }
+
+  static const registerPasswordInputHint = TextStyle(
+    color: AppColors.textHint,
+    fontSize: 15,
+    fontWeight: FontWeight.w400,
+  );
+
+  static TextStyle registerPasswordPrimaryButton(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      fontWeight: FontWeight.w500,
+    );
+  }
+
   static TextStyle providerButton(TextTheme textTheme) {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
       fontWeight: FontWeight.w500,

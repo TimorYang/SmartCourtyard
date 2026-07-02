@@ -64,6 +64,21 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get registerPasswordTitle => '密码';
+
+  @override
+  String get registerPasswordDescription => '设置您的密码';
+
+  @override
+  String get registerPasswordPlaceholder => '请输入 8 位数字密码';
+
+  @override
+  String get registerConfirmPasswordPlaceholder => '请再次输入 8 位数字密码';
+
+  @override
+  String get registerPasswordPending => '密码注册功能暂未接入';
+
+  @override
   String get forgotPasswordComingSoon => '忘记密码页面即将上线';
 
   @override

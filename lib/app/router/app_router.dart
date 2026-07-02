@@ -7,6 +7,7 @@ import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_code_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
+import '../../features/auth/presentation/pages/register_password_page.dart';
 import '../../features/auth/presentation/pages/welcome_page.dart';
 import '../../features/add_device/presentation/pages/wifi_configuration_page.dart';
 import '../../features/device_control/presentation/pages/device_command_page.dart';
@@ -28,7 +29,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           location == LoginPage.routePath ||
           location == ForgotPasswordPage.routePath ||
           location == RegisterPage.routePath ||
-          location == RegisterCodePage.routePath;
+          location == RegisterCodePage.routePath ||
+          location == RegisterPasswordPage.routePath;
       final isPublicRoute = isAuthRoute || location == AppWebViewPage.routePath;
 
       if (!isSignedIn && !isPublicRoute) {
@@ -67,6 +69,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: RegisterCodePage.routeName,
         builder: (context, state) =>
             RegisterCodePage(email: state.uri.queryParameters['email'] ?? ''),
+      ),
+      GoRoute(
+        path: RegisterPasswordPage.routePath,
+        name: RegisterPasswordPage.routeName,
+        builder: (context, state) => RegisterPasswordPage(
+          email: state.uri.queryParameters['email'] ?? '',
+        ),
       ),
       GoRoute(
         path: AppWebViewPage.routePath,

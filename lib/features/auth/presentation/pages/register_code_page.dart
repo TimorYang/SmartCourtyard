@@ -7,6 +7,7 @@ import 'package:pinput/pinput.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../application/providers.dart';
+import 'register_password_page.dart';
 
 class RegisterCodePage extends ConsumerStatefulWidget {
   const RegisterCodePage({super.key, required this.email});
@@ -103,7 +104,14 @@ class _RegisterCodePageState extends ConsumerState<RegisterCodePage> {
                 code: state.code,
                 focusNode: _focusNode,
                 textController: _textController,
-                onChanged: controller.updateCode,
+                onChanged: (value) {
+                  controller.updateCode(value);
+                  if (value.replaceAll(RegExp(r'\D'), '').length >= 6) {
+                    context.push(
+                      RegisterPasswordPage.locationFor(widget.email),
+                    );
+                  }
+                },
               ),
               const SizedBox(height: 24),
               TextButton(

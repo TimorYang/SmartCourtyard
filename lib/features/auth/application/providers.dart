@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'login_form_controller.dart';
 import 'register_code_controller.dart';
 import 'register_form_controller.dart';
+import 'register_password_controller.dart';
 import '../data/repositories/auth_session_repository_impl.dart';
 import '../domain/entities/auth_session.dart';
 import '../domain/repositories/auth_session_repository.dart';
@@ -29,4 +30,12 @@ final registerFormControllerProvider =
 final registerCodeControllerProvider =
     NotifierProvider.autoDispose<RegisterCodeController, RegisterCodeState>(() {
       return RegisterCodeController();
+    });
+
+final registerPasswordControllerProvider =
+    NotifierProvider.autoDispose<
+      RegisterPasswordController,
+      RegisterPasswordState
+    >(() {
+      return RegisterPasswordController();
     });

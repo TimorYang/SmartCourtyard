@@ -65,6 +65,23 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get registerPasswordTitle => 'Password';
+
+  @override
+  String get registerPasswordDescription => 'Set your password';
+
+  @override
+  String get registerPasswordPlaceholder => 'Enter an 8-digit password';
+
+  @override
+  String get registerConfirmPasswordPlaceholder =>
+      'Enter the 8-digit password again';
+
+  @override
+  String get registerPasswordPending =>
+      'Password registration is not connected yet';
+
+  @override
   String get forgotPasswordComingSoon => 'Forgot password page coming soon';
 
   @override

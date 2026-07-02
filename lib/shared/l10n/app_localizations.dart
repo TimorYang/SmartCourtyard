@@ -200,6 +200,36 @@ abstract class AppLocalizations {
   /// **'Send Again OTP ({seconds}s)'**
   String registerCodeResend(int seconds);
 
+  /// Register password setup page heading
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get registerPasswordTitle;
+
+  /// Register password setup helper text
+  ///
+  /// In en, this message translates to:
+  /// **'Set your password'**
+  String get registerPasswordDescription;
+
+  /// Register password input placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an 8-digit password'**
+  String get registerPasswordPlaceholder;
+
+  /// Register confirm password input placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 8-digit password again'**
+  String get registerConfirmPasswordPlaceholder;
+
+  /// Temporary message shown when the user submits the register password form
+  ///
+  /// In en, this message translates to:
+  /// **'Password registration is not connected yet'**
+  String get registerPasswordPending;
+
   /// Placeholder text for the forgot password page
   ///
   /// In en, this message translates to:
