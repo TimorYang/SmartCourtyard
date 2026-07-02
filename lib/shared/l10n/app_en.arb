@@ -49,6 +49,34 @@
   "@registerSendPending": {
     "description": "Temporary message shown when the user submits the register form"
   },
+  "registerCodeTitle": "Enter Code",
+  "@registerCodeTitle": {
+    "description": "Register verification code page heading"
+  },
+  "registerCodeDescription": "We've sent an email to {email} with a confirmation code. Enter the code below to continue registration.",
+  "@registerCodeDescription": {
+    "description": "Register verification code helper text",
+    "placeholders": {
+      "email": {
+        "type": "String",
+        "example": "771*****@q***"
+      }
+    }
+  },
+  "registerCodeInputLabel": "Verification code",
+  "@registerCodeInputLabel": {
+    "description": "Accessibility label for the verification code input"
+  },
+  "registerCodeResend": "Send Again OTP ({seconds}s)",
+  "@registerCodeResend": {
+    "description": "Register verification resend countdown label",
+    "placeholders": {
+      "seconds": {
+        "type": "int",
+        "example": "59"
+      }
+    }
+  },
   "forgotPasswordComingSoon": "Forgot password page coming soon",
   "@forgotPasswordComingSoon": {
     "description": "Placeholder text for the forgot password page"

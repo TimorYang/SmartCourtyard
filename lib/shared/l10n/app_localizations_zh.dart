@@ -48,6 +48,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get registerSendPending => '验证码功能暂未接入';
 
   @override
+  String get registerCodeTitle => '输入验证码';
+
+  @override
+  String registerCodeDescription(String email) {
+    return '我们已向 $email 发送确认验证码。请输入邮件中的验证码继续注册。';
+  }
+
+  @override
+  String get registerCodeInputLabel => '验证码';
+
+  @override
+  String registerCodeResend(int seconds) {
+    return '重新发送验证码（$seconds秒）';
+  }
+
+  @override
   String get forgotPasswordComingSoon => '忘记密码页面即将上线';
 
   @override

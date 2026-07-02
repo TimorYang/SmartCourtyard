@@ -176,6 +176,30 @@ abstract class AppLocalizations {
   /// **'Verification code is not connected yet'**
   String get registerSendPending;
 
+  /// Register verification code page heading
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Code'**
+  String get registerCodeTitle;
+
+  /// Register verification code helper text
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ve sent an email to {email} with a confirmation code. Enter the code below to continue registration.'**
+  String registerCodeDescription(String email);
+
+  /// Accessibility label for the verification code input
+  ///
+  /// In en, this message translates to:
+  /// **'Verification code'**
+  String get registerCodeInputLabel;
+
+  /// Register verification resend countdown label
+  ///
+  /// In en, this message translates to:
+  /// **'Send Again OTP ({seconds}s)'**
+  String registerCodeResend(int seconds);
+
   /// Placeholder text for the forgot password page
   ///
   /// In en, this message translates to:

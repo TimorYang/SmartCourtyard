@@ -49,6 +49,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get registerSendPending => 'Verification code is not connected yet';
 
   @override
+  String get registerCodeTitle => 'Enter Code';
+
+  @override
+  String registerCodeDescription(String email) {
+    return 'We\'ve sent an email to $email with a confirmation code. Enter the code below to continue registration.';
+  }
+
+  @override
+  String get registerCodeInputLabel => 'Verification code';
+
+  @override
+  String registerCodeResend(int seconds) {
+    return 'Send Again OTP (${seconds}s)';
+  }
+
+  @override
   String get forgotPasswordComingSoon => 'Forgot password page coming soon';
 
   @override

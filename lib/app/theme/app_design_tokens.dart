@@ -38,10 +38,12 @@ class AppColors {
   static const textRegisterAgreement = Color(0xFF707070);
   static const textRegisterLink = Color(0xFF0D6EFF);
   static const textProviderDark = Color(0xFF2D2D2D);
+  static const textCodeResend = Color(0xFF7DAEFF);
 
   static const borderSubtle = Color(0xFFDBDBDB);
   static const borderMuted = Color(0xFFC8C8C8);
   static const borderProvider = Color(0xFFADADAD);
+  static const borderCodeCell = Color(0xFFE1E1E1);
 
   static const shadowStrong = Color(0x99000000);
   static const overlayStrong = Color(0x7A000000);
@@ -137,6 +139,35 @@ class AppTextTokens {
   static TextStyle registerPrimaryButton(TextTheme textTheme) {
     return (textTheme.titleLarge ?? const TextStyle()).copyWith(
       fontWeight: FontWeight.w500,
+    );
+  }
+
+  static TextStyle verificationTitle(TextTheme textTheme) {
+    return (textTheme.displaySmall ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontWeight: FontWeight.w700,
+    );
+  }
+
+  static TextStyle verificationDescription(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textAuthBody,
+      fontWeight: FontWeight.w400,
+      height: 1.35,
+    );
+  }
+
+  static TextStyle verificationDigit(TextTheme textTheme) {
+    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontWeight: FontWeight.w500,
+    );
+  }
+
+  static TextStyle verificationResend(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textCodeResend,
+      fontWeight: FontWeight.w400,
     );
   }
 

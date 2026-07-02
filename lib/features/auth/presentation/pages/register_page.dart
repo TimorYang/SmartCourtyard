@@ -7,6 +7,7 @@ import '../../../../app/config/app_links.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../application/providers.dart';
 import '../../../../shared/l10n/app_localizations.dart';
+import 'register_code_page.dart';
 
 class RegisterPage extends ConsumerWidget {
   const RegisterPage({super.key});
@@ -101,8 +102,8 @@ class RegisterPage extends ConsumerWidget {
                 child: FilledButton(
                   onPressed: state.canSendCode
                       ? () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(l10n.registerSendPending)),
+                          context.push(
+                            RegisterCodePage.locationFor(state.email.trim()),
                           );
                         }
                       : null,
