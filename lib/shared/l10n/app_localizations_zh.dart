@@ -30,6 +30,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get registerComingSoon => '注册页即将上线';
 
   @override
+  String get registerTitle => '注册';
+
+  @override
+  String get registerDescription => '请输入与您的账号关联的邮箱地址';
+
+  @override
+  String get registerEmailPlaceholder => '请输入邮箱地址';
+
+  @override
+  String get registerAgreementPrefix => '我已阅读并同意';
+
+  @override
+  String get sendCodeAction => '发送验证码';
+
+  @override
+  String get registerSendPending => '验证码功能暂未接入';
+
+  @override
   String get forgotPasswordComingSoon => '忘记密码页面即将上线';
 
   @override

@@ -30,6 +30,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get registerComingSoon => 'Register page coming soon';
 
   @override
+  String get registerTitle => 'Register';
+
+  @override
+  String get registerDescription =>
+      'Please enter the address associated your account';
+
+  @override
+  String get registerEmailPlaceholder => 'Enter your email address';
+
+  @override
+  String get registerAgreementPrefix => 'I have read and agreed ';
+
+  @override
+  String get sendCodeAction => 'Send code';
+
+  @override
+  String get registerSendPending => 'Verification code is not connected yet';
+
+  @override
   String get forgotPasswordComingSoon => 'Forgot password page coming soon';
 
   @override

@@ -6,6 +6,7 @@ class AppColors {
   static const brandPrimary = Color(0xFF176CFF);
   static const brandPrimaryLight = Color(0xFF84BDEE);
   static const brandPrimaryDisabled = Color(0xFFB5D8F5);
+  static const authSuccess = Color(0xFF12C76B);
   static const brandAlexa = Color(0xFF2EB5E9);
   static const brandAlexaDark = Color(0xFF1F96C5);
   static const brandGoogleBlue = Color(0xFF4285F4);
@@ -33,6 +34,9 @@ class AppColors {
   static const textIcon = Color(0xFF5A5D64);
   static const textAgreement = Color(0xFFC0C0C3);
   static const textAgreementLink = Color(0xFF4C4B4A);
+  static const textAuthBody = Color(0xFF555A62);
+  static const textRegisterAgreement = Color(0xFF707070);
+  static const textRegisterLink = Color(0xFF0D6EFF);
   static const textProviderDark = Color(0xFF2D2D2D);
 
   static const borderSubtle = Color(0xFFDBDBDB);
@@ -97,6 +101,41 @@ class AppTextTokens {
 
   static TextStyle loginPrimaryButton(TextTheme textTheme) {
     return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
+      fontWeight: FontWeight.w500,
+    );
+  }
+
+  static TextStyle registerTitle(TextTheme textTheme) {
+    return (textTheme.displaySmall ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontWeight: FontWeight.w700,
+    );
+  }
+
+  static TextStyle registerDescription(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textAuthBody,
+      fontWeight: FontWeight.w400,
+      height: 1.4,
+    );
+  }
+
+  static const registerInputHint = TextStyle(
+    color: AppColors.textHint,
+    fontSize: 18,
+    fontWeight: FontWeight.w400,
+  );
+
+  static TextStyle registerAgreement(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textRegisterAgreement,
+      fontWeight: FontWeight.w400,
+      height: 1.4,
+    );
+  }
+
+  static TextStyle registerPrimaryButton(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
       fontWeight: FontWeight.w500,
     );
   }

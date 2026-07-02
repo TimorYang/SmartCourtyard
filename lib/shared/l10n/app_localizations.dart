@@ -140,6 +140,42 @@ abstract class AppLocalizations {
   /// **'Register page coming soon'**
   String get registerComingSoon;
 
+  /// Register page heading
+  ///
+  /// In en, this message translates to:
+  /// **'Register'**
+  String get registerTitle;
+
+  /// Register page helper text asking for the account email address
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter the address associated your account'**
+  String get registerDescription;
+
+  /// Register email input placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email address'**
+  String get registerEmailPlaceholder;
+
+  /// Register privacy agreement prefix
+  ///
+  /// In en, this message translates to:
+  /// **'I have read and agreed '**
+  String get registerAgreementPrefix;
+
+  /// Register send verification code button label
+  ///
+  /// In en, this message translates to:
+  /// **'Send code'**
+  String get sendCodeAction;
+
+  /// Temporary message shown when the user submits the register form
+  ///
+  /// In en, this message translates to:
+  /// **'Verification code is not connected yet'**
+  String get registerSendPending;
+
   /// Placeholder text for the forgot password page
   ///
   /// In en, this message translates to:

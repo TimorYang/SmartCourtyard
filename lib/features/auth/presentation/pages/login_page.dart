@@ -84,62 +84,58 @@ class LoginPage extends ConsumerWidget {
                       onChanged: controller.updatePassword,
                     ),
                     const SizedBox(height: 8),
-                    InkWell(
-                      onTap: controller.toggleAgreement,
-                      borderRadius: BorderRadius.circular(12),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            _AgreementToggle(selected: state.agreedToTerms),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text.rich(
-                                TextSpan(
-                                  style: AppTextTokens.loginAgreement(
-                                    theme.textTheme,
-                                  ),
-                                  children: [
-                                    TextSpan(text: l10n.loginAgreementPrefix),
-                                    TextSpan(
-                                      text: l10n.userAgreementLabel,
-                                      style: const TextStyle(
-                                        color: AppColors.textAgreementLink,
-                                        decoration: TextDecoration.underline,
-                                      ),
-                                      recognizer: TapGestureRecognizer()
-                                        ..onTap = () => context.push(
-                                          AppLinks.webViewLocation(
-                                            destination: AppLinkDestination
-                                                .userAgreement,
-                                            title: l10n.userAgreementLabel,
-                                          ),
-                                        ),
-                                    ),
-                                    TextSpan(text: l10n.loginAgreementMiddle),
-                                    TextSpan(
-                                      text: l10n.privacyPolicyLabel,
-                                      style: const TextStyle(
-                                        color: AppColors.textAgreementLink,
-                                        decoration: TextDecoration.underline,
-                                      ),
-                                      recognizer: TapGestureRecognizer()
-                                        ..onTap = () => context.push(
-                                          AppLinks.webViewLocation(
-                                            destination: AppLinkDestination
-                                                .privacyPolicy,
-                                            title: l10n.privacyPolicyLabel,
-                                          ),
-                                        ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        _AgreementToggle(
+                          selected: state.agreedToTerms,
+                          onTap: controller.toggleAgreement,
                         ),
-                      ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text.rich(
+                            TextSpan(
+                              style: AppTextTokens.loginAgreement(
+                                theme.textTheme,
+                              ),
+                              children: [
+                                TextSpan(text: l10n.loginAgreementPrefix),
+                                TextSpan(
+                                  text: l10n.userAgreementLabel,
+                                  style: const TextStyle(
+                                    color: AppColors.textAgreementLink,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                  recognizer: TapGestureRecognizer()
+                                    ..onTap = () => context.push(
+                                      AppLinks.webViewLocation(
+                                        destination:
+                                            AppLinkDestination.userAgreement,
+                                        title: l10n.userAgreementLabel,
+                                      ),
+                                    ),
+                                ),
+                                TextSpan(text: l10n.loginAgreementMiddle),
+                                TextSpan(
+                                  text: l10n.privacyPolicyLabel,
+                                  style: const TextStyle(
+                                    color: AppColors.textAgreementLink,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                  recognizer: TapGestureRecognizer()
+                                    ..onTap = () => context.push(
+                                      AppLinks.webViewLocation(
+                                        destination:
+                                            AppLinkDestination.privacyPolicy,
+                                        title: l10n.privacyPolicyLabel,
+                                      ),
+                                    ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 12),
                     SizedBox(
@@ -347,30 +343,52 @@ class _LoginField extends StatelessWidget {
 }
 
 class _AgreementToggle extends StatelessWidget {
-  const _AgreementToggle({required this.selected});
+  const _AgreementToggle({required this.selected, required this.onTap});
 
   final bool selected;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 22,
-      height: 22,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: selected ? AppColors.brandPrimaryLight : AppColors.borderMuted,
+    return Semantics(
+      button: true,
+      checked: selected,
+      child: GestureDetector(
+        key: const ValueKey('login_agreement_toggle'),
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: SizedBox(
+          width: 44,
+          height: 44,
+          child: Center(
+            child: Container(
+              width: 22,
+              height: 22,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: selected
+                      ? AppColors.brandPrimaryLight
+                      : AppColors.borderMuted,
+                ),
+                color: selected ? AppColors.brandPrimaryLight : Colors.white,
+              ),
+              child: selected
+                  ? const _AssetIcon(
+                      assetPath: _LoginPageAssetPaths.agreementCheckedIcon,
+                      width: 14,
+                      height: 14,
+                      fallback: Icon(
+                        Icons.check,
+                        size: 14,
+                        color: Colors.white,
+                      ),
+                    )
+                  : null,
+            ),
+          ),
         ),
-        color: selected ? AppColors.brandPrimaryLight : Colors.white,
       ),
-      child: selected
-          ? const _AssetIcon(
-              assetPath: _LoginPageAssetPaths.agreementCheckedIcon,
-              width: 14,
-              height: 14,
-              fallback: Icon(Icons.check, size: 14, color: Colors.white),
-            )
-          : null,
     );
   }
 }

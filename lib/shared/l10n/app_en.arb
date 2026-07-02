@@ -25,6 +25,30 @@
   "@registerComingSoon": {
     "description": "Placeholder text for the register page"
   },
+  "registerTitle": "Register",
+  "@registerTitle": {
+    "description": "Register page heading"
+  },
+  "registerDescription": "Please enter the address associated your account",
+  "@registerDescription": {
+    "description": "Register page helper text asking for the account email address"
+  },
+  "registerEmailPlaceholder": "Enter your email address",
+  "@registerEmailPlaceholder": {
+    "description": "Register email input placeholder"
+  },
+  "registerAgreementPrefix": "I have read and agreed ",
+  "@registerAgreementPrefix": {
+    "description": "Register privacy agreement prefix"
+  },
+  "sendCodeAction": "Send code",
+  "@sendCodeAction": {
+    "description": "Register send verification code button label"
+  },
+  "registerSendPending": "Verification code is not connected yet",
+  "@registerSendPending": {
+    "description": "Temporary message shown when the user submits the register form"
+  },
   "forgotPasswordComingSoon": "Forgot password page coming soon",
   "@forgotPasswordComingSoon": {
     "description": "Placeholder text for the forgot password page"

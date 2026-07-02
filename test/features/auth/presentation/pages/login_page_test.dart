@@ -49,7 +49,7 @@ void main() {
 
     await tester.enterText(find.byType(TextField).at(0), 'demo-account');
     await tester.enterText(find.byType(TextField).at(1), 'demo-password');
-    await tester.tap(find.textContaining('I have read and agreed'));
+    await tester.tap(find.byKey(const ValueKey('login_agreement_toggle')));
     await tester.pumpAndSettle();
 
     final enabledButton = tester.widget<FilledButton>(
@@ -63,16 +63,17 @@ void main() {
     expect(find.text('Login is not connected yet'), findsOneWidget);
   });
 
-  testWidgets('navigates to register and forgot password placeholders', (
+  testWidgets('navigates to register page and forgot password placeholder', (
     tester,
   ) async {
     await openLoginPage(tester);
 
     await tester.tap(find.text('Register'));
     await tester.pumpAndSettle();
-    expect(find.text('Register page coming soon'), findsOneWidget);
+    expect(find.text('Enter your email address'), findsOneWidget);
+    expect(find.text('Send code'), findsOneWidget);
 
-    await tester.pageBack();
+    await tester.tap(find.byType(IconButton));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Forgot password'));
