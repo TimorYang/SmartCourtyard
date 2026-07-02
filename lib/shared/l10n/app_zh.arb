@@ -20,5 +20,26 @@
   "continueWithApple": "使用 Apple 继续登录",
   "continueWithGoogle": "使用 Google 继续登录",
   "continueWithAlexa": "使用 Alexa 继续登录",
-  "loginSubmitPending": "登录功能暂未接入"
+  "loginSubmitPending": "登录功能暂未接入",
+  "homeShortcutAction": "首页",
+  "homeGreeting": "您好",
+  "homeWelcome": "欢迎回来",
+  "homeMenuTooltip": "菜单",
+  "homeEditTooltip": "编辑家庭",
+  "homeAddDoorTooltip": "添加门",
+  "homeDoorCount": "{count} 个门",
+  "@homeDoorCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeNoDoorsTitle": "暂无门",
+  "homeNoDoorsSubtitle": "请添加门",
+  "homeAddDoorAction": "门",
+  "homeLoadDoorsFailed": "无法加载门设备。",
+  "homeDoorStateLabel": "门状态",
+  "homeConnectionStateLabel": "连接状态",
+  "homeLifeRemainingLabel": "剩余寿命"
 }

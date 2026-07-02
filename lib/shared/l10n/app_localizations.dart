@@ -223,6 +223,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Login is not connected yet'**
   String get loginSubmitPending;
+
+  /// Temporary shortcut button from the welcome page to the home page
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get homeShortcutAction;
+
+  /// Greeting title on the home page
+  ///
+  /// In en, this message translates to:
+  /// **'Hi xxxxx'**
+  String get homeGreeting;
+
+  /// Greeting subtitle on the home page
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome'**
+  String get homeWelcome;
+
+  /// Tooltip for the home menu action
+  ///
+  /// In en, this message translates to:
+  /// **'Menu'**
+  String get homeMenuTooltip;
+
+  /// Tooltip for editing a home
+  ///
+  /// In en, this message translates to:
+  /// **'Edit home'**
+  String get homeEditTooltip;
+
+  /// Tooltip for adding a door from the home header
+  ///
+  /// In en, this message translates to:
+  /// **'Add door'**
+  String get homeAddDoorTooltip;
+
+  /// Number of doors bound under the current home
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{0 Door} =1{1 Door} other{{count} Doors}}'**
+  String homeDoorCount(int count);
+
+  /// Title for the empty home state when no doors are bound
+  ///
+  /// In en, this message translates to:
+  /// **'No doors'**
+  String get homeNoDoorsTitle;
+
+  /// Subtitle for the empty home state when no doors are bound
+  ///
+  /// In en, this message translates to:
+  /// **'Please add Doors'**
+  String get homeNoDoorsSubtitle;
+
+  /// Add door button label on the empty home state
+  ///
+  /// In en, this message translates to:
+  /// **'New door'**
+  String get homeAddDoorAction;
+
+  /// Error message shown when home door loading fails
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load doors.'**
+  String get homeLoadDoorsFailed;
+
+  /// Device card label for door state
+  ///
+  /// In en, this message translates to:
+  /// **'Door'**
+  String get homeDoorStateLabel;
+
+  /// Device card label for connection state
+  ///
+  /// In en, this message translates to:
+  /// **'Connection'**
+  String get homeConnectionStateLabel;
+
+  /// Device card label for remaining device life
+  ///
+  /// In en, this message translates to:
+  /// **'Life remaining'**
+  String get homeLifeRemainingLabel;
 }
 
 class _AppLocalizationsDelegate

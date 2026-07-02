@@ -80,5 +80,66 @@
   "loginSubmitPending": "Login is not connected yet",
   "@loginSubmitPending": {
     "description": "Temporary message shown when the user submits the login form"
+  },
+  "homeShortcutAction": "Home",
+  "@homeShortcutAction": {
+    "description": "Temporary shortcut button from the welcome page to the home page"
+  },
+  "homeGreeting": "Hi xxxxx",
+  "@homeGreeting": {
+    "description": "Greeting title on the home page"
+  },
+  "homeWelcome": "Welcome",
+  "@homeWelcome": {
+    "description": "Greeting subtitle on the home page"
+  },
+  "homeMenuTooltip": "Menu",
+  "@homeMenuTooltip": {
+    "description": "Tooltip for the home menu action"
+  },
+  "homeEditTooltip": "Edit home",
+  "@homeEditTooltip": {
+    "description": "Tooltip for editing a home"
+  },
+  "homeAddDoorTooltip": "Add door",
+  "@homeAddDoorTooltip": {
+    "description": "Tooltip for adding a door from the home header"
+  },
+  "homeDoorCount": "{count, plural, =0{0 Door} =1{1 Door} other{{count} Doors}}",
+  "@homeDoorCount": {
+    "description": "Number of doors bound under the current home",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeNoDoorsTitle": "No doors",
+  "@homeNoDoorsTitle": {
+    "description": "Title for the empty home state when no doors are bound"
+  },
+  "homeNoDoorsSubtitle": "Please add Doors",
+  "@homeNoDoorsSubtitle": {
+    "description": "Subtitle for the empty home state when no doors are bound"
+  },
+  "homeAddDoorAction": "New door",
+  "@homeAddDoorAction": {
+    "description": "Add door button label on the empty home state"
+  },
+  "homeLoadDoorsFailed": "Unable to load doors.",
+  "@homeLoadDoorsFailed": {
+    "description": "Error message shown when home door loading fails"
+  },
+  "homeDoorStateLabel": "Door",
+  "@homeDoorStateLabel": {
+    "description": "Device card label for door state"
+  },
+  "homeConnectionStateLabel": "Connection",
+  "@homeConnectionStateLabel": {
+    "description": "Device card label for connection state"
+  },
+  "homeLifeRemainingLabel": "Life remaining",
+  "@homeLifeRemainingLabel": {
+    "description": "Device card label for remaining device life"
   }
 }

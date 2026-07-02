@@ -70,4 +70,55 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loginSubmitPending => 'Login is not connected yet';
+
+  @override
+  String get homeShortcutAction => 'Home';
+
+  @override
+  String get homeGreeting => 'Hi xxxxx';
+
+  @override
+  String get homeWelcome => 'Welcome';
+
+  @override
+  String get homeMenuTooltip => 'Menu';
+
+  @override
+  String get homeEditTooltip => 'Edit home';
+
+  @override
+  String get homeAddDoorTooltip => 'Add door';
+
+  @override
+  String homeDoorCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Doors',
+      one: '1 Door',
+      zero: '0 Door',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeNoDoorsTitle => 'No doors';
+
+  @override
+  String get homeNoDoorsSubtitle => 'Please add Doors';
+
+  @override
+  String get homeAddDoorAction => 'New door';
+
+  @override
+  String get homeLoadDoorsFailed => 'Unable to load doors.';
+
+  @override
+  String get homeDoorStateLabel => 'Door';
+
+  @override
+  String get homeConnectionStateLabel => 'Connection';
+
+  @override
+  String get homeLifeRemainingLabel => 'Life remaining';
 }

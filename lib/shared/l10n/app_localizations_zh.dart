@@ -70,4 +70,48 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get loginSubmitPending => '登录功能暂未接入';
+
+  @override
+  String get homeShortcutAction => '首页';
+
+  @override
+  String get homeGreeting => '您好';
+
+  @override
+  String get homeWelcome => '欢迎回来';
+
+  @override
+  String get homeMenuTooltip => '菜单';
+
+  @override
+  String get homeEditTooltip => '编辑家庭';
+
+  @override
+  String get homeAddDoorTooltip => '添加门';
+
+  @override
+  String homeDoorCount(int count) {
+    return '$count 个门';
+  }
+
+  @override
+  String get homeNoDoorsTitle => '暂无门';
+
+  @override
+  String get homeNoDoorsSubtitle => '请添加门';
+
+  @override
+  String get homeAddDoorAction => '门';
+
+  @override
+  String get homeLoadDoorsFailed => '无法加载门设备。';
+
+  @override
+  String get homeDoorStateLabel => '门状态';
+
+  @override
+  String get homeConnectionStateLabel => '连接状态';
+
+  @override
+  String get homeLifeRemainingLabel => '剩余寿命';
 }

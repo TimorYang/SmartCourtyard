@@ -15,6 +15,7 @@ class AppColors {
 
   static const backgroundPrimary = Colors.white;
   static const backgroundInverse = Colors.black;
+  static const homeBackground = Color(0xFFF8F8F9);
   static const backgroundDarkTop = Color(0xFF0D1B30);
   static const backgroundDarkMiddle = Color(0xFF14253D);
   static const backgroundDarkBottom = Color(0xFF1B1D24);
@@ -35,9 +36,16 @@ class AppColors {
   static const textAgreementLink = Color(0xFF4C4B4A);
   static const textProviderDark = Color(0xFF2D2D2D);
 
+  static const iconHomeAction = Color(0xFF3F424A);
+  static const iconHomePlaceholder = Color(0xFFD5D9E0);
+  static const surfaceHomeAvatar = Color(0xFFECEFF4);
+  static const surfaceHomeIcon = Color(0xFFF8F9FB);
+
   static const borderSubtle = Color(0xFFDBDBDB);
   static const borderMuted = Color(0xFFC8C8C8);
   static const borderProvider = Color(0xFFADADAD);
+  static const borderHomeDivider = Color(0xFFE7E8EB);
+  static const borderHomePlaceholder = Color(0xFFDDE1E7);
 
   static const shadowStrong = Color(0x99000000);
   static const overlayStrong = Color(0x7A000000);
@@ -112,6 +120,55 @@ class AppTextTokens {
       color: Colors.white,
       fontWeight: FontWeight.w900,
       letterSpacing: -1.4,
+    );
+  }
+
+  static TextStyle homeGreeting(TextTheme textTheme) {
+    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
+      color: Colors.black,
+      fontWeight: FontWeight.w800,
+      height: 1.05,
+    );
+  }
+
+  static TextStyle homeWelcome(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textSecondary,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle homeTabLabel(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      fontWeight: FontWeight.w600,
+    );
+  }
+
+  static TextStyle homeDoorCount(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textSecondary,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle homeEmptyTitle(TextTheme textTheme) {
+    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
+      color: Colors.black,
+      fontWeight: FontWeight.w800,
+      height: 1.05,
+    );
+  }
+
+  static TextStyle homeEmptySubtitle(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textHint,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle homePrimaryButton(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      fontWeight: FontWeight.w600,
     );
   }
 }

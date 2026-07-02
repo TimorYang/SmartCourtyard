@@ -50,18 +50,7 @@ class MockHardwareGateway implements HardwareGateway {
 
   @override
   Future<List<DeviceSummary>> readDevices() async {
-    return [
-      DeviceSummary(
-        id: 'mock-garage-door',
-        name: 'Garage Door',
-        onlineState: DeviceOnlineState.online,
-        bleState: BleConnectionState.connected,
-        doorState: DoorState.closed,
-        cycleCount: 328,
-        remainingLifePercent: 91,
-        lastSeenAt: DateTime.now(),
-      ),
-    ];
+    return const <DeviceSummary>[];
   }
 
   @override

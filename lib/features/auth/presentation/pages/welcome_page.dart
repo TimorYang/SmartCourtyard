@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
+import '../../../home/presentation/pages/home_page.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import 'login_page.dart';
 import 'register_page.dart';
@@ -56,6 +57,23 @@ class WelcomePage extends StatelessWidget {
                     style: AppTextTokens.welcomeSubtitle(theme.textTheme),
                   ),
                   const Spacer(),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: () => context.push(HomePage.routePath),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.brandPrimary,
+                        foregroundColor: AppColors.backgroundPrimary,
+                        minimumSize: const Size.fromHeight(62),
+                        shape: const StadiumBorder(),
+                        textStyle: AppTextTokens.welcomePrimaryButton(
+                          theme.textTheme,
+                        ),
+                      ),
+                      child: Text(l10n.homeShortcutAction),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton(

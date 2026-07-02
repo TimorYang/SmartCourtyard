@@ -26,6 +26,18 @@ void main() {
     expect(find.text('Enter account number'), findsOneWidget);
   });
 
+  testWidgets('opens home page from welcome page shortcut', (tester) async {
+    await tester.pumpWidget(const ProviderScope(child: FlinxApp()));
+
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Home'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('No Doors'), findsOneWidget);
+    expect(find.text('0 Door'), findsOneWidget);
+  });
+
   testWidgets('redirects authenticated users to the home page', (tester) async {
     await tester.pumpWidget(
       ProviderScope(
@@ -42,7 +54,7 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    expect(find.text('Add Device'), findsOneWidget);
+    expect(find.text('No Doors'), findsOneWidget);
     expect(find.text('Login'), findsNothing);
   });
 }
