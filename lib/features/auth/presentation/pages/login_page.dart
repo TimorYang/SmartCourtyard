@@ -41,9 +41,14 @@ class LoginPage extends ConsumerWidget {
                       onPressed: () => context.pop(),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
-                      icon: const Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        size: 22,
+                      icon: const _AssetIcon(
+                        assetPath: _LoginPageAssetPaths.backArrowIcon,
+                        width: 22,
+                        height: 22,
+                        fallback: Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          size: 22,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -54,7 +59,12 @@ class LoginPage extends ConsumerWidget {
                     const SizedBox(height: 24),
                     _LoginField(
                       hintText: l10n.loginAccountPlaceholder,
-                      icon: Icons.person_outline_rounded,
+                      icon: const _AssetIcon(
+                        assetPath: _LoginPageAssetPaths.accountFieldIcon,
+                        width: 22,
+                        height: 22,
+                        fallback: SizedBox.shrink(),
+                      ),
                       compact: true,
                       ultraCompact: true,
                       onChanged: controller.updateAccount,
@@ -62,7 +72,12 @@ class LoginPage extends ConsumerWidget {
                     const SizedBox(height: 12),
                     _LoginField(
                       hintText: l10n.loginPasswordPlaceholder,
-                      icon: Icons.lock_outline_rounded,
+                      icon: const _AssetIcon(
+                        assetPath: _LoginPageAssetPaths.passwordFieldIcon,
+                        width: 22,
+                        height: 22,
+                        fallback: SizedBox.shrink(),
+                      ),
                       compact: true,
                       ultraCompact: true,
                       obscureText: true,
@@ -75,7 +90,7 @@ class LoginPage extends ConsumerWidget {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             _AgreementToggle(selected: state.agreedToTerms),
                             const SizedBox(width: 10),
@@ -197,10 +212,14 @@ class LoginPage extends ConsumerWidget {
                       borderColor: AppColors.backgroundInverse,
                       minHeight: 40,
                       compact: true,
-                      icon: const Icon(
-                        Icons.apple,
-                        color: Colors.white,
+                      icon: const _ProviderAssetIcon(
+                        assetPath: _LoginPageAssetPaths.appleProviderMark,
                         size: 24,
+                        fallback: Icon(
+                          Icons.apple,
+                          color: Colors.white,
+                          size: 24,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -211,11 +230,15 @@ class LoginPage extends ConsumerWidget {
                       borderColor: AppColors.borderProvider,
                       minHeight: 40,
                       compact: true,
-                      icon: const _LetterBadge(
-                        text: 'G',
-                        foregroundColor: AppColors.brandGoogleBlue,
-                        backgroundColor: Colors.white,
-                        compact: true,
+                      icon: const _ProviderAssetIcon(
+                        assetPath: _LoginPageAssetPaths.googleProviderMark,
+                        size: 28,
+                        fallback: _LetterBadge(
+                          text: 'G',
+                          foregroundColor: AppColors.brandGoogleBlue,
+                          backgroundColor: Colors.white,
+                          compact: true,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -226,11 +249,16 @@ class LoginPage extends ConsumerWidget {
                       borderColor: AppColors.brandAlexa,
                       minHeight: 40,
                       compact: true,
-                      icon: const _LetterBadge(
-                        text: 'a',
-                        foregroundColor: Colors.white,
-                        backgroundColor: AppColors.brandAlexaDark,
-                        compact: true,
+                      icon: const _ProviderAssetIcon(
+                        assetPath:
+                            _LoginPageAssetPaths.voiceAssistantProviderMark,
+                        size: 28,
+                        fallback: _LetterBadge(
+                          text: 'a',
+                          foregroundColor: Colors.white,
+                          backgroundColor: AppColors.brandAlexaDark,
+                          compact: true,
+                        ),
                       ),
                     ),
                   ],
@@ -244,6 +272,21 @@ class LoginPage extends ConsumerWidget {
   }
 }
 
+class _LoginPageAssetPaths {
+  const _LoginPageAssetPaths._();
+
+  static const appleProviderMark = 'assets/icons/auth/provider_apple_mark.png';
+  static const googleProviderMark =
+      'assets/icons/auth/provider_google_mark.png';
+  static const voiceAssistantProviderMark =
+      'assets/icons/auth/provider_voice_assistant_mark.png';
+  static const backArrowIcon = 'assets/icons/auth/login_back_arrow.png';
+  static const accountFieldIcon = 'assets/icons/auth/login_account_icon.png';
+  static const passwordFieldIcon = 'assets/icons/auth/login_password_icon.png';
+  static const agreementCheckedIcon =
+      'assets/icons/auth/login_agreement_checked_icon.png';
+}
+
 class _LoginField extends StatelessWidget {
   const _LoginField({
     required this.hintText,
@@ -255,7 +298,7 @@ class _LoginField extends StatelessWidget {
   });
 
   final String hintText;
-  final IconData icon;
+  final Widget icon;
   final ValueChanged<String> onChanged;
   final bool compact;
   final bool ultraCompact;
@@ -273,16 +316,10 @@ class _LoginField extends StatelessWidget {
             width: compact ? 26 : 30,
             height: compact ? 26 : 30,
             alignment: Alignment.center,
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: AppColors.borderMuted,
-                style: BorderStyle.solid,
-              ),
-            ),
-            child: Icon(
-              icon,
-              color: AppColors.textIcon,
-              size: compact ? 22 : 25,
+            child: SizedBox(
+              width: compact ? 22 : 25,
+              height: compact ? 22 : 25,
+              child: icon,
             ),
           ),
           const SizedBox(width: 12),
@@ -319,7 +356,6 @@ class _AgreementToggle extends StatelessWidget {
     return Container(
       width: 22,
       height: 22,
-      margin: const EdgeInsets.only(top: 2),
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
@@ -328,7 +364,12 @@ class _AgreementToggle extends StatelessWidget {
         color: selected ? AppColors.brandPrimaryLight : Colors.white,
       ),
       child: selected
-          ? const Icon(Icons.check, size: 14, color: Colors.white)
+          ? const _AssetIcon(
+              assetPath: _LoginPageAssetPaths.agreementCheckedIcon,
+              width: 14,
+              height: 14,
+              fallback: Icon(Icons.check, size: 14, color: Colors.white),
+            )
           : null,
     );
   }
@@ -380,6 +421,54 @@ class _ProviderButton extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ProviderAssetIcon extends StatelessWidget {
+  const _ProviderAssetIcon({
+    required this.assetPath,
+    required this.size,
+    required this.fallback,
+  });
+
+  final String assetPath;
+  final double size;
+  final Widget fallback;
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.asset(
+      assetPath,
+      width: size,
+      height: size,
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) => fallback,
+    );
+  }
+}
+
+class _AssetIcon extends StatelessWidget {
+  const _AssetIcon({
+    required this.assetPath,
+    required this.width,
+    required this.height,
+    required this.fallback,
+  });
+
+  final String assetPath;
+  final double width;
+  final double height;
+  final Widget fallback;
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.asset(
+      assetPath,
+      width: width,
+      height: height,
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) => fallback,
     );
   }
 }
