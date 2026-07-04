@@ -155,9 +155,13 @@
   "@loginTitle": {
     "description": "Login page heading"
   },
-  "loginAccountPlaceholder": "Enter account number",
+  "loginAccountPlaceholder": "Enter your email address",
   "@loginAccountPlaceholder": {
-    "description": "Login account input placeholder"
+    "description": "Login email input placeholder"
+  },
+  "loginEmailInvalid": "Enter a valid email address",
+  "@loginEmailInvalid": {
+    "description": "Validation message shown when the login email format is invalid"
   },
   "loginPasswordPlaceholder": "Enter password",
   "@loginPasswordPlaceholder": {
@@ -179,7 +183,7 @@
   "@privacyPolicyLabel": {
     "description": "Privacy policy link label"
   },
-  "signInAction": "Sign in",
+  "signInAction": "Login in",
   "@signInAction": {
     "description": "Login submit button label"
   },

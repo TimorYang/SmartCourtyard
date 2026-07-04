@@ -1,5 +1,6 @@
 import 'package:flinx/app/flinx_app.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -16,9 +17,9 @@ void main() {
   ) async {
     await openLoginPage(tester);
 
-    expect(find.text('Enter account number'), findsOneWidget);
+    expect(find.text('Enter your email address'), findsOneWidget);
     expect(find.text('Enter password'), findsOneWidget);
-    expect(find.text('Sign in'), findsOneWidget);
+    expect(find.text('Login in'), findsOneWidget);
     expect(find.text('Continue Sign in with Apple'), findsOneWidget);
     expect(find.text('Continue Sign in with Google'), findsOneWidget);
     expect(find.text('Continue Sign in with Alexa'), findsOneWidget);
@@ -39,9 +40,23 @@ void main() {
     expect(tester.getTopLeft(appleButton).dy, initialTop);
   });
 
-  testWidgets('enables sign in after filling the form and agreeing to terms', (
-    tester,
-  ) async {
+  testWidgets('validates email format when login in is tapped', (tester) async {
+    const alertChannel = MethodChannel('flutter_platform_alert');
+    final alertCalls = <MethodCall>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      alertChannel,
+      (call) async {
+        alertCalls.add(call);
+        return 'positive_button';
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        alertChannel,
+        null,
+      ),
+    );
+
     await openLoginPage(tester);
 
     final button = tester.widget<FilledButton>(find.byType(FilledButton));
@@ -52,12 +67,40 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('login_agreement_toggle')));
     await tester.pumpAndSettle();
 
+    final disabledButton = tester.widget<FilledButton>(
+      find.byType(FilledButton),
+    );
+    expect(disabledButton.onPressed, isNotNull);
+    expect(find.text('Enter a valid email address'), findsNothing);
+
+    await tester.tap(find.text('Login in'));
+    await tester.pumpAndSettle();
+
+    expect(alertCalls, hasLength(1));
+    expect(alertCalls.single.method, 'showCustomAlert');
+    expect(
+      alertCalls.single.arguments,
+      containsPair('text', 'Enter a valid email address'),
+    );
+    expect(find.text('Login is not connected yet'), findsNothing);
+  });
+
+  testWidgets('enables sign in after entering a valid email and agreeing', (
+    tester,
+  ) async {
+    await openLoginPage(tester);
+
+    await tester.enterText(find.byType(TextField).at(0), 'user@example.com');
+    await tester.enterText(find.byType(TextField).at(1), 'demo-password');
+    await tester.tap(find.byKey(const ValueKey('login_agreement_toggle')));
+    await tester.pumpAndSettle();
+
     final enabledButton = tester.widget<FilledButton>(
       find.byType(FilledButton),
     );
     expect(enabledButton.onPressed, isNotNull);
 
-    await tester.tap(find.text('Sign in'));
+    await tester.tap(find.text('Login in'));
     await tester.pumpAndSettle();
 
     expect(find.text('Login is not connected yet'), findsOneWidget);

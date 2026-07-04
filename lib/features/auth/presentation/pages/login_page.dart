@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_alert/flutter_platform_alert.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -67,6 +68,9 @@ class LoginPage extends ConsumerWidget {
                       ),
                       compact: true,
                       ultraCompact: true,
+                      keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
+                      autocorrect: false,
                       onChanged: controller.updateAccount,
                     ),
                     const SizedBox(height: 12),
@@ -81,6 +85,7 @@ class LoginPage extends ConsumerWidget {
                       compact: true,
                       ultraCompact: true,
                       obscureText: true,
+                      textInputAction: TextInputAction.done,
                       onChanged: controller.updatePassword,
                     ),
                     const SizedBox(height: 8),
@@ -142,7 +147,17 @@ class LoginPage extends ConsumerWidget {
                       width: double.infinity,
                       child: FilledButton(
                         onPressed: state.canSubmit
-                            ? () {
+                            ? () async {
+                                if (!controller.validateEmailForSubmit()) {
+                                  await _showLoginEmailInvalidDialog(
+                                    title: l10n.appTitle,
+                                    message: l10n.loginEmailInvalid,
+                                    okLabel: MaterialLocalizations.of(
+                                      context,
+                                    ).okButtonLabel,
+                                  );
+                                  return;
+                                }
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(l10n.loginSubmitPending),
@@ -268,6 +283,18 @@ class LoginPage extends ConsumerWidget {
   }
 }
 
+Future<void> _showLoginEmailInvalidDialog({
+  required String title,
+  required String message,
+  required String okLabel,
+}) async {
+  await FlutterPlatformAlert.showCustomAlert(
+    windowTitle: title,
+    text: message,
+    positiveButtonTitle: okLabel,
+  );
+}
+
 class _LoginPageAssetPaths {
   const _LoginPageAssetPaths._();
 
@@ -290,6 +317,9 @@ class _LoginField extends StatelessWidget {
     required this.onChanged,
     required this.compact,
     required this.ultraCompact,
+    this.keyboardType,
+    this.textInputAction,
+    this.autocorrect = true,
     this.obscureText = false,
   });
 
@@ -298,6 +328,9 @@ class _LoginField extends StatelessWidget {
   final ValueChanged<String> onChanged;
   final bool compact;
   final bool ultraCompact;
+  final TextInputType? keyboardType;
+  final TextInputAction? textInputAction;
+  final bool autocorrect;
   final bool obscureText;
 
   @override
@@ -322,6 +355,9 @@ class _LoginField extends StatelessWidget {
           Expanded(
             child: TextField(
               obscureText: obscureText,
+              keyboardType: keyboardType,
+              textInputAction: textInputAction,
+              autocorrect: autocorrect,
               onChanged: onChanged,
               decoration: InputDecoration(
                 border: InputBorder.none,

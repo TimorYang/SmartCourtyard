@@ -308,11 +308,17 @@ abstract class AppLocalizations {
   /// **'Login'**
   String get loginTitle;
 
-  /// Login account input placeholder
+  /// Login email input placeholder
   ///
   /// In en, this message translates to:
-  /// **'Enter account number'**
+  /// **'Enter your email address'**
   String get loginAccountPlaceholder;
+
+  /// Validation message shown when the login email format is invalid
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid email address'**
+  String get loginEmailInvalid;
 
   /// Login password input placeholder
   ///
@@ -347,7 +353,7 @@ abstract class AppLocalizations {
   /// Login submit button label
   ///
   /// In en, this message translates to:
-  /// **'Sign in'**
+  /// **'Login in'**
   String get signInAction;
 
   /// Forgot password action label

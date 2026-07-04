@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/validation/input_validators.dart';
+
 class LoginFormState {
   const LoginFormState({
     this.account = '',
@@ -11,8 +13,13 @@ class LoginFormState {
   final String password;
   final bool agreedToTerms;
 
-  bool get canSubmit =>
-      account.trim().isNotEmpty && password.isNotEmpty && agreedToTerms;
+  String get trimmedEmail => account.trim();
+
+  bool get hasAccountInput => trimmedEmail.isNotEmpty;
+
+  bool get isAccountEmailValid => InputValidators.isValidEmail(account);
+
+  bool get canSubmit => hasAccountInput && password.isNotEmpty && agreedToTerms;
 
   LoginFormState copyWith({
     String? account,
@@ -43,5 +50,9 @@ class LoginFormController extends Notifier<LoginFormState> {
 
   void toggleAgreement() {
     state = state.copyWith(agreedToTerms: !state.agreedToTerms);
+  }
+
+  bool validateEmailForSubmit() {
+    return state.isAccountEmailValid;
   }
 }

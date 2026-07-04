@@ -120,7 +120,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get loginTitle => '登录';
 
   @override
-  String get loginAccountPlaceholder => '请输入账号';
+  String get loginAccountPlaceholder => '请输入邮箱地址';
+
+  @override
+  String get loginEmailInvalid => '请输入有效的邮箱地址';
 
   @override
   String get loginPasswordPlaceholder => '请输入密码';

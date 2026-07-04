@@ -109,7 +109,7 @@ void main() {
     await tester.tap(find.text('Back to Login'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Enter account number'), findsOneWidget);
+    expect(find.text('Enter your email address'), findsOneWidget);
 
     await tester.tap(find.byType(IconButton));
     await tester.pumpAndSettle();

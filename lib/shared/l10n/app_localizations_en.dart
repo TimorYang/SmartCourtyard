@@ -126,7 +126,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginTitle => 'Login';
 
   @override
-  String get loginAccountPlaceholder => 'Enter account number';
+  String get loginAccountPlaceholder => 'Enter your email address';
+
+  @override
+  String get loginEmailInvalid => 'Enter a valid email address';
 
   @override
   String get loginPasswordPlaceholder => 'Enter password';
@@ -144,7 +147,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get privacyPolicyLabel => 'Privacy Policy';
 
   @override
-  String get signInAction => 'Sign in';
+  String get signInAction => 'Login in';
 
   @override
   String get forgotPasswordAction => 'Forgot password';
