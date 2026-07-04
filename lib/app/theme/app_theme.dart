@@ -12,7 +12,28 @@ class AppTheme {
       useMaterial3: true,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: AppColors.backgroundPrimary,
-      appBarTheme: const AppBarTheme(centerTitle: false),
+      appBarTheme: AppBarTheme(
+        backgroundColor: AppColors.navigationBackground,
+        foregroundColor: AppColors.navigationForeground,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: true,
+        titleTextStyle: AppTextTokens.navigationTitle(
+          ThemeData.light().textTheme,
+        ),
+        iconTheme: const IconThemeData(
+          color: AppColors.navigationForeground,
+          size: 22,
+        ),
+        actionsIconTheme: const IconThemeData(
+          color: AppColors.navigationForeground,
+          size: 22,
+        ),
+        shape: const Border(
+          bottom: BorderSide(color: AppColors.navigationDivider),
+        ),
+      ),
     );
   }
 
@@ -25,7 +46,20 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      appBarTheme: const AppBarTheme(centerTitle: false),
+      appBarTheme: AppBarTheme(
+        backgroundColor: colorScheme.surface,
+        foregroundColor: colorScheme.onSurface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: true,
+        titleTextStyle: AppTextTokens.navigationTitle(
+          ThemeData.dark().textTheme,
+        ).copyWith(color: colorScheme.onSurface),
+        iconTheme: IconThemeData(color: colorScheme.onSurface, size: 22),
+        actionsIconTheme: IconThemeData(color: colorScheme.onSurface, size: 22),
+        shape: Border(bottom: BorderSide(color: colorScheme.outlineVariant)),
+      ),
     );
   }
 }

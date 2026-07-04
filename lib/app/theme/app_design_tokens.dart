@@ -44,6 +44,9 @@ class AppColors {
   static const borderMuted = Color(0xFFC8C8C8);
   static const borderProvider = Color(0xFFADADAD);
   static const borderCodeCell = Color(0xFFE1E1E1);
+  static const navigationBackground = Colors.white;
+  static const navigationForeground = Color(0xFF26292F);
+  static const navigationDivider = Color(0xFFE6E7EB);
 
   static const shadowStrong = Color(0x99000000);
   static const overlayStrong = Color(0x7A000000);
@@ -66,6 +69,14 @@ class AppTextTokens {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
       color: Colors.white.withValues(alpha: 0.88),
       fontWeight: FontWeight.w500,
+    );
+  }
+
+  static TextStyle navigationTitle(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.navigationForeground,
+      fontSize: 17,
+      fontWeight: FontWeight.w600,
     );
   }
 

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../platform_bridge/hardware_gateway.dart';
 import '../../../../platform_bridge/hardware_models.dart';
 import '../../../../platform_bridge/providers.dart';
+import '../../../../shared/widgets/flinx_navigation_bar.dart';
 
 const String bleDebugTargetName = 'HEMS_Controller';
 const Duration bleDebugDeviceStaleAfter = Duration(seconds: 12);
@@ -209,7 +210,7 @@ class _BleDebugPageState extends ConsumerState<BleDebugPage> {
     );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('BLE Debug')),
+      appBar: const FlinxNavigationBar(title: 'BLE Debug'),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../application/device_command_controller.dart';
 import '../../../../platform_bridge/hardware_models.dart';
+import '../../../../shared/widgets/flinx_navigation_bar.dart';
 
 class DeviceCommandPage extends ConsumerWidget {
   const DeviceCommandPage({required this.deviceId, super.key});
@@ -25,7 +26,7 @@ class DeviceCommandPage extends ConsumerWidget {
     final isDeletingAll = state.pendingRemoteManagementAction == 'delete-all';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('设备控制')),
+      appBar: const FlinxNavigationBar(title: '设备控制'),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

@@ -10,6 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_debug_tools: ^2.0.5
   flutter_localizations:
     sdk: flutter
   flutter_platform_alert: ^0.9.1

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../add_device/presentation/pages/add_device_page.dart';
 import '../../../../features/hardware_debug/presentation/pages/ble_debug_page.dart';
 import '../../../../platform_bridge/hardware_models.dart';
+import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
 
 class HomePage extends ConsumerWidget {
@@ -18,8 +19,8 @@ class HomePage extends ConsumerWidget {
     final devices = ref.watch(homeDevicesProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('FLINX'),
+      appBar: FlinxNavigationBar(
+        title: 'FLINX',
         actions: [
           TextButton.icon(
             onPressed: () => context.push(AddDevicePage.routePath),

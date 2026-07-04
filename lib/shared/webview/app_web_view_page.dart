@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../app/config/app_links.dart';
+import '../widgets/flinx_navigation_bar.dart';
 
 class AppWebViewPage extends StatefulWidget {
   const AppWebViewPage({
@@ -52,7 +53,7 @@ class _AppWebViewPageState extends State<AppWebViewPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
+      appBar: FlinxNavigationBar(title: widget.title),
       body: Stack(
         children: [
           WebViewWidget(controller: _controller),
