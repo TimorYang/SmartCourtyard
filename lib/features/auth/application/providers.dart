@@ -1,5 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'forgot_password_code_controller.dart';
+import 'forgot_password_controller.dart';
+import 'forgot_password_reset_controller.dart';
 import 'login_form_controller.dart';
 import 'register_code_controller.dart';
 import 'register_form_controller.dart';
@@ -20,6 +23,29 @@ final authSessionProvider = Provider<AuthSession>((ref) {
 final loginFormControllerProvider =
     NotifierProvider.autoDispose<LoginFormController, LoginFormState>(() {
       return LoginFormController();
+    });
+
+final forgotPasswordControllerProvider =
+    NotifierProvider.autoDispose<ForgotPasswordController, ForgotPasswordState>(
+      () {
+        return ForgotPasswordController();
+      },
+    );
+
+final forgotPasswordCodeControllerProvider =
+    NotifierProvider.autoDispose<
+      ForgotPasswordCodeController,
+      ForgotPasswordCodeState
+    >(() {
+      return ForgotPasswordCodeController();
+    });
+
+final forgotPasswordResetControllerProvider =
+    NotifierProvider.autoDispose<
+      ForgotPasswordResetController,
+      ForgotPasswordResetState
+    >(() {
+      return ForgotPasswordResetController();
     });
 
 final registerFormControllerProvider =

@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../application/providers.dart';
 import '../widgets/auth_flow_widgets.dart';
+import 'forgot_password_success_page.dart';
 
-class RegisterPasswordPage extends ConsumerStatefulWidget {
-  const RegisterPasswordPage({super.key, required this.email});
+class ForgotPasswordResetPage extends ConsumerStatefulWidget {
+  const ForgotPasswordResetPage({super.key, required this.email});
 
-  static const routeName = 'register-password';
-  static const routePath = '/register/password';
+  static const routeName = 'forgot-password-reset';
+  static const routePath = '/forgot-password/reset';
 
   final String email;
 
@@ -18,11 +20,12 @@ class RegisterPasswordPage extends ConsumerStatefulWidget {
   }
 
   @override
-  ConsumerState<RegisterPasswordPage> createState() =>
-      _RegisterPasswordPageState();
+  ConsumerState<ForgotPasswordResetPage> createState() =>
+      _ForgotPasswordResetPageState();
 }
 
-class _RegisterPasswordPageState extends ConsumerState<RegisterPasswordPage> {
+class _ForgotPasswordResetPageState
+    extends ConsumerState<ForgotPasswordResetPage> {
   late final TextEditingController _passwordTextController;
   late final TextEditingController _confirmPasswordTextController;
   late final FocusNode _passwordFocusNode;
@@ -51,23 +54,25 @@ class _RegisterPasswordPageState extends ConsumerState<RegisterPasswordPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final state = ref.watch(registerPasswordControllerProvider);
-    final controller = ref.read(registerPasswordControllerProvider.notifier);
+    final state = ref.watch(forgotPasswordResetControllerProvider);
+    final controller = ref.read(forgotPasswordResetControllerProvider.notifier);
 
-    ref.listen(registerPasswordControllerProvider, (previous, next) {
+    ref.listen(forgotPasswordResetControllerProvider, (previous, next) {
       _syncTextController(_passwordTextController, next.password);
       _syncTextController(_confirmPasswordTextController, next.confirmPassword);
     });
 
     return AuthFlowScaffold(
-      title: l10n.registerPasswordTitle,
-      description: l10n.registerPasswordDescription,
+      title: l10n.forgotPasswordResetTitle,
+      description: l10n.forgotPasswordResetDescription,
       dismissKeyboardOnTap: true,
-      dismissAreaKey: const ValueKey('register_password_keyboard_dismiss_area'),
+      dismissAreaKey: const ValueKey(
+        'forgot_password_reset_keyboard_dismiss_area',
+      ),
       children: [
         const SizedBox(height: 44),
         AuthPasswordField(
-          key: const ValueKey('register_password_input'),
+          key: const ValueKey('forgot_password_reset_password_input'),
           controller: _passwordTextController,
           focusNode: _passwordFocusNode,
           hintText: l10n.registerPasswordPlaceholder,
@@ -76,34 +81,28 @@ class _RegisterPasswordPageState extends ConsumerState<RegisterPasswordPage> {
         ),
         const SizedBox(height: 36),
         AuthPasswordField(
-          key: const ValueKey('register_confirm_password_input'),
+          key: const ValueKey('forgot_password_reset_confirm_password_input'),
           controller: _confirmPasswordTextController,
           hintText: l10n.registerConfirmPasswordPlaceholder,
           textInputAction: TextInputAction.done,
           onChanged: controller.updateConfirmPassword,
           onSubmitted: (_) {
             if (state.canSubmit) {
-              _showPendingMessage(context);
+              _openSuccessPage(context);
             }
           },
         ),
         const SizedBox(height: 55),
         AuthPrimaryButton(
-          label: l10n.loginAction,
-          onPressed: state.canSubmit
-              ? () => _showPendingMessage(context)
-              : null,
+          label: l10n.finishAction,
+          onPressed: state.canSubmit ? () => _openSuccessPage(context) : null,
         ),
       ],
     );
   }
 
-  void _showPendingMessage(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(AppLocalizations.of(context).registerPasswordPending),
-      ),
-    );
+  void _openSuccessPage(BuildContext context) {
+    context.push(ForgotPasswordSuccessPage.routePath);
   }
 
   static void _syncTextController(

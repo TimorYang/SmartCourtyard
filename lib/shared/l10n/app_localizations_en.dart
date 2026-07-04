@@ -82,7 +82,45 @@ class AppLocalizationsEn extends AppLocalizations {
       'Password registration is not connected yet';
 
   @override
-  String get forgotPasswordComingSoon => 'Forgot password page coming soon';
+  String get forgotPasswordTitle => 'Forget Password?';
+
+  @override
+  String get forgotPasswordDescription =>
+      'Please enter the address associated your account';
+
+  @override
+  String get forgotPasswordSendPending =>
+      'Password reset code is not connected yet';
+
+  @override
+  String get forgotPasswordCodeTitle => 'Enter Code';
+
+  @override
+  String forgotPasswordCodeDescription(String email) {
+    return 'We\'ve sent an email to $email with a confirmation code. Enter the code below to reset your password.';
+  }
+
+  @override
+  String get forgotPasswordResetTitle => 'Password';
+
+  @override
+  String get forgotPasswordResetDescription => 'Set your password';
+
+  @override
+  String get finishAction => 'Finish';
+
+  @override
+  String get forgotPasswordResetPending =>
+      'Password reset is not connected yet';
+
+  @override
+  String get passwordResetSucceededTitle => 'Reset Succeeded';
+
+  @override
+  String get passwordResetSucceededDescription => 'Password reset succeeded';
+
+  @override
+  String get backToLoginAction => 'Back to Login';
 
   @override
   String get loginTitle => 'Login';

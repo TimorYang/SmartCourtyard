@@ -6,13 +6,13 @@ import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../application/providers.dart';
 import '../widgets/auth_flow_widgets.dart';
-import 'register_password_page.dart';
+import 'forgot_password_reset_page.dart';
 
-class RegisterCodePage extends ConsumerStatefulWidget {
-  const RegisterCodePage({super.key, required this.email});
+class ForgotPasswordCodePage extends ConsumerStatefulWidget {
+  const ForgotPasswordCodePage({super.key, required this.email});
 
-  static const routeName = 'register-code';
-  static const routePath = '/register/code';
+  static const routeName = 'forgot-password-code';
+  static const routePath = '/forgot-password/code';
 
   final String email;
 
@@ -21,10 +21,12 @@ class RegisterCodePage extends ConsumerStatefulWidget {
   }
 
   @override
-  ConsumerState<RegisterCodePage> createState() => _RegisterCodePageState();
+  ConsumerState<ForgotPasswordCodePage> createState() =>
+      _ForgotPasswordCodePageState();
 }
 
-class _RegisterCodePageState extends ConsumerState<RegisterCodePage> {
+class _ForgotPasswordCodePageState
+    extends ConsumerState<ForgotPasswordCodePage> {
   late final TextEditingController _textController;
   late final FocusNode _focusNode;
 
@@ -50,10 +52,10 @@ class _RegisterCodePageState extends ConsumerState<RegisterCodePage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final state = ref.watch(registerCodeControllerProvider);
-    final controller = ref.read(registerCodeControllerProvider.notifier);
+    final state = ref.watch(forgotPasswordCodeControllerProvider);
+    final controller = ref.read(forgotPasswordCodeControllerProvider.notifier);
 
-    ref.listen(registerCodeControllerProvider, (previous, next) {
+    ref.listen(forgotPasswordCodeControllerProvider, (previous, next) {
       if (_textController.text != next.code) {
         _textController.value = TextEditingValue(
           text: next.code,
@@ -63,13 +65,15 @@ class _RegisterCodePageState extends ConsumerState<RegisterCodePage> {
     });
 
     return AuthFlowScaffold(
-      title: l10n.registerCodeTitle,
-      description: l10n.registerCodeDescription(maskedAuthEmail(widget.email)),
+      title: l10n.forgotPasswordCodeTitle,
+      description: l10n.forgotPasswordCodeDescription(
+        maskedAuthEmail(widget.email),
+      ),
       children: [
         const SizedBox(height: 80),
         AuthVerificationCodeInput(
-          inputKey: const ValueKey('register_code_input'),
-          pinputKey: const ValueKey('register_code_pinput'),
+          inputKey: const ValueKey('forgot_password_code_input'),
+          pinputKey: const ValueKey('forgot_password_code_pinput'),
           code: state.code,
           focusNode: _focusNode,
           textController: _textController,
@@ -77,7 +81,7 @@ class _RegisterCodePageState extends ConsumerState<RegisterCodePage> {
           onChanged: (value) {
             controller.updateCode(value);
             if (value.replaceAll(RegExp(r'\D'), '').length >= 6) {
-              context.push(RegisterPasswordPage.locationFor(widget.email));
+              context.push(ForgotPasswordResetPage.locationFor(widget.email));
             }
           },
         ),

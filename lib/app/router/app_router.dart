@@ -3,7 +3,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/add_device/presentation/pages/add_device_page.dart';
 import '../../features/auth/application/providers.dart';
+import '../../features/auth/presentation/pages/forgot_password_code_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
+import '../../features/auth/presentation/pages/forgot_password_reset_page.dart';
+import '../../features/auth/presentation/pages/forgot_password_success_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_code_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
@@ -28,6 +31,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           location == WelcomePage.routePath ||
           location == LoginPage.routePath ||
           location == ForgotPasswordPage.routePath ||
+          location == ForgotPasswordCodePage.routePath ||
+          location == ForgotPasswordResetPage.routePath ||
+          location == ForgotPasswordSuccessPage.routePath ||
           location == RegisterPage.routePath ||
           location == RegisterCodePage.routePath ||
           location == RegisterPasswordPage.routePath;
@@ -58,6 +64,25 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: ForgotPasswordPage.routePath,
         name: ForgotPasswordPage.routeName,
         builder: (context, state) => const ForgotPasswordPage(),
+      ),
+      GoRoute(
+        path: ForgotPasswordCodePage.routePath,
+        name: ForgotPasswordCodePage.routeName,
+        builder: (context, state) => ForgotPasswordCodePage(
+          email: state.uri.queryParameters['email'] ?? '',
+        ),
+      ),
+      GoRoute(
+        path: ForgotPasswordResetPage.routePath,
+        name: ForgotPasswordResetPage.routeName,
+        builder: (context, state) => ForgotPasswordResetPage(
+          email: state.uri.queryParameters['email'] ?? '',
+        ),
+      ),
+      GoRoute(
+        path: ForgotPasswordSuccessPage.routePath,
+        name: ForgotPasswordSuccessPage.routeName,
+        builder: (context, state) => const ForgotPasswordSuccessPage(),
       ),
       GoRoute(
         path: RegisterPage.routePath,

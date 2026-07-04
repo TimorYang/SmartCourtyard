@@ -230,11 +230,77 @@ abstract class AppLocalizations {
   /// **'Password registration is not connected yet'**
   String get registerPasswordPending;
 
-  /// Placeholder text for the forgot password page
+  /// Forgot password page heading
   ///
   /// In en, this message translates to:
-  /// **'Forgot password page coming soon'**
-  String get forgotPasswordComingSoon;
+  /// **'Forget Password?'**
+  String get forgotPasswordTitle;
+
+  /// Forgot password page helper text asking for the account email address
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter the address associated your account'**
+  String get forgotPasswordDescription;
+
+  /// Temporary message shown when the user submits the forgot password form
+  ///
+  /// In en, this message translates to:
+  /// **'Password reset code is not connected yet'**
+  String get forgotPasswordSendPending;
+
+  /// Forgot password verification code page heading
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Code'**
+  String get forgotPasswordCodeTitle;
+
+  /// Forgot password verification code helper text
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ve sent an email to {email} with a confirmation code. Enter the code below to reset your password.'**
+  String forgotPasswordCodeDescription(String email);
+
+  /// Forgot password reset page heading
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get forgotPasswordResetTitle;
+
+  /// Forgot password reset helper text
+  ///
+  /// In en, this message translates to:
+  /// **'Set your password'**
+  String get forgotPasswordResetDescription;
+
+  /// Finish button label
+  ///
+  /// In en, this message translates to:
+  /// **'Finish'**
+  String get finishAction;
+
+  /// Temporary message shown when the user submits the reset password form
+  ///
+  /// In en, this message translates to:
+  /// **'Password reset is not connected yet'**
+  String get forgotPasswordResetPending;
+
+  /// Password reset success page heading
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Succeeded'**
+  String get passwordResetSucceededTitle;
+
+  /// Password reset success page helper text
+  ///
+  /// In en, this message translates to:
+  /// **'Password reset succeeded'**
+  String get passwordResetSucceededDescription;
+
+  /// Button label for returning from password reset success to login
+  ///
+  /// In en, this message translates to:
+  /// **'Back to Login'**
+  String get backToLoginAction;
 
   /// Login page heading
   ///

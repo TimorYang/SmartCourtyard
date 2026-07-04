@@ -63,7 +63,7 @@ void main() {
     expect(find.text('Login is not connected yet'), findsOneWidget);
   });
 
-  testWidgets('navigates to register page and forgot password placeholder', (
+  testWidgets('navigates to register page and forgot password form', (
     tester,
   ) async {
     await openLoginPage(tester);
@@ -78,6 +78,8 @@ void main() {
 
     await tester.tap(find.text('Forgot password'));
     await tester.pumpAndSettle();
-    expect(find.text('Forgot password page coming soon'), findsOneWidget);
+    expect(find.text('Forget Password?'), findsOneWidget);
+    expect(find.text('Enter your email address'), findsOneWidget);
+    expect(find.text('Send code'), findsOneWidget);
   });
 }

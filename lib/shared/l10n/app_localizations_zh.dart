@@ -79,7 +79,42 @@ class AppLocalizationsZh extends AppLocalizations {
   String get registerPasswordPending => '密码注册功能暂未接入';
 
   @override
-  String get forgotPasswordComingSoon => '忘记密码页面即将上线';
+  String get forgotPasswordTitle => '忘记密码？';
+
+  @override
+  String get forgotPasswordDescription => '请输入与您的账号关联的邮箱地址';
+
+  @override
+  String get forgotPasswordSendPending => '重置密码验证码功能暂未接入';
+
+  @override
+  String get forgotPasswordCodeTitle => '输入验证码';
+
+  @override
+  String forgotPasswordCodeDescription(String email) {
+    return '我们已向 $email 发送确认验证码。请输入邮件中的验证码重置密码。';
+  }
+
+  @override
+  String get forgotPasswordResetTitle => '密码';
+
+  @override
+  String get forgotPasswordResetDescription => '设置您的密码';
+
+  @override
+  String get finishAction => '完成';
+
+  @override
+  String get forgotPasswordResetPending => '重置密码功能暂未接入';
+
+  @override
+  String get passwordResetSucceededTitle => '重置成功';
+
+  @override
+  String get passwordResetSucceededDescription => '密码重置成功';
+
+  @override
+  String get backToLoginAction => '返回登录';
 
   @override
   String get loginTitle => '登录';
