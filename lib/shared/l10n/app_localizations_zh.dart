@@ -177,6 +177,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeAddDoorTooltip => '添加门';
 
   @override
+  String get homeAddSceneMenuAction => '添加场景';
+
+  @override
+  String get homeAddDoorMenuAction => '添加门';
+
+  @override
+  String get homeSmartDeviceMenuAction => '智能设备';
+
+  @override
   String homeDoorCount(int count) {
     return '$count 个门';
   }

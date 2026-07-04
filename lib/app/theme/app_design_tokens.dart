@@ -347,6 +347,15 @@ class AppTextTokens {
     );
   }
 
+  static TextStyle homeAddMenuItem(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 15,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
   static TextStyle sceneTitle(TextTheme textTheme) {
     return (textTheme.displaySmall ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,

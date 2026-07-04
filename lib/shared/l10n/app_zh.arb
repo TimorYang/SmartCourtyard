@@ -54,6 +54,9 @@
   "homeMenuTooltip": "菜单",
   "homeEditTooltip": "编辑家庭",
   "homeAddDoorTooltip": "添加门",
+  "homeAddSceneMenuAction": "添加场景",
+  "homeAddDoorMenuAction": "添加门",
+  "homeSmartDeviceMenuAction": "智能设备",
   "homeDoorCount": "{count} 个门",
   "@homeDoorCount": {
     "placeholders": {

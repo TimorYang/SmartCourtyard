@@ -17,16 +17,29 @@ class HomeAssetPaths {
       'assets/icons/home/home_avatar_placeholder.png';
   static const emptyDoorsPlaceholder =
       'assets/icons/home/home_empty_doors_placeholder.png';
+  static const addScenePlaceholder =
+      'assets/icons/home/home_add_scene_placeholder.png';
+  static const addDoorPlaceholder =
+      'assets/icons/home/home_add_door_placeholder.png';
+  static const smartDevicePlaceholder =
+      'assets/icons/home/home_smart_device_placeholder.png';
 }
 
-class HomePage extends ConsumerWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   static const routeName = 'home';
   static const routePath = '/home';
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends ConsumerState<HomePage> {
+  var _isAddMenuVisible = false;
+
+  @override
+  Widget build(BuildContext context) {
     final devices = ref.watch(homeDevicesProvider);
     final homeDevices = devices.when(
       data: (items) => items,
@@ -43,42 +56,214 @@ class HomePage extends ConsumerWidget {
       length: homes.length,
       child: Scaffold(
         backgroundColor: AppColors.homeBackground,
-        body: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const _HomeHeader(),
-              _HomeTabs(homes: homes),
-              const Divider(height: 1, color: AppColors.borderHomeDivider),
-              Expanded(
-                child: devices.when(
-                  data: (_) => TabBarView(
-                    children: [
-                      for (final home in homes) _HomeDevicePanel(home: home),
-                    ],
+        body: Stack(
+          children: [
+            SafeArea(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _HomeHeader(
+                    onAddPressed: () {
+                      setState(() {
+                        _isAddMenuVisible = true;
+                      });
+                    },
                   ),
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (error, stackTrace) => const _HomeErrorState(),
-                ),
+                  _HomeTabs(homes: homes),
+                  const Divider(height: 1, color: AppColors.borderHomeDivider),
+                  Expanded(
+                    child: devices.when(
+                      data: (_) => TabBarView(
+                        children: [
+                          for (final home in homes)
+                            _HomeDevicePanel(home: home),
+                        ],
+                      ),
+                      loading: () =>
+                          const Center(child: CircularProgressIndicator()),
+                      error: (error, stackTrace) => const _HomeErrorState(),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+            if (_isAddMenuVisible)
+              _HomeAddMenuOverlay(
+                onDismissed: () {
+                  setState(() {
+                    _isAddMenuVisible = false;
+                  });
+                },
+              ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _HomeGroup {
-  const _HomeGroup({required this.label, required this.devices});
+class _HomeAddMenuOverlay extends StatelessWidget {
+  const _HomeAddMenuOverlay({required this.onDismissed});
+
+  final VoidCallback onDismissed;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return Positioned.fill(
+      child: Stack(
+        children: [
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onDismissed,
+            child: Container(color: AppColors.overlaySoft),
+          ),
+          SafeArea(
+            child: Align(
+              alignment: Alignment.topRight,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 62, right: 30),
+                child: _HomeAddMenu(
+                  items: [
+                    _HomeAddMenuItemData(
+                      label: l10n.homeAddSceneMenuAction,
+                      assetPath: HomeAssetPaths.addScenePlaceholder,
+                      fallbackIcon: Icons.view_in_ar_outlined,
+                      onPressed: () {
+                        onDismissed();
+                        context.push(ScenePage.routePath);
+                      },
+                    ),
+                    _HomeAddMenuItemData(
+                      label: l10n.homeAddDoorMenuAction,
+                      assetPath: HomeAssetPaths.addDoorPlaceholder,
+                      fallbackIcon: Icons.dns_outlined,
+                      onPressed: () {
+                        onDismissed();
+                        context.push(AddDevicePage.routePath);
+                      },
+                    ),
+                    _HomeAddMenuItemData(
+                      label: l10n.homeSmartDeviceMenuAction,
+                      assetPath: HomeAssetPaths.smartDevicePlaceholder,
+                      fallbackIcon: Icons.wifi_tethering_outlined,
+                      onPressed: onDismissed,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HomeAddMenu extends StatelessWidget {
+  const _HomeAddMenu({required this.items});
+
+  final List<_HomeAddMenuItemData> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.backgroundPrimary,
+      borderRadius: BorderRadius.circular(8),
+      clipBehavior: Clip.antiAlias,
+      child: SizedBox(
+        width: 180,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var index = 0; index < items.length; index++) ...[
+              _HomeAddMenuItem(item: items[index]),
+              if (index != items.length - 1)
+                const Padding(
+                  padding: EdgeInsets.only(left: 34, right: 34),
+                  child: Divider(height: 1, color: AppColors.borderHomeDivider),
+                ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HomeAddMenuItemData {
+  const _HomeAddMenuItemData({
+    required this.label,
+    required this.assetPath,
+    required this.fallbackIcon,
+    required this.onPressed,
+  });
 
   final String label;
-  final List<DeviceSummary> devices;
+  final String assetPath;
+  final IconData fallbackIcon;
+  final VoidCallback onPressed;
+}
+
+class _HomeAddMenuItem extends StatelessWidget {
+  const _HomeAddMenuItem({required this.item});
+
+  final _HomeAddMenuItemData item;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: item.onPressed,
+      child: SizedBox(
+        height: 58,
+        child: Row(
+          children: [
+            const SizedBox(width: 32),
+            _HomeAddMenuIcon(
+              assetPath: item.assetPath,
+              fallbackIcon: item.fallbackIcon,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                item.label,
+                style: AppTextTokens.homeAddMenuItem(
+                  Theme.of(context).textTheme,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HomeAddMenuIcon extends StatelessWidget {
+  const _HomeAddMenuIcon({required this.assetPath, required this.fallbackIcon});
+
+  final String assetPath;
+  final IconData fallbackIcon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.asset(
+      assetPath,
+      width: 20,
+      height: 20,
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) {
+        return Icon(fallbackIcon, color: AppColors.iconHomeAction, size: 20);
+      },
+    );
+  }
 }
 
 class _HomeHeader extends StatelessWidget {
-  const _HomeHeader();
+  const _HomeHeader({required this.onAddPressed});
+
+  final VoidCallback onAddPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -111,7 +296,7 @@ class _HomeHeader extends StatelessWidget {
               _HeaderIconButton(
                 tooltip: l10n.homeAddDoorTooltip,
                 icon: Icons.add_rounded,
-                onPressed: () => context.push(AddDevicePage.routePath),
+                onPressed: onAddPressed,
               ),
             ],
           ),
@@ -123,6 +308,13 @@ class _HomeHeader extends StatelessWidget {
       ),
     );
   }
+}
+
+class _HomeGroup {
+  const _HomeGroup({required this.label, required this.devices});
+
+  final String label;
+  final List<DeviceSummary> devices;
 }
 
 class _HeaderIconButton extends StatelessWidget {

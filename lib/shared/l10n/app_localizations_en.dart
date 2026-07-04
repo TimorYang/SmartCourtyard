@@ -183,6 +183,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeAddDoorTooltip => 'Add door';
 
   @override
+  String get homeAddSceneMenuAction => 'Add Scene';
+
+  @override
+  String get homeAddDoorMenuAction => 'Add Door';
+
+  @override
+  String get homeSmartDeviceMenuAction => 'Smart Device';
+
+  @override
   String homeDoorCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

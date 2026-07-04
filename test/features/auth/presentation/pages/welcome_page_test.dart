@@ -38,6 +38,29 @@ void main() {
     expect(find.text('0 Door'), findsOneWidget);
   });
 
+  testWidgets('shows home add menu from header add action', (tester) async {
+    await tester.pumpWidget(const ProviderScope(child: FlinxApp()));
+
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Home'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Add door'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Add Scene'), findsOneWidget);
+    expect(find.text('Add Door'), findsOneWidget);
+    expect(find.text('Smart Device'), findsOneWidget);
+
+    await tester.tapAt(const Offset(20, 20));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Add Scene'), findsNothing);
+    expect(find.text('Add Door'), findsNothing);
+    expect(find.text('Smart Device'), findsNothing);
+  });
+
   testWidgets('redirects authenticated users to the home page', (tester) async {
     await tester.pumpWidget(
       ProviderScope(

@@ -422,6 +422,24 @@ abstract class AppLocalizations {
   /// **'Add door'**
   String get homeAddDoorTooltip;
 
+  /// Add scene action in the home add menu
+  ///
+  /// In en, this message translates to:
+  /// **'Add Scene'**
+  String get homeAddSceneMenuAction;
+
+  /// Add door action in the home add menu
+  ///
+  /// In en, this message translates to:
+  /// **'Add Door'**
+  String get homeAddDoorMenuAction;
+
+  /// Smart device action in the home add menu
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Device'**
+  String get homeSmartDeviceMenuAction;
+
   /// Number of doors bound under the current home
   ///
   /// In en, this message translates to:
