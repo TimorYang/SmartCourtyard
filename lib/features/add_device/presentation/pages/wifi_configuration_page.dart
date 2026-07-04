@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../application/providers.dart';
+import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../../device_control/presentation/pages/device_command_page.dart';
 
 class WifiConfigurationPage extends ConsumerStatefulWidget {
@@ -57,7 +58,7 @@ class _WifiConfigurationPageState extends ConsumerState<WifiConfigurationPage> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Wi‑Fi 配置')),
+      appBar: const FlinxNavigationBar(title: 'Wi‑Fi 配置'),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

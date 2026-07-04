@@ -30,13 +30,106 @@ class AppLocalizationsEn extends AppLocalizations {
   String get registerComingSoon => 'Register page coming soon';
 
   @override
-  String get forgotPasswordComingSoon => 'Forgot password page coming soon';
+  String get registerTitle => 'Register';
+
+  @override
+  String get registerDescription =>
+      'Please enter the address associated your account';
+
+  @override
+  String get registerEmailPlaceholder => 'Enter your email address';
+
+  @override
+  String get registerAgreementPrefix => 'I have read and agreed ';
+
+  @override
+  String get sendCodeAction => 'Send code';
+
+  @override
+  String get registerSendPending => 'Verification code is not connected yet';
+
+  @override
+  String get registerCodeTitle => 'Enter Code';
+
+  @override
+  String registerCodeDescription(String email) {
+    return 'We\'ve sent an email to $email with a confirmation code. Enter the code below to continue registration.';
+  }
+
+  @override
+  String get registerCodeInputLabel => 'Verification code';
+
+  @override
+  String registerCodeResend(int seconds) {
+    return 'Send Again OTP (${seconds}s)';
+  }
+
+  @override
+  String get registerPasswordTitle => 'Password';
+
+  @override
+  String get registerPasswordDescription => 'Set your password';
+
+  @override
+  String get registerPasswordPlaceholder => 'Enter an 8-digit password';
+
+  @override
+  String get registerConfirmPasswordPlaceholder =>
+      'Enter the 8-digit password again';
+
+  @override
+  String get registerPasswordPending =>
+      'Password registration is not connected yet';
+
+  @override
+  String get forgotPasswordTitle => 'Forget Password?';
+
+  @override
+  String get forgotPasswordDescription =>
+      'Please enter the address associated your account';
+
+  @override
+  String get forgotPasswordSendPending =>
+      'Password reset code is not connected yet';
+
+  @override
+  String get forgotPasswordCodeTitle => 'Enter Code';
+
+  @override
+  String forgotPasswordCodeDescription(String email) {
+    return 'We\'ve sent an email to $email with a confirmation code. Enter the code below to reset your password.';
+  }
+
+  @override
+  String get forgotPasswordResetTitle => 'Password';
+
+  @override
+  String get forgotPasswordResetDescription => 'Set your password';
+
+  @override
+  String get finishAction => 'Finish';
+
+  @override
+  String get forgotPasswordResetPending =>
+      'Password reset is not connected yet';
+
+  @override
+  String get passwordResetSucceededTitle => 'Reset Succeeded';
+
+  @override
+  String get passwordResetSucceededDescription => 'Password reset succeeded';
+
+  @override
+  String get backToLoginAction => 'Back to Login';
 
   @override
   String get loginTitle => 'Login';
 
   @override
-  String get loginAccountPlaceholder => 'Enter account number';
+  String get loginAccountPlaceholder => 'Enter your email address';
+
+  @override
+  String get loginEmailInvalid => 'Enter a valid email address';
 
   @override
   String get loginPasswordPlaceholder => 'Enter password';
@@ -54,7 +147,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get privacyPolicyLabel => 'Privacy Policy';
 
   @override
-  String get signInAction => 'Sign in';
+  String get signInAction => 'Login in';
 
   @override
   String get forgotPasswordAction => 'Forgot password';

@@ -25,17 +25,143 @@
   "@registerComingSoon": {
     "description": "Placeholder text for the register page"
   },
-  "forgotPasswordComingSoon": "Forgot password page coming soon",
-  "@forgotPasswordComingSoon": {
-    "description": "Placeholder text for the forgot password page"
+  "registerTitle": "Register",
+  "@registerTitle": {
+    "description": "Register page heading"
+  },
+  "registerDescription": "Please enter the address associated your account",
+  "@registerDescription": {
+    "description": "Register page helper text asking for the account email address"
+  },
+  "registerEmailPlaceholder": "Enter your email address",
+  "@registerEmailPlaceholder": {
+    "description": "Register email input placeholder"
+  },
+  "registerAgreementPrefix": "I have read and agreed ",
+  "@registerAgreementPrefix": {
+    "description": "Register privacy agreement prefix"
+  },
+  "sendCodeAction": "Send code",
+  "@sendCodeAction": {
+    "description": "Register send verification code button label"
+  },
+  "registerSendPending": "Verification code is not connected yet",
+  "@registerSendPending": {
+    "description": "Temporary message shown when the user submits the register form"
+  },
+  "registerCodeTitle": "Enter Code",
+  "@registerCodeTitle": {
+    "description": "Register verification code page heading"
+  },
+  "registerCodeDescription": "We've sent an email to {email} with a confirmation code. Enter the code below to continue registration.",
+  "@registerCodeDescription": {
+    "description": "Register verification code helper text",
+    "placeholders": {
+      "email": {
+        "type": "String",
+        "example": "771*****@q***"
+      }
+    }
+  },
+  "registerCodeInputLabel": "Verification code",
+  "@registerCodeInputLabel": {
+    "description": "Accessibility label for the verification code input"
+  },
+  "registerCodeResend": "Send Again OTP ({seconds}s)",
+  "@registerCodeResend": {
+    "description": "Register verification resend countdown label",
+    "placeholders": {
+      "seconds": {
+        "type": "int",
+        "example": "59"
+      }
+    }
+  },
+  "registerPasswordTitle": "Password",
+  "@registerPasswordTitle": {
+    "description": "Register password setup page heading"
+  },
+  "registerPasswordDescription": "Set your password",
+  "@registerPasswordDescription": {
+    "description": "Register password setup helper text"
+  },
+  "registerPasswordPlaceholder": "Enter an 8-digit password",
+  "@registerPasswordPlaceholder": {
+    "description": "Register password input placeholder"
+  },
+  "registerConfirmPasswordPlaceholder": "Enter the 8-digit password again",
+  "@registerConfirmPasswordPlaceholder": {
+    "description": "Register confirm password input placeholder"
+  },
+  "registerPasswordPending": "Password registration is not connected yet",
+  "@registerPasswordPending": {
+    "description": "Temporary message shown when the user submits the register password form"
+  },
+  "forgotPasswordTitle": "Forget Password?",
+  "@forgotPasswordTitle": {
+    "description": "Forgot password page heading"
+  },
+  "forgotPasswordDescription": "Please enter the address associated your account",
+  "@forgotPasswordDescription": {
+    "description": "Forgot password page helper text asking for the account email address"
+  },
+  "forgotPasswordSendPending": "Password reset code is not connected yet",
+  "@forgotPasswordSendPending": {
+    "description": "Temporary message shown when the user submits the forgot password form"
+  },
+  "forgotPasswordCodeTitle": "Enter Code",
+  "@forgotPasswordCodeTitle": {
+    "description": "Forgot password verification code page heading"
+  },
+  "forgotPasswordCodeDescription": "We've sent an email to {email} with a confirmation code. Enter the code below to reset your password.",
+  "@forgotPasswordCodeDescription": {
+    "description": "Forgot password verification code helper text",
+    "placeholders": {
+      "email": {
+        "type": "String",
+        "example": "771*****@q***"
+      }
+    }
+  },
+  "forgotPasswordResetTitle": "Password",
+  "@forgotPasswordResetTitle": {
+    "description": "Forgot password reset page heading"
+  },
+  "forgotPasswordResetDescription": "Set your password",
+  "@forgotPasswordResetDescription": {
+    "description": "Forgot password reset helper text"
+  },
+  "finishAction": "Finish",
+  "@finishAction": {
+    "description": "Finish button label"
+  },
+  "forgotPasswordResetPending": "Password reset is not connected yet",
+  "@forgotPasswordResetPending": {
+    "description": "Temporary message shown when the user submits the reset password form"
+  },
+  "passwordResetSucceededTitle": "Reset Succeeded",
+  "@passwordResetSucceededTitle": {
+    "description": "Password reset success page heading"
+  },
+  "passwordResetSucceededDescription": "Password reset succeeded",
+  "@passwordResetSucceededDescription": {
+    "description": "Password reset success page helper text"
+  },
+  "backToLoginAction": "Back to Login",
+  "@backToLoginAction": {
+    "description": "Button label for returning from password reset success to login"
   },
   "loginTitle": "Login",
   "@loginTitle": {
     "description": "Login page heading"
   },
-  "loginAccountPlaceholder": "Enter account number",
+  "loginAccountPlaceholder": "Enter your email address",
   "@loginAccountPlaceholder": {
-    "description": "Login account input placeholder"
+    "description": "Login email input placeholder"
+  },
+  "loginEmailInvalid": "Enter a valid email address",
+  "@loginEmailInvalid": {
+    "description": "Validation message shown when the login email format is invalid"
   },
   "loginPasswordPlaceholder": "Enter password",
   "@loginPasswordPlaceholder": {
@@ -57,7 +183,7 @@
   "@privacyPolicyLabel": {
     "description": "Privacy policy link label"
   },
-  "signInAction": "Sign in",
+  "signInAction": "Login in",
   "@signInAction": {
     "description": "Login submit button label"
   },

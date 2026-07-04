@@ -23,7 +23,7 @@ void main() {
     await tester.tap(find.text('Login'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Enter account number'), findsOneWidget);
+    expect(find.text('Enter your email address'), findsOneWidget);
   });
 
   testWidgets('opens home page from welcome page shortcut', (tester) async {

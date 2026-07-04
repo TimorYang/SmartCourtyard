@@ -1,11 +1,18 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter_debug_tools/flutter_debug_tools.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/add_device/presentation/pages/add_device_page.dart';
 import '../../features/auth/application/providers.dart';
+import '../../features/auth/presentation/pages/forgot_password_code_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
+import '../../features/auth/presentation/pages/forgot_password_reset_page.dart';
+import '../../features/auth/presentation/pages/forgot_password_success_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
+import '../../features/auth/presentation/pages/register_code_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
+import '../../features/auth/presentation/pages/register_password_page.dart';
 import '../../features/auth/presentation/pages/welcome_page.dart';
 import '../../features/add_device/presentation/pages/wifi_configuration_page.dart';
 import '../../features/device_control/presentation/pages/device_command_page.dart';
@@ -19,6 +26,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
   return GoRouter(
     initialLocation: WelcomePage.routePath,
+    observers: kDebugMode ? [DebugNavigatorObserver()] : [],
     redirect: (context, state) {
       final isSignedIn = session.isAuthenticated;
       final location = state.matchedLocation;
@@ -26,11 +34,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           location == WelcomePage.routePath ||
           location == LoginPage.routePath ||
           location == ForgotPasswordPage.routePath ||
-          location == RegisterPage.routePath;
-      final isPublicRoute =
-          isAuthRoute ||
-          location == AppWebViewPage.routePath ||
-          location == HomePage.routePath;
+          location == ForgotPasswordCodePage.routePath ||
+          location == ForgotPasswordResetPage.routePath ||
+          location == ForgotPasswordSuccessPage.routePath ||
+          location == RegisterPage.routePath ||
+          location == RegisterCodePage.routePath ||
+          location == RegisterPasswordPage.routePath;
+      final isPublicRoute = isAuthRoute || location == AppWebViewPage.routePath || location == HomePage.routePath;
 
       if (!isSignedIn && !isPublicRoute) {
         return WelcomePage.routePath;
@@ -59,9 +69,41 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ForgotPasswordPage(),
       ),
       GoRoute(
+        path: ForgotPasswordCodePage.routePath,
+        name: ForgotPasswordCodePage.routeName,
+        builder: (context, state) => ForgotPasswordCodePage(
+          email: state.uri.queryParameters['email'] ?? '',
+        ),
+      ),
+      GoRoute(
+        path: ForgotPasswordResetPage.routePath,
+        name: ForgotPasswordResetPage.routeName,
+        builder: (context, state) => ForgotPasswordResetPage(
+          email: state.uri.queryParameters['email'] ?? '',
+        ),
+      ),
+      GoRoute(
+        path: ForgotPasswordSuccessPage.routePath,
+        name: ForgotPasswordSuccessPage.routeName,
+        builder: (context, state) => const ForgotPasswordSuccessPage(),
+      ),
+      GoRoute(
         path: RegisterPage.routePath,
         name: RegisterPage.routeName,
         builder: (context, state) => const RegisterPage(),
+      ),
+      GoRoute(
+        path: RegisterCodePage.routePath,
+        name: RegisterCodePage.routeName,
+        builder: (context, state) =>
+            RegisterCodePage(email: state.uri.queryParameters['email'] ?? ''),
+      ),
+      GoRoute(
+        path: RegisterPasswordPage.routePath,
+        name: RegisterPasswordPage.routeName,
+        builder: (context, state) => RegisterPasswordPage(
+          email: state.uri.queryParameters['email'] ?? '',
+        ),
       ),
       GoRoute(
         path: AppWebViewPage.routePath,

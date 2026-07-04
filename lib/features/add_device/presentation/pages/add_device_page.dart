@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../application/providers.dart';
 import '../../../../platform_bridge/hardware_models.dart';
+import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../../device_control/presentation/pages/device_command_page.dart';
 
 class AddDevicePage extends ConsumerStatefulWidget {
@@ -43,7 +44,7 @@ class _AddDevicePageState extends ConsumerState<AddDevicePage> {
     final devices = state.sortedDevices();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('添加设备')),
+      appBar: const FlinxNavigationBar(title: '添加设备'),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

@@ -6,6 +6,7 @@ class AppColors {
   static const brandPrimary = Color(0xFF176CFF);
   static const brandPrimaryLight = Color(0xFF84BDEE);
   static const brandPrimaryDisabled = Color(0xFFB5D8F5);
+  static const authSuccess = Color(0xFF12C76B);
   static const brandAlexa = Color(0xFF2EB5E9);
   static const brandAlexaDark = Color(0xFF1F96C5);
   static const brandGoogleBlue = Color(0xFF4285F4);
@@ -34,7 +35,11 @@ class AppColors {
   static const textIcon = Color(0xFF5A5D64);
   static const textAgreement = Color(0xFFC0C0C3);
   static const textAgreementLink = Color(0xFF4C4B4A);
+  static const textAuthBody = Color(0xFF555A62);
+  static const textRegisterAgreement = Color(0xFF707070);
+  static const textRegisterLink = Color(0xFF0D6EFF);
   static const textProviderDark = Color(0xFF2D2D2D);
+  static const textCodeResend = Color(0xFF7DAEFF);
 
   static const iconHomeAction = Color(0xFF3F424A);
   static const iconHomePlaceholder = Color(0xFFD5D9E0);
@@ -44,6 +49,10 @@ class AppColors {
   static const borderSubtle = Color(0xFFDBDBDB);
   static const borderMuted = Color(0xFFC8C8C8);
   static const borderProvider = Color(0xFFADADAD);
+  static const borderCodeCell = Color(0xFFE1E1E1);
+  static const navigationBackground = Colors.white;
+  static const navigationForeground = Color(0xFF26292F);
+  static const navigationDivider = Color(0xFFE6E7EB);
   static const borderHomeDivider = Color(0xFFE7E8EB);
   static const borderHomePlaceholder = Color(0xFFDDE1E7);
 
@@ -68,6 +77,14 @@ class AppTextTokens {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
       color: Colors.white.withValues(alpha: 0.88),
       fontWeight: FontWeight.w500,
+    );
+  }
+
+  static TextStyle navigationTitle(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.navigationForeground,
+      fontSize: 17,
+      fontWeight: FontWeight.w600,
     );
   }
 
@@ -106,6 +123,159 @@ class AppTextTokens {
   static TextStyle loginPrimaryButton(TextTheme textTheme) {
     return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
       fontWeight: FontWeight.w500,
+    );
+  }
+
+  static TextStyle registerTitle(TextTheme textTheme) {
+    return (textTheme.displaySmall ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontWeight: FontWeight.w700,
+    );
+  }
+
+  static TextStyle registerDescription(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textAuthBody,
+      fontWeight: FontWeight.w400,
+      height: 1.4,
+    );
+  }
+
+  static const registerInputHint = TextStyle(
+    color: AppColors.textHint,
+    fontSize: 18,
+    fontWeight: FontWeight.w400,
+  );
+
+  static TextStyle registerAgreement(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textRegisterAgreement,
+      fontWeight: FontWeight.w400,
+      height: 1.4,
+    );
+  }
+
+  static TextStyle registerPrimaryButton(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      fontWeight: FontWeight.w500,
+    );
+  }
+
+  static TextStyle forgotPasswordTitle(TextTheme textTheme) {
+    return (textTheme.displaySmall ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontWeight: FontWeight.w700,
+    );
+  }
+
+  static TextStyle forgotPasswordDescription(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textAuthBody,
+      fontWeight: FontWeight.w400,
+      height: 1.4,
+    );
+  }
+
+  static const forgotPasswordInputHint = TextStyle(
+    color: AppColors.textHint,
+    fontSize: 18,
+    fontWeight: FontWeight.w400,
+  );
+
+  static TextStyle forgotPasswordPrimaryButton(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      fontWeight: FontWeight.w500,
+    );
+  }
+
+  static TextStyle authFlowTitle(TextTheme textTheme) {
+    return (textTheme.displaySmall ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontWeight: FontWeight.w700,
+    );
+  }
+
+  static TextStyle authFlowDescription(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textAuthBody,
+      fontWeight: FontWeight.w400,
+      height: 1.35,
+    );
+  }
+
+  static TextStyle verificationTitle(TextTheme textTheme) {
+    return (textTheme.displaySmall ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontWeight: FontWeight.w700,
+    );
+  }
+
+  static TextStyle verificationDescription(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textAuthBody,
+      fontWeight: FontWeight.w400,
+      height: 1.35,
+    );
+  }
+
+  static TextStyle verificationDigit(TextTheme textTheme) {
+    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontWeight: FontWeight.w500,
+    );
+  }
+
+  static TextStyle verificationResend(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textCodeResend,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle registerPasswordTitle(TextTheme textTheme) {
+    return (textTheme.displaySmall ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontWeight: FontWeight.w700,
+    );
+  }
+
+  static TextStyle registerPasswordDescription(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textAuthBody,
+      fontWeight: FontWeight.w400,
+      height: 1.35,
+    );
+  }
+
+  static const registerPasswordInputHint = TextStyle(
+    color: AppColors.textHint,
+    fontSize: 15,
+    fontWeight: FontWeight.w400,
+  );
+
+  static const authPasswordInput = TextStyle(
+    color: AppColors.textPrimary,
+    fontSize: 15,
+    fontWeight: FontWeight.w400,
+  );
+
+  static TextStyle registerPasswordPrimaryButton(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      fontWeight: FontWeight.w500,
+    );
+  }
+
+  static TextStyle authSuccessTitle(TextTheme textTheme) {
+    return (textTheme.headlineMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontWeight: FontWeight.w700,
+    );
+  }
+
+  static TextStyle authSuccessDescription(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textAuthBody,
+      fontWeight: FontWeight.w400,
     );
   }
 

@@ -328,6 +328,8 @@ Control buttons must support pending and disabled states. Prevent duplicate comm
 
 Do not assume cached device state is realtime. Security Center offline views must show the last update time when displaying cached data.
 
+Avoid Android-style Material tap effects such as ripple, splash, and highlight on custom-designed app UI unless the design explicitly calls for them. Prefer explicit visual states from the design system or silent tap targets with adequate hit area.
+
 ## Data and Storage Rules
 
 Use separate data sources for:

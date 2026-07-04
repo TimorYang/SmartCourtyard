@@ -30,13 +30,100 @@ class AppLocalizationsZh extends AppLocalizations {
   String get registerComingSoon => '注册页即将上线';
 
   @override
-  String get forgotPasswordComingSoon => '忘记密码页面即将上线';
+  String get registerTitle => '注册';
+
+  @override
+  String get registerDescription => '请输入与您的账号关联的邮箱地址';
+
+  @override
+  String get registerEmailPlaceholder => '请输入邮箱地址';
+
+  @override
+  String get registerAgreementPrefix => '我已阅读并同意';
+
+  @override
+  String get sendCodeAction => '发送验证码';
+
+  @override
+  String get registerSendPending => '验证码功能暂未接入';
+
+  @override
+  String get registerCodeTitle => '输入验证码';
+
+  @override
+  String registerCodeDescription(String email) {
+    return '我们已向 $email 发送确认验证码。请输入邮件中的验证码继续注册。';
+  }
+
+  @override
+  String get registerCodeInputLabel => '验证码';
+
+  @override
+  String registerCodeResend(int seconds) {
+    return '重新发送验证码（$seconds秒）';
+  }
+
+  @override
+  String get registerPasswordTitle => '密码';
+
+  @override
+  String get registerPasswordDescription => '设置您的密码';
+
+  @override
+  String get registerPasswordPlaceholder => '请输入 8 位数字密码';
+
+  @override
+  String get registerConfirmPasswordPlaceholder => '请再次输入 8 位数字密码';
+
+  @override
+  String get registerPasswordPending => '密码注册功能暂未接入';
+
+  @override
+  String get forgotPasswordTitle => '忘记密码？';
+
+  @override
+  String get forgotPasswordDescription => '请输入与您的账号关联的邮箱地址';
+
+  @override
+  String get forgotPasswordSendPending => '重置密码验证码功能暂未接入';
+
+  @override
+  String get forgotPasswordCodeTitle => '输入验证码';
+
+  @override
+  String forgotPasswordCodeDescription(String email) {
+    return '我们已向 $email 发送确认验证码。请输入邮件中的验证码重置密码。';
+  }
+
+  @override
+  String get forgotPasswordResetTitle => '密码';
+
+  @override
+  String get forgotPasswordResetDescription => '设置您的密码';
+
+  @override
+  String get finishAction => '完成';
+
+  @override
+  String get forgotPasswordResetPending => '重置密码功能暂未接入';
+
+  @override
+  String get passwordResetSucceededTitle => '重置成功';
+
+  @override
+  String get passwordResetSucceededDescription => '密码重置成功';
+
+  @override
+  String get backToLoginAction => '返回登录';
 
   @override
   String get loginTitle => '登录';
 
   @override
-  String get loginAccountPlaceholder => '请输入账号';
+  String get loginAccountPlaceholder => '请输入邮箱地址';
+
+  @override
+  String get loginEmailInvalid => '请输入有效的邮箱地址';
 
   @override
   String get loginPasswordPlaceholder => '请输入密码';

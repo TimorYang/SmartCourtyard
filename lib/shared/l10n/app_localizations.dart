@@ -140,11 +140,167 @@ abstract class AppLocalizations {
   /// **'Register page coming soon'**
   String get registerComingSoon;
 
-  /// Placeholder text for the forgot password page
+  /// Register page heading
   ///
   /// In en, this message translates to:
-  /// **'Forgot password page coming soon'**
-  String get forgotPasswordComingSoon;
+  /// **'Register'**
+  String get registerTitle;
+
+  /// Register page helper text asking for the account email address
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter the address associated your account'**
+  String get registerDescription;
+
+  /// Register email input placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email address'**
+  String get registerEmailPlaceholder;
+
+  /// Register privacy agreement prefix
+  ///
+  /// In en, this message translates to:
+  /// **'I have read and agreed '**
+  String get registerAgreementPrefix;
+
+  /// Register send verification code button label
+  ///
+  /// In en, this message translates to:
+  /// **'Send code'**
+  String get sendCodeAction;
+
+  /// Temporary message shown when the user submits the register form
+  ///
+  /// In en, this message translates to:
+  /// **'Verification code is not connected yet'**
+  String get registerSendPending;
+
+  /// Register verification code page heading
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Code'**
+  String get registerCodeTitle;
+
+  /// Register verification code helper text
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ve sent an email to {email} with a confirmation code. Enter the code below to continue registration.'**
+  String registerCodeDescription(String email);
+
+  /// Accessibility label for the verification code input
+  ///
+  /// In en, this message translates to:
+  /// **'Verification code'**
+  String get registerCodeInputLabel;
+
+  /// Register verification resend countdown label
+  ///
+  /// In en, this message translates to:
+  /// **'Send Again OTP ({seconds}s)'**
+  String registerCodeResend(int seconds);
+
+  /// Register password setup page heading
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get registerPasswordTitle;
+
+  /// Register password setup helper text
+  ///
+  /// In en, this message translates to:
+  /// **'Set your password'**
+  String get registerPasswordDescription;
+
+  /// Register password input placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an 8-digit password'**
+  String get registerPasswordPlaceholder;
+
+  /// Register confirm password input placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 8-digit password again'**
+  String get registerConfirmPasswordPlaceholder;
+
+  /// Temporary message shown when the user submits the register password form
+  ///
+  /// In en, this message translates to:
+  /// **'Password registration is not connected yet'**
+  String get registerPasswordPending;
+
+  /// Forgot password page heading
+  ///
+  /// In en, this message translates to:
+  /// **'Forget Password?'**
+  String get forgotPasswordTitle;
+
+  /// Forgot password page helper text asking for the account email address
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter the address associated your account'**
+  String get forgotPasswordDescription;
+
+  /// Temporary message shown when the user submits the forgot password form
+  ///
+  /// In en, this message translates to:
+  /// **'Password reset code is not connected yet'**
+  String get forgotPasswordSendPending;
+
+  /// Forgot password verification code page heading
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Code'**
+  String get forgotPasswordCodeTitle;
+
+  /// Forgot password verification code helper text
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ve sent an email to {email} with a confirmation code. Enter the code below to reset your password.'**
+  String forgotPasswordCodeDescription(String email);
+
+  /// Forgot password reset page heading
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get forgotPasswordResetTitle;
+
+  /// Forgot password reset helper text
+  ///
+  /// In en, this message translates to:
+  /// **'Set your password'**
+  String get forgotPasswordResetDescription;
+
+  /// Finish button label
+  ///
+  /// In en, this message translates to:
+  /// **'Finish'**
+  String get finishAction;
+
+  /// Temporary message shown when the user submits the reset password form
+  ///
+  /// In en, this message translates to:
+  /// **'Password reset is not connected yet'**
+  String get forgotPasswordResetPending;
+
+  /// Password reset success page heading
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Succeeded'**
+  String get passwordResetSucceededTitle;
+
+  /// Password reset success page helper text
+  ///
+  /// In en, this message translates to:
+  /// **'Password reset succeeded'**
+  String get passwordResetSucceededDescription;
+
+  /// Button label for returning from password reset success to login
+  ///
+  /// In en, this message translates to:
+  /// **'Back to Login'**
+  String get backToLoginAction;
 
   /// Login page heading
   ///
@@ -152,11 +308,17 @@ abstract class AppLocalizations {
   /// **'Login'**
   String get loginTitle;
 
-  /// Login account input placeholder
+  /// Login email input placeholder
   ///
   /// In en, this message translates to:
-  /// **'Enter account number'**
+  /// **'Enter your email address'**
   String get loginAccountPlaceholder;
+
+  /// Validation message shown when the login email format is invalid
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid email address'**
+  String get loginEmailInvalid;
 
   /// Login password input placeholder
   ///
@@ -191,7 +353,7 @@ abstract class AppLocalizations {
   /// Login submit button label
   ///
   /// In en, this message translates to:
-  /// **'Sign in'**
+  /// **'Login in'**
   String get signInAction;
 
   /// Forgot password action label
