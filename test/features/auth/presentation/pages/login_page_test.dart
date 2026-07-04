@@ -82,6 +82,7 @@ void main() {
       alertCalls.single.arguments,
       containsPair('text', 'Enter a valid email address'),
     );
+    expect(alertCalls.single.arguments, containsPair('windowTitle', ''));
     expect(find.text('Login is not connected yet'), findsNothing);
   });
 

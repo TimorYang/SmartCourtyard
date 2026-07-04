@@ -1,6 +1,5 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_platform_alert/flutter_platform_alert.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -10,6 +9,7 @@ import '../../application/providers.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import 'forgot_password_page.dart';
 import 'register_page.dart';
+import '../widgets/auth_alerts.dart';
 
 class LoginPage extends ConsumerWidget {
   const LoginPage({super.key});
@@ -149,13 +149,7 @@ class LoginPage extends ConsumerWidget {
                         onPressed: state.canSubmit
                             ? () async {
                                 if (!controller.validateEmailForSubmit()) {
-                                  await _showLoginEmailInvalidDialog(
-                                    title: l10n.appTitle,
-                                    message: l10n.loginEmailInvalid,
-                                    okLabel: MaterialLocalizations.of(
-                                      context,
-                                    ).okButtonLabel,
-                                  );
+                                  await showAuthEmailInvalidDialog(context);
                                   return;
                                 }
                                 ScaffoldMessenger.of(context).showSnackBar(
@@ -281,18 +275,6 @@ class LoginPage extends ConsumerWidget {
       ),
     );
   }
-}
-
-Future<void> _showLoginEmailInvalidDialog({
-  required String title,
-  required String message,
-  required String okLabel,
-}) async {
-  await FlutterPlatformAlert.showCustomAlert(
-    windowTitle: title,
-    text: message,
-    positiveButtonTitle: okLabel,
-  );
 }
 
 class _LoginPageAssetPaths {

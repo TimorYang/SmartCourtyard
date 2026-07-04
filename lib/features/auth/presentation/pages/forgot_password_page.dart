@@ -6,6 +6,7 @@ import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../application/providers.dart';
 import 'forgot_password_code_page.dart';
+import '../widgets/auth_alerts.dart';
 
 class ForgotPasswordPage extends ConsumerWidget {
   const ForgotPasswordPage({super.key});
@@ -69,9 +70,17 @@ class ForgotPasswordPage extends ConsumerWidget {
                   width: double.infinity,
                   child: FilledButton(
                     onPressed: state.canSendCode
-                        ? () => context.push(
-                            ForgotPasswordCodePage.locationFor(state.email),
-                          )
+                        ? () async {
+                            if (!controller.validateEmailForSubmit()) {
+                              await showAuthEmailInvalidDialog(context);
+                              return;
+                            }
+                            context.push(
+                              ForgotPasswordCodePage.locationFor(
+                                state.trimmedEmail,
+                              ),
+                            );
+                          }
                         : null,
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.brandPrimary,

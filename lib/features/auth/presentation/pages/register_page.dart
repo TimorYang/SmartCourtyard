@@ -8,6 +8,7 @@ import '../../../../app/theme/app_design_tokens.dart';
 import '../../application/providers.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import 'register_code_page.dart';
+import '../widgets/auth_alerts.dart';
 
 class RegisterPage extends ConsumerWidget {
   const RegisterPage({super.key});
@@ -101,9 +102,13 @@ class RegisterPage extends ConsumerWidget {
                 width: double.infinity,
                 child: FilledButton(
                   onPressed: state.canSendCode
-                      ? () {
+                      ? () async {
+                          if (!controller.validateEmailForSubmit()) {
+                            await showAuthEmailInvalidDialog(context);
+                            return;
+                          }
                           context.push(
-                            RegisterCodePage.locationFor(state.email.trim()),
+                            RegisterCodePage.locationFor(state.trimmedEmail),
                           );
                         }
                       : null,

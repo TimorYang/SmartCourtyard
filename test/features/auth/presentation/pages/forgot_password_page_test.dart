@@ -1,5 +1,6 @@
 import 'package:flinx/app/flinx_app.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -41,6 +42,44 @@ void main() {
 
     button = tester.widget<FilledButton>(find.byType(FilledButton));
     expect(button.onPressed, isNotNull);
+  });
+
+  testWidgets('shows an untitled alert for an invalid email', (tester) async {
+    const alertChannel = MethodChannel('flutter_platform_alert');
+    final alertCalls = <MethodCall>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      alertChannel,
+      (call) async {
+        alertCalls.add(call);
+        return 'positive_button';
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        alertChannel,
+        null,
+      ),
+    );
+
+    await openForgotPasswordPage(tester);
+
+    await tester.enterText(
+      find.byKey(const ValueKey('forgot_password_email_input')),
+      'demo-account',
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Send code'));
+    await tester.pumpAndSettle();
+
+    expect(alertCalls, hasLength(1));
+    expect(alertCalls.single.method, 'showCustomAlert');
+    expect(alertCalls.single.arguments, containsPair('windowTitle', ''));
+    expect(
+      alertCalls.single.arguments,
+      containsPair('text', 'Enter a valid email address'),
+    );
+    expect(find.text('Enter Code'), findsNothing);
   });
 
   testWidgets('opens code, reset password, and success steps', (tester) async {
