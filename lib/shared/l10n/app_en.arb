@@ -301,6 +301,10 @@
   "@sceneTitle": {
     "description": "Scene page title"
   },
+  "sceneEditingTitle": "SCENE EDITING",
+  "@sceneEditingTitle": {
+    "description": "Scene page title while editing scenes"
+  },
   "sceneCount": "{count, plural, =0{0 Scenes} =1{1 Scene} other{{count} Scenes}}",
   "@sceneCount": {
     "description": "Number of scenes on the scene page",
@@ -318,6 +322,10 @@
   "@sceneEditTooltip": {
     "description": "Tooltip for the scene page edit action"
   },
+  "sceneDoneEditingTooltip": "Done editing",
+  "@sceneDoneEditingTooltip": {
+    "description": "Tooltip for leaving scene editing mode"
+  },
   "sceneDeviceCount": "{count, plural, =0{0 Devices} =1{1 Device} other{{count} Devices}}",
   "@sceneDeviceCount": {
     "description": "Number of devices in a scene on the scene page",
@@ -330,5 +338,21 @@
   "sceneNewSceneAction": "New scene",
   "@sceneNewSceneAction": {
     "description": "New scene card action label on the scene page"
+  },
+  "sceneNameDialogTitle": "Scene Name",
+  "@sceneNameDialogTitle": {
+    "description": "Title of the dialog for creating a scene"
+  },
+  "sceneNameInputPlaceholder": "Input scene name",
+  "@sceneNameInputPlaceholder": {
+    "description": "Placeholder for the scene name input"
+  },
+  "sceneNameCancelAction": "Cancel",
+  "@sceneNameCancelAction": {
+    "description": "Cancel button label in the scene name dialog"
+  },
+  "sceneNameConfirmAction": "confirm",
+  "@sceneNameConfirmAction": {
+    "description": "Confirm button label in the scene name dialog"
   }
 }

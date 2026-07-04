@@ -512,6 +512,12 @@ abstract class AppLocalizations {
   /// **'SCENE'**
   String get sceneTitle;
 
+  /// Scene page title while editing scenes
+  ///
+  /// In en, this message translates to:
+  /// **'SCENE EDITING'**
+  String get sceneEditingTitle;
+
   /// Number of scenes on the scene page
   ///
   /// In en, this message translates to:
@@ -530,6 +536,12 @@ abstract class AppLocalizations {
   /// **'Edit scene'**
   String get sceneEditTooltip;
 
+  /// Tooltip for leaving scene editing mode
+  ///
+  /// In en, this message translates to:
+  /// **'Done editing'**
+  String get sceneDoneEditingTooltip;
+
   /// Number of devices in a scene on the scene page
   ///
   /// In en, this message translates to:
@@ -541,6 +553,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New scene'**
   String get sceneNewSceneAction;
+
+  /// Title of the dialog for creating a scene
+  ///
+  /// In en, this message translates to:
+  /// **'Scene Name'**
+  String get sceneNameDialogTitle;
+
+  /// Placeholder for the scene name input
+  ///
+  /// In en, this message translates to:
+  /// **'Input scene name'**
+  String get sceneNameInputPlaceholder;
+
+  /// Cancel button label in the scene name dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get sceneNameCancelAction;
+
+  /// Confirm button label in the scene name dialog
+  ///
+  /// In en, this message translates to:
+  /// **'confirm'**
+  String get sceneNameConfirmAction;
 }
 
 class _AppLocalizationsDelegate

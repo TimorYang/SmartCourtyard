@@ -83,6 +83,7 @@
   "chooseSceneNewSceneAction": "新建场景",
   "sceneHomeShortcutTooltip": "场景",
   "sceneTitle": "场景",
+  "sceneEditingTitle": "编辑场景",
   "sceneCount": "{count} 个场景",
   "@sceneCount": {
     "placeholders": {
@@ -93,6 +94,7 @@
   },
   "sceneBackTooltip": "返回",
   "sceneEditTooltip": "编辑场景",
+  "sceneDoneEditingTooltip": "完成编辑",
   "sceneDeviceCount": "{count} 台设备",
   "@sceneDeviceCount": {
     "placeholders": {
@@ -101,5 +103,9 @@
       }
     }
   },
-  "sceneNewSceneAction": "新建场景"
+  "sceneNewSceneAction": "新建场景",
+  "sceneNameDialogTitle": "场景名称",
+  "sceneNameInputPlaceholder": "请输入场景名称",
+  "sceneNameCancelAction": "取消",
+  "sceneNameConfirmAction": "确认"
 }

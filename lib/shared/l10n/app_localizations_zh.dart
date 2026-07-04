@@ -226,6 +226,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sceneTitle => '场景';
 
   @override
+  String get sceneEditingTitle => '编辑场景';
+
+  @override
   String sceneCount(int count) {
     return '$count 个场景';
   }
@@ -237,10 +240,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sceneEditTooltip => '编辑场景';
 
   @override
+  String get sceneDoneEditingTooltip => '完成编辑';
+
+  @override
   String sceneDeviceCount(int count) {
     return '$count 台设备';
   }
 
   @override
   String get sceneNewSceneAction => '新建场景';
+
+  @override
+  String get sceneNameDialogTitle => '场景名称';
+
+  @override
+  String get sceneNameInputPlaceholder => '请输入场景名称';
+
+  @override
+  String get sceneNameCancelAction => '取消';
+
+  @override
+  String get sceneNameConfirmAction => '确认';
 }

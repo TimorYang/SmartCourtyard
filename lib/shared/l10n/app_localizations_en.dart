@@ -246,6 +246,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sceneTitle => 'SCENE';
 
   @override
+  String get sceneEditingTitle => 'SCENE EDITING';
+
+  @override
   String sceneCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -264,6 +267,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sceneEditTooltip => 'Edit scene';
 
   @override
+  String get sceneDoneEditingTooltip => 'Done editing';
+
+  @override
   String sceneDeviceCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -277,4 +283,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sceneNewSceneAction => 'New scene';
+
+  @override
+  String get sceneNameDialogTitle => 'Scene Name';
+
+  @override
+  String get sceneNameInputPlaceholder => 'Input scene name';
+
+  @override
+  String get sceneNameCancelAction => 'Cancel';
+
+  @override
+  String get sceneNameConfirmAction => 'confirm';
 }

@@ -47,6 +47,9 @@ class AppColors {
   static const surfaceHomeIcon = Color(0xFFF8F9FB);
   static const surfaceSceneCard = Color(0xFFF4F5F7);
   static const surfaceItemSceneCard = Color(0xFFF1F3F5);
+  static const sceneDeleteAction = Color(0xFFFF1010);
+  static const sceneDialogCancelButton = Color(0xFFF4F5F6);
+  static const sceneDialogInputBorder = Color(0xFFC8C8C8);
 
   static const borderSubtle = Color(0xFFDBDBDB);
   static const borderMuted = Color(0xFFC8C8C8);
@@ -387,6 +390,38 @@ class AppTextTokens {
       fontSize: 12,
       fontWeight: FontWeight.w500,
       height: 1.2,
+    );
+  }
+
+  static TextStyle sceneDialogTitle(TextTheme textTheme) {
+    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 20,
+      fontWeight: FontWeight.w500,
+      height: 1.1,
+    );
+  }
+
+  static TextStyle sceneDialogInput(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 15,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle sceneDialogInputHint(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textHint,
+      fontSize: 15,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle sceneDialogButton(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      fontSize: 18,
+      fontWeight: FontWeight.w400,
     );
   }
 }
