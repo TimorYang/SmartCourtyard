@@ -8,6 +8,7 @@ import '../../../add_device/presentation/pages/add_device_page.dart';
 import '../../../../features/hardware_debug/presentation/pages/ble_debug_page.dart';
 import '../../../../platform_bridge/hardware_models.dart';
 import '../../application/providers.dart';
+import 'scene_page.dart';
 
 class HomeAssetPaths {
   const HomeAssetPaths._();
@@ -103,9 +104,9 @@ class _HomeHeader extends StatelessWidget {
                 onPressed: () => context.push(BleDebugPage.routePath),
               ),
               _HeaderIconButton(
-                tooltip: l10n.homeEditTooltip,
+                tooltip: l10n.sceneHomeShortcutTooltip,
                 icon: Icons.edit_outlined,
-                onPressed: () {},
+                onPressed: () => context.push(ScenePage.routePath),
               ),
               _HeaderIconButton(
                 tooltip: l10n.homeAddDoorTooltip,

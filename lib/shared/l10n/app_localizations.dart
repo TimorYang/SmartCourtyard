@@ -469,6 +469,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Life remaining'**
   String get homeLifeRemainingLabel;
+
+  /// Choose scene page title
+  ///
+  /// In en, this message translates to:
+  /// **'CHOOSE A SCENE'**
+  String get chooseSceneTitle;
+
+  /// Tooltip for the choose scene page back action
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get chooseSceneBackTooltip;
+
+  /// Tooltip for the choose scene page edit action
+  ///
+  /// In en, this message translates to:
+  /// **'Edit scene'**
+  String get chooseSceneEditTooltip;
+
+  /// Number of devices in a scene
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{0 Devices} =1{1 Device} other{{count} Devices}}'**
+  String chooseSceneDeviceCount(int count);
+
+  /// New scene card action label
+  ///
+  /// In en, this message translates to:
+  /// **'New scene'**
+  String get chooseSceneNewSceneAction;
+
+  /// Tooltip for opening the scene page from the home page
+  ///
+  /// In en, this message translates to:
+  /// **'Scene'**
+  String get sceneHomeShortcutTooltip;
+
+  /// Scene page title
+  ///
+  /// In en, this message translates to:
+  /// **'SCENE'**
+  String get sceneTitle;
+
+  /// Number of scenes on the scene page
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{0 Scenes} =1{1 Scene} other{{count} Scenes}}'**
+  String sceneCount(int count);
+
+  /// Tooltip for the scene page back action
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get sceneBackTooltip;
+
+  /// Tooltip for the scene page edit action
+  ///
+  /// In en, this message translates to:
+  /// **'Edit scene'**
+  String get sceneEditTooltip;
+
+  /// Number of devices in a scene on the scene page
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{0 Devices} =1{1 Device} other{{count} Devices}}'**
+  String sceneDeviceCount(int count);
+
+  /// New scene card action label on the scene page
+  ///
+  /// In en, this message translates to:
+  /// **'New scene'**
+  String get sceneNewSceneAction;
 }
 
 class _AppLocalizationsDelegate

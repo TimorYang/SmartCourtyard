@@ -68,5 +68,38 @@
   "homeLoadDoorsFailed": "无法加载门设备。",
   "homeDoorStateLabel": "门状态",
   "homeConnectionStateLabel": "连接状态",
-  "homeLifeRemainingLabel": "剩余寿命"
+  "homeLifeRemainingLabel": "剩余寿命",
+  "chooseSceneTitle": "选择场景",
+  "chooseSceneBackTooltip": "返回",
+  "chooseSceneEditTooltip": "编辑场景",
+  "chooseSceneDeviceCount": "{count} 台设备",
+  "@chooseSceneDeviceCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chooseSceneNewSceneAction": "新建场景",
+  "sceneHomeShortcutTooltip": "场景",
+  "sceneTitle": "场景",
+  "sceneCount": "{count} 个场景",
+  "@sceneCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sceneBackTooltip": "返回",
+  "sceneEditTooltip": "编辑场景",
+  "sceneDeviceCount": "{count} 台设备",
+  "@sceneDeviceCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sceneNewSceneAction": "新建场景"
 }

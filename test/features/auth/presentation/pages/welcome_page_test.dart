@@ -34,7 +34,7 @@ void main() {
     await tester.tap(find.text('Home'));
     await tester.pumpAndSettle();
 
-    expect(find.text('No Doors'), findsOneWidget);
+    expect(find.text('No doors'), findsOneWidget);
     expect(find.text('0 Door'), findsOneWidget);
   });
 
@@ -54,7 +54,7 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    expect(find.text('No Doors'), findsOneWidget);
+    expect(find.text('No doors'), findsOneWidget);
     expect(find.text('Login'), findsNothing);
   });
 }

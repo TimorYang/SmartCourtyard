@@ -201,4 +201,46 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get homeLifeRemainingLabel => '剩余寿命';
+
+  @override
+  String get chooseSceneTitle => '选择场景';
+
+  @override
+  String get chooseSceneBackTooltip => '返回';
+
+  @override
+  String get chooseSceneEditTooltip => '编辑场景';
+
+  @override
+  String chooseSceneDeviceCount(int count) {
+    return '$count 台设备';
+  }
+
+  @override
+  String get chooseSceneNewSceneAction => '新建场景';
+
+  @override
+  String get sceneHomeShortcutTooltip => '场景';
+
+  @override
+  String get sceneTitle => '场景';
+
+  @override
+  String sceneCount(int count) {
+    return '$count 个场景';
+  }
+
+  @override
+  String get sceneBackTooltip => '返回';
+
+  @override
+  String get sceneEditTooltip => '编辑场景';
+
+  @override
+  String sceneDeviceCount(int count) {
+    return '$count 台设备';
+  }
+
+  @override
+  String get sceneNewSceneAction => '新建场景';
 }

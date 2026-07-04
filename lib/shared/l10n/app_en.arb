@@ -267,5 +267,68 @@
   "homeLifeRemainingLabel": "Life remaining",
   "@homeLifeRemainingLabel": {
     "description": "Device card label for remaining device life"
+  },
+  "chooseSceneTitle": "CHOOSE A SCENE",
+  "@chooseSceneTitle": {
+    "description": "Choose scene page title"
+  },
+  "chooseSceneBackTooltip": "Back",
+  "@chooseSceneBackTooltip": {
+    "description": "Tooltip for the choose scene page back action"
+  },
+  "chooseSceneEditTooltip": "Edit scene",
+  "@chooseSceneEditTooltip": {
+    "description": "Tooltip for the choose scene page edit action"
+  },
+  "chooseSceneDeviceCount": "{count, plural, =0{0 Devices} =1{1 Device} other{{count} Devices}}",
+  "@chooseSceneDeviceCount": {
+    "description": "Number of devices in a scene",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chooseSceneNewSceneAction": "New scene",
+  "@chooseSceneNewSceneAction": {
+    "description": "New scene card action label"
+  },
+  "sceneHomeShortcutTooltip": "Scene",
+  "@sceneHomeShortcutTooltip": {
+    "description": "Tooltip for opening the scene page from the home page"
+  },
+  "sceneTitle": "SCENE",
+  "@sceneTitle": {
+    "description": "Scene page title"
+  },
+  "sceneCount": "{count, plural, =0{0 Scenes} =1{1 Scene} other{{count} Scenes}}",
+  "@sceneCount": {
+    "description": "Number of scenes on the scene page",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sceneBackTooltip": "Back",
+  "@sceneBackTooltip": {
+    "description": "Tooltip for the scene page back action"
+  },
+  "sceneEditTooltip": "Edit scene",
+  "@sceneEditTooltip": {
+    "description": "Tooltip for the scene page edit action"
+  },
+  "sceneDeviceCount": "{count, plural, =0{0 Devices} =1{1 Device} other{{count} Devices}}",
+  "@sceneDeviceCount": {
+    "description": "Number of devices in a scene on the scene page",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sceneNewSceneAction": "New scene",
+  "@sceneNewSceneAction": {
+    "description": "New scene card action label on the scene page"
   }
 }

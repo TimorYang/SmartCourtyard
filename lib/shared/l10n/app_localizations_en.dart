@@ -214,4 +214,67 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeLifeRemainingLabel => 'Life remaining';
+
+  @override
+  String get chooseSceneTitle => 'CHOOSE A SCENE';
+
+  @override
+  String get chooseSceneBackTooltip => 'Back';
+
+  @override
+  String get chooseSceneEditTooltip => 'Edit scene';
+
+  @override
+  String chooseSceneDeviceCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Devices',
+      one: '1 Device',
+      zero: '0 Devices',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get chooseSceneNewSceneAction => 'New scene';
+
+  @override
+  String get sceneHomeShortcutTooltip => 'Scene';
+
+  @override
+  String get sceneTitle => 'SCENE';
+
+  @override
+  String sceneCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Scenes',
+      one: '1 Scene',
+      zero: '0 Scenes',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sceneBackTooltip => 'Back';
+
+  @override
+  String get sceneEditTooltip => 'Edit scene';
+
+  @override
+  String sceneDeviceCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Devices',
+      one: '1 Device',
+      zero: '0 Devices',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sceneNewSceneAction => 'New scene';
 }

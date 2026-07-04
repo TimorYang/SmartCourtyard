@@ -17,7 +17,9 @@ import '../../features/auth/presentation/pages/welcome_page.dart';
 import '../../features/add_device/presentation/pages/wifi_configuration_page.dart';
 import '../../features/device_control/presentation/pages/device_command_page.dart';
 import '../../features/hardware_debug/presentation/pages/ble_debug_page.dart';
+import '../../features/home/presentation/pages/choose_scene_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
+import '../../features/home/presentation/pages/scene_page.dart';
 import '../../shared/webview/app_web_view_page.dart';
 import '../config/app_links.dart';
 
@@ -40,7 +42,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           location == RegisterPage.routePath ||
           location == RegisterCodePage.routePath ||
           location == RegisterPasswordPage.routePath;
-      final isPublicRoute = isAuthRoute || location == AppWebViewPage.routePath || location == HomePage.routePath;
+      final isPublicRoute =
+          isAuthRoute ||
+          location == AppWebViewPage.routePath ||
+          location == HomePage.routePath ||
+          location == ScenePage.routePath ||
+          location == ChooseScenePage.routePath;
 
       if (!isSignedIn && !isPublicRoute) {
         return WelcomePage.routePath;
@@ -120,6 +127,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: HomePage.routePath,
         name: HomePage.routeName,
         builder: (context, state) => const HomePage(),
+      ),
+      GoRoute(
+        path: ChooseScenePage.routePath,
+        name: ChooseScenePage.routeName,
+        builder: (context, state) => const ChooseScenePage(),
+      ),
+      GoRoute(
+        path: ScenePage.routePath,
+        name: ScenePage.routeName,
+        builder: (context, state) => const ScenePage(),
       ),
       GoRoute(
         path: AddDevicePage.routePath,

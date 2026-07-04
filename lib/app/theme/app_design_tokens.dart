@@ -45,6 +45,8 @@ class AppColors {
   static const iconHomePlaceholder = Color(0xFFD5D9E0);
   static const surfaceHomeAvatar = Color(0xFFECEFF4);
   static const surfaceHomeIcon = Color(0xFFF8F9FB);
+  static const surfaceSceneCard = Color(0xFFF4F5F7);
+  static const surfaceItemSceneCard = Color(0xFFF1F3F5);
 
   static const borderSubtle = Color(0xFFDBDBDB);
   static const borderMuted = Color(0xFFC8C8C8);
@@ -339,6 +341,52 @@ class AppTextTokens {
   static TextStyle homePrimaryButton(TextTheme textTheme) {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
       fontWeight: FontWeight.w600,
+    );
+  }
+
+  static TextStyle sceneTitle(TextTheme textTheme) {
+    return (textTheme.displaySmall ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 25,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 1.2,
+      height: 1.08,
+    );
+  }
+
+  static TextStyle sceneBreadcrumb(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 14,
+      fontWeight: FontWeight.w500,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle sceneCardTitle(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 16,
+      fontWeight: FontWeight.w600,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle sceneCardMeta(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textHint,
+      fontSize: 12,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle sceneNewScene(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 12,
+      fontWeight: FontWeight.w500,
+      height: 1.2,
     );
   }
 }

@@ -7,11 +7,13 @@ class FlinxNavigationBar extends StatelessWidget
     required this.title,
     this.actions,
     this.automaticallyImplyLeading = true,
+    this.showBottomDivider = true, //是否展示底部分割线
   });
 
   final String title;
   final List<Widget>? actions;
   final bool automaticallyImplyLeading;
+  final bool showBottomDivider;
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -28,6 +30,11 @@ class FlinxNavigationBar extends StatelessWidget
           : null,
       title: Text(title),
       actions: actions,
+      elevation: showBottomDivider ? null : 0,
+      scrolledUnderElevation: showBottomDivider ? null : 0,
+      shadowColor: showBottomDivider ? null : Colors.transparent,
+      surfaceTintColor: showBottomDivider ? null : Colors.transparent,
+      shape: showBottomDivider ? null : const Border(),
     );
   }
 }
