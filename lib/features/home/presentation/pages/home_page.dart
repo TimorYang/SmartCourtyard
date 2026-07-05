@@ -8,6 +8,7 @@ import '../../../add_device/presentation/pages/add_device_page.dart';
 import '../../../../features/hardware_debug/presentation/pages/ble_debug_page.dart';
 import '../../../../platform_bridge/hardware_models.dart';
 import '../../application/providers.dart';
+import '../widgets/scene_name_dialog.dart';
 import 'scene_page.dart';
 
 class HomeAssetPaths {
@@ -132,7 +133,7 @@ class _HomeAddMenuOverlay extends StatelessWidget {
                       fallbackIcon: Icons.view_in_ar_outlined,
                       onPressed: () {
                         onDismissed();
-                        context.push(ScenePage.routePath);
+                        showSceneNameDialog(context);
                       },
                     ),
                     _HomeAddMenuItemData(

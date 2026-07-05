@@ -61,6 +61,27 @@ void main() {
     expect(find.text('Smart Device'), findsNothing);
   });
 
+  testWidgets('opens scene name dialog from home add scene menu action', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const ProviderScope(child: FlinxApp()));
+
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Home'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Add door'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Add Scene'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Scene Name'), findsOneWidget);
+    expect(find.text('Input scene name'), findsOneWidget);
+    expect(find.text('SCENE'), findsNothing);
+  });
+
   testWidgets('redirects authenticated users to the home page', (tester) async {
     await tester.pumpWidget(
       ProviderScope(
