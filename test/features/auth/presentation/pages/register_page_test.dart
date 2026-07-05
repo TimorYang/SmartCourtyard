@@ -1,4 +1,5 @@
 import 'package:flinx/app/flinx_app.dart';
+import 'package:flinx/app/theme/app_design_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +8,10 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   Future<void> openRegisterPage(WidgetTester tester) async {
     await tester.pumpWidget(const ProviderScope(child: FlinxApp()));
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+    });
     await tester.pumpAndSettle();
     await tester.tap(find.text('Register'));
     await tester.pumpAndSettle();
@@ -70,7 +75,7 @@ void main() {
 
     expect(find.text('Enter Code'), findsOneWidget);
     expect(find.textContaining('use*****@e***'), findsOneWidget);
-    expect(find.text('Send Again OTP (59s)'), findsOneWidget);
+    expect(find.text('Send Again OTP (58s)'), findsOneWidget);
   });
 
   testWidgets('shows an untitled alert for an invalid email', (tester) async {
@@ -138,6 +143,47 @@ void main() {
       expect(find.text('Login'), findsOneWidget);
     },
   );
+
+  testWidgets('resend OTP countdown enables resend and restarts after tap', (
+    tester,
+  ) async {
+    await openRegisterPage(tester);
+
+    await tester.enterText(find.byType(TextField), 'user@example.com');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Send code'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(find.text('Send Again OTP (58s)'), findsOneWidget);
+
+    TextButton resendButton = tester.widget<TextButton>(
+      find.widgetWithText(TextButton, 'Send Again OTP (58s)'),
+    );
+    expect(resendButton.onPressed, isNull);
+    expect(
+      resendButton.style?.foregroundColor?.resolve({WidgetState.disabled}),
+      AppColors.textCodeResendDisabled,
+    );
+
+    await tester.pump(const Duration(seconds: 58));
+    expect(find.text('Send Again OTP (0s)'), findsNothing);
+    expect(find.text('Send Again OTP'), findsOneWidget);
+
+    resendButton = tester.widget<TextButton>(
+      find.widgetWithText(TextButton, 'Send Again OTP'),
+    );
+    expect(resendButton.onPressed, isNotNull);
+    expect(
+      resendButton.style?.foregroundColor?.resolve(<WidgetState>{}),
+      AppColors.textCodeResend,
+    );
+
+    await tester.tap(find.text('Send Again OTP'));
+    await tester.pump();
+
+    expect(find.text('Send Again OTP (59s)'), findsOneWidget);
+  });
 
   testWidgets('password step requires matching 8-digit passwords', (
     tester,

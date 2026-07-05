@@ -65,6 +65,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get registerCodeResendAction => 'Send Again OTP';
+
+  @override
   String get registerPasswordTitle => 'Password';
 
   @override

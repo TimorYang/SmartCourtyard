@@ -200,6 +200,12 @@ abstract class AppLocalizations {
   /// **'Send Again OTP ({seconds}s)'**
   String registerCodeResend(int seconds);
 
+  /// Register verification resend action label when the countdown has finished
+  ///
+  /// In en, this message translates to:
+  /// **'Send Again OTP'**
+  String get registerCodeResendAction;
+
   /// Register password setup page heading
   ///
   /// In en, this message translates to:

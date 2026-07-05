@@ -1,3 +1,4 @@
+import 'package:flinx/shared/widgets/flinx_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +10,7 @@ import '../../application/providers.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import 'register_code_page.dart';
 import '../widgets/auth_alerts.dart';
+import '../widgets/auth_flow_widgets.dart';
 
 class RegisterPage extends ConsumerWidget {
   const RegisterPage({super.key});
@@ -24,29 +26,18 @@ class RegisterPage extends ConsumerWidget {
     final controller = ref.read(registerFormControllerProvider.notifier);
 
     return Scaffold(
+      appBar: FlinxNavigationBar(title: '', showBottomDivider: false),
       backgroundColor: AppColors.backgroundPrimary,
       resizeToAvoidBottomInset: false,
       body: SafeArea(
+        top: false,
+        left: false,
+        right: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(32, 10, 32, 0),
+          padding: const EdgeInsets.fromLTRB(30, 10, 30, 0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              IconButton(
-                onPressed: () => context.pop(),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints.tightFor(
-                  width: 28,
-                  height: 28,
-                ),
-                icon: const _RegisterAssetIcon(
-                  assetPath: _RegisterPageAssetPaths.backArrowIcon,
-                  width: 22,
-                  height: 22,
-                  fallback: Icon(Icons.arrow_back_ios_new_rounded, size: 22),
-                ),
-              ),
-              const SizedBox(height: 106),
               Text(
                 l10n.registerTitle,
                 style: AppTextTokens.registerTitle(theme.textTheme),
@@ -56,9 +47,22 @@ class RegisterPage extends ConsumerWidget {
                 l10n.registerDescription,
                 style: AppTextTokens.registerDescription(theme.textTheme),
               ),
-              const SizedBox(height: 56),
-              _RegisterEmailField(
+              const SizedBox(height: 48),
+              AuthTextField(
                 hintText: l10n.registerEmailPlaceholder,
+                icon: const AuthAssetIcon(
+                  assetPath: AuthAssetPaths.emailFieldIcon,
+                  width: 22,
+                  height: 22,
+                  fallback: Icon(
+                    Icons.mail_outline_rounded,
+                    color: AppColors.textIcon,
+                    size: 22,
+                  ),
+                ),
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.done,
+                autocorrect: false,
                 onChanged: controller.updateEmail,
               ),
               const SizedBox(height: 16),
@@ -69,7 +73,7 @@ class RegisterPage extends ConsumerWidget {
                     selected: state.agreedToPrivacyPolicy,
                     onTap: controller.togglePrivacyAgreement,
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 0),
                   Expanded(
                     child: Text.rich(
                       TextSpan(
@@ -79,9 +83,8 @@ class RegisterPage extends ConsumerWidget {
                           TextSpan(
                             text: l10n.privacyPolicyLabel,
                             style: const TextStyle(
-                              color: AppColors.textRegisterLink,
+                              color: AppColors.textAgreementLink,
                               decoration: TextDecoration.underline,
-                              decorationColor: AppColors.textRegisterLink,
                             ),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () => context.push(
@@ -100,6 +103,7 @@ class RegisterPage extends ConsumerWidget {
               const SizedBox(height: 40),
               SizedBox(
                 width: double.infinity,
+                height: 52,
                 child: FilledButton(
                   onPressed: state.canSendCode
                       ? () async {
@@ -113,12 +117,14 @@ class RegisterPage extends ConsumerWidget {
                         }
                       : null,
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.brandPrimary,
+                    backgroundColor: AppColors.brandPrimaryLight,
                     disabledBackgroundColor: AppColors.brandPrimaryDisabled,
                     foregroundColor: Colors.white,
-                    minimumSize: const Size.fromHeight(72),
+                    disabledForegroundColor:
+                        AppColors.authPrimaryButtonDisabledForeground,
+                    minimumSize: const Size.fromHeight(48),
                     shape: const StadiumBorder(),
-                    textStyle: AppTextTokens.registerPrimaryButton(
+                    textStyle: AppTextTokens.loginPrimaryButton(
                       theme.textTheme,
                     ),
                   ),
@@ -136,62 +142,8 @@ class RegisterPage extends ConsumerWidget {
 class _RegisterPageAssetPaths {
   const _RegisterPageAssetPaths._();
 
-  static const backArrowIcon = 'assets/icons/auth/register_back_arrow.png';
-  static const emailFieldIcon = 'assets/icons/auth/register_email_icon.png';
   static const privacyCheckedIcon =
       'assets/icons/auth/register_privacy_checked_icon.png';
-}
-
-class _RegisterEmailField extends StatelessWidget {
-  const _RegisterEmailField({required this.hintText, required this.onChanged});
-
-  final String hintText;
-  final ValueChanged<String> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.borderSubtle)),
-      ),
-      child: Row(
-        children: [
-          const SizedBox(
-            width: 28,
-            height: 34,
-            child: Center(
-              child: _RegisterAssetIcon(
-                assetPath: _RegisterPageAssetPaths.emailFieldIcon,
-                width: 24,
-                height: 24,
-                fallback: Icon(
-                  Icons.mail_outline_rounded,
-                  color: AppColors.textIcon,
-                  size: 24,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 18),
-          Expanded(
-            child: TextField(
-              keyboardType: TextInputType.emailAddress,
-              textInputAction: TextInputAction.done,
-              autocorrect: false,
-              onChanged: onChanged,
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                hintText: hintText,
-                hintStyle: AppTextTokens.registerInputHint,
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: 10),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _PrivacyAgreementToggle extends StatelessWidget {
@@ -210,29 +162,30 @@ class _PrivacyAgreementToggle extends StatelessWidget {
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
         child: SizedBox(
-          width: 44,
-          height: 44,
-          child: Center(
+          width: 30,
+          height: 30,
+          child: Align(
+            alignment: Alignment.centerLeft,
             child: Container(
-              width: 32,
-              height: 32,
+              width: 18,
+              height: 18,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: selected
-                      ? AppColors.authSuccess
+                      ? AppColors.toggleSelected
                       : AppColors.borderMuted,
                 ),
-                color: selected ? AppColors.authSuccess : Colors.white,
+                color: selected ? AppColors.toggleSelected : Colors.white,
               ),
               child: selected
-                  ? const _RegisterAssetIcon(
+                  ? const AuthAssetIcon(
                       assetPath: _RegisterPageAssetPaths.privacyCheckedIcon,
-                      width: 18,
-                      height: 18,
+                      width: 14,
+                      height: 14,
                       fallback: Icon(
                         Icons.check,
-                        size: 20,
+                        size: 14,
                         color: Colors.white,
                       ),
                     )
@@ -241,31 +194,6 @@ class _PrivacyAgreementToggle extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _RegisterAssetIcon extends StatelessWidget {
-  const _RegisterAssetIcon({
-    required this.assetPath,
-    required this.width,
-    required this.height,
-    required this.fallback,
-  });
-
-  final String assetPath;
-  final double width;
-  final double height;
-  final Widget fallback;
-
-  @override
-  Widget build(BuildContext context) {
-    return Image.asset(
-      assetPath,
-      width: width,
-      height: height,
-      fit: BoxFit.contain,
-      errorBuilder: (context, error, stackTrace) => fallback,
     );
   }
 }

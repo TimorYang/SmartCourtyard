@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
 import '../widgets/auth_flow_widgets.dart';
 import 'forgot_password_reset_page.dart';
@@ -65,6 +66,7 @@ class _ForgotPasswordCodePageState
     });
 
     return AuthFlowScaffold(
+      appBar: const FlinxNavigationBar(title: '', showBottomDivider: false),
       title: l10n.forgotPasswordCodeTitle,
       description: l10n.forgotPasswordCodeDescription(
         maskedAuthEmail(widget.email),
@@ -93,12 +95,16 @@ class _ForgotPasswordCodePageState
             minimumSize: const Size(0, 28),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             foregroundColor: AppColors.textCodeResend,
-            disabledForegroundColor: AppColors.textCodeResend,
+            disabledForegroundColor: AppColors.textCodeResendDisabled,
             textStyle: AppTextTokens.verificationResend(
               Theme.of(context).textTheme,
             ),
           ),
-          child: Text(l10n.registerCodeResend(state.resendSecondsRemaining)),
+          child: Text(
+            state.canResend
+                ? l10n.registerCodeResendAction
+                : l10n.registerCodeResend(state.resendSecondsRemaining),
+          ),
         ),
       ],
     );

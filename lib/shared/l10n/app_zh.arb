@@ -17,6 +17,7 @@
   "registerCodeDescription": "我们已向 {email} 发送确认验证码。请输入邮件中的验证码继续注册。",
   "registerCodeInputLabel": "验证码",
   "registerCodeResend": "重新发送验证码（{seconds}秒）",
+  "registerCodeResendAction": "重新发送验证码",
   "registerPasswordTitle": "密码",
   "registerPasswordDescription": "设置您的密码",
   "registerPasswordPlaceholder": "请输入 8 位数字密码",

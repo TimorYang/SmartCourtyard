@@ -4,9 +4,11 @@ class AppColors {
   const AppColors._();
 
   static const brandPrimary = Color(0xFF176CFF);
-  static const brandPrimaryLight = Color(0xFF84BDEE);
+  static const brandPrimaryLight = Color(0xFF90CAF8);
   static const brandPrimaryDisabled = Color(0xFFB5D8F5);
+  static const authPrimaryButtonDisabledForeground = Color(0xFFFFFFFF);
   static const authSuccess = Color(0xFF12C76B);
+  static const toggleSelected = Color(0xFF12C76B);
   static const brandAlexa = Color(0xFF2EB5E9);
   static const brandAlexaDark = Color(0xFF1F96C5);
   static const brandGoogleBlue = Color(0xFF4285F4);
@@ -29,7 +31,7 @@ class AppColors {
   static const surfacePlantLight = Color(0xFF4E6550);
 
   static const textPrimary = Color(0xFF26292F);
-  static const textSecondary = Color(0xFF313131);
+  static const textSecondary = Color(0xFF202020);
   static const textMuted = Color(0xFF5B5B60);
   static const textHint = Color(0xFF7A7A7A);
   static const textIcon = Color(0xFF5A5D64);
@@ -40,6 +42,7 @@ class AppColors {
   static const textRegisterLink = Color(0xFF0D6EFF);
   static const textProviderDark = Color(0xFF2D2D2D);
   static const textCodeResend = Color(0xFF7DAEFF);
+  static const textCodeResendDisabled = Color(0xFFC0C0C3);
 
   static const iconHomeAction = Color(0xFF3F424A);
   static const iconHomePlaceholder = Color(0xFFD5D9E0);
@@ -107,6 +110,7 @@ class AppTextTokens {
 
   static TextStyle loginTitle(TextTheme textTheme) {
     return (textTheme.displaySmall ?? const TextStyle()).copyWith(
+      fontSize: 28,
       fontWeight: FontWeight.w700,
       color: AppColors.textPrimary,
     );
@@ -114,6 +118,8 @@ class AppTextTokens {
 
   static TextStyle loginAgreement(TextTheme textTheme) {
     return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      fontSize: 12,
+      fontWeight: FontWeight.w400,
       color: AppColors.textAgreement,
       height: 1.45,
     );
@@ -127,22 +133,31 @@ class AppTextTokens {
 
   static TextStyle loginPrimaryButton(TextTheme textTheme) {
     return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
+      fontSize: 17,
       fontWeight: FontWeight.w500,
+    );
+  }
+
+  static TextStyle loginTextButton(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      fontSize: 13,
+      fontWeight: FontWeight.w400,
     );
   }
 
   static TextStyle registerTitle(TextTheme textTheme) {
     return (textTheme.displaySmall ?? const TextStyle()).copyWith(
-      color: AppColors.textPrimary,
+      fontSize: 28,
       fontWeight: FontWeight.w700,
+      color: AppColors.textPrimary,
     );
   }
 
   static TextStyle registerDescription(TextTheme textTheme) {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
-      color: AppColors.textAuthBody,
+      fontSize: 14,
       fontWeight: FontWeight.w400,
-      height: 1.4,
+      color: AppColors.textAuthBody,
     );
   }
 
@@ -154,6 +169,7 @@ class AppTextTokens {
 
   static TextStyle registerAgreement(TextTheme textTheme) {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      fontSize: 12,
       color: AppColors.textRegisterAgreement,
       fontWeight: FontWeight.w400,
       height: 1.4,
@@ -168,15 +184,17 @@ class AppTextTokens {
 
   static TextStyle forgotPasswordTitle(TextTheme textTheme) {
     return (textTheme.displaySmall ?? const TextStyle()).copyWith(
-      color: AppColors.textPrimary,
+      fontSize: 28,
       fontWeight: FontWeight.w700,
+      color: AppColors.textPrimary,
     );
   }
 
   static TextStyle forgotPasswordDescription(TextTheme textTheme) {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
-      color: AppColors.textAuthBody,
+      fontSize: 14,
       fontWeight: FontWeight.w400,
+      color: AppColors.textAuthBody,
       height: 1.4,
     );
   }

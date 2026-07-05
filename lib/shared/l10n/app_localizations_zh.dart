@@ -64,6 +64,9 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get registerCodeResendAction => '重新发送验证码';
+
+  @override
   String get registerPasswordTitle => '密码';
 
   @override

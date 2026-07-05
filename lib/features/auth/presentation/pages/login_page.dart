@@ -7,9 +7,11 @@ import '../../../../app/config/app_links.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../application/providers.dart';
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import 'forgot_password_page.dart';
 import 'register_page.dart';
 import '../widgets/auth_alerts.dart';
+import '../widgets/auth_flow_widgets.dart';
 
 class LoginPage extends ConsumerWidget {
   const LoginPage({super.key});
@@ -25,188 +27,187 @@ class LoginPage extends ConsumerWidget {
     final controller = ref.read(loginFormControllerProvider.notifier);
 
     return Scaffold(
+      appBar: FlinxNavigationBar(title: '', showBottomDivider: false),
       backgroundColor: AppColors.backgroundPrimary,
       resizeToAvoidBottomInset: false,
       body: MediaQuery.removeViewInsets(
         removeBottom: true,
         context: context,
-        child: Stack(
-          children: [
-            SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    IconButton(
-                      onPressed: () => context.pop(),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      icon: const _AssetIcon(
-                        assetPath: _LoginPageAssetPaths.backArrowIcon,
-                        width: 22,
-                        height: 22,
-                        fallback: Icon(
-                          Icons.arrow_back_ios_new_rounded,
-                          size: 22,
+        child: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: Stack(
+            children: [
+              SafeArea(
+                top: false,
+                left: false,
+                right: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(30, 10, 30, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.loginTitle,
+                        style: AppTextTokens.loginTitle(theme.textTheme),
+                      ),
+                      const SizedBox(height: 24),
+                      AuthTextField(
+                        hintText: l10n.loginAccountPlaceholder,
+                        icon: const AuthAssetIcon(
+                          assetPath: AuthAssetPaths.accountFieldIcon,
+                          width: 22,
+                          height: 22,
+                          fallback: SizedBox.shrink(),
                         ),
+                        compact: true,
+                        ultraCompact: true,
+                        keyboardType: TextInputType.emailAddress,
+                        textInputAction: TextInputAction.next,
+                        autocorrect: false,
+                        onChanged: controller.updateAccount,
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      l10n.loginTitle,
-                      style: AppTextTokens.loginTitle(theme.textTheme),
-                    ),
-                    const SizedBox(height: 24),
-                    _LoginField(
-                      hintText: l10n.loginAccountPlaceholder,
-                      icon: const _AssetIcon(
-                        assetPath: _LoginPageAssetPaths.accountFieldIcon,
-                        width: 22,
-                        height: 22,
-                        fallback: SizedBox.shrink(),
-                      ),
-                      compact: true,
-                      ultraCompact: true,
-                      keyboardType: TextInputType.emailAddress,
-                      textInputAction: TextInputAction.next,
-                      autocorrect: false,
-                      onChanged: controller.updateAccount,
-                    ),
-                    const SizedBox(height: 12),
-                    _LoginField(
-                      hintText: l10n.loginPasswordPlaceholder,
-                      icon: const _AssetIcon(
-                        assetPath: _LoginPageAssetPaths.passwordFieldIcon,
-                        width: 22,
-                        height: 22,
-                        fallback: SizedBox.shrink(),
-                      ),
-                      compact: true,
-                      ultraCompact: true,
-                      obscureText: true,
-                      textInputAction: TextInputAction.done,
-                      onChanged: controller.updatePassword,
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        _AgreementToggle(
-                          selected: state.agreedToTerms,
-                          onTap: controller.toggleAgreement,
+                      const SizedBox(height: 20),
+                      AuthTextField(
+                        hintText: l10n.loginPasswordPlaceholder,
+                        icon: const AuthAssetIcon(
+                          assetPath: AuthAssetPaths.passwordFieldIcon,
+                          width: 22,
+                          height: 22,
+                          fallback: SizedBox.shrink(),
                         ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text.rich(
-                            TextSpan(
-                              style: AppTextTokens.loginAgreement(
-                                theme.textTheme,
+                        compact: true,
+                        ultraCompact: true,
+                        obscureText: true,
+                        textInputAction: TextInputAction.done,
+                        onChanged: controller.updatePassword,
+                      ),
+                      const SizedBox(height: 18),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          _AgreementToggle(
+                            selected: state.agreedToTerms,
+                            onTap: controller.toggleAgreement,
+                          ),
+                          const SizedBox(width: 0),
+                          Expanded(
+                            child: Text.rich(
+                              TextSpan(
+                                style: AppTextTokens.loginAgreement(
+                                  theme.textTheme,
+                                ),
+                                children: [
+                                  TextSpan(text: l10n.loginAgreementPrefix),
+                                  TextSpan(
+                                    text: l10n.userAgreementLabel,
+                                    style: const TextStyle(
+                                      color: AppColors.textAgreementLink,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                    recognizer: TapGestureRecognizer()
+                                      ..onTap = () => context.push(
+                                        AppLinks.webViewLocation(
+                                          destination:
+                                              AppLinkDestination.userAgreement,
+                                          title: l10n.userAgreementLabel,
+                                        ),
+                                      ),
+                                  ),
+                                  TextSpan(text: l10n.loginAgreementMiddle),
+                                  TextSpan(
+                                    text: l10n.privacyPolicyLabel,
+                                    style: const TextStyle(
+                                      color: AppColors.textAgreementLink,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                    recognizer: TapGestureRecognizer()
+                                      ..onTap = () => context.push(
+                                        AppLinks.webViewLocation(
+                                          destination:
+                                              AppLinkDestination.privacyPolicy,
+                                          title: l10n.privacyPolicyLabel,
+                                        ),
+                                      ),
+                                  ),
+                                ],
                               ),
-                              children: [
-                                TextSpan(text: l10n.loginAgreementPrefix),
-                                TextSpan(
-                                  text: l10n.userAgreementLabel,
-                                  style: const TextStyle(
-                                    color: AppColors.textAgreementLink,
-                                    decoration: TextDecoration.underline,
-                                  ),
-                                  recognizer: TapGestureRecognizer()
-                                    ..onTap = () => context.push(
-                                      AppLinks.webViewLocation(
-                                        destination:
-                                            AppLinkDestination.userAgreement,
-                                        title: l10n.userAgreementLabel,
-                                      ),
-                                    ),
-                                ),
-                                TextSpan(text: l10n.loginAgreementMiddle),
-                                TextSpan(
-                                  text: l10n.privacyPolicyLabel,
-                                  style: const TextStyle(
-                                    color: AppColors.textAgreementLink,
-                                    decoration: TextDecoration.underline,
-                                  ),
-                                  recognizer: TapGestureRecognizer()
-                                    ..onTap = () => context.push(
-                                      AppLinks.webViewLocation(
-                                        destination:
-                                            AppLinkDestination.privacyPolicy,
-                                        title: l10n.privacyPolicyLabel,
-                                      ),
-                                    ),
-                                ),
-                              ],
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: state.canSubmit
-                            ? () async {
-                                if (!controller.validateEmailForSubmit()) {
-                                  await showAuthEmailInvalidDialog(context);
-                                  return;
-                                }
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(l10n.loginSubmitPending),
-                                  ),
-                                );
-                              }
-                            : null,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.brandPrimaryLight,
-                          disabledBackgroundColor:
-                              AppColors.brandPrimaryDisabled,
-                          foregroundColor: Colors.white,
-                          minimumSize: const Size.fromHeight(48),
-                          shape: const StadiumBorder(),
-                          textStyle: AppTextTokens.loginPrimaryButton(
-                            theme.textTheme,
-                          ),
-                        ),
-                        child: Text(l10n.signInAction),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        TextButton(
-                          onPressed: () => context.push(RegisterPage.routePath),
-                          style: TextButton.styleFrom(
-                            foregroundColor: AppColors.textSecondary,
-                            padding: EdgeInsets.zero,
+                      const SizedBox(height: 25),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: FilledButton(
+                          onPressed: state.canSubmit
+                              ? () async {
+                                  if (!controller.validateEmailForSubmit()) {
+                                    await showAuthEmailInvalidDialog(context);
+                                    return;
+                                  }
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(l10n.loginSubmitPending),
+                                    ),
+                                  );
+                                }
+                              : null,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppColors.brandPrimaryLight,
+                            disabledBackgroundColor:
+                                AppColors.brandPrimaryDisabled,
+                            foregroundColor: Colors.white,
+                            disabledForegroundColor:
+                                AppColors.authPrimaryButtonDisabledForeground,
+                            minimumSize: const Size.fromHeight(48),
+                            shape: const StadiumBorder(),
+                            textStyle: AppTextTokens.loginPrimaryButton(
+                              theme.textTheme,
+                            ),
                           ),
-                          child: Text(l10n.registerAction),
+                          child: Text(l10n.signInAction),
                         ),
-                        const Spacer(),
-                        TextButton(
-                          onPressed: () =>
-                              context.push(ForgotPasswordPage.routePath),
-                          style: TextButton.styleFrom(
-                            foregroundColor: AppColors.textSecondary,
-                            padding: EdgeInsets.zero,
+                      ),
+                      const SizedBox(height: 18),
+                      Row(
+                        children: [
+                          TextButton(
+                            onPressed: () =>
+                                context.push(RegisterPage.routePath),
+                            style: TextButton.styleFrom(
+                              foregroundColor: AppColors.textSecondary,
+                              padding: EdgeInsets.zero,
+                              textStyle: AppTextTokens.loginTextButton(
+                                theme.textTheme,
+                              ),
+                            ),
+                            child: Text(l10n.registerAction),
                           ),
-                          child: Text(l10n.forgotPasswordAction),
-                        ),
-                      ],
-                    ),
-                  ],
+                          const Spacer(),
+                          TextButton(
+                            onPressed: () =>
+                                context.push(ForgotPasswordPage.routePath),
+                            style: TextButton.styleFrom(
+                              foregroundColor: AppColors.textSecondary,
+                              padding: EdgeInsets.zero,
+                              textStyle: AppTextTokens.loginTextButton(
+                                theme.textTheme,
+                              ),
+                            ),
+                            child: Text(l10n.forgotPasswordAction),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            Positioned(
-              left: 24,
-              right: 24,
-              bottom: 28,
-              child: SafeArea(
-                top: false,
-                maintainBottomViewPadding: true,
+              Positioned(
+                left: 30,
+                right: 30,
+                bottom: 40,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -237,7 +238,7 @@ class LoginPage extends ConsumerWidget {
                       compact: true,
                       icon: const _ProviderAssetIcon(
                         assetPath: _LoginPageAssetPaths.googleProviderMark,
-                        size: 28,
+                        size: 24,
                         fallback: _LetterBadge(
                           text: 'G',
                           foregroundColor: AppColors.brandGoogleBlue,
@@ -257,7 +258,7 @@ class LoginPage extends ConsumerWidget {
                       icon: const _ProviderAssetIcon(
                         assetPath:
                             _LoginPageAssetPaths.voiceAssistantProviderMark,
-                        size: 28,
+                        size: 24,
                         fallback: _LetterBadge(
                           text: 'a',
                           foregroundColor: Colors.white,
@@ -269,8 +270,8 @@ class LoginPage extends ConsumerWidget {
                   ],
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -285,79 +286,8 @@ class _LoginPageAssetPaths {
       'assets/icons/auth/provider_google_mark.png';
   static const voiceAssistantProviderMark =
       'assets/icons/auth/provider_voice_assistant_mark.png';
-  static const backArrowIcon = 'assets/icons/auth/login_back_arrow.png';
-  static const accountFieldIcon = 'assets/icons/auth/login_account_icon.png';
-  static const passwordFieldIcon = 'assets/icons/auth/login_password_icon.png';
   static const agreementCheckedIcon =
       'assets/icons/auth/login_agreement_checked_icon.png';
-}
-
-class _LoginField extends StatelessWidget {
-  const _LoginField({
-    required this.hintText,
-    required this.icon,
-    required this.onChanged,
-    required this.compact,
-    required this.ultraCompact,
-    this.keyboardType,
-    this.textInputAction,
-    this.autocorrect = true,
-    this.obscureText = false,
-  });
-
-  final String hintText;
-  final Widget icon;
-  final ValueChanged<String> onChanged;
-  final bool compact;
-  final bool ultraCompact;
-  final TextInputType? keyboardType;
-  final TextInputAction? textInputAction;
-  final bool autocorrect;
-  final bool obscureText;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.borderSubtle)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: compact ? 26 : 30,
-            height: compact ? 26 : 30,
-            alignment: Alignment.center,
-            child: SizedBox(
-              width: compact ? 22 : 25,
-              height: compact ? 22 : 25,
-              child: icon,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: TextField(
-              obscureText: obscureText,
-              keyboardType: keyboardType,
-              textInputAction: textInputAction,
-              autocorrect: autocorrect,
-              onChanged: onChanged,
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                hintText: hintText,
-                hintStyle: AppTextTokens.loginInputHint.copyWith(
-                  fontSize: ultraCompact ? 16 : 18,
-                ),
-                isDense: compact,
-                contentPadding: EdgeInsets.symmetric(
-                  vertical: ultraCompact ? 8 : 12,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _AgreementToggle extends StatelessWidget {
@@ -376,23 +306,24 @@ class _AgreementToggle extends StatelessWidget {
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
         child: SizedBox(
-          width: 44,
-          height: 44,
-          child: Center(
+          width: 30,
+          height: 30,
+          child: Align(
+            alignment: Alignment.centerLeft,
             child: Container(
-              width: 22,
-              height: 22,
+              width: 18,
+              height: 18,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: selected
-                      ? AppColors.brandPrimaryLight
+                      ? AppColors.toggleSelected
                       : AppColors.borderMuted,
                 ),
-                color: selected ? AppColors.brandPrimaryLight : Colors.white,
+                color: selected ? AppColors.toggleSelected : Colors.white,
               ),
               child: selected
-                  ? const _AssetIcon(
+                  ? const AuthAssetIcon(
                       assetPath: _LoginPageAssetPaths.agreementCheckedIcon,
                       width: 14,
                       height: 14,
@@ -478,31 +409,6 @@ class _ProviderAssetIcon extends StatelessWidget {
       assetPath,
       width: size,
       height: size,
-      fit: BoxFit.contain,
-      errorBuilder: (context, error, stackTrace) => fallback,
-    );
-  }
-}
-
-class _AssetIcon extends StatelessWidget {
-  const _AssetIcon({
-    required this.assetPath,
-    required this.width,
-    required this.height,
-    required this.fallback,
-  });
-
-  final String assetPath;
-  final double width;
-  final double height;
-  final Widget fallback;
-
-  @override
-  Widget build(BuildContext context) {
-    return Image.asset(
-      assetPath,
-      width: width,
-      height: height,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) => fallback,
     );
