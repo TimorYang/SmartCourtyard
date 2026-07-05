@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
 import '../widgets/auth_flow_widgets.dart';
 import 'register_password_page.dart';
@@ -63,6 +64,7 @@ class _RegisterCodePageState extends ConsumerState<RegisterCodePage> {
     });
 
     return AuthFlowScaffold(
+      appBar: const FlinxNavigationBar(title: '', showBottomDivider: false),
       title: l10n.registerCodeTitle,
       description: l10n.registerCodeDescription(maskedAuthEmail(widget.email)),
       children: [

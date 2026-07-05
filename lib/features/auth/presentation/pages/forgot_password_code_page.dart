@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
 import '../widgets/auth_flow_widgets.dart';
 import 'forgot_password_reset_page.dart';
@@ -65,6 +66,7 @@ class _ForgotPasswordCodePageState
     });
 
     return AuthFlowScaffold(
+      appBar: const FlinxNavigationBar(title: '', showBottomDivider: false),
       title: l10n.forgotPasswordCodeTitle,
       description: l10n.forgotPasswordCodeDescription(
         maskedAuthEmail(widget.email),

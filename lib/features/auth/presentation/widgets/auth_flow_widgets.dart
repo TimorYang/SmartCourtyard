@@ -11,7 +11,9 @@ class AuthFlowScaffold extends StatelessWidget {
     required this.title,
     required this.description,
     required this.children,
-    this.headingTopSpacing = 124,
+    this.appBar,
+    this.headingTopSpacing,
+    this.showBodyBackButton,
     this.dismissKeyboardOnTap = false,
     this.dismissAreaKey,
   });
@@ -19,21 +21,28 @@ class AuthFlowScaffold extends StatelessWidget {
   final String title;
   final String description;
   final List<Widget> children;
-  final double headingTopSpacing;
+  final PreferredSizeWidget? appBar;
+  final double? headingTopSpacing;
+  final bool? showBodyBackButton;
   final bool dismissKeyboardOnTap;
   final Key? dismissAreaKey;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final shouldShowBodyBackButton = showBodyBackButton ?? appBar == null;
+    final effectiveHeadingTopSpacing =
+        headingTopSpacing ?? (shouldShowBodyBackButton ? 124.0 : 10.0);
     final content = SafeArea(
+      top: appBar == null,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(32, 10, 32, 0),
+        padding: const EdgeInsets.fromLTRB(30, 10, 30, 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AuthBackButton(onPressed: () => context.pop()),
-            SizedBox(height: headingTopSpacing),
+            if (shouldShowBodyBackButton)
+              AuthBackButton(onPressed: () => context.pop()),
+            SizedBox(height: effectiveHeadingTopSpacing),
             Text(title, style: AppTextTokens.authFlowTitle(theme.textTheme)),
             const SizedBox(height: 12),
             Text(
@@ -48,6 +57,7 @@ class AuthFlowScaffold extends StatelessWidget {
     );
 
     return Scaffold(
+      appBar: appBar,
       backgroundColor: AppColors.backgroundPrimary,
       resizeToAvoidBottomInset: true,
       body: dismissKeyboardOnTap
@@ -306,17 +316,18 @@ class AuthPrimaryButton extends StatelessWidget {
 
     return SizedBox(
       width: double.infinity,
+      height: 52,
       child: FilledButton(
         onPressed: onPressed,
         style: FilledButton.styleFrom(
-          backgroundColor: AppColors.brandPrimary,
+          backgroundColor: AppColors.brandPrimaryLight,
           disabledBackgroundColor: AppColors.brandPrimaryDisabled,
           foregroundColor: Colors.white,
-          minimumSize: const Size.fromHeight(54),
+          disabledForegroundColor:
+              AppColors.authPrimaryButtonDisabledForeground,
+          minimumSize: const Size.fromHeight(48),
           shape: const StadiumBorder(),
-          textStyle: AppTextTokens.registerPasswordPrimaryButton(
-            theme.textTheme,
-          ),
+          textStyle: AppTextTokens.loginPrimaryButton(theme.textTheme),
         ),
         child: Text(label),
       ),

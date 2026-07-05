@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
 import '../widgets/auth_flow_widgets.dart';
 import 'forgot_password_success_page.dart';
@@ -63,6 +64,7 @@ class _ForgotPasswordResetPageState
     });
 
     return AuthFlowScaffold(
+      appBar: const FlinxNavigationBar(title: '', showBottomDivider: false),
       title: l10n.forgotPasswordResetTitle,
       description: l10n.forgotPasswordResetDescription,
       dismissKeyboardOnTap: true,

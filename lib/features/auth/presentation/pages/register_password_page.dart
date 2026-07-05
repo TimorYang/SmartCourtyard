@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
 import '../widgets/auth_flow_widgets.dart';
 
@@ -60,6 +61,7 @@ class _RegisterPasswordPageState extends ConsumerState<RegisterPasswordPage> {
     });
 
     return AuthFlowScaffold(
+      appBar: const FlinxNavigationBar(title: '', showBottomDivider: false),
       title: l10n.registerPasswordTitle,
       description: l10n.registerPasswordDescription,
       dismissKeyboardOnTap: true,
