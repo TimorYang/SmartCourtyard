@@ -4,9 +4,11 @@ class AppColors {
   const AppColors._();
 
   static const brandPrimary = Color(0xFF176CFF);
-  static const brandPrimaryLight = Color(0xFF84BDEE);
+  static const brandPrimaryLight = Color(0xFF90CAF8);
   static const brandPrimaryDisabled = Color(0xFFB5D8F5);
+  static const authPrimaryButtonDisabledForeground = Color(0xFFFFFFFF);
   static const authSuccess = Color(0xFF12C76B);
+  static const toggleSelected = Color(0xFF12C76B);
   static const brandAlexa = Color(0xFF2EB5E9);
   static const brandAlexaDark = Color(0xFF1F96C5);
   static const brandGoogleBlue = Color(0xFF4285F4);
@@ -29,7 +31,7 @@ class AppColors {
   static const surfacePlantLight = Color(0xFF4E6550);
 
   static const textPrimary = Color(0xFF26292F);
-  static const textSecondary = Color(0xFF313131);
+  static const textSecondary = Color(0xFF202020);
   static const textMuted = Color(0xFF5B5B60);
   static const textHint = Color(0xFF7A7A7A);
   static const textIcon = Color(0xFF5A5D64);
@@ -104,6 +106,7 @@ class AppTextTokens {
 
   static TextStyle loginTitle(TextTheme textTheme) {
     return (textTheme.displaySmall ?? const TextStyle()).copyWith(
+      fontSize: 28,
       fontWeight: FontWeight.w700,
       color: AppColors.textPrimary,
     );
@@ -124,7 +127,15 @@ class AppTextTokens {
 
   static TextStyle loginPrimaryButton(TextTheme textTheme) {
     return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
+      fontSize: 17,
       fontWeight: FontWeight.w500,
+    );
+  }
+
+  static TextStyle loginTextButton(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      fontSize: 13,
+      fontWeight: FontWeight.w400,
     );
   }
 
