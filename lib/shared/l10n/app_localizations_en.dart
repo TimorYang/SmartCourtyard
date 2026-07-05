@@ -267,6 +267,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeDeviceEditCustomizeAction => 'Customize';
 
   @override
+  String get deviceNameDialogTitle => 'Device Name';
+
+  @override
+  String get deviceNameInputPlaceholder => 'Input Device Name';
+
+  @override
+  String get deviceDeleteConfirmMessage =>
+      'Are you sure to delete the device ?';
+
+  @override
+  String get deviceDeleteCancelAction => 'No';
+
+  @override
+  String get deviceDeleteConfirmAction => 'Yes';
+
+  @override
+  String get deviceCustomizeTitle => 'Customize';
+
+  @override
+  String get deviceCustomizeChangePictureAction => 'Change picture';
+
+  @override
+  String get deviceCustomizeDefaultPictureAction => 'Default picture';
+
+  @override
   String get addNewDoorsTitle => 'Add new doors';
 
   @override

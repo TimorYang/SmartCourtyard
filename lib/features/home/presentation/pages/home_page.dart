@@ -9,28 +9,45 @@ import '../../../add_device/presentation/pages/add_new_doors_page.dart';
 import '../../../../features/hardware_debug/presentation/pages/ble_debug_page.dart';
 import '../../../../platform_bridge/hardware_models.dart';
 import '../../application/providers.dart';
+import '../widgets/device_customize_dialog.dart';
+import '../widgets/device_delete_dialog.dart';
+import '../widgets/device_name_dialog.dart';
 import '../widgets/scene_name_dialog.dart';
+import 'choose_scene_page.dart';
 import 'scene_page.dart';
 
 class HomeAssetPaths {
   const HomeAssetPaths._();
 
-  static const avatarPlaceholder = 'assets/icons/home/home_avatar_placeholder.png';
-  static const emptyDoorsPlaceholder = 'assets/icons/home/home_empty_doors_placeholder.png';
+  static const avatarPlaceholder =
+      'assets/icons/home/home_avatar_placeholder.png';
+  static const emptyDoorsPlaceholder =
+      'assets/icons/home/home_empty_doors_placeholder.png';
   static const headerMenuIcon = 'assets/icons/home/home_header_menu_icon.png';
   static const headerSceneIcon = 'assets/icons/home/home_header_scene_icon.png';
   static const headerAddIcon = 'assets/icons/home/home_header_add_icon.png';
-  static const addScenePlaceholder = 'assets/icons/home/home_add_scene_placeholder.png';
-  static const addDoorPlaceholder = 'assets/icons/home/home_add_door_placeholder.png';
-  static const smartDevicePlaceholder = 'assets/icons/home/home_smart_device_placeholder.png';
-  static const garageDoorIcon = 'assets/icons/add_device/add_new_doors_garage_door.png';
-  static const rollerDoorIcon = 'assets/icons/add_device/add_new_doors_roller_door.png';
-  static const deviceEditTopIcon = 'assets/icons/home/home_device_edit_top_icon.png';
-  static const deviceEditShareIcon = 'assets/icons/home/home_device_edit_share_icon.png';
-  static const deviceEditMoveSceneIcon = 'assets/icons/home/home_device_edit_move_scene_icon.png';
-  static const deviceEditNameIcon = 'assets/icons/home/home_device_edit_name_icon.png';
-  static const deviceEditDeleteIcon = 'assets/icons/home/home_device_edit_delete_icon.png';
-  static const deviceEditCustomizeIcon = 'assets/icons/home/home_device_edit_customize_icon.png';
+  static const addScenePlaceholder =
+      'assets/icons/home/home_add_scene_placeholder.png';
+  static const addDoorPlaceholder =
+      'assets/icons/home/home_add_door_placeholder.png';
+  static const smartDevicePlaceholder =
+      'assets/icons/home/home_smart_device_placeholder.png';
+  static const garageDoorIcon =
+      'assets/icons/add_device/add_new_doors_garage_door.png';
+  static const rollerDoorIcon =
+      'assets/icons/add_device/add_new_doors_roller_door.png';
+  static const deviceEditTopIcon =
+      'assets/icons/home/home_device_edit_top_icon.png';
+  static const deviceEditShareIcon =
+      'assets/icons/home/home_device_edit_share_icon.png';
+  static const deviceEditMoveSceneIcon =
+      'assets/icons/home/home_device_edit_move_scene_icon.png';
+  static const deviceEditNameIcon =
+      'assets/icons/home/home_device_edit_name_icon.png';
+  static const deviceEditDeleteIcon =
+      'assets/icons/home/home_device_edit_delete_icon.png';
+  static const deviceEditCustomizeIcon =
+      'assets/icons/home/home_device_edit_customize_icon.png';
 }
 
 class HomePage extends ConsumerStatefulWidget {
@@ -102,8 +119,14 @@ class _HomePageState extends ConsumerState<HomePage> {
                   const Divider(height: 1, color: AppColors.borderHomeDivider),
                   Expanded(
                     child: devices.when(
-                      data: (_) => TabBarView(children: [for (final home in homes) _HomeDevicePanel(home: home)]),
-                      loading: () => const Center(child: CircularProgressIndicator()),
+                      data: (_) => TabBarView(
+                        children: [
+                          for (final home in homes)
+                            _HomeDevicePanel(home: home),
+                        ],
+                      ),
+                      loading: () =>
+                          const Center(child: CircularProgressIndicator()),
                       error: (error, stackTrace) => const _HomeErrorState(),
                     ),
                   ),
@@ -216,7 +239,12 @@ class _HomeAddMenu extends StatelessWidget {
 }
 
 class _HomeAddMenuItemData {
-  const _HomeAddMenuItemData({required this.label, required this.assetPath, required this.fallbackIcon, required this.onPressed});
+  const _HomeAddMenuItemData({
+    required this.label,
+    required this.assetPath,
+    required this.fallbackIcon,
+    required this.onPressed,
+  });
 
   final String label;
   final String assetPath;
@@ -238,9 +266,19 @@ class _HomeAddMenuItem extends StatelessWidget {
         child: Row(
           children: [
             const SizedBox(width: 22),
-            _HomeAddMenuIcon(assetPath: item.assetPath, fallbackIcon: item.fallbackIcon),
+            _HomeAddMenuIcon(
+              assetPath: item.assetPath,
+              fallbackIcon: item.fallbackIcon,
+            ),
             const SizedBox(width: 10),
-            Expanded(child: Text(item.label, style: AppTextTokens.homeAddMenuItem(Theme.of(context).textTheme))),
+            Expanded(
+              child: Text(
+                item.label,
+                style: AppTextTokens.homeAddMenuItem(
+                  Theme.of(context).textTheme,
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -286,7 +324,10 @@ class _HomeHeader extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _AvatarPlaceholder(assetPath: HomeAssetPaths.avatarPlaceholder, size: 58),
+              _AvatarPlaceholder(
+                assetPath: HomeAssetPaths.avatarPlaceholder,
+                size: 58,
+              ),
               const Spacer(),
               _HeaderIconButton(
                 tooltip: l10n.homeMenuTooltip,
@@ -326,7 +367,12 @@ class _HomeGroup {
 }
 
 class _HeaderIconButton extends StatelessWidget {
-  const _HeaderIconButton({required this.tooltip, required this.assetPath, required this.fallbackIcon, required this.onPressed});
+  const _HeaderIconButton({
+    required this.tooltip,
+    required this.assetPath,
+    required this.fallbackIcon,
+    required this.onPressed,
+  });
 
   final String tooltip;
   final String assetPath;
@@ -403,7 +449,12 @@ class _HomeDevicePanel extends StatelessWidget {
           itemCount: home.devices.length,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, mainAxisSpacing: 18, crossAxisSpacing: 22, childAspectRatio: 0.96),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisSpacing: 18,
+            crossAxisSpacing: 22,
+            childAspectRatio: 0.96,
+          ),
           itemBuilder: (context, index) {
             return _DeviceCard(device: home.devices[index]);
           },
@@ -420,7 +471,10 @@ class _DoorCount extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(AppLocalizations.of(context).homeDoorCount(count), style: AppTextTokens.homeDoorCount(Theme.of(context).textTheme));
+    return Text(
+      AppLocalizations.of(context).homeDoorCount(count),
+      style: AppTextTokens.homeDoorCount(Theme.of(context).textTheme),
+    );
   }
 }
 
@@ -441,11 +495,24 @@ class _EmptyHomeState extends StatelessWidget {
         children: [
           _DoorCount(count: doorCount),
           const Spacer(flex: 2),
-          Center(child: _EmptyDoorsAsset(assetPath: HomeAssetPaths.emptyDoorsPlaceholder, size: 116)),
+          Center(
+            child: _EmptyDoorsAsset(
+              assetPath: HomeAssetPaths.emptyDoorsPlaceholder,
+              size: 116,
+            ),
+          ),
           const SizedBox(height: 28),
-          Text(l10n.homeNoDoorsTitle, textAlign: TextAlign.center, style: AppTextTokens.homeEmptyTitle(textTheme)),
+          Text(
+            l10n.homeNoDoorsTitle,
+            textAlign: TextAlign.center,
+            style: AppTextTokens.homeEmptyTitle(textTheme),
+          ),
           const SizedBox(height: 8),
-          Text(l10n.homeNoDoorsSubtitle, textAlign: TextAlign.center, style: AppTextTokens.homeEmptySubtitle(textTheme)),
+          Text(
+            l10n.homeNoDoorsSubtitle,
+            textAlign: TextAlign.center,
+            style: AppTextTokens.homeEmptySubtitle(textTheme),
+          ),
           const SizedBox(height: 42),
           Center(
             child: SizedBox(
@@ -456,7 +523,9 @@ class _EmptyHomeState extends StatelessWidget {
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.brandPrimary,
                   foregroundColor: AppColors.backgroundPrimary,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
                   textStyle: AppTextTokens.homePrimaryButton(textTheme),
                 ),
                 icon: const Icon(Icons.add_rounded),
@@ -476,7 +545,9 @@ class _HomeErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(child: Text(AppLocalizations.of(context).homeLoadDoorsFailed));
+    return Center(
+      child: Text(AppLocalizations.of(context).homeLoadDoorsFailed),
+    );
   }
 }
 
@@ -500,7 +571,11 @@ class _AvatarPlaceholder extends StatelessWidget {
             height: size,
             color: AppColors.surfaceHomeAvatar,
             alignment: Alignment.center,
-            child: Icon(Icons.person, color: AppColors.iconHomePlaceholder, size: size * 0.64),
+            child: Icon(
+              Icons.person,
+              color: AppColors.iconHomePlaceholder,
+              size: size * 0.64,
+            ),
           );
         },
       ),
@@ -528,10 +603,17 @@ class _EmptyDoorsAsset extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColors.surfaceHomeIcon,
             shape: BoxShape.circle,
-            border: Border.all(color: AppColors.borderHomePlaceholder, width: 1),
+            border: Border.all(
+              color: AppColors.borderHomePlaceholder,
+              width: 1,
+            ),
           ),
           alignment: Alignment.center,
-          child: Icon(Icons.dns_outlined, color: AppColors.iconHomePlaceholder, size: size * 0.48),
+          child: Icon(
+            Icons.dns_outlined,
+            color: AppColors.iconHomePlaceholder,
+            size: size * 0.48,
+          ),
         );
       },
     );
@@ -558,7 +640,11 @@ class _DeviceCard extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: Stack(
           children: [
-            Positioned(top: 10, right: 10, child: _DeviceStatusDot(onlineState: device.onlineState)),
+            Positioned(
+              top: 10,
+              right: 10,
+              child: _DeviceStatusDot(onlineState: device.onlineState),
+            ),
             Positioned.fill(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(10, 18, 10, 14),
@@ -574,7 +660,9 @@ class _DeviceCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.center,
-                        style: AppTextTokens.homeDeviceCardTitle(Theme.of(context).textTheme),
+                        style: AppTextTokens.homeDeviceCardTitle(
+                          Theme.of(context).textTheme,
+                        ),
                       ),
                       const SizedBox(height: 6),
                       Text(
@@ -582,7 +670,9 @@ class _DeviceCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.center,
-                        style: AppTextTokens.homeDeviceCardState(Theme.of(context).textTheme),
+                        style: AppTextTokens.homeDeviceCardState(
+                          Theme.of(context).textTheme,
+                        ),
                       ),
                     ],
                   ),
@@ -595,12 +685,16 @@ class _DeviceCard extends StatelessWidget {
     );
   }
 
-  Future<void> _showDeviceEditingSheet(BuildContext context, DeviceSummary device) {
+  Future<void> _showDeviceEditingSheet(
+    BuildContext context,
+    DeviceSummary device,
+  ) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _DeviceEditingSheet(device: device),
+      builder: (_) =>
+          _DeviceEditingSheet(device: device, parentContext: context),
     );
   }
 
@@ -617,29 +711,66 @@ class _DeviceCard extends StatelessWidget {
 }
 
 class _DeviceEditingSheet extends StatelessWidget {
-  const _DeviceEditingSheet({required this.device});
+  const _DeviceEditingSheet({
+    required this.device,
+    required this.parentContext,
+  });
 
   final DeviceSummary device;
+  final BuildContext parentContext;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final textTheme = Theme.of(context).textTheme;
     final items = [
-      _DeviceEditingAction(label: l10n.homeDeviceEditTopAction, assetPath: HomeAssetPaths.deviceEditTopIcon, fallbackIcon: Icons.vertical_align_top_rounded),
-      _DeviceEditingAction(label: l10n.homeDeviceEditShareAction, assetPath: HomeAssetPaths.deviceEditShareIcon, fallbackIcon: Icons.person_add_alt_1_outlined),
+      _DeviceEditingAction(
+        label: l10n.homeDeviceEditTopAction,
+        assetPath: HomeAssetPaths.deviceEditTopIcon,
+        fallbackIcon: Icons.vertical_align_top_rounded,
+      ),
+      _DeviceEditingAction(
+        label: l10n.homeDeviceEditShareAction,
+        assetPath: HomeAssetPaths.deviceEditShareIcon,
+        fallbackIcon: Icons.person_add_alt_1_outlined,
+      ),
       _DeviceEditingAction(
         label: l10n.homeDeviceEditMoveSceneAction,
         assetPath: HomeAssetPaths.deviceEditMoveSceneIcon,
         fallbackIcon: Icons.exit_to_app_rounded,
+        onPressed: () {
+          final router = GoRouter.of(context);
+          Navigator.of(context).pop();
+          router.push(ChooseScenePage.routePath);
+        },
       ),
       _DeviceEditingAction(
         label: l10n.homeDeviceEditNameAction,
         assetPath: HomeAssetPaths.deviceEditNameIcon,
         fallbackIcon: Icons.drive_file_rename_outline_rounded,
+        onPressed: () {
+          Navigator.of(context).pop();
+          showDeviceNameDialog(parentContext);
+        },
       ),
-      _DeviceEditingAction(label: l10n.homeDeviceEditDeleteAction, assetPath: HomeAssetPaths.deviceEditDeleteIcon, fallbackIcon: Icons.delete_outline_rounded),
-      _DeviceEditingAction(label: l10n.homeDeviceEditCustomizeAction, assetPath: HomeAssetPaths.deviceEditCustomizeIcon, fallbackIcon: Icons.image_outlined),
+      _DeviceEditingAction(
+        label: l10n.homeDeviceEditDeleteAction,
+        assetPath: HomeAssetPaths.deviceEditDeleteIcon,
+        fallbackIcon: Icons.delete_outline_rounded,
+        onPressed: () {
+          Navigator.of(context).pop();
+          showDeviceDeleteDialog(parentContext);
+        },
+      ),
+      _DeviceEditingAction(
+        label: l10n.homeDeviceEditCustomizeAction,
+        assetPath: HomeAssetPaths.deviceEditCustomizeIcon,
+        fallbackIcon: Icons.image_outlined,
+        onPressed: () {
+          Navigator.of(context).pop();
+          showDeviceCustomizeDialog(parentContext);
+        },
+      ),
     ];
 
     return SafeArea(
@@ -661,9 +792,19 @@ class _DeviceEditingSheet extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(l10n.homeDeviceEditingTitle, style: AppTextTokens.homeDeviceEditingTitle(textTheme)),
+                        Text(
+                          l10n.homeDeviceEditingTitle,
+                          style: AppTextTokens.homeDeviceEditingTitle(
+                            textTheme,
+                          ),
+                        ),
                         const SizedBox(height: 4),
-                        Text(device.name, style: AppTextTokens.homeDeviceEditingSubtitle(textTheme)),
+                        Text(
+                          device.name,
+                          style: AppTextTokens.homeDeviceEditingSubtitle(
+                            textTheme,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -672,7 +813,8 @@ class _DeviceEditingSheet extends StatelessWidget {
               const SizedBox(height: 24),
               for (var index = 0; index < items.length; index++) ...[
                 _DeviceEditingActionTile(action: items[index]),
-                if (index != items.length - 1) const Divider(height: 1, color: AppColors.borderHomeDivider),
+                if (index != items.length - 1)
+                  const Divider(height: 1, color: AppColors.borderHomeDivider),
               ],
             ],
           ),
@@ -683,11 +825,17 @@ class _DeviceEditingSheet extends StatelessWidget {
 }
 
 class _DeviceEditingAction {
-  const _DeviceEditingAction({required this.label, required this.assetPath, required this.fallbackIcon});
+  const _DeviceEditingAction({
+    required this.label,
+    required this.assetPath,
+    required this.fallbackIcon,
+    this.onPressed,
+  });
 
   final String label;
   final String assetPath;
   final IconData fallbackIcon;
+  final VoidCallback? onPressed;
 }
 
 class _DeviceEditingActionTile extends StatelessWidget {
@@ -698,15 +846,26 @@ class _DeviceEditingActionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () {},
+      onTap: action.onPressed,
       child: SizedBox(
         height: 62,
         child: Row(
           children: [
             _DeviceEditingActionIcon(action: action),
             const SizedBox(width: 12),
-            Expanded(child: Text(action.label, style: AppTextTokens.homeDeviceEditingAction(Theme.of(context).textTheme))),
-            const Icon(Icons.chevron_right_rounded, color: AppColors.textPrimary, size: 25),
+            Expanded(
+              child: Text(
+                action.label,
+                style: AppTextTokens.homeDeviceEditingAction(
+                  Theme.of(context).textTheme,
+                ),
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: AppColors.textPrimary,
+              size: 25,
+            ),
           ],
         ),
       ),
@@ -743,7 +902,12 @@ class _DeviceStatusDot extends StatelessWidget {
     return Container(
       width: 10,
       height: 10,
-      decoration: BoxDecoration(shape: BoxShape.circle, color: onlineState == DeviceOnlineState.online ? AppColors.authSuccess : AppColors.iconHomeAction),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: onlineState == DeviceOnlineState.online
+            ? AppColors.authSuccess
+            : AppColors.iconHomeAction,
+      ),
     );
   }
 }
@@ -756,7 +920,9 @@ class _DeviceDoorIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isRoller = deviceName.toLowerCase().contains('roller');
-    final assetPath = isRoller ? HomeAssetPaths.rollerDoorIcon : HomeAssetPaths.garageDoorIcon;
+    final assetPath = isRoller
+        ? HomeAssetPaths.rollerDoorIcon
+        : HomeAssetPaths.garageDoorIcon;
 
     return Image.asset(
       assetPath,
@@ -764,7 +930,11 @@ class _DeviceDoorIcon extends StatelessWidget {
       height: 45,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) {
-        return Icon(isRoller ? Icons.window_outlined : Icons.garage_outlined, color: AppColors.iconHomeAction, size: 45);
+        return Icon(
+          isRoller ? Icons.window_outlined : Icons.garage_outlined,
+          color: AppColors.iconHomeAction,
+          size: 45,
+        );
       },
     );
   }

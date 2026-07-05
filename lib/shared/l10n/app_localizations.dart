@@ -572,6 +572,54 @@ abstract class AppLocalizations {
   /// **'Customize'**
   String get homeDeviceEditCustomizeAction;
 
+  /// Title of the dialog for editing a device name
+  ///
+  /// In en, this message translates to:
+  /// **'Device Name'**
+  String get deviceNameDialogTitle;
+
+  /// Placeholder for the device name input
+  ///
+  /// In en, this message translates to:
+  /// **'Input Device Name'**
+  String get deviceNameInputPlaceholder;
+
+  /// Confirmation message for deleting a device
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure to delete the device ?'**
+  String get deviceDeleteConfirmMessage;
+
+  /// Cancel action for deleting a device
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get deviceDeleteCancelAction;
+
+  /// Confirm action for deleting a device
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get deviceDeleteConfirmAction;
+
+  /// Title of the device customization dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Customize'**
+  String get deviceCustomizeTitle;
+
+  /// Change picture action in the device customization dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Change picture'**
+  String get deviceCustomizeChangePictureAction;
+
+  /// Default picture action in the device customization dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Default picture'**
+  String get deviceCustomizeDefaultPictureAction;
+
   /// Add new doors page title
   ///
   /// In en, this message translates to:

@@ -415,7 +415,34 @@ class AppTextTokens {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
       color: AppColors.textMuted,
       fontSize: 15,
+      fontWeight: FontWeight.w500,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle deviceDeleteConfirmMessage(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 16,
       fontWeight: FontWeight.w600,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle deviceCustomizeTitle(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 18,
+      fontWeight: FontWeight.w600,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle deviceCustomizeAction(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 15,
+      fontWeight: FontWeight.w400,
       height: 1.2,
     );
   }
@@ -540,7 +567,7 @@ class AppTextTokens {
     return (textTheme.titleLarge ?? const TextStyle()).copyWith(
       color: AppColors.textMuted,
       fontSize: 14,
-      fontWeight: FontWeight.w500,
+      fontWeight: FontWeight.w400,
       height: 1.2,
     );
   }

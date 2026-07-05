@@ -254,6 +254,30 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeDeviceEditCustomizeAction => '自定义';
 
   @override
+  String get deviceNameDialogTitle => '设备名称';
+
+  @override
+  String get deviceNameInputPlaceholder => '请输入设备名称';
+
+  @override
+  String get deviceDeleteConfirmMessage => '确定要删除该设备吗？';
+
+  @override
+  String get deviceDeleteCancelAction => '否';
+
+  @override
+  String get deviceDeleteConfirmAction => '是';
+
+  @override
+  String get deviceCustomizeTitle => '自定义';
+
+  @override
+  String get deviceCustomizeChangePictureAction => '更换图片';
+
+  @override
+  String get deviceCustomizeDefaultPictureAction => '默认图片';
+
+  @override
   String get addNewDoorsTitle => '添加新门';
 
   @override

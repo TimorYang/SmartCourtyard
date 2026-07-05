@@ -111,6 +111,94 @@ void main() {
     expect(find.text('Customize'), findsOneWidget);
   });
 
+  testWidgets('opens choose scene page from device editing move scene action', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const ProviderScope(child: FlinxApp()));
+
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Home'));
+    await tester.pumpAndSettle();
+
+    await tester.longPress(find.text('Roller door'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Move Scene'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('CHOOSE A SCENE'), findsOneWidget);
+    expect(find.text('Home/Smart Door'), findsOneWidget);
+    expect(find.text('Device editing'), findsNothing);
+  });
+
+  testWidgets('opens device name dialog from device editing name action', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const ProviderScope(child: FlinxApp()));
+
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Home'));
+    await tester.pumpAndSettle();
+
+    await tester.longPress(find.text('Roller door'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Name'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Device Name'), findsOneWidget);
+    expect(find.text('Input Device Name'), findsOneWidget);
+    expect(find.text('Cancel'), findsOneWidget);
+    expect(find.text('confirm'), findsOneWidget);
+    expect(find.text('Device editing'), findsNothing);
+  });
+
+  testWidgets('opens device delete dialog from device editing delete action', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const ProviderScope(child: FlinxApp()));
+
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Home'));
+    await tester.pumpAndSettle();
+
+    await tester.longPress(find.text('Roller door'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Delete Device'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Are you sure to delete the device ?'), findsOneWidget);
+    expect(find.text('No'), findsOneWidget);
+    expect(find.text('Yes'), findsOneWidget);
+    expect(find.text('Device editing'), findsNothing);
+  });
+
+  testWidgets('opens customize dialog from device editing customize action', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const ProviderScope(child: FlinxApp()));
+
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Home'));
+    await tester.pumpAndSettle();
+
+    await tester.longPress(find.text('Roller door'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Customize'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Customize'), findsOneWidget);
+    expect(find.text('Change picture'), findsOneWidget);
+    expect(find.text('Default picture'), findsOneWidget);
+    expect(find.text('Device editing'), findsNothing);
+  });
+
   testWidgets('shows home add menu from header add action', (tester) async {
     await tester.pumpWidget(const ProviderScope(child: FlinxApp()));
 

@@ -336,6 +336,38 @@
   "@homeDeviceEditCustomizeAction": {
     "description": "Customize action in the home device editing sheet"
   },
+  "deviceNameDialogTitle": "Device Name",
+  "@deviceNameDialogTitle": {
+    "description": "Title of the dialog for editing a device name"
+  },
+  "deviceNameInputPlaceholder": "Input Device Name",
+  "@deviceNameInputPlaceholder": {
+    "description": "Placeholder for the device name input"
+  },
+  "deviceDeleteConfirmMessage": "Are you sure to delete the device ?",
+  "@deviceDeleteConfirmMessage": {
+    "description": "Confirmation message for deleting a device"
+  },
+  "deviceDeleteCancelAction": "No",
+  "@deviceDeleteCancelAction": {
+    "description": "Cancel action for deleting a device"
+  },
+  "deviceDeleteConfirmAction": "Yes",
+  "@deviceDeleteConfirmAction": {
+    "description": "Confirm action for deleting a device"
+  },
+  "deviceCustomizeTitle": "Customize",
+  "@deviceCustomizeTitle": {
+    "description": "Title of the device customization dialog"
+  },
+  "deviceCustomizeChangePictureAction": "Change picture",
+  "@deviceCustomizeChangePictureAction": {
+    "description": "Change picture action in the device customization dialog"
+  },
+  "deviceCustomizeDefaultPictureAction": "Default picture",
+  "@deviceCustomizeDefaultPictureAction": {
+    "description": "Default picture action in the device customization dialog"
+  },
   "addNewDoorsTitle": "Add new doors",
   "@addNewDoorsTitle": {
     "description": "Add new doors page title"
