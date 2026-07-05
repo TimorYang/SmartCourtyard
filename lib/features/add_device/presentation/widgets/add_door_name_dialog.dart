@@ -1,0 +1,237 @@
+import 'package:flutter/material.dart';
+
+import '../../../../app/theme/app_design_tokens.dart';
+import '../../../../shared/l10n/app_localizations.dart';
+
+class AddDoorNameDialogAssetPaths {
+  const AddDoorNameDialogAssetPaths._();
+
+  static const nameInputPlaceholder =
+      'assets/icons/add_device/add_door_name_input_placeholder.png';
+  static const sceneSelectPlaceholder =
+      'assets/icons/add_device/add_door_name_input_placeholder.png';
+}
+
+Future<void> showAddDoorNameDialog(
+  BuildContext context, {
+  VoidCallback? onConfirmed,
+}) {
+  return showDialog<void>(
+    context: context,
+    barrierColor: AppColors.overlaySoft,
+    builder: (context) => AddDoorNameDialog(onConfirmed: onConfirmed),
+  );
+}
+
+class AddDoorNameDialog extends StatefulWidget {
+  const AddDoorNameDialog({super.key, this.onConfirmed});
+
+  final VoidCallback? onConfirmed;
+
+  @override
+  State<AddDoorNameDialog> createState() => _AddDoorNameDialogState();
+}
+
+class _AddDoorNameDialogState extends State<AddDoorNameDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final textTheme = Theme.of(context).textTheme;
+    final viewInsets = MediaQuery.viewInsetsOf(context);
+
+    return AnimatedPadding(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOut,
+      padding: viewInsets + const EdgeInsets.symmetric(horizontal: 22),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 390),
+          child: Material(
+            color: AppColors.backgroundPrimary,
+            borderRadius: BorderRadius.circular(10),
+            clipBehavior: Clip.antiAlias,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 18, 24, 28),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    l10n.addDoorNameDialogTitle,
+                    style: AppTextTokens.addDoorDialogTitle(textTheme),
+                  ),
+                  const SizedBox(height: 24),
+                  _AddDoorNameTextField(controller: _controller),
+                  const SizedBox(height: 22),
+                  _AddDoorSceneSelector(label: l10n.addDoorSceneDefault),
+                  const SizedBox(height: 40),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: 52,
+                          child: FilledButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: FilledButton.styleFrom(
+                              backgroundColor:
+                                  AppColors.sceneDialogCancelButton,
+                              foregroundColor: AppColors.textPrimary,
+                              shape: const StadiumBorder(),
+                              textStyle: AppTextTokens.addDoorDialogButton(
+                                textTheme,
+                              ),
+                            ),
+                            child: Text(l10n.addDoorNameCancelAction),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 18),
+                      Expanded(
+                        child: SizedBox(
+                          height: 52,
+                          child: FilledButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              widget.onConfirmed?.call();
+                            },
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppColors.brandPrimary,
+                              foregroundColor: AppColors.backgroundPrimary,
+                              shape: const StadiumBorder(),
+                              textStyle: AppTextTokens.addDoorDialogButton(
+                                textTheme,
+                              ),
+                            ),
+                            child: Text(l10n.addDoorNameConfirmAction),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AddDoorNameTextField extends StatelessWidget {
+  const _AddDoorNameTextField({required this.controller});
+
+  final TextEditingController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final textTheme = Theme.of(context).textTheme;
+
+    return _AddDoorDialogFieldFrame(
+      leading: const _AddDoorDialogIcon(
+        assetPath: AddDoorNameDialogAssetPaths.nameInputPlaceholder,
+      ),
+      child: TextField(
+        controller: controller,
+        style: AppTextTokens.addDoorDialogField(textTheme),
+        decoration: InputDecoration.collapsed(
+          hintText: l10n.addDoorNameInputPlaceholder,
+          hintStyle: AppTextTokens.addDoorDialogHint(textTheme),
+        ),
+      ),
+    );
+  }
+}
+
+class _AddDoorSceneSelector extends StatelessWidget {
+  const _AddDoorSceneSelector({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return _AddDoorDialogFieldFrame(
+      leading: const _AddDoorDialogIcon(
+        assetPath: AddDoorNameDialogAssetPaths.sceneSelectPlaceholder,
+      ),
+      trailing: const Icon(
+        Icons.keyboard_arrow_down_rounded,
+        color: AppColors.textMuted,
+        size: 24,
+      ),
+      child: Text(
+        label,
+        style: AppTextTokens.addDoorDialogField(Theme.of(context).textTheme),
+      ),
+    );
+  }
+}
+
+class _AddDoorDialogFieldFrame extends StatelessWidget {
+  const _AddDoorDialogFieldFrame({
+    required this.leading,
+    required this.child,
+    this.trailing,
+  });
+
+  final Widget leading;
+  final Widget child;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 58,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: AppColors.sceneDialogInputBorder, width: 1.2),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 22),
+      child: Row(
+        children: [
+          leading,
+          const SizedBox(width: 16),
+          Expanded(child: child),
+          if (trailing != null) ...[const SizedBox(width: 12), trailing!],
+        ],
+      ),
+    );
+  }
+}
+
+class _AddDoorDialogIcon extends StatelessWidget {
+  const _AddDoorDialogIcon({required this.assetPath});
+
+  final String assetPath;
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.asset(
+      assetPath,
+      width: 22,
+      height: 22,
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) {
+        return const Icon(
+          Icons.view_in_ar_outlined,
+          color: AppColors.textMuted,
+          size: 22,
+        );
+      },
+    );
+  }
+}

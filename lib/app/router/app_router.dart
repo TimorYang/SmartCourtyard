@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/add_device/presentation/pages/add_device_page.dart';
+import '../../features/add_device/presentation/pages/add_new_doors_page.dart';
 import '../../features/auth/application/providers.dart';
 import '../../features/auth/presentation/pages/forgot_password_code_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
@@ -47,7 +48,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           location == AppWebViewPage.routePath ||
           location == HomePage.routePath ||
           location == ScenePage.routePath ||
-          location == ChooseScenePage.routePath;
+          location == ChooseScenePage.routePath ||
+          location == AddNewDoorsPage.routePath ||
+          location == AddDevicePage.routePath;
 
       if (!isSignedIn && !isPublicRoute) {
         return WelcomePage.routePath;
@@ -142,6 +145,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AddDevicePage.routePath,
         name: AddDevicePage.routeName,
         builder: (context, state) => const AddDevicePage(),
+      ),
+      GoRoute(
+        path: AddNewDoorsPage.routePath,
+        name: AddNewDoorsPage.routeName,
+        builder: (context, state) => const AddNewDoorsPage(),
       ),
       GoRoute(
         path: WifiConfigurationPage.routePath,

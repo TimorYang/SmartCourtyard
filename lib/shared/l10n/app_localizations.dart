@@ -488,6 +488,144 @@ abstract class AppLocalizations {
   /// **'Life remaining'**
   String get homeLifeRemainingLabel;
 
+  /// Add new doors page title
+  ///
+  /// In en, this message translates to:
+  /// **'Add new doors'**
+  String get addNewDoorsTitle;
+
+  /// Add new doors page subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Select the door to be added'**
+  String get addNewDoorsSubtitle;
+
+  /// Tooltip for the add new doors back action
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get addNewDoorsBackTooltip;
+
+  /// Garage door option on the add new doors page
+  ///
+  /// In en, this message translates to:
+  /// **'Garage door'**
+  String get addNewDoorsGarageDoor;
+
+  /// Roller door option on the add new doors page
+  ///
+  /// In en, this message translates to:
+  /// **'Roller door'**
+  String get addNewDoorsRollerDoor;
+
+  /// Industrial door option on the add new doors page
+  ///
+  /// In en, this message translates to:
+  /// **'Industrial door'**
+  String get addNewDoorsIndustrialDoor;
+
+  /// Swing gate option on the add new doors page
+  ///
+  /// In en, this message translates to:
+  /// **'Swing gate'**
+  String get addNewDoorsSwingGate;
+
+  /// Sliding gate option on the add new doors page
+  ///
+  /// In en, this message translates to:
+  /// **'Sliding gate'**
+  String get addNewDoorsSlidingGate;
+
+  /// Title of the dialog for naming a door
+  ///
+  /// In en, this message translates to:
+  /// **'Door name'**
+  String get addDoorNameDialogTitle;
+
+  /// Placeholder for the door name input
+  ///
+  /// In en, this message translates to:
+  /// **'Input door name'**
+  String get addDoorNameInputPlaceholder;
+
+  /// Default scene value in the add door dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get addDoorSceneDefault;
+
+  /// Cancel button label in the add door name dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get addDoorNameCancelAction;
+
+  /// Confirm button label in the add door name dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get addDoorNameConfirmAction;
+
+  /// Add device page title
+  ///
+  /// In en, this message translates to:
+  /// **'Add Device'**
+  String get addDeviceTitle;
+
+  /// Add device page subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Select the device to be added'**
+  String get addDeviceSubtitle;
+
+  /// F-box section title on the add device page
+  ///
+  /// In en, this message translates to:
+  /// **'F-box'**
+  String get addDeviceFBoxSection;
+
+  /// Smart controller section title on the add device page
+  ///
+  /// In en, this message translates to:
+  /// **'Smart controller'**
+  String get addDeviceSmartControllerSection;
+
+  /// Smart accessory section title on the add device page
+  ///
+  /// In en, this message translates to:
+  /// **'Smart accessory'**
+  String get addDeviceSmartAccessorySection;
+
+  /// F-box option on the add device page
+  ///
+  /// In en, this message translates to:
+  /// **'F-box'**
+  String get addDeviceFBox;
+
+  /// USB WIFI module option on the add device page
+  ///
+  /// In en, this message translates to:
+  /// **'USB WIFI module'**
+  String get addDeviceUsbWifiModule;
+
+  /// Smart Opener option on the add device page
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Opener'**
+  String get addDeviceSmartOpener;
+
+  /// Solar Energy System option on the add device page
+  ///
+  /// In en, this message translates to:
+  /// **'Solar Energy System'**
+  String get addDeviceSolarEnergySystem;
+
+  /// Camera option on the add device page
+  ///
+  /// In en, this message translates to:
+  /// **'Camera'**
+  String get addDeviceCamera;
+
   /// Choose scene page title
   ///
   /// In en, this message translates to:

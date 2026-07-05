@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../../add_device/presentation/pages/add_new_doors_page.dart';
 import '../../../add_device/presentation/pages/add_device_page.dart';
 import '../../../../features/hardware_debug/presentation/pages/ble_debug_page.dart';
 import '../../../../platform_bridge/hardware_models.dart';
@@ -142,7 +143,7 @@ class _HomeAddMenuOverlay extends StatelessWidget {
                       fallbackIcon: Icons.dns_outlined,
                       onPressed: () {
                         onDismissed();
-                        context.push(AddDevicePage.routePath);
+                        context.push(AddNewDoorsPage.routePath);
                       },
                     ),
                     _HomeAddMenuItemData(
@@ -174,7 +175,7 @@ class _HomeAddMenu extends StatelessWidget {
       borderRadius: BorderRadius.circular(8),
       clipBehavior: Clip.antiAlias,
       child: SizedBox(
-        width: 180,
+        width: 160,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -182,7 +183,7 @@ class _HomeAddMenu extends StatelessWidget {
               _HomeAddMenuItem(item: items[index]),
               if (index != items.length - 1)
                 const Padding(
-                  padding: EdgeInsets.only(left: 34, right: 34),
+                  padding: EdgeInsets.only(left: 20, right: 20),
                   child: Divider(height: 1, color: AppColors.borderHomeDivider),
                 ),
             ],
@@ -220,7 +221,7 @@ class _HomeAddMenuItem extends StatelessWidget {
         height: 58,
         child: Row(
           children: [
-            const SizedBox(width: 32),
+            const SizedBox(width: 22),
             _HomeAddMenuIcon(
               assetPath: item.assetPath,
               fallbackIcon: item.fallbackIcon,

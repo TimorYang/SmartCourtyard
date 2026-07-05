@@ -36,4 +36,5 @@ flutter:
     - assets/images/
     - assets/icons/
     - assets/icons/auth/
+    - assets/icons/add_device/
     - assets/icons/home/

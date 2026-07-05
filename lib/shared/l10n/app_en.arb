@@ -280,6 +280,98 @@
   "@homeLifeRemainingLabel": {
     "description": "Device card label for remaining device life"
   },
+  "addNewDoorsTitle": "Add new doors",
+  "@addNewDoorsTitle": {
+    "description": "Add new doors page title"
+  },
+  "addNewDoorsSubtitle": "Select the door to be added",
+  "@addNewDoorsSubtitle": {
+    "description": "Add new doors page subtitle"
+  },
+  "addNewDoorsBackTooltip": "Back",
+  "@addNewDoorsBackTooltip": {
+    "description": "Tooltip for the add new doors back action"
+  },
+  "addNewDoorsGarageDoor": "Garage door",
+  "@addNewDoorsGarageDoor": {
+    "description": "Garage door option on the add new doors page"
+  },
+  "addNewDoorsRollerDoor": "Roller door",
+  "@addNewDoorsRollerDoor": {
+    "description": "Roller door option on the add new doors page"
+  },
+  "addNewDoorsIndustrialDoor": "Industrial door",
+  "@addNewDoorsIndustrialDoor": {
+    "description": "Industrial door option on the add new doors page"
+  },
+  "addNewDoorsSwingGate": "Swing gate",
+  "@addNewDoorsSwingGate": {
+    "description": "Swing gate option on the add new doors page"
+  },
+  "addNewDoorsSlidingGate": "Sliding gate",
+  "@addNewDoorsSlidingGate": {
+    "description": "Sliding gate option on the add new doors page"
+  },
+  "addDoorNameDialogTitle": "Door name",
+  "@addDoorNameDialogTitle": {
+    "description": "Title of the dialog for naming a door"
+  },
+  "addDoorNameInputPlaceholder": "Input door name",
+  "@addDoorNameInputPlaceholder": {
+    "description": "Placeholder for the door name input"
+  },
+  "addDoorSceneDefault": "Home",
+  "@addDoorSceneDefault": {
+    "description": "Default scene value in the add door dialog"
+  },
+  "addDoorNameCancelAction": "Cancel",
+  "@addDoorNameCancelAction": {
+    "description": "Cancel button label in the add door name dialog"
+  },
+  "addDoorNameConfirmAction": "Confirm",
+  "@addDoorNameConfirmAction": {
+    "description": "Confirm button label in the add door name dialog"
+  },
+  "addDeviceTitle": "Add Device",
+  "@addDeviceTitle": {
+    "description": "Add device page title"
+  },
+  "addDeviceSubtitle": "Select the device to be added",
+  "@addDeviceSubtitle": {
+    "description": "Add device page subtitle"
+  },
+  "addDeviceFBoxSection": "F-box",
+  "@addDeviceFBoxSection": {
+    "description": "F-box section title on the add device page"
+  },
+  "addDeviceSmartControllerSection": "Smart controller",
+  "@addDeviceSmartControllerSection": {
+    "description": "Smart controller section title on the add device page"
+  },
+  "addDeviceSmartAccessorySection": "Smart accessory",
+  "@addDeviceSmartAccessorySection": {
+    "description": "Smart accessory section title on the add device page"
+  },
+  "addDeviceFBox": "F-box",
+  "@addDeviceFBox": {
+    "description": "F-box option on the add device page"
+  },
+  "addDeviceUsbWifiModule": "USB WIFI module",
+  "@addDeviceUsbWifiModule": {
+    "description": "USB WIFI module option on the add device page"
+  },
+  "addDeviceSmartOpener": "Smart Opener",
+  "@addDeviceSmartOpener": {
+    "description": "Smart Opener option on the add device page"
+  },
+  "addDeviceSolarEnergySystem": "Solar Energy System",
+  "@addDeviceSolarEnergySystem": {
+    "description": "Solar Energy System option on the add device page"
+  },
+  "addDeviceCamera": "Camera",
+  "@addDeviceCamera": {
+    "description": "Camera option on the add device page"
+  },
   "chooseSceneTitle": "CHOOSE A SCENE",
   "@chooseSceneTitle": {
     "description": "Choose scene page title"

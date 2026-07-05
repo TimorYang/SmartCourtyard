@@ -225,6 +225,75 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeLifeRemainingLabel => 'Life remaining';
 
   @override
+  String get addNewDoorsTitle => 'Add new doors';
+
+  @override
+  String get addNewDoorsSubtitle => 'Select the door to be added';
+
+  @override
+  String get addNewDoorsBackTooltip => 'Back';
+
+  @override
+  String get addNewDoorsGarageDoor => 'Garage door';
+
+  @override
+  String get addNewDoorsRollerDoor => 'Roller door';
+
+  @override
+  String get addNewDoorsIndustrialDoor => 'Industrial door';
+
+  @override
+  String get addNewDoorsSwingGate => 'Swing gate';
+
+  @override
+  String get addNewDoorsSlidingGate => 'Sliding gate';
+
+  @override
+  String get addDoorNameDialogTitle => 'Door name';
+
+  @override
+  String get addDoorNameInputPlaceholder => 'Input door name';
+
+  @override
+  String get addDoorSceneDefault => 'Home';
+
+  @override
+  String get addDoorNameCancelAction => 'Cancel';
+
+  @override
+  String get addDoorNameConfirmAction => 'Confirm';
+
+  @override
+  String get addDeviceTitle => 'Add Device';
+
+  @override
+  String get addDeviceSubtitle => 'Select the device to be added';
+
+  @override
+  String get addDeviceFBoxSection => 'F-box';
+
+  @override
+  String get addDeviceSmartControllerSection => 'Smart controller';
+
+  @override
+  String get addDeviceSmartAccessorySection => 'Smart accessory';
+
+  @override
+  String get addDeviceFBox => 'F-box';
+
+  @override
+  String get addDeviceUsbWifiModule => 'USB WIFI module';
+
+  @override
+  String get addDeviceSmartOpener => 'Smart Opener';
+
+  @override
+  String get addDeviceSolarEnergySystem => 'Solar Energy System';
+
+  @override
+  String get addDeviceCamera => 'Camera';
+
+  @override
   String get chooseSceneTitle => 'CHOOSE A SCENE';
 
   @override

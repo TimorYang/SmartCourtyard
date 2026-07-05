@@ -212,6 +212,75 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeLifeRemainingLabel => '剩余寿命';
 
   @override
+  String get addNewDoorsTitle => '添加新门';
+
+  @override
+  String get addNewDoorsSubtitle => '选择要添加的门';
+
+  @override
+  String get addNewDoorsBackTooltip => '返回';
+
+  @override
+  String get addNewDoorsGarageDoor => '车库门';
+
+  @override
+  String get addNewDoorsRollerDoor => '卷帘门';
+
+  @override
+  String get addNewDoorsIndustrialDoor => '工业门';
+
+  @override
+  String get addNewDoorsSwingGate => '平开门';
+
+  @override
+  String get addNewDoorsSlidingGate => '平移门';
+
+  @override
+  String get addDoorNameDialogTitle => '门名称';
+
+  @override
+  String get addDoorNameInputPlaceholder => '请输入门名称';
+
+  @override
+  String get addDoorSceneDefault => '首页';
+
+  @override
+  String get addDoorNameCancelAction => '取消';
+
+  @override
+  String get addDoorNameConfirmAction => '确认';
+
+  @override
+  String get addDeviceTitle => '添加设备';
+
+  @override
+  String get addDeviceSubtitle => '选择要添加的设备';
+
+  @override
+  String get addDeviceFBoxSection => 'F-box';
+
+  @override
+  String get addDeviceSmartControllerSection => '智能控制器';
+
+  @override
+  String get addDeviceSmartAccessorySection => '智能配件';
+
+  @override
+  String get addDeviceFBox => 'F-box';
+
+  @override
+  String get addDeviceUsbWifiModule => 'USB WIFI 模块';
+
+  @override
+  String get addDeviceSmartOpener => '智能开门器';
+
+  @override
+  String get addDeviceSolarEnergySystem => '太阳能系统';
+
+  @override
+  String get addDeviceCamera => '摄像头';
+
+  @override
   String get chooseSceneTitle => '选择场景';
 
   @override

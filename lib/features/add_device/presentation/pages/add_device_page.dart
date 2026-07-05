@@ -1,203 +1,119 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../application/providers.dart';
-import '../../../../platform_bridge/hardware_models.dart';
+import '../../../../app/theme/app_design_tokens.dart';
+import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
-import '../../../device_control/presentation/pages/device_command_page.dart';
 
-class AddDevicePage extends ConsumerStatefulWidget {
+class AddDeviceAssetPaths {
+  const AddDeviceAssetPaths._();
+
+  static const fBox = 'assets/icons/add_device/add_device_f_box.png';
+  static const usbWifiModule = 'assets/icons/add_device/add_device_usb_wifi_module.png';
+  static const smartOpener = 'assets/icons/add_device/add_device_smart_opener.png';
+  static const solarEnergySystem = 'assets/icons/add_device/add_device_solar_energy_system.png';
+  static const camera = 'assets/icons/add_device/add_device_camera.png';
+}
+
+class AddDevicePage extends StatelessWidget {
   const AddDevicePage({super.key});
 
   static const routeName = 'add-device';
   static const routePath = '/add-device';
 
   @override
-  ConsumerState<AddDevicePage> createState() => _AddDevicePageState();
-}
-
-class _AddDevicePageState extends ConsumerState<AddDevicePage> {
-  late final TextEditingController _authTokenController;
-
-  @override
-  void initState() {
-    super.initState();
-    final initialToken = ref.read(addDeviceControllerProvider).authToken;
-    _authTokenController = TextEditingController(text: initialToken);
-    Future<void>.microtask(
-      () => ref.read(addDeviceControllerProvider.notifier).startScan(),
-    );
-  }
-
-  @override
-  void dispose() {
-    ref.read(addDeviceControllerProvider.notifier).stopScan();
-    _authTokenController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final state = ref.watch(addDeviceControllerProvider);
-    final controller = ref.read(addDeviceControllerProvider.notifier);
-    final devices = state.sortedDevices();
+    final l10n = AppLocalizations.of(context);
+    final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: const FlinxNavigationBar(title: '添加设备'),
+      backgroundColor: AppColors.backgroundPrimary,
+      appBar: const FlinxNavigationBar(title: '', showBottomDivider: false),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(20, 36, 18, 46),
         children: [
-          const Text('先扫描并连接蓝牙设备，鉴权成功后进入设备控制页面。'),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _authTokenController,
-            onChanged: controller.updateAuthToken,
-            decoration: const InputDecoration(
-              labelText: '鉴权 Token（32 位 MD5）',
-              hintText: '请输入设备鉴权 Token',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              FilledButton.icon(
-                onPressed: state.isScanning ? null : controller.startScan,
-                icon: const Icon(Icons.bluetooth_searching),
-                label: const Text('开始扫描'),
-              ),
-              OutlinedButton.icon(
-                onPressed: state.isScanning ? controller.stopScan : null,
-                icon: const Icon(Icons.stop_circle_outlined),
-                label: const Text('停止扫描'),
-              ),
-            ],
-          ),
-          if (state.infoMessage != null) ...[
-            const SizedBox(height: 16),
-            _MessageBanner(
-              message: state.infoMessage!,
-              backgroundColor: Colors.blue.shade50,
-              foregroundColor: Colors.blue.shade900,
-            ),
-          ],
-          if (state.errorMessage != null) ...[
-            const SizedBox(height: 12),
-            _MessageBanner(
-              message: state.errorMessage!,
-              backgroundColor: Colors.red.shade50,
-              foregroundColor: Colors.red.shade900,
-            ),
-          ],
-          const SizedBox(height: 16),
-          Text(
-            '蓝牙设备 (${devices.length})',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 12),
-          if (devices.isEmpty)
-            const Card(
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Text('暂未发现蓝牙设备，请确认设备已上电且在附近。'),
-              ),
-            ),
-          for (final device in devices) ...[
-            _BleDeviceCard(
-              device: device,
-              connectionState: state.connectionStateFor(device.id),
-              busy: state.isConnecting || state.isAuthenticating,
-              onConnect: () async {
-                final success = await controller.connectAndAuthenticate(device);
-                if (!context.mounted || !success) {
-                  return;
-                }
-                await controller.stopScan();
-                if (!context.mounted) {
-                  return;
-                }
-                context.push(
-                  Uri(
-                    path: DeviceCommandPage.routePath,
-                    queryParameters: {'deviceId': device.id},
-                  ).toString(),
-                );
-              },
-            ),
-            const SizedBox(height: 12),
-          ],
+          Text(l10n.addDeviceTitle, style: AppTextTokens.addDeviceTitle(textTheme)),
+          const SizedBox(height: 2),
+          Text(l10n.addDeviceSubtitle, style: AppTextTokens.addDeviceSubtitle(textTheme)),
+          const SizedBox(height: 42),
+          _DeviceSectionTitle(label: l10n.addDeviceFBoxSection),
+          const SizedBox(height: 10),
+          _DeviceOptionCard(label: l10n.addDeviceFBox, assetPath: AddDeviceAssetPaths.fBox, fallbackIcon: Icons.developer_board_outlined),
+          const SizedBox(height: 29),
+          _DeviceSectionTitle(label: l10n.addDeviceSmartControllerSection),
+          const SizedBox(height: 14),
+          _DeviceOptionCard(label: l10n.addDeviceUsbWifiModule, assetPath: AddDeviceAssetPaths.usbWifiModule, fallbackIcon: Icons.usb_outlined),
+          const SizedBox(height: 14),
+          _DeviceOptionCard(label: l10n.addDeviceSmartOpener, assetPath: AddDeviceAssetPaths.smartOpener, fallbackIcon: Icons.wifi_tethering_outlined),
+          const SizedBox(height: 14),
+          _DeviceOptionCard(label: l10n.addDeviceSolarEnergySystem, assetPath: AddDeviceAssetPaths.solarEnergySystem, fallbackIcon: Icons.solar_power_outlined),
+          const SizedBox(height: 26),
+          _DeviceSectionTitle(label: l10n.addDeviceSmartAccessorySection),
+          const SizedBox(height: 14),
+          _DeviceOptionCard(label: l10n.addDeviceCamera, assetPath: AddDeviceAssetPaths.camera, fallbackIcon: Icons.videocam_outlined),
         ],
       ),
     );
   }
 }
 
-class _BleDeviceCard extends StatelessWidget {
-  const _BleDeviceCard({
-    required this.device,
-    required this.connectionState,
-    required this.busy,
-    required this.onConnect,
-  });
+class _DeviceSectionTitle extends StatelessWidget {
+  const _DeviceSectionTitle({required this.label});
 
-  final BleDevice device;
-  final BleConnectionState connectionState;
-  final bool busy;
-  final VoidCallback onConnect;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(device.name ?? '未命名设备'),
-            const SizedBox(height: 8),
-            Text('设备 ID: ${device.id}'),
-            Text('RSSI: ${device.rssi}'),
-            Text('连接状态: ${connectionState.name}'),
-            const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerRight,
-              child: FilledButton(
-                onPressed: busy ? null : onConnect,
-                child: const Text('连接并鉴权'),
-              ),
-            ),
-          ],
+    return Text(label, style: AppTextTokens.addDeviceSectionTitle(Theme.of(context).textTheme));
+  }
+}
+
+class _DeviceOptionCard extends StatelessWidget {
+  const _DeviceOptionCard({required this.label, required this.assetPath, required this.fallbackIcon});
+
+  final String label;
+  final String assetPath;
+  final IconData fallbackIcon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.surfaceItemSceneCard,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: () {},
+        child: SizedBox(
+          height: 96,
+          child: Row(
+            children: [
+              const SizedBox(width: 18),
+              _DeviceOptionIcon(assetPath: assetPath, fallbackIcon: fallbackIcon),
+              const SizedBox(width: 29),
+              Expanded(child: Text(label, style: AppTextTokens.addDeviceCardTitle(Theme.of(context).textTheme))),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _MessageBanner extends StatelessWidget {
-  const _MessageBanner({
-    required this.message,
-    required this.backgroundColor,
-    required this.foregroundColor,
-  });
+class _DeviceOptionIcon extends StatelessWidget {
+  const _DeviceOptionIcon({required this.assetPath, required this.fallbackIcon});
 
-  final String message;
-  final Color backgroundColor;
-  final Color foregroundColor;
+  final String assetPath;
+  final IconData fallbackIcon;
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Text(message, style: TextStyle(color: foregroundColor)),
-      ),
+    return Image.asset(
+      assetPath,
+      width: 64,
+      height: 64,
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) {
+        return Icon(fallbackIcon, color: AppColors.iconHomeAction, size: 64);
+      },
     );
   }
 }
