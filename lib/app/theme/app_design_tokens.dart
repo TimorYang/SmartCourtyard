@@ -114,6 +114,8 @@ class AppTextTokens {
 
   static TextStyle loginAgreement(TextTheme textTheme) {
     return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      fontSize: 12,
+      fontWeight: FontWeight.w400,
       color: AppColors.textAgreement,
       height: 1.45,
     );
@@ -141,16 +143,17 @@ class AppTextTokens {
 
   static TextStyle registerTitle(TextTheme textTheme) {
     return (textTheme.displaySmall ?? const TextStyle()).copyWith(
-      color: AppColors.textPrimary,
+      fontSize: 28,
       fontWeight: FontWeight.w700,
+      color: AppColors.textPrimary,
     );
   }
 
   static TextStyle registerDescription(TextTheme textTheme) {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
-      color: AppColors.textAuthBody,
+      fontSize: 14,
       fontWeight: FontWeight.w400,
-      height: 1.4,
+      color: AppColors.textAuthBody,
     );
   }
 
@@ -162,6 +165,7 @@ class AppTextTokens {
 
   static TextStyle registerAgreement(TextTheme textTheme) {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      fontSize: 12,
       color: AppColors.textRegisterAgreement,
       fontWeight: FontWeight.w400,
       height: 1.4,

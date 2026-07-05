@@ -11,6 +11,7 @@ import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import 'forgot_password_page.dart';
 import 'register_page.dart';
 import '../widgets/auth_alerts.dart';
+import '../widgets/auth_flow_widgets.dart';
 
 class LoginPage extends ConsumerWidget {
   const LoginPage({super.key});
@@ -42,7 +43,7 @@ class LoginPage extends ConsumerWidget {
                 left: false,
                 right: false,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+                  padding: const EdgeInsets.fromLTRB(30, 10, 30, 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -51,10 +52,10 @@ class LoginPage extends ConsumerWidget {
                         style: AppTextTokens.loginTitle(theme.textTheme),
                       ),
                       const SizedBox(height: 24),
-                      _LoginField(
+                      AuthTextField(
                         hintText: l10n.loginAccountPlaceholder,
-                        icon: const _AssetIcon(
-                          assetPath: _LoginPageAssetPaths.accountFieldIcon,
+                        icon: const AuthAssetIcon(
+                          assetPath: AuthAssetPaths.accountFieldIcon,
                           width: 22,
                           height: 22,
                           fallback: SizedBox.shrink(),
@@ -67,10 +68,10 @@ class LoginPage extends ConsumerWidget {
                         onChanged: controller.updateAccount,
                       ),
                       const SizedBox(height: 20),
-                      _LoginField(
+                      AuthTextField(
                         hintText: l10n.loginPasswordPlaceholder,
-                        icon: const _AssetIcon(
-                          assetPath: _LoginPageAssetPaths.passwordFieldIcon,
+                        icon: const AuthAssetIcon(
+                          assetPath: AuthAssetPaths.passwordFieldIcon,
                           width: 22,
                           height: 22,
                           fallback: SizedBox.shrink(),
@@ -285,78 +286,8 @@ class _LoginPageAssetPaths {
       'assets/icons/auth/provider_google_mark.png';
   static const voiceAssistantProviderMark =
       'assets/icons/auth/provider_voice_assistant_mark.png';
-  static const accountFieldIcon = 'assets/icons/auth/login_account_icon.png';
-  static const passwordFieldIcon = 'assets/icons/auth/login_password_icon.png';
   static const agreementCheckedIcon =
       'assets/icons/auth/login_agreement_checked_icon.png';
-}
-
-class _LoginField extends StatelessWidget {
-  const _LoginField({
-    required this.hintText,
-    required this.icon,
-    required this.onChanged,
-    required this.compact,
-    required this.ultraCompact,
-    this.keyboardType,
-    this.textInputAction,
-    this.autocorrect = true,
-    this.obscureText = false,
-  });
-
-  final String hintText;
-  final Widget icon;
-  final ValueChanged<String> onChanged;
-  final bool compact;
-  final bool ultraCompact;
-  final TextInputType? keyboardType;
-  final TextInputAction? textInputAction;
-  final bool autocorrect;
-  final bool obscureText;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.borderSubtle)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: compact ? 26 : 30,
-            height: compact ? 26 : 30,
-            alignment: Alignment.center,
-            child: SizedBox(
-              width: compact ? 22 : 25,
-              height: compact ? 22 : 25,
-              child: icon,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: TextField(
-              obscureText: obscureText,
-              keyboardType: keyboardType,
-              textInputAction: textInputAction,
-              autocorrect: autocorrect,
-              onChanged: onChanged,
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                hintText: hintText,
-                hintStyle: AppTextTokens.loginInputHint.copyWith(
-                  fontSize: ultraCompact ? 16 : 18,
-                ),
-                isDense: compact,
-                contentPadding: EdgeInsets.symmetric(
-                  vertical: ultraCompact ? 8 : 12,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _AgreementToggle extends StatelessWidget {
@@ -392,7 +323,7 @@ class _AgreementToggle extends StatelessWidget {
                 color: selected ? AppColors.toggleSelected : Colors.white,
               ),
               child: selected
-                  ? const _AssetIcon(
+                  ? const AuthAssetIcon(
                       assetPath: _LoginPageAssetPaths.agreementCheckedIcon,
                       width: 14,
                       height: 14,
@@ -478,31 +409,6 @@ class _ProviderAssetIcon extends StatelessWidget {
       assetPath,
       width: size,
       height: size,
-      fit: BoxFit.contain,
-      errorBuilder: (context, error, stackTrace) => fallback,
-    );
-  }
-}
-
-class _AssetIcon extends StatelessWidget {
-  const _AssetIcon({
-    required this.assetPath,
-    required this.width,
-    required this.height,
-    required this.fallback,
-  });
-
-  final String assetPath;
-  final double width;
-  final double height;
-  final Widget fallback;
-
-  @override
-  Widget build(BuildContext context) {
-    return Image.asset(
-      assetPath,
-      width: width,
-      height: height,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) => fallback,
     );

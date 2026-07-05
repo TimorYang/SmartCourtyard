@@ -7,6 +7,7 @@ import '../../../../shared/l10n/app_localizations.dart';
 import '../../application/providers.dart';
 import 'forgot_password_code_page.dart';
 import '../widgets/auth_alerts.dart';
+import '../widgets/auth_flow_widgets.dart';
 
 class ForgotPasswordPage extends ConsumerWidget {
   const ForgotPasswordPage({super.key});
@@ -34,20 +35,7 @@ class ForgotPasswordPage extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                IconButton(
-                  onPressed: () => context.pop(),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints.tightFor(
-                    width: 28,
-                    height: 28,
-                  ),
-                  icon: const _ForgotPasswordAssetIcon(
-                    assetPath: _ForgotPasswordAssetPaths.backArrowIcon,
-                    width: 22,
-                    height: 22,
-                    fallback: Icon(Icons.arrow_back_ios_new_rounded, size: 22),
-                  ),
-                ),
+                AuthBackButton(onPressed: () => context.pop()),
                 const SizedBox(height: 106),
                 Text(
                   l10n.forgotPasswordTitle,
@@ -61,9 +49,26 @@ class ForgotPasswordPage extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 56),
-                _ForgotPasswordEmailField(
+                AuthTextField(
+                  fieldKey: const ValueKey('forgot_password_email_input'),
                   hintText: l10n.registerEmailPlaceholder,
+                  icon: const AuthAssetIcon(
+                    assetPath: AuthAssetPaths.emailFieldIcon,
+                    width: 22,
+                    height: 22,
+                    fallback: Icon(
+                      Icons.mail_outline_rounded,
+                      color: AppColors.textIcon,
+                      size: 22,
+                    ),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.done,
+                  autocorrect: false,
+                  autofocus: true,
                   onChanged: controller.updateEmail,
+                  onTapOutside: (_) =>
+                      FocusManager.instance.primaryFocus?.unfocus(),
                 ),
                 const SizedBox(height: 138),
                 SizedBox(
@@ -102,95 +107,4 @@ class ForgotPasswordPage extends ConsumerWidget {
       ),
     );
   }
-}
-
-class _ForgotPasswordEmailField extends StatelessWidget {
-  const _ForgotPasswordEmailField({
-    required this.hintText,
-    required this.onChanged,
-  });
-
-  final String hintText;
-  final ValueChanged<String> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.borderSubtle)),
-      ),
-      child: Row(
-        children: [
-          const SizedBox(
-            width: 28,
-            height: 34,
-            child: Center(
-              child: _ForgotPasswordAssetIcon(
-                assetPath: _ForgotPasswordAssetPaths.emailFieldIcon,
-                width: 24,
-                height: 24,
-                fallback: Icon(
-                  Icons.mail_outline_rounded,
-                  color: AppColors.textIcon,
-                  size: 24,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 18),
-          Expanded(
-            child: TextField(
-              key: const ValueKey('forgot_password_email_input'),
-              keyboardType: TextInputType.emailAddress,
-              textInputAction: TextInputAction.done,
-              autocorrect: false,
-              autofocus: true,
-              onChanged: onChanged,
-              onTapOutside: (_) =>
-                  FocusManager.instance.primaryFocus?.unfocus(),
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                hintText: hintText,
-                hintStyle: AppTextTokens.forgotPasswordInputHint,
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: 10),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ForgotPasswordAssetIcon extends StatelessWidget {
-  const _ForgotPasswordAssetIcon({
-    required this.assetPath,
-    required this.width,
-    required this.height,
-    required this.fallback,
-  });
-
-  final String assetPath;
-  final double width;
-  final double height;
-  final Widget fallback;
-
-  @override
-  Widget build(BuildContext context) {
-    return Image.asset(
-      assetPath,
-      width: width,
-      height: height,
-      fit: BoxFit.contain,
-      errorBuilder: (context, error, stackTrace) => fallback,
-    );
-  }
-}
-
-class _ForgotPasswordAssetPaths {
-  const _ForgotPasswordAssetPaths._();
-
-  static const backArrowIcon = 'assets/icons/auth/register_back_arrow.png';
-  static const emailFieldIcon = 'assets/icons/auth/register_email_icon.png';
 }

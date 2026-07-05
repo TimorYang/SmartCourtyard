@@ -152,6 +152,99 @@ class AuthVerificationCodeInput extends StatelessWidget {
   }
 }
 
+class AuthTextField extends StatelessWidget {
+  const AuthTextField({
+    super.key,
+    required this.hintText,
+    required this.icon,
+    required this.onChanged,
+    this.fieldKey,
+    this.controller,
+    this.focusNode,
+    this.keyboardType,
+    this.textInputAction,
+    this.autocorrect = true,
+    this.autofocus = false,
+    this.enableSuggestions = true,
+    this.obscureText = false,
+    this.inputFormatters,
+    this.onSubmitted,
+    this.onTapOutside,
+    this.compact = true,
+    this.ultraCompact = true,
+  });
+
+  final String hintText;
+  final Widget icon;
+  final ValueChanged<String> onChanged;
+  final Key? fieldKey;
+  final TextEditingController? controller;
+  final FocusNode? focusNode;
+  final TextInputType? keyboardType;
+  final TextInputAction? textInputAction;
+  final bool autocorrect;
+  final bool autofocus;
+  final bool enableSuggestions;
+  final bool obscureText;
+  final List<TextInputFormatter>? inputFormatters;
+  final ValueChanged<String>? onSubmitted;
+  final TapRegionCallback? onTapOutside;
+  final bool compact;
+  final bool ultraCompact;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: AppColors.borderSubtle)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: compact ? 26 : 30,
+            height: compact ? 26 : 30,
+            alignment: Alignment.center,
+            child: SizedBox(
+              width: compact ? 22 : 25,
+              height: compact ? 22 : 25,
+              child: icon,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextField(
+              key: fieldKey,
+              controller: controller,
+              focusNode: focusNode,
+              obscureText: obscureText,
+              keyboardType: keyboardType,
+              textInputAction: textInputAction,
+              autocorrect: autocorrect,
+              autofocus: autofocus,
+              enableSuggestions: enableSuggestions,
+              inputFormatters: inputFormatters,
+              onChanged: onChanged,
+              onSubmitted: onSubmitted,
+              onTapOutside: onTapOutside,
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                hintText: hintText,
+                hintStyle: AppTextTokens.loginInputHint.copyWith(
+                  fontSize: ultraCompact ? 16 : 18,
+                ),
+                isDense: compact,
+                contentPadding: EdgeInsets.symmetric(
+                  vertical: ultraCompact ? 8 : 12,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class AuthPasswordField extends StatelessWidget {
   const AuthPasswordField({
     super.key,
@@ -172,52 +265,27 @@ class AuthPasswordField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.borderSubtle)),
+    return AuthTextField(
+      controller: controller,
+      focusNode: focusNode,
+      hintText: hintText,
+      icon: const AuthAssetIcon(
+        assetPath: AuthAssetPaths.passwordLockIcon,
+        width: 22,
+        height: 22,
+        fallback: SizedBox(width: 22, height: 22),
       ),
-      child: Row(
-        children: [
-          const SizedBox(
-            width: 28,
-            height: 34,
-            child: Center(
-              child: AuthAssetIcon(
-                assetPath: AuthAssetPaths.passwordLockIcon,
-                width: 24,
-                height: 24,
-                fallback: SizedBox(width: 24, height: 24),
-              ),
-            ),
-          ),
-          const SizedBox(width: 4),
-          Expanded(
-            child: TextField(
-              controller: controller,
-              focusNode: focusNode,
-              keyboardType: TextInputType.number,
-              textInputAction: textInputAction,
-              style: AppTextTokens.authPasswordInput,
-              autocorrect: false,
-              obscureText: true,
-              enableSuggestions: false,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(8),
-              ],
-              onChanged: onChanged,
-              onSubmitted: onSubmitted,
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                hintText: hintText,
-                hintStyle: AppTextTokens.registerPasswordInputHint,
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: 10),
-              ),
-            ),
-          ),
-        ],
-      ),
+      keyboardType: TextInputType.number,
+      textInputAction: textInputAction,
+      autocorrect: false,
+      obscureText: true,
+      enableSuggestions: false,
+      inputFormatters: [
+        FilteringTextInputFormatter.digitsOnly,
+        LengthLimitingTextInputFormatter(8),
+      ],
+      onChanged: onChanged,
+      onSubmitted: onSubmitted,
     );
   }
 }
@@ -286,6 +354,9 @@ class AuthAssetPaths {
   const AuthAssetPaths._();
 
   static const backArrowIcon = 'assets/icons/auth/register_back_arrow.png';
+  static const accountFieldIcon = 'assets/icons/auth/login_account_icon.png';
+  static const passwordFieldIcon = 'assets/icons/auth/login_password_icon.png';
+  static const emailFieldIcon = 'assets/icons/auth/register_email_icon.png';
   static const passwordLockIcon =
       'assets/icons/auth/register_password_lock_icon.png';
   static const passwordResetSuccessIcon =
