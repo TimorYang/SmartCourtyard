@@ -91,12 +91,16 @@ class _RegisterCodePageState extends ConsumerState<RegisterCodePage> {
             minimumSize: const Size(0, 28),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             foregroundColor: AppColors.textCodeResend,
-            disabledForegroundColor: AppColors.textCodeResend,
+            disabledForegroundColor: AppColors.textCodeResendDisabled,
             textStyle: AppTextTokens.verificationResend(
               Theme.of(context).textTheme,
             ),
           ),
-          child: Text(l10n.registerCodeResend(state.resendSecondsRemaining)),
+          child: Text(
+            state.canResend
+                ? l10n.registerCodeResendAction
+                : l10n.registerCodeResend(state.resendSecondsRemaining),
+          ),
         ),
       ],
     );

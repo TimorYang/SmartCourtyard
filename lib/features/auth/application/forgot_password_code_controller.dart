@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ForgotPasswordCodeState {
@@ -26,11 +28,18 @@ class ForgotPasswordCodeState {
 }
 
 class ForgotPasswordCodeController extends Notifier<ForgotPasswordCodeState> {
+  static const _resendCountdownSeconds = 59;
   static final _digitsOnlyPattern = RegExp(r'\D');
+
+  Timer? _resendTimer;
 
   @override
   ForgotPasswordCodeState build() {
-    return const ForgotPasswordCodeState();
+    ref.onDispose(_stopResendCountdown);
+    _startResendCountdown();
+    return const ForgotPasswordCodeState(
+      resendSecondsRemaining: _resendCountdownSeconds,
+    );
   }
 
   void updateCode(String value) {
@@ -45,6 +54,26 @@ class ForgotPasswordCodeController extends Notifier<ForgotPasswordCodeState> {
       return;
     }
 
-    state = state.copyWith(resendSecondsRemaining: 59);
+    state = state.copyWith(resendSecondsRemaining: _resendCountdownSeconds);
+    _startResendCountdown();
+  }
+
+  void _startResendCountdown() {
+    _stopResendCountdown();
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      final remaining = state.resendSecondsRemaining;
+      if (remaining <= 1) {
+        state = state.copyWith(resendSecondsRemaining: 0);
+        _stopResendCountdown();
+        return;
+      }
+
+      state = state.copyWith(resendSecondsRemaining: remaining - 1);
+    });
+  }
+
+  void _stopResendCountdown() {
+    _resendTimer?.cancel();
+    _resendTimer = null;
   }
 }

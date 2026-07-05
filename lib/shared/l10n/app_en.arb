@@ -77,6 +77,10 @@
       }
     }
   },
+  "registerCodeResendAction": "Send Again OTP",
+  "@registerCodeResendAction": {
+    "description": "Register verification resend action label when the countdown has finished"
+  },
   "registerPasswordTitle": "Password",
   "@registerPasswordTitle": {
     "description": "Register password setup page heading"

@@ -42,6 +42,7 @@ class AppColors {
   static const textRegisterLink = Color(0xFF0D6EFF);
   static const textProviderDark = Color(0xFF2D2D2D);
   static const textCodeResend = Color(0xFF7DAEFF);
+  static const textCodeResendDisabled = Color(0xFFC0C0C3);
 
   static const iconHomeAction = Color(0xFF3F424A);
   static const iconHomePlaceholder = Color(0xFFD5D9E0);
@@ -180,15 +181,17 @@ class AppTextTokens {
 
   static TextStyle forgotPasswordTitle(TextTheme textTheme) {
     return (textTheme.displaySmall ?? const TextStyle()).copyWith(
-      color: AppColors.textPrimary,
+      fontSize: 28,
       fontWeight: FontWeight.w700,
+      color: AppColors.textPrimary,
     );
   }
 
   static TextStyle forgotPasswordDescription(TextTheme textTheme) {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
-      color: AppColors.textAuthBody,
+      fontSize: 14,
       fontWeight: FontWeight.w400,
+      color: AppColors.textAuthBody,
       height: 1.4,
     );
   }

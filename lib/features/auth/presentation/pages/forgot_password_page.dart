@@ -1,3 +1,4 @@
+import 'package:flinx/shared/widgets/flinx_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -23,6 +24,7 @@ class ForgotPasswordPage extends ConsumerWidget {
     final controller = ref.read(forgotPasswordControllerProvider.notifier);
 
     return Scaffold(
+      appBar: FlinxNavigationBar(title: '', showBottomDivider: false),
       backgroundColor: AppColors.backgroundPrimary,
       resizeToAvoidBottomInset: true,
       body: GestureDetector(
@@ -31,12 +33,11 @@ class ForgotPasswordPage extends ConsumerWidget {
         onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(32, 10, 32, 0),
+            padding: const EdgeInsets.fromLTRB(30, 10, 30, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                AuthBackButton(onPressed: () => context.pop()),
-                const SizedBox(height: 106),
+                const SizedBox(height: 10),
                 Text(
                   l10n.forgotPasswordTitle,
                   style: AppTextTokens.forgotPasswordTitle(theme.textTheme),
@@ -48,7 +49,7 @@ class ForgotPasswordPage extends ConsumerWidget {
                     theme.textTheme,
                   ),
                 ),
-                const SizedBox(height: 56),
+                const SizedBox(height: 40),
                 AuthTextField(
                   fieldKey: const ValueKey('forgot_password_email_input'),
                   hintText: l10n.registerEmailPlaceholder,
@@ -70,9 +71,10 @@ class ForgotPasswordPage extends ConsumerWidget {
                   onTapOutside: (_) =>
                       FocusManager.instance.primaryFocus?.unfocus(),
                 ),
-                const SizedBox(height: 138),
+                const SizedBox(height: 80),
                 SizedBox(
                   width: double.infinity,
+                  height: 52,
                   child: FilledButton(
                     onPressed: state.canSendCode
                         ? () async {
@@ -88,12 +90,14 @@ class ForgotPasswordPage extends ConsumerWidget {
                           }
                         : null,
                     style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.brandPrimary,
+                      backgroundColor: AppColors.brandPrimaryLight,
                       disabledBackgroundColor: AppColors.brandPrimaryDisabled,
                       foregroundColor: Colors.white,
-                      minimumSize: const Size.fromHeight(72),
+                      disabledForegroundColor:
+                          AppColors.authPrimaryButtonDisabledForeground,
+                      minimumSize: const Size.fromHeight(48),
                       shape: const StadiumBorder(),
-                      textStyle: AppTextTokens.forgotPasswordPrimaryButton(
+                      textStyle: AppTextTokens.loginPrimaryButton(
                         theme.textTheme,
                       ),
                     ),

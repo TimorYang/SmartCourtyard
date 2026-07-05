@@ -370,8 +370,6 @@ class AuthAssetPaths {
   static const emailFieldIcon = 'assets/icons/auth/register_email_icon.png';
   static const passwordLockIcon =
       'assets/icons/auth/register_password_lock_icon.png';
-  static const passwordResetSuccessIcon =
-      'assets/icons/auth/password_reset_success_icon.png';
 }
 
 String maskedAuthEmail(String email) {

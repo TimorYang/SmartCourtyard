@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class RegisterCodeState {
@@ -20,11 +22,18 @@ class RegisterCodeState {
 }
 
 class RegisterCodeController extends Notifier<RegisterCodeState> {
+  static const _resendCountdownSeconds = 59;
   static final _digitsOnlyPattern = RegExp(r'\D');
+
+  Timer? _resendTimer;
 
   @override
   RegisterCodeState build() {
-    return const RegisterCodeState();
+    ref.onDispose(_stopResendCountdown);
+    _startResendCountdown();
+    return const RegisterCodeState(
+      resendSecondsRemaining: _resendCountdownSeconds,
+    );
   }
 
   void updateCode(String value) {
@@ -39,6 +48,26 @@ class RegisterCodeController extends Notifier<RegisterCodeState> {
       return;
     }
 
-    state = state.copyWith(resendSecondsRemaining: 59);
+    state = state.copyWith(resendSecondsRemaining: _resendCountdownSeconds);
+    _startResendCountdown();
+  }
+
+  void _startResendCountdown() {
+    _stopResendCountdown();
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      final remaining = state.resendSecondsRemaining;
+      if (remaining <= 1) {
+        state = state.copyWith(resendSecondsRemaining: 0);
+        _stopResendCountdown();
+        return;
+      }
+
+      state = state.copyWith(resendSecondsRemaining: remaining - 1);
+    });
+  }
+
+  void _stopResendCountdown() {
+    _resendTimer?.cancel();
+    _resendTimer = null;
   }
 }

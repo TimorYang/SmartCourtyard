@@ -1,3 +1,4 @@
+import 'package:flinx/shared/widgets/flinx_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -18,6 +19,7 @@ class ForgotPasswordSuccessPage extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
+      appBar: FlinxNavigationBar(title: '', showBottomDivider: false),
       backgroundColor: AppColors.backgroundPrimary,
       body: SafeArea(
         child: Padding(
@@ -25,21 +27,19 @@ class ForgotPasswordSuccessPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AuthBackButton(onPressed: () => context.pop()),
               const SizedBox(height: 160),
               Center(
                 child: Column(
                   children: [
-                    Image.asset(
-                      AuthAssetPaths.passwordResetSuccessIcon,
-                      key: const ValueKey('forgot_password_success_icon'),
-                      width: 96,
-                      height: 96,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) =>
-                          const SizedBox(width: 96, height: 96),
+                    const AuthAssetIcon(
+                      key: ValueKey('forgot_password_success_icon'),
+                      assetPath: _ForgotPasswordSuccessPageAssetPaths
+                          .passwordResetSuccessIcon,
+                      width: 108,
+                      height: 108,
+                      fallback: SizedBox(width: 96, height: 96),
                     ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 20),
                     Text(
                       l10n.passwordResetSucceededTitle,
                       textAlign: TextAlign.center,
@@ -81,4 +81,11 @@ class ForgotPasswordSuccessPage extends StatelessWidget {
       router.go(LoginPage.routePath);
     }
   }
+}
+
+class _ForgotPasswordSuccessPageAssetPaths {
+  const _ForgotPasswordSuccessPageAssetPaths._();
+
+  static const passwordResetSuccessIcon =
+      'assets/icons/auth/forgot_password_success_icon.png';
 }
