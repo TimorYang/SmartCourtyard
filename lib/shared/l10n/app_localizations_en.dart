@@ -228,6 +228,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeLifeRemainingLabel => 'Life remaining';
 
   @override
+  String get homeDoorStateOpen => 'Opened';
+
+  @override
+  String get homeDoorStateOpening => 'Opening';
+
+  @override
+  String get homeDoorStateStopped => 'Stopped';
+
+  @override
+  String get homeDoorStateClosing => 'Closing';
+
+  @override
+  String get homeDoorStateClosed => 'Closed';
+
+  @override
+  String get homeDoorStateUnknown => 'Unknown';
+
+  @override
+  String get homeDeviceEditingTitle => 'Device editing';
+
+  @override
+  String get homeDeviceEditTopAction => 'Top';
+
+  @override
+  String get homeDeviceEditShareAction => 'Share';
+
+  @override
+  String get homeDeviceEditMoveSceneAction => 'Move Scene';
+
+  @override
+  String get homeDeviceEditNameAction => 'Name';
+
+  @override
+  String get homeDeviceEditDeleteAction => 'Delete Device';
+
+  @override
+  String get homeDeviceEditCustomizeAction => 'Customize';
+
+  @override
   String get addNewDoorsTitle => 'Add new doors';
 
   @override

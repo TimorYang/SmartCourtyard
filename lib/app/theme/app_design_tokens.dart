@@ -319,7 +319,8 @@ class AppTextTokens {
   static TextStyle homeGreeting(TextTheme textTheme) {
     return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
       color: Colors.black,
-      fontWeight: FontWeight.w800,
+      fontSize: 28,
+      fontWeight: FontWeight.w600,
       height: 1.05,
     );
   }
@@ -327,13 +328,22 @@ class AppTextTokens {
   static TextStyle homeWelcome(TextTheme textTheme) {
     return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
       color: AppColors.textSecondary,
+      fontSize: 15,
       fontWeight: FontWeight.w400,
     );
   }
 
   static TextStyle homeTabLabel(TextTheme textTheme) {
     return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      fontSize: 12,
       fontWeight: FontWeight.w600,
+    );
+  }
+
+  static TextStyle homeUnselectedTabLabel(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      fontSize: 12,
+      fontWeight: FontWeight.w400,
     );
   }
 
@@ -362,6 +372,51 @@ class AppTextTokens {
   static TextStyle homePrimaryButton(TextTheme textTheme) {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
       fontWeight: FontWeight.w600,
+    );
+  }
+
+  static TextStyle homeDeviceCardTitle(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 16,
+      fontWeight: FontWeight.w600,
+      height: 1.15,
+    );
+  }
+
+  static TextStyle homeDeviceCardState(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textHint,
+      fontSize: 12,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle homeDeviceEditingTitle(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 15,
+      fontWeight: FontWeight.w600,
+      height: 1.15,
+    );
+  }
+
+  static TextStyle homeDeviceEditingSubtitle(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textHint,
+      fontSize: 9,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle homeDeviceEditingAction(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 15,
+      fontWeight: FontWeight.w600,
+      height: 1.2,
     );
   }
 

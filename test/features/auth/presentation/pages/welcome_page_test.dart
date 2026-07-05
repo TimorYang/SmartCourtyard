@@ -2,6 +2,8 @@ import 'package:flinx/app/flinx_app.dart';
 import 'package:flinx/features/auth/application/providers.dart';
 import 'package:flinx/features/auth/domain/entities/auth_session.dart';
 import 'package:flinx/features/auth/domain/repositories/auth_session_repository.dart';
+import 'package:flinx/features/home/application/providers.dart';
+import 'package:flinx/platform_bridge/hardware_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -35,8 +37,78 @@ void main() {
     await tester.tap(find.text('Home'));
     await tester.pumpAndSettle();
 
-    expect(find.text('No doors'), findsOneWidget);
-    expect(find.text('0 Door'), findsOneWidget);
+    expect(find.text('2 Doors'), findsOneWidget);
+    expect(find.text('Garage door'), findsOneWidget);
+    expect(find.text('Closing'), findsOneWidget);
+    expect(find.text('Roller door'), findsOneWidget);
+    expect(find.text('Opened'), findsOneWidget);
+    expect(find.text('No doors'), findsNothing);
+  });
+
+  testWidgets('shows home device cards when doors are loaded', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          homeDevicesProvider.overrideWith((ref) async {
+            return const [
+              DeviceSummary(
+                id: 'door-1',
+                name: 'Garage door',
+                onlineState: DeviceOnlineState.online,
+                bleState: BleConnectionState.connected,
+                doorState: DoorState.closing,
+                cycleCount: 8,
+                remainingLifePercent: 96,
+              ),
+              DeviceSummary(
+                id: 'door-2',
+                name: 'Roller door',
+                onlineState: DeviceOnlineState.offline,
+                bleState: BleConnectionState.disconnected,
+                doorState: DoorState.open,
+                cycleCount: 12,
+                remainingLifePercent: 89,
+              ),
+            ];
+          }),
+        ],
+        child: const FlinxApp(),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Home'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('2 Doors'), findsOneWidget);
+    expect(find.text('Garage door'), findsOneWidget);
+    expect(find.text('Closing'), findsOneWidget);
+    expect(find.text('Roller door'), findsOneWidget);
+    expect(find.text('Opened'), findsOneWidget);
+    expect(find.text('No doors'), findsNothing);
+  });
+
+  testWidgets('opens device editing sheet from home device long press', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const ProviderScope(child: FlinxApp()));
+
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Home'));
+    await tester.pumpAndSettle();
+
+    await tester.longPress(find.text('Roller door'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Device editing'), findsOneWidget);
+    expect(find.text('Top'), findsOneWidget);
+    expect(find.text('Share'), findsOneWidget);
+    expect(find.text('Move Scene'), findsOneWidget);
+    expect(find.text('Name'), findsOneWidget);
+    expect(find.text('Delete Device'), findsOneWidget);
+    expect(find.text('Customize'), findsOneWidget);
   });
 
   testWidgets('shows home add menu from header add action', (tester) async {
@@ -147,7 +219,7 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    expect(find.text('No doors'), findsOneWidget);
+    expect(find.text('2 Doors'), findsOneWidget);
     expect(find.text('Login'), findsNothing);
   });
 }

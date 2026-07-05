@@ -284,6 +284,58 @@
   "@homeLifeRemainingLabel": {
     "description": "Device card label for remaining device life"
   },
+  "homeDoorStateOpen": "Opened",
+  "@homeDoorStateOpen": {
+    "description": "Open door state on the home device card"
+  },
+  "homeDoorStateOpening": "Opening",
+  "@homeDoorStateOpening": {
+    "description": "Opening door state on the home device card"
+  },
+  "homeDoorStateStopped": "Stopped",
+  "@homeDoorStateStopped": {
+    "description": "Stopped door state on the home device card"
+  },
+  "homeDoorStateClosing": "Closing",
+  "@homeDoorStateClosing": {
+    "description": "Closing door state on the home device card"
+  },
+  "homeDoorStateClosed": "Closed",
+  "@homeDoorStateClosed": {
+    "description": "Closed door state on the home device card"
+  },
+  "homeDoorStateUnknown": "Unknown",
+  "@homeDoorStateUnknown": {
+    "description": "Unknown door state on the home device card"
+  },
+  "homeDeviceEditingTitle": "Device editing",
+  "@homeDeviceEditingTitle": {
+    "description": "Title of the home device editing sheet"
+  },
+  "homeDeviceEditTopAction": "Top",
+  "@homeDeviceEditTopAction": {
+    "description": "Top action in the home device editing sheet"
+  },
+  "homeDeviceEditShareAction": "Share",
+  "@homeDeviceEditShareAction": {
+    "description": "Share action in the home device editing sheet"
+  },
+  "homeDeviceEditMoveSceneAction": "Move Scene",
+  "@homeDeviceEditMoveSceneAction": {
+    "description": "Move scene action in the home device editing sheet"
+  },
+  "homeDeviceEditNameAction": "Name",
+  "@homeDeviceEditNameAction": {
+    "description": "Name action in the home device editing sheet"
+  },
+  "homeDeviceEditDeleteAction": "Delete Device",
+  "@homeDeviceEditDeleteAction": {
+    "description": "Delete device action in the home device editing sheet"
+  },
+  "homeDeviceEditCustomizeAction": "Customize",
+  "@homeDeviceEditCustomizeAction": {
+    "description": "Customize action in the home device editing sheet"
+  },
   "addNewDoorsTitle": "Add new doors",
   "@addNewDoorsTitle": {
     "description": "Add new doors page title"

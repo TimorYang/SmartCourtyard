@@ -215,6 +215,45 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeLifeRemainingLabel => '剩余寿命';
 
   @override
+  String get homeDoorStateOpen => '已打开';
+
+  @override
+  String get homeDoorStateOpening => '打开中';
+
+  @override
+  String get homeDoorStateStopped => '已停止';
+
+  @override
+  String get homeDoorStateClosing => '关闭中';
+
+  @override
+  String get homeDoorStateClosed => '已关闭';
+
+  @override
+  String get homeDoorStateUnknown => '未知';
+
+  @override
+  String get homeDeviceEditingTitle => '设备编辑';
+
+  @override
+  String get homeDeviceEditTopAction => '置顶';
+
+  @override
+  String get homeDeviceEditShareAction => '分享';
+
+  @override
+  String get homeDeviceEditMoveSceneAction => '移动场景';
+
+  @override
+  String get homeDeviceEditNameAction => '名称';
+
+  @override
+  String get homeDeviceEditDeleteAction => '删除设备';
+
+  @override
+  String get homeDeviceEditCustomizeAction => '自定义';
+
+  @override
   String get addNewDoorsTitle => '添加新门';
 
   @override

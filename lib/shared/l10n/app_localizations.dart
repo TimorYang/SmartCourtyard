@@ -494,6 +494,84 @@ abstract class AppLocalizations {
   /// **'Life remaining'**
   String get homeLifeRemainingLabel;
 
+  /// Open door state on the home device card
+  ///
+  /// In en, this message translates to:
+  /// **'Opened'**
+  String get homeDoorStateOpen;
+
+  /// Opening door state on the home device card
+  ///
+  /// In en, this message translates to:
+  /// **'Opening'**
+  String get homeDoorStateOpening;
+
+  /// Stopped door state on the home device card
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped'**
+  String get homeDoorStateStopped;
+
+  /// Closing door state on the home device card
+  ///
+  /// In en, this message translates to:
+  /// **'Closing'**
+  String get homeDoorStateClosing;
+
+  /// Closed door state on the home device card
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get homeDoorStateClosed;
+
+  /// Unknown door state on the home device card
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get homeDoorStateUnknown;
+
+  /// Title of the home device editing sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Device editing'**
+  String get homeDeviceEditingTitle;
+
+  /// Top action in the home device editing sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Top'**
+  String get homeDeviceEditTopAction;
+
+  /// Share action in the home device editing sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get homeDeviceEditShareAction;
+
+  /// Move scene action in the home device editing sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Move Scene'**
+  String get homeDeviceEditMoveSceneAction;
+
+  /// Name action in the home device editing sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get homeDeviceEditNameAction;
+
+  /// Delete device action in the home device editing sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Device'**
+  String get homeDeviceEditDeleteAction;
+
+  /// Customize action in the home device editing sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Customize'**
+  String get homeDeviceEditCustomizeAction;
+
   /// Add new doors page title
   ///
   /// In en, this message translates to:
