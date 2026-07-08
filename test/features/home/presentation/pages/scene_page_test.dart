@@ -1,16 +1,29 @@
 import 'package:flinx/app/flinx_app.dart';
+import 'package:flinx/features/auth/application/providers.dart';
+import 'package:flinx/features/auth/domain/entities/auth_session.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  Future<void> pumpSignedInApp(WidgetTester tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authSessionProvider.overrideWith(
+            (ref) async =>
+                const AuthSession(isAuthenticated: true, userId: 'test-user'),
+          ),
+        ],
+        child: const FlinxApp(),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+  }
+
   testWidgets('opens scene page from the second home action', (tester) async {
-    await tester.pumpWidget(const ProviderScope(child: FlinxApp()));
-
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Home'));
-    await tester.pumpAndSettle();
+    await pumpSignedInApp(tester);
 
     await tester.tap(find.byTooltip('Scene'));
     await tester.pumpAndSettle();
@@ -29,12 +42,7 @@ void main() {
   });
 
   testWidgets('opens scene name dialog from new scene card', (tester) async {
-    await tester.pumpWidget(const ProviderScope(child: FlinxApp()));
-
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Home'));
-    await tester.pumpAndSettle();
+    await pumpSignedInApp(tester);
 
     await tester.tap(find.byTooltip('Scene'));
     await tester.pumpAndSettle();
@@ -67,12 +75,7 @@ void main() {
   testWidgets('toggles scene editing mode from the top-right action', (
     tester,
   ) async {
-    await tester.pumpWidget(const ProviderScope(child: FlinxApp()));
-
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Home'));
-    await tester.pumpAndSettle();
+    await pumpSignedInApp(tester);
 
     await tester.tap(find.byTooltip('Scene'));
     await tester.pumpAndSettle();

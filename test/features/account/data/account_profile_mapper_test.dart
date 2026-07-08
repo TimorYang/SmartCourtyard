@@ -8,6 +8,7 @@ void main() {
   test('maps local dto to domain and normalizes values', () {
     final dto = AccountProfileDto(
       schemaVersion: 1,
+      userId: 'user-1',
       email: '  USER@Example.COM ',
       nickname: ' Alice ',
       avatarUrl: ' ',
@@ -17,6 +18,7 @@ void main() {
 
     final profile = dto.toDomain();
 
+    expect(profile.userId, 'user-1');
     expect(profile.email, 'user@example.com');
     expect(profile.nickname, 'Alice');
     expect(profile.avatarUrl, isNull);
@@ -26,6 +28,7 @@ void main() {
 
   test('maps domain to local dto without token fields', () {
     final profile = AccountProfile(
+      userId: 'user-1',
       email: 'user@example.com',
       nickname: 'Alice',
       avatarUrl: 'https://example.com/avatar.png',
@@ -36,6 +39,7 @@ void main() {
     final json = profile.toLocalDto().toJson();
 
     expect(json['schemaVersion'], AccountProfileDto.currentSchemaVersion);
+    expect(json['userId'], 'user-1');
     expect(json['email'], 'user@example.com');
     expect(json['nickname'], 'Alice');
     expect(json['avatarUrl'], 'https://example.com/avatar.png');
@@ -48,6 +52,7 @@ void main() {
 
   test('maps remote dto through the app-local domain boundary', () {
     const remoteDto = AccountRemoteDto(
+      userId: 'remote-user',
       email: 'Remote@Example.COM',
       nickname: 'Remote User',
       registeredAtIso8601: '2026-04-05T06:07:08Z',
@@ -55,6 +60,7 @@ void main() {
 
     final profile = remoteDto.toDomain();
 
+    expect(profile.userId, 'remote-user');
     expect(profile.email, 'remote@example.com');
     expect(profile.nickname, 'Remote User');
     expect(profile.avatarUrl, isNull);

@@ -7,17 +7,29 @@ import 'login_form_controller.dart';
 import 'register_code_controller.dart';
 import 'register_form_controller.dart';
 import 'register_password_controller.dart';
-import '../data/repositories/auth_session_repository_impl.dart';
+import 'simulated_login_use_case.dart';
+import '../../account/application/providers.dart';
 import '../domain/entities/auth_session.dart';
-import '../domain/repositories/auth_session_repository.dart';
 
-final authSessionRepositoryProvider = Provider<AuthSessionRepository>((ref) {
-  return const AuthSessionRepositoryImpl();
+final authSessionProvider = FutureProvider<AuthSession>((ref) async {
+  final accountRepository = ref.watch(accountRepositoryProvider);
+  final profile = await accountRepository.readCachedProfile();
+  final tokenSet = await accountRepository.readTokenSet();
+  if (profile == null || tokenSet == null) {
+    return const AuthSession.signedOut();
+  }
+
+  if (profile.userId.isEmpty || !tokenSet.isUsableAt(DateTime.now())) {
+    return const AuthSession.signedOut();
+  }
+
+  return AuthSession(isAuthenticated: true, userId: profile.userId);
 });
 
-final authSessionProvider = Provider<AuthSession>((ref) {
-  final repository = ref.watch(authSessionRepositoryProvider);
-  return repository.readCurrentSession();
+final simulatedLoginUseCaseProvider = Provider<SimulatedLoginUseCase>((ref) {
+  return SimulatedLoginUseCase(
+    accountRepository: ref.watch(accountRepositoryProvider),
+  );
 });
 
 final loginFormControllerProvider =

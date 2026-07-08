@@ -162,6 +162,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get loginSubmitPending => '登录功能暂未接入';
 
   @override
+  String get loginFailed => '登录失败，请重试。';
+
+  @override
   String get homeShortcutAction => '首页';
 
   @override
@@ -252,6 +255,118 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get homeDeviceEditCustomizeAction => '自定义';
+
+  @override
+  String get accountProfileTitle => '账户资料';
+
+  @override
+  String get accountDetailsTitle => 'ACCOUNT';
+
+  @override
+  String get accountDetailsHeadPortrait => 'Head portrait';
+
+  @override
+  String get accountDetailsAccountNumber => 'Account number';
+
+  @override
+  String get accountDetailsFullName => 'Full name';
+
+  @override
+  String get accountDetailsMailbox => 'Mailbox';
+
+  @override
+  String get accountDetailsChangePassword => 'Change Password';
+
+  @override
+  String get accountDetailsForgotPassword => 'Forgot password';
+
+  @override
+  String get accountDetailsLogout => 'Log out';
+
+  @override
+  String get accountDetailsFallbackNumber => '34345435@qq.com';
+
+  @override
+  String get accountDetailsFallbackFullName => 'James';
+
+  @override
+  String get accountDetailsFallbackMailbox => '123456@qq.com';
+
+  @override
+  String get accountDetailsPhotoAlbumAction => 'Photo album';
+
+  @override
+  String get accountDetailsPhotographAction => 'Photograph';
+
+  @override
+  String get accountDetailsCancelAction => 'Cancel';
+
+  @override
+  String get accountDetailsConfirmAction => 'confirm';
+
+  @override
+  String get accountDetailsRenameTitle => 'Rename';
+
+  @override
+  String get accountDetailsNameInputPlaceholder => 'JAMES';
+
+  @override
+  String get accountDetailsChangePasswordTitle => 'Change Password';
+
+  @override
+  String get accountDetailsNewPasswordPlaceholder => 'Enter New Password';
+
+  @override
+  String get accountDetailsShowPasswordAction => 'Show password';
+
+  @override
+  String get accountDetailsHidePasswordAction => 'Hide password';
+
+  @override
+  String accountDetailsAvatarOptionLabel(int index) {
+    return 'Avatar option $index';
+  }
+
+  @override
+  String get accountFallbackEmail => '739059568@qq.com';
+
+  @override
+  String get accountSharedDevices => '共享设备';
+
+  @override
+  String get accountReceivingDevices => '接收设备';
+
+  @override
+  String get accountManageDevices => '管理设备';
+
+  @override
+  String get accountMessage => '消息';
+
+  @override
+  String get accountRegion => '地区';
+
+  @override
+  String get accountLanguage => '语言';
+
+  @override
+  String get accountSystemPermissions => '系统权限';
+
+  @override
+  String get accountCheckForUpdates => '检查更新';
+
+  @override
+  String get accountAbout => '关于';
+
+  @override
+  String get accountDefaultRegion => 'England';
+
+  @override
+  String get accountDefaultLanguage => 'English';
+
+  @override
+  String accountMenuComingSoon(String item) {
+    return '$item 即将上线';
+  }
 
   @override
   String get deviceNameDialogTitle => '设备名称';

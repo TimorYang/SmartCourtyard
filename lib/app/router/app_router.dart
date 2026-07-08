@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter_debug_tools/flutter_debug_tools.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -13,6 +15,8 @@ import '../../features/add_device/presentation/pages/smart_opener_scan_guide_pag
 import '../../features/add_device/presentation/pages/smart_opener_scan_results_page.dart';
 import '../../features/add_device/presentation/pages/wifi_configuration_page.dart';
 import '../../features/auth/application/providers.dart';
+import '../../features/account/presentation/pages/account_details_page.dart';
+import '../../features/account/presentation/pages/account_profile_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_code_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_reset_page.dart';
@@ -31,11 +35,13 @@ import '../../shared/webview/app_web_view_page.dart';
 import '../config/app_links.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final session = ref.watch(authSessionProvider);
+  ref.watch(authSessionProvider);
 
   return GoRouter(
     initialLocation: WelcomePage.routePath,
-    redirect: (context, state) {
+    observers: kDebugMode ? [DebugNavigatorObserver()] : [],
+    redirect: (context, state) async {
+      final session = await ref.read(authSessionProvider.future);
       final isSignedIn = session.isAuthenticated;
       final location = state.matchedLocation;
       final isAuthRoute =
@@ -48,23 +54,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           location == RegisterPage.routePath ||
           location == RegisterCodePage.routePath ||
           location == RegisterPasswordPage.routePath;
-      final isPublicRoute =
-          isAuthRoute ||
-          location == AppWebViewPage.routePath ||
-          location == HomePage.routePath ||
-          location == ScenePage.routePath ||
-          location == ChooseScenePage.routePath ||
-          location == AddNewDoorsPage.routePath ||
-          location == AddDevicePage.routePath ||
-          location == WifiConfigurationPage.routePath ||
-          location == SmartOpenerScanGuidePage.routePath ||
-          location == SmartOpenerQrScanPage.routePath ||
-          location == SmartOpenerBleScanPage.routePath ||
-          location == SmartOpenerScanResultsPage.routePath ||
-          location == SmartOpenerDeviceNotFoundPage.routePath ||
-          location == SmartOpenerChooseWifiPage.routePath ||
-          location == SmartOpenerConnectingPage.routePath ||
-          location == SmartOpenerConnectionSuccessPage.routePath;
+      final isPublicRoute = isAuthRoute || location == AppWebViewPage.routePath;
 
       if (!isSignedIn && !isPublicRoute) {
         return WelcomePage.routePath;
@@ -144,6 +134,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: HomePage.routePath,
         name: HomePage.routeName,
         builder: (context, state) => const HomePage(),
+      ),
+      GoRoute(
+        path: AccountDetailsPage.routePath,
+        name: AccountDetailsPage.routeName,
+        builder: (context, state) => const AccountDetailsPage(),
+      ),
+      GoRoute(
+        path: AccountProfilePage.routePath,
+        name: AccountProfilePage.routeName,
+        builder: (context, state) => const AccountProfilePage(),
       ),
       GoRoute(
         path: ChooseScenePage.routePath,

@@ -168,6 +168,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginSubmitPending => 'Login is not connected yet';
 
   @override
+  String get loginFailed => 'Login failed. Please try again.';
+
+  @override
   String get homeShortcutAction => 'Home';
 
   @override
@@ -265,6 +268,118 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeDeviceEditCustomizeAction => 'Customize';
+
+  @override
+  String get accountProfileTitle => 'Account profile';
+
+  @override
+  String get accountDetailsTitle => 'ACCOUNT';
+
+  @override
+  String get accountDetailsHeadPortrait => 'Head portrait';
+
+  @override
+  String get accountDetailsAccountNumber => 'Account number';
+
+  @override
+  String get accountDetailsFullName => 'Full name';
+
+  @override
+  String get accountDetailsMailbox => 'Mailbox';
+
+  @override
+  String get accountDetailsChangePassword => 'Change Password';
+
+  @override
+  String get accountDetailsForgotPassword => 'Forgot password';
+
+  @override
+  String get accountDetailsLogout => 'Log out';
+
+  @override
+  String get accountDetailsFallbackNumber => '34345435@qq.com';
+
+  @override
+  String get accountDetailsFallbackFullName => 'James';
+
+  @override
+  String get accountDetailsFallbackMailbox => '123456@qq.com';
+
+  @override
+  String get accountDetailsPhotoAlbumAction => 'Photo album';
+
+  @override
+  String get accountDetailsPhotographAction => 'Photograph';
+
+  @override
+  String get accountDetailsCancelAction => 'Cancel';
+
+  @override
+  String get accountDetailsConfirmAction => 'confirm';
+
+  @override
+  String get accountDetailsRenameTitle => 'Rename';
+
+  @override
+  String get accountDetailsNameInputPlaceholder => 'JAMES';
+
+  @override
+  String get accountDetailsChangePasswordTitle => 'Change Password';
+
+  @override
+  String get accountDetailsNewPasswordPlaceholder => 'Enter New Password';
+
+  @override
+  String get accountDetailsShowPasswordAction => 'Show password';
+
+  @override
+  String get accountDetailsHidePasswordAction => 'Hide password';
+
+  @override
+  String accountDetailsAvatarOptionLabel(int index) {
+    return 'Avatar option $index';
+  }
+
+  @override
+  String get accountFallbackEmail => '739059568@qq.com';
+
+  @override
+  String get accountSharedDevices => 'Shared devices';
+
+  @override
+  String get accountReceivingDevices => 'Receiving devices';
+
+  @override
+  String get accountManageDevices => 'manage devices';
+
+  @override
+  String get accountMessage => 'message';
+
+  @override
+  String get accountRegion => 'Region';
+
+  @override
+  String get accountLanguage => 'Language';
+
+  @override
+  String get accountSystemPermissions => 'System permissions';
+
+  @override
+  String get accountCheckForUpdates => 'Check for updates';
+
+  @override
+  String get accountAbout => 'About';
+
+  @override
+  String get accountDefaultRegion => 'England';
+
+  @override
+  String get accountDefaultLanguage => 'English';
+
+  @override
+  String accountMenuComingSoon(String item) {
+    return '$item is coming soon';
+  }
 
   @override
   String get deviceNameDialogTitle => 'Device Name';

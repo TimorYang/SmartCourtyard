@@ -1,23 +1,29 @@
 import 'package:flinx/app/flinx_app.dart';
 import 'package:flinx/features/auth/application/providers.dart';
 import 'package:flinx/features/auth/domain/entities/auth_session.dart';
-import 'package:flinx/features/auth/domain/repositories/auth_session_repository.dart';
 import 'package:flinx/features/home/application/providers.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-class _FakeAuthSessionRepository implements AuthSessionRepository {
-  const _FakeAuthSessionRepository(this.session);
-
-  final AuthSession session;
-
-  @override
-  AuthSession readCurrentSession() => session;
-}
-
 void main() {
+  Future<void> pumpSignedInApp(WidgetTester tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authSessionProvider.overrideWith(
+            (ref) async =>
+                const AuthSession(isAuthenticated: true, userId: 'test-user'),
+          ),
+        ],
+        child: const FlinxApp(),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+  }
+
   testWidgets('opens login page from welcome page', (tester) async {
     await tester.pumpWidget(const ProviderScope(child: FlinxApp()));
 
@@ -29,7 +35,7 @@ void main() {
     expect(find.text('Enter your email address'), findsOneWidget);
   });
 
-  testWidgets('opens home page from welcome page shortcut', (tester) async {
+  testWidgets('keeps home shortcut protected while signed out', (tester) async {
     await tester.pumpWidget(const ProviderScope(child: FlinxApp()));
 
     await tester.pumpAndSettle();
@@ -37,18 +43,44 @@ void main() {
     await tester.tap(find.text('Home'));
     await tester.pumpAndSettle();
 
-    expect(find.text('2 Doors'), findsOneWidget);
-    expect(find.text('Garage door'), findsOneWidget);
-    expect(find.text('Closing'), findsOneWidget);
-    expect(find.text('Roller door'), findsOneWidget);
-    expect(find.text('Opened'), findsOneWidget);
-    expect(find.text('No doors'), findsNothing);
+    expect(find.text('Start your\nsmart life'), findsOneWidget);
+    expect(find.text('2 Doors'), findsNothing);
+  });
+
+  testWidgets('opens device command page from home shortcut device card', (
+    tester,
+  ) async {
+    await pumpSignedInApp(tester);
+
+    await tester.tap(find.text('Garage door').first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Operated cycles'), findsOneWidget);
+    expect(find.byTooltip('More'), findsOneWidget);
+    expect(find.text('Login'), findsNothing);
+  });
+
+  testWidgets('opens account profile page from the home avatar', (
+    tester,
+  ) async {
+    await pumpSignedInApp(tester);
+
+    await tester.tap(find.byTooltip('Account profile'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('739059568@qq.com'), findsOneWidget);
+    expect(find.text('Shared devices'), findsOneWidget);
+    expect(find.text('Region'), findsOneWidget);
   });
 
   testWidgets('shows home device cards when doors are loaded', (tester) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          authSessionProvider.overrideWith(
+            (ref) async =>
+                const AuthSession(isAuthenticated: true, userId: 'test-user'),
+          ),
           homeDevicesProvider.overrideWith((ref) async {
             return const [
               DeviceSummary(
@@ -78,9 +110,6 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Home'));
-    await tester.pumpAndSettle();
-
     expect(find.text('2 Doors'), findsOneWidget);
     expect(find.text('Garage door'), findsOneWidget);
     expect(find.text('Closing'), findsOneWidget);
@@ -92,12 +121,7 @@ void main() {
   testWidgets('opens device editing sheet from home device long press', (
     tester,
   ) async {
-    await tester.pumpWidget(const ProviderScope(child: FlinxApp()));
-
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Home'));
-    await tester.pumpAndSettle();
+    await pumpSignedInApp(tester);
 
     await tester.longPress(find.text('Roller door'));
     await tester.pumpAndSettle();
@@ -114,12 +138,7 @@ void main() {
   testWidgets('opens choose scene page from device editing move scene action', (
     tester,
   ) async {
-    await tester.pumpWidget(const ProviderScope(child: FlinxApp()));
-
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Home'));
-    await tester.pumpAndSettle();
+    await pumpSignedInApp(tester);
 
     await tester.longPress(find.text('Roller door'));
     await tester.pumpAndSettle();
@@ -135,12 +154,7 @@ void main() {
   testWidgets('opens device name dialog from device editing name action', (
     tester,
   ) async {
-    await tester.pumpWidget(const ProviderScope(child: FlinxApp()));
-
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Home'));
-    await tester.pumpAndSettle();
+    await pumpSignedInApp(tester);
 
     await tester.longPress(find.text('Roller door'));
     await tester.pumpAndSettle();
@@ -158,12 +172,7 @@ void main() {
   testWidgets('opens device delete dialog from device editing delete action', (
     tester,
   ) async {
-    await tester.pumpWidget(const ProviderScope(child: FlinxApp()));
-
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Home'));
-    await tester.pumpAndSettle();
+    await pumpSignedInApp(tester);
 
     await tester.longPress(find.text('Roller door'));
     await tester.pumpAndSettle();
@@ -180,12 +189,7 @@ void main() {
   testWidgets('opens customize dialog from device editing customize action', (
     tester,
   ) async {
-    await tester.pumpWidget(const ProviderScope(child: FlinxApp()));
-
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Home'));
-    await tester.pumpAndSettle();
+    await pumpSignedInApp(tester);
 
     await tester.longPress(find.text('Roller door'));
     await tester.pumpAndSettle();
@@ -200,12 +204,7 @@ void main() {
   });
 
   testWidgets('shows home add menu from header add action', (tester) async {
-    await tester.pumpWidget(const ProviderScope(child: FlinxApp()));
-
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Home'));
-    await tester.pumpAndSettle();
+    await pumpSignedInApp(tester);
 
     await tester.tap(find.byTooltip('Add door'));
     await tester.pumpAndSettle();
@@ -225,12 +224,7 @@ void main() {
   testWidgets('opens scene name dialog from home add scene menu action', (
     tester,
   ) async {
-    await tester.pumpWidget(const ProviderScope(child: FlinxApp()));
-
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Home'));
-    await tester.pumpAndSettle();
+    await pumpSignedInApp(tester);
 
     await tester.tap(find.byTooltip('Add door'));
     await tester.pumpAndSettle();
@@ -246,12 +240,7 @@ void main() {
   testWidgets('opens add new doors page from home add door menu action', (
     tester,
   ) async {
-    await tester.pumpWidget(const ProviderScope(child: FlinxApp()));
-
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Home'));
-    await tester.pumpAndSettle();
+    await pumpSignedInApp(tester);
 
     await tester.tap(find.byTooltip('Add door'));
     await tester.pumpAndSettle();
@@ -295,10 +284,9 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          authSessionRepositoryProvider.overrideWithValue(
-            const _FakeAuthSessionRepository(
-              AuthSession(isAuthenticated: true, userId: 'user-1'),
-            ),
+          authSessionProvider.overrideWith(
+            (ref) async =>
+                const AuthSession(isAuthenticated: true, userId: 'user-1'),
           ),
         ],
         child: const FlinxApp(),

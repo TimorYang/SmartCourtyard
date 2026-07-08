@@ -36,10 +36,12 @@ flutter:
   uses-material-design: true
   generate: true
   assets:
-    - assets/images/
     - assets/animations/add_device/
+    - assets/images/
+    - assets/images/account/
     - assets/icons/
     - assets/icons/auth/
     - assets/icons/add_device/
     - assets/icons/add_device/lottie_js_scan_device/
     - assets/icons/home/
+    - assets/icons/account/

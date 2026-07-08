@@ -19,6 +19,24 @@ class AppColors {
   static const backgroundPrimary = Colors.white;
   static const backgroundInverse = Colors.black;
   static const homeBackground = Color(0xFFF8F8F9);
+  static const accountProfileBackground = Color(0xFFFFFFFF);
+  static const accountDetailsLogoutSurface = Color(0xFFF3F4F6);
+  static const accountDetailsAvatarSurface = Color(0xFFF1F3F6);
+  static const accountDetailsAvatarForeground = Color(0xFFFFFFFF);
+  static const accountDetailsSheetSurface = Color(0xFFFFFFFF);
+  static const accountDetailsSheetActionSurface = Color(0xFFF2F3F5);
+  static const accountDetailsSheetInputBorder = Color(0xFFC8C8C8);
+  static const accountDetailsSheetInputFocusedBorder = Color(0xFF176CFF);
+  static const accountDetailsSheetInputIcon = Color(0xFFB4B6BA);
+  static const accountDetailsAvatarOptionBorder = Color(0xFFE9ECF2);
+  static const deviceControlPanel = Color(0xFFF3F4F6);
+  static const deviceControlPanelPressed = Color(0xFFE8EAEE);
+  static const deviceControlPrimaryAction = Color(0xFF151D27);
+  static const deviceControlPrimaryActionForeground = Color(0xFFFFFFFF);
+  static const deviceControlInactive = Color(0xFFB5BAC1);
+  static const deviceControlDivider = Color(0xFFD8DADD);
+  static const deviceControlWireless = Color(0xFF006DFF);
+  static const deviceControlMetricMuted = Color(0xFF6A6F77);
   static const backgroundDarkTop = Color(0xFF0D1B30);
   static const backgroundDarkMiddle = Color(0xFF14253D);
   static const backgroundDarkBottom = Color(0xFF1B1D24);
@@ -35,6 +53,10 @@ class AppColors {
   static const textMuted = Color(0xFF5B5B60);
   static const textHint = Color(0xFF7A7A7A);
   static const textIcon = Color(0xFF5A5D64);
+  static const textAccountHeader = Colors.white;
+  static const textAccountHeaderMeta = Color(0xFFECEFF4);
+  static const textAccountMenuValue = Color(0xFF4F535A);
+  static const textAccountDetailsValue = Color(0xFFA7ADB7);
   static const textAgreement = Color(0xFFC0C0C3);
   static const textAgreementLink = Color(0xFF4C4B4A);
   static const textAuthBody = Color(0xFF555A62);
@@ -46,8 +68,13 @@ class AppColors {
 
   static const iconHomeAction = Color(0xFF3F424A);
   static const iconHomePlaceholder = Color(0xFFD5D9E0);
+  static const iconAccountMenu = Color(0xFF4D535B);
+  static const iconAccountChevron = Color(0xFFA2A7AE);
   static const surfaceHomeAvatar = Color(0xFFECEFF4);
   static const surfaceHomeIcon = Color(0xFFF8F9FB);
+  static const surfaceAccountHeaderFallback = Color(0xFF384148);
+  static const surfaceAccountHeaderFallbackLight = Color(0xFF6D7B6D);
+  static const surfaceAccountMenu = Colors.white;
   static const surfaceSceneCard = Color(0xFFF4F5F7);
   static const surfaceItemSceneCard = Color(0xFFF1F3F5);
   static const sceneDeleteAction = Color(0xFFFF1010);
@@ -77,6 +104,7 @@ class AppColors {
   static const navigationDivider = Color(0xFFE6E7EB);
   static const borderHomeDivider = Color(0xFFE7E8EB);
   static const borderHomePlaceholder = Color(0xFFDDE1E7);
+  static const borderAccountDivider = Color(0xFFF0F1F3);
 
   static const shadowStrong = Color(0x99000000);
   static const overlayStrong = Color(0x7A000000);
@@ -268,6 +296,158 @@ class AppTextTokens {
 
   static TextStyle homeDeviceEditingAction(TextTheme textTheme) {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(color: AppColors.textMuted, fontSize: 15, fontWeight: FontWeight.w500, height: 1.2);
+  }
+
+  static TextStyle deviceControlMetricLabel(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.deviceControlMetricMuted,
+      fontSize: 14,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle deviceControlMetricValue(TextTheme textTheme) {
+    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 26,
+      fontWeight: FontWeight.w700,
+      height: 1.05,
+    );
+  }
+
+  static TextStyle deviceControlDoorState(TextTheme textTheme) {
+    return (textTheme.displaySmall ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 36,
+      fontWeight: FontWeight.w800,
+      height: 1.05,
+    );
+  }
+
+  static TextStyle deviceControlCardTitle(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textSecondary,
+      fontSize: 18,
+      fontWeight: FontWeight.w800,
+      height: 1.15,
+    );
+  }
+
+  static TextStyle deviceControlCardMeta(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textHint,
+      fontSize: 16,
+      fontWeight: FontWeight.w700,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle deviceControlBadge(TextTheme textTheme) {
+    return (textTheme.labelMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 12,
+      fontWeight: FontWeight.w500,
+      height: 1.1,
+    );
+  }
+
+  static TextStyle accountProfileEmail(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textAccountHeader,
+      fontSize: 20,
+      fontWeight: FontWeight.w500,
+      height: 1.15,
+    );
+  }
+
+  static TextStyle accountProfileRegisteredAt(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textAccountHeaderMeta,
+      fontSize: 12,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle accountMenuLabel(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 15,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle accountMenuValue(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textAccountMenuValue,
+      fontSize: 15,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle accountDetailsTitle(TextTheme textTheme) {
+    return (textTheme.displaySmall ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 28,
+      fontWeight: FontWeight.w800,
+      height: 1.05,
+    );
+  }
+
+  static TextStyle accountDetailsLabel(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 16,
+      fontWeight: FontWeight.w700,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle accountDetailsValue(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textAccountDetailsValue,
+      fontSize: 16,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle accountDetailsLogout(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 17,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle accountDetailsSheetTitle(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 20,
+      fontWeight: FontWeight.w700,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle accountDetailsSheetInput(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 17,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle accountDetailsSheetButton(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      fontSize: 17,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
   }
 
   static TextStyle deviceDeleteConfirmMessage(TextTheme textTheme) {

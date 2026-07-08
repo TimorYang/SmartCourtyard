@@ -211,6 +211,10 @@
   "@loginSubmitPending": {
     "description": "Temporary message shown when the user submits the login form"
   },
+  "loginFailed": "Login failed. Please try again.",
+  "@loginFailed": {
+    "description": "Message shown when simulated login fails unexpectedly"
+  },
   "homeShortcutAction": "Home",
   "@homeShortcutAction": {
     "description": "Temporary shortcut button from the welcome page to the home page"
@@ -335,6 +339,162 @@
   "homeDeviceEditCustomizeAction": "Customize",
   "@homeDeviceEditCustomizeAction": {
     "description": "Customize action in the home device editing sheet"
+  },
+  "accountProfileTitle": "Account profile",
+  "@accountProfileTitle": {
+    "description": "Title and accessibility label for the account profile menu page"
+  },
+  "accountDetailsTitle": "ACCOUNT",
+  "@accountDetailsTitle": {
+    "description": "Title for the account details page"
+  },
+  "accountDetailsHeadPortrait": "Head portrait",
+  "@accountDetailsHeadPortrait": {
+    "description": "Account details row label for the user's avatar"
+  },
+  "accountDetailsAccountNumber": "Account number",
+  "@accountDetailsAccountNumber": {
+    "description": "Account details row label for account number"
+  },
+  "accountDetailsFullName": "Full name",
+  "@accountDetailsFullName": {
+    "description": "Account details row label for full name"
+  },
+  "accountDetailsMailbox": "Mailbox",
+  "@accountDetailsMailbox": {
+    "description": "Account details row label for mailbox"
+  },
+  "accountDetailsChangePassword": "Change Password",
+  "@accountDetailsChangePassword": {
+    "description": "Account details row label for changing password"
+  },
+  "accountDetailsForgotPassword": "Forgot password",
+  "@accountDetailsForgotPassword": {
+    "description": "Account details row label for forgot password"
+  },
+  "accountDetailsLogout": "Log out",
+  "@accountDetailsLogout": {
+    "description": "Account details log out button label"
+  },
+  "accountDetailsFallbackNumber": "34345435@qq.com",
+  "@accountDetailsFallbackNumber": {
+    "description": "Fallback account number shown while account data is unavailable"
+  },
+  "accountDetailsFallbackFullName": "James",
+  "@accountDetailsFallbackFullName": {
+    "description": "Fallback full name shown while account data is unavailable"
+  },
+  "accountDetailsFallbackMailbox": "123456@qq.com",
+  "@accountDetailsFallbackMailbox": {
+    "description": "Fallback mailbox shown while account data is unavailable"
+  },
+  "accountDetailsPhotoAlbumAction": "Photo album",
+  "@accountDetailsPhotoAlbumAction": {
+    "description": "Action for choosing an account avatar from the photo album"
+  },
+  "accountDetailsPhotographAction": "Photograph",
+  "@accountDetailsPhotographAction": {
+    "description": "Action for taking a new account avatar photo"
+  },
+  "accountDetailsCancelAction": "Cancel",
+  "@accountDetailsCancelAction": {
+    "description": "Cancel action in account details modal sheets"
+  },
+  "accountDetailsConfirmAction": "confirm",
+  "@accountDetailsConfirmAction": {
+    "description": "Confirm action in account details modal sheets"
+  },
+  "accountDetailsRenameTitle": "Rename",
+  "@accountDetailsRenameTitle": {
+    "description": "Title for the account full-name editing sheet"
+  },
+  "accountDetailsNameInputPlaceholder": "JAMES",
+  "@accountDetailsNameInputPlaceholder": {
+    "description": "Placeholder for the account name input"
+  },
+  "accountDetailsChangePasswordTitle": "Change Password",
+  "@accountDetailsChangePasswordTitle": {
+    "description": "Title for the account password change sheet"
+  },
+  "accountDetailsNewPasswordPlaceholder": "Enter New Password",
+  "@accountDetailsNewPasswordPlaceholder": {
+    "description": "Placeholder for new password fields"
+  },
+  "accountDetailsShowPasswordAction": "Show password",
+  "@accountDetailsShowPasswordAction": {
+    "description": "Accessibility label for showing a password field"
+  },
+  "accountDetailsHidePasswordAction": "Hide password",
+  "@accountDetailsHidePasswordAction": {
+    "description": "Accessibility label for hiding a password field"
+  },
+  "accountDetailsAvatarOptionLabel": "Avatar option {index}",
+  "@accountDetailsAvatarOptionLabel": {
+    "description": "Accessibility label for avatar choices in the account avatar sheet",
+    "placeholders": {
+      "index": {
+        "type": "int",
+        "example": "1"
+      }
+    }
+  },
+  "accountFallbackEmail": "739059568@qq.com",
+  "@accountFallbackEmail": {
+    "description": "Fallback account email shown on the profile page while account data is unavailable"
+  },
+  "accountSharedDevices": "Shared devices",
+  "@accountSharedDevices": {
+    "description": "Account menu item for devices shared by the user"
+  },
+  "accountReceivingDevices": "Receiving devices",
+  "@accountReceivingDevices": {
+    "description": "Account menu item for devices received from others"
+  },
+  "accountManageDevices": "manage devices",
+  "@accountManageDevices": {
+    "description": "Account menu item for managing devices; lowercase matches the provided design"
+  },
+  "accountMessage": "message",
+  "@accountMessage": {
+    "description": "Account menu item for messages; lowercase matches the provided design"
+  },
+  "accountRegion": "Region",
+  "@accountRegion": {
+    "description": "Account menu item for region settings"
+  },
+  "accountLanguage": "Language",
+  "@accountLanguage": {
+    "description": "Account menu item for language settings"
+  },
+  "accountSystemPermissions": "System permissions",
+  "@accountSystemPermissions": {
+    "description": "Account menu item for system permission settings"
+  },
+  "accountCheckForUpdates": "Check for updates",
+  "@accountCheckForUpdates": {
+    "description": "Account menu item for checking app updates"
+  },
+  "accountAbout": "About",
+  "@accountAbout": {
+    "description": "Account menu item for about page"
+  },
+  "accountDefaultRegion": "England",
+  "@accountDefaultRegion": {
+    "description": "Default region value shown on the account profile page"
+  },
+  "accountDefaultLanguage": "English",
+  "@accountDefaultLanguage": {
+    "description": "Default language value shown on the account profile page"
+  },
+  "accountMenuComingSoon": "{item} is coming soon",
+  "@accountMenuComingSoon": {
+    "description": "Temporary snackbar shown when tapping account menu rows without a destination page",
+    "placeholders": {
+      "item": {
+        "type": "String",
+        "example": "Region"
+      }
+    }
   },
   "deviceNameDialogTitle": "Device Name",
   "@deviceNameDialogTitle": {

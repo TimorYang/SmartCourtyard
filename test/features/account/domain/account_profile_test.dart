@@ -5,6 +5,7 @@ import 'package:flinx/features/account/domain/entities/account_token_set.dart';
 void main() {
   test('normalizes email and trims nickname', () {
     final profile = AccountProfile(
+      userId: 'user-1',
       email: '  USER@Example.COM ',
       nickname: '  FLINX User  ',
       registeredAt: DateTime.utc(2026, 1, 2),
@@ -12,6 +13,7 @@ void main() {
     );
 
     expect(profile.email, 'user@example.com');
+    expect(profile.userId, 'user-1');
     expect(profile.nickname, 'FLINX User');
   });
 
