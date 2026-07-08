@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/storage/app_storage_paths.dart';
 import '../data/data_sources/account_local_data_source.dart';
 import '../data/data_sources/account_secure_data_source.dart';
 import '../data/repositories/account_repository_impl.dart';
@@ -8,12 +11,26 @@ import '../domain/repositories/account_repository.dart';
 import 'account_controller.dart';
 
 final accountLocalDataSourceProvider = Provider<AccountLocalDataSource>((ref) {
+  if (!AppStoragePaths.isFlutterTest) {
+    final storageDirectory = AppStoragePaths.defaultStorageDirectory();
+    return JsonFileAccountLocalDataSource(
+      profileFile: File('${storageDirectory.path}/account_profile.json'),
+    );
+  }
+
   return InMemoryAccountLocalDataSource();
 });
 
 final accountSecureDataSourceProvider = Provider<AccountSecureDataSource>((
   ref,
 ) {
+  if (!AppStoragePaths.isFlutterTest) {
+    final storageDirectory = AppStoragePaths.defaultStorageDirectory();
+    return JsonFileAccountSecureDataSource(
+      tokenFile: File('${storageDirectory.path}/account_token.json'),
+    );
+  }
+
   return InMemoryAccountSecureDataSource();
 });
 

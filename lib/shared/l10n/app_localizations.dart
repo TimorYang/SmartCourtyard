@@ -392,6 +392,12 @@ abstract class AppLocalizations {
   /// **'Login is not connected yet'**
   String get loginSubmitPending;
 
+  /// Message shown when simulated login fails unexpectedly
+  ///
+  /// In en, this message translates to:
+  /// **'Login failed. Please try again.'**
+  String get loginFailed;
+
   /// Temporary shortcut button from the welcome page to the home page
   ///
   /// In en, this message translates to:

@@ -13,6 +13,7 @@ void main() {
           InMemoryAccountLocalDataSource(
             initialProfile: const AccountProfileDto(
               schemaVersion: 1,
+              userId: 'cached-user',
               email: 'cached@example.com',
               nickname: 'Cached User',
               registeredAtIso8601: '2026-01-02T03:04:05Z',
@@ -35,6 +36,7 @@ void main() {
       final container = ProviderContainer();
       addTearDown(container.dispose);
       final profile = AccountProfile(
+        userId: 'user-1',
         email: 'new@example.com',
         nickname: 'New User',
         registeredAt: DateTime.utc(2026, 2, 3),
@@ -57,6 +59,7 @@ void main() {
     final container = ProviderContainer();
     addTearDown(container.dispose);
     final profile = AccountProfile(
+      userId: 'user-1',
       email: 'new@example.com',
       nickname: 'New User',
       registeredAt: DateTime.utc(2026, 2, 3),

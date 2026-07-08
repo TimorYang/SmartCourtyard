@@ -1,5 +1,6 @@
 class AccountRemoteDto {
   const AccountRemoteDto({
+    required this.userId,
     required this.email,
     required this.nickname,
     required this.registeredAtIso8601,
@@ -7,6 +8,7 @@ class AccountRemoteDto {
     this.country,
   });
 
+  final String userId;
   final String email;
   final String nickname;
   final String? avatarUrl;
@@ -15,6 +17,7 @@ class AccountRemoteDto {
 
   factory AccountRemoteDto.fromJson(Map<String, Object?> json) {
     return AccountRemoteDto(
+      userId: json['userId'] as String? ?? '',
       email: json['email'] as String? ?? '',
       nickname: json['nickname'] as String? ?? '',
       avatarUrl: json['avatarUrl'] as String?,

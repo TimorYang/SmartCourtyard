@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
+import '../../../auth/application/providers.dart';
+import '../../../auth/presentation/pages/welcome_page.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
@@ -35,6 +38,11 @@ class AccountDetailsPage extends ConsumerWidget {
                   await ref
                       .read(accountControllerProvider.notifier)
                       .clearAccount();
+                  ref.invalidate(authSessionProvider);
+                  if (!context.mounted) {
+                    return;
+                  }
+                  context.go(WelcomePage.routePath);
                 },
               ),
             ),

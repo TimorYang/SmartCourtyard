@@ -27,12 +27,13 @@ import '../../shared/webview/app_web_view_page.dart';
 import '../config/app_links.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final session = ref.watch(authSessionProvider);
+  ref.watch(authSessionProvider);
 
   return GoRouter(
     initialLocation: WelcomePage.routePath,
     observers: kDebugMode ? [DebugNavigatorObserver()] : [],
-    redirect: (context, state) {
+    redirect: (context, state) async {
+      final session = await ref.read(authSessionProvider.future);
       final isSignedIn = session.isAuthenticated;
       final location = state.matchedLocation;
       final isAuthRoute =
@@ -45,17 +46,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           location == RegisterPage.routePath ||
           location == RegisterCodePage.routePath ||
           location == RegisterPasswordPage.routePath;
-      final isPublicRoute =
-          isAuthRoute ||
-          location == AppWebViewPage.routePath ||
-          location == AccountDetailsPage.routePath ||
-          location == HomePage.routePath ||
-          location == AccountProfilePage.routePath ||
-          location == ScenePage.routePath ||
-          location == ChooseScenePage.routePath ||
-          location == AddNewDoorsPage.routePath ||
-          location == AddDevicePage.routePath ||
-          location == DeviceCommandPage.routePath;
+      final isPublicRoute = isAuthRoute || location == AppWebViewPage.routePath;
 
       if (!isSignedIn && !isPublicRoute) {
         return WelcomePage.routePath;

@@ -162,6 +162,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get loginSubmitPending => '登录功能暂未接入';
 
   @override
+  String get loginFailed => '登录失败，请重试。';
+
+  @override
   String get homeShortcutAction => '首页';
 
   @override

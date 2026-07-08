@@ -1,13 +1,16 @@
 class AccountProfile {
   AccountProfile({
+    required String userId,
     required String email,
     required String nickname,
     required this.registeredAt,
     this.avatarUrl,
     this.country,
-  }) : email = normalizeEmail(email),
+  }) : userId = userId.trim(),
+       email = normalizeEmail(email),
        nickname = nickname.trim();
 
+  final String userId;
   final String email;
   final String nickname;
   final String? avatarUrl;
@@ -19,6 +22,7 @@ class AccountProfile {
   }
 
   AccountProfile copyWith({
+    String? userId,
     String? email,
     String? nickname,
     String? avatarUrl,
@@ -28,6 +32,7 @@ class AccountProfile {
     bool clearCountry = false,
   }) {
     return AccountProfile(
+      userId: userId ?? this.userId,
       email: email ?? this.email,
       nickname: nickname ?? this.nickname,
       avatarUrl: clearAvatarUrl ? null : avatarUrl ?? this.avatarUrl,
@@ -38,7 +43,7 @@ class AccountProfile {
 
   @override
   String toString() {
-    return 'AccountProfile(email: $email, nickname: $nickname, '
+    return 'AccountProfile(userId: $userId, email: $email, nickname: $nickname, '
         'avatarUrl: $avatarUrl, registeredAt: $registeredAt, '
         'country: $country)';
   }
@@ -47,6 +52,7 @@ class AccountProfile {
   bool operator ==(Object other) {
     return identical(this, other) ||
         other is AccountProfile &&
+            other.userId == userId &&
             other.email == email &&
             other.nickname == nickname &&
             other.avatarUrl == avatarUrl &&
@@ -56,6 +62,13 @@ class AccountProfile {
 
   @override
   int get hashCode {
-    return Object.hash(email, nickname, avatarUrl, registeredAt, country);
+    return Object.hash(
+      userId,
+      email,
+      nickname,
+      avatarUrl,
+      registeredAt,
+      country,
+    );
   }
 }

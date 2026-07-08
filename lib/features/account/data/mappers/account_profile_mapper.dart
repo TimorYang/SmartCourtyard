@@ -5,6 +5,7 @@ import '../dto/account_remote_dto.dart';
 extension AccountProfileDtoMapper on AccountProfileDto {
   AccountProfile toDomain() {
     return AccountProfile(
+      userId: _fallbackUserId(userId, email),
       email: email,
       nickname: nickname,
       avatarUrl: _blankToNull(avatarUrl),
@@ -18,6 +19,7 @@ extension AccountProfileDomainMapper on AccountProfile {
   AccountProfileDto toLocalDto() {
     return AccountProfileDto(
       schemaVersion: AccountProfileDto.currentSchemaVersion,
+      userId: userId,
       email: email,
       nickname: nickname,
       avatarUrl: _blankToNull(avatarUrl),
@@ -30,6 +32,7 @@ extension AccountProfileDomainMapper on AccountProfile {
 extension AccountRemoteDtoMapper on AccountRemoteDto {
   AccountProfile toDomain() {
     return AccountProfile(
+      userId: _fallbackUserId(userId, email),
       email: email,
       nickname: nickname,
       avatarUrl: _blankToNull(avatarUrl),
@@ -50,4 +53,13 @@ String? _blankToNull(String? value) {
     return null;
   }
   return trimmed;
+}
+
+String _fallbackUserId(String value, String email) {
+  final trimmed = value.trim();
+  if (trimmed.isNotEmpty) {
+    return trimmed;
+  }
+
+  return AccountProfile.normalizeEmail(email);
 }

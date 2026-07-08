@@ -211,6 +211,10 @@
   "@loginSubmitPending": {
     "description": "Temporary message shown when the user submits the login form"
   },
+  "loginFailed": "Login failed. Please try again.",
+  "@loginFailed": {
+    "description": "Message shown when simulated login fails unexpectedly"
+  },
   "homeShortcutAction": "Home",
   "@homeShortcutAction": {
     "description": "Temporary shortcut button from the welcome page to the home page"

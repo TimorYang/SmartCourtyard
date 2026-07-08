@@ -49,6 +49,7 @@
   "continueWithGoogle": "使用 Google 继续登录",
   "continueWithAlexa": "使用 Alexa 继续登录",
   "loginSubmitPending": "登录功能暂未接入",
+  "loginFailed": "登录失败，请重试。",
   "homeShortcutAction": "首页",
   "homeGreeting": "您好",
   "homeWelcome": "欢迎回来",

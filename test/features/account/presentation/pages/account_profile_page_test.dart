@@ -174,4 +174,41 @@ void main() {
 
     expect(find.text('Enter New Password'), findsNothing);
   });
+
+  testWidgets('clears account data and returns to welcome on logout', (
+    tester,
+  ) async {
+    final router = GoRouter(
+      initialLocation: AccountDetailsPage.routePath,
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (context, state) => const Scaffold(body: Text('Welcome')),
+        ),
+        GoRoute(
+          path: AccountDetailsPage.routePath,
+          name: AccountDetailsPage.routeName,
+          builder: (context, state) => const AccountDetailsPage(),
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp.router(
+          theme: AppTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          routerConfig: router,
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Log out'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Welcome'), findsOneWidget);
+    expect(find.text('ACCOUNT'), findsNothing);
+  });
 }

@@ -168,6 +168,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginSubmitPending => 'Login is not connected yet';
 
   @override
+  String get loginFailed => 'Login failed. Please try again.';
+
+  @override
   String get homeShortcutAction => 'Home';
 
   @override

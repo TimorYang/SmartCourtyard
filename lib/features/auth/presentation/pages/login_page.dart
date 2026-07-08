@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/config/app_links.dart';
 import '../../../../app/theme/app_design_tokens.dart';
+import '../../../home/presentation/pages/home_page.dart';
 import '../../application/providers.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
@@ -13,14 +14,21 @@ import 'register_page.dart';
 import '../widgets/auth_alerts.dart';
 import '../widgets/auth_flow_widgets.dart';
 
-class LoginPage extends ConsumerWidget {
+class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
   static const routeName = 'login';
   static const routePath = '/login';
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends ConsumerState<LoginPage> {
+  bool _isSubmitting = false;
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final state = ref.watch(loginFormControllerProvider);
@@ -141,17 +149,41 @@ class LoginPage extends ConsumerWidget {
                         width: double.infinity,
                         height: 52,
                         child: FilledButton(
-                          onPressed: state.canSubmit
+                          onPressed: state.canSubmit && !_isSubmitting
                               ? () async {
                                   if (!controller.validateEmailForSubmit()) {
                                     await showAuthEmailInvalidDialog(context);
                                     return;
                                   }
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(l10n.loginSubmitPending),
-                                    ),
-                                  );
+                                  setState(() {
+                                    _isSubmitting = true;
+                                  });
+                                  try {
+                                    await ref.read(
+                                      simulatedLoginUseCaseProvider,
+                                    )(
+                                      email: state.trimmedEmail,
+                                      password: state.password,
+                                    );
+                                    ref.invalidate(authSessionProvider);
+                                    if (!context.mounted) {
+                                      return;
+                                    }
+                                    context.go(HomePage.routePath);
+                                  } catch (_) {
+                                    if (!context.mounted) {
+                                      return;
+                                    }
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(l10n.loginFailed)),
+                                    );
+                                  } finally {
+                                    if (mounted) {
+                                      setState(() {
+                                        _isSubmitting = false;
+                                      });
+                                    }
+                                  }
                                 }
                               : null,
                           style: FilledButton.styleFrom(
@@ -167,7 +199,16 @@ class LoginPage extends ConsumerWidget {
                               theme.textTheme,
                             ),
                           ),
-                          child: Text(l10n.signInAction),
+                          child: _isSubmitting
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : Text(l10n.signInAction),
                         ),
                       ),
                       const SizedBox(height: 18),
