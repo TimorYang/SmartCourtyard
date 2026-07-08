@@ -1,10 +1,17 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter_debug_tools/flutter_debug_tools.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/add_device/presentation/pages/add_device_page.dart';
 import '../../features/add_device/presentation/pages/add_new_doors_page.dart';
+import '../../features/add_device/presentation/pages/smart_opener_ble_scan_page.dart';
+import '../../features/add_device/presentation/pages/smart_opener_choose_wifi_page.dart';
+import '../../features/add_device/presentation/pages/smart_opener_connecting_page.dart';
+import '../../features/add_device/presentation/pages/smart_opener_connection_success_page.dart';
+import '../../features/add_device/presentation/pages/smart_opener_device_not_found_page.dart';
+import '../../features/add_device/presentation/pages/smart_opener_qr_scan_page.dart';
+import '../../features/add_device/presentation/pages/smart_opener_scan_guide_page.dart';
+import '../../features/add_device/presentation/pages/smart_opener_scan_results_page.dart';
+import '../../features/add_device/presentation/pages/wifi_configuration_page.dart';
 import '../../features/auth/application/providers.dart';
 import '../../features/auth/presentation/pages/forgot_password_code_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
@@ -15,7 +22,6 @@ import '../../features/auth/presentation/pages/register_code_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/pages/register_password_page.dart';
 import '../../features/auth/presentation/pages/welcome_page.dart';
-import '../../features/add_device/presentation/pages/wifi_configuration_page.dart';
 import '../../features/device_control/presentation/pages/device_command_page.dart';
 import '../../features/hardware_debug/presentation/pages/ble_debug_page.dart';
 import '../../features/home/presentation/pages/choose_scene_page.dart';
@@ -29,7 +35,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
   return GoRouter(
     initialLocation: WelcomePage.routePath,
-    observers: kDebugMode ? [DebugNavigatorObserver()] : [],
     redirect: (context, state) {
       final isSignedIn = session.isAuthenticated;
       final location = state.matchedLocation;
@@ -50,7 +55,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           location == ScenePage.routePath ||
           location == ChooseScenePage.routePath ||
           location == AddNewDoorsPage.routePath ||
-          location == AddDevicePage.routePath;
+          location == AddDevicePage.routePath ||
+          location == WifiConfigurationPage.routePath ||
+          location == SmartOpenerScanGuidePage.routePath ||
+          location == SmartOpenerQrScanPage.routePath ||
+          location == SmartOpenerBleScanPage.routePath ||
+          location == SmartOpenerScanResultsPage.routePath ||
+          location == SmartOpenerDeviceNotFoundPage.routePath ||
+          location == SmartOpenerChooseWifiPage.routePath ||
+          location == SmartOpenerConnectingPage.routePath ||
+          location == SmartOpenerConnectionSuccessPage.routePath;
 
       if (!isSignedIn && !isPublicRoute) {
         return WelcomePage.routePath;
@@ -152,9 +166,53 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const AddNewDoorsPage(),
       ),
       GoRoute(
+        path: SmartOpenerScanGuidePage.routePath,
+        name: SmartOpenerScanGuidePage.routeName,
+        builder: (context, state) => const SmartOpenerScanGuidePage(),
+      ),
+      GoRoute(
+        path: SmartOpenerQrScanPage.routePath,
+        name: SmartOpenerQrScanPage.routeName,
+        builder: (context, state) => const SmartOpenerQrScanPage(),
+      ),
+      GoRoute(
+        path: SmartOpenerBleScanPage.routePath,
+        name: SmartOpenerBleScanPage.routeName,
+        builder: (context, state) => const SmartOpenerBleScanPage(),
+      ),
+      GoRoute(
+        path: SmartOpenerScanResultsPage.routePath,
+        name: SmartOpenerScanResultsPage.routeName,
+        builder: (context, state) => const SmartOpenerScanResultsPage(),
+      ),
+      GoRoute(
+        path: SmartOpenerDeviceNotFoundPage.routePath,
+        name: SmartOpenerDeviceNotFoundPage.routeName,
+        builder: (context, state) => const SmartOpenerDeviceNotFoundPage(),
+      ),
+      GoRoute(
+        path: SmartOpenerChooseWifiPage.routePath,
+        name: SmartOpenerChooseWifiPage.routeName,
+        builder: (context, state) => const SmartOpenerChooseWifiPage(),
+      ),
+      GoRoute(
+        path: SmartOpenerConnectingPage.routePath,
+        name: SmartOpenerConnectingPage.routeName,
+        builder: (context, state) => SmartOpenerConnectingPage(
+          isWifiSkipped: state.uri.queryParameters['skipWifi'] == 'true',
+        ),
+      ),
+      GoRoute(
+        path: SmartOpenerConnectionSuccessPage.routePath,
+        name: SmartOpenerConnectionSuccessPage.routeName,
+        builder: (context, state) => const SmartOpenerConnectionSuccessPage(),
+      ),
+      GoRoute(
         path: WifiConfigurationPage.routePath,
         name: WifiConfigurationPage.routeName,
-        builder: (context, state) => const WifiConfigurationPage(),
+        builder: (context, state) => WifiConfigurationPage(
+          qrPayload: state.uri.queryParameters['qrPayload'],
+        ),
       ),
       GoRoute(
         path: DeviceCommandPage.routePath,

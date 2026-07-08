@@ -347,6 +347,159 @@ class AppLocalizationsZh extends AppLocalizations {
   String get addDeviceCamera => '摄像头';
 
   @override
+  String get smartOpenerScanTitle => '扫描';
+
+  @override
+  String get smartOpenerScanDescription => '请使用手机扫描包装内的二维码。';
+
+  @override
+  String get smartOpenerScanAction => '扫描';
+
+  @override
+  String get smartOpenerScannerManualAction => '没有二维码？手动添加';
+
+  @override
+  String get smartOpenerScannerGalleryAction => '相册';
+
+  @override
+  String get smartOpenerScannerFlashlightAction => '手电筒';
+
+  @override
+  String get smartOpenerScannerBackTooltip => '返回';
+
+  @override
+  String get smartOpenerScannerBluetoothTooltip => '扫描蓝牙设备';
+
+  @override
+  String get smartOpenerScannerPermissionError => '需要相机权限才能扫描二维码。';
+
+  @override
+  String get smartOpenerScannerUnknownError => '无法启动扫码器。';
+
+  @override
+  String get smartOpenerScannerNoCodeFound => '所选图片中未识别到二维码。';
+
+  @override
+  String get smartOpenerScannerImageFailed => '无法读取所选图片。';
+
+  @override
+  String get smartOpenerQrPayloadReceived => '已收到二维码内容，请继续连接设备。';
+
+  @override
+  String get smartOpenerBleScanningTitle => '扫描中';
+
+  @override
+  String get smartOpenerBleScanningDescription => '请确保在现场操作！';
+
+  @override
+  String get smartOpenerBleScanningStatus => '正在扫描设备，请稍候...';
+
+  @override
+  String get smartOpenerScanResultsTitle => '扫描结果';
+
+  @override
+  String smartOpenerScanResultsCount(int count) {
+    return '发现 $count 台设备';
+  }
+
+  @override
+  String get smartOpenerAddAction => '+ 添加';
+
+  @override
+  String get smartOpenerDefaultDeviceSubtitle => '默认编码门|54-89';
+
+  @override
+  String get smartOpenerDeviceNotFoundTitle => '未发现设备';
+
+  @override
+  String get smartOpenerDeviceNotFoundDescription =>
+      '未检测到附近设备。请确认设备已成功重置后重新扫描！';
+
+  @override
+  String get smartOpenerRescanAction => '重新扫描';
+
+  @override
+  String get smartOpenerBackHomeAction => '返回首页';
+
+  @override
+  String get smartOpenerChooseWifiTitle => '选择 WIFI';
+
+  @override
+  String get smartOpenerChooseWifiDescription => '设备仅支持 2.4GHz Wi-Fi 连接';
+
+  @override
+  String get smartOpenerSelectWifiPlaceholder => '选择 Wi-Fi';
+
+  @override
+  String get smartOpenerWifiPasswordPlaceholder => '输入 Wi-Fi 密码';
+
+  @override
+  String get smartOpenerWifiPasswordHint =>
+      'Wi-Fi 密码错误是失败最常见的原因之一。请仔细检查 Wi-Fi 密码';
+
+  @override
+  String get smartOpenerEnableBluetoothTip => '提交前请开启蓝牙';
+
+  @override
+  String get smartOpenerNextAction => '下一步';
+
+  @override
+  String get smartOpenerSkipAction => '跳过';
+
+  @override
+  String get smartOpenerSkipTip => '仅使用蓝牙模式操作，跳过 Wi-Fi 配网';
+
+  @override
+  String get smartOpenerSelectWifiTitle => '选择 Wi-Fi';
+
+  @override
+  String get smartOpenerConnectingTitle => '连接中';
+
+  @override
+  String get smartOpenerConnectingTip => '请尽量让手机靠近设备';
+
+  @override
+  String get smartOpenerConnectionFailedMessage =>
+      'Connection failed. Please check Wi-Fi password and try again.';
+
+  @override
+  String get smartOpenerOkAction => 'OK';
+
+  @override
+  String get smartOpenerStopAdditionTitle => '停止添加设备';
+
+  @override
+  String get smartOpenerStopAdditionDescription =>
+      '设备正在添加中。终止后再次添加前，需要重置 WIFI 模块。';
+
+  @override
+  String get smartOpenerCancelAction => '取消';
+
+  @override
+  String get smartOpenerConfirmAction => '确认';
+
+  @override
+  String get smartOpenerConnectionSuccessTitle => '连接成功';
+
+  @override
+  String get smartOpenerConnectionSuccessDescription => '配置设备信息';
+
+  @override
+  String get smartOpenerDeviceNamePlaceholder => '设备名称';
+
+  @override
+  String get smartOpenerSelectScenePlaceholder => '选择场景';
+
+  @override
+  String get smartOpenerInviteFamilyTip => '邀请家人使用';
+
+  @override
+  String get smartOpenerShareAction => '去分享';
+
+  @override
+  String get smartOpenerTryAction => '试一下';
+
+  @override
   String get chooseSceneTitle => '选择场景';
 
   @override

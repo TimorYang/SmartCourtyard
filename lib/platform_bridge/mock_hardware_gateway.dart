@@ -133,14 +133,14 @@ class MockHardwareGateway implements HardwareGateway {
     required String ssid,
     required String password,
   }) async {
+    final skippedWifi = ssid.isEmpty && password.isEmpty;
+    final success = skippedWifi || (ssid.isNotEmpty && password.isNotEmpty);
     return WifiProvisionResult(
       requestId: requestId,
       deviceId: deviceId,
       ssid: ssid,
-      success: ssid.isNotEmpty && password.isNotEmpty,
-      nativeCode: ssid.isNotEmpty && password.isNotEmpty
-          ? null
-          : 'mock_invalid_wifi_credentials',
+      success: success,
+      nativeCode: success ? null : 'mock_invalid_wifi_credentials',
     );
   }
 

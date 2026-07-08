@@ -53,6 +53,20 @@ class AppColors {
   static const sceneDeleteAction = Color(0xFFFF1010);
   static const sceneDialogCancelButton = Color(0xFFF4F5F6);
   static const sceneDialogInputBorder = Color(0xFFC8C8C8);
+  static const scannerBackground = Color(0xFF171717);
+  static const scannerWindowFill = Color(0xFF4A4A4A);
+  static const scannerWindowCorner = Color(0xFFE8E8E8);
+  static const scannerChipBackground = Color(0xFF565656);
+  static const scannerControlBackground = Colors.white;
+  static const scanRadarTint = Color(0xFFEAF9FD);
+  static const smartOpenerCardSurface = Color(0xFFF3F4F6);
+  static const smartOpenerAddButton = Color(0xFF17212C);
+  static const smartOpenerSecondaryButton = Color(0xFFF1F2F4);
+  static const smartOpenerWifiError = Color(0xFFFF3D1F);
+  static const smartOpenerDivider = Color(0xFFE1E1E1);
+  static const smartOpenerSuccess = Color(0xFF20D667);
+  static const smartOpenerProgressTrack = Color(0xFFF0F1F3);
+  static const smartOpenerWarning = Color(0xFFFF3D12);
 
   static const borderSubtle = Color(0xFFDBDBDB);
   static const borderMuted = Color(0xFFC8C8C8);
@@ -550,6 +564,197 @@ class AppTextTokens {
       fontSize: 15,
       fontWeight: FontWeight.w400,
       height: 1.2,
+    );
+  }
+
+  static TextStyle smartOpenerScanTitle(TextTheme textTheme) {
+    return (textTheme.displaySmall ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 28,
+      fontWeight: FontWeight.w700,
+      height: 1.08,
+    );
+  }
+
+  static TextStyle smartOpenerScanDescription(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 17,
+      fontWeight: FontWeight.w400,
+      height: 1.18,
+    );
+  }
+
+  static TextStyle smartOpenerPrimaryButton(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: Colors.white,
+      fontSize: 18,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle scannerChip(TextTheme textTheme) {
+    return (textTheme.labelMedium ?? const TextStyle()).copyWith(
+      color: Colors.white,
+      fontSize: 11,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle scannerControlLabel(TextTheme textTheme) {
+    return (textTheme.labelMedium ?? const TextStyle()).copyWith(
+      color: Colors.white,
+      fontSize: 11,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle smartOpenerScanningTitle(TextTheme textTheme) {
+    return (textTheme.displaySmall ?? const TextStyle()).copyWith(
+      color: AppColors.textSecondary,
+      fontSize: 46,
+      fontWeight: FontWeight.w700,
+      height: 1.08,
+    );
+  }
+
+  static TextStyle smartOpenerScanningDescription(TextTheme textTheme) {
+    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 28,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle smartOpenerScanningStatus(TextTheme textTheme) {
+    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 25,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle smartOpenerFlowTitle(TextTheme textTheme) {
+    return (textTheme.displaySmall ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 32,
+      fontWeight: FontWeight.w700,
+      height: 1.1,
+      letterSpacing: 0,
+    );
+  }
+
+  static TextStyle smartOpenerFlowSubtitle(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 21,
+      fontWeight: FontWeight.w400,
+      height: 1.25,
+      letterSpacing: 0,
+    );
+  }
+
+  static TextStyle smartOpenerResultCardTitle(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 25,
+      fontWeight: FontWeight.w700,
+      height: 1.1,
+      letterSpacing: 0,
+    );
+  }
+
+  static TextStyle smartOpenerResultCardSubtitle(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: Color(0xFF8B9BA7),
+      fontSize: 17,
+      fontWeight: FontWeight.w700,
+      height: 1.2,
+      letterSpacing: 0,
+    );
+  }
+
+  static TextStyle smartOpenerSmallButton(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: Colors.white,
+      fontSize: 16,
+      fontWeight: FontWeight.w700,
+      height: 1.2,
+      letterSpacing: 0,
+    );
+  }
+
+  static TextStyle smartOpenerFormText(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textHint,
+      fontSize: 22,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+      letterSpacing: 0,
+    );
+  }
+
+  static TextStyle smartOpenerFormHint(TextTheme textTheme) {
+    return (textTheme.bodyLarge ?? const TextStyle()).copyWith(
+      color: AppColors.smartOpenerWifiError,
+      fontSize: 16,
+      fontWeight: FontWeight.w400,
+      height: 1.35,
+      letterSpacing: 0,
+    );
+  }
+
+  static TextStyle smartOpenerActionButton(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: Colors.white,
+      fontSize: 22,
+      fontWeight: FontWeight.w500,
+      height: 1.2,
+      letterSpacing: 0,
+    );
+  }
+
+  static TextStyle smartOpenerSecondaryActionButton(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 22,
+      fontWeight: FontWeight.w700,
+      height: 1.2,
+      letterSpacing: 0,
+    );
+  }
+
+  static TextStyle smartOpenerSheetTitle(TextTheme textTheme) {
+    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 25,
+      fontWeight: FontWeight.w700,
+      height: 1.2,
+      letterSpacing: 0,
+    );
+  }
+
+  static TextStyle smartOpenerConnectingTitle(TextTheme textTheme) {
+    return (textTheme.headlineMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textSecondary,
+      fontSize: 34,
+      fontWeight: FontWeight.w700,
+      height: 1.15,
+      letterSpacing: 0,
+    );
+  }
+
+  static TextStyle smartOpenerBodyCenter(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 20,
+      fontWeight: FontWeight.w400,
+      height: 1.25,
+      letterSpacing: 0,
     );
   }
 

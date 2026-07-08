@@ -3,14 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../application/providers.dart';
+import '../../../../app/theme/app_design_tokens.dart';
+import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../../device_control/presentation/pages/device_command_page.dart';
 
 class WifiConfigurationPage extends ConsumerStatefulWidget {
-  const WifiConfigurationPage({super.key});
+  const WifiConfigurationPage({super.key, this.qrPayload});
 
   static const routeName = 'wifi-configuration';
   static const routePath = '/add-device/wifi';
+
+  final String? qrPayload;
 
   @override
   ConsumerState<WifiConfigurationPage> createState() =>
@@ -40,6 +44,7 @@ class _WifiConfigurationPageState extends ConsumerState<WifiConfigurationPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final state = ref.watch(addDeviceControllerProvider);
     final controller = ref.read(addDeviceControllerProvider.notifier);
     final selectedDevice = state.selectedDevice;
@@ -62,6 +67,14 @@ class _WifiConfigurationPageState extends ConsumerState<WifiConfigurationPage> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          if (widget.qrPayload != null && widget.qrPayload!.trim().isNotEmpty)
+            _WifiMessage(
+              message: l10n.smartOpenerQrPayloadReceived,
+              backgroundColor: AppColors.surfaceSceneCard,
+              foregroundColor: AppColors.textMuted,
+            ),
+          if (widget.qrPayload != null && widget.qrPayload!.trim().isNotEmpty)
+            const SizedBox(height: 12),
           if (selectedDevice == null)
             const Card(
               child: Padding(
