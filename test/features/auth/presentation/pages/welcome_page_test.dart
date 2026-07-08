@@ -45,6 +45,42 @@ void main() {
     expect(find.text('No doors'), findsNothing);
   });
 
+  testWidgets('opens device command page from home shortcut device card', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const ProviderScope(child: FlinxApp()));
+
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Home'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Garage door').first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Operated cycles'), findsOneWidget);
+    expect(find.byTooltip('More'), findsOneWidget);
+    expect(find.text('Login'), findsNothing);
+  });
+
+  testWidgets('opens account profile page from the home avatar', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const ProviderScope(child: FlinxApp()));
+
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Home'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Account profile'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('739059568@qq.com'), findsOneWidget);
+    expect(find.text('Shared devices'), findsOneWidget);
+    expect(find.text('Region'), findsOneWidget);
+  });
+
   testWidgets('shows home device cards when doors are loaded', (tester) async {
     await tester.pumpWidget(
       ProviderScope(

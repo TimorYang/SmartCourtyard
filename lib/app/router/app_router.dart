@@ -6,6 +6,8 @@ import 'package:go_router/go_router.dart';
 import '../../features/add_device/presentation/pages/add_device_page.dart';
 import '../../features/add_device/presentation/pages/add_new_doors_page.dart';
 import '../../features/auth/application/providers.dart';
+import '../../features/account/presentation/pages/account_details_page.dart';
+import '../../features/account/presentation/pages/account_profile_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_code_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_reset_page.dart';
@@ -46,11 +48,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final isPublicRoute =
           isAuthRoute ||
           location == AppWebViewPage.routePath ||
+          location == AccountDetailsPage.routePath ||
           location == HomePage.routePath ||
+          location == AccountProfilePage.routePath ||
           location == ScenePage.routePath ||
           location == ChooseScenePage.routePath ||
           location == AddNewDoorsPage.routePath ||
-          location == AddDevicePage.routePath;
+          location == AddDevicePage.routePath ||
+          location == DeviceCommandPage.routePath;
 
       if (!isSignedIn && !isPublicRoute) {
         return WelcomePage.routePath;
@@ -130,6 +135,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: HomePage.routePath,
         name: HomePage.routeName,
         builder: (context, state) => const HomePage(),
+      ),
+      GoRoute(
+        path: AccountDetailsPage.routePath,
+        name: AccountDetailsPage.routeName,
+        builder: (context, state) => const AccountDetailsPage(),
+      ),
+      GoRoute(
+        path: AccountProfilePage.routePath,
+        name: AccountProfilePage.routeName,
+        builder: (context, state) => const AccountProfilePage(),
       ),
       GoRoute(
         path: ChooseScenePage.routePath,

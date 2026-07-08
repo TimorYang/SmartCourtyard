@@ -572,6 +572,222 @@ abstract class AppLocalizations {
   /// **'Customize'**
   String get homeDeviceEditCustomizeAction;
 
+  /// Title and accessibility label for the account profile menu page
+  ///
+  /// In en, this message translates to:
+  /// **'Account profile'**
+  String get accountProfileTitle;
+
+  /// Title for the account details page
+  ///
+  /// In en, this message translates to:
+  /// **'ACCOUNT'**
+  String get accountDetailsTitle;
+
+  /// Account details row label for the user's avatar
+  ///
+  /// In en, this message translates to:
+  /// **'Head portrait'**
+  String get accountDetailsHeadPortrait;
+
+  /// Account details row label for account number
+  ///
+  /// In en, this message translates to:
+  /// **'Account number'**
+  String get accountDetailsAccountNumber;
+
+  /// Account details row label for full name
+  ///
+  /// In en, this message translates to:
+  /// **'Full name'**
+  String get accountDetailsFullName;
+
+  /// Account details row label for mailbox
+  ///
+  /// In en, this message translates to:
+  /// **'Mailbox'**
+  String get accountDetailsMailbox;
+
+  /// Account details row label for changing password
+  ///
+  /// In en, this message translates to:
+  /// **'Change Password'**
+  String get accountDetailsChangePassword;
+
+  /// Account details row label for forgot password
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password'**
+  String get accountDetailsForgotPassword;
+
+  /// Account details log out button label
+  ///
+  /// In en, this message translates to:
+  /// **'Log out'**
+  String get accountDetailsLogout;
+
+  /// Fallback account number shown while account data is unavailable
+  ///
+  /// In en, this message translates to:
+  /// **'34345435@qq.com'**
+  String get accountDetailsFallbackNumber;
+
+  /// Fallback full name shown while account data is unavailable
+  ///
+  /// In en, this message translates to:
+  /// **'James'**
+  String get accountDetailsFallbackFullName;
+
+  /// Fallback mailbox shown while account data is unavailable
+  ///
+  /// In en, this message translates to:
+  /// **'123456@qq.com'**
+  String get accountDetailsFallbackMailbox;
+
+  /// Action for choosing an account avatar from the photo album
+  ///
+  /// In en, this message translates to:
+  /// **'Photo album'**
+  String get accountDetailsPhotoAlbumAction;
+
+  /// Action for taking a new account avatar photo
+  ///
+  /// In en, this message translates to:
+  /// **'Photograph'**
+  String get accountDetailsPhotographAction;
+
+  /// Cancel action in account details modal sheets
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get accountDetailsCancelAction;
+
+  /// Confirm action in account details modal sheets
+  ///
+  /// In en, this message translates to:
+  /// **'confirm'**
+  String get accountDetailsConfirmAction;
+
+  /// Title for the account full-name editing sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get accountDetailsRenameTitle;
+
+  /// Placeholder for the account name input
+  ///
+  /// In en, this message translates to:
+  /// **'JAMES'**
+  String get accountDetailsNameInputPlaceholder;
+
+  /// Title for the account password change sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Change Password'**
+  String get accountDetailsChangePasswordTitle;
+
+  /// Placeholder for new password fields
+  ///
+  /// In en, this message translates to:
+  /// **'Enter New Password'**
+  String get accountDetailsNewPasswordPlaceholder;
+
+  /// Accessibility label for showing a password field
+  ///
+  /// In en, this message translates to:
+  /// **'Show password'**
+  String get accountDetailsShowPasswordAction;
+
+  /// Accessibility label for hiding a password field
+  ///
+  /// In en, this message translates to:
+  /// **'Hide password'**
+  String get accountDetailsHidePasswordAction;
+
+  /// Accessibility label for avatar choices in the account avatar sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Avatar option {index}'**
+  String accountDetailsAvatarOptionLabel(int index);
+
+  /// Fallback account email shown on the profile page while account data is unavailable
+  ///
+  /// In en, this message translates to:
+  /// **'739059568@qq.com'**
+  String get accountFallbackEmail;
+
+  /// Account menu item for devices shared by the user
+  ///
+  /// In en, this message translates to:
+  /// **'Shared devices'**
+  String get accountSharedDevices;
+
+  /// Account menu item for devices received from others
+  ///
+  /// In en, this message translates to:
+  /// **'Receiving devices'**
+  String get accountReceivingDevices;
+
+  /// Account menu item for managing devices; lowercase matches the provided design
+  ///
+  /// In en, this message translates to:
+  /// **'manage devices'**
+  String get accountManageDevices;
+
+  /// Account menu item for messages; lowercase matches the provided design
+  ///
+  /// In en, this message translates to:
+  /// **'message'**
+  String get accountMessage;
+
+  /// Account menu item for region settings
+  ///
+  /// In en, this message translates to:
+  /// **'Region'**
+  String get accountRegion;
+
+  /// Account menu item for language settings
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get accountLanguage;
+
+  /// Account menu item for system permission settings
+  ///
+  /// In en, this message translates to:
+  /// **'System permissions'**
+  String get accountSystemPermissions;
+
+  /// Account menu item for checking app updates
+  ///
+  /// In en, this message translates to:
+  /// **'Check for updates'**
+  String get accountCheckForUpdates;
+
+  /// Account menu item for about page
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get accountAbout;
+
+  /// Default region value shown on the account profile page
+  ///
+  /// In en, this message translates to:
+  /// **'England'**
+  String get accountDefaultRegion;
+
+  /// Default language value shown on the account profile page
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get accountDefaultLanguage;
+
+  /// Temporary snackbar shown when tapping account menu rows without a destination page
+  ///
+  /// In en, this message translates to:
+  /// **'{item} is coming soon'**
+  String accountMenuComingSoon(String item);
+
   /// Title of the dialog for editing a device name
   ///
   /// In en, this message translates to:

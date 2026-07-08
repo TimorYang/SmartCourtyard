@@ -34,7 +34,9 @@ flutter:
   generate: true
   assets:
     - assets/images/
+    - assets/images/account/
     - assets/icons/
     - assets/icons/auth/
     - assets/icons/add_device/
     - assets/icons/home/
+    - assets/icons/account/

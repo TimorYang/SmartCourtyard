@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
+import '../../../../features/account/presentation/pages/account_profile_page.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../add_device/presentation/pages/add_new_doors_page.dart';
 import '../../../../features/hardware_debug/presentation/pages/ble_debug_page.dart';
@@ -13,6 +14,7 @@ import '../widgets/device_customize_dialog.dart';
 import '../widgets/device_delete_dialog.dart';
 import '../widgets/device_name_dialog.dart';
 import '../widgets/scene_name_dialog.dart';
+import '../../../device_control/presentation/pages/device_command_page.dart';
 import 'choose_scene_page.dart';
 import 'scene_page.dart';
 
@@ -327,6 +329,8 @@ class _HomeHeader extends StatelessWidget {
               _AvatarPlaceholder(
                 assetPath: HomeAssetPaths.avatarPlaceholder,
                 size: 58,
+                tooltip: l10n.accountProfileTitle,
+                onPressed: () => context.push(AccountProfilePage.routePath),
               ),
               const Spacer(),
               _HeaderIconButton(
@@ -552,32 +556,56 @@ class _HomeErrorState extends StatelessWidget {
 }
 
 class _AvatarPlaceholder extends StatelessWidget {
-  const _AvatarPlaceholder({required this.assetPath, required this.size});
+  const _AvatarPlaceholder({
+    required this.assetPath,
+    required this.size,
+    this.tooltip,
+    this.onPressed,
+  });
 
   final String assetPath;
   final double size;
+  final String? tooltip;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
-    return ClipOval(
-      child: Image.asset(
-        assetPath,
+    final avatar = ClipOval(
+      child: SizedBox(
         width: size,
         height: size,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return Container(
-            width: size,
-            height: size,
-            color: AppColors.surfaceHomeAvatar,
-            alignment: Alignment.center,
-            child: Icon(
-              Icons.person,
-              color: AppColors.iconHomePlaceholder,
-              size: size * 0.64,
-            ),
-          );
-        },
+        child: Image.asset(
+          assetPath,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              color: AppColors.surfaceHomeAvatar,
+              alignment: Alignment.center,
+              child: Icon(
+                Icons.person,
+                color: AppColors.iconHomePlaceholder,
+                size: size * 0.64,
+              ),
+            );
+          },
+        ),
+      ),
+    );
+
+    if (onPressed == null) {
+      return avatar;
+    }
+
+    return Tooltip(
+      message: tooltip ?? '',
+      child: Semantics(
+        button: true,
+        label: tooltip,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onPressed,
+          child: SizedBox(width: size, height: size, child: avatar),
+        ),
       ),
     );
   }
@@ -630,6 +658,10 @@ class _DeviceCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
 
     return GestureDetector(
+      onTap: () {
+        final deviceId = Uri.encodeQueryComponent(device.id);
+        context.push('${DeviceCommandPage.routePath}?deviceId=$deviceId');
+      },
       onLongPress: () {
         HapticFeedback.mediumImpact();
         _showDeviceEditingSheet(context, device);
