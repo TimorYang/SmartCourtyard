@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
-import '../../../home/presentation/pages/home_page.dart';
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../../home/presentation/pages/home_page.dart';
 import 'login_page.dart';
 import 'register_page.dart';
 

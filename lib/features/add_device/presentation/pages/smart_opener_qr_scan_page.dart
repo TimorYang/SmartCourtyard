@@ -10,6 +10,15 @@ import '../../../../shared/l10n/app_localizations.dart';
 import 'smart_opener_ble_scan_page.dart';
 import 'wifi_configuration_page.dart';
 
+class SmartOpenerQrScanAssetPaths {
+  const SmartOpenerQrScanAssetPaths._();
+
+  static const galleryIcon =
+      'assets/icons/add_device/smart_opener_qr_gallery_icon.png';
+  static const flashlightIcon =
+      'assets/icons/add_device/smart_opener_qr_flashlight_icon.png';
+}
+
 class SmartOpenerQrScanPage extends StatefulWidget {
   const SmartOpenerQrScanPage({super.key, this.enableCamera = true});
 
@@ -202,13 +211,15 @@ class _SmartOpenerQrScanPageState extends State<SmartOpenerQrScanPage> {
                   children: [
                     _ScannerActionButton(
                       label: l10n.smartOpenerScannerGalleryAction,
-                      icon: Icons.image_outlined,
+                      assetPath: SmartOpenerQrScanAssetPaths.galleryIcon,
+                      fallbackIcon: Icons.image_outlined,
                       onPressed: _pickFromGallery,
                     ),
                     const SizedBox(width: 76),
                     _ScannerActionButton(
                       label: l10n.smartOpenerScannerFlashlightAction,
-                      icon: Icons.flashlight_on_outlined,
+                      assetPath: SmartOpenerQrScanAssetPaths.flashlightIcon,
+                      fallbackIcon: Icons.flashlight_on_outlined,
                       onPressed: _toggleTorch,
                     ),
                   ],
@@ -283,12 +294,14 @@ class _ScannerChip extends StatelessWidget {
 class _ScannerActionButton extends StatelessWidget {
   const _ScannerActionButton({
     required this.label,
-    required this.icon,
+    required this.assetPath,
+    required this.fallbackIcon,
     required this.onPressed,
   });
 
   final String label;
-  final IconData icon;
+  final String assetPath;
+  final IconData fallbackIcon;
   final VoidCallback onPressed;
 
   @override
@@ -296,17 +309,12 @@ class _ScannerActionButton extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(
-          width: 54,
-          height: 54,
-          child: IconButton.filled(
-            onPressed: onPressed,
-            style: IconButton.styleFrom(
-              backgroundColor: AppColors.scannerControlBackground,
-              foregroundColor: AppColors.textPrimary,
-            ),
-            icon: Icon(icon, size: 22),
-          ),
+        Image.asset(
+          assetPath,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) {
+            return Icon(fallbackIcon, size: 22);
+          },
         ),
         const SizedBox(height: 8),
         Text(

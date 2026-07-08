@@ -88,98 +88,52 @@ class AppTextTokens {
   const AppTextTokens._();
 
   static TextStyle welcomeHeadline(TextTheme textTheme) {
-    return (textTheme.displaySmall ?? const TextStyle()).copyWith(
-      color: Colors.white,
-      fontWeight: FontWeight.w700,
-      height: 1.06,
-    );
+    return (textTheme.displaySmall ?? const TextStyle()).copyWith(color: Colors.white, fontWeight: FontWeight.w700, height: 1.06);
   }
 
   static TextStyle welcomeSubtitle(TextTheme textTheme) {
-    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
-      color: Colors.white.withValues(alpha: 0.88),
-      fontWeight: FontWeight.w500,
-    );
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(color: Colors.white.withValues(alpha: 0.88), fontWeight: FontWeight.w500);
   }
 
   static TextStyle navigationTitle(TextTheme textTheme) {
-    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
-      color: AppColors.navigationForeground,
-      fontSize: 17,
-      fontWeight: FontWeight.w600,
-    );
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(color: AppColors.navigationForeground, fontSize: 17, fontWeight: FontWeight.w600);
   }
 
   static TextStyle welcomePrimaryButton(TextTheme textTheme) {
-    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
-      fontWeight: FontWeight.w700,
-    );
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(fontWeight: FontWeight.w700);
   }
 
   static TextStyle welcomeSecondaryButton(TextTheme textTheme) {
-    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
-      fontWeight: FontWeight.w600,
-    );
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(fontWeight: FontWeight.w600);
   }
 
   static TextStyle loginTitle(TextTheme textTheme) {
-    return (textTheme.displaySmall ?? const TextStyle()).copyWith(
-      fontSize: 28,
-      fontWeight: FontWeight.w700,
-      color: AppColors.textPrimary,
-    );
+    return (textTheme.displaySmall ?? const TextStyle()).copyWith(fontSize: 28, fontWeight: FontWeight.w700, color: AppColors.textPrimary);
   }
 
   static TextStyle loginAgreement(TextTheme textTheme) {
-    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
-      fontSize: 12,
-      fontWeight: FontWeight.w400,
-      color: AppColors.textAgreement,
-      height: 1.45,
-    );
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(fontSize: 12, fontWeight: FontWeight.w400, color: AppColors.textAgreement, height: 1.45);
   }
 
-  static const loginInputHint = TextStyle(
-    color: AppColors.textHint,
-    fontSize: 18,
-    fontWeight: FontWeight.w400,
-  );
+  static const loginInputHint = TextStyle(color: AppColors.textHint, fontSize: 18, fontWeight: FontWeight.w400);
 
   static TextStyle loginPrimaryButton(TextTheme textTheme) {
-    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
-      fontSize: 17,
-      fontWeight: FontWeight.w500,
-    );
+    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(fontSize: 17, fontWeight: FontWeight.w500);
   }
 
   static TextStyle loginTextButton(TextTheme textTheme) {
-    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
-      fontSize: 13,
-      fontWeight: FontWeight.w400,
-    );
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(fontSize: 13, fontWeight: FontWeight.w400);
   }
 
   static TextStyle registerTitle(TextTheme textTheme) {
-    return (textTheme.displaySmall ?? const TextStyle()).copyWith(
-      fontSize: 28,
-      fontWeight: FontWeight.w700,
-      color: AppColors.textPrimary,
-    );
+    return (textTheme.displaySmall ?? const TextStyle()).copyWith(fontSize: 28, fontWeight: FontWeight.w700, color: AppColors.textPrimary);
   }
 
   static TextStyle registerDescription(TextTheme textTheme) {
-    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
-      fontSize: 14,
-      fontWeight: FontWeight.w400,
-      color: AppColors.textAuthBody,
-    );
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(fontSize: 14, fontWeight: FontWeight.w400, color: AppColors.textAuthBody);
   }
 
-  static const registerInputHint = TextStyle(
-    color: AppColors.textHint,
-    fontSize: 18,
-    fontWeight: FontWeight.w400,
-  );
+  static const registerInputHint = TextStyle(color: AppColors.textHint, fontSize: 18, fontWeight: FontWeight.w400);
 
   static TextStyle registerAgreement(TextTheme textTheme) {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
@@ -191,459 +145,229 @@ class AppTextTokens {
   }
 
   static TextStyle registerPrimaryButton(TextTheme textTheme) {
-    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
-      fontWeight: FontWeight.w500,
-    );
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(fontWeight: FontWeight.w500);
   }
 
   static TextStyle forgotPasswordTitle(TextTheme textTheme) {
-    return (textTheme.displaySmall ?? const TextStyle()).copyWith(
-      fontSize: 28,
-      fontWeight: FontWeight.w700,
-      color: AppColors.textPrimary,
-    );
+    return (textTheme.displaySmall ?? const TextStyle()).copyWith(fontSize: 28, fontWeight: FontWeight.w700, color: AppColors.textPrimary);
   }
 
   static TextStyle forgotPasswordDescription(TextTheme textTheme) {
-    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
-      fontSize: 14,
-      fontWeight: FontWeight.w400,
-      color: AppColors.textAuthBody,
-      height: 1.4,
-    );
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(fontSize: 14, fontWeight: FontWeight.w400, color: AppColors.textAuthBody, height: 1.4);
   }
 
-  static const forgotPasswordInputHint = TextStyle(
-    color: AppColors.textHint,
-    fontSize: 18,
-    fontWeight: FontWeight.w400,
-  );
+  static const forgotPasswordInputHint = TextStyle(color: AppColors.textHint, fontSize: 18, fontWeight: FontWeight.w400);
 
   static TextStyle forgotPasswordPrimaryButton(TextTheme textTheme) {
-    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
-      fontWeight: FontWeight.w500,
-    );
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(fontWeight: FontWeight.w500);
   }
 
   static TextStyle authFlowTitle(TextTheme textTheme) {
-    return (textTheme.displaySmall ?? const TextStyle()).copyWith(
-      color: AppColors.textPrimary,
-      fontWeight: FontWeight.w700,
-    );
+    return (textTheme.displaySmall ?? const TextStyle()).copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.w700);
   }
 
   static TextStyle authFlowDescription(TextTheme textTheme) {
-    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
-      color: AppColors.textAuthBody,
-      fontWeight: FontWeight.w400,
-      height: 1.35,
-    );
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(color: AppColors.textAuthBody, fontWeight: FontWeight.w400, height: 1.35);
   }
 
   static TextStyle verificationTitle(TextTheme textTheme) {
-    return (textTheme.displaySmall ?? const TextStyle()).copyWith(
-      color: AppColors.textPrimary,
-      fontWeight: FontWeight.w700,
-    );
+    return (textTheme.displaySmall ?? const TextStyle()).copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.w700);
   }
 
   static TextStyle verificationDescription(TextTheme textTheme) {
-    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
-      color: AppColors.textAuthBody,
-      fontWeight: FontWeight.w400,
-      height: 1.35,
-    );
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(color: AppColors.textAuthBody, fontWeight: FontWeight.w400, height: 1.35);
   }
 
   static TextStyle verificationDigit(TextTheme textTheme) {
-    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
-      color: AppColors.textPrimary,
-      fontWeight: FontWeight.w500,
-    );
+    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.w500);
   }
 
   static TextStyle verificationResend(TextTheme textTheme) {
-    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
-      color: AppColors.textCodeResend,
-      fontWeight: FontWeight.w400,
-    );
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(color: AppColors.textCodeResend, fontWeight: FontWeight.w400);
   }
 
   static TextStyle registerPasswordTitle(TextTheme textTheme) {
-    return (textTheme.displaySmall ?? const TextStyle()).copyWith(
-      color: AppColors.textPrimary,
-      fontWeight: FontWeight.w700,
-    );
+    return (textTheme.displaySmall ?? const TextStyle()).copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.w700);
   }
 
   static TextStyle registerPasswordDescription(TextTheme textTheme) {
-    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
-      color: AppColors.textAuthBody,
-      fontWeight: FontWeight.w400,
-      height: 1.35,
-    );
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(color: AppColors.textAuthBody, fontWeight: FontWeight.w400, height: 1.35);
   }
 
-  static const registerPasswordInputHint = TextStyle(
-    color: AppColors.textHint,
-    fontSize: 15,
-    fontWeight: FontWeight.w400,
-  );
+  static const registerPasswordInputHint = TextStyle(color: AppColors.textHint, fontSize: 15, fontWeight: FontWeight.w400);
 
-  static const authPasswordInput = TextStyle(
-    color: AppColors.textPrimary,
-    fontSize: 15,
-    fontWeight: FontWeight.w400,
-  );
+  static const authPasswordInput = TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.w400);
 
   static TextStyle registerPasswordPrimaryButton(TextTheme textTheme) {
-    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
-      fontWeight: FontWeight.w500,
-    );
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(fontWeight: FontWeight.w500);
   }
 
   static TextStyle authSuccessTitle(TextTheme textTheme) {
-    return (textTheme.headlineMedium ?? const TextStyle()).copyWith(
-      color: AppColors.textPrimary,
-      fontWeight: FontWeight.w700,
-    );
+    return (textTheme.headlineMedium ?? const TextStyle()).copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.w700);
   }
 
   static TextStyle authSuccessDescription(TextTheme textTheme) {
-    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
-      color: AppColors.textAuthBody,
-      fontWeight: FontWeight.w400,
-    );
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(color: AppColors.textAuthBody, fontWeight: FontWeight.w400);
   }
 
   static TextStyle providerButton(TextTheme textTheme) {
-    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
-      fontWeight: FontWeight.w500,
-    );
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(fontWeight: FontWeight.w500);
   }
 
   static TextStyle flinxLogo(TextTheme textTheme) {
-    return (textTheme.headlineMedium ?? const TextStyle()).copyWith(
-      color: Colors.white,
-      fontWeight: FontWeight.w900,
-      letterSpacing: -1.4,
-    );
+    return (textTheme.headlineMedium ?? const TextStyle()).copyWith(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: -1.4);
   }
 
   static TextStyle homeGreeting(TextTheme textTheme) {
-    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
-      color: Colors.black,
-      fontSize: 28,
-      fontWeight: FontWeight.w600,
-      height: 1.05,
-    );
+    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(color: Colors.black, fontSize: 28, fontWeight: FontWeight.w600, height: 1.05);
   }
 
   static TextStyle homeWelcome(TextTheme textTheme) {
-    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
-      color: AppColors.textSecondary,
-      fontSize: 15,
-      fontWeight: FontWeight.w400,
-    );
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(color: AppColors.textSecondary, fontSize: 15, fontWeight: FontWeight.w400);
   }
 
   static TextStyle homeTabLabel(TextTheme textTheme) {
-    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
-      fontSize: 12,
-      fontWeight: FontWeight.w600,
-    );
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(fontSize: 12, fontWeight: FontWeight.w600);
   }
 
   static TextStyle homeUnselectedTabLabel(TextTheme textTheme) {
-    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
-      fontSize: 12,
-      fontWeight: FontWeight.w400,
-    );
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(fontSize: 12, fontWeight: FontWeight.w400);
   }
 
   static TextStyle homeDoorCount(TextTheme textTheme) {
-    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
-      color: AppColors.textSecondary,
-      fontWeight: FontWeight.w400,
-    );
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(color: AppColors.textSecondary, fontWeight: FontWeight.w400);
   }
 
   static TextStyle homeEmptyTitle(TextTheme textTheme) {
-    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
-      color: Colors.black,
-      fontWeight: FontWeight.w800,
-      height: 1.05,
-    );
+    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(color: Colors.black, fontWeight: FontWeight.w800, height: 1.05);
   }
 
   static TextStyle homeEmptySubtitle(TextTheme textTheme) {
-    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
-      color: AppColors.textHint,
-      fontWeight: FontWeight.w400,
-    );
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(color: AppColors.textHint, fontWeight: FontWeight.w400);
   }
 
   static TextStyle homePrimaryButton(TextTheme textTheme) {
-    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
-      fontWeight: FontWeight.w600,
-    );
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(fontWeight: FontWeight.w600);
   }
 
   static TextStyle homeDeviceCardTitle(TextTheme textTheme) {
-    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
-      color: AppColors.textPrimary,
-      fontSize: 16,
-      fontWeight: FontWeight.w600,
-      height: 1.15,
-    );
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.w600, height: 1.15);
   }
 
   static TextStyle homeDeviceCardState(TextTheme textTheme) {
-    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
-      color: AppColors.textHint,
-      fontSize: 12,
-      fontWeight: FontWeight.w400,
-      height: 1.2,
-    );
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(color: AppColors.textHint, fontSize: 12, fontWeight: FontWeight.w400, height: 1.2);
   }
 
   static TextStyle homeDeviceEditingTitle(TextTheme textTheme) {
-    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
-      color: AppColors.textPrimary,
-      fontSize: 15,
-      fontWeight: FontWeight.w600,
-      height: 1.15,
-    );
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.w600, height: 1.15);
   }
 
   static TextStyle homeDeviceEditingSubtitle(TextTheme textTheme) {
-    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
-      color: AppColors.textHint,
-      fontSize: 9,
-      fontWeight: FontWeight.w400,
-      height: 1.2,
-    );
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(color: AppColors.textHint, fontSize: 9, fontWeight: FontWeight.w400, height: 1.2);
   }
 
   static TextStyle homeDeviceEditingAction(TextTheme textTheme) {
-    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
-      color: AppColors.textMuted,
-      fontSize: 15,
-      fontWeight: FontWeight.w500,
-      height: 1.2,
-    );
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(color: AppColors.textMuted, fontSize: 15, fontWeight: FontWeight.w500, height: 1.2);
   }
 
   static TextStyle deviceDeleteConfirmMessage(TextTheme textTheme) {
-    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
-      color: AppColors.textPrimary,
-      fontSize: 16,
-      fontWeight: FontWeight.w600,
-      height: 1.2,
-    );
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.w600, height: 1.2);
   }
 
   static TextStyle deviceCustomizeTitle(TextTheme textTheme) {
-    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
-      color: AppColors.textPrimary,
-      fontSize: 18,
-      fontWeight: FontWeight.w600,
-      height: 1.2,
-    );
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.w600, height: 1.2);
   }
 
   static TextStyle deviceCustomizeAction(TextTheme textTheme) {
-    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
-      color: AppColors.textMuted,
-      fontSize: 15,
-      fontWeight: FontWeight.w400,
-      height: 1.2,
-    );
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(color: AppColors.textMuted, fontSize: 15, fontWeight: FontWeight.w400, height: 1.2);
   }
 
   static TextStyle homeAddMenuItem(TextTheme textTheme) {
-    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
-      color: AppColors.textMuted,
-      fontSize: 15,
-      fontWeight: FontWeight.w400,
-      height: 1.2,
-    );
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(color: AppColors.textMuted, fontSize: 15, fontWeight: FontWeight.w400, height: 1.2);
   }
 
   static TextStyle addNewDoorsTitle(TextTheme textTheme) {
-    return (textTheme.displaySmall ?? const TextStyle()).copyWith(
-      color: AppColors.textPrimary,
-      fontSize: 25,
-      fontWeight: FontWeight.w600,
-      height: 1.08,
-    );
+    return (textTheme.displaySmall ?? const TextStyle()).copyWith(color: AppColors.textPrimary, fontSize: 25, fontWeight: FontWeight.w600, height: 1.08);
   }
 
   static TextStyle addNewDoorsSubtitle(TextTheme textTheme) {
-    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
-      color: AppColors.textMuted,
-      fontSize: 14,
-      fontWeight: FontWeight.w400,
-      height: 1.2,
-    );
+    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(color: AppColors.textMuted, fontSize: 14, fontWeight: FontWeight.w400, height: 1.2);
   }
 
   static TextStyle addNewDoorsCardTitle(TextTheme textTheme) {
-    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
-      color: AppColors.textMuted,
-      fontSize: 14,
-      fontWeight: FontWeight.w400,
-      height: 1.2,
-    );
+    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(color: AppColors.textMuted, fontSize: 14, fontWeight: FontWeight.w400, height: 1.2);
   }
 
   static TextStyle addDoorDialogTitle(TextTheme textTheme) {
-    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
-      color: AppColors.textPrimary,
-      fontSize: 18,
-      fontWeight: FontWeight.w600,
-      height: 1.1,
-    );
+    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.w600, height: 1.1);
   }
 
   static TextStyle addDoorDialogField(TextTheme textTheme) {
-    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
-      color: AppColors.textPrimary,
-      fontSize: 15,
-      fontWeight: FontWeight.w400,
-      height: 1.2,
-    );
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.w400, height: 1.2);
   }
 
   static TextStyle addDoorDialogHint(TextTheme textTheme) {
-    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
-      color: AppColors.textHint,
-      fontSize: 15,
-      fontWeight: FontWeight.w400,
-      height: 1.2,
-    );
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(color: AppColors.textHint, fontSize: 15, fontWeight: FontWeight.w400, height: 1.2);
   }
 
   static TextStyle addDoorDialogButton(TextTheme textTheme) {
-    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
-      fontSize: 16,
-      fontWeight: FontWeight.w400,
-    );
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(fontSize: 16, fontWeight: FontWeight.w400);
   }
 
   static TextStyle addDeviceTitle(TextTheme textTheme) {
-    return (textTheme.displaySmall ?? const TextStyle()).copyWith(
-      color: AppColors.textPrimary,
-      fontSize: 25,
-      fontWeight: FontWeight.w600,
-      height: 1.08,
-    );
+    return (textTheme.displaySmall ?? const TextStyle()).copyWith(color: AppColors.textPrimary, fontSize: 25, fontWeight: FontWeight.w600, height: 1.08);
   }
 
   static TextStyle addDeviceSubtitle(TextTheme textTheme) {
-    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
-      color: AppColors.textMuted,
-      fontSize: 14,
-      fontWeight: FontWeight.w400,
-      height: 1.2,
-    );
+    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(color: AppColors.textMuted, fontSize: 14, fontWeight: FontWeight.w400, height: 1.2);
   }
 
   static TextStyle addDeviceSectionTitle(TextTheme textTheme) {
-    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
-      color: AppColors.textPrimary,
-      fontSize: 16,
-      fontWeight: FontWeight.w400,
-      height: 1.2,
-    );
+    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.w400, height: 1.2);
   }
 
   static TextStyle addDeviceCardTitle(TextTheme textTheme) {
-    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
-      color: AppColors.textMuted,
-      fontSize: 15,
-      fontWeight: FontWeight.w400,
-      height: 1.2,
-    );
+    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(color: AppColors.textMuted, fontSize: 15, fontWeight: FontWeight.w400, height: 1.2);
   }
 
   static TextStyle smartOpenerScanTitle(TextTheme textTheme) {
-    return (textTheme.displaySmall ?? const TextStyle()).copyWith(
-      color: AppColors.textPrimary,
-      fontSize: 28,
-      fontWeight: FontWeight.w700,
-      height: 1.08,
-    );
+    return (textTheme.displaySmall ?? const TextStyle()).copyWith(color: AppColors.textPrimary, fontSize: 26, fontWeight: FontWeight.w600, height: 1.08);
   }
 
   static TextStyle smartOpenerScanDescription(TextTheme textTheme) {
-    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
-      color: AppColors.textMuted,
-      fontSize: 17,
-      fontWeight: FontWeight.w400,
-      height: 1.18,
-    );
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(color: AppColors.textMuted, fontSize: 13, fontWeight: FontWeight.w400, height: 1.18);
   }
 
   static TextStyle smartOpenerPrimaryButton(TextTheme textTheme) {
-    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
-      color: Colors.white,
-      fontSize: 18,
-      fontWeight: FontWeight.w400,
-    );
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w400);
   }
 
   static TextStyle scannerChip(TextTheme textTheme) {
-    return (textTheme.labelMedium ?? const TextStyle()).copyWith(
-      color: Colors.white,
-      fontSize: 11,
-      fontWeight: FontWeight.w400,
-      height: 1.2,
-    );
+    return (textTheme.labelMedium ?? const TextStyle()).copyWith(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w400, height: 1.2);
   }
 
   static TextStyle scannerControlLabel(TextTheme textTheme) {
-    return (textTheme.labelMedium ?? const TextStyle()).copyWith(
-      color: Colors.white,
-      fontSize: 11,
-      fontWeight: FontWeight.w400,
-      height: 1.2,
-    );
+    return (textTheme.labelMedium ?? const TextStyle()).copyWith(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w400, height: 1.2);
   }
 
   static TextStyle smartOpenerScanningTitle(TextTheme textTheme) {
-    return (textTheme.displaySmall ?? const TextStyle()).copyWith(
-      color: AppColors.textSecondary,
-      fontSize: 46,
-      fontWeight: FontWeight.w700,
-      height: 1.08,
-    );
+    return (textTheme.displaySmall ?? const TextStyle()).copyWith(color: AppColors.textSecondary, fontSize: 25, fontWeight: FontWeight.w600, height: 1.08);
   }
 
   static TextStyle smartOpenerScanningDescription(TextTheme textTheme) {
-    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
-      color: AppColors.textMuted,
-      fontSize: 28,
-      fontWeight: FontWeight.w400,
-      height: 1.2,
-    );
+    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(color: AppColors.textMuted, fontSize: 14, fontWeight: FontWeight.w400, height: 1.2);
   }
 
   static TextStyle smartOpenerScanningStatus(TextTheme textTheme) {
-    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
-      color: AppColors.textMuted,
-      fontSize: 25,
-      fontWeight: FontWeight.w400,
-      height: 1.2,
-    );
+    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(color: AppColors.textMuted, fontSize: 16, fontWeight: FontWeight.w400, height: 1.2);
   }
 
   static TextStyle smartOpenerFlowTitle(TextTheme textTheme) {
     return (textTheme.displaySmall ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
-      fontSize: 32,
-      fontWeight: FontWeight.w700,
-      height: 1.1,
+      fontSize: 25,
+      fontWeight: FontWeight.w600,
+      height: 1.0,
       letterSpacing: 0,
     );
   }
@@ -651,9 +375,9 @@ class AppTextTokens {
   static TextStyle smartOpenerFlowSubtitle(TextTheme textTheme) {
     return (textTheme.titleLarge ?? const TextStyle()).copyWith(
       color: AppColors.textMuted,
-      fontSize: 21,
+      fontSize: 14,
       fontWeight: FontWeight.w400,
-      height: 1.25,
+      height: 1,
       letterSpacing: 0,
     );
   }
@@ -661,9 +385,9 @@ class AppTextTokens {
   static TextStyle smartOpenerResultCardTitle(TextTheme textTheme) {
     return (textTheme.titleLarge ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
-      fontSize: 25,
-      fontWeight: FontWeight.w700,
-      height: 1.1,
+      fontSize: 18,
+      fontWeight: FontWeight.w600,
+      height: 1,
       letterSpacing: 0,
     );
   }
@@ -671,29 +395,23 @@ class AppTextTokens {
   static TextStyle smartOpenerResultCardSubtitle(TextTheme textTheme) {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
       color: Color(0xFF8B9BA7),
-      fontSize: 17,
-      fontWeight: FontWeight.w700,
+      fontSize: 13,
+      fontWeight: FontWeight.w400,
       height: 1.2,
       letterSpacing: 0,
     );
   }
 
   static TextStyle smartOpenerSmallButton(TextTheme textTheme) {
-    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
-      color: Colors.white,
-      fontSize: 16,
-      fontWeight: FontWeight.w700,
-      height: 1.2,
-      letterSpacing: 0,
-    );
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600, height: 1.2, letterSpacing: 0);
   }
 
   static TextStyle smartOpenerFormText(TextTheme textTheme) {
     return (textTheme.titleLarge ?? const TextStyle()).copyWith(
       color: AppColors.textHint,
-      fontSize: 22,
+      fontSize: 15,
       fontWeight: FontWeight.w400,
-      height: 1.2,
+      height: 1,
       letterSpacing: 0,
     );
   }
@@ -701,7 +419,7 @@ class AppTextTokens {
   static TextStyle smartOpenerFormHint(TextTheme textTheme) {
     return (textTheme.bodyLarge ?? const TextStyle()).copyWith(
       color: AppColors.smartOpenerWifiError,
-      fontSize: 16,
+      fontSize: 12,
       fontWeight: FontWeight.w400,
       height: 1.35,
       letterSpacing: 0,
@@ -709,20 +427,14 @@ class AppTextTokens {
   }
 
   static TextStyle smartOpenerActionButton(TextTheme textTheme) {
-    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
-      color: Colors.white,
-      fontSize: 22,
-      fontWeight: FontWeight.w500,
-      height: 1.2,
-      letterSpacing: 0,
-    );
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w400, height: 1.2, letterSpacing: 0);
   }
 
   static TextStyle smartOpenerSecondaryActionButton(TextTheme textTheme) {
     return (textTheme.titleLarge ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
-      fontSize: 22,
-      fontWeight: FontWeight.w700,
+      fontSize: 18,
+      fontWeight: FontWeight.w400,
       height: 1.2,
       letterSpacing: 0,
     );
@@ -731,8 +443,8 @@ class AppTextTokens {
   static TextStyle smartOpenerSheetTitle(TextTheme textTheme) {
     return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
-      fontSize: 25,
-      fontWeight: FontWeight.w700,
+      fontSize: 20,
+      fontWeight: FontWeight.w600,
       height: 1.2,
       letterSpacing: 0,
     );
@@ -741,9 +453,9 @@ class AppTextTokens {
   static TextStyle smartOpenerConnectingTitle(TextTheme textTheme) {
     return (textTheme.headlineMedium ?? const TextStyle()).copyWith(
       color: AppColors.textSecondary,
-      fontSize: 34,
-      fontWeight: FontWeight.w700,
-      height: 1.15,
+      fontSize: 26,
+      fontWeight: FontWeight.w600,
+      height: 1.0,
       letterSpacing: 0,
     );
   }
@@ -751,9 +463,9 @@ class AppTextTokens {
   static TextStyle smartOpenerBodyCenter(TextTheme textTheme) {
     return (textTheme.titleLarge ?? const TextStyle()).copyWith(
       color: AppColors.textMuted,
-      fontSize: 20,
-      fontWeight: FontWeight.w400,
-      height: 1.25,
+      fontSize: 14,
+      fontWeight: FontWeight.w300,
+      height: 1,
       letterSpacing: 0,
     );
   }
@@ -769,70 +481,34 @@ class AppTextTokens {
   }
 
   static TextStyle sceneBreadcrumb(TextTheme textTheme) {
-    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
-      color: AppColors.textMuted,
-      fontSize: 14,
-      fontWeight: FontWeight.w400,
-      height: 1.2,
-    );
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(color: AppColors.textMuted, fontSize: 14, fontWeight: FontWeight.w400, height: 1.2);
   }
 
   static TextStyle sceneCardTitle(TextTheme textTheme) {
-    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
-      color: AppColors.textPrimary,
-      fontSize: 16,
-      fontWeight: FontWeight.w600,
-      height: 1.2,
-    );
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.w600, height: 1.2);
   }
 
   static TextStyle sceneCardMeta(TextTheme textTheme) {
-    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
-      color: AppColors.textHint,
-      fontSize: 12,
-      fontWeight: FontWeight.w400,
-      height: 1.2,
-    );
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(color: AppColors.textHint, fontSize: 12, fontWeight: FontWeight.w400, height: 1.2);
   }
 
   static TextStyle sceneNewScene(TextTheme textTheme) {
-    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
-      color: AppColors.textPrimary,
-      fontSize: 12,
-      fontWeight: FontWeight.w500,
-      height: 1.2,
-    );
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(color: AppColors.textPrimary, fontSize: 12, fontWeight: FontWeight.w500, height: 1.2);
   }
 
   static TextStyle sceneDialogTitle(TextTheme textTheme) {
-    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
-      color: AppColors.textPrimary,
-      fontSize: 20,
-      fontWeight: FontWeight.w500,
-      height: 1.1,
-    );
+    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(color: AppColors.textPrimary, fontSize: 20, fontWeight: FontWeight.w500, height: 1.1);
   }
 
   static TextStyle sceneDialogInput(TextTheme textTheme) {
-    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
-      color: AppColors.textPrimary,
-      fontSize: 15,
-      fontWeight: FontWeight.w400,
-    );
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.w400);
   }
 
   static TextStyle sceneDialogInputHint(TextTheme textTheme) {
-    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
-      color: AppColors.textHint,
-      fontSize: 15,
-      fontWeight: FontWeight.w400,
-    );
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(color: AppColors.textHint, fontSize: 15, fontWeight: FontWeight.w400);
   }
 
   static TextStyle sceneDialogButton(TextTheme textTheme) {
-    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
-      fontSize: 18,
-      fontWeight: FontWeight.w400,
-    );
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(fontSize: 18, fontWeight: FontWeight.w400);
   }
 }

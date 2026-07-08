@@ -11,6 +11,19 @@ import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
 import 'smart_opener_connecting_page.dart';
 
+class SmartOpenerChooseWifiAssetPaths {
+  const SmartOpenerChooseWifiAssetPaths._();
+
+  static const wifiAccountIcon =
+      'assets/icons/add_device/smart_opener_wifi_account_icon.png';
+  static const wifiPasswordIcon =
+      'assets/icons/add_device/smart_opener_wifi_password_icon.png';
+  static const wifiPasswordShowIcon =
+      'assets/icons/add_device/smart_opener_wifi_password_show_icon.png';
+  static const wifiPasswordHideIcon =
+      'assets/icons/add_device/smart_opener_wifi_password_hide_icon.png';
+}
+
 class SmartOpenerChooseWifiPage extends ConsumerStatefulWidget {
   const SmartOpenerChooseWifiPage({super.key});
 
@@ -26,6 +39,7 @@ class _SmartOpenerChooseWifiPageState
     extends ConsumerState<SmartOpenerChooseWifiPage> {
   final TextEditingController _passwordController = TextEditingController();
   var _wifiSheetShown = false;
+  var _isPasswordObscured = true;
 
   @override
   void initState() {
@@ -89,35 +103,41 @@ class _SmartOpenerChooseWifiPageState
         children: [
           LayoutBuilder(
             builder: (context, constraints) {
-              final afterHintGap = constraints.maxHeight < 760 ? 72.0 : 170.0;
+              final afterHintGap = constraints.maxHeight < 760 ? 90.0 : 170.0;
 
               return SafeArea(
                 top: false,
                 child: ListView(
-                  padding: const EdgeInsets.fromLTRB(43, 42, 43, 36),
+                  padding: const EdgeInsets.fromLTRB(20, 36, 20, 0),
                   children: [
                     Text(
                       l10n.smartOpenerChooseWifiTitle,
                       style: AppTextTokens.smartOpenerFlowTitle(textTheme),
                     ),
-                    const SizedBox(height: 17),
+                    const SizedBox(height: 8),
                     Text(
                       l10n.smartOpenerChooseWifiDescription,
                       style: AppTextTokens.smartOpenerFlowSubtitle(textTheme),
                     ),
-                    const SizedBox(height: 79),
+                    const SizedBox(height: 64),
                     _WifiFormRow(
-                      icon: Icons.wifi,
                       text: state.wifiSsid.isEmpty
                           ? l10n.smartOpenerSelectWifiPlaceholder
                           : state.wifiSsid,
-                      trailing: Icons.chevron_right,
                       onTap: () => _showWifiSheet(networks),
                     ),
-                    _PasswordRow(controller: _passwordController),
-                    const SizedBox(height: 30),
+                    _PasswordRow(
+                      controller: _passwordController,
+                      isObscured: _isPasswordObscured,
+                      onToggleObscured: () {
+                        setState(() {
+                          _isPasswordObscured = !_isPasswordObscured;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 25),
                     Padding(
-                      padding: const EdgeInsets.only(left: 20, right: 10),
+                      padding: const EdgeInsets.only(left: 5, right: 5),
                       child: Text(
                         l10n.smartOpenerWifiPasswordHint,
                         style: AppTextTokens.smartOpenerFormHint(textTheme),
@@ -129,22 +149,24 @@ class _SmartOpenerChooseWifiPageState
                       textAlign: TextAlign.center,
                       style: AppTextTokens.smartOpenerBodyCenter(textTheme),
                     ),
-                    const SizedBox(height: 22),
+                    const SizedBox(height: 13),
                     _WideActionButton(
                       label: l10n.smartOpenerNextAction,
                       onPressed: () => _goConnecting(skipWifi: false),
                     ),
-                    const SizedBox(height: 23),
+                    const SizedBox(height: 20),
                     _WideActionButton(
                       label: l10n.smartOpenerSkipAction,
                       isPrimary: false,
                       onPressed: () => _goConnecting(skipWifi: true),
                     ),
-                    const SizedBox(height: 40),
-                    Text(
-                      l10n.smartOpenerSkipTip,
-                      textAlign: TextAlign.center,
-                      style: AppTextTokens.smartOpenerBodyCenter(textTheme),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(10, 30, 0, 0),
+                      child: Text(
+                        l10n.smartOpenerSkipTip,
+                        textAlign: TextAlign.center,
+                        style: AppTextTokens.smartOpenerBodyCenter(textTheme),
+                      ),
                     ),
                   ],
                 ),
@@ -165,16 +187,9 @@ class _SmartOpenerChooseWifiPageState
 }
 
 class _WifiFormRow extends StatelessWidget {
-  const _WifiFormRow({
-    required this.icon,
-    required this.text,
-    required this.trailing,
-    required this.onTap,
-  });
+  const _WifiFormRow({required this.text, required this.onTap});
 
-  final IconData icon;
   final String text;
-  final IconData trailing;
   final VoidCallback onTap;
 
   @override
@@ -185,7 +200,7 @@ class _WifiFormRow extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
-        height: 72,
+        height: 60,
         decoration: const BoxDecoration(
           border: Border(
             bottom: BorderSide(color: AppColors.smartOpenerDivider),
@@ -193,8 +208,13 @@ class _WifiFormRow extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(icon, size: 30, color: AppColors.textIcon),
-            const SizedBox(width: 21),
+            const _SmartOpenerChooseWifiIcon(
+              assetPath: SmartOpenerChooseWifiAssetPaths.wifiAccountIcon,
+              fallbackIcon: Icons.wifi,
+              size: 24,
+              color: AppColors.surfacePlantDarker,
+            ),
+            const SizedBox(width: 10),
             Expanded(
               child: Text(
                 text,
@@ -203,7 +223,11 @@ class _WifiFormRow extends StatelessWidget {
                 style: AppTextTokens.smartOpenerFormText(textTheme),
               ),
             ),
-            Icon(trailing, size: 34, color: AppColors.textPrimary),
+            const Icon(
+              Icons.chevron_right,
+              size: 30,
+              color: AppColors.textPrimary,
+            ),
           ],
         ),
       ),
@@ -212,9 +236,15 @@ class _WifiFormRow extends StatelessWidget {
 }
 
 class _PasswordRow extends StatelessWidget {
-  const _PasswordRow({required this.controller});
+  const _PasswordRow({
+    required this.controller,
+    required this.isObscured,
+    required this.onToggleObscured,
+  });
 
   final TextEditingController controller;
+  final bool isObscured;
+  final VoidCallback onToggleObscured;
 
   @override
   Widget build(BuildContext context) {
@@ -228,12 +258,17 @@ class _PasswordRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.lock_outline, size: 30, color: AppColors.textIcon),
-          const SizedBox(width: 21),
+          const _SmartOpenerChooseWifiIcon(
+            assetPath: SmartOpenerChooseWifiAssetPaths.wifiPasswordIcon,
+            fallbackIcon: Icons.lock_outline,
+            size: 24,
+            color: AppColors.textIcon,
+          ),
+          const SizedBox(width: 10),
           Expanded(
             child: TextField(
               controller: controller,
-              obscureText: true,
+              obscureText: isObscured,
               decoration: InputDecoration(
                 border: InputBorder.none,
                 hintText: l10n.smartOpenerWifiPasswordPlaceholder,
@@ -242,13 +277,52 @@ class _PasswordRow extends StatelessWidget {
               style: AppTextTokens.smartOpenerFormText(textTheme),
             ),
           ),
-          const Icon(
-            Icons.visibility_off_outlined,
-            size: 30,
-            color: AppColors.textIcon,
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onToggleObscured,
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: _SmartOpenerChooseWifiIcon(
+                assetPath: isObscured
+                    ? SmartOpenerChooseWifiAssetPaths.wifiPasswordHideIcon
+                    : SmartOpenerChooseWifiAssetPaths.wifiPasswordShowIcon,
+                fallbackIcon: isObscured
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
+                size: 25,
+                color: AppColors.textIcon,
+              ),
+            ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _SmartOpenerChooseWifiIcon extends StatelessWidget {
+  const _SmartOpenerChooseWifiIcon({
+    required this.assetPath,
+    required this.fallbackIcon,
+    required this.size,
+    required this.color,
+  });
+
+  final String assetPath;
+  final IconData fallbackIcon;
+  final double size;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.asset(
+      assetPath,
+      width: size,
+      height: size,
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) {
+        return Icon(fallbackIcon, size: size, color: color);
+      },
     );
   }
 }
@@ -267,7 +341,7 @@ class _WifiNetworkSheet extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(38, 29, 38, 28),
+        padding: const EdgeInsets.fromLTRB(38, 20, 38, 28),
         decoration: const BoxDecoration(
           color: AppColors.backgroundPrimary,
           borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
@@ -316,10 +390,10 @@ class _WifiNetworkTile extends StatelessWidget {
           children: [
             Icon(
               Icons.wifi,
-              size: 29,
+              size: 30,
               color: isSelected ? AppColors.brandPrimary : AppColors.textIcon,
             ),
-            const SizedBox(width: 22),
+            const SizedBox(width: 30),
             Expanded(
               child: Text(
                 network.ssid,
@@ -361,7 +435,7 @@ class _WideActionButton extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return SizedBox(
-      height: 68,
+      height: 50,
       child: FilledButton(
         onPressed: onPressed,
         style: FilledButton.styleFrom(

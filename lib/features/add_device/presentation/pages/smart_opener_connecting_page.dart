@@ -114,7 +114,7 @@ class _SmartOpenerConnectingPageState
             return SafeArea(
               top: false,
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(34, 42, 34, 32),
+                padding: const EdgeInsets.fromLTRB(20, 80, 20, 0),
                 children: [
                   Center(
                     child: Image.asset(
@@ -129,20 +129,21 @@ class _SmartOpenerConnectingPageState
                           ),
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 80),
                   Text(
                     l10n.smartOpenerConnectingTitle,
                     textAlign: TextAlign.center,
                     style: AppTextTokens.smartOpenerConnectingTitle(textTheme),
                   ),
-                  const SizedBox(height: 27),
-                  const _ConnectingProgressBar(),
-                  const SizedBox(height: 42),
-                  Text(
+                  const SizedBox(height: 16),
+                  Padding(padding: EdgeInsetsGeometry.only(left: 50,right: 50),child: const _ConnectingProgressBar(),),
+                  const SizedBox(height: 28),
+                  Padding(padding: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+                  child: Text(
                     l10n.smartOpenerConnectingTip,
                     textAlign: TextAlign.center,
                     style: AppTextTokens.smartOpenerBodyCenter(textTheme),
-                  ),
+                  ),)
                 ],
               ),
             );
@@ -169,7 +170,7 @@ class _ConnectingProgressBar extends StatelessWidget {
         borderRadius: BorderRadius.circular(6),
         child: SizedBox(
           width: 353,
-          height: 14,
+          height: 10,
           child: LinearProgressIndicator(
             value: 0.4,
             backgroundColor: AppColors.smartOpenerProgressTrack,

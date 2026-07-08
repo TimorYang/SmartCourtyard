@@ -122,7 +122,7 @@ class _SmartOpenerBleScanPageState extends ConsumerState<SmartOpenerBleScanPage>
           return SafeArea(
             top: false,
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(43, 46, 43, 24),
+              padding: const EdgeInsets.fromLTRB(20, 36, 20, 24),
               children: [
                 Text(
                   l10n.smartOpenerBleScanningTitle,

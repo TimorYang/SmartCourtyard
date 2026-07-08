@@ -25,42 +25,39 @@ class SmartOpenerDeviceNotFoundPage extends StatelessWidget {
       appBar: const FlinxNavigationBar(title: '', showBottomDivider: false),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final artSize = (constraints.maxWidth * 0.78).clamp(240.0, 390.0);
-
           return SafeArea(
             top: false,
             child: ListView(
               padding: const EdgeInsets.fromLTRB(43, 54, 43, 48),
               children: [
-                const SizedBox(height: 12),
                 Center(
                   child: Image.asset(
                     artAssetPath,
-                    width: artSize,
-                    height: artSize,
+                    width: 300,
+                    height: 300,
                     fit: BoxFit.contain,
                     errorBuilder: (context, error, stackTrace) =>
-                        _MissingDeviceFallbackArt(size: artSize),
+                        _MissingDeviceFallbackArt(size: 300),
                   ),
                 ),
-                const SizedBox(height: 47),
+                const SizedBox(height: 38),
                 Text(
                   l10n.smartOpenerDeviceNotFoundTitle,
                   textAlign: TextAlign.center,
                   style: AppTextTokens.smartOpenerConnectingTitle(textTheme),
                 ),
-                const SizedBox(height: 15),
+                const SizedBox(height: 9),
                 Text(
                   l10n.smartOpenerDeviceNotFoundDescription,
                   textAlign: TextAlign.center,
                   style: AppTextTokens.smartOpenerBodyCenter(textTheme),
                 ),
-                SizedBox(height: constraints.maxHeight < 660 ? 48 : 116),
+                SizedBox(height: constraints.maxHeight < 660 ? 48 : 78),
                 _SmartOpenerWideButton(
                   label: l10n.smartOpenerRescanAction,
                   onPressed: () => context.go(SmartOpenerBleScanPage.routePath),
                 ),
-                const SizedBox(height: 23),
+                const SizedBox(height: 19),
                 _SmartOpenerWideButton(
                   label: l10n.smartOpenerBackHomeAction,
                   isPrimary: false,
@@ -128,7 +125,7 @@ class _SmartOpenerWideButton extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return SizedBox(
-      height: 67,
+      height: 50,
       child: FilledButton(
         onPressed: onPressed,
         style: FilledButton.styleFrom(

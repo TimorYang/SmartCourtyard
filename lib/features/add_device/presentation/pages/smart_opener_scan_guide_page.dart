@@ -37,7 +37,7 @@ class SmartOpenerScanGuidePage extends StatelessWidget {
       body: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(30, 48, 30, 28),
+          padding: const EdgeInsets.fromLTRB(20, 35, 30, 28),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -61,7 +61,7 @@ class SmartOpenerScanGuidePage extends StatelessWidget {
               const Spacer(flex: 3),
               SizedBox(
                 width: double.infinity,
-                height: 62,
+                height: 52,
                 child: FilledButton(
                   onPressed: () =>
                       context.push(SmartOpenerQrScanPage.routePath),

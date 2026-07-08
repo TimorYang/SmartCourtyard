@@ -60,7 +60,7 @@ class _SmartOpenerScanResultsPageState
       body: SafeArea(
         top: false,
         child: ListView.separated(
-          padding: const EdgeInsets.fromLTRB(43, 42, 43, 32),
+          padding: const EdgeInsets.fromLTRB(20, 36, 20, 0),
           itemCount: devices.length + 1,
           separatorBuilder: (context, index) => index == 0
               ? const SizedBox(height: 17)
@@ -74,7 +74,7 @@ class _SmartOpenerScanResultsPageState
                     l10n.smartOpenerScanResultsTitle,
                     style: AppTextTokens.smartOpenerFlowTitle(textTheme),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 10),
                   Text(
                     l10n.smartOpenerScanResultsCount(devices.length),
                     style: AppTextTokens.smartOpenerFlowSubtitle(textTheme),
@@ -119,8 +119,8 @@ class _ScanResultCard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      constraints: const BoxConstraints(minHeight: 116),
-      padding: const EdgeInsets.fromLTRB(28, 18, 28, 18),
+      constraints: const BoxConstraints(minHeight: 95),
+      padding: const EdgeInsets.fromLTRB(15, 23, 15, 23),
       decoration: BoxDecoration(
         color: AppColors.smartOpenerCardSurface,
         borderRadius: BorderRadius.circular(14),
@@ -132,7 +132,7 @@ class _ScanResultCard extends StatelessWidget {
             size: 48,
             color: AppColors.textPrimary,
           ),
-          const SizedBox(width: 24),
+          const SizedBox(width: 13),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -144,7 +144,7 @@ class _ScanResultCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: AppTextTokens.smartOpenerResultCardTitle(textTheme),
                 ),
-                const SizedBox(height: 13),
+                const SizedBox(height: 8),
                 Text(
                   l10n.smartOpenerDefaultDeviceSubtitle,
                   maxLines: 1,
@@ -156,7 +156,7 @@ class _ScanResultCard extends StatelessWidget {
           ),
           const SizedBox(width: 14),
           SizedBox(
-            height: 44,
+            height: 32,
             child: FilledButton(
               onPressed: onAddPressed,
               style: FilledButton.styleFrom(
