@@ -114,13 +114,15 @@ class AddDeviceState {
 }
 
 class AddDeviceController extends Notifier<AddDeviceState> {
-  late final HardwareGateway _gateway;
+  late HardwareGateway _gateway;
   final List<StreamSubscription<Object?>> _subscriptions =
       <StreamSubscription<Object?>>[];
   int _requestCounter = 0;
+  var _disposeHookRegistered = false;
 
   @override
   AddDeviceState build() {
+    _cancelSubscriptions();
     _gateway = ref.watch(addDeviceHardwareGatewayProvider);
     _subscriptions.addAll(<StreamSubscription<Object?>>[
       _gateway.bleScanResults.listen((device) {
@@ -146,12 +148,18 @@ class AddDeviceController extends Notifier<AddDeviceState> {
         );
       }),
     ]);
-    ref.onDispose(() {
-      for (final subscription in _subscriptions) {
-        subscription.cancel();
-      }
-    });
+    if (!_disposeHookRegistered) {
+      _disposeHookRegistered = true;
+      ref.onDispose(_cancelSubscriptions);
+    }
     return AddDeviceState.initial();
+  }
+
+  void _cancelSubscriptions() {
+    for (final subscription in _subscriptions) {
+      unawaited(subscription.cancel());
+    }
+    _subscriptions.clear();
   }
 
   void updateAuthToken(String value) {
@@ -172,6 +180,24 @@ class AddDeviceController extends Notifier<AddDeviceState> {
 
   void clearMessages() {
     state = state.copyWith(clearErrorMessage: true, clearInfoMessage: true);
+  }
+
+  void clearScanResults() {
+    state = state.copyWith(
+      devices: const <String, BleDevice>{},
+      connectionStates: const <String, BleConnectionState>{},
+      clearSelectedDevice: true,
+      clearErrorMessage: true,
+      clearInfoMessage: true,
+    );
+  }
+
+  void selectBleDevice(BleDevice device) {
+    state = state.copyWith(
+      selectedDevice: device,
+      clearErrorMessage: true,
+      clearInfoMessage: true,
+    );
   }
 
   Future<void> startScan() async {
@@ -204,7 +230,9 @@ class AddDeviceController extends Notifier<AddDeviceState> {
     try {
       await _gateway.stopBleScan(requestId: _nextRequestId('ble-stop'));
     } finally {
-      state = state.copyWith(isScanning: false, infoMessage: '蓝牙扫描已停止');
+      if (ref.mounted) {
+        state = state.copyWith(isScanning: false, infoMessage: '蓝牙扫描已停止');
+      }
     }
   }
 
@@ -307,20 +335,20 @@ class AddDeviceController extends Notifier<AddDeviceState> {
     }
   }
 
-  Future<bool> configureWifi() async {
+  Future<bool> configureWifi({bool isWifiSkipped = false}) async {
     final device = state.selectedDevice;
     if (device == null) {
       state = state.copyWith(errorMessage: '请先完成蓝牙连接');
       return false;
     }
 
-    final ssid = state.wifiSsid.trim();
-    final password = state.wifiPassword;
-    if (ssid.isEmpty) {
+    final ssid = isWifiSkipped ? '' : state.wifiSsid.trim();
+    final password = isWifiSkipped ? '' : state.wifiPassword;
+    if (!isWifiSkipped && ssid.isEmpty) {
       state = state.copyWith(errorMessage: '请选择或输入 Wi‑Fi 名称');
       return false;
     }
-    if (password.isEmpty) {
+    if (!isWifiSkipped && password.isEmpty) {
       state = state.copyWith(errorMessage: '请输入 Wi‑Fi 密码');
       return false;
     }

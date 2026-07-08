@@ -1,0 +1,464 @@
+import 'dart:async';
+
+import 'package:flinx/app/theme/app_theme.dart';
+import 'package:flinx/features/add_device/application/providers.dart';
+import 'package:flinx/features/add_device/presentation/pages/add_device_page.dart';
+import 'package:flinx/features/add_device/presentation/pages/smart_opener_ble_scan_page.dart';
+import 'package:flinx/features/add_device/presentation/pages/smart_opener_choose_wifi_page.dart';
+import 'package:flinx/features/add_device/presentation/pages/smart_opener_connecting_page.dart';
+import 'package:flinx/features/add_device/presentation/pages/smart_opener_connection_success_page.dart';
+import 'package:flinx/features/add_device/presentation/pages/smart_opener_device_not_found_page.dart';
+import 'package:flinx/features/add_device/presentation/pages/smart_opener_qr_scan_page.dart';
+import 'package:flinx/features/add_device/presentation/pages/smart_opener_scan_guide_page.dart';
+import 'package:flinx/features/add_device/presentation/pages/smart_opener_scan_results_page.dart';
+import 'package:flinx/features/home/presentation/pages/home_page.dart';
+import 'package:flinx/platform_bridge/hardware_models.dart';
+import 'package:flinx/platform_bridge/mock_hardware_gateway.dart';
+import 'package:flinx/shared/l10n/app_localizations.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+
+void main() {
+  const scanDuration = Duration(milliseconds: 20);
+
+  testWidgets('opens Smart Opener scan guide from add device page', (
+    tester,
+  ) async {
+    await _pumpScanFlowTestApp(tester, AddDevicePage.routePath);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Smart Opener'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Scan the QR code inside the package with your smart phone.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('opens QR scanner page from scan guide action', (tester) async {
+    await _pumpScanFlowTestApp(tester, SmartOpenerScanGuidePage.routePath);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Scan'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Gallery'), findsOneWidget);
+    expect(find.text('Flashlight'), findsOneWidget);
+  });
+
+  testWidgets('opens Bluetooth scanning page from QR scanner shortcut', (
+    tester,
+  ) async {
+    await _pumpScanFlowTestApp(tester, SmartOpenerQrScanPage.routePath);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Scan Bluetooth devices'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(find.text('Scanning'), findsOneWidget);
+    expect(find.text('Scanning the device, please wait...'), findsOneWidget);
+  });
+
+  testWidgets('BLE scan opens scan results when devices are discovered', (
+    tester,
+  ) async {
+    await _pumpScanFlowTestApp(
+      tester,
+      SmartOpenerBleScanPage.routePath,
+      scanDuration: scanDuration,
+    );
+    await tester.pump();
+    await tester.pump(scanDuration);
+    await tester.pump();
+
+    expect(find.text('SCAN RESULTS'), findsOneWidget);
+    expect(find.text('Found 1 Devices'), findsOneWidget);
+  });
+
+  testWidgets('BLE scan opens not found when no device is discovered', (
+    tester,
+  ) async {
+    await _pumpScanFlowTestApp(
+      tester,
+      SmartOpenerBleScanPage.routePath,
+      gateway: _NoDeviceHardwareGateway(),
+      scanDuration: scanDuration,
+    );
+    await tester.pump();
+    await tester.pump(scanDuration);
+    await tester.pump();
+
+    expect(find.text('Device not found'), findsOneWidget);
+  });
+
+  testWidgets('not found actions rescan and return home', (tester) async {
+    await _pumpScanFlowTestApp(tester, SmartOpenerDeviceNotFoundPage.routePath);
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(find.text('Rescan'), 260);
+    await tester.tap(find.text('Rescan'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byType(SmartOpenerBleScanPage), findsOneWidget);
+
+    await _pumpScanFlowTestApp(tester, SmartOpenerDeviceNotFoundPage.routePath);
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Back to home'), 260);
+    await tester.tap(find.text('Back to home'));
+    await tester.pumpAndSettle();
+    expect(find.byType(HomePage), findsOneWidget);
+  });
+
+  testWidgets('Add connects and opens Choose Wi-Fi with Wi-Fi sheet', (
+    tester,
+  ) async {
+    await _openScanResults(tester, scanDuration: scanDuration);
+
+    await tester.tap(find.widgetWithText(FilledButton, '+ Add'));
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    expect(find.text('CHOOSE WIFI'), findsOneWidget);
+    expect(find.text('Select Wi-Fi'), findsWidgets);
+    expect(find.text('FLINX Office'), findsOneWidget);
+  });
+
+  testWidgets('selecting Wi-Fi fills SSID and Next reaches connecting flow', (
+    tester,
+  ) async {
+    await _openChooseWifi(
+      tester,
+      gateway: _PendingWifiHardwareGateway(),
+      scanDuration: scanDuration,
+    );
+
+    await tester.tap(find.text('FLINX Office'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('FLINX Office'), findsOneWidget);
+    await tester.enterText(find.byType(TextField), 'password123');
+    await _scrollToAction(tester, 'NEXT');
+    await _tapAction(tester, 'NEXT');
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+
+    expect(find.byType(SmartOpenerConnectingPage), findsOneWidget);
+  });
+
+  testWidgets('Skip reaches connecting flow', (tester) async {
+    await _openChooseWifi(
+      tester,
+      gateway: _PendingWifiHardwareGateway(),
+      scanDuration: scanDuration,
+    );
+
+    await tester.tap(find.text('FLINX Office'));
+    await tester.pumpAndSettle();
+    await _scrollToAction(tester, 'Skip');
+    await _tapAction(tester, 'Skip');
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+
+    expect(find.byType(SmartOpenerConnectingPage), findsOneWidget);
+  });
+
+  testWidgets('configure failure shows dialog and OK returns to Choose Wi-Fi', (
+    tester,
+  ) async {
+    await _openChooseWifi(
+      tester,
+      gateway: _FailingWifiHardwareGateway(),
+      scanDuration: scanDuration,
+    );
+
+    await tester.tap(find.text('FLINX Office'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'bad-password');
+    await _scrollToAction(tester, 'NEXT');
+    await _tapAction(tester, 'NEXT');
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+
+    expect(
+      find.text(
+        'Connection failed. Please check Wi-Fi password and try again.',
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
+    expect(find.text('CHOOSE WIFI'), findsOneWidget);
+  });
+
+  testWidgets('connecting back sheet can cancel or return to scan results', (
+    tester,
+  ) async {
+    await _openChooseWifi(
+      tester,
+      gateway: _PendingWifiHardwareGateway(),
+      scanDuration: scanDuration,
+    );
+
+    await tester.tap(find.text('FLINX Office'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'password123');
+    await _scrollToAction(tester, 'NEXT');
+    await _tapAction(tester, 'NEXT');
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SmartOpenerConnectingPage), findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('STOP DEVICE ADDITION'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Cancel'));
+    await tester.pumpAndSettle();
+    expect(find.byType(SmartOpenerConnectingPage), findsOneWidget);
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Confirm'));
+    await tester.pumpAndSettle();
+    expect(find.text('SCAN RESULTS'), findsOneWidget);
+  });
+
+  testWidgets('configure success opens success page and actions return home', (
+    tester,
+  ) async {
+    await _openChooseWifi(tester, scanDuration: scanDuration);
+
+    await tester.tap(find.text('FLINX Office'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'password123');
+    await _scrollToAction(tester, 'NEXT');
+    await _tapAction(tester, 'NEXT');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Connection successful'), findsOneWidget);
+    await tester.tap(find.widgetWithText(FilledButton, 'Try it'));
+    await tester.pumpAndSettle();
+    expect(find.byType(HomePage), findsOneWidget);
+  });
+
+  testWidgets('connecting page fits a normal phone viewport', (tester) async {
+    await _openChooseWifi(
+      tester,
+      gateway: _PendingWifiHardwareGateway(),
+      scanDuration: scanDuration,
+      viewSize: const Size(393, 852),
+    );
+
+    await tester.tap(find.text('FLINX Office'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'password123');
+    await _scrollToAction(tester, 'NEXT');
+    await _tapAction(tester, 'NEXT');
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+
+    expect(find.byType(SmartOpenerConnectingPage), findsOneWidget);
+  });
+
+  testWidgets('success page fits a normal phone viewport', (tester) async {
+    await _pumpScanFlowTestApp(
+      tester,
+      SmartOpenerConnectionSuccessPage.routePath,
+      viewSize: const Size(393, 852),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Connection successful'), findsOneWidget);
+    await _scrollToAction(tester, 'Try it');
+    expect(find.text('Try it'), findsOneWidget);
+  });
+}
+
+Future<void> _openScanResults(
+  WidgetTester tester, {
+  MockHardwareGateway? gateway,
+  Duration scanDuration = const Duration(milliseconds: 20),
+  Size viewSize = const Size(393, 1200),
+}) async {
+  await _pumpScanFlowTestApp(
+    tester,
+    SmartOpenerBleScanPage.routePath,
+    gateway: gateway,
+    scanDuration: scanDuration,
+    viewSize: viewSize,
+  );
+  await tester.pump();
+  await tester.pump(scanDuration);
+  await tester.pump();
+  expect(find.text('SCAN RESULTS'), findsOneWidget);
+}
+
+Future<void> _scrollToAction(WidgetTester tester, String label) async {
+  final textFinder = find.text(label);
+  if (textFinder.evaluate().isEmpty) {
+    await tester.drag(find.byType(Scrollable).last, const Offset(0, -500));
+    await tester.pump();
+  }
+  await tester.ensureVisible(textFinder.last);
+  await tester.pump();
+}
+
+Future<void> _tapAction(WidgetTester tester, String label) async {
+  final button = find.ancestor(
+    of: find.text(label),
+    matching: find.byType(FilledButton),
+  );
+  await tester.tap(button.last);
+}
+
+Future<void> _pumpScanFlowTestApp(
+  WidgetTester tester,
+  String initialLocation, {
+  MockHardwareGateway? gateway,
+  Duration scanDuration = const Duration(seconds: 30),
+  Size viewSize = const Size(393, 1200),
+}) async {
+  tester.view.physicalSize = viewSize;
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+  await tester.pumpWidget(
+    _scanFlowTestApp(
+      initialLocation,
+      gateway: gateway,
+      scanDuration: scanDuration,
+    ),
+  );
+}
+
+Future<void> _openChooseWifi(
+  WidgetTester tester, {
+  MockHardwareGateway? gateway,
+  Duration scanDuration = const Duration(milliseconds: 20),
+  Size viewSize = const Size(393, 1200),
+}) async {
+  await _openScanResults(
+    tester,
+    gateway: gateway,
+    scanDuration: scanDuration,
+    viewSize: viewSize,
+  );
+  await tester.tap(find.widgetWithText(FilledButton, '+ Add'));
+  await tester.pump();
+  await tester.pumpAndSettle();
+  expect(find.text('CHOOSE WIFI'), findsOneWidget);
+}
+
+Widget _scanFlowTestApp(
+  String initialLocation, {
+  MockHardwareGateway? gateway,
+  Duration scanDuration = const Duration(seconds: 30),
+}) {
+  final router = GoRouter(
+    initialLocation: initialLocation,
+    routes: [
+      GoRoute(
+        path: HomePage.routePath,
+        builder: (context, state) => const HomePage(),
+      ),
+      GoRoute(
+        path: AddDevicePage.routePath,
+        builder: (context, state) => const AddDevicePage(),
+      ),
+      GoRoute(
+        path: SmartOpenerScanGuidePage.routePath,
+        builder: (context, state) => const SmartOpenerScanGuidePage(),
+      ),
+      GoRoute(
+        path: SmartOpenerQrScanPage.routePath,
+        builder: (context, state) =>
+            const SmartOpenerQrScanPage(enableCamera: false),
+      ),
+      GoRoute(
+        path: SmartOpenerBleScanPage.routePath,
+        builder: (context, state) =>
+            SmartOpenerBleScanPage(scanDuration: scanDuration),
+      ),
+      GoRoute(
+        path: SmartOpenerScanResultsPage.routePath,
+        builder: (context, state) => const SmartOpenerScanResultsPage(),
+      ),
+      GoRoute(
+        path: SmartOpenerDeviceNotFoundPage.routePath,
+        builder: (context, state) => const SmartOpenerDeviceNotFoundPage(),
+      ),
+      GoRoute(
+        path: SmartOpenerChooseWifiPage.routePath,
+        builder: (context, state) => const SmartOpenerChooseWifiPage(),
+      ),
+      GoRoute(
+        path: SmartOpenerConnectingPage.routePath,
+        builder: (context, state) => SmartOpenerConnectingPage(
+          isWifiSkipped: state.uri.queryParameters['skipWifi'] == 'true',
+        ),
+      ),
+      GoRoute(
+        path: SmartOpenerConnectionSuccessPage.routePath,
+        builder: (context, state) => const SmartOpenerConnectionSuccessPage(),
+      ),
+    ],
+  );
+
+  return ProviderScope(
+    overrides: [
+      addDeviceHardwareGatewayProvider.overrideWithValue(
+        gateway ?? MockHardwareGateway(),
+      ),
+    ],
+    child: MaterialApp.router(
+      theme: AppTheme.light(),
+      routerConfig: router,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+    ),
+  );
+}
+
+class _NoDeviceHardwareGateway extends MockHardwareGateway {
+  @override
+  Future<void> startBleScan({
+    required String requestId,
+    BleScanFilter filter = const BleScanFilter(),
+  }) async {}
+}
+
+class _FailingWifiHardwareGateway extends MockHardwareGateway {
+  @override
+  Future<WifiProvisionResult> configureWifi({
+    required String requestId,
+    required String deviceId,
+    required String ssid,
+    required String password,
+  }) async {
+    return WifiProvisionResult(
+      requestId: requestId,
+      deviceId: deviceId,
+      ssid: ssid,
+      success: false,
+      nativeCode: 'test_wifi_failure',
+    );
+  }
+}
+
+class _PendingWifiHardwareGateway extends MockHardwareGateway {
+  final Completer<WifiProvisionResult> _completer =
+      Completer<WifiProvisionResult>();
+
+  @override
+  Future<WifiProvisionResult> configureWifi({
+    required String requestId,
+    required String deviceId,
+    required String ssid,
+    required String password,
+  }) {
+    return _completer.future;
+  }
+}

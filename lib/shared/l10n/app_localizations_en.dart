@@ -476,6 +476,171 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addDeviceCamera => 'Camera';
 
   @override
+  String get smartOpenerScanTitle => 'Scan';
+
+  @override
+  String get smartOpenerScanDescription =>
+      'Scan the QR code inside the package with your smart phone.';
+
+  @override
+  String get smartOpenerScanAction => 'Scan';
+
+  @override
+  String get smartOpenerScannerManualAction =>
+      'No QR code available? Add manually';
+
+  @override
+  String get smartOpenerScannerGalleryAction => 'Gallery';
+
+  @override
+  String get smartOpenerScannerFlashlightAction => 'Flashlight';
+
+  @override
+  String get smartOpenerScannerBackTooltip => 'Back';
+
+  @override
+  String get smartOpenerScannerBluetoothTooltip => 'Scan Bluetooth devices';
+
+  @override
+  String get smartOpenerScannerPermissionError =>
+      'Camera permission is required to scan the QR code.';
+
+  @override
+  String get smartOpenerScannerUnknownError => 'Unable to start the scanner.';
+
+  @override
+  String get smartOpenerScannerNoCodeFound =>
+      'No QR code found in the selected image.';
+
+  @override
+  String get smartOpenerScannerImageFailed =>
+      'Unable to read the selected image.';
+
+  @override
+  String get smartOpenerQrPayloadReceived =>
+      'QR code received. Continue by connecting the device.';
+
+  @override
+  String get smartOpenerBleScanningTitle => 'Scanning';
+
+  @override
+  String get smartOpenerBleScanningDescription => 'Be sure to operate on site!';
+
+  @override
+  String get smartOpenerBleScanningStatus =>
+      'Scanning the device, please wait...';
+
+  @override
+  String get smartOpenerScanResultsTitle => 'SCAN RESULTS';
+
+  @override
+  String smartOpenerScanResultsCount(int count) {
+    return 'Found $count Devices';
+  }
+
+  @override
+  String get smartOpenerAddAction => '+ Add';
+
+  @override
+  String get smartOpenerDefaultDeviceSubtitle => 'Default encoding door|54-89';
+
+  @override
+  String get smartOpenerDeviceNotFoundTitle => 'Device not found';
+
+  @override
+  String get smartOpenerDeviceNotFoundDescription =>
+      'No nearby device is detected. Please confirm the device has been reset successfully and try scanning again!';
+
+  @override
+  String get smartOpenerRescanAction => 'Rescan';
+
+  @override
+  String get smartOpenerBackHomeAction => 'Back to home';
+
+  @override
+  String get smartOpenerChooseWifiTitle => 'CHOOSE WIFI';
+
+  @override
+  String get smartOpenerChooseWifiDescription =>
+      'Device only supports a 2.4GHZ Wi-Fi connection';
+
+  @override
+  String get smartOpenerSelectWifiPlaceholder => 'Select Wi-Fi';
+
+  @override
+  String get smartOpenerWifiPasswordPlaceholder => 'Enter the Wi-Fi password';
+
+  @override
+  String get smartOpenerWifiPasswordHint =>
+      'Wi-Fi password error is one of the most common reasons for failure. Please check your Wi-Fi password carefully';
+
+  @override
+  String get smartOpenerEnableBluetoothTip =>
+      'Enable Bluetooth before submission';
+
+  @override
+  String get smartOpenerNextAction => 'NEXT';
+
+  @override
+  String get smartOpenerSkipAction => 'Skip';
+
+  @override
+  String get smartOpenerSkipTip =>
+      'Only use Bluetooth mode to operate, skip Wifi distribution network';
+
+  @override
+  String get smartOpenerSelectWifiTitle => 'Select Wi-Fi';
+
+  @override
+  String get smartOpenerConnectingTitle => 'Connecting';
+
+  @override
+  String get smartOpenerConnectingTip =>
+      'Keep your phone as close to the device as possible';
+
+  @override
+  String get smartOpenerConnectionFailedMessage =>
+      'Connection failed. Please check Wi-Fi password and try again.';
+
+  @override
+  String get smartOpenerOkAction => 'OK';
+
+  @override
+  String get smartOpenerStopAdditionTitle => 'STOP DEVICE ADDITION';
+
+  @override
+  String get smartOpenerStopAdditionDescription =>
+      'The device is being added. The WIFI module needs to be reset before add it again after termination.';
+
+  @override
+  String get smartOpenerCancelAction => 'Cancel';
+
+  @override
+  String get smartOpenerConfirmAction => 'Confirm';
+
+  @override
+  String get smartOpenerConnectionSuccessTitle => 'Connection successful';
+
+  @override
+  String get smartOpenerConnectionSuccessDescription =>
+      'configure the device information';
+
+  @override
+  String get smartOpenerDeviceNamePlaceholder => 'Device Name';
+
+  @override
+  String get smartOpenerSelectScenePlaceholder => 'Select scene';
+
+  @override
+  String get smartOpenerInviteFamilyTip => 'Invite the family to use it';
+
+  @override
+  String get smartOpenerShareAction => 'To share';
+
+  @override
+  String get smartOpenerTryAction => 'Try it';
+
+  @override
   String get chooseSceneTitle => 'CHOOSE A SCENE';
 
   @override

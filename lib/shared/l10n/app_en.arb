@@ -620,6 +620,110 @@
   "@addDeviceCamera": {
     "description": "Camera option on the add device page"
   },
+  "smartOpenerScanTitle": "Scan",
+  "@smartOpenerScanTitle": {
+    "description": "Smart Opener package QR scan guide title"
+  },
+  "smartOpenerScanDescription": "Scan the QR code inside the package with your smart phone.",
+  "@smartOpenerScanDescription": {
+    "description": "Smart Opener package QR scan guide description"
+  },
+  "smartOpenerScanAction": "Scan",
+  "@smartOpenerScanAction": {
+    "description": "Smart Opener scan guide primary action"
+  },
+  "smartOpenerScannerManualAction": "No QR code available? Add manually",
+  "@smartOpenerScannerManualAction": {
+    "description": "Manual add action on the QR scanner page"
+  },
+  "smartOpenerScannerGalleryAction": "Gallery",
+  "@smartOpenerScannerGalleryAction": {
+    "description": "Gallery action on the QR scanner page"
+  },
+  "smartOpenerScannerFlashlightAction": "Flashlight",
+  "@smartOpenerScannerFlashlightAction": {
+    "description": "Flashlight action on the QR scanner page"
+  },
+  "smartOpenerScannerBackTooltip": "Back",
+  "@smartOpenerScannerBackTooltip": {
+    "description": "Back tooltip on Smart Opener scanner pages"
+  },
+  "smartOpenerScannerBluetoothTooltip": "Scan Bluetooth devices",
+  "@smartOpenerScannerBluetoothTooltip": {
+    "description": "Bluetooth scan shortcut tooltip on the QR scanner page"
+  },
+  "smartOpenerScannerPermissionError": "Camera permission is required to scan the QR code.",
+  "@smartOpenerScannerPermissionError": {
+    "description": "Camera permission error on QR scanner page"
+  },
+  "smartOpenerScannerUnknownError": "Unable to start the scanner.",
+  "@smartOpenerScannerUnknownError": {
+    "description": "Generic scanner error on QR scanner page"
+  },
+  "smartOpenerScannerNoCodeFound": "No QR code found in the selected image.",
+  "@smartOpenerScannerNoCodeFound": {
+    "description": "Gallery image no QR code message"
+  },
+  "smartOpenerScannerImageFailed": "Unable to read the selected image.",
+  "@smartOpenerScannerImageFailed": {
+    "description": "Gallery image scan failure message"
+  },
+  "smartOpenerQrPayloadReceived": "QR code received. Continue by connecting the device.",
+  "@smartOpenerQrPayloadReceived": {
+    "description": "Wi-Fi page message when a QR payload is handed off"
+  },
+  "smartOpenerBleScanningTitle": "Scanning",
+  "@smartOpenerBleScanningTitle": {
+    "description": "Bluetooth scanning page title"
+  },
+  "smartOpenerBleScanningDescription": "Be sure to operate on site!",
+  "@smartOpenerBleScanningDescription": {
+    "description": "Bluetooth scanning page description"
+  },
+  "smartOpenerBleScanningStatus": "Scanning the device, please wait...",
+  "@smartOpenerBleScanningStatus": {
+    "description": "Bluetooth scanning page status"
+  },
+  "smartOpenerScanResultsTitle": "SCAN RESULTS",
+  "smartOpenerScanResultsCount": "Found {count} Devices",
+  "@smartOpenerScanResultsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "smartOpenerAddAction": "+ Add",
+  "smartOpenerDefaultDeviceSubtitle": "Default encoding door|54-89",
+  "smartOpenerDeviceNotFoundTitle": "Device not found",
+  "smartOpenerDeviceNotFoundDescription": "No nearby device is detected. Please confirm the device has been reset successfully and try scanning again!",
+  "smartOpenerRescanAction": "Rescan",
+  "smartOpenerBackHomeAction": "Back to home",
+  "smartOpenerChooseWifiTitle": "CHOOSE WIFI",
+  "smartOpenerChooseWifiDescription": "Device only supports a 2.4GHZ Wi-Fi connection",
+  "smartOpenerSelectWifiPlaceholder": "Select Wi-Fi",
+  "smartOpenerWifiPasswordPlaceholder": "Enter the Wi-Fi password",
+  "smartOpenerWifiPasswordHint": "Wi-Fi password error is one of the most common reasons for failure. Please check your Wi-Fi password carefully",
+  "smartOpenerEnableBluetoothTip": "Enable Bluetooth before submission",
+  "smartOpenerNextAction": "NEXT",
+  "smartOpenerSkipAction": "Skip",
+  "smartOpenerSkipTip": "Only use Bluetooth mode to operate, skip Wifi distribution network",
+  "smartOpenerSelectWifiTitle": "Select Wi-Fi",
+  "smartOpenerConnectingTitle": "Connecting",
+  "smartOpenerConnectingTip": "Keep your phone as close to the device as possible",
+  "smartOpenerConnectionFailedMessage": "Connection failed. Please check Wi-Fi password and try again.",
+  "smartOpenerOkAction": "OK",
+  "smartOpenerStopAdditionTitle": "STOP DEVICE ADDITION",
+  "smartOpenerStopAdditionDescription": "The device is being added. The WIFI module needs to be reset before add it again after termination.",
+  "smartOpenerCancelAction": "Cancel",
+  "smartOpenerConfirmAction": "Confirm",
+  "smartOpenerConnectionSuccessTitle": "Connection successful",
+  "smartOpenerConnectionSuccessDescription": "configure the device information",
+  "smartOpenerDeviceNamePlaceholder": "Device Name",
+  "smartOpenerSelectScenePlaceholder": "Select scene",
+  "smartOpenerInviteFamilyTip": "Invite the family to use it",
+  "smartOpenerShareAction": "To share",
+  "smartOpenerTryAction": "Try it",
   "chooseSceneTitle": "CHOOSE A SCENE",
   "@chooseSceneTitle": {
     "description": "Choose scene page title"

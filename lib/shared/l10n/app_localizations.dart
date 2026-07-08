@@ -980,6 +980,300 @@ abstract class AppLocalizations {
   /// **'Camera'**
   String get addDeviceCamera;
 
+  /// Smart Opener package QR scan guide title
+  ///
+  /// In en, this message translates to:
+  /// **'Scan'**
+  String get smartOpenerScanTitle;
+
+  /// Smart Opener package QR scan guide description
+  ///
+  /// In en, this message translates to:
+  /// **'Scan the QR code inside the package with your smart phone.'**
+  String get smartOpenerScanDescription;
+
+  /// Smart Opener scan guide primary action
+  ///
+  /// In en, this message translates to:
+  /// **'Scan'**
+  String get smartOpenerScanAction;
+
+  /// Manual add action on the QR scanner page
+  ///
+  /// In en, this message translates to:
+  /// **'No QR code available? Add manually'**
+  String get smartOpenerScannerManualAction;
+
+  /// Gallery action on the QR scanner page
+  ///
+  /// In en, this message translates to:
+  /// **'Gallery'**
+  String get smartOpenerScannerGalleryAction;
+
+  /// Flashlight action on the QR scanner page
+  ///
+  /// In en, this message translates to:
+  /// **'Flashlight'**
+  String get smartOpenerScannerFlashlightAction;
+
+  /// Back tooltip on Smart Opener scanner pages
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get smartOpenerScannerBackTooltip;
+
+  /// Bluetooth scan shortcut tooltip on the QR scanner page
+  ///
+  /// In en, this message translates to:
+  /// **'Scan Bluetooth devices'**
+  String get smartOpenerScannerBluetoothTooltip;
+
+  /// Camera permission error on QR scanner page
+  ///
+  /// In en, this message translates to:
+  /// **'Camera permission is required to scan the QR code.'**
+  String get smartOpenerScannerPermissionError;
+
+  /// Generic scanner error on QR scanner page
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to start the scanner.'**
+  String get smartOpenerScannerUnknownError;
+
+  /// Gallery image no QR code message
+  ///
+  /// In en, this message translates to:
+  /// **'No QR code found in the selected image.'**
+  String get smartOpenerScannerNoCodeFound;
+
+  /// Gallery image scan failure message
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to read the selected image.'**
+  String get smartOpenerScannerImageFailed;
+
+  /// Wi-Fi page message when a QR payload is handed off
+  ///
+  /// In en, this message translates to:
+  /// **'QR code received. Continue by connecting the device.'**
+  String get smartOpenerQrPayloadReceived;
+
+  /// Bluetooth scanning page title
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning'**
+  String get smartOpenerBleScanningTitle;
+
+  /// Bluetooth scanning page description
+  ///
+  /// In en, this message translates to:
+  /// **'Be sure to operate on site!'**
+  String get smartOpenerBleScanningDescription;
+
+  /// Bluetooth scanning page status
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning the device, please wait...'**
+  String get smartOpenerBleScanningStatus;
+
+  /// No description provided for @smartOpenerScanResultsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'SCAN RESULTS'**
+  String get smartOpenerScanResultsTitle;
+
+  /// No description provided for @smartOpenerScanResultsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Found {count} Devices'**
+  String smartOpenerScanResultsCount(int count);
+
+  /// No description provided for @smartOpenerAddAction.
+  ///
+  /// In en, this message translates to:
+  /// **'+ Add'**
+  String get smartOpenerAddAction;
+
+  /// No description provided for @smartOpenerDefaultDeviceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Default encoding door|54-89'**
+  String get smartOpenerDefaultDeviceSubtitle;
+
+  /// No description provided for @smartOpenerDeviceNotFoundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Device not found'**
+  String get smartOpenerDeviceNotFoundTitle;
+
+  /// No description provided for @smartOpenerDeviceNotFoundDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'No nearby device is detected. Please confirm the device has been reset successfully and try scanning again!'**
+  String get smartOpenerDeviceNotFoundDescription;
+
+  /// No description provided for @smartOpenerRescanAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Rescan'**
+  String get smartOpenerRescanAction;
+
+  /// No description provided for @smartOpenerBackHomeAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to home'**
+  String get smartOpenerBackHomeAction;
+
+  /// No description provided for @smartOpenerChooseWifiTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'CHOOSE WIFI'**
+  String get smartOpenerChooseWifiTitle;
+
+  /// No description provided for @smartOpenerChooseWifiDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Device only supports a 2.4GHZ Wi-Fi connection'**
+  String get smartOpenerChooseWifiDescription;
+
+  /// No description provided for @smartOpenerSelectWifiPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Wi-Fi'**
+  String get smartOpenerSelectWifiPlaceholder;
+
+  /// No description provided for @smartOpenerWifiPasswordPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the Wi-Fi password'**
+  String get smartOpenerWifiPasswordPlaceholder;
+
+  /// No description provided for @smartOpenerWifiPasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Wi-Fi password error is one of the most common reasons for failure. Please check your Wi-Fi password carefully'**
+  String get smartOpenerWifiPasswordHint;
+
+  /// No description provided for @smartOpenerEnableBluetoothTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Bluetooth before submission'**
+  String get smartOpenerEnableBluetoothTip;
+
+  /// No description provided for @smartOpenerNextAction.
+  ///
+  /// In en, this message translates to:
+  /// **'NEXT'**
+  String get smartOpenerNextAction;
+
+  /// No description provided for @smartOpenerSkipAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get smartOpenerSkipAction;
+
+  /// No description provided for @smartOpenerSkipTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Only use Bluetooth mode to operate, skip Wifi distribution network'**
+  String get smartOpenerSkipTip;
+
+  /// No description provided for @smartOpenerSelectWifiTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Wi-Fi'**
+  String get smartOpenerSelectWifiTitle;
+
+  /// No description provided for @smartOpenerConnectingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting'**
+  String get smartOpenerConnectingTitle;
+
+  /// No description provided for @smartOpenerConnectingTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep your phone as close to the device as possible'**
+  String get smartOpenerConnectingTip;
+
+  /// No description provided for @smartOpenerConnectionFailedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection failed. Please check Wi-Fi password and try again.'**
+  String get smartOpenerConnectionFailedMessage;
+
+  /// No description provided for @smartOpenerOkAction.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get smartOpenerOkAction;
+
+  /// No description provided for @smartOpenerStopAdditionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'STOP DEVICE ADDITION'**
+  String get smartOpenerStopAdditionTitle;
+
+  /// No description provided for @smartOpenerStopAdditionDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The device is being added. The WIFI module needs to be reset before add it again after termination.'**
+  String get smartOpenerStopAdditionDescription;
+
+  /// No description provided for @smartOpenerCancelAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get smartOpenerCancelAction;
+
+  /// No description provided for @smartOpenerConfirmAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get smartOpenerConfirmAction;
+
+  /// No description provided for @smartOpenerConnectionSuccessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection successful'**
+  String get smartOpenerConnectionSuccessTitle;
+
+  /// No description provided for @smartOpenerConnectionSuccessDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'configure the device information'**
+  String get smartOpenerConnectionSuccessDescription;
+
+  /// No description provided for @smartOpenerDeviceNamePlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Device Name'**
+  String get smartOpenerDeviceNamePlaceholder;
+
+  /// No description provided for @smartOpenerSelectScenePlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Select scene'**
+  String get smartOpenerSelectScenePlaceholder;
+
+  /// No description provided for @smartOpenerInviteFamilyTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite the family to use it'**
+  String get smartOpenerInviteFamilyTip;
+
+  /// No description provided for @smartOpenerShareAction.
+  ///
+  /// In en, this message translates to:
+  /// **'To share'**
+  String get smartOpenerShareAction;
+
+  /// No description provided for @smartOpenerTryAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Try it'**
+  String get smartOpenerTryAction;
+
   /// Choose scene page title
   ///
   /// In en, this message translates to:
