@@ -51,7 +51,10 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
           isBusy: isBusy,
           textTheme: textTheme,
         ),
-        SecurityCenterPage(onTabSelected: _selectTab),
+        SecurityCenterPage(
+          deviceId: widget.deviceId,
+          onTabSelected: _selectTab,
+        ),
       ],
     );
   }

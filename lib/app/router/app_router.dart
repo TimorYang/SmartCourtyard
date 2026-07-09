@@ -31,6 +31,9 @@ import '../../features/hardware_debug/presentation/pages/ble_debug_page.dart';
 import '../../features/home/presentation/pages/choose_scene_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/home/presentation/pages/scene_page.dart';
+import '../../features/security_center/presentation/pages/full_report_page.dart';
+import '../../features/security_center/presentation/pages/general_evaluation_page.dart';
+import '../../features/security_center/presentation/pages/safety_sensors_evaluation_page.dart';
 import '../../shared/webview/app_web_view_page.dart';
 import '../config/app_links.dart';
 
@@ -218,6 +221,27 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: DeviceCommandPage.routePath,
         name: DeviceCommandPage.routeName,
         builder: (context, state) => DeviceCommandPage(
+          deviceId: state.uri.queryParameters['deviceId'] ?? '',
+        ),
+      ),
+      GoRoute(
+        path: FullReportPage.routePath,
+        name: FullReportPage.routeName,
+        builder: (context, state) => FullReportPage(
+          deviceId: state.uri.queryParameters['deviceId'] ?? '',
+        ),
+      ),
+      GoRoute(
+        path: GeneralEvaluationPage.routePath,
+        name: GeneralEvaluationPage.routeName,
+        builder: (context, state) => GeneralEvaluationPage(
+          deviceId: state.uri.queryParameters['deviceId'] ?? '',
+        ),
+      ),
+      GoRoute(
+        path: SafetySensorsEvaluationPage.routePath,
+        name: SafetySensorsEvaluationPage.routeName,
+        builder: (context, state) => SafetySensorsEvaluationPage(
           deviceId: state.uri.queryParameters['deviceId'] ?? '',
         ),
       ),

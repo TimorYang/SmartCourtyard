@@ -1,15 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../../device_control/presentation/widgets/device_detail_bottom_navigation.dart';
+import 'full_report_page.dart';
+import 'general_evaluation_page.dart';
+import 'safety_sensors_evaluation_page.dart';
 
 class SecurityCenterPage extends StatelessWidget {
-  const SecurityCenterPage({required this.onTabSelected, super.key});
+  const SecurityCenterPage({
+    required this.deviceId,
+    required this.onTabSelected,
+    super.key,
+  });
 
   static const _heroAsset =
       'assets/icons/security_center/security_center_protecting_hero.png';
 
+  final String deviceId;
   final ValueChanged<DeviceDetailTab> onTabSelected;
 
   @override
@@ -54,7 +63,10 @@ class SecurityCenterPage extends StatelessWidget {
                         style: AppTextTokens.securityCenterHeroTitle(textTheme),
                       ),
                       TextButton.icon(
-                        onPressed: () {},
+                        onPressed: () => context.pushNamed(
+                          FullReportPage.routeName,
+                          queryParameters: {'deviceId': deviceId},
+                        ),
                         style: TextButton.styleFrom(
                           padding: EdgeInsets.zero,
                           foregroundColor: AppColors.securityCenterLink,
@@ -75,12 +87,22 @@ class SecurityCenterPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 55),
-          const _EvaluationCard(
+          _EvaluationCard(
             title: 'General Evaluation',
             tags: ['Door Operation Status', 'Door operation record'],
+            onTap: () => context.pushNamed(
+              GeneralEvaluationPage.routeName,
+              queryParameters: {'deviceId': deviceId},
+            ),
           ),
           const SizedBox(height: 22),
-          _SensorEvaluationCard(textTheme: textTheme),
+          _SensorEvaluationCard(
+            textTheme: textTheme,
+            onTap: () => context.pushNamed(
+              SafetySensorsEvaluationPage.routeName,
+              queryParameters: {'deviceId': deviceId},
+            ),
+          ),
         ],
       ),
     );
@@ -123,60 +145,65 @@ class _SecurityHeroFallback extends StatelessWidget {
 }
 
 class _EvaluationCard extends StatelessWidget {
-  const _EvaluationCard({required this.title, required this.tags});
+  const _EvaluationCard({required this.title, required this.tags, this.onTap});
 
   final String title;
   final List<String> tags;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppColors.securityCenterCard,
+    return Material(
+      color: AppColors.securityCenterCard,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        splashFactory: NoSplash.splashFactory,
+        highlightColor: Colors.transparent,
         borderRadius: BorderRadius.circular(14),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(11, 18, 11, 18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    style: AppTextTokens.securityCenterCardTitle(textTheme),
-                  ),
-                ),
-                const Icon(
-                  Icons.check_circle,
-                  color: AppColors.securityCenterSuccess,
-                  size: 14,
-                ),
-              ],
-            ),
-            const SizedBox(height: 18),
-            Row(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        for (var index = 0; index < tags.length; index++) ...[
-                          if (index > 0) const SizedBox(width: 8),
-                          _EvaluationTag(label: tags[index]),
-                        ],
-                      ],
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(11, 18, 11, 18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: AppTextTokens.securityCenterCardTitle(textTheme),
                     ),
                   ),
-                ),
-                const Icon(Icons.chevron_right, size: 34),
-              ],
-            ),
-          ],
+                  const Icon(
+                    Icons.check_circle,
+                    color: AppColors.securityCenterSuccess,
+                    size: 14,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          for (var index = 0; index < tags.length; index++) ...[
+                            if (index > 0) const SizedBox(width: 8),
+                            _EvaluationTag(label: tags[index]),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right, size: 34),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -207,9 +234,10 @@ class _EvaluationTag extends StatelessWidget {
 }
 
 class _SensorEvaluationCard extends StatelessWidget {
-  const _SensorEvaluationCard({required this.textTheme});
+  const _SensorEvaluationCard({required this.textTheme, required this.onTap});
 
   final TextTheme textTheme;
+  final VoidCallback onTap;
 
   static const sensors = <_SensorItem>[
     _SensorItem(Icons.door_sliding_outlined, 'Photo beam'),
@@ -221,78 +249,83 @@ class _SensorEvaluationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppColors.securityCenterCard,
+    return Material(
+      key: const ValueKey<String>('safety-sensors-evaluation-card'),
+      color: AppColors.securityCenterCard,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        splashFactory: NoSplash.splashFactory,
+        highlightColor: Colors.transparent,
         borderRadius: BorderRadius.circular(14),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(18, 18, 18, 0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Safety Sensors Evaluation',
-                    style: AppTextTokens.securityCenterCardTitle(textTheme),
-                  ),
-                ),
-                const Icon(
-                  Icons.check_circle,
-                  color: AppColors.securityCenterSuccess,
-                  size: 14,
-                ),
-              ],
-            ),
-            const SizedBox(height: 11),
-            const SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
-                  _EvaluationTag(label: 'Wireless Photo Beam'),
-                  SizedBox(width: 8),
-                  _EvaluationTag(label: 'Wireless E-lock'),
+                  Expanded(
+                    child: Text(
+                      'Safety Sensors Evaluation',
+                      style: AppTextTokens.securityCenterCardTitle(textTheme),
+                    ),
+                  ),
+                  const Icon(
+                    Icons.check_circle,
+                    color: AppColors.securityCenterSuccess,
+                    size: 14,
+                  ),
                 ],
               ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Wireless Sensors',
-              style: AppTextTokens.securityCenterSectionTitle(textTheme),
-            ),
-            const SizedBox(height: 18),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: sensors.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 12,
-                childAspectRatio: 0.72,
+              const SizedBox(height: 11),
+              const SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _EvaluationTag(label: 'Wireless Photo Beam'),
+                    SizedBox(width: 8),
+                    _EvaluationTag(label: 'Wireless E-lock'),
+                  ],
+                ),
               ),
-              itemBuilder: (context, index) =>
-                  _SensorTile(sensor: sensors[index]),
-            ),
-            Text(
-              'Wired Sensors',
-              style: AppTextTokens.securityCenterSectionTitle(textTheme),
-            ),
-            const SizedBox(height: 18),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: 1,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 12,
-                childAspectRatio: 0.82,
+              const SizedBox(height: 20),
+              Text(
+                'Wireless Sensors',
+                style: AppTextTokens.securityCenterSectionTitle(textTheme),
               ),
-              itemBuilder: (context, index) =>
-                  _SensorTile(sensor: sensors[index]),
-            ),
-          ],
+              const SizedBox(height: 18),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: sensors.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 0.65,
+                ),
+                itemBuilder: (context, index) =>
+                    _SensorTile(sensor: sensors[index]),
+              ),
+              Text(
+                'Wired Sensors',
+                style: AppTextTokens.securityCenterSectionTitle(textTheme),
+              ),
+              const SizedBox(height: 18),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: 1,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 0.68,
+                ),
+                itemBuilder: (context, index) =>
+                    _SensorTile(sensor: sensors[index]),
+              ),
+            ],
+          ),
         ),
       ),
     );

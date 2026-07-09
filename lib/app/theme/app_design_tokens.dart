@@ -52,6 +52,24 @@ class AppColors {
   static const securityCenterShield = Color(0xFF0878ED);
   static const securityCenterSensorSurface = Color(0xFFE9EBEE);
   static const securityCenterSensorIcon = Color(0xFF60646A);
+  static const securityReportHeroBlue = Color(0xFF2478F5);
+  static const securityReportHeroFade = Color(0xFFDCE9FF);
+  static const securityReportWarning = Color(0xFFFF9800);
+  static const securityReportSegmentTrack = Color(0xFFF0F2F5);
+  static const securityReportSegmentSelected = Color(0xFF0878ED);
+  static const securityReportDivider = Color(0xFFE3E5E8);
+  static const securityReportChartGrid = Color(0xFFB7BCC2);
+  static const securityReportChartBar = Color(0xFFFF9800);
+  static const securityReportNormal = Color(0xFF19C966);
+  static const securityReportDisconnected = Color(0xFFFF9800);
+  static const securityReportAbnormal = Color(0xFFE52323);
+  static const securityReportSuggestion = Color(0xFFFF2028);
+  static const securityReportActionSurface = Color(0xFFE0E0E0);
+  static const safetySensorMetricIcon = Color(0xFF0878ED);
+  static const safetySensorItemSurface = Color(0xFFF5F7FB);
+  static const safetySensorDisconnected = Color(0xFFB1B4BA);
+  static const safetySensorAction = Color(0xFF0878ED);
+  static const safetySensorPlaceholder = Color(0xFFD8DCE2);
   static const backgroundDarkTop = Color(0xFF0D1B30);
   static const backgroundDarkMiddle = Color(0xFF14253D);
   static const backgroundDarkBottom = Color(0xFF1B1D24);
@@ -630,6 +648,109 @@ class AppTextTokens {
     return (textTheme.labelLarge ?? const TextStyle()).copyWith(
       color: AppColors.textMuted,
       fontSize: 12,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle securityReportDeviceName(TextTheme textTheme) {
+    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
+      color: Colors.white,
+      fontSize: 22,
+      fontWeight: FontWeight.w700,
+    );
+  }
+
+  static TextStyle securityReportMetric(TextTheme textTheme) {
+    return (textTheme.headlineMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 24,
+      fontWeight: FontWeight.w700,
+    );
+  }
+
+  static TextStyle securityReportLabel(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 12,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle securityReportWarning(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.securityReportWarning,
+      fontSize: 13,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle securityReportBody(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 13,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle securityReportValue(TextTheme textTheme) {
+    return securityReportBody(
+      textTheme,
+    ).copyWith(color: AppColors.securityCenterLink);
+  }
+
+  static TextStyle securityReportSuggestion(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.securityReportSuggestion,
+      fontSize: 13,
+      fontWeight: FontWeight.w400,
+      height: 1.55,
+    );
+  }
+
+  static TextStyle securityReportAction(TextTheme textTheme) {
+    return (textTheme.labelLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 14,
+      fontWeight: FontWeight.w600,
+    );
+  }
+
+  static TextStyle safetySensorMetricLabel(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 13,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle safetySensorMetricValue(TextTheme textTheme) {
+    return (textTheme.headlineMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 28,
+      fontWeight: FontWeight.w600,
+    );
+  }
+
+  static TextStyle safetySensorItemTitle(TextTheme textTheme) {
+    return (textTheme.bodyLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 14,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle safetySensorItemStatus(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.safetySensorDisconnected,
+      fontSize: 13,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle safetySensorAction(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: Colors.white,
+      fontSize: 18,
       fontWeight: FontWeight.w400,
     );
   }
