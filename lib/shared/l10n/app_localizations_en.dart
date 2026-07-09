@@ -727,4 +727,84 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sceneNameConfirmAction => 'confirm';
+
+  @override
+  String get notificationTitle => 'Notification';
+
+  @override
+  String get notificationAllRead => 'All read';
+
+  @override
+  String get notificationAllReadMessage =>
+      'All notifications have been marked as read';
+
+  @override
+  String get notificationNotFound => 'Notification not found';
+
+  @override
+  String get notificationViewDetails => 'View details';
+
+  @override
+  String get notificationAppointmentAfterSales =>
+      'Appointment for after-sales service';
+
+  @override
+  String get notificationUpgrade => 'Upgrade';
+
+  @override
+  String get notificationAppointmentTime => 'Appointment time';
+
+  @override
+  String get notificationUpgradeComingSoon => 'Device upgrade is coming soon';
+
+  @override
+  String get afterSalesDetailsTitle => 'After sales service details';
+
+  @override
+  String get afterSalesAppointmentTitle =>
+      'Appointment for after-sales service';
+
+  @override
+  String get afterSalesProblemDescription => 'Problem description';
+
+  @override
+  String get afterSalesAppointmentTime => 'appointment time';
+
+  @override
+  String get afterSalesRemark => 'Remark';
+
+  @override
+  String get afterSalesPicture => 'Picture';
+
+  @override
+  String get afterSalesInstallerConfirm => 'Installation personnel confirm';
+
+  @override
+  String get afterSalesConfirmed => 'Confirmed';
+
+  @override
+  String get afterSalesFeedback => 'feedback';
+
+  @override
+  String get afterSalesContactInstaller => 'Contact the installer';
+
+  @override
+  String get afterSalesFeedbackSubmitted => 'Feedback submitted';
+
+  @override
+  String get afterSalesContactComingSoon => 'Installer contact is coming soon';
+
+  @override
+  String get afterSalesDescriptionHint =>
+      'Suggest including key information such as equipment model, fault symptoms, etc';
+
+  @override
+  String get afterSalesSubmitToEngineer => 'Submit to Engineer';
+
+  @override
+  String get afterSalesDescriptionRequired =>
+      'Please enter a problem description';
+
+  @override
+  String get afterSalesSubmitSuccess => 'Appointment submitted successfully';
 }

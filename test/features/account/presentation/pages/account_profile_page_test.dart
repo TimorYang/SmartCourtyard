@@ -1,6 +1,7 @@
 import 'package:flinx/app/theme/app_theme.dart';
 import 'package:flinx/features/account/presentation/pages/account_details_page.dart';
 import 'package:flinx/features/account/presentation/pages/account_profile_page.dart';
+import 'package:flinx/features/notification/presentation/pages/notification_list_page.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -107,6 +108,47 @@ void main() {
     expect(find.text('Change Password'), findsOneWidget);
     expect(find.text('Forgot password'), findsOneWidget);
     expect(find.text('Log out'), findsOneWidget);
+  });
+
+  testWidgets('opens notifications when tapping message', (tester) async {
+    final router = GoRouter(
+      initialLocation: AccountProfilePage.routePath,
+      routes: [
+        GoRoute(
+          path: AccountProfilePage.routePath,
+          name: AccountProfilePage.routeName,
+          builder: (context, state) => const AccountProfilePage(),
+        ),
+        GoRoute(
+          path: NotificationListPage.routePath,
+          name: NotificationListPage.routeName,
+          builder: (context, state) => const NotificationListPage(),
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp.router(
+          theme: AppTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          routerConfig: router,
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('message'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Notification'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('The device battery is low'),
+      250,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('The device battery is low'), findsOneWidget);
   });
 
   testWidgets('opens and dismisses account details avatar sheet', (

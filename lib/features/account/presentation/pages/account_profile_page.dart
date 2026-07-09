@@ -8,6 +8,7 @@ import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
 import '../../domain/entities/account_profile.dart';
 import 'account_details_page.dart';
+import '../../../notification/presentation/pages/notification_list_page.dart';
 
 class AccountProfileAssetPaths {
   const AccountProfileAssetPaths._();
@@ -94,7 +95,11 @@ class _AccountProfileContent extends StatelessWidget {
         trailingText: '2',
         icon: Icons.subject_rounded,
       ),
-      _AccountMenuItem(label: l10n.accountMessage, icon: Icons.inbox_rounded),
+      _AccountMenuItem(
+        label: l10n.accountMessage,
+        icon: Icons.inbox_rounded,
+        onTap: () => context.pushNamed(NotificationListPage.routeName),
+      ),
       _AccountMenuItem(
         label: l10n.accountRegion,
         trailingText: profile?.country ?? l10n.accountDefaultRegion,
@@ -328,11 +333,13 @@ class _AccountMenuItem {
     required this.label,
     required this.icon,
     this.trailingText,
+    this.onTap,
   });
 
   final String label;
   final IconData icon;
   final String? trailingText;
+  final VoidCallback? onTap;
 }
 
 class _AccountMenuRow extends StatelessWidget {
@@ -349,13 +356,17 @@ class _AccountMenuRow extends StatelessWidget {
       button: true,
       label: item.label,
       child: InkWell(
-        onTap: () {
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(content: Text(l10n.accountMenuComingSoon(item.label))),
-            );
-        },
+        onTap:
+            item.onTap ??
+            () {
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(
+                  SnackBar(
+                    content: Text(l10n.accountMenuComingSoon(item.label)),
+                  ),
+                );
+            },
         child: SizedBox(
           height: 48,
           child: Row(

@@ -818,5 +818,105 @@
   "sceneNameConfirmAction": "confirm",
   "@sceneNameConfirmAction": {
     "description": "Confirm button label in the scene name dialog"
+  },
+  "notificationTitle": "Notification",
+  "@notificationTitle": {
+    "description": "Title for notification list and detail pages"
+  },
+  "notificationAllRead": "All read",
+  "@notificationAllRead": {
+    "description": "Action that marks all notifications as read"
+  },
+  "notificationAllReadMessage": "All notifications have been marked as read",
+  "@notificationAllReadMessage": {
+    "description": "Confirmation after marking all notifications as read"
+  },
+  "notificationNotFound": "Notification not found",
+  "@notificationNotFound": {
+    "description": "Message shown for an unknown notification identifier"
+  },
+  "notificationViewDetails": "View details",
+  "@notificationViewDetails": {
+    "description": "Notification action that opens after-sales details"
+  },
+  "notificationAppointmentAfterSales": "Appointment for after-sales service",
+  "@notificationAppointmentAfterSales": {
+    "description": "Notification action that starts an after-sales appointment"
+  },
+  "notificationUpgrade": "Upgrade",
+  "@notificationUpgrade": {
+    "description": "Notification action that starts a device upgrade"
+  },
+  "notificationAppointmentTime": "Appointment time",
+  "@notificationAppointmentTime": {
+    "description": "Appointment time label on notification details"
+  },
+  "notificationUpgradeComingSoon": "Device upgrade is coming soon",
+  "@notificationUpgradeComingSoon": {
+    "description": "Placeholder response for the upgrade action"
+  },
+  "afterSalesDetailsTitle": "After sales service details",
+  "@afterSalesDetailsTitle": {
+    "description": "Title of the completed after-sales service detail page"
+  },
+  "afterSalesAppointmentTitle": "Appointment for after-sales service",
+  "@afterSalesAppointmentTitle": {
+    "description": "Title of the after-sales appointment page"
+  },
+  "afterSalesProblemDescription": "Problem description",
+  "@afterSalesProblemDescription": {
+    "description": "Problem description field label"
+  },
+  "afterSalesAppointmentTime": "appointment time",
+  "@afterSalesAppointmentTime": {
+    "description": "Appointment date and time field label"
+  },
+  "afterSalesRemark": "Remark",
+  "@afterSalesRemark": {
+    "description": "Editable remark field label"
+  },
+  "afterSalesPicture": "Picture",
+  "@afterSalesPicture": {
+    "description": "After-sales picture field label"
+  },
+  "afterSalesInstallerConfirm": "Installation personnel confirm",
+  "@afterSalesInstallerConfirm": {
+    "description": "Installer confirmation section label"
+  },
+  "afterSalesConfirmed": "Confirmed",
+  "@afterSalesConfirmed": {
+    "description": "Confirmed after-sales status"
+  },
+  "afterSalesFeedback": "feedback",
+  "@afterSalesFeedback": {
+    "description": "After-sales feedback action"
+  },
+  "afterSalesContactInstaller": "Contact the installer",
+  "@afterSalesContactInstaller": {
+    "description": "Action to contact the assigned installer"
+  },
+  "afterSalesFeedbackSubmitted": "Feedback submitted",
+  "@afterSalesFeedbackSubmitted": {
+    "description": "Placeholder confirmation for feedback"
+  },
+  "afterSalesContactComingSoon": "Installer contact is coming soon",
+  "@afterSalesContactComingSoon": {
+    "description": "Placeholder response for installer contact"
+  },
+  "afterSalesDescriptionHint": "Suggest including key information such as equipment model, fault symptoms, etc",
+  "@afterSalesDescriptionHint": {
+    "description": "Hint below the appointment problem description"
+  },
+  "afterSalesSubmitToEngineer": "Submit to Engineer",
+  "@afterSalesSubmitToEngineer": {
+    "description": "Submit after-sales appointment button"
+  },
+  "afterSalesDescriptionRequired": "Please enter a problem description",
+  "@afterSalesDescriptionRequired": {
+    "description": "Validation message for an empty problem description"
+  },
+  "afterSalesSubmitSuccess": "Appointment submitted successfully",
+  "@afterSalesSubmitSuccess": {
+    "description": "Local confirmation after submitting an appointment"
   }
 }

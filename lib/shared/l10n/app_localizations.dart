@@ -1393,6 +1393,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'confirm'**
   String get sceneNameConfirmAction;
+
+  /// Title for notification list and detail pages
+  ///
+  /// In en, this message translates to:
+  /// **'Notification'**
+  String get notificationTitle;
+
+  /// Action that marks all notifications as read
+  ///
+  /// In en, this message translates to:
+  /// **'All read'**
+  String get notificationAllRead;
+
+  /// Confirmation after marking all notifications as read
+  ///
+  /// In en, this message translates to:
+  /// **'All notifications have been marked as read'**
+  String get notificationAllReadMessage;
+
+  /// Message shown for an unknown notification identifier
+  ///
+  /// In en, this message translates to:
+  /// **'Notification not found'**
+  String get notificationNotFound;
+
+  /// Notification action that opens after-sales details
+  ///
+  /// In en, this message translates to:
+  /// **'View details'**
+  String get notificationViewDetails;
+
+  /// Notification action that starts an after-sales appointment
+  ///
+  /// In en, this message translates to:
+  /// **'Appointment for after-sales service'**
+  String get notificationAppointmentAfterSales;
+
+  /// Notification action that starts a device upgrade
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade'**
+  String get notificationUpgrade;
+
+  /// Appointment time label on notification details
+  ///
+  /// In en, this message translates to:
+  /// **'Appointment time'**
+  String get notificationAppointmentTime;
+
+  /// Placeholder response for the upgrade action
+  ///
+  /// In en, this message translates to:
+  /// **'Device upgrade is coming soon'**
+  String get notificationUpgradeComingSoon;
+
+  /// Title of the completed after-sales service detail page
+  ///
+  /// In en, this message translates to:
+  /// **'After sales service details'**
+  String get afterSalesDetailsTitle;
+
+  /// Title of the after-sales appointment page
+  ///
+  /// In en, this message translates to:
+  /// **'Appointment for after-sales service'**
+  String get afterSalesAppointmentTitle;
+
+  /// Problem description field label
+  ///
+  /// In en, this message translates to:
+  /// **'Problem description'**
+  String get afterSalesProblemDescription;
+
+  /// Appointment date and time field label
+  ///
+  /// In en, this message translates to:
+  /// **'appointment time'**
+  String get afterSalesAppointmentTime;
+
+  /// Editable remark field label
+  ///
+  /// In en, this message translates to:
+  /// **'Remark'**
+  String get afterSalesRemark;
+
+  /// After-sales picture field label
+  ///
+  /// In en, this message translates to:
+  /// **'Picture'**
+  String get afterSalesPicture;
+
+  /// Installer confirmation section label
+  ///
+  /// In en, this message translates to:
+  /// **'Installation personnel confirm'**
+  String get afterSalesInstallerConfirm;
+
+  /// Confirmed after-sales status
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed'**
+  String get afterSalesConfirmed;
+
+  /// After-sales feedback action
+  ///
+  /// In en, this message translates to:
+  /// **'feedback'**
+  String get afterSalesFeedback;
+
+  /// Action to contact the assigned installer
+  ///
+  /// In en, this message translates to:
+  /// **'Contact the installer'**
+  String get afterSalesContactInstaller;
+
+  /// Placeholder confirmation for feedback
+  ///
+  /// In en, this message translates to:
+  /// **'Feedback submitted'**
+  String get afterSalesFeedbackSubmitted;
+
+  /// Placeholder response for installer contact
+  ///
+  /// In en, this message translates to:
+  /// **'Installer contact is coming soon'**
+  String get afterSalesContactComingSoon;
+
+  /// Hint below the appointment problem description
+  ///
+  /// In en, this message translates to:
+  /// **'Suggest including key information such as equipment model, fault symptoms, etc'**
+  String get afterSalesDescriptionHint;
+
+  /// Submit after-sales appointment button
+  ///
+  /// In en, this message translates to:
+  /// **'Submit to Engineer'**
+  String get afterSalesSubmitToEngineer;
+
+  /// Validation message for an empty problem description
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a problem description'**
+  String get afterSalesDescriptionRequired;
+
+  /// Local confirmation after submitting an appointment
+  ///
+  /// In en, this message translates to:
+  /// **'Appointment submitted successfully'**
+  String get afterSalesSubmitSuccess;
 }
 
 class _AppLocalizationsDelegate

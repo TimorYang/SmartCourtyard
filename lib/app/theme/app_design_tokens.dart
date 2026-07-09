@@ -20,6 +20,24 @@ class AppColors {
   static const backgroundInverse = Colors.black;
   static const homeBackground = Color(0xFFF8F8F9);
   static const accountProfileBackground = Color(0xFFFFFFFF);
+  static const notificationBackground = Color(0xFFF4F6F9);
+  static const notificationCard = Color(0xFFFFFFFF);
+  static const notificationIconSurface = Color(0xFFF5F6F7);
+  static const notificationIcon = Color(0xFF30343A);
+  static const notificationUnread = Color(0xFF0878ED);
+  static const notificationServiceTag = Color(0xFFEAF4FF);
+  static const notificationServiceText = Color(0xFF2080D8);
+  static const notificationUpgradeTag = Color(0xFFEDF7E3);
+  static const notificationUpgradeText = Color(0xFF64A728);
+  static const notificationEquipmentTag = Color(0xFFFFECEE);
+  static const notificationEquipmentText = Color(0xFFE35B65);
+  static const afterSalesFieldBorder = Color(0xFFDADDE2);
+  static const afterSalesPhotoPlaceholder = Color(0xFFE1E3E6);
+  static const afterSalesPhotoIcon = Color(0xFF656A72);
+  static const afterSalesConfirmedSurface = Color(0xFFE8F3FF);
+  static const afterSalesSummarySurface = Color(0xFFF1F3F5);
+  static const afterSalesSecondaryBorder = Color(0xFFF1F2F4);
+  static const afterSalesHint = Color(0xFFFF8A00);
   static const accountDetailsLogoutSurface = Color(0xFFF3F4F6);
   static const accountDetailsAvatarSurface = Color(0xFFF1F3F6);
   static const accountDetailsAvatarForeground = Color(0xFFFFFFFF);
@@ -788,6 +806,106 @@ class AppTextTokens {
       fontSize: 15,
       fontWeight: FontWeight.w400,
       height: 1.2,
+    );
+  }
+
+  static TextStyle notificationHeaderAction(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.brandPrimary,
+      fontSize: 14,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle notificationCardTitle(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 16,
+      fontWeight: FontWeight.w700,
+      height: 1.25,
+    );
+  }
+
+  static TextStyle notificationCategory(TextTheme textTheme) {
+    return (textTheme.labelSmall ?? const TextStyle()).copyWith(
+      fontSize: 10,
+      fontWeight: FontWeight.w400,
+      height: 1,
+    );
+  }
+
+  static TextStyle notificationBody(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 13,
+      fontWeight: FontWeight.w400,
+      height: 1.35,
+    );
+  }
+
+  static TextStyle notificationTimestamp(TextTheme textTheme) {
+    return (textTheme.bodySmall ?? const TextStyle()).copyWith(
+      color: AppColors.textHint,
+      fontSize: 12,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle notificationDetailTitle(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 15,
+      fontWeight: FontWeight.w700,
+      height: 1.25,
+    );
+  }
+
+  static TextStyle notificationPrimaryButton(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: Colors.white,
+      fontSize: 16,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle afterSalesSectionTitle(TextTheme textTheme) {
+    return (textTheme.titleSmall ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 14,
+      fontWeight: FontWeight.w700,
+    );
+  }
+
+  static TextStyle afterSalesField(TextTheme textTheme) {
+    return (textTheme.bodySmall ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 11,
+      fontWeight: FontWeight.w400,
+      height: 1.35,
+    );
+  }
+
+  static TextStyle afterSalesHint(TextTheme textTheme) {
+    return (textTheme.labelSmall ?? const TextStyle()).copyWith(
+      color: AppColors.afterSalesHint,
+      fontSize: 8,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle afterSalesConfirmed(TextTheme textTheme) {
+    return (textTheme.bodySmall ?? const TextStyle()).copyWith(
+      color: AppColors.brandPrimary,
+      fontSize: 12,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle afterSalesMeta(TextTheme textTheme) {
+    return (textTheme.bodySmall ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 11,
+      fontWeight: FontWeight.w400,
     );
   }
 

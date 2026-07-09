@@ -31,6 +31,10 @@ import '../../features/hardware_debug/presentation/pages/ble_debug_page.dart';
 import '../../features/home/presentation/pages/choose_scene_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/home/presentation/pages/scene_page.dart';
+import '../../features/notification/presentation/pages/after_sales_appointment_page.dart';
+import '../../features/notification/presentation/pages/after_sales_detail_page.dart';
+import '../../features/notification/presentation/pages/notification_detail_page.dart';
+import '../../features/notification/presentation/pages/notification_list_page.dart';
 import '../../features/security_center/presentation/pages/full_report_page.dart';
 import '../../features/security_center/presentation/pages/general_evaluation_page.dart';
 import '../../features/security_center/presentation/pages/safety_sensors_evaluation_page.dart';
@@ -147,6 +151,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AccountProfilePage.routePath,
         name: AccountProfilePage.routeName,
         builder: (context, state) => const AccountProfilePage(),
+      ),
+      GoRoute(
+        path: NotificationListPage.routePath,
+        name: NotificationListPage.routeName,
+        builder: (context, state) => const NotificationListPage(),
+      ),
+      GoRoute(
+        path: NotificationDetailPage.routePath,
+        name: NotificationDetailPage.routeName,
+        builder: (context, state) => NotificationDetailPage(
+          notificationId: state.pathParameters['notificationId'] ?? '',
+        ),
+      ),
+      GoRoute(
+        path: AfterSalesDetailPage.routePath,
+        name: AfterSalesDetailPage.routeName,
+        builder: (context, state) => const AfterSalesDetailPage(),
+      ),
+      GoRoute(
+        path: AfterSalesAppointmentPage.routePath,
+        name: AfterSalesAppointmentPage.routeName,
+        builder: (context, state) => const AfterSalesAppointmentPage(),
       ),
       GoRoute(
         path: ChooseScenePage.routePath,
