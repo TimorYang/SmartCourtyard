@@ -104,6 +104,18 @@ abstract class AppLocalizations {
   /// **'FLINX'**
   String get appTitle;
 
+  /// Heading of the device operation record page
+  ///
+  /// In en, this message translates to:
+  /// **'OPERATION RECORD'**
+  String get operationRecordTitle;
+
+  /// Description of the time range shown on the device operation record page
+  ///
+  /// In en, this message translates to:
+  /// **'Operation data of the last 14 days'**
+  String get operationRecordLast14DaysDescription;
+
   /// Headline shown on the unauthenticated welcome page
   ///
   /// In en, this message translates to:

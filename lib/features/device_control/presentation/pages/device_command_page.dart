@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
+import '../../../records/presentation/pages/operation_record_page.dart';
+import '../../../security_center/presentation/pages/security_center_page.dart';
 import '../../application/device_command_controller.dart';
+import '../widgets/device_detail_bottom_navigation.dart';
 
 class DeviceCommandPage extends ConsumerStatefulWidget {
   const DeviceCommandPage({required this.deviceId, super.key});
@@ -24,7 +27,9 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
       'assets/icons/add_device/add_new_doors_garage_door.png';
 
   bool _ledEnabled = false;
-  bool _autoCloseEnabled = true;
+  bool _unclosedReminderEnabled = false;
+  bool _autoCloseEnabled = false;
+  DeviceDetailTab _selectedTab = DeviceDetailTab.command;
 
   @override
   Widget build(BuildContext context) {
@@ -36,9 +41,37 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
         commandState.pendingRemoteManagementAction != null;
     final textTheme = Theme.of(context).textTheme;
 
+    return IndexedStack(
+      index: _selectedTab.index,
+      children: [
+        OperationRecordPage(onTabSelected: _selectTab),
+        _buildCommandPage(
+          commandState: commandState,
+          controller: controller,
+          isBusy: isBusy,
+          textTheme: textTheme,
+        ),
+        SecurityCenterPage(onTabSelected: _selectTab),
+      ],
+    );
+  }
+
+  void _selectTab(DeviceDetailTab tab) {
+    if (_selectedTab == tab) {
+      return;
+    }
+    setState(() => _selectedTab = tab);
+  }
+
+  Widget _buildCommandPage({
+    required DeviceCommandState commandState,
+    required DeviceCommandController controller,
+    required bool isBusy,
+    required TextTheme textTheme,
+  }) {
     return Scaffold(
       appBar: FlinxNavigationBar(
-        title: 'Garage door',
+        title: 'TestFoor',
         showBottomDivider: false,
         actions: [
           IconButton(
@@ -49,9 +82,14 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
           const SizedBox(width: 8),
         ],
       ),
+      bottomNavigationBar: DeviceDetailBottomNavigation(
+        selectedTab: DeviceDetailTab.command,
+        onSelected: _selectTab,
+      ),
       body: SafeArea(
         top: false,
         child: ListView(
+          key: const PageStorageKey<String>('device-command-scroll'),
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
           children: [
             _CycleSummary(textTheme: textTheme),
@@ -62,14 +100,13 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
               assetPath: _garageDoorClosedAsset,
               fallbackAssetPath: _garageDoorFallbackAsset,
             ),
-            const SizedBox(height: 8),
             Center(
               child: Text(
                 'Closed',
                 style: AppTextTokens.deviceControlDoorState(textTheme),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 18),
             _DoorCommandRow(
               busy: isBusy,
               pendingAction: commandState.pendingAction,
@@ -86,7 +123,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                 action: DeviceCommandAction.openDoor,
               ),
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 18),
             if (commandState.errorMessage != null) ...[
               _CommandFeedback(
                 message: commandState.errorMessage!,
@@ -104,6 +141,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
             ],
             _QuickActionGrid(
               ledEnabled: _ledEnabled,
+              unclosedReminderEnabled: _unclosedReminderEnabled,
               autoCloseEnabled: _autoCloseEnabled,
               busy: isBusy,
               onLedChanged: (enabled) async {
@@ -118,6 +156,9 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
               onAutoCloseChanged: (enabled) {
                 setState(() => _autoCloseEnabled = enabled);
               },
+              onUnclosedReminderChanged: (enabled) {
+                setState(() => _unclosedReminderEnabled = enabled);
+              },
               onPartialOpen: () => controller.runAction(
                 deviceId: widget.deviceId,
                 action: DeviceCommandAction.partialOpenDoor,
@@ -126,7 +167,6 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                   controller.queryRemotes(deviceId: widget.deviceId),
             ),
             const SizedBox(height: 22),
-            const _DeviceControlBottomTabs(),
           ],
         ),
       ),
@@ -141,82 +181,20 @@ class _CycleSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Row(
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: _CycleMetric(
-                label: 'Operated cycles',
-                value: '100',
-                textTheme: textTheme,
-              ),
-            ),
-            Container(
-              width: 1,
-              height: 62,
-              color: AppColors.deviceControlDivider,
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(left: 48),
-                child: _CycleMetric(
-                  label: 'Remaining',
-                  value: '4900',
-                  textTheme: textTheme,
-                ),
-              ),
-            ),
-            _PlaybackButton(onPressed: () {}),
-          ],
+        Text(
+          'Operated cycles:',
+          style: AppTextTokens.deviceControlMetricLabel(textTheme),
         ),
-        const SizedBox(height: 14),
-        const Divider(height: 1, color: AppColors.deviceControlDivider),
+        const SizedBox(width: 3),
+        Text(
+          '3',
+          style: AppTextTokens.deviceControlMetricValue(
+            textTheme,
+          ).copyWith(fontSize: 18),
+        ),
       ],
-    );
-  }
-}
-
-class _CycleMetric extends StatelessWidget {
-  const _CycleMetric({
-    required this.label,
-    required this.value,
-    required this.textTheme,
-  });
-
-  final String label;
-  final String value;
-  final TextTheme textTheme;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: AppTextTokens.deviceControlMetricLabel(textTheme)),
-        const SizedBox(height: 6),
-        Text(value, style: AppTextTokens.deviceControlMetricValue(textTheme)),
-      ],
-    );
-  }
-}
-
-class _PlaybackButton extends StatelessWidget {
-  const _PlaybackButton({required this.onPressed});
-
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return IconButton.filledTonal(
-      tooltip: 'Operation records',
-      onPressed: onPressed,
-      style: IconButton.styleFrom(
-        fixedSize: const Size.square(44),
-        backgroundColor: AppColors.deviceControlPanel,
-        foregroundColor: AppColors.textPrimary,
-      ),
-      icon: const Icon(Icons.play_arrow_outlined, size: 24),
     );
   }
 }
@@ -226,30 +204,36 @@ class _DeviceConnectionStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: const [
-        _ConnectionGroup(
-          deviceIcon: Icons.sensors_outlined,
-          bluetoothActive: true,
-          wifiActive: true,
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: SizedBox(
+        width: 353,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: const [
+            _ConnectionGroup(
+              deviceIcon: Icons.sensors_outlined,
+              bluetoothActive: true,
+              wifiActive: true,
+            ),
+            _ConnectionGroup(
+              deviceIcon: Icons.settings_remote_outlined,
+              bluetoothActive: false,
+              wifiActive: true,
+            ),
+            _ConnectionGroup(
+              deviceIcon: Icons.sensor_occupied_outlined,
+              bluetoothActive: false,
+              wifiActive: false,
+            ),
+            _ConnectionGroup(
+              deviceIcon: Icons.solar_power_outlined,
+              bluetoothActive: false,
+              wifiActive: true,
+            ),
+          ],
         ),
-        _ConnectionGroup(
-          deviceIcon: Icons.settings_remote_outlined,
-          bluetoothActive: false,
-          wifiActive: true,
-        ),
-        _ConnectionGroup(
-          deviceIcon: Icons.sensor_occupied_outlined,
-          bluetoothActive: false,
-          wifiActive: false,
-        ),
-        _ConnectionGroup(
-          deviceIcon: Icons.solar_power_outlined,
-          bluetoothActive: false,
-          wifiActive: true,
-        ),
-      ],
+      ),
     );
   }
 }
@@ -392,10 +376,10 @@ class _DoorCommandButton extends StatelessWidget {
       tooltip: tooltip,
       onPressed: onPressed,
       style: IconButton.styleFrom(
-        fixedSize: const Size.square(82),
+        fixedSize: const Size.square(55),
         backgroundColor: AppColors.deviceControlPrimaryAction,
         disabledBackgroundColor: AppColors.deviceControlPrimaryAction
-            .withValues(alpha: 0.42),
+            .withValues(alpha: 0.5),
         foregroundColor: AppColors.deviceControlPrimaryActionForeground,
         disabledForegroundColor: AppColors.deviceControlPrimaryActionForeground,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -408,7 +392,7 @@ class _DoorCommandButton extends StatelessWidget {
                 color: AppColors.deviceControlPrimaryActionForeground,
               ),
             )
-          : Icon(icon, size: 44),
+          : Icon(icon, size: 30),
     );
   }
 }
@@ -442,7 +426,7 @@ class _CommandFeedback extends StatelessWidget {
                 message,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: foregroundColor,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w400,
                 ),
               ),
             ),
@@ -456,18 +440,22 @@ class _CommandFeedback extends StatelessWidget {
 class _QuickActionGrid extends StatelessWidget {
   const _QuickActionGrid({
     required this.ledEnabled,
+    required this.unclosedReminderEnabled,
     required this.autoCloseEnabled,
     required this.busy,
     required this.onLedChanged,
+    required this.onUnclosedReminderChanged,
     required this.onAutoCloseChanged,
     required this.onPartialOpen,
     required this.onMoreSettings,
   });
 
   final bool ledEnabled;
+  final bool unclosedReminderEnabled;
   final bool autoCloseEnabled;
   final bool busy;
   final ValueChanged<bool> onLedChanged;
+  final ValueChanged<bool> onUnclosedReminderChanged;
   final ValueChanged<bool> onAutoCloseChanged;
   final VoidCallback onPartialOpen;
   final VoidCallback onMoreSettings;
@@ -475,36 +463,76 @@ class _QuickActionGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisSpacing: 14,
-      mainAxisSpacing: 14,
-      childAspectRatio: 1.2,
-      children: [
-        _LedActionCard(
-          enabled: ledEnabled,
-          busy: busy,
-          textTheme: textTheme,
-          onChanged: onLedChanged,
-        ),
-        _PartialOpenCard(
-          busy: busy,
-          textTheme: textTheme,
-          onPressed: onPartialOpen,
-        ),
-        _AutoCloseCard(
-          enabled: autoCloseEnabled,
-          textTheme: textTheme,
-          onChanged: onAutoCloseChanged,
-        ),
-        _MoreSettingsCard(
-          busy: busy,
-          textTheme: textTheme,
-          onPressed: onMoreSettings,
-        ),
-      ],
+    return SizedBox(
+      height: 250,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: Column(
+              children: [
+                Expanded(
+                  flex: 64,
+                  child: _LedActionCard(
+                    enabled: ledEnabled,
+                    busy: busy,
+                    textTheme: textTheme,
+                    onChanged: onLedChanged,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Expanded(
+                  flex: 78,
+                  child: _ToggleActionCard(
+                    icon: Icons.door_front_door_outlined,
+                    title: 'Unclosed reminding',
+                    enabled: unclosedReminderEnabled,
+                    busy: busy,
+                    textTheme: textTheme,
+                    onChanged: onUnclosedReminderChanged,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Expanded(
+                  flex: 72,
+                  child: _ToggleActionCard(
+                    icon: Icons.door_back_door_outlined,
+                    title: 'Auto close',
+                    enabled: autoCloseEnabled,
+                    busy: busy,
+                    textTheme: textTheme,
+                    onChanged: onAutoCloseChanged,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              children: [
+                Expanded(
+                  flex: 152,
+                  child: _PartialOpenCard(
+                    busy: busy,
+                    textTheme: textTheme,
+                    onPressed: onPartialOpen,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Expanded(
+                  flex: 72,
+                  child: _MoreSettingsCard(
+                    busy: busy,
+                    textTheme: textTheme,
+                    onPressed: onMoreSettings,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -525,13 +553,76 @@ class _LedActionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _ControlCard(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Row(
+        children: [
+          const Icon(Icons.light_mode_outlined, size: 27),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'LED',
+                    maxLines: 1,
+                    style: AppTextTokens.deviceControlQuickActionTitle(
+                      textTheme,
+                    ),
+                  ),
+                ),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    '3 min',
+                    maxLines: 1,
+                    style: AppTextTokens.deviceControlQuickActionMeta(
+                      textTheme,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _FlinxSwitch(value: enabled, enabled: !busy, onChanged: onChanged),
+        ],
+      ),
+    );
+  }
+}
+
+class _ToggleActionCard extends StatelessWidget {
+  const _ToggleActionCard({
+    required this.icon,
+    required this.title,
+    required this.enabled,
+    required this.busy,
+    required this.textTheme,
+    required this.onChanged,
+  });
+
+  final IconData icon;
+  final String title;
+  final bool enabled;
+  final bool busy;
+  final TextTheme textTheme;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return _ControlCard(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Icon(Icons.light_mode_outlined, size: 42),
+              Icon(icon, size: 27),
+              const Spacer(),
               _FlinxSwitch(
                 value: enabled,
                 enabled: !busy,
@@ -540,9 +631,12 @@ class _LedActionCard extends StatelessWidget {
             ],
           ),
           const Spacer(),
-          Text('LED', style: AppTextTokens.deviceControlCardTitle(textTheme)),
-          const SizedBox(height: 6),
-          Text('1 min', style: AppTextTokens.deviceControlCardMeta(textTheme)),
+          Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTextTokens.deviceControlQuickActionTitle(textTheme),
+          ),
         ],
       ),
     );
@@ -563,6 +657,7 @@ class _PartialOpenCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _ControlCard(
+      key: const ValueKey<String>('partial-open-action'),
       onTap: busy ? null : onPressed,
       child: Stack(
         children: [
@@ -579,7 +674,7 @@ class _PartialOpenCard extends StatelessWidget {
                   vertical: 5,
                 ),
                 child: Text(
-                  '60cm',
+                  'Off',
                   style: AppTextTokens.deviceControlBadge(textTheme),
                 ),
               ),
@@ -587,8 +682,8 @@ class _PartialOpenCard extends StatelessWidget {
           ),
           Center(
             child: Container(
-              width: 92,
-              height: 92,
+              width: 82,
+              height: 82,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
@@ -607,43 +702,8 @@ class _PartialOpenCard extends StatelessWidget {
             alignment: Alignment.bottomCenter,
             child: Text(
               'Partial open',
-              style: AppTextTokens.deviceControlCardTitle(textTheme),
+              style: AppTextTokens.deviceControlQuickActionTitle(textTheme),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AutoCloseCard extends StatelessWidget {
-  const _AutoCloseCard({
-    required this.enabled,
-    required this.textTheme,
-    required this.onChanged,
-  });
-
-  final bool enabled;
-  final TextTheme textTheme;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return _ControlCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Icon(Icons.event_available_outlined, size: 42),
-              _FlinxSwitch(value: enabled, enabled: true, onChanged: onChanged),
-            ],
-          ),
-          const Spacer(),
-          Text(
-            'Auto close',
-            style: AppTextTokens.deviceControlCardTitle(textTheme),
           ),
         ],
       ),
@@ -665,15 +725,17 @@ class _MoreSettingsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _ControlCard(
+      key: const ValueKey<String>('more-settings-action'),
       onTap: busy ? null : onPressed,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       child: Row(
         children: [
-          const Icon(Icons.settings_outlined, size: 42),
-          const SizedBox(width: 14),
+          const Icon(Icons.settings_outlined, size: 27),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
               'More setting',
-              style: AppTextTokens.deviceControlCardTitle(textTheme),
+              style: AppTextTokens.deviceControlQuickActionTitle(textTheme),
             ),
           ),
         ],
@@ -683,10 +745,16 @@ class _MoreSettingsCard extends StatelessWidget {
 }
 
 class _ControlCard extends StatelessWidget {
-  const _ControlCard({required this.child, this.onTap});
+  const _ControlCard({
+    required this.child,
+    this.onTap,
+    this.padding = const EdgeInsets.all(18),
+    super.key,
+  });
 
   final Widget child;
   final VoidCallback? onTap;
+  final EdgeInsetsGeometry padding;
 
   @override
   Widget build(BuildContext context) {
@@ -696,7 +764,7 @@ class _ControlCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
-        child: Padding(padding: const EdgeInsets.all(18), child: child),
+        child: Padding(padding: padding, child: child),
       ),
     );
   }
@@ -715,66 +783,23 @@ class _FlinxSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Switch(
-      value: value,
-      onChanged: enabled ? onChanged : null,
-      activeThumbColor: AppColors.backgroundPrimary,
-      activeTrackColor: AppColors.toggleSelected,
-      inactiveThumbColor: AppColors.backgroundPrimary,
-      inactiveTrackColor: AppColors.deviceControlInactive.withValues(
-        alpha: 0.58,
-      ),
-      trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-    );
-  }
-}
-
-class _DeviceControlBottomTabs extends StatelessWidget {
-  const _DeviceControlBottomTabs();
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: const [
-        _BottomTab(icon: Icons.description_outlined, selected: false),
-        _BottomTab(icon: Icons.home_filled, selected: true),
-        _BottomTab(icon: Icons.health_and_safety_outlined, selected: false),
-      ],
-    );
-  }
-}
-
-class _BottomTab extends StatelessWidget {
-  const _BottomTab({required this.icon, required this.selected});
-
-  final IconData icon;
-  final bool selected;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = selected
-        ? AppColors.textPrimary
-        : AppColors.deviceControlInactive;
     return SizedBox(
-      width: 72,
-      height: 58,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: color, size: 42),
-          const SizedBox(height: 4),
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            width: selected ? 10 : 0,
-            height: selected ? 10 : 0,
-            decoration: const BoxDecoration(
-              color: AppColors.textPrimary,
-              shape: BoxShape.circle,
-            ),
+      width: 46,
+      height: 32,
+      child: FittedBox(
+        fit: BoxFit.contain,
+        child: Switch(
+          value: value,
+          onChanged: enabled ? onChanged : null,
+          activeThumbColor: AppColors.backgroundPrimary,
+          activeTrackColor: AppColors.toggleSelected,
+          inactiveThumbColor: AppColors.backgroundPrimary,
+          inactiveTrackColor: AppColors.deviceControlInactive.withValues(
+            alpha: 0.58,
           ),
-        ],
+          trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
       ),
     );
   }

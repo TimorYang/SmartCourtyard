@@ -12,6 +12,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appTitle => 'FLINX';
 
   @override
+  String get operationRecordTitle => '操作记录';
+
+  @override
+  String get operationRecordLast14DaysDescription => '最近 14 天的操作数据';
+
+  @override
   String get welcomeHeadline => '开启您的\n智慧生活';
 
   @override

@@ -1,6 +1,14 @@
 {
   "@@locale": "en",
   "appTitle": "FLINX",
+  "operationRecordTitle": "OPERATION RECORD",
+  "@operationRecordTitle": {
+    "description": "Heading of the device operation record page"
+  },
+  "operationRecordLast14DaysDescription": "Operation data of the last 14 days",
+  "@operationRecordLast14DaysDescription": {
+    "description": "Description of the time range shown on the device operation record page"
+  },
   "welcomeHeadline": "Start your\nsmart life",
   "@welcomeHeadline": {
     "description": "Headline shown on the unauthenticated welcome page"

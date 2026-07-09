@@ -4,6 +4,7 @@ import 'package:flinx/features/device_control/application/device_command_control
 import 'package:flinx/features/device_control/presentation/pages/device_command_page.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
 import 'package:flinx/platform_bridge/mock_hardware_gateway.dart';
+import 'package:flinx/shared/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -16,12 +17,11 @@ void main() {
 
     await _pumpDevicePage(tester, gateway);
 
-    expect(find.text('Garage door'), findsOneWidget);
-    expect(find.text('Operated cycles'), findsOneWidget);
-    expect(find.text('Remaining'), findsOneWidget);
+    expect(find.text('TestFoor'), findsOneWidget);
+    expect(find.text('Operated cycles:'), findsOneWidget);
     expect(find.text('Closed'), findsOneWidget);
     expect(find.text('LED'), findsOneWidget);
-    expect(find.text('Auto close'), findsOneWidget);
+    expect(find.text('Unclosed reminding'), findsOneWidget);
     expect(find.text('Partial open'), findsOneWidget);
     expect(find.text('More setting'), findsOneWidget);
 
@@ -57,15 +57,25 @@ void main() {
     expect(gateway.commands.last, DoorCommand.lightOn);
     expect(find.text('开灯指令已发送（0x1005）。'), findsOneWidget);
 
-    await tester.ensureVisible(find.text('Partial open'));
-    await tester.tap(find.text('Partial open'));
+    final partialOpenAction = find.byKey(
+      const ValueKey<String>('partial-open-action'),
+    );
+    await tester.ensureVisible(partialOpenAction);
+    await tester.drag(find.byType(ListView).first, const Offset(0, -80));
+    await tester.pumpAndSettle();
+    await tester.tap(partialOpenAction);
     await tester.pumpAndSettle();
 
     expect(gateway.commands.last, DoorCommand.partialOpen);
     expect(find.text('半开门指令已发送（0x1004）。'), findsOneWidget);
 
-    await tester.ensureVisible(find.text('More setting'));
-    await tester.tap(find.text('More setting'));
+    final moreSettingsAction = find.byKey(
+      const ValueKey<String>('more-settings-action'),
+    );
+    await tester.ensureVisible(moreSettingsAction);
+    await tester.drag(find.byType(ListView).first, const Offset(0, -80));
+    await tester.pumpAndSettle();
+    await tester.tap(moreSettingsAction);
     await tester.pumpAndSettle();
 
     expect(gateway.queryCount, 1);
@@ -98,6 +108,55 @@ void main() {
 
     expect(find.text('开门指令已发送（0x1001）。'), findsOneWidget);
   });
+
+  testWidgets('switches between records, command, and security tabs', (
+    tester,
+  ) async {
+    final gateway = _RecordingHardwareGateway();
+
+    await _pumpDevicePage(tester, gateway);
+
+    expect(find.text('Closed'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Operation records'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('OPERATION RECORD'), findsOneWidget);
+    expect(find.text('Partial open setting'), findsOneWidget);
+    expect(find.text('346054814@qq.com'), findsWidgets);
+
+    await tester.tap(find.byTooltip('Security center'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Security center'), findsOneWidget);
+    expect(find.text('Protecting...'), findsOneWidget);
+    expect(find.text('General Evaluation'), findsOneWidget);
+    expect(find.text('Safety Sensors Evaluation'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Device command'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Closed'), findsOneWidget);
+    expect(find.text('TestFoor'), findsOneWidget);
+  });
+
+  testWidgets('renders on a compact screen without overflow', (tester) async {
+    final gateway = _RecordingHardwareGateway();
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(_buildPage(gateway));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+
+    await tester.tap(find.byTooltip('Security center'));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+  });
 }
 
 Widget _buildPage(MockHardwareGateway gateway) {
@@ -105,7 +164,11 @@ Widget _buildPage(MockHardwareGateway gateway) {
     overrides: [
       deviceCommandHardwareGatewayProvider.overrideWithValue(gateway),
     ],
-    child: const MaterialApp(home: DeviceCommandPage(deviceId: 'mock-device')),
+    child: const MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: DeviceCommandPage(deviceId: 'mock-device'),
+    ),
   );
 }
 

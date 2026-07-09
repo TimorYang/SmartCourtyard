@@ -1,6 +1,8 @@
 {
   "@@locale": "zh",
   "appTitle": "FLINX",
+  "operationRecordTitle": "操作记录",
+  "operationRecordLast14DaysDescription": "最近 14 天的操作数据",
   "welcomeHeadline": "开启您的\n智慧生活",
   "welcomeSubtitle": "让生活更加舒适便捷",
   "loginAction": "登录",
