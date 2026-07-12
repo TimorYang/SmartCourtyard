@@ -11,6 +11,9 @@
 .buildlog/
 .history
 
+# Local Flutter environment definitions. Commit only *.json.example templates.
+config/env/*.json
+
 
 
 # Flutter repo-specific

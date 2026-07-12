@@ -1,0 +1,5 @@
+{
+  "FLINX_API_ORIGIN": "https://test-api.example.com",
+  "FLINX_API_PATH_PREFIX": "/api/force-door",
+  "FLINX_CLIENT_AUTHORIZATION": "replace-with-test-client-authorization"
+}

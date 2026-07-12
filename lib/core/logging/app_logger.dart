@@ -1,5 +1,7 @@
 import 'dart:developer' as developer;
 
+import 'package:flutter/foundation.dart';
+
 abstract interface class AppLogger {
   void info(
     String message, {
@@ -87,6 +89,13 @@ class DebugAppLogger implements AppLogger {
       developer.log(
         'requestId=${requestId ?? '-'} context=${_redactedContext(context)}',
         name: 'FLINX',
+      );
+    }
+    if (kDebugMode) {
+      debugPrint(
+        '[FLINX][$level] $message '
+        'requestId=${requestId ?? '-'} '
+        'context=${_redactedContext(context)}',
       );
     }
   }

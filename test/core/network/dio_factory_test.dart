@@ -1,0 +1,102 @@
+import 'dart:convert';
+
+import 'package:dio/dio.dart';
+import 'package:flinx/core/config/app_api_configuration.dart';
+import 'package:flinx/core/logging/app_logger.dart';
+import 'package:flinx/core/network/dio_factory.dart';
+import 'package:flinx/core/network/network_exception.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  test(
+    'adds the correlated request id without logging request content',
+    () async {
+      final adapter = _CapturingAdapter();
+      final dio = DioFactory.create(
+        configuration: const AppApiConfiguration(
+          apiOrigin: 'https://api.flinx.example',
+          apiPathPrefix: '/api/force-door',
+        ),
+        logger: _FakeLogger(),
+      )..httpClientAdapter = adapter;
+
+      await dio.get<void>(
+        'health',
+        options: Options(
+          extra: {NetworkRequestExtras.requestId: 'request-123'},
+        ),
+      );
+
+      expect(
+        adapter.requestOptions.uri.toString(),
+        'https://api.flinx.example/api/force-door/health',
+      );
+      expect(
+        adapter.requestOptions.headers[NetworkHeaders.requestId],
+        'request-123',
+      );
+    },
+  );
+
+  test('maps a bad HTTP response to a network exception with its status', () {
+    final options = RequestOptions(path: 'health');
+    final exception = NetworkException.fromDio(
+      DioException(
+        requestOptions: options,
+        response: Response<void>(requestOptions: options, statusCode: 503),
+        type: DioExceptionType.badResponse,
+      ),
+    );
+
+    expect(exception.kind, NetworkErrorKind.httpStatus);
+    expect(exception.statusCode, 503);
+  });
+}
+
+class _CapturingAdapter implements HttpClientAdapter {
+  late RequestOptions requestOptions;
+
+  @override
+  void close({bool force = false}) {}
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<List<int>>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    requestOptions = options;
+    return ResponseBody.fromString(
+      jsonEncode({'code': 200, 'success': true}),
+      200,
+      headers: {
+        Headers.contentTypeHeader: [Headers.jsonContentType],
+      },
+    );
+  }
+}
+
+class _FakeLogger implements AppLogger {
+  @override
+  void error(
+    String message, {
+    String? requestId,
+    Object? error,
+    StackTrace? stackTrace,
+    Map<String, Object?> context = const {},
+  }) {}
+
+  @override
+  void info(
+    String message, {
+    String? requestId,
+    Map<String, Object?> context = const {},
+  }) {}
+
+  @override
+  void warning(
+    String message, {
+    String? requestId,
+    Map<String, Object?> context = const {},
+  }) {}
+}
