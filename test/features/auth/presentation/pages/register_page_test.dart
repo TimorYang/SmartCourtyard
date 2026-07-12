@@ -1,5 +1,8 @@
 import 'package:flinx/app/flinx_app.dart';
 import 'package:flinx/app/theme/app_design_tokens.dart';
+import 'package:flinx/features/auth/application/providers.dart';
+import 'package:flinx/features/auth/domain/entities/registration_verification.dart';
+import 'package:flinx/features/auth/domain/repositories/auth_registration_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,7 +10,16 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   Future<void> openRegisterPage(WidgetTester tester) async {
-    await tester.pumpWidget(const ProviderScope(child: FlinxApp()));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authRegistrationRepositoryProvider.overrideWithValue(
+            _SuccessfulRegistrationRepository(),
+          ),
+        ],
+        child: const FlinxApp(),
+      ),
+    );
     addTearDown(() async {
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();
@@ -275,4 +287,35 @@ void main() {
     editableText = tester.widget<EditableText>(passwordEditableText);
     expect(editableText.focusNode.hasFocus, isFalse);
   });
+}
+
+class _SuccessfulRegistrationRepository implements AuthRegistrationRepository {
+  @override
+  Future<void> completeRegistration({
+    required String registrationToken,
+    required String passwordCiphertext,
+    required String confirmPasswordCiphertext,
+    required String keyId,
+    required String nonce,
+    required String locale,
+    required String timezone,
+    String? regionCode,
+    required String requestId,
+  }) async {}
+
+  @override
+  Future<void> sendEmailCode({
+    required String email,
+    required String requestId,
+  }) async {}
+
+  @override
+  Future<RegistrationVerification> verifyEmailCode({
+    required String email,
+    required String code,
+    required String requestId,
+  }) async => const RegistrationVerification(
+    registrationToken: 'test-registration-token',
+    expiresIn: Duration(minutes: 5),
+  );
 }

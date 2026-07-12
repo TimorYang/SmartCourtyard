@@ -109,6 +109,12 @@
   "@registerPasswordPending": {
     "description": "Temporary message shown when the user submits the register password form"
   },
+  "registerCodeResending": "Sending verification code…",
+  "registerRequestFailed": "Unable to complete registration. Please try again.",
+  "registerNetworkUnavailable": "Network unavailable. Please try again.",
+  "registerAuthorizationFailed": "Registration is temporarily unavailable.",
+  "registerRestartRequired": "Your registration session has expired. Please start again.",
+  "registerSucceeded": "Registration successful. Please log in.",
   "forgotPasswordTitle": "Forget Password?",
   "@forgotPasswordTitle": {
     "description": "Forgot password page heading"

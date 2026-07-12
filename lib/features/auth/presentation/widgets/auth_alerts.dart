@@ -10,3 +10,14 @@ Future<void> showAuthEmailInvalidDialog(BuildContext context) async {
     positiveButtonTitle: MaterialLocalizations.of(context).okButtonLabel,
   );
 }
+
+String registrationErrorMessage(BuildContext context, String? messageKey) {
+  final l10n = AppLocalizations.of(context);
+  return switch (messageKey) {
+    'auth.registration.restartRequired' => l10n.registerRestartRequired,
+    'auth.registration.networkUnavailable' => l10n.registerNetworkUnavailable,
+    'auth.registration.clientAuthorizationFailed' =>
+      l10n.registerAuthorizationFailed,
+    _ => l10n.registerRequestFailed,
+  };
+}

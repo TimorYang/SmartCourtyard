@@ -25,6 +25,19 @@ class RegisterPage extends ConsumerWidget {
     final state = ref.watch(registerFormControllerProvider);
     final controller = ref.read(registerFormControllerProvider.notifier);
 
+    ref.listen(registerFormControllerProvider, (previous, next) {
+      if (next.errorMessageKey != null &&
+          next.errorMessageKey != previous?.errorMessageKey) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              registrationErrorMessage(context, next.errorMessageKey),
+            ),
+          ),
+        );
+      }
+    });
+
     return Scaffold(
       appBar: FlinxNavigationBar(title: '', showBottomDivider: false),
       backgroundColor: AppColors.backgroundPrimary,
@@ -111,9 +124,12 @@ class RegisterPage extends ConsumerWidget {
                             await showAuthEmailInvalidDialog(context);
                             return;
                           }
-                          context.push(
-                            RegisterCodePage.locationFor(state.trimmedEmail),
-                          );
+                          final sent = await controller.sendCode();
+                          if (sent && context.mounted) {
+                            context.push(
+                              RegisterCodePage.locationFor(state.trimmedEmail),
+                            );
+                          }
                         }
                       : null,
                   style: FilledButton.styleFrom(
@@ -128,7 +144,13 @@ class RegisterPage extends ConsumerWidget {
                       theme.textTheme,
                     ),
                   ),
-                  child: Text(l10n.sendCodeAction),
+                  child: state.isSubmitting
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(l10n.sendCodeAction),
                 ),
               ),
             ],

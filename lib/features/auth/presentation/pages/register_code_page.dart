@@ -6,6 +6,7 @@ import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
+import '../widgets/auth_alerts.dart';
 import '../widgets/auth_flow_widgets.dart';
 import 'register_password_page.dart';
 
@@ -61,6 +62,16 @@ class _RegisterCodePageState extends ConsumerState<RegisterCodePage> {
           selection: TextSelection.collapsed(offset: next.code.length),
         );
       }
+      if (next.errorMessageKey != null &&
+          next.errorMessageKey != previous?.errorMessageKey) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              registrationErrorMessage(context, next.errorMessageKey),
+            ),
+          ),
+        );
+      }
     });
 
     return AuthFlowScaffold(
@@ -76,16 +87,21 @@ class _RegisterCodePageState extends ConsumerState<RegisterCodePage> {
           focusNode: _focusNode,
           textController: _textController,
           inputLabel: l10n.registerCodeInputLabel,
-          onChanged: (value) {
+          onChanged: (value) async {
             controller.updateCode(value);
             if (value.replaceAll(RegExp(r'\D'), '').length >= 6) {
-              context.push(RegisterPasswordPage.locationFor(widget.email));
+              final verified = await controller.verifyCode();
+              if (verified && context.mounted) {
+                context.push(RegisterPasswordPage.locationFor(widget.email));
+              }
             }
           },
         ),
         const SizedBox(height: 24),
         TextButton(
-          onPressed: state.canResend ? controller.resetResendCountdown : null,
+          onPressed: state.canResend && !state.isResending
+              ? () => controller.resendCode()
+              : null,
           style: TextButton.styleFrom(
             padding: EdgeInsets.zero,
             minimumSize: const Size(0, 28),
@@ -97,7 +113,9 @@ class _RegisterCodePageState extends ConsumerState<RegisterCodePage> {
             ),
           ),
           child: Text(
-            state.canResend
+            state.isResending
+                ? l10n.registerCodeResending
+                : state.canResend
                 ? l10n.registerCodeResendAction
                 : l10n.registerCodeResend(state.resendSecondsRemaining),
           ),

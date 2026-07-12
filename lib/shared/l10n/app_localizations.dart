@@ -248,6 +248,42 @@ abstract class AppLocalizations {
   /// **'Password registration is not connected yet'**
   String get registerPasswordPending;
 
+  /// No description provided for @registerCodeResending.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending verification code…'**
+  String get registerCodeResending;
+
+  /// No description provided for @registerRequestFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to complete registration. Please try again.'**
+  String get registerRequestFailed;
+
+  /// No description provided for @registerNetworkUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Network unavailable. Please try again.'**
+  String get registerNetworkUnavailable;
+
+  /// No description provided for @registerAuthorizationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration is temporarily unavailable.'**
+  String get registerAuthorizationFailed;
+
+  /// No description provided for @registerRestartRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Your registration session has expired. Please start again.'**
+  String get registerRestartRequired;
+
+  /// No description provided for @registerSucceeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration successful. Please log in.'**
+  String get registerSucceeded;
+
   /// Forgot password page heading
   ///
   /// In en, this message translates to:

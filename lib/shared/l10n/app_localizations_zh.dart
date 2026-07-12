@@ -88,6 +88,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get registerPasswordPending => '密码注册功能暂未接入';
 
   @override
+  String get registerCodeResending => '正在发送验证码…';
+
+  @override
+  String get registerRequestFailed => '注册失败，请重试。';
+
+  @override
+  String get registerNetworkUnavailable => '网络不可用，请重试。';
+
+  @override
+  String get registerAuthorizationFailed => '注册暂不可用，请稍后再试。';
+
+  @override
+  String get registerRestartRequired => '注册会话已失效，请重新开始。';
+
+  @override
+  String get registerSucceeded => '注册成功，请登录。';
+
+  @override
   String get forgotPasswordTitle => '忘记密码？';
 
   @override

@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
+import '../../application/register_password_controller.dart';
 import '../widgets/auth_flow_widgets.dart';
+import '../widgets/auth_alerts.dart';
+import 'login_page.dart';
+import 'register_page.dart';
 
 class RegisterPasswordPage extends ConsumerStatefulWidget {
   const RegisterPasswordPage({super.key, required this.email});
@@ -35,9 +40,12 @@ class _RegisterPasswordPageState extends ConsumerState<RegisterPasswordPage> {
     _confirmPasswordTextController = TextEditingController();
     _passwordFocusNode = FocusNode();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _passwordFocusNode.requestFocus();
+      if (!mounted) return;
+      if (ref.read(registrationFlowStoreProvider).registrationToken == null) {
+        context.go(RegisterPage.routePath);
+        return;
       }
+      _passwordFocusNode.requestFocus();
     });
   }
 
@@ -58,6 +66,16 @@ class _RegisterPasswordPageState extends ConsumerState<RegisterPasswordPage> {
     ref.listen(registerPasswordControllerProvider, (previous, next) {
       _syncTextController(_passwordTextController, next.password);
       _syncTextController(_confirmPasswordTextController, next.confirmPassword);
+      if (next.errorMessageKey != null &&
+          next.errorMessageKey != previous?.errorMessageKey) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              registrationErrorMessage(context, next.errorMessageKey),
+            ),
+          ),
+        );
+      }
     });
 
     return AuthFlowScaffold(
@@ -85,7 +103,7 @@ class _RegisterPasswordPageState extends ConsumerState<RegisterPasswordPage> {
           onChanged: controller.updateConfirmPassword,
           onSubmitted: (_) {
             if (state.canSubmit) {
-              _showPendingMessage(context);
+              _submit(context, controller);
             }
           },
         ),
@@ -93,19 +111,23 @@ class _RegisterPasswordPageState extends ConsumerState<RegisterPasswordPage> {
         AuthPrimaryButton(
           label: l10n.loginAction,
           onPressed: state.canSubmit
-              ? () => _showPendingMessage(context)
+              ? () => _submit(context, controller)
               : null,
         ),
       ],
     );
   }
 
-  void _showPendingMessage(BuildContext context) {
+  Future<void> _submit(
+    BuildContext context,
+    RegisterPasswordController controller,
+  ) async {
+    final completed = await controller.submit();
+    if (!completed || !context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(AppLocalizations.of(context).registerPasswordPending),
-      ),
+      SnackBar(content: Text(AppLocalizations.of(context).registerSucceeded)),
     );
+    context.go(LoginPage.routePath);
   }
 
   static void _syncTextController(

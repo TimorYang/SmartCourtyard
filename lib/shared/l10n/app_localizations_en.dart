@@ -92,6 +92,28 @@ class AppLocalizationsEn extends AppLocalizations {
       'Password registration is not connected yet';
 
   @override
+  String get registerCodeResending => 'Sending verification code…';
+
+  @override
+  String get registerRequestFailed =>
+      'Unable to complete registration. Please try again.';
+
+  @override
+  String get registerNetworkUnavailable =>
+      'Network unavailable. Please try again.';
+
+  @override
+  String get registerAuthorizationFailed =>
+      'Registration is temporarily unavailable.';
+
+  @override
+  String get registerRestartRequired =>
+      'Your registration session has expired. Please start again.';
+
+  @override
+  String get registerSucceeded => 'Registration successful. Please log in.';
+
+  @override
   String get forgotPasswordTitle => 'Forget Password?';
 
   @override

@@ -1,0 +1,35 @@
+import 'package:dio/dio.dart';
+import 'package:retrofit/retrofit.dart';
+
+import '../../../../core/network/api_envelope_dto.dart';
+import '../dto/auth_public_key_response_dto.dart';
+
+part 'auth_api.g.dart';
+
+@RestApi()
+abstract class AuthApi {
+  factory AuthApi(Dio dio, {String? baseUrl}) = _AuthApi;
+
+  @GET('app/auth/crypto/public-key')
+  Future<ApiEnvelopeDto<AuthPublicKeyResponseDto>> fetchPublicKey(
+    @DioOptions() Options options,
+  );
+
+  @POST('app/auth/register/email-code')
+  Future<ApiEnvelopeDto<dynamic>> sendRegistrationEmailCode(
+    @Body() Map<String, dynamic> body,
+    @DioOptions() Options options,
+  );
+
+  @POST('app/auth/register/verify-code')
+  Future<ApiEnvelopeDto<dynamic>> verifyRegistrationEmailCode(
+    @Body() Map<String, dynamic> body,
+    @DioOptions() Options options,
+  );
+
+  @POST('app/auth/register/complete')
+  Future<ApiEnvelopeDto<dynamic>> completeRegistration(
+    @Body() Map<String, dynamic> body,
+    @DioOptions() Options options,
+  );
+}
