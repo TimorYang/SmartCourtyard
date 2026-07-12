@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 
 import '../../../../core/network/api_envelope_dto.dart';
+import '../dto/auth_login_response_dto.dart';
+import '../dto/auth_profile_response_dto.dart';
 import '../dto/auth_public_key_response_dto.dart';
 
 part 'auth_api.g.dart';
@@ -12,6 +14,17 @@ abstract class AuthApi {
 
   @GET('app/auth/crypto/public-key')
   Future<ApiEnvelopeDto<AuthPublicKeyResponseDto>> fetchPublicKey(
+    @DioOptions() Options options,
+  );
+
+  @POST('app/auth/login')
+  Future<ApiEnvelopeDto<AuthLoginResponseDto>> login(
+    @Body() Map<String, dynamic> body,
+    @DioOptions() Options options,
+  );
+
+  @GET('app/account/profile')
+  Future<ApiEnvelopeDto<AuthProfileResponseDto>> fetchAccountProfile(
     @DioOptions() Options options,
   );
 

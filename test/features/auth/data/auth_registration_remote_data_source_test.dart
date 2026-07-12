@@ -3,6 +3,8 @@ import 'package:flinx/core/network/api_envelope_dto.dart';
 import 'package:flinx/core/network/dio_factory.dart';
 import 'package:flinx/features/auth/data/data_sources/auth_api.dart';
 import 'package:flinx/features/auth/data/data_sources/auth_registration_remote_data_source.dart';
+import 'package:flinx/features/auth/data/dto/auth_login_response_dto.dart';
+import 'package:flinx/features/auth/data/dto/auth_profile_response_dto.dart';
 import 'package:flinx/features/auth/data/dto/auth_public_key_response_dto.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -54,6 +56,17 @@ class _FakeAuthApi implements AuthApi {
   Map<String, dynamic>? sentEmailBody;
   Map<String, dynamic>? verifyBody;
   Map<String, dynamic>? completedBody;
+
+  @override
+  Future<ApiEnvelopeDto<AuthProfileResponseDto>> fetchAccountProfile(
+    Options options,
+  ) => throw UnimplementedError();
+
+  @override
+  Future<ApiEnvelopeDto<AuthLoginResponseDto>> login(
+    Map<String, dynamic> body,
+    Options requestOptions,
+  ) => throw UnimplementedError();
 
   @override
   Future<ApiEnvelopeDto<dynamic>> completeRegistration(

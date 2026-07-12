@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 
 import '../config/app_api_configuration.dart';
 import '../logging/app_logger.dart';
+import 'access_token_cache.dart';
 import 'network_debug_settings.dart';
 import 'network_proxy_adapter.dart';
 
@@ -12,6 +13,7 @@ abstract final class NetworkRequestExtras {
 
 abstract final class NetworkHeaders {
   static const requestId = 'X-Request-Id';
+  static const bladeAuth = 'Blade-Auth';
 }
 
 class DioFactory {
@@ -43,9 +45,26 @@ class DioFactory {
     }
     dio.interceptors.addAll([
       _RequestIdInterceptor(),
+      _BladeAuthInterceptor(),
       _SafeNetworkLogInterceptor(logger),
     ]);
     return dio;
+  }
+}
+
+class _BladeAuthInterceptor extends Interceptor {
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    if (!options.path.startsWith('app/auth/')) {
+      final accessToken = AccessTokenCache.value;
+      if (accessToken != null) {
+        options.headers.putIfAbsent(
+          NetworkHeaders.bladeAuth,
+          () => accessToken,
+        );
+      }
+    }
+    handler.next(options);
   }
 }
 

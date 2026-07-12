@@ -1,6 +1,7 @@
 import 'package:flinx/app/theme/app_theme.dart';
 import 'package:flinx/features/account/presentation/pages/account_details_page.dart';
 import 'package:flinx/features/account/presentation/pages/account_profile_page.dart';
+import 'package:flinx/features/auth/application/providers.dart';
 import 'package:flinx/features/notification/presentation/pages/notification_list_page.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -247,10 +248,17 @@ void main() {
     );
 
     await tester.pumpAndSettle();
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(AccountDetailsPage)),
+    );
+    container.read(activeAuthSessionProvider.notifier).markAuthenticated();
+    expect(container.read(activeAuthSessionProvider).isAuthenticated, isTrue);
+
     await tester.tap(find.text('Log out'));
     await tester.pumpAndSettle();
 
     expect(find.text('Welcome'), findsOneWidget);
     expect(find.text('ACCOUNT'), findsNothing);
+    expect(container.read(activeAuthSessionProvider).isAuthenticated, isFalse);
   });
 }

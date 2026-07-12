@@ -38,6 +38,7 @@ class AccountDetailsPage extends ConsumerWidget {
                   await ref
                       .read(accountControllerProvider.notifier)
                       .clearAccount();
+                  ref.read(activeAuthSessionProvider.notifier).clear();
                   ref.invalidate(authSessionProvider);
                   if (!context.mounted) {
                     return;

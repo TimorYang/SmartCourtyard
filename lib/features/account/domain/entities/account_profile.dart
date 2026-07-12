@@ -3,7 +3,7 @@ class AccountProfile {
     required String userId,
     required String email,
     required String nickname,
-    required this.registeredAt,
+    this.registeredAt,
     this.avatarUrl,
     this.country,
   }) : userId = userId.trim(),
@@ -14,7 +14,7 @@ class AccountProfile {
   final String email;
   final String nickname;
   final String? avatarUrl;
-  final DateTime registeredAt;
+  final DateTime? registeredAt;
   final String? country;
 
   static String normalizeEmail(String value) {

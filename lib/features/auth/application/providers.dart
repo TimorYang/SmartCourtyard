@@ -9,28 +9,36 @@ import 'forgot_password_code_controller.dart';
 import 'forgot_password_controller.dart';
 import 'forgot_password_reset_controller.dart';
 import 'login_form_controller.dart';
+import 'auth_session_controller.dart';
 import 'register_code_controller.dart';
 import 'register_form_controller.dart';
 import 'register_password_controller.dart';
-import 'simulated_login_use_case.dart';
 import '../../account/application/providers.dart';
 import '../data/data_sources/auth_crypto_remote_data_source.dart';
+import '../data/data_sources/auth_login_remote_data_source.dart';
 import '../data/data_sources/auth_registration_remote_data_source.dart';
 import '../data/data_sources/auth_api.dart';
 import '../data/repositories/auth_registration_repository_impl.dart';
 import '../data/repositories/auth_crypto_repository_impl.dart';
+import '../data/repositories/auth_login_repository_impl.dart';
 import '../data/services/rsa_oaep_password_ciphertext_encryptor.dart';
 import '../domain/entities/auth_session.dart';
 import '../domain/entities/registration_device_context.dart';
 import '../domain/repositories/auth_crypto_repository.dart';
+import '../domain/repositories/auth_login_repository.dart';
 import '../domain/repositories/auth_registration_repository.dart';
 import '../domain/services/password_ciphertext_encryptor.dart';
 import '../domain/use_cases/complete_registration_use_case.dart';
+import '../domain/use_cases/login_use_case.dart';
 import '../domain/use_cases/send_registration_email_code_use_case.dart';
 import '../domain/use_cases/verify_registration_email_code_use_case.dart';
 import 'registration_flow_store.dart';
 
 final authSessionProvider = FutureProvider<AuthSession>((ref) async {
+  final activeSession = ref.watch(activeAuthSessionProvider);
+  if (activeSession.isAuthenticated) {
+    return activeSession;
+  }
   final accountRepository = ref.watch(accountRepositoryProvider);
   final profile = await accountRepository.readCachedProfile();
   final tokenSet = await accountRepository.readTokenSet();
@@ -45,11 +53,10 @@ final authSessionProvider = FutureProvider<AuthSession>((ref) async {
   return AuthSession(isAuthenticated: true, userId: profile.userId);
 });
 
-final simulatedLoginUseCaseProvider = Provider<SimulatedLoginUseCase>((ref) {
-  return SimulatedLoginUseCase(
-    accountRepository: ref.watch(accountRepositoryProvider),
-  );
-});
+final activeAuthSessionProvider =
+    NotifierProvider<AuthSessionController, AuthSession>(
+      AuthSessionController.new,
+    );
 
 final authClientAuthorizationProvider = Provider<String>((ref) {
   return const String.fromEnvironment(
@@ -74,6 +81,20 @@ final authCryptoRemoteDataSourceProvider = Provider<AuthCryptoRemoteDataSource>(
 final authCryptoRepositoryProvider = Provider<AuthCryptoRepository>((ref) {
   return AuthCryptoRepositoryImpl(
     remoteDataSource: ref.watch(authCryptoRemoteDataSourceProvider),
+    logger: ref.watch(appLoggerProvider),
+  );
+});
+
+final authLoginRemoteDataSourceProvider = Provider<AuthLoginRemoteDataSource>(
+  (ref) => AuthLoginRemoteDataSourceImpl(
+    api: ref.watch(authApiProvider),
+    clientAuthorization: ref.watch(authClientAuthorizationProvider),
+  ),
+);
+
+final authLoginRepositoryProvider = Provider<AuthLoginRepository>((ref) {
+  return AuthLoginRepositoryImpl(
+    remoteDataSource: ref.watch(authLoginRemoteDataSourceProvider),
     logger: ref.watch(appLoggerProvider),
   );
 });
@@ -140,6 +161,15 @@ final completeRegistrationUseCaseProvider =
         encryptor: ref.watch(passwordCiphertextEncryptorProvider),
       );
     });
+
+final loginUseCaseProvider = Provider<LoginUseCase>((ref) {
+  return LoginUseCase(
+    loginRepository: ref.watch(authLoginRepositoryProvider),
+    cryptoRepository: ref.watch(authCryptoRepositoryProvider),
+    encryptor: ref.watch(passwordCiphertextEncryptorProvider),
+    accountRepository: ref.watch(accountRepositoryProvider),
+  );
+});
 
 final loginFormControllerProvider =
     NotifierProvider.autoDispose<LoginFormController, LoginFormState>(() {

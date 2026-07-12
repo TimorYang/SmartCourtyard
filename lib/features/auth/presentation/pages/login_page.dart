@@ -159,13 +159,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                     _isSubmitting = true;
                                   });
                                   try {
-                                    await ref.read(
-                                      simulatedLoginUseCaseProvider,
-                                    )(
+                                    await ref.read(loginUseCaseProvider)(
                                       email: state.trimmedEmail,
                                       password: state.password,
                                     );
-                                    ref.invalidate(authSessionProvider);
+                                    ref
+                                        .read(
+                                          activeAuthSessionProvider.notifier,
+                                        )
+                                        .markAuthenticated();
                                     if (!context.mounted) {
                                       return;
                                     }

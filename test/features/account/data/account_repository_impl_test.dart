@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flinx/core/network/access_token_cache.dart';
 import 'package:flinx/features/account/data/data_sources/account_local_data_source.dart';
 import 'package:flinx/features/account/data/data_sources/account_secure_data_source.dart';
 import 'package:flinx/features/account/data/repositories/account_repository_impl.dart';
@@ -8,6 +9,8 @@ import 'package:flinx/features/account/domain/entities/account_profile.dart';
 import 'package:flinx/features/account/domain/entities/account_token_set.dart';
 
 void main() {
+  tearDown(AccessTokenCache.clear);
+
   test('returns null when no profile is cached', () async {
     final repository = AccountRepositoryImpl(
       localDataSource: InMemoryAccountLocalDataSource(),
@@ -78,32 +81,6 @@ void main() {
     expect(await localDataSource.readProfile(), isNull);
   });
 
-  test('restores token set from disk on cold start', () async {
-    final directory = await Directory.systemTemp.createTemp(
-      'flinx_account_token_test_',
-    );
-    addTearDown(() => directory.delete(recursive: true));
-    final tokenFile = File('${directory.path}/account_token.json');
-    final tokenSet = AccountTokenSet(
-      accessToken: 'access-secret',
-      refreshToken: 'refresh-secret',
-      expiresAt: DateTime.utc(2026, 1, 2),
-    );
-
-    final firstLaunchRepository = AccountRepositoryImpl(
-      localDataSource: InMemoryAccountLocalDataSource(),
-      secureDataSource: JsonFileAccountSecureDataSource(tokenFile: tokenFile),
-    );
-    await firstLaunchRepository.saveTokenSet(tokenSet);
-
-    final coldStartRepository = AccountRepositoryImpl(
-      localDataSource: InMemoryAccountLocalDataSource(),
-      secureDataSource: JsonFileAccountSecureDataSource(tokenFile: tokenFile),
-    );
-
-    expect(await coldStartRepository.readTokenSet(), tokenSet);
-  });
-
   test('clearAccount clears profile cache and token set', () async {
     final repository = AccountRepositoryImpl(
       localDataSource: InMemoryAccountLocalDataSource(),
@@ -124,5 +101,22 @@ void main() {
 
     expect(await repository.readCachedProfile(), isNull);
     expect(await repository.readTokenSet(), isNull);
+  });
+
+  test('does not cache an expired access token for network requests', () async {
+    final secureDataSource = InMemoryAccountSecureDataSource();
+    final repository = AccountRepositoryImpl(
+      localDataSource: InMemoryAccountLocalDataSource(),
+      secureDataSource: secureDataSource,
+    );
+    await secureDataSource.saveTokenSet(
+      AccountTokenSet(
+        accessToken: 'expired-access',
+        expiresAt: DateTime.utc(2020),
+      ),
+    );
+
+    expect(await repository.readTokenSet(), isNotNull);
+    expect(AccessTokenCache.value, isNull);
   });
 }

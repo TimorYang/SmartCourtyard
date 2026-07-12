@@ -23,7 +23,7 @@ extension AccountProfileDomainMapper on AccountProfile {
       email: email,
       nickname: nickname,
       avatarUrl: _blankToNull(avatarUrl),
-      registeredAtIso8601: registeredAt.toUtc().toIso8601String(),
+      registeredAtIso8601: registeredAt?.toUtc().toIso8601String() ?? '',
       country: _blankToNull(country),
     );
   }
@@ -42,9 +42,8 @@ extension AccountRemoteDtoMapper on AccountRemoteDto {
   }
 }
 
-DateTime _parseRegisteredAt(String value) {
-  return DateTime.tryParse(value)?.toUtc() ??
-      DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
+DateTime? _parseRegisteredAt(String value) {
+  return DateTime.tryParse(value)?.toUtc();
 }
 
 String? _blankToNull(String? value) {

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flinx/core/config/app_api_configuration.dart';
 import 'package:flinx/core/logging/app_logger.dart';
+import 'package:flinx/core/network/access_token_cache.dart';
 import 'package:flinx/core/network/dio_factory.dart';
 import 'package:flinx/core/network/network_exception.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -50,6 +51,26 @@ void main() {
 
     expect(exception.kind, NetworkErrorKind.httpStatus);
     expect(exception.statusCode, 503);
+  });
+
+  test('adds Blade-Auth for non-authentication endpoints', () async {
+    addTearDown(AccessTokenCache.clear);
+    AccessTokenCache.set('access-token');
+    final adapter = _CapturingAdapter();
+    final dio = DioFactory.create(
+      configuration: const AppApiConfiguration(
+        apiOrigin: 'https://api.flinx.example',
+        apiPathPrefix: '/api/force-door',
+      ),
+      logger: _FakeLogger(),
+    )..httpClientAdapter = adapter;
+
+    await dio.get<void>('app/account/profile');
+
+    expect(
+      adapter.requestOptions.headers[NetworkHeaders.bladeAuth],
+      'access-token',
+    );
   });
 }
 

@@ -1,3 +1,4 @@
+import '../../../../core/network/access_token_cache.dart';
 import '../../domain/entities/account_profile.dart';
 import '../../domain/entities/account_token_set.dart';
 import '../../domain/repositories/account_repository.dart';
@@ -34,15 +35,23 @@ class AccountRepositoryImpl implements AccountRepository {
   Future<void> clearAccount() async {
     await localDataSource.clearProfile();
     await secureDataSource.clearTokenSet();
+    AccessTokenCache.clear();
   }
 
   @override
-  Future<void> saveTokenSet(AccountTokenSet tokenSet) {
-    return secureDataSource.saveTokenSet(tokenSet);
+  Future<void> saveTokenSet(AccountTokenSet tokenSet) async {
+    await secureDataSource.saveTokenSet(tokenSet);
+    AccessTokenCache.set(tokenSet.accessToken);
   }
 
   @override
-  Future<AccountTokenSet?> readTokenSet() {
-    return secureDataSource.readTokenSet();
+  Future<AccountTokenSet?> readTokenSet() async {
+    final tokenSet = await secureDataSource.readTokenSet();
+    if (tokenSet == null || !tokenSet.isUsableAt(DateTime.now())) {
+      AccessTokenCache.clear();
+    } else {
+      AccessTokenCache.set(tokenSet.accessToken);
+    }
+    return tokenSet;
   }
 }

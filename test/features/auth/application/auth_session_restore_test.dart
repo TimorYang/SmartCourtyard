@@ -8,34 +8,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test(
-    'simulated login saves generated account profile and token set',
-    () async {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-
-      final session = await container.read(simulatedLoginUseCaseProvider)(
-        email: ' USER@example.com ',
-        password: 'anything',
-      );
-
-      final accountRepository = container.read(accountRepositoryProvider);
-      final profile = await accountRepository.readCachedProfile();
-      final tokenSet = await accountRepository.readTokenSet();
-      final restoredSession = await container.read(authSessionProvider.future);
-
-      expect(session.isAuthenticated, isTrue);
-      expect(session.userId, startsWith('mock-user-'));
-      expect(profile?.email, 'user@example.com');
-      expect(profile?.nickname, 'User');
-      expect(profile?.country, isNotEmpty);
-      expect(tokenSet?.hasAccessToken, isTrue);
-      expect(tokenSet?.refreshToken, isNotEmpty);
-      expect(restoredSession.isAuthenticated, isTrue);
-      expect(restoredSession.userId, session.userId);
-    },
-  );
-
   test('does not restore a session when the cached token is missing', () async {
     final container = ProviderContainer(
       overrides: [

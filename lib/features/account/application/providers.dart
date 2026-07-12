@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../../core/storage/app_storage_paths.dart';
 import '../data/data_sources/account_local_data_source.dart';
@@ -26,8 +27,16 @@ final accountSecureDataSourceProvider = Provider<AccountSecureDataSource>((
 ) {
   if (!AppStoragePaths.isFlutterTest) {
     final storageDirectory = AppStoragePaths.defaultStorageDirectory();
-    return JsonFileAccountSecureDataSource(
-      tokenFile: File('${storageDirectory.path}/account_token.json'),
+    return PlatformAccountSecureDataSource(
+      storage: const FlutterSecureStorage(
+        aOptions: AndroidOptions(),
+        iOptions: IOSOptions(
+          accessibility: KeychainAccessibility.unlocked_this_device,
+        ),
+      ),
+      legacyPlaintextTokenFile: File(
+        '${storageDirectory.path}/account_token.json',
+      ),
     );
   }
 

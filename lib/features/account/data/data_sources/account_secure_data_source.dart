@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
 import '../../domain/entities/account_token_set.dart';
 
 abstract class AccountSecureDataSource {
@@ -30,51 +32,100 @@ class InMemoryAccountSecureDataSource implements AccountSecureDataSource {
   }
 }
 
-class JsonFileAccountSecureDataSource implements AccountSecureDataSource {
-  JsonFileAccountSecureDataSource({required this.tokenFile});
+class PlatformAccountSecureDataSource implements AccountSecureDataSource {
+  const PlatformAccountSecureDataSource({
+    required this.storage,
+    this.legacyPlaintextTokenFile,
+  });
 
-  final File tokenFile;
+  static const _accessTokenKey = 'account.access_token';
+  static const _refreshTokenKey = 'account.refresh_token';
+  static const _expiresAtKey = 'account.expires_at';
+  static const _tokenTypeKey = 'account.token_type';
+
+  final FlutterSecureStorage storage;
+  final File? legacyPlaintextTokenFile;
 
   @override
   Future<AccountTokenSet?> readTokenSet() async {
-    try {
-      if (!await tokenFile.exists()) {
-        return null;
+    final values = await storage.readAll();
+    final accessToken = values[_accessTokenKey];
+    final AccountTokenSet? tokenSet;
+    if (accessToken == null || accessToken.trim().isEmpty) {
+      tokenSet = await _readLegacyPlaintextTokenSet();
+      if (tokenSet != null) {
+        await _writeTokenSet(tokenSet);
       }
-
-      final json = jsonDecode(await tokenFile.readAsString());
-      if (json is! Map) {
-        return null;
-      }
-
-      return AccountTokenSet(
-        accessToken: json['accessToken'] as String? ?? '',
-        refreshToken: json['refreshToken'] as String?,
-        expiresAt: _parseDateTime(json['expiresAt'] as String?),
-        tokenType: json['tokenType'] as String? ?? 'Bearer',
+    } else {
+      tokenSet = AccountTokenSet(
+        accessToken: accessToken,
+        refreshToken: values[_refreshTokenKey],
+        expiresAt: _parseDateTime(values[_expiresAtKey]),
+        tokenType: values[_tokenTypeKey] ?? 'Bearer',
       );
-    } catch (_) {
-      return null;
     }
+    await _deleteLegacyPlaintextTokenFile();
+    return tokenSet;
   }
 
   @override
   Future<void> saveTokenSet(AccountTokenSet tokenSet) async {
-    await tokenFile.parent.create(recursive: true);
-    await tokenFile.writeAsString(
-      jsonEncode(<String, Object?>{
-        'accessToken': tokenSet.accessToken,
-        'refreshToken': tokenSet.refreshToken,
-        'expiresAt': tokenSet.expiresAt?.toUtc().toIso8601String(),
-        'tokenType': tokenSet.tokenType,
-      }),
+    await _writeTokenSet(tokenSet);
+    await _deleteLegacyPlaintextTokenFile();
+  }
+
+  Future<void> _writeTokenSet(AccountTokenSet tokenSet) async {
+    await storage.write(key: _accessTokenKey, value: tokenSet.accessToken);
+    await storage.write(key: _refreshTokenKey, value: tokenSet.refreshToken);
+    await storage.write(
+      key: _expiresAtKey,
+      value: tokenSet.expiresAt?.toUtc().toIso8601String(),
     );
+    await storage.write(key: _tokenTypeKey, value: tokenSet.tokenType);
   }
 
   @override
   Future<void> clearTokenSet() async {
-    if (await tokenFile.exists()) {
-      await tokenFile.delete();
+    for (final key in const [
+      _accessTokenKey,
+      _refreshTokenKey,
+      _expiresAtKey,
+      _tokenTypeKey,
+    ]) {
+      await storage.delete(key: key);
+    }
+    await _deleteLegacyPlaintextTokenFile();
+  }
+
+  Future<void> _deleteLegacyPlaintextTokenFile() async {
+    final file = legacyPlaintextTokenFile;
+    if (file != null && await file.exists()) {
+      await file.delete();
+    }
+  }
+
+  Future<AccountTokenSet?> _readLegacyPlaintextTokenSet() async {
+    final file = legacyPlaintextTokenFile;
+    if (file == null || !await file.exists()) {
+      return null;
+    }
+    try {
+      final json = jsonDecode(await file.readAsString());
+      if (json is! Map) {
+        return null;
+      }
+      final accessToken = json['accessToken'] as String?;
+      if (accessToken == null || accessToken.trim().isEmpty) {
+        return null;
+      }
+      return AccountTokenSet(
+        accessToken: accessToken,
+        refreshToken: json['refreshToken'] as String?,
+        expiresAt: _parseDateTime(json['expiresAt'] as String?),
+        tokenType: json['tokenType'] as String? ?? 'Bearer',
+      );
+    } on Object {
+      return null;
     }
   }
 

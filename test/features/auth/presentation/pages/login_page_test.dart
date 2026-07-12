@@ -86,35 +86,6 @@ void main() {
     expect(find.text('Login is not connected yet'), findsNothing);
   });
 
-  testWidgets(
-    'simulates login and opens home after a valid email is submitted',
-    (tester) async {
-      await openLoginPage(tester);
-
-      await tester.enterText(find.byType(TextField).at(0), 'user@example.com');
-      await tester.enterText(find.byType(TextField).at(1), 'demo-password');
-      await tester.tap(find.byKey(const ValueKey('login_agreement_toggle')));
-      await tester.pumpAndSettle();
-
-      final enabledButton = tester.widget<FilledButton>(
-        find.byType(FilledButton),
-      );
-      expect(enabledButton.onPressed, isNotNull);
-
-      await tester.tap(find.text('Login in'));
-      await tester.pump();
-
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-
-      await tester.pump(const Duration(seconds: 3));
-      await tester.pumpAndSettle();
-
-      expect(find.text('2 Doors'), findsOneWidget);
-      expect(find.text('Garage door'), findsOneWidget);
-      expect(find.text('Login is not connected yet'), findsNothing);
-    },
-  );
-
   testWidgets('navigates to register page and forgot password form', (
     tester,
   ) async {
