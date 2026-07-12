@@ -5,6 +5,9 @@ This file defines the development rules for AI agents and contributors working o
 The app is a Flutter-first mobile application for FLINX door-control devices. Flutter owns UI, navigation, application state, and business orchestration. iOS and Android native code own BLE, Wi-Fi provisioning, device protocol handling, permissions, scanning, and hardware diagnostics.
 
 Read `docs/flutter_architecture.md` before making architecture-level changes.
+Read `docs/network_requests.md` before adding or changing REST APIs, network
+configuration, JSON DTOs, remote data sources, repository mappings, or network
+error handling.
 
 ## Git Flow
 
@@ -330,6 +333,62 @@ Do not assume cached device state is realtime. Security Center offline views mus
 
 Avoid Android-style Material tap effects such as ripple, splash, and highlight on custom-designed app UI unless the design explicitly calls for them. Prefer explicit visual states from the design system or silent tap targets with adequate hit area.
 
+## Network Request Rules
+
+The canonical network usage guide is `docs/network_requests.md`. Follow it for
+all REST API work.
+
+Required request flow:
+
+```text
+Page / Widget
+→ Controller / Provider
+→ UseCase
+→ Domain Repository
+→ RepositoryImpl
+→ RemoteDataSource
+→ Retrofit API
+→ shared Dio
+```
+
+Rules:
+
+- Obtain Dio through `dioProvider`; do not create feature-specific Dio clients
+  that bypass shared timeouts, request correlation, logging, or debug proxy
+  configuration.
+- Define Retrofit APIs and wire-format DTOs inside the owning feature's data
+  layer. Put only reusable transport infrastructure in `core/network`.
+- Use `ApiEnvelopeDto<T>` for the shared server response envelope. Prefer a
+  strongly typed DTO for structured `data`; use `dynamic` only when the wire
+  response is intentionally unstructured or a primitive.
+- DTOs represent the server contract. Domain entities represent business
+  meaning. Convert DTOs to domain entities in a data-layer mapper or
+  `RepositoryImpl`, never in presentation, application, or domain code.
+- Remote data sources validate HTTP-independent protocol success, including
+  `code`, `success`, required `data`, and feature-specific wire fields.
+- Convert `DioException` to `NetworkException`, then to a feature data-source
+  exception, then to `AppError` or a typed domain error. Do not expose Dio,
+  HTTP status codes, server messages, or raw response codes to UI code.
+- Every network-backed business operation must create a `requestId` and reuse
+  it across use case, repository, data source, Dio `extra`, the
+  `X-Request-Id` header, and structured logs.
+- Do not log full request or response bodies, Authorization headers, tokens,
+  passwords, Wi-Fi credentials, nonces, device keys, or other secrets.
+- Environment values must come from `--dart-define-from-file`. Commit example
+  files only; never commit populated `config/env/*.json` files.
+- Personal debug proxy addresses and invalid-certificate settings must not be
+  committed to shared branches.
+- Widget tests and controller tests must override providers or repositories and
+  must never call real servers.
+
+Code generation rules:
+
+- Run `dart run build_runner build` after changing Retrofit APIs, Freezed DTOs,
+  or JSON serialization models.
+- Commit the resulting `.g.dart` and `.freezed.dart` files.
+- Never edit generated files manually.
+- Run `bash tool/verify_generated.sh` before completing network or DTO work.
+
 ## Data and Storage Rules
 
 Use separate data sources for:
@@ -455,6 +514,12 @@ Before finishing a feature or fix, confirm:
 - Mock gateway still works.
 - Tests cover success and important failure paths.
 - Sensitive data is not logged or persisted insecurely.
+- Network calls use the shared Dio/Retrofit path and do not originate in UI.
+- Structured API responses use typed DTOs and are mapped to domain entities in
+  the data layer.
+- Network errors are normalized before reaching application or presentation.
+- Network operations preserve one `requestId` through requests and logs.
+- Retrofit, JSON, and Freezed generated files are current.
 
 ## Development Phases
 
