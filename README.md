@@ -20,6 +20,11 @@ Read `docs/flutter_architecture.md` before architecture-level changes.
 
 ```sh
 flutter pub get
+dart run build_runner build
+bash tool/verify_generated.sh
 flutter analyze
 flutter test
 ```
+
+`tool/verify_generated.sh` is the CI command for ensuring generated Retrofit,
+JSON, and Freezed files are committed and current.
