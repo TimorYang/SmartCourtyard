@@ -5,9 +5,18 @@ import 'package:flinx/features/home/application/providers.dart';
 import 'package:flinx/features/home/domain/entities/home_scene.dart';
 import 'package:flinx/features/home/domain/use_cases/create_home_scene_use_case.dart';
 import 'package:flinx/features/home/domain/repositories/home_scene_repository.dart';
+import 'package:flinx/platform_bridge/hardware_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+const _sceneFixtures = [
+  HomeScene(id: 1, name: 'Home', doorCount: 2, isDefault: true),
+  HomeScene(id: 2, name: 'Warehouse A', doorCount: 5, isDefault: false),
+  HomeScene(id: 3, name: 'Home Garage A', doorCount: 1, isDefault: false),
+  HomeScene(id: 4, name: 'Workshop', doorCount: 0, isDefault: false),
+  HomeScene(id: 5, name: 'Office', doorCount: 0, isDefault: true),
+];
 
 void main() {
   Future<void> pumpSignedInApp(WidgetTester tester) async {
@@ -18,10 +27,9 @@ void main() {
             (ref) async =>
                 const AuthSession(isAuthenticated: true, userId: 'test-user'),
           ),
-          homeScenesProvider.overrideWith(
-            (ref) async => const [
-              HomeScene(id: 1, name: 'Home', doorCount: 2, isDefault: true),
-            ],
+          homeScenesProvider.overrideWith((ref) async => _sceneFixtures),
+          homeDevicesProvider.overrideWith(
+            (ref) async => const <DeviceSummary>[],
           ),
           createHomeSceneUseCaseProvider.overrideWith(
             (ref) => CreateHomeSceneUseCase(repository: _FakeSceneRepository()),
@@ -116,7 +124,7 @@ void main() {
 
     expect(find.text('SCENE EDITING'), findsOneWidget);
     expect(find.byTooltip('Done editing'), findsOneWidget);
-    expect(find.byIcon(Icons.remove_rounded), findsNWidgets(3));
+    expect(find.byIcon(Icons.remove_rounded), findsNWidgets(5));
     expect(find.text('New scene'), findsNothing);
 
     await tester.tap(find.byTooltip('Done editing'));
@@ -130,9 +138,7 @@ void main() {
 class _FakeSceneRepository implements HomeSceneRepository {
   @override
   Future<List<HomeScene>> fetchScenes({required String requestId}) async {
-    return const [
-      HomeScene(id: 1, name: 'Home', doorCount: 2, isDefault: true),
-    ];
+    return _sceneFixtures;
   }
 
   @override
@@ -142,4 +148,17 @@ class _FakeSceneRepository implements HomeSceneRepository {
   }) async {
     return HomeScene(id: 2, name: name, doorCount: 0, isDefault: false);
   }
+
+  @override
+  Future<void> deleteScene({
+    required int sceneId,
+    required String requestId,
+  }) async {}
+
+  @override
+  Future<void> renameScene({
+    required int sceneId,
+    required String name,
+    required String requestId,
+  }) async {}
 }

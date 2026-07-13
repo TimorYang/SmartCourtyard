@@ -105,6 +105,19 @@ class _FakeHomeSceneRemoteDataSource implements HomeSceneRemoteDataSource {
   }) async {
     return scenes.single;
   }
+
+  @override
+  Future<void> deleteScene({
+    required int sceneId,
+    required String requestId,
+  }) async {}
+
+  @override
+  Future<void> renameScene({
+    required int sceneId,
+    required String name,
+    required String requestId,
+  }) async {}
 }
 
 class _FailingHomeSceneRemoteDataSource implements HomeSceneRemoteDataSource {
@@ -119,6 +132,20 @@ class _FailingHomeSceneRemoteDataSource implements HomeSceneRemoteDataSource {
 
   @override
   Future<HomeSceneResponseDto> createScene({
+    required String name,
+    required String requestId,
+  }) {
+    throw error;
+  }
+
+  @override
+  Future<void> deleteScene({required int sceneId, required String requestId}) {
+    throw error;
+  }
+
+  @override
+  Future<void> renameScene({
+    required int sceneId,
     required String name,
     required String requestId,
   }) {

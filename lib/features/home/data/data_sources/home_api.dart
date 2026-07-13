@@ -3,6 +3,7 @@ import 'package:retrofit/retrofit.dart';
 
 import '../../../../core/network/api_envelope_dto.dart';
 import '../dto/create_home_scene_request_dto.dart';
+import '../dto/home_door_response_dto.dart';
 import '../dto/home_scene_response_dto.dart';
 
 part 'home_api.g.dart';
@@ -13,6 +14,12 @@ abstract class HomeApi {
 
   @GET('app/scenes')
   Future<ApiEnvelopeDto<List<HomeSceneResponseDto>>> fetchScenes(
+    @DioOptions() Options options,
+  );
+
+  @GET('app/doors')
+  Future<ApiEnvelopeDto<List<HomeDoorResponseDto>>> fetchDoors(
+    @Query('sceneId') int sceneId,
     @DioOptions() Options options,
   );
 

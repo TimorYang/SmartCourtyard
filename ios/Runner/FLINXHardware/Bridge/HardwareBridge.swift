@@ -1492,6 +1492,7 @@ private extension BleDiscoveredDevice {
             scanSessionId: scanSessionId,
             id: id,
             name: name,
+            sn: sn,
             rssi: Int64(rssi),
             advertisementServiceUuids: advertisementServiceUuids,
             manufacturerData: FlutterStandardTypedData(bytes: manufacturerData),

@@ -2115,6 +2115,7 @@ class BleManager(
       scanSessionId = requestId,
       id = result.device?.address ?: "",
       name = deviceName,
+      sn = parseSmartOpenerSn(deviceName),
       rssi = result.rssi.toLong(),
       advertisementServiceUuids = result.scanRecord?.serviceUuids?.map { it.uuid.toString() } ?: emptyList(),
       manufacturerData = flattenManufacturerData(result),
@@ -2125,6 +2126,12 @@ class BleManager(
       "蓝牙扫描结果 requestId=$requestId deviceId=${device.id} name=${device.name} rssi=${device.rssi} serviceUuids=${device.advertisementServiceUuids}",
     )
     onDeviceFound?.invoke(device)
+  }
+
+  private fun parseSmartOpenerSn(name: String?): String? {
+    val prefix = "opener_"
+    if (name == null || !name.startsWith(prefix)) return null
+    return name.removePrefix(prefix).trim().takeIf { it.isNotEmpty() }
   }
 
   private fun buildScanFilters(filter: BleScanFilterDto): List<ScanFilter> {

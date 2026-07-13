@@ -226,22 +226,67 @@ class HardwareHostApiImpl(
     requestId: String,
     deviceId: String,
     command: DoorCommandDto,
-  ): CommandResultDto {
-    permissionManager.ensureBleConnectPreconditions()
-    val control = when (command) {
-      DoorCommandDto.OPEN -> DeviceBleProtocolConfig.controlOpenDoor
-      DoorCommandDto.CLOSE -> DeviceBleProtocolConfig.controlCloseDoor
-      DoorCommandDto.STOP -> DeviceBleProtocolConfig.controlStopDoor
-      DoorCommandDto.PARTIAL_OPEN -> DeviceBleProtocolConfig.controlPartialOpenDoor
-      DoorCommandDto.LIGHT_ON -> DeviceBleProtocolConfig.controlLightOn
-      DoorCommandDto.LIGHT_OFF -> DeviceBleProtocolConfig.controlLightOff
-      DoorCommandDto.PB -> DeviceBleProtocolConfig.controlPb
+    callback: (Result<CommandResultDto>) -> Unit,
+  ) {
+    try {
+      permissionManager.ensureBleConnectPreconditions()
+      val control = when (command) {
+        DoorCommandDto.OPEN -> DeviceBleProtocolConfig.controlOpenDoor
+        DoorCommandDto.CLOSE -> DeviceBleProtocolConfig.controlCloseDoor
+        DoorCommandDto.STOP -> DeviceBleProtocolConfig.controlStopDoor
+        DoorCommandDto.PARTIAL_OPEN -> DeviceBleProtocolConfig.controlPartialOpenDoor
+        DoorCommandDto.LIGHT_ON -> DeviceBleProtocolConfig.controlLightOn
+        DoorCommandDto.LIGHT_OFF -> DeviceBleProtocolConfig.controlLightOff
+        DoorCommandDto.PB -> DeviceBleProtocolConfig.controlPb
+      }
+      callback(
+        Result.success(
+          bleManager.sendDoorCommand(
+            requestId = requestId,
+            deviceId = deviceId,
+            control = control,
+          ),
+        ),
+      )
+    } catch (error: Throwable) {
+      callback(Result.failure(error))
     }
-    return bleManager.sendDoorCommand(
-      requestId = requestId,
-      deviceId = deviceId,
-      control = control,
-    )
+  }
+
+  override fun pairRemote(
+    requestId: String,
+    deviceId: String,
+    action: RemotePairingActionDto,
+    callback: (Result<RemotePairingResultDto>) -> Unit,
+  ) {
+    callback(Result.failure(notImplemented("pairRemote", requestId, deviceId)))
+  }
+
+  override fun queryRemotes(
+    requestId: String,
+    deviceId: String,
+    callback: (Result<RemoteControlListResultDto>) -> Unit,
+  ) {
+    callback(Result.failure(notImplemented("queryRemotes", requestId, deviceId)))
+  }
+
+  override fun deleteRemote(
+    requestId: String,
+    deviceId: String,
+    serialNumber: Long?,
+    callback: (Result<RemoteOperationResultDto>) -> Unit,
+  ) {
+    callback(Result.failure(notImplemented("deleteRemote", requestId, deviceId)))
+  }
+
+  override fun renameRemote(
+    requestId: String,
+    deviceId: String,
+    serialNumber: Long,
+    name: String,
+    callback: (Result<RemoteOperationResultDto>) -> Unit,
+  ) {
+    callback(Result.failure(notImplemented("renameRemote", requestId, deviceId)))
   }
 
   /** 生成统一的“未实现”错误，附带方法与请求上下文信息。 */

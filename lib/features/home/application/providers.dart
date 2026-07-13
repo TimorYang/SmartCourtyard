@@ -3,30 +3,38 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/logging/providers.dart';
 import '../../../core/network/providers.dart';
 import '../../../platform_bridge/hardware_models.dart';
-import '../../../platform_bridge/providers.dart';
 import '../data/data_sources/home_api.dart';
+import '../data/data_sources/home_door_remote_data_source.dart';
 import '../data/data_sources/home_scene_remote_data_source.dart';
+import '../data/repositories/home_door_repository_impl.dart';
 import '../data/repositories/home_scene_repository_impl.dart';
 import '../domain/entities/home_scene.dart';
+import '../domain/repositories/home_door_repository.dart';
 import '../domain/repositories/home_scene_repository.dart';
 import '../domain/use_cases/create_home_scene_use_case.dart';
 import '../domain/use_cases/delete_home_scene_use_case.dart';
+import '../domain/use_cases/fetch_home_doors_use_case.dart';
 import '../domain/use_cases/fetch_home_scenes_use_case.dart';
 import '../domain/use_cases/rename_home_scene_use_case.dart';
-
-final homeDevicesProvider = FutureProvider<List<DeviceSummary>>((ref) {
-  final hardwareGateway = ref.watch(hardwareGatewayProvider);
-
-  return hardwareGateway.readDevices();
-});
 
 final homeApiProvider = Provider<HomeApi>((ref) {
   return HomeApi(ref.watch(dioProvider));
 });
 
+final homeDoorRemoteDataSourceProvider = Provider<HomeDoorRemoteDataSource>(
+  (ref) => HomeDoorRemoteDataSourceImpl(api: ref.watch(homeApiProvider)),
+);
+
 final homeSceneRemoteDataSourceProvider = Provider<HomeSceneRemoteDataSource>(
   (ref) => HomeSceneRemoteDataSourceImpl(api: ref.watch(homeApiProvider)),
 );
+
+final homeDoorRepositoryProvider = Provider<HomeDoorRepository>((ref) {
+  return HomeDoorRepositoryImpl(
+    remoteDataSource: ref.watch(homeDoorRemoteDataSourceProvider),
+    logger: ref.watch(appLoggerProvider),
+  );
+});
 
 final homeSceneRepositoryProvider = Provider<HomeSceneRepository>((ref) {
   return HomeSceneRepositoryImpl(
@@ -38,6 +46,12 @@ final homeSceneRepositoryProvider = Provider<HomeSceneRepository>((ref) {
 final fetchHomeScenesUseCaseProvider = Provider<FetchHomeScenesUseCase>((ref) {
   return FetchHomeScenesUseCase(
     repository: ref.watch(homeSceneRepositoryProvider),
+  );
+});
+
+final fetchHomeDoorsUseCaseProvider = Provider<FetchHomeDoorsUseCase>((ref) {
+  return FetchHomeDoorsUseCase(
+    repository: ref.watch(homeDoorRepositoryProvider),
   );
 });
 
@@ -65,4 +79,23 @@ final homeScenesProvider = FutureProvider<List<HomeScene>>((ref) {
     requestId:
         'home-fetch-scenes-${DateTime.now().toUtc().microsecondsSinceEpoch}',
   );
+});
+
+final homeDevicesProvider = FutureProvider<List<DeviceSummary>>((ref) async {
+  final scenes = await ref.watch(homeScenesProvider.future);
+  if (scenes.isEmpty) {
+    return const <DeviceSummary>[];
+  }
+
+  final useCase = ref.watch(fetchHomeDoorsUseCaseProvider);
+  final now = DateTime.now().toUtc().microsecondsSinceEpoch;
+  final results = await Future.wait([
+    for (final scene in scenes)
+      useCase(
+        sceneId: scene.id,
+        requestId: 'home-fetch-doors-${scene.id}-$now',
+      ),
+  ]);
+
+  return [for (final doors in results) ...doors];
 });

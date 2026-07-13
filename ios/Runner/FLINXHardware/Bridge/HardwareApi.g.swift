@@ -322,6 +322,7 @@ struct BleDeviceDto: Hashable {
   var scanSessionId: String
   var id: String
   var name: String? = nil
+  var sn: String? = nil
   var rssi: Int64
   var advertisementServiceUuids: [String]
   var manufacturerData: FlutterStandardTypedData
@@ -334,16 +335,18 @@ struct BleDeviceDto: Hashable {
     let scanSessionId = pigeonVar_list[1] as! String
     let id = pigeonVar_list[2] as! String
     let name: String? = nilOrValue(pigeonVar_list[3])
-    let rssi = pigeonVar_list[4] as! Int64
-    let advertisementServiceUuids = pigeonVar_list[5] as! [String]
-    let manufacturerData = pigeonVar_list[6] as! FlutterStandardTypedData
-    let seenAtMillis = pigeonVar_list[7] as! Int64
+    let sn: String? = nilOrValue(pigeonVar_list[4])
+    let rssi = pigeonVar_list[5] as! Int64
+    let advertisementServiceUuids = pigeonVar_list[6] as! [String]
+    let manufacturerData = pigeonVar_list[7] as! FlutterStandardTypedData
+    let seenAtMillis = pigeonVar_list[8] as! Int64
 
     return BleDeviceDto(
       requestId: requestId,
       scanSessionId: scanSessionId,
       id: id,
       name: name,
+      sn: sn,
       rssi: rssi,
       advertisementServiceUuids: advertisementServiceUuids,
       manufacturerData: manufacturerData,
@@ -356,6 +359,7 @@ struct BleDeviceDto: Hashable {
       scanSessionId,
       id,
       name,
+      sn,
       rssi,
       advertisementServiceUuids,
       manufacturerData,
@@ -366,7 +370,7 @@ struct BleDeviceDto: Hashable {
     if Swift.type(of: lhs) != Swift.type(of: rhs) {
       return false
     }
-    return deepEqualsHardwareApi(lhs.requestId, rhs.requestId) && deepEqualsHardwareApi(lhs.scanSessionId, rhs.scanSessionId) && deepEqualsHardwareApi(lhs.id, rhs.id) && deepEqualsHardwareApi(lhs.name, rhs.name) && deepEqualsHardwareApi(lhs.rssi, rhs.rssi) && deepEqualsHardwareApi(lhs.advertisementServiceUuids, rhs.advertisementServiceUuids) && deepEqualsHardwareApi(lhs.manufacturerData, rhs.manufacturerData) && deepEqualsHardwareApi(lhs.seenAtMillis, rhs.seenAtMillis)
+    return deepEqualsHardwareApi(lhs.requestId, rhs.requestId) && deepEqualsHardwareApi(lhs.scanSessionId, rhs.scanSessionId) && deepEqualsHardwareApi(lhs.id, rhs.id) && deepEqualsHardwareApi(lhs.name, rhs.name) && deepEqualsHardwareApi(lhs.sn, rhs.sn) && deepEqualsHardwareApi(lhs.rssi, rhs.rssi) && deepEqualsHardwareApi(lhs.advertisementServiceUuids, rhs.advertisementServiceUuids) && deepEqualsHardwareApi(lhs.manufacturerData, rhs.manufacturerData) && deepEqualsHardwareApi(lhs.seenAtMillis, rhs.seenAtMillis)
   }
 
   func hash(into hasher: inout Hasher) {
@@ -375,6 +379,7 @@ struct BleDeviceDto: Hashable {
     deepHashHardwareApi(value: scanSessionId, hasher: &hasher)
     deepHashHardwareApi(value: id, hasher: &hasher)
     deepHashHardwareApi(value: name, hasher: &hasher)
+    deepHashHardwareApi(value: sn, hasher: &hasher)
     deepHashHardwareApi(value: rssi, hasher: &hasher)
     deepHashHardwareApi(value: advertisementServiceUuids, hasher: &hasher)
     deepHashHardwareApi(value: manufacturerData, hasher: &hasher)

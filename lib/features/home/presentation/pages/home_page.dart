@@ -65,27 +65,6 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
-  static const _demoHomeDevices = <DeviceSummary>[
-    DeviceSummary(
-      id: 'demo-garage-door',
-      name: 'Garage door',
-      onlineState: DeviceOnlineState.online,
-      bleState: BleConnectionState.connected,
-      doorState: DoorState.closing,
-      cycleCount: 8,
-      remainingLifePercent: 96,
-    ),
-    DeviceSummary(
-      id: 'demo-roller-door',
-      name: 'Roller door',
-      onlineState: DeviceOnlineState.offline,
-      bleState: BleConnectionState.disconnected,
-      doorState: DoorState.open,
-      cycleCount: 12,
-      remainingLifePercent: 89,
-    ),
-  ];
-
   var _isAddMenuVisible = false;
   var _isSingleColumnDeviceList = false;
 
@@ -94,9 +73,9 @@ class _HomePageState extends ConsumerState<HomePage> {
     final devices = ref.watch(homeDevicesProvider);
     final scenes = ref.watch(homeScenesProvider);
     final homeDevices = devices.when(
-      data: (items) => items.isEmpty ? _demoHomeDevices : items,
-      loading: () => _demoHomeDevices,
-      error: (error, stackTrace) => _demoHomeDevices,
+      data: (items) => items,
+      loading: () => const <DeviceSummary>[],
+      error: (error, stackTrace) => const <DeviceSummary>[],
     );
     final homes = scenes.when(
       data: (items) => _buildHomeGroups(items, homeDevices),
@@ -187,7 +166,8 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
 
     final defaultSceneIndex = scenes.indexWhere((scene) => scene.isDefault);
-    final deviceSceneIndex = defaultSceneIndex == -1 ? 0 : defaultSceneIndex;
+    final fallbackSceneId =
+        scenes[defaultSceneIndex == -1 ? 0 : defaultSceneIndex].id;
 
     return [
       for (var index = 0; index < scenes.length; index++)
@@ -195,10 +175,18 @@ class _HomePageState extends ConsumerState<HomePage> {
           label: scenes[index].name.trim().isEmpty
               ? 'Home'
               : scenes[index].name.trim(),
-          doorCount: scenes[index].doorCount,
-          devices: index == deviceSceneIndex
-              ? devices
-              : const <DeviceSummary>[],
+          doorCount: devices
+              .where(
+                (device) =>
+                    (device.sceneId ?? fallbackSceneId) == scenes[index].id,
+              )
+              .length,
+          devices: devices
+              .where(
+                (device) =>
+                    (device.sceneId ?? fallbackSceneId) == scenes[index].id,
+              )
+              .toList(growable: false),
         ),
     ];
   }

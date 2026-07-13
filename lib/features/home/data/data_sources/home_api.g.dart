@@ -58,6 +58,46 @@ class _HomeApi implements HomeApi {
   }
 
   @override
+  Future<ApiEnvelopeDto<List<HomeDoorResponseDto>>> fetchDoors(
+    int sceneId,
+    Options options,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'sceneId': sceneId};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final newOptions = newRequestOptions(options);
+    newOptions.extra.addAll(_extra);
+    newOptions.headers.addAll(_dio.options.headers);
+    newOptions.headers.addAll(_headers);
+    final _options = newOptions.copyWith(
+      method: 'GET',
+      baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl),
+      queryParameters: queryParameters,
+      path: 'app/doors',
+    )..data = _data;
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late ApiEnvelopeDto<List<HomeDoorResponseDto>> _value;
+    try {
+      _value = ApiEnvelopeDto<List<HomeDoorResponseDto>>.fromJson(
+        _result.data!,
+        (json) => json is List<dynamic>
+            ? json
+                  .map<HomeDoorResponseDto>(
+                    (i) =>
+                        HomeDoorResponseDto.fromJson(i as Map<String, dynamic>),
+                  )
+                  .toList()
+            : List.empty(),
+      );
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, response: _result);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
   Future<ApiEnvelopeDto<HomeSceneResponseDto>> createScene(
     CreateHomeSceneRequestDto request,
     Options options,

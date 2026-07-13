@@ -93,6 +93,7 @@ class DeviceSummary {
     required this.doorState,
     required this.cycleCount,
     required this.remainingLifePercent,
+    this.sceneId,
     this.lastSeenAt,
   });
 
@@ -103,6 +104,7 @@ class DeviceSummary {
   final DoorState doorState;
   final int cycleCount;
   final int remainingLifePercent;
+  final int? sceneId;
   final DateTime? lastSeenAt;
 }
 
@@ -210,6 +212,7 @@ class BleDevice {
     required this.rssi,
     required this.seenAtMillis,
     this.name,
+    this.sn,
     this.advertisementServiceUuids = const [],
     Uint8List? manufacturerData,
   }) : manufacturerData = manufacturerData ?? Uint8List(0);
@@ -218,6 +221,7 @@ class BleDevice {
   final String scanSessionId;
   final String id;
   final String? name;
+  final String? sn;
   final int rssi;
   final int seenAtMillis;
   final List<String> advertisementServiceUuids;

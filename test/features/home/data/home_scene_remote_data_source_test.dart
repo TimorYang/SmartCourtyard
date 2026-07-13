@@ -4,6 +4,7 @@ import 'package:flinx/core/network/dio_factory.dart';
 import 'package:flinx/features/home/data/data_sources/home_api.dart';
 import 'package:flinx/features/home/data/data_sources/home_scene_remote_data_source.dart';
 import 'package:flinx/features/home/data/dto/create_home_scene_request_dto.dart';
+import 'package:flinx/features/home/data/dto/home_door_response_dto.dart';
 import 'package:flinx/features/home/data/dto/home_scene_response_dto.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -170,6 +171,19 @@ class _FakeHomeApi implements HomeApi {
   }
 
   @override
+  Future<ApiEnvelopeDto<List<HomeDoorResponseDto>>> fetchDoors(
+    int sceneId,
+    Options requestOptions,
+  ) async {
+    options = requestOptions;
+    return const ApiEnvelopeDto<List<HomeDoorResponseDto>>(
+      code: 0,
+      success: true,
+      data: <HomeDoorResponseDto>[],
+    );
+  }
+
+  @override
   Future<ApiEnvelopeDto<HomeSceneResponseDto>> createScene(
     CreateHomeSceneRequestDto request,
     Options requestOptions,
@@ -177,6 +191,26 @@ class _FakeHomeApi implements HomeApi {
     createRequest = request;
     options = requestOptions;
     return createResponse!;
+  }
+
+  @override
+  Future<ApiEnvelopeDto<dynamic>> deleteScene(
+    int sceneId,
+    Options requestOptions,
+  ) async {
+    options = requestOptions;
+    return const ApiEnvelopeDto<dynamic>(code: 0, success: true);
+  }
+
+  @override
+  Future<ApiEnvelopeDto<bool>> renameScene(
+    int sceneId,
+    CreateHomeSceneRequestDto request,
+    Options requestOptions,
+  ) async {
+    createRequest = request;
+    options = requestOptions;
+    return const ApiEnvelopeDto<bool>(code: 0, success: true, data: true);
   }
 }
 
@@ -193,7 +227,29 @@ class _ThrowingHomeApi implements HomeApi {
   }
 
   @override
+  Future<ApiEnvelopeDto<List<HomeDoorResponseDto>>> fetchDoors(
+    int sceneId,
+    Options options,
+  ) {
+    throw error;
+  }
+
+  @override
   Future<ApiEnvelopeDto<HomeSceneResponseDto>> createScene(
+    CreateHomeSceneRequestDto request,
+    Options options,
+  ) {
+    throw error;
+  }
+
+  @override
+  Future<ApiEnvelopeDto<dynamic>> deleteScene(int sceneId, Options options) {
+    throw error;
+  }
+
+  @override
+  Future<ApiEnvelopeDto<bool>> renameScene(
+    int sceneId,
     CreateHomeSceneRequestDto request,
     Options options,
   ) {
