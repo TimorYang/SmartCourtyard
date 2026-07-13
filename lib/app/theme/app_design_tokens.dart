@@ -83,6 +83,8 @@ class AppColors {
   static const securityReportAbnormal = Color(0xFFE52323);
   static const securityReportSuggestion = Color(0xFFFF2028);
   static const securityReportActionSurface = Color(0xFFE0E0E0);
+  static const securityReportBottomBar = Colors.white;
+  static const securityReportBottomBarDivider = Color(0xFFE6E7EB);
   static const safetySensorMetricIcon = Color(0xFF0878ED);
   static const safetySensorItemSurface = Color(0xFFF5F7FB);
   static const safetySensorDisconnected = Color(0xFFB1B4BA);

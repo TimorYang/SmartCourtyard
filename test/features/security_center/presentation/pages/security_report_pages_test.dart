@@ -1,3 +1,6 @@
+import 'dart:typed_data';
+
+import 'package:flinx/core/platform/gallery_image_saver.dart';
 import 'package:flinx/features/security_center/presentation/pages/full_report_page.dart';
 import 'package:flinx/features/security_center/presentation/pages/general_evaluation_page.dart';
 import 'package:flinx/features/security_center/presentation/pages/security_center_page.dart';
@@ -109,13 +112,99 @@ void main() {
     expect(find.text('Safety suggestion:'), findsOneWidget);
     expect(find.text('Save'), findsOneWidget);
     expect(find.text('Share'), findsOneWidget);
+    expect(find.byType(SecurityReportActionBar), findsOneWidget);
+    expect(
+      find.ancestor(
+        of: find.text('Safety suggestion:'),
+        matching: find.byType(SecurityReportCard),
+      ),
+      findsNothing,
+    );
 
     await tester.scrollUntilVisible(
-      find.text('Share'),
+      find.text('Safety suggestion:'),
       500,
       scrollable: _scrollableInside('full-report-scroll'),
     );
-    expect(find.text('Share'), findsOneWidget);
+    expect(find.text('Safety suggestion:'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('full report save captures report image and shows success', (
+    tester,
+  ) async {
+    var saveCalls = 0;
+    Uint8List? savedBytes;
+
+    await _pumpPage(
+      tester,
+      FullReportPage(
+        deviceId: 'mock-device',
+        captureReportImage: (_, _) async => Uint8List.fromList([1, 2, 3]),
+        saveReportImage: (bytes) async {
+          saveCalls += 1;
+          savedBytes = bytes;
+        },
+      ),
+    );
+
+    _tapReportSaveAction(tester);
+    await tester.pump();
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    expect(saveCalls, 1);
+    expect(savedBytes, isNotNull);
+    expect(savedBytes, isNotEmpty);
+    expect(find.text('Report saved to album.'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('full report save failure shows a readable error', (
+    tester,
+  ) async {
+    await _pumpPage(
+      tester,
+      FullReportPage(
+        deviceId: 'mock-device',
+        captureReportImage: (_, _) async => Uint8List.fromList([1, 2, 3]),
+        saveReportImage: (_) async {
+          throw const GalleryImageSaveException(GalleryImageSaveFailure.failed);
+        },
+      ),
+    );
+
+    _tapReportSaveAction(tester);
+    await tester.pump();
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Unable to save report image.'), findsOneWidget);
+    expect(find.text('gallery unavailable'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('full report capture failure shows a readable error', (
+    tester,
+  ) async {
+    await _pumpPage(
+      tester,
+      FullReportPage(
+        deviceId: 'mock-device',
+        captureReportImage: (_, _) async {
+          throw StateError('capture unavailable');
+        },
+        saveReportImage: (_) async {},
+      ),
+    );
+
+    _tapReportSaveAction(tester);
+    await tester.pump();
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Unable to create report image.'), findsOneWidget);
+    expect(find.text('capture unavailable'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -200,6 +289,18 @@ Finder _scrollableInside(String key) {
     of: find.byKey(ValueKey<String>(key)),
     matching: find.byType(Scrollable),
   );
+}
+
+void _tapReportSaveAction(WidgetTester tester) {
+  final action = find.byKey(const ValueKey<String>('full-report-save-action'));
+  expect(action, findsOneWidget);
+  final gesture = find.descendant(
+    of: action,
+    matching: find.byType(GestureDetector),
+  );
+  final detector = tester.widget<GestureDetector>(gesture);
+  expect(detector.onTap, isNotNull);
+  detector.onTap?.call();
 }
 
 GoRouter _buildRouter() {

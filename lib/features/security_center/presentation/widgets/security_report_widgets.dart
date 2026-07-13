@@ -605,10 +605,7 @@ class SensorStatusCard extends StatelessWidget {
 }
 
 class SafetySuggestionCard extends StatelessWidget {
-  const SafetySuggestionCard({this.onSave, this.onShare, super.key});
-
-  final VoidCallback? onSave;
-  final VoidCallback? onShare;
+  const SafetySuggestionCard({super.key});
 
   static const suggestions = <String>[
     'Operated cycles has reached the maintenance warning;',
@@ -620,7 +617,8 @@ class SafetySuggestionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    return SecurityReportCard(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -634,34 +632,18 @@ class SafetySuggestionCard extends StatelessWidget {
               '${index + 1}. ${suggestions[index]}',
               style: AppTextTokens.securityReportSuggestion(textTheme),
             ),
-          const SizedBox(height: 18),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _SuggestionAction(
-                icon: Icons.save_outlined,
-                label: 'Save',
-                onTap: onSave,
-              ),
-              const SizedBox(width: 18),
-              _SuggestionAction(
-                icon: Icons.open_in_new,
-                label: 'Share',
-                onTap: onShare,
-              ),
-            ],
-          ),
         ],
       ),
     );
   }
 }
 
-class _SuggestionAction extends StatelessWidget {
-  const _SuggestionAction({
+class SecurityReportActionButton extends StatelessWidget {
+  const SecurityReportActionButton({
     required this.icon,
     required this.label,
     required this.onTap,
+    super.key,
   });
 
   final IconData icon;
@@ -670,17 +652,18 @@ class _SuggestionAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Material(
-        color: AppColors.securityReportActionSurface,
-        borderRadius: BorderRadius.circular(5),
-        child: InkWell(
-          onTap: onTap,
-          splashFactory: NoSplash.splashFactory,
-          highlightColor: Colors.transparent,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: AppColors.securityReportActionSurface,
           borderRadius: BorderRadius.circular(5),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Opacity(
+            opacity: onTap == null ? 0.45 : 1,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [

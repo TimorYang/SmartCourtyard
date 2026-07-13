@@ -32,6 +32,8 @@
 	<string>FLINX uses the camera to scan device QR codes during setup.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>FLINX uses your photo library when you choose a QR code image during device setup.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>FLINX saves report images to your photo library when you choose Save.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSExceptionDomains</key>
