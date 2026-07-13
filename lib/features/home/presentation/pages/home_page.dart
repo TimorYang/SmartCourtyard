@@ -7,9 +7,9 @@ import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../features/account/presentation/pages/account_profile_page.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../add_device/presentation/pages/add_new_doors_page.dart';
-import '../../../../features/hardware_debug/presentation/pages/ble_debug_page.dart';
 import '../../../../platform_bridge/hardware_models.dart';
 import '../../application/providers.dart';
+import '../../domain/entities/home_scene.dart';
 import '../widgets/device_customize_dialog.dart';
 import '../widgets/device_delete_dialog.dart';
 import '../widgets/device_name_dialog.dart';
@@ -26,6 +26,8 @@ class HomeAssetPaths {
   static const emptyDoorsPlaceholder =
       'assets/icons/home/home_empty_doors_placeholder.png';
   static const headerMenuIcon = 'assets/icons/home/home_header_menu_icon.png';
+  static const headerGridPlaceholder =
+      'assets/icons/home/home_header_grid_placeholder.png';
   static const headerSceneIcon = 'assets/icons/home/home_header_scene_icon.png';
   static const headerAddIcon = 'assets/icons/home/home_header_add_icon.png';
   static const addScenePlaceholder =
@@ -63,44 +65,40 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
-  static const _demoHomeDevices = <DeviceSummary>[
-    DeviceSummary(
-      id: 'demo-garage-door',
-      name: 'Garage door',
-      onlineState: DeviceOnlineState.online,
-      bleState: BleConnectionState.connected,
-      doorState: DoorState.closing,
-      cycleCount: 8,
-      remainingLifePercent: 96,
-    ),
-    DeviceSummary(
-      id: 'demo-roller-door',
-      name: 'Roller door',
-      onlineState: DeviceOnlineState.offline,
-      bleState: BleConnectionState.disconnected,
-      doorState: DoorState.open,
-      cycleCount: 12,
-      remainingLifePercent: 89,
-    ),
-  ];
-
   var _isAddMenuVisible = false;
+  var _isSingleColumnDeviceList = false;
 
   @override
   Widget build(BuildContext context) {
     final devices = ref.watch(homeDevicesProvider);
+    final scenes = ref.watch(homeScenesProvider);
     final homeDevices = devices.when(
-      data: (items) => items.isEmpty ? _demoHomeDevices : items,
-      loading: () => _demoHomeDevices,
-      error: (error, stackTrace) => _demoHomeDevices,
+      data: (items) => items,
+      loading: () => const <DeviceSummary>[],
+      error: (error, stackTrace) => const <DeviceSummary>[],
     );
-    final homes = <_HomeGroup>[
-      _HomeGroup(label: 'Home', devices: homeDevices),
-      const _HomeGroup(label: 'home2', devices: <DeviceSummary>[]),
-      const _HomeGroup(label: 'home3', devices: <DeviceSummary>[]),
-    ];
+    final homes = scenes.when(
+      data: (items) => _buildHomeGroups(items, homeDevices),
+      loading: () => <_HomeGroup>[
+        _HomeGroup(
+          label: 'Home',
+          doorCount: homeDevices.length,
+          devices: homeDevices,
+        ),
+      ],
+      error: (error, stackTrace) => <_HomeGroup>[
+        _HomeGroup(
+          label: 'Home',
+          doorCount: homeDevices.length,
+          devices: homeDevices,
+        ),
+      ],
+    );
+    final isLoading = devices.isLoading || scenes.isLoading;
+    final hasError = devices.hasError || scenes.hasError;
 
     return DefaultTabController(
+      key: ValueKey(homes.map((home) => home.label).join('|')),
       length: homes.length,
       child: Scaffold(
         backgroundColor: AppColors.homeBackground,
@@ -111,6 +109,12 @@ class _HomePageState extends ConsumerState<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _HomeHeader(
+                    isSingleColumnDeviceList: _isSingleColumnDeviceList,
+                    onToggleDeviceLayout: () {
+                      setState(() {
+                        _isSingleColumnDeviceList = !_isSingleColumnDeviceList;
+                      });
+                    },
                     onAddPressed: () {
                       setState(() {
                         _isAddMenuVisible = true;
@@ -120,17 +124,19 @@ class _HomePageState extends ConsumerState<HomePage> {
                   _HomeTabs(homes: homes),
                   const Divider(height: 1, color: AppColors.borderHomeDivider),
                   Expanded(
-                    child: devices.when(
-                      data: (_) => TabBarView(
-                        children: [
-                          for (final home in homes)
-                            _HomeDevicePanel(home: home),
-                        ],
-                      ),
-                      loading: () =>
-                          const Center(child: CircularProgressIndicator()),
-                      error: (error, stackTrace) => const _HomeErrorState(),
-                    ),
+                    child: hasError
+                        ? const _HomeErrorState()
+                        : isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : TabBarView(
+                            children: [
+                              for (final home in homes)
+                                _HomeDevicePanel(
+                                  home: home,
+                                  isSingleColumn: _isSingleColumnDeviceList,
+                                ),
+                            ],
+                          ),
                   ),
                 ],
               ),
@@ -147,6 +153,42 @@ class _HomePageState extends ConsumerState<HomePage> {
         ),
       ),
     );
+  }
+
+  List<_HomeGroup> _buildHomeGroups(
+    List<HomeScene> scenes,
+    List<DeviceSummary> devices,
+  ) {
+    if (scenes.isEmpty) {
+      return [
+        _HomeGroup(label: 'Home', doorCount: devices.length, devices: devices),
+      ];
+    }
+
+    final defaultSceneIndex = scenes.indexWhere((scene) => scene.isDefault);
+    final fallbackSceneId =
+        scenes[defaultSceneIndex == -1 ? 0 : defaultSceneIndex].id;
+
+    return [
+      for (var index = 0; index < scenes.length; index++)
+        _HomeGroup(
+          label: scenes[index].name.trim().isEmpty
+              ? 'Home'
+              : scenes[index].name.trim(),
+          doorCount: devices
+              .where(
+                (device) =>
+                    (device.sceneId ?? fallbackSceneId) == scenes[index].id,
+              )
+              .length,
+          devices: devices
+              .where(
+                (device) =>
+                    (device.sceneId ?? fallbackSceneId) == scenes[index].id,
+              )
+              .toList(growable: false),
+        ),
+    ];
   }
 }
 
@@ -309,8 +351,14 @@ class _HomeAddMenuIcon extends StatelessWidget {
 }
 
 class _HomeHeader extends StatelessWidget {
-  const _HomeHeader({required this.onAddPressed});
+  const _HomeHeader({
+    required this.isSingleColumnDeviceList,
+    required this.onToggleDeviceLayout,
+    required this.onAddPressed,
+  });
 
+  final bool isSingleColumnDeviceList;
+  final VoidCallback onToggleDeviceLayout;
   final VoidCallback onAddPressed;
 
   @override
@@ -335,9 +383,13 @@ class _HomeHeader extends StatelessWidget {
               const Spacer(),
               _HeaderIconButton(
                 tooltip: l10n.homeMenuTooltip,
-                assetPath: HomeAssetPaths.headerMenuIcon,
-                fallbackIcon: Icons.menu_rounded,
-                onPressed: () => context.push(BleDebugPage.routePath),
+                assetPath: isSingleColumnDeviceList
+                    ? HomeAssetPaths.headerGridPlaceholder
+                    : HomeAssetPaths.headerMenuIcon,
+                fallbackIcon: isSingleColumnDeviceList
+                    ? Icons.grid_view_rounded
+                    : Icons.menu_rounded,
+                onPressed: onToggleDeviceLayout,
               ),
               _HeaderIconButton(
                 tooltip: l10n.sceneHomeShortcutTooltip,
@@ -364,9 +416,14 @@ class _HomeHeader extends StatelessWidget {
 }
 
 class _HomeGroup {
-  const _HomeGroup({required this.label, required this.devices});
+  const _HomeGroup({
+    required this.label,
+    required this.doorCount,
+    required this.devices,
+  });
 
   final String label;
+  final int doorCount;
   final List<DeviceSummary> devices;
 }
 
@@ -434,35 +491,42 @@ class _HomeTabs extends StatelessWidget {
 }
 
 class _HomeDevicePanel extends StatelessWidget {
-  const _HomeDevicePanel({required this.home});
+  const _HomeDevicePanel({required this.home, required this.isSingleColumn});
 
   final _HomeGroup home;
+  final bool isSingleColumn;
 
   @override
   Widget build(BuildContext context) {
     if (home.devices.isEmpty) {
-      return _EmptyHomeState(doorCount: home.devices.length);
+      return _EmptyHomeState(doorCount: home.doorCount);
     }
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(18, 10, 18, 24),
       children: [
-        _DoorCount(count: home.devices.length),
+        _DoorCount(count: home.doorCount),
         const SizedBox(height: 16),
-        GridView.builder(
-          itemCount: home.devices.length,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            mainAxisSpacing: 18,
-            crossAxisSpacing: 22,
-            childAspectRatio: 0.96,
+        if (isSingleColumn)
+          for (final device in home.devices) ...[
+            SizedBox(height: 160, child: _DeviceCard(device: device)),
+            const SizedBox(height: 18),
+          ]
+        else
+          GridView.builder(
+            itemCount: home.devices.length,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 18,
+              crossAxisSpacing: 22,
+              childAspectRatio: 0.96,
+            ),
+            itemBuilder: (context, index) {
+              return _DeviceCard(device: home.devices[index]);
+            },
           ),
-          itemBuilder: (context, index) {
-            return _DeviceCard(device: home.devices[index]);
-          },
-        ),
       ],
     );
   }

@@ -60,6 +60,7 @@ class BleDeviceDto {
     required this.scanSessionId,
     required this.id,
     this.name,
+    this.sn,
     required this.rssi,
     required this.advertisementServiceUuids,
     required this.manufacturerData,
@@ -70,6 +71,7 @@ class BleDeviceDto {
   final String scanSessionId;
   final String id;
   final String? name;
+  final String? sn;
   final int rssi;
   final List<String> advertisementServiceUuids;
   final Uint8List manufacturerData;

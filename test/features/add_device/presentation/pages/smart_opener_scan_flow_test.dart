@@ -2,6 +2,9 @@ import 'dart:async';
 
 import 'package:flinx/app/theme/app_theme.dart';
 import 'package:flinx/features/add_device/application/providers.dart';
+import 'package:flinx/features/add_device/domain/entities/onboarded_force_door.dart';
+import 'package:flinx/features/add_device/domain/entities/onboarding_device_key.dart';
+import 'package:flinx/features/add_device/domain/repositories/add_device_onboarding_repository.dart';
 import 'package:flinx/features/add_device/presentation/pages/add_device_page.dart';
 import 'package:flinx/features/add_device/presentation/pages/smart_opener_ble_scan_page.dart';
 import 'package:flinx/features/add_device/presentation/pages/smart_opener_choose_wifi_page.dart';
@@ -11,6 +14,8 @@ import 'package:flinx/features/add_device/presentation/pages/smart_opener_device
 import 'package:flinx/features/add_device/presentation/pages/smart_opener_qr_scan_page.dart';
 import 'package:flinx/features/add_device/presentation/pages/smart_opener_scan_guide_page.dart';
 import 'package:flinx/features/add_device/presentation/pages/smart_opener_scan_results_page.dart';
+import 'package:flinx/features/home/application/providers.dart';
+import 'package:flinx/features/home/domain/entities/home_scene.dart';
 import 'package:flinx/features/home/presentation/pages/home_page.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
 import 'package:flinx/platform_bridge/mock_hardware_gateway.dart';
@@ -118,7 +123,7 @@ void main() {
   ) async {
     await _openScanResults(tester, scanDuration: scanDuration);
 
-    await tester.tap(find.widgetWithText(FilledButton, '+ Add'));
+    await _tapAddDevice(tester);
     await tester.pump();
     await tester.pumpAndSettle();
 
@@ -314,6 +319,12 @@ Future<void> _tapAction(WidgetTester tester, String label) async {
   await tester.tap(button.last);
 }
 
+Future<void> _tapAddDevice(WidgetTester tester) async {
+  final button = find.widgetWithText(FilledButton, '+ Add');
+  final topLeft = tester.getTopLeft(button);
+  await tester.tapAt(topLeft + const Offset(4, 16));
+}
+
 Future<void> _pumpScanFlowTestApp(
   WidgetTester tester,
   String initialLocation, {
@@ -346,7 +357,7 @@ Future<void> _openChooseWifi(
     scanDuration: scanDuration,
     viewSize: viewSize,
   );
-  await tester.tap(find.widgetWithText(FilledButton, '+ Add'));
+  await _tapAddDevice(tester);
   await tester.pump();
   await tester.pumpAndSettle();
   expect(find.text('CHOOSE WIFI'), findsOneWidget);
@@ -412,6 +423,11 @@ Widget _scanFlowTestApp(
       addDeviceHardwareGatewayProvider.overrideWithValue(
         gateway ?? MockHardwareGateway(),
       ),
+      addDeviceOnboardingRepositoryProvider.overrideWithValue(
+        const _FakeAddDeviceOnboardingRepository(),
+      ),
+      homeDevicesProvider.overrideWith((ref) async => const <DeviceSummary>[]),
+      homeScenesProvider.overrideWith((ref) async => const <HomeScene>[]),
     ],
     child: MaterialApp.router(
       theme: AppTheme.light(),
@@ -420,6 +436,31 @@ Widget _scanFlowTestApp(
       supportedLocales: AppLocalizations.supportedLocales,
     ),
   );
+}
+
+class _FakeAddDeviceOnboardingRepository
+    implements AddDeviceOnboardingRepository {
+  const _FakeAddDeviceOnboardingRepository();
+
+  @override
+  Future<OnboardingDeviceKey> fetchDeviceKey({
+    required String sn,
+    required String requestId,
+  }) async {
+    return OnboardingDeviceKey(
+      sn: sn,
+      aesKey: '0123456789abcdef0123456789abcdef',
+      aesKeyVersion: 'test',
+    );
+  }
+
+  @override
+  Future<OnboardedForceDoor> addForceDoor({
+    required String sn,
+    required String requestId,
+  }) async {
+    return OnboardedForceDoor(id: 1, sn: sn, name: 'Test Door');
+  }
 }
 
 class _NoDeviceHardwareGateway extends MockHardwareGateway {

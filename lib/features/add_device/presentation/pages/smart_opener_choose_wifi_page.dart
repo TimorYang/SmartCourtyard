@@ -71,6 +71,7 @@ class _SmartOpenerChooseWifiPageState
       context: context,
       backgroundColor: Colors.transparent,
       barrierColor: AppColors.overlaySoft,
+      isScrollControlled: true,
       builder: (context) =>
           _WifiNetworkSheet(networks: networks, selectedSsid: selectedSsid),
     );
@@ -337,29 +338,43 @@ class _WifiNetworkSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final textTheme = Theme.of(context).textTheme;
+    final screenHeight = MediaQuery.sizeOf(context).height;
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
 
     return SafeArea(
       top: false,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(38, 20, 38, 28),
-        decoration: const BoxDecoration(
-          color: AppColors.backgroundPrimary,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              l10n.smartOpenerSelectWifiTitle,
-              style: AppTextTokens.smartOpenerSheetTitle(textTheme),
-            ),
-            const SizedBox(height: 21),
-            for (final network in networks)
-              _WifiNetworkTile(
-                network: network,
-                isSelected: network.ssid == selectedSsid,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: screenHeight * 0.72),
+        child: Container(
+          padding: EdgeInsets.fromLTRB(38, 20, 38, 18 + bottomInset),
+          decoration: const BoxDecoration(
+            color: AppColors.backgroundPrimary,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                l10n.smartOpenerSelectWifiTitle,
+                style: AppTextTokens.smartOpenerSheetTitle(textTheme),
               ),
-          ],
+              const SizedBox(height: 21),
+              Flexible(
+                child: ListView.builder(
+                  padding: EdgeInsets.zero,
+                  shrinkWrap: true,
+                  itemCount: networks.length,
+                  itemBuilder: (context, index) {
+                    final network = networks[index];
+                    return _WifiNetworkTile(
+                      network: network,
+                      isSelected: network.ssid == selectedSsid,
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

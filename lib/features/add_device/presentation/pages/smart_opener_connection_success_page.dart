@@ -31,29 +31,55 @@ class SmartOpenerConnectionSuccessPage extends StatelessWidget {
               children: [
                 const Center(child: _SuccessCheck()),
                 const SizedBox(height: 20),
-                Text(l10n.smartOpenerConnectionSuccessTitle, textAlign: TextAlign.center, style: AppTextTokens.smartOpenerConnectingTitle(textTheme)),
+                Text(
+                  l10n.smartOpenerConnectionSuccessTitle,
+                  textAlign: TextAlign.center,
+                  style: AppTextTokens.smartOpenerConnectingTitle(textTheme),
+                ),
                 const SizedBox(height: 4),
-                Text(l10n.smartOpenerConnectionSuccessDescription, textAlign: TextAlign.center, style: AppTextTokens.smartOpenerBodyCenter(textTheme)),
+                Text(
+                  l10n.smartOpenerConnectionSuccessDescription,
+                  textAlign: TextAlign.center,
+                  style: AppTextTokens.smartOpenerBodyCenter(textTheme),
+                ),
                 SizedBox(height: 76),
                 Padding(
                   padding: EdgeInsetsGeometry.only(left: 10, right: 10),
-                  child: _SuccessFormRow(icon: Icons.door_front_door_outlined, label: l10n.smartOpenerDeviceNamePlaceholder),
+                  child: _SuccessFormRow(
+                    icon: Icons.door_front_door_outlined,
+                    label: l10n.smartOpenerDeviceNamePlaceholder,
+                  ),
                 ),
                 Padding(
                   padding: EdgeInsetsGeometry.only(left: 10, right: 10),
-                  child: _SuccessFormRow(icon: Icons.view_in_ar_outlined, label: l10n.smartOpenerSelectScenePlaceholder, trailing: Icons.chevron_right),
+                  child: _SuccessFormRow(
+                    icon: Icons.view_in_ar_outlined,
+                    label: l10n.smartOpenerSelectScenePlaceholder,
+                    trailing: Icons.chevron_right,
+                  ),
                 ),
                 SizedBox(height: 80),
-                Text(l10n.smartOpenerInviteFamilyTip, textAlign: TextAlign.center, style: AppTextTokens.smartOpenerBodyCenter(textTheme)),
+                Text(
+                  l10n.smartOpenerInviteFamilyTip,
+                  textAlign: TextAlign.center,
+                  style: AppTextTokens.smartOpenerBodyCenter(textTheme),
+                ),
                 const SizedBox(height: 13),
                 Padding(
                   padding: EdgeInsetsGeometry.only(left: 10, right: 10),
-                  child: _SuccessActionButton(label: l10n.smartOpenerShareAction, isPrimary: false, onPressed: () => context.go(HomePage.routePath)),
+                  child: _SuccessActionButton(
+                    label: l10n.smartOpenerShareAction,
+                    isPrimary: false,
+                    onPressed: () => context.go(HomePage.routePath),
+                  ),
                 ),
                 const SizedBox(height: 19),
                 Padding(
                   padding: EdgeInsetsGeometry.only(left: 10, right: 10),
-                  child: _SuccessActionButton(label: l10n.smartOpenerTryAction, onPressed: () => context.go(HomePage.routePath)),
+                  child: _SuccessActionButton(
+                    label: l10n.smartOpenerTryAction,
+                    onPressed: () => context.go(HomePage.routePath),
+                  ),
                 ),
               ],
             ),
@@ -72,14 +98,21 @@ class _SuccessCheck extends StatelessWidget {
     return Container(
       width: 108,
       height: 108,
-      decoration: const BoxDecoration(color: AppColors.smartOpenerSuccess, shape: BoxShape.circle),
+      decoration: const BoxDecoration(
+        color: AppColors.smartOpenerSuccess,
+        shape: BoxShape.circle,
+      ),
       child: const Icon(Icons.check, color: Colors.white, size: 60),
     );
   }
 }
 
 class _SuccessFormRow extends StatelessWidget {
-  const _SuccessFormRow({required this.icon, required this.label, this.trailing});
+  const _SuccessFormRow({
+    required this.icon,
+    required this.label,
+    this.trailing,
+  });
 
   final IconData icon;
   final String label;
@@ -99,9 +132,15 @@ class _SuccessFormRow extends StatelessWidget {
           Icon(icon, size: 24, color: AppColors.textIcon),
           const SizedBox(width: 9),
           Expanded(
-            child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextTokens.smartOpenerFormText(textTheme)),
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextTokens.smartOpenerFormText(textTheme),
+            ),
           ),
-          if (trailing != null) Icon(trailing, size: 24, color: AppColors.textPrimary),
+          if (trailing != null)
+            Icon(trailing, size: 24, color: AppColors.textPrimary),
         ],
       ),
     );
@@ -109,7 +148,11 @@ class _SuccessFormRow extends StatelessWidget {
 }
 
 class _SuccessActionButton extends StatelessWidget {
-  const _SuccessActionButton({required this.label, required this.onPressed, this.isPrimary = true});
+  const _SuccessActionButton({
+    required this.label,
+    required this.onPressed,
+    this.isPrimary = true,
+  });
 
   final String label;
   final VoidCallback onPressed;
@@ -124,11 +167,20 @@ class _SuccessActionButton extends StatelessWidget {
       child: FilledButton(
         onPressed: onPressed,
         style: FilledButton.styleFrom(
-          backgroundColor: isPrimary ? AppColors.brandPrimary : AppColors.smartOpenerSecondaryButton,
+          backgroundColor: isPrimary
+              ? AppColors.brandPrimary
+              : AppColors.smartOpenerSecondaryButton,
           foregroundColor: isPrimary ? Colors.white : AppColors.textPrimary,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(34)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(34),
+          ),
         ),
-        child: Text(label, style: isPrimary ? AppTextTokens.smartOpenerActionButton(textTheme) : AppTextTokens.smartOpenerSecondaryActionButton(textTheme)),
+        child: Text(
+          label,
+          style: isPrimary
+              ? AppTextTokens.smartOpenerActionButton(textTheme)
+              : AppTextTokens.smartOpenerSecondaryActionButton(textTheme),
+        ),
       ),
     );
   }

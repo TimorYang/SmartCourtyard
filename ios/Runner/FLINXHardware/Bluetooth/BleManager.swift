@@ -721,6 +721,7 @@ extension BleManager: CBCentralManagerDelegate {
     )
     let manufacturerData =
       advertisementData[CBAdvertisementDataManufacturerDataKey] as? Data ?? Data()
+    let sn = parseSmartOpenerSn(from: normalizedName)
     let overflowServiceUuids = uuidArraySummary(
       advertisementData[CBAdvertisementDataOverflowServiceUUIDsKey]
     )
@@ -740,6 +741,7 @@ extension BleManager: CBCentralManagerDelegate {
       scanSessionId: scan.sessionId,
       id: deviceId,
       name: normalizedName,
+      sn: sn,
       rssi: rssi,
       advertisementServiceUuids: serviceUuids,
       manufacturerData: manufacturerData,
@@ -863,8 +865,18 @@ extension BleManager: CBCentralManagerDelegate {
   private func shouldEmitScanUpdate(previous: BleDiscoveredDevice, next: BleDiscoveredDevice) -> Bool {
     abs(previous.rssi - next.rssi) >= 8
       || previous.name != next.name
+      || previous.sn != next.sn
       || previous.advertisementServiceUuids != next.advertisementServiceUuids
       || previous.manufacturerData != next.manufacturerData
+  }
+
+  private func parseSmartOpenerSn(from name: String?) -> String? {
+    let prefix = "opener_"
+    guard let name, name.hasPrefix(prefix) else {
+      return nil
+    }
+    let sn = String(name.dropFirst(prefix.count)).trimmingCharacters(in: .whitespacesAndNewlines)
+    return sn.isEmpty ? nil : sn
   }
 }
 

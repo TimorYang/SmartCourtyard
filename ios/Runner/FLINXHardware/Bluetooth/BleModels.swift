@@ -12,6 +12,7 @@ struct BleDiscoveredDevice {
   let scanSessionId: String
   let id: String
   let name: String?
+  let sn: String?
   let rssi: Int
   let advertisementServiceUuids: [String]
   let manufacturerData: Data

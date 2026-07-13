@@ -348,6 +348,7 @@ class _HardwareFlutterApiHandler implements pigeon.HardwareFlutterApi {
       payloadBytes: model.manufacturerData.length,
       details:
           'name=${model.name ?? '(unnamed)'} rssi=${model.rssi} '
+          'sn=${model.sn ?? '(missing)'} '
           'services=${model.advertisementServiceUuids.isEmpty ? 'none' : model.advertisementServiceUuids.join(',')} '
           'manufacturer=${_hexString(model.manufacturerData)}',
     );
@@ -589,6 +590,7 @@ extension _BleDeviceDtoMapper on pigeon.BleDeviceDto {
       scanSessionId: scanSessionId,
       id: id,
       name: name,
+      sn: sn,
       rssi: rssi,
       seenAtMillis: seenAtMillis,
       advertisementServiceUuids: advertisementServiceUuids,

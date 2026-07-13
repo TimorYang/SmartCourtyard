@@ -10,9 +10,9 @@ import 'package:flutter/services.dart';
 import 'package:meta/meta.dart' show immutable, protected, visibleForTesting;
 
 Object? _extractReplyValueOrThrow(
-  List<Object?>? replyList,
-  String channelName, {
-  required bool isNullValid,
+    List<Object?>? replyList,
+    String channelName, {
+    required bool isNullValid,
 }) {
   if (replyList == null) {
     throw PlatformException(
@@ -34,11 +34,8 @@ Object? _extractReplyValueOrThrow(
   return replyList.firstOrNull;
 }
 
-List<Object?> wrapResponse({
-  Object? result,
-  PlatformException? error,
-  bool empty = false,
-}) {
+
+List<Object?> wrapResponse({Object? result, PlatformException? error, bool empty = false}) {
   if (empty) {
     return <Object?>[];
   }
@@ -47,7 +44,6 @@ List<Object?> wrapResponse({
   }
   return <Object?>[error.code, error.message, error.details];
 }
-
 bool _deepEquals(Object? a, Object? b) {
   if (identical(a, b)) {
     return true;
@@ -60,9 +56,8 @@ bool _deepEquals(Object? a, Object? b) {
   }
   if (a is List && b is List) {
     return a.length == b.length &&
-        a.indexed.every(
-          ((int, dynamic) item) => _deepEquals(item.$2, b[item.$1]),
-        );
+        a.indexed
+            .every(((int, dynamic) item) => _deepEquals(item.$2, b[item.$1]));
   }
   if (a is Map && b is Map) {
     if (a.length != b.length) {
@@ -111,19 +106,52 @@ int _deepHash(Object? value) {
   return value.hashCode;
 }
 
-enum PermissionKindDto { bluetooth, camera, localNetwork, notification }
 
-enum DoorCommandDto { open, stop, close, partialOpen, lightOn, lightOff, pb }
+enum PermissionKindDto {
+  bluetooth,
+  camera,
+  localNetwork,
+  notification,
+}
 
-enum RemotePairingActionDto { start, cancel }
+enum DoorCommandDto {
+  open,
+  stop,
+  close,
+  partialOpen,
+  lightOn,
+  lightOff,
+  pb,
+}
 
-enum RemotePairingStatusDto { success, failure, timeout, unknown }
+enum RemotePairingActionDto {
+  start,
+  cancel,
+}
 
-enum RemoteOperationStatusDto { success, failure, unknown }
+enum RemotePairingStatusDto {
+  success,
+  failure,
+  timeout,
+  unknown,
+}
 
-enum BleConnectionStateDto { disconnected, connecting, connected }
+enum RemoteOperationStatusDto {
+  success,
+  failure,
+  unknown,
+}
 
-enum BleWriteTypeDto { withResponse, withoutResponse }
+enum BleConnectionStateDto {
+  disconnected,
+  connecting,
+  connected,
+}
+
+enum BleWriteTypeDto {
+  withResponse,
+  withoutResponse,
+}
 
 class PermissionSnapshotDto {
   PermissionSnapshotDto({
@@ -151,8 +179,7 @@ class PermissionSnapshotDto {
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static PermissionSnapshotDto decode(Object result) {
     result as List<Object?>;
@@ -173,10 +200,7 @@ class PermissionSnapshotDto {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(bluetoothGranted, other.bluetoothGranted) &&
-        _deepEquals(cameraGranted, other.cameraGranted) &&
-        _deepEquals(localNetworkGranted, other.localNetworkGranted) &&
-        _deepEquals(notificationGranted, other.notificationGranted);
+    return _deepEquals(bluetoothGranted, other.bluetoothGranted) && _deepEquals(cameraGranted, other.cameraGranted) && _deepEquals(localNetworkGranted, other.localNetworkGranted) && _deepEquals(notificationGranted, other.notificationGranted);
   }
 
   @override
@@ -201,12 +225,16 @@ class BleScanFilterDto {
   bool allowDuplicates;
 
   List<Object?> _toList() {
-    return <Object?>[serviceUuids, namePrefix, exactName, allowDuplicates];
+    return <Object?>[
+      serviceUuids,
+      namePrefix,
+      exactName,
+      allowDuplicates,
+    ];
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static BleScanFilterDto decode(Object result) {
     result as List<Object?>;
@@ -227,10 +255,7 @@ class BleScanFilterDto {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(serviceUuids, other.serviceUuids) &&
-        _deepEquals(namePrefix, other.namePrefix) &&
-        _deepEquals(exactName, other.exactName) &&
-        _deepEquals(allowDuplicates, other.allowDuplicates);
+    return _deepEquals(serviceUuids, other.serviceUuids) && _deepEquals(namePrefix, other.namePrefix) && _deepEquals(exactName, other.exactName) && _deepEquals(allowDuplicates, other.allowDuplicates);
   }
 
   @override
@@ -244,6 +269,7 @@ class BleDeviceDto {
     required this.scanSessionId,
     required this.id,
     this.name,
+    this.sn,
     required this.rssi,
     required this.advertisementServiceUuids,
     required this.manufacturerData,
@@ -257,6 +283,8 @@ class BleDeviceDto {
   String id;
 
   String? name;
+
+  String? sn;
 
   int rssi;
 
@@ -272,6 +300,7 @@ class BleDeviceDto {
       scanSessionId,
       id,
       name,
+      sn,
       rssi,
       advertisementServiceUuids,
       manufacturerData,
@@ -280,8 +309,7 @@ class BleDeviceDto {
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static BleDeviceDto decode(Object result) {
     result as List<Object?>;
@@ -290,10 +318,11 @@ class BleDeviceDto {
       scanSessionId: result[1]! as String,
       id: result[2]! as String,
       name: result[3] as String?,
-      rssi: result[4]! as int,
-      advertisementServiceUuids: (result[5]! as List<Object?>).cast<String>(),
-      manufacturerData: result[6]! as Uint8List,
-      seenAtMillis: result[7]! as int,
+      sn: result[4] as String?,
+      rssi: result[5]! as int,
+      advertisementServiceUuids: (result[6]! as List<Object?>).cast<String>(),
+      manufacturerData: result[7]! as Uint8List,
+      seenAtMillis: result[8]! as int,
     );
   }
 
@@ -306,17 +335,7 @@ class BleDeviceDto {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(requestId, other.requestId) &&
-        _deepEquals(scanSessionId, other.scanSessionId) &&
-        _deepEquals(id, other.id) &&
-        _deepEquals(name, other.name) &&
-        _deepEquals(rssi, other.rssi) &&
-        _deepEquals(
-          advertisementServiceUuids,
-          other.advertisementServiceUuids,
-        ) &&
-        _deepEquals(manufacturerData, other.manufacturerData) &&
-        _deepEquals(seenAtMillis, other.seenAtMillis);
+    return _deepEquals(requestId, other.requestId) && _deepEquals(scanSessionId, other.scanSessionId) && _deepEquals(id, other.id) && _deepEquals(name, other.name) && _deepEquals(sn, other.sn) && _deepEquals(rssi, other.rssi) && _deepEquals(advertisementServiceUuids, other.advertisementServiceUuids) && _deepEquals(manufacturerData, other.manufacturerData) && _deepEquals(seenAtMillis, other.seenAtMillis);
   }
 
   @override
@@ -341,12 +360,16 @@ class BleConnectionEventDto {
   String? nativeCode;
 
   List<Object?> _toList() {
-    return <Object?>[requestId, deviceId, state, nativeCode];
+    return <Object?>[
+      requestId,
+      deviceId,
+      state,
+      nativeCode,
+    ];
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static BleConnectionEventDto decode(Object result) {
     result as List<Object?>;
@@ -367,10 +390,7 @@ class BleConnectionEventDto {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(requestId, other.requestId) &&
-        _deepEquals(deviceId, other.deviceId) &&
-        _deepEquals(state, other.state) &&
-        _deepEquals(nativeCode, other.nativeCode);
+    return _deepEquals(requestId, other.requestId) && _deepEquals(deviceId, other.deviceId) && _deepEquals(state, other.state) && _deepEquals(nativeCode, other.nativeCode);
   }
 
   @override
@@ -408,8 +428,7 @@ class BleAuthenticationResultDto {
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static BleAuthenticationResultDto decode(Object result) {
     result as List<Object?>;
@@ -425,18 +444,13 @@ class BleAuthenticationResultDto {
   @override
   // ignore: avoid_equals_and_hash_code_on_mutable_classes
   bool operator ==(Object other) {
-    if (other is! BleAuthenticationResultDto ||
-        other.runtimeType != runtimeType) {
+    if (other is! BleAuthenticationResultDto || other.runtimeType != runtimeType) {
       return false;
     }
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(requestId, other.requestId) &&
-        _deepEquals(deviceId, other.deviceId) &&
-        _deepEquals(authenticated, other.authenticated) &&
-        _deepEquals(bindingState, other.bindingState) &&
-        _deepEquals(nativeCode, other.nativeCode);
+    return _deepEquals(requestId, other.requestId) && _deepEquals(deviceId, other.deviceId) && _deepEquals(authenticated, other.authenticated) && _deepEquals(bindingState, other.bindingState) && _deepEquals(nativeCode, other.nativeCode);
   }
 
   @override
@@ -458,12 +472,15 @@ class WifiScanResultDto {
   List<String> ssids;
 
   List<Object?> _toList() {
-    return <Object?>[requestId, deviceId, ssids];
+    return <Object?>[
+      requestId,
+      deviceId,
+      ssids,
+    ];
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static WifiScanResultDto decode(Object result) {
     result as List<Object?>;
@@ -483,9 +500,7 @@ class WifiScanResultDto {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(requestId, other.requestId) &&
-        _deepEquals(deviceId, other.deviceId) &&
-        _deepEquals(ssids, other.ssids);
+    return _deepEquals(requestId, other.requestId) && _deepEquals(deviceId, other.deviceId) && _deepEquals(ssids, other.ssids);
   }
 
   @override
@@ -513,12 +528,17 @@ class WifiProvisionResultDto {
   String? nativeCode;
 
   List<Object?> _toList() {
-    return <Object?>[requestId, deviceId, ssid, success, nativeCode];
+    return <Object?>[
+      requestId,
+      deviceId,
+      ssid,
+      success,
+      nativeCode,
+    ];
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static WifiProvisionResultDto decode(Object result) {
     result as List<Object?>;
@@ -540,11 +560,7 @@ class WifiProvisionResultDto {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(requestId, other.requestId) &&
-        _deepEquals(deviceId, other.deviceId) &&
-        _deepEquals(ssid, other.ssid) &&
-        _deepEquals(success, other.success) &&
-        _deepEquals(nativeCode, other.nativeCode);
+    return _deepEquals(requestId, other.requestId) && _deepEquals(deviceId, other.deviceId) && _deepEquals(ssid, other.ssid) && _deepEquals(success, other.success) && _deepEquals(nativeCode, other.nativeCode);
   }
 
   @override
@@ -586,8 +602,7 @@ class BleCharacteristicDto {
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static BleCharacteristicDto decode(Object result) {
     result as List<Object?>;
@@ -610,12 +625,7 @@ class BleCharacteristicDto {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(serviceUuid, other.serviceUuid) &&
-        _deepEquals(characteristicUuid, other.characteristicUuid) &&
-        _deepEquals(canRead, other.canRead) &&
-        _deepEquals(canWriteWithResponse, other.canWriteWithResponse) &&
-        _deepEquals(canWriteWithoutResponse, other.canWriteWithoutResponse) &&
-        _deepEquals(canNotify, other.canNotify);
+    return _deepEquals(serviceUuid, other.serviceUuid) && _deepEquals(characteristicUuid, other.characteristicUuid) && _deepEquals(canRead, other.canRead) && _deepEquals(canWriteWithResponse, other.canWriteWithResponse) && _deepEquals(canWriteWithoutResponse, other.canWriteWithoutResponse) && _deepEquals(canNotify, other.canNotify);
   }
 
   @override
@@ -624,26 +634,30 @@ class BleCharacteristicDto {
 }
 
 class BleServiceDto {
-  BleServiceDto({required this.serviceUuid, required this.characteristics});
+  BleServiceDto({
+    required this.serviceUuid,
+    required this.characteristics,
+  });
 
   String serviceUuid;
 
   List<BleCharacteristicDto> characteristics;
 
   List<Object?> _toList() {
-    return <Object?>[serviceUuid, characteristics];
+    return <Object?>[
+      serviceUuid,
+      characteristics,
+    ];
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static BleServiceDto decode(Object result) {
     result as List<Object?>;
     return BleServiceDto(
       serviceUuid: result[0]! as String,
-      characteristics: (result[1]! as List<Object?>)
-          .cast<BleCharacteristicDto>(),
+      characteristics: (result[1]! as List<Object?>).cast<BleCharacteristicDto>(),
     );
   }
 
@@ -656,8 +670,7 @@ class BleServiceDto {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(serviceUuid, other.serviceUuid) &&
-        _deepEquals(characteristics, other.characteristics);
+    return _deepEquals(serviceUuid, other.serviceUuid) && _deepEquals(characteristics, other.characteristics);
   }
 
   @override
@@ -679,12 +692,15 @@ class BleServicesDto {
   List<BleServiceDto> services;
 
   List<Object?> _toList() {
-    return <Object?>[requestId, deviceId, services];
+    return <Object?>[
+      requestId,
+      deviceId,
+      services,
+    ];
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static BleServicesDto decode(Object result) {
     result as List<Object?>;
@@ -704,9 +720,7 @@ class BleServicesDto {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(requestId, other.requestId) &&
-        _deepEquals(deviceId, other.deviceId) &&
-        _deepEquals(services, other.services);
+    return _deepEquals(requestId, other.requestId) && _deepEquals(deviceId, other.deviceId) && _deepEquals(services, other.services);
   }
 
   @override
@@ -744,8 +758,7 @@ class BleReadResultDto {
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static BleReadResultDto decode(Object result) {
     result as List<Object?>;
@@ -767,11 +780,7 @@ class BleReadResultDto {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(requestId, other.requestId) &&
-        _deepEquals(deviceId, other.deviceId) &&
-        _deepEquals(serviceUuid, other.serviceUuid) &&
-        _deepEquals(characteristicUuid, other.characteristicUuid) &&
-        _deepEquals(payload, other.payload);
+    return _deepEquals(requestId, other.requestId) && _deepEquals(deviceId, other.deviceId) && _deepEquals(serviceUuid, other.serviceUuid) && _deepEquals(characteristicUuid, other.characteristicUuid) && _deepEquals(payload, other.payload);
   }
 
   @override
@@ -813,8 +822,7 @@ class BleWriteResultDto {
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static BleWriteResultDto decode(Object result) {
     result as List<Object?>;
@@ -837,12 +845,7 @@ class BleWriteResultDto {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(requestId, other.requestId) &&
-        _deepEquals(deviceId, other.deviceId) &&
-        _deepEquals(serviceUuid, other.serviceUuid) &&
-        _deepEquals(characteristicUuid, other.characteristicUuid) &&
-        _deepEquals(accepted, other.accepted) &&
-        _deepEquals(nativeCode, other.nativeCode);
+    return _deepEquals(requestId, other.requestId) && _deepEquals(deviceId, other.deviceId) && _deepEquals(serviceUuid, other.serviceUuid) && _deepEquals(characteristicUuid, other.characteristicUuid) && _deepEquals(accepted, other.accepted) && _deepEquals(nativeCode, other.nativeCode);
   }
 
   @override
@@ -888,8 +891,7 @@ class BleNotificationDto {
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static BleNotificationDto decode(Object result) {
     result as List<Object?>;
@@ -913,13 +915,7 @@ class BleNotificationDto {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(requestId, other.requestId) &&
-        _deepEquals(deviceId, other.deviceId) &&
-        _deepEquals(serviceUuid, other.serviceUuid) &&
-        _deepEquals(characteristicUuid, other.characteristicUuid) &&
-        _deepEquals(payload, other.payload) &&
-        _deepEquals(timestampMillis, other.timestampMillis) &&
-        _deepEquals(sequenceNumber, other.sequenceNumber);
+    return _deepEquals(requestId, other.requestId) && _deepEquals(deviceId, other.deviceId) && _deepEquals(serviceUuid, other.serviceUuid) && _deepEquals(characteristicUuid, other.characteristicUuid) && _deepEquals(payload, other.payload) && _deepEquals(timestampMillis, other.timestampMillis) && _deepEquals(sequenceNumber, other.sequenceNumber);
   }
 
   @override
@@ -965,8 +961,7 @@ class NativeErrorDto {
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static NativeErrorDto decode(Object result) {
     result as List<Object?>;
@@ -990,13 +985,7 @@ class NativeErrorDto {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(code, other.code) &&
-        _deepEquals(domainCode, other.domainCode) &&
-        _deepEquals(message, other.message) &&
-        _deepEquals(requestId, other.requestId) &&
-        _deepEquals(deviceId, other.deviceId) &&
-        _deepEquals(retryable, other.retryable) &&
-        _deepEquals(timestampMillis, other.timestampMillis);
+    return _deepEquals(code, other.code) && _deepEquals(domainCode, other.domainCode) && _deepEquals(message, other.message) && _deepEquals(requestId, other.requestId) && _deepEquals(deviceId, other.deviceId) && _deepEquals(retryable, other.retryable) && _deepEquals(timestampMillis, other.timestampMillis);
   }
 
   @override
@@ -1024,12 +1013,17 @@ class CommandResultDto {
   String? domainCode;
 
   List<Object?> _toList() {
-    return <Object?>[requestId, deviceId, accepted, nativeCode, domainCode];
+    return <Object?>[
+      requestId,
+      deviceId,
+      accepted,
+      nativeCode,
+      domainCode,
+    ];
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static CommandResultDto decode(Object result) {
     result as List<Object?>;
@@ -1051,11 +1045,7 @@ class CommandResultDto {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(requestId, other.requestId) &&
-        _deepEquals(deviceId, other.deviceId) &&
-        _deepEquals(accepted, other.accepted) &&
-        _deepEquals(nativeCode, other.nativeCode) &&
-        _deepEquals(domainCode, other.domainCode);
+    return _deepEquals(requestId, other.requestId) && _deepEquals(deviceId, other.deviceId) && _deepEquals(accepted, other.accepted) && _deepEquals(nativeCode, other.nativeCode) && _deepEquals(domainCode, other.domainCode);
   }
 
   @override
@@ -1097,8 +1087,7 @@ class RemotePairingResultDto {
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static RemotePairingResultDto decode(Object result) {
     result as List<Object?>;
@@ -1121,12 +1110,7 @@ class RemotePairingResultDto {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(requestId, other.requestId) &&
-        _deepEquals(deviceId, other.deviceId) &&
-        _deepEquals(status, other.status) &&
-        _deepEquals(reasonCode, other.reasonCode) &&
-        _deepEquals(nativeCode, other.nativeCode) &&
-        _deepEquals(domainCode, other.domainCode);
+    return _deepEquals(requestId, other.requestId) && _deepEquals(deviceId, other.deviceId) && _deepEquals(status, other.status) && _deepEquals(reasonCode, other.reasonCode) && _deepEquals(nativeCode, other.nativeCode) && _deepEquals(domainCode, other.domainCode);
   }
 
   @override
@@ -1135,19 +1119,24 @@ class RemotePairingResultDto {
 }
 
 class RemoteControlDto {
-  RemoteControlDto({required this.name, required this.serialNumber});
+  RemoteControlDto({
+    required this.name,
+    required this.serialNumber,
+  });
 
   String name;
 
   int serialNumber;
 
   List<Object?> _toList() {
-    return <Object?>[name, serialNumber];
+    return <Object?>[
+      name,
+      serialNumber,
+    ];
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static RemoteControlDto decode(Object result) {
     result as List<Object?>;
@@ -1166,8 +1155,7 @@ class RemoteControlDto {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(name, other.name) &&
-        _deepEquals(serialNumber, other.serialNumber);
+    return _deepEquals(name, other.name) && _deepEquals(serialNumber, other.serialNumber);
   }
 
   @override
@@ -1213,8 +1201,7 @@ class RemoteControlListResultDto {
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static RemoteControlListResultDto decode(Object result) {
     result as List<Object?>;
@@ -1232,20 +1219,13 @@ class RemoteControlListResultDto {
   @override
   // ignore: avoid_equals_and_hash_code_on_mutable_classes
   bool operator ==(Object other) {
-    if (other is! RemoteControlListResultDto ||
-        other.runtimeType != runtimeType) {
+    if (other is! RemoteControlListResultDto || other.runtimeType != runtimeType) {
       return false;
     }
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(requestId, other.requestId) &&
-        _deepEquals(deviceId, other.deviceId) &&
-        _deepEquals(totalCount, other.totalCount) &&
-        _deepEquals(totalPages, other.totalPages) &&
-        _deepEquals(currentPage, other.currentPage) &&
-        _deepEquals(hasMore, other.hasMore) &&
-        _deepEquals(remotes, other.remotes);
+    return _deepEquals(requestId, other.requestId) && _deepEquals(deviceId, other.deviceId) && _deepEquals(totalCount, other.totalCount) && _deepEquals(totalPages, other.totalPages) && _deepEquals(currentPage, other.currentPage) && _deepEquals(hasMore, other.hasMore) && _deepEquals(remotes, other.remotes);
   }
 
   @override
@@ -1287,8 +1267,7 @@ class RemoteOperationResultDto {
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static RemoteOperationResultDto decode(Object result) {
     result as List<Object?>;
@@ -1305,25 +1284,20 @@ class RemoteOperationResultDto {
   @override
   // ignore: avoid_equals_and_hash_code_on_mutable_classes
   bool operator ==(Object other) {
-    if (other is! RemoteOperationResultDto ||
-        other.runtimeType != runtimeType) {
+    if (other is! RemoteOperationResultDto || other.runtimeType != runtimeType) {
       return false;
     }
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(requestId, other.requestId) &&
-        _deepEquals(deviceId, other.deviceId) &&
-        _deepEquals(status, other.status) &&
-        _deepEquals(reasonCode, other.reasonCode) &&
-        _deepEquals(nativeCode, other.nativeCode) &&
-        _deepEquals(domainCode, other.domainCode);
+    return _deepEquals(requestId, other.requestId) && _deepEquals(deviceId, other.deviceId) && _deepEquals(status, other.status) && _deepEquals(reasonCode, other.reasonCode) && _deepEquals(nativeCode, other.nativeCode) && _deepEquals(domainCode, other.domainCode);
   }
 
   @override
   // ignore: avoid_equals_and_hash_code_on_mutable_classes
   int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
 }
+
 
 class _PigeonCodec extends StandardMessageCodec {
   const _PigeonCodec();
@@ -1332,82 +1306,82 @@ class _PigeonCodec extends StandardMessageCodec {
     if (value is int) {
       buffer.putUint8(4);
       buffer.putInt64(value);
-    } else if (value is PermissionKindDto) {
+    }    else if (value is PermissionKindDto) {
       buffer.putUint8(129);
       writeValue(buffer, value.index);
-    } else if (value is DoorCommandDto) {
+    }    else if (value is DoorCommandDto) {
       buffer.putUint8(130);
       writeValue(buffer, value.index);
-    } else if (value is RemotePairingActionDto) {
+    }    else if (value is RemotePairingActionDto) {
       buffer.putUint8(131);
       writeValue(buffer, value.index);
-    } else if (value is RemotePairingStatusDto) {
+    }    else if (value is RemotePairingStatusDto) {
       buffer.putUint8(132);
       writeValue(buffer, value.index);
-    } else if (value is RemoteOperationStatusDto) {
+    }    else if (value is RemoteOperationStatusDto) {
       buffer.putUint8(133);
       writeValue(buffer, value.index);
-    } else if (value is BleConnectionStateDto) {
+    }    else if (value is BleConnectionStateDto) {
       buffer.putUint8(134);
       writeValue(buffer, value.index);
-    } else if (value is BleWriteTypeDto) {
+    }    else if (value is BleWriteTypeDto) {
       buffer.putUint8(135);
       writeValue(buffer, value.index);
-    } else if (value is PermissionSnapshotDto) {
+    }    else if (value is PermissionSnapshotDto) {
       buffer.putUint8(136);
       writeValue(buffer, value.encode());
-    } else if (value is BleScanFilterDto) {
+    }    else if (value is BleScanFilterDto) {
       buffer.putUint8(137);
       writeValue(buffer, value.encode());
-    } else if (value is BleDeviceDto) {
+    }    else if (value is BleDeviceDto) {
       buffer.putUint8(138);
       writeValue(buffer, value.encode());
-    } else if (value is BleConnectionEventDto) {
+    }    else if (value is BleConnectionEventDto) {
       buffer.putUint8(139);
       writeValue(buffer, value.encode());
-    } else if (value is BleAuthenticationResultDto) {
+    }    else if (value is BleAuthenticationResultDto) {
       buffer.putUint8(140);
       writeValue(buffer, value.encode());
-    } else if (value is WifiScanResultDto) {
+    }    else if (value is WifiScanResultDto) {
       buffer.putUint8(141);
       writeValue(buffer, value.encode());
-    } else if (value is WifiProvisionResultDto) {
+    }    else if (value is WifiProvisionResultDto) {
       buffer.putUint8(142);
       writeValue(buffer, value.encode());
-    } else if (value is BleCharacteristicDto) {
+    }    else if (value is BleCharacteristicDto) {
       buffer.putUint8(143);
       writeValue(buffer, value.encode());
-    } else if (value is BleServiceDto) {
+    }    else if (value is BleServiceDto) {
       buffer.putUint8(144);
       writeValue(buffer, value.encode());
-    } else if (value is BleServicesDto) {
+    }    else if (value is BleServicesDto) {
       buffer.putUint8(145);
       writeValue(buffer, value.encode());
-    } else if (value is BleReadResultDto) {
+    }    else if (value is BleReadResultDto) {
       buffer.putUint8(146);
       writeValue(buffer, value.encode());
-    } else if (value is BleWriteResultDto) {
+    }    else if (value is BleWriteResultDto) {
       buffer.putUint8(147);
       writeValue(buffer, value.encode());
-    } else if (value is BleNotificationDto) {
+    }    else if (value is BleNotificationDto) {
       buffer.putUint8(148);
       writeValue(buffer, value.encode());
-    } else if (value is NativeErrorDto) {
+    }    else if (value is NativeErrorDto) {
       buffer.putUint8(149);
       writeValue(buffer, value.encode());
-    } else if (value is CommandResultDto) {
+    }    else if (value is CommandResultDto) {
       buffer.putUint8(150);
       writeValue(buffer, value.encode());
-    } else if (value is RemotePairingResultDto) {
+    }    else if (value is RemotePairingResultDto) {
       buffer.putUint8(151);
       writeValue(buffer, value.encode());
-    } else if (value is RemoteControlDto) {
+    }    else if (value is RemoteControlDto) {
       buffer.putUint8(152);
       writeValue(buffer, value.encode());
-    } else if (value is RemoteControlListResultDto) {
+    }    else if (value is RemoteControlListResultDto) {
       buffer.putUint8(153);
       writeValue(buffer, value.encode());
-    } else if (value is RemoteOperationResultDto) {
+    }    else if (value is RemoteOperationResultDto) {
       buffer.putUint8(154);
       writeValue(buffer, value.encode());
     } else {
@@ -1487,13 +1461,9 @@ class HardwareHostApi {
   /// Constructor for [HardwareHostApi].  The [binaryMessenger] named argument is
   /// available for dependency injection.  If it is left null, the default
   /// BinaryMessenger will be used which routes to the host platform.
-  HardwareHostApi({
-    BinaryMessenger? binaryMessenger,
-    String messageChannelSuffix = '',
-  }) : pigeonVar_binaryMessenger = binaryMessenger,
-       pigeonVar_messageChannelSuffix = messageChannelSuffix.isNotEmpty
-           ? '.$messageChannelSuffix'
-           : '';
+  HardwareHostApi({BinaryMessenger? binaryMessenger, String messageChannelSuffix = ''})
+      : pigeonVar_binaryMessenger = binaryMessenger,
+        pigeonVar_messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
   final BinaryMessenger? pigeonVar_binaryMessenger;
 
   static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
@@ -1501,8 +1471,7 @@ class HardwareHostApi {
   final String pigeonVar_messageChannelSuffix;
 
   Future<PermissionSnapshotDto> getPermissionSnapshot() async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.flinx.HardwareHostApi.getPermissionSnapshot$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.getPermissionSnapshot$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -1512,433 +1481,332 @@ class HardwareHostApi {
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: false,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
     return pigeonVar_replyValue! as PermissionSnapshotDto;
   }
 
-  Future<PermissionSnapshotDto> requestPermissions(
-    List<PermissionKindDto> permissions,
-  ) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.flinx.HardwareHostApi.requestPermissions$pigeonVar_messageChannelSuffix';
+  Future<PermissionSnapshotDto> requestPermissions(List<PermissionKindDto> permissions) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.requestPermissions$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[permissions],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[permissions]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: false,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
     return pigeonVar_replyValue! as PermissionSnapshotDto;
   }
 
   Future<void> startBleScan(String requestId, BleScanFilterDto filter) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.flinx.HardwareHostApi.startBleScan$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.startBleScan$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[requestId, filter],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[requestId, filter]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: true,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
   }
 
   Future<void> stopBleScan(String requestId) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.flinx.HardwareHostApi.stopBleScan$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.stopBleScan$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[requestId],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[requestId]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: true,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
   }
 
-  Future<BleConnectionEventDto> connectBleDevice(
-    String requestId,
-    String deviceId,
-  ) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.flinx.HardwareHostApi.connectBleDevice$pigeonVar_messageChannelSuffix';
+  Future<BleConnectionEventDto> connectBleDevice(String requestId, String deviceId) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.connectBleDevice$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[requestId, deviceId],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[requestId, deviceId]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: false,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
     return pigeonVar_replyValue! as BleConnectionEventDto;
   }
 
-  Future<BleAuthenticationResultDto> authenticateBleDevice(
-    String requestId,
-    String deviceId,
-    String token,
-  ) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.flinx.HardwareHostApi.authenticateBleDevice$pigeonVar_messageChannelSuffix';
+  Future<BleAuthenticationResultDto> authenticateBleDevice(String requestId, String deviceId, String token) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.authenticateBleDevice$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[requestId, deviceId, token],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[requestId, deviceId, token]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: false,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
     return pigeonVar_replyValue! as BleAuthenticationResultDto;
   }
 
-  Future<WifiScanResultDto> scanWifiNetworks(
-    String requestId,
-    String deviceId,
-  ) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.flinx.HardwareHostApi.scanWifiNetworks$pigeonVar_messageChannelSuffix';
+  Future<WifiScanResultDto> scanWifiNetworks(String requestId, String deviceId) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.scanWifiNetworks$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[requestId, deviceId],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[requestId, deviceId]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: false,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
     return pigeonVar_replyValue! as WifiScanResultDto;
   }
 
-  Future<WifiProvisionResultDto> configureWifi(
-    String requestId,
-    String deviceId,
-    String ssid,
-    String password,
-  ) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.flinx.HardwareHostApi.configureWifi$pigeonVar_messageChannelSuffix';
+  Future<WifiProvisionResultDto> configureWifi(String requestId, String deviceId, String ssid, String password) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.configureWifi$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[requestId, deviceId, ssid, password],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[requestId, deviceId, ssid, password]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: false,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
     return pigeonVar_replyValue! as WifiProvisionResultDto;
   }
 
-  Future<BleConnectionEventDto> disconnectBleDevice(
-    String requestId,
-    String deviceId,
-  ) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.flinx.HardwareHostApi.disconnectBleDevice$pigeonVar_messageChannelSuffix';
+  Future<BleConnectionEventDto> disconnectBleDevice(String requestId, String deviceId) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.disconnectBleDevice$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[requestId, deviceId],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[requestId, deviceId]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: false,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
     return pigeonVar_replyValue! as BleConnectionEventDto;
   }
 
-  Future<BleServicesDto> discoverServices(
-    String requestId,
-    String deviceId,
-  ) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.flinx.HardwareHostApi.discoverServices$pigeonVar_messageChannelSuffix';
+  Future<BleServicesDto> discoverServices(String requestId, String deviceId) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.discoverServices$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[requestId, deviceId],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[requestId, deviceId]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: false,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
     return pigeonVar_replyValue! as BleServicesDto;
   }
 
-  Future<BleReadResultDto> readCharacteristic(
-    String requestId,
-    String deviceId,
-    String serviceUuid,
-    String characteristicUuid,
-  ) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.flinx.HardwareHostApi.readCharacteristic$pigeonVar_messageChannelSuffix';
+  Future<BleReadResultDto> readCharacteristic(String requestId, String deviceId, String serviceUuid, String characteristicUuid) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.readCharacteristic$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[requestId, deviceId, serviceUuid, characteristicUuid],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[requestId, deviceId, serviceUuid, characteristicUuid]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: false,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
     return pigeonVar_replyValue! as BleReadResultDto;
   }
 
-  Future<BleWriteResultDto> writeCharacteristic(
-    String requestId,
-    String deviceId,
-    String serviceUuid,
-    String characteristicUuid,
-    Uint8List payload,
-    BleWriteTypeDto writeType,
-  ) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.flinx.HardwareHostApi.writeCharacteristic$pigeonVar_messageChannelSuffix';
+  Future<BleWriteResultDto> writeCharacteristic(String requestId, String deviceId, String serviceUuid, String characteristicUuid, Uint8List payload, BleWriteTypeDto writeType) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.writeCharacteristic$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[
-        requestId,
-        deviceId,
-        serviceUuid,
-        characteristicUuid,
-        payload,
-        writeType,
-      ],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[requestId, deviceId, serviceUuid, characteristicUuid, payload, writeType]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: false,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
     return pigeonVar_replyValue! as BleWriteResultDto;
   }
 
-  Future<BleWriteResultDto> setCharacteristicNotify(
-    String requestId,
-    String deviceId,
-    String serviceUuid,
-    String characteristicUuid,
-    bool enabled,
-  ) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.flinx.HardwareHostApi.setCharacteristicNotify$pigeonVar_messageChannelSuffix';
+  Future<BleWriteResultDto> setCharacteristicNotify(String requestId, String deviceId, String serviceUuid, String characteristicUuid, bool enabled) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.setCharacteristicNotify$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[requestId, deviceId, serviceUuid, characteristicUuid, enabled],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[requestId, deviceId, serviceUuid, characteristicUuid, enabled]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: false,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
     return pigeonVar_replyValue! as BleWriteResultDto;
   }
 
-  Future<CommandResultDto> sendDoorCommand(
-    String requestId,
-    String deviceId,
-    DoorCommandDto command,
-  ) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.flinx.HardwareHostApi.sendDoorCommand$pigeonVar_messageChannelSuffix';
+  Future<CommandResultDto> sendDoorCommand(String requestId, String deviceId, DoorCommandDto command) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.sendDoorCommand$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[requestId, deviceId, command],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[requestId, deviceId, command]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: false,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
     return pigeonVar_replyValue! as CommandResultDto;
   }
 
-  Future<RemotePairingResultDto> pairRemote(
-    String requestId,
-    String deviceId,
-    RemotePairingActionDto action,
-  ) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.flinx.HardwareHostApi.pairRemote$pigeonVar_messageChannelSuffix';
+  Future<RemotePairingResultDto> pairRemote(String requestId, String deviceId, RemotePairingActionDto action) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.pairRemote$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[requestId, deviceId, action],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[requestId, deviceId, action]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: false,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
     return pigeonVar_replyValue! as RemotePairingResultDto;
   }
 
-  Future<RemoteControlListResultDto> queryRemotes(
-    String requestId,
-    String deviceId,
-  ) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.flinx.HardwareHostApi.queryRemotes$pigeonVar_messageChannelSuffix';
+  Future<RemoteControlListResultDto> queryRemotes(String requestId, String deviceId) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.queryRemotes$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[requestId, deviceId],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[requestId, deviceId]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: false,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
     return pigeonVar_replyValue! as RemoteControlListResultDto;
   }
 
-  Future<RemoteOperationResultDto> deleteRemote(
-    String requestId,
-    String deviceId,
-    int? serialNumber,
-  ) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.flinx.HardwareHostApi.deleteRemote$pigeonVar_messageChannelSuffix';
+  Future<RemoteOperationResultDto> deleteRemote(String requestId, String deviceId, int? serialNumber) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.deleteRemote$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[requestId, deviceId, serialNumber],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[requestId, deviceId, serialNumber]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: false,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
     return pigeonVar_replyValue! as RemoteOperationResultDto;
   }
 
-  Future<RemoteOperationResultDto> renameRemote(
-    String requestId,
-    String deviceId,
-    int serialNumber,
-    String name,
-  ) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.flinx.HardwareHostApi.renameRemote$pigeonVar_messageChannelSuffix';
+  Future<RemoteOperationResultDto> renameRemote(String requestId, String deviceId, int serialNumber, String name) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.renameRemote$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[requestId, deviceId, serialNumber, name],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[requestId, deviceId, serialNumber, name]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: false,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
     return pigeonVar_replyValue! as RemoteOperationResultDto;
   }
 }
@@ -1954,20 +1822,12 @@ abstract class HardwareFlutterApi {
 
   void onNativeError(NativeErrorDto error);
 
-  static void setUp(
-    HardwareFlutterApi? api, {
-    BinaryMessenger? binaryMessenger,
-    String messageChannelSuffix = '',
-  }) {
-    messageChannelSuffix = messageChannelSuffix.isNotEmpty
-        ? '.$messageChannelSuffix'
-        : '';
+  static void setUp(HardwareFlutterApi? api, {BinaryMessenger? binaryMessenger, String messageChannelSuffix = '',}) {
+    messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
     {
       final pigeonVar_channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.flinx.HardwareFlutterApi.onBleScanResult$messageChannelSuffix',
-        pigeonChannelCodec,
-        binaryMessenger: binaryMessenger,
-      );
+          'dev.flutter.pigeon.flinx.HardwareFlutterApi.onBleScanResult$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
       } else {
@@ -1979,72 +1839,58 @@ abstract class HardwareFlutterApi {
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
-          } catch (e) {
-            return wrapResponse(
-              error: PlatformException(code: 'error', message: e.toString()),
-            );
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
           }
         });
       }
     }
     {
       final pigeonVar_channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.flinx.HardwareFlutterApi.onBleConnectionChanged$messageChannelSuffix',
-        pigeonChannelCodec,
-        binaryMessenger: binaryMessenger,
-      );
+          'dev.flutter.pigeon.flinx.HardwareFlutterApi.onBleConnectionChanged$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
       } else {
         pigeonVar_channel.setMessageHandler((Object? message) async {
           final List<Object?> args = message! as List<Object?>;
-          final BleConnectionEventDto arg_event =
-              args[0]! as BleConnectionEventDto;
+          final BleConnectionEventDto arg_event = args[0]! as BleConnectionEventDto;
           try {
             api.onBleConnectionChanged(arg_event);
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
-          } catch (e) {
-            return wrapResponse(
-              error: PlatformException(code: 'error', message: e.toString()),
-            );
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
           }
         });
       }
     }
     {
       final pigeonVar_channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.flinx.HardwareFlutterApi.onBleNotification$messageChannelSuffix',
-        pigeonChannelCodec,
-        binaryMessenger: binaryMessenger,
-      );
+          'dev.flutter.pigeon.flinx.HardwareFlutterApi.onBleNotification$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
       } else {
         pigeonVar_channel.setMessageHandler((Object? message) async {
           final List<Object?> args = message! as List<Object?>;
-          final BleNotificationDto arg_notification =
-              args[0]! as BleNotificationDto;
+          final BleNotificationDto arg_notification = args[0]! as BleNotificationDto;
           try {
             api.onBleNotification(arg_notification);
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
-          } catch (e) {
-            return wrapResponse(
-              error: PlatformException(code: 'error', message: e.toString()),
-            );
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
           }
         });
       }
     }
     {
       final pigeonVar_channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.flinx.HardwareFlutterApi.onNativeError$messageChannelSuffix',
-        pigeonChannelCodec,
-        binaryMessenger: binaryMessenger,
-      );
+          'dev.flutter.pigeon.flinx.HardwareFlutterApi.onNativeError$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
       } else {
@@ -2056,10 +1902,8 @@ abstract class HardwareFlutterApi {
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
-          } catch (e) {
-            return wrapResponse(
-              error: PlatformException(code: 'error', message: e.toString()),
-            );
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
           }
         });
       }

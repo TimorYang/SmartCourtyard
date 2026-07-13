@@ -136,14 +136,19 @@ class _SmartOpenerConnectingPageState
                     style: AppTextTokens.smartOpenerConnectingTitle(textTheme),
                   ),
                   const SizedBox(height: 16),
-                  Padding(padding: EdgeInsetsGeometry.only(left: 50,right: 50),child: const _ConnectingProgressBar(),),
+                  Padding(
+                    padding: EdgeInsetsGeometry.only(left: 50, right: 50),
+                    child: const _ConnectingProgressBar(),
+                  ),
                   const SizedBox(height: 28),
-                  Padding(padding: const EdgeInsets.fromLTRB(30, 0, 30, 0),
-                  child: Text(
-                    l10n.smartOpenerConnectingTip,
-                    textAlign: TextAlign.center,
-                    style: AppTextTokens.smartOpenerBodyCenter(textTheme),
-                  ),)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+                    child: Text(
+                      l10n.smartOpenerConnectingTip,
+                      textAlign: TextAlign.center,
+                      style: AppTextTokens.smartOpenerBodyCenter(textTheme),
+                    ),
+                  ),
                 ],
               ),
             );

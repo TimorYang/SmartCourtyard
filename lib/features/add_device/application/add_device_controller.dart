@@ -2,12 +2,14 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/errors/app_error.dart';
 import '../../../platform_bridge/hardware_gateway.dart';
 import '../../../platform_bridge/hardware_models.dart';
+import '../domain/use_cases/add_force_door_use_case.dart';
+import '../domain/use_cases/fetch_onboarding_device_key_use_case.dart';
 import 'providers.dart';
 
 const String addDeviceBleNamePrefix = 'opener_';
-const String defaultBleAuthToken = 'AF035A47A6ABB06B884F28409EFB8E44';
 
 class AddDeviceState {
   const AddDeviceState({
@@ -18,7 +20,6 @@ class AddDeviceState {
     required this.isAuthenticating,
     required this.isScanningWifi,
     required this.isProvisioningWifi,
-    required this.authToken,
     required this.wifiSsid,
     required this.wifiPassword,
     required this.wifiNetworks,
@@ -36,10 +37,6 @@ class AddDeviceState {
       isAuthenticating: false,
       isScanningWifi: false,
       isProvisioningWifi: false,
-      authToken: String.fromEnvironment(
-        'FLINX_BLE_AUTH_TOKEN',
-        defaultValue: defaultBleAuthToken,
-      ),
       wifiSsid: '',
       wifiPassword: '',
       wifiNetworks: <WifiNetwork>[],
@@ -53,7 +50,6 @@ class AddDeviceState {
   final bool isAuthenticating;
   final bool isScanningWifi;
   final bool isProvisioningWifi;
-  final String authToken;
   final String wifiSsid;
   final String wifiPassword;
   final List<WifiNetwork> wifiNetworks;
@@ -79,7 +75,6 @@ class AddDeviceState {
     bool? isAuthenticating,
     bool? isScanningWifi,
     bool? isProvisioningWifi,
-    String? authToken,
     String? wifiSsid,
     String? wifiPassword,
     List<WifiNetwork>? wifiNetworks,
@@ -98,7 +93,6 @@ class AddDeviceState {
       isAuthenticating: isAuthenticating ?? this.isAuthenticating,
       isScanningWifi: isScanningWifi ?? this.isScanningWifi,
       isProvisioningWifi: isProvisioningWifi ?? this.isProvisioningWifi,
-      authToken: authToken ?? this.authToken,
       wifiSsid: wifiSsid ?? this.wifiSsid,
       wifiPassword: wifiPassword ?? this.wifiPassword,
       wifiNetworks: wifiNetworks ?? this.wifiNetworks,
@@ -115,6 +109,8 @@ class AddDeviceState {
 
 class AddDeviceController extends Notifier<AddDeviceState> {
   late HardwareGateway _gateway;
+  late FetchOnboardingDeviceKeyUseCase _fetchDeviceKeyUseCase;
+  late AddForceDoorUseCase _addForceDoorUseCase;
   final List<StreamSubscription<Object?>> _subscriptions =
       <StreamSubscription<Object?>>[];
   int _requestCounter = 0;
@@ -124,8 +120,13 @@ class AddDeviceController extends Notifier<AddDeviceState> {
   AddDeviceState build() {
     _cancelSubscriptions();
     _gateway = ref.watch(addDeviceHardwareGatewayProvider);
+    _fetchDeviceKeyUseCase = ref.watch(fetchOnboardingDeviceKeyUseCaseProvider);
+    _addForceDoorUseCase = ref.watch(addForceDoorUseCaseProvider);
     _subscriptions.addAll(<StreamSubscription<Object?>>[
       _gateway.bleScanResults.listen((device) {
+        if ((device.sn ?? '').trim().isEmpty) {
+          return;
+        }
         final nextDevices = Map<String, BleDevice>.from(state.devices);
         nextDevices[device.id] = device;
         state = state.copyWith(
@@ -160,10 +161,6 @@ class AddDeviceController extends Notifier<AddDeviceState> {
       unawaited(subscription.cancel());
     }
     _subscriptions.clear();
-  }
-
-  void updateAuthToken(String value) {
-    state = state.copyWith(authToken: value, clearErrorMessage: true);
   }
 
   void updateWifiSsid(String value) {
@@ -237,10 +234,10 @@ class AddDeviceController extends Notifier<AddDeviceState> {
   }
 
   Future<bool> connectAndAuthenticate(BleDevice device) async {
-    final token = state.authToken.trim();
-    if (token.length != 32) {
+    final sn = device.sn?.trim() ?? '';
+    if (sn.isEmpty) {
       state = state.copyWith(
-        errorMessage: '请输入 32 位鉴权 Token（MD5 值）',
+        errorMessage: '设备信息不完整，请重新扫描',
         clearInfoMessage: true,
       );
       return false;
@@ -270,12 +267,21 @@ class AddDeviceController extends Notifier<AddDeviceState> {
       state = state.copyWith(
         isConnecting: false,
         isAuthenticating: true,
-        infoMessage: '连接成功，正在鉴权...',
+        infoMessage: '连接成功，正在获取设备密钥...',
+      );
+      final deviceKey = await _fetchDeviceKeyUseCase(
+        sn: sn,
+        requestId: _nextRequestId('device-key'),
+      );
+      final fixedAesKeyHex = deviceKey.aesKey.trim();
+      state = state.copyWith(
+        isAuthenticating: true,
+        infoMessage: '设备密钥获取成功，正在鉴权...',
       );
       final authResult = await _gateway.authenticateBleDevice(
         requestId: _nextRequestId('ble-auth'),
         deviceId: device.id,
-        token: token,
+        token: fixedAesKeyHex,
       );
       if (!authResult.authenticated) {
         state = state.copyWith(
@@ -288,9 +294,17 @@ class AddDeviceController extends Notifier<AddDeviceState> {
 
       state = state.copyWith(
         isAuthenticating: false,
-        infoMessage: '鉴权成功，准备进入设备控制',
+        infoMessage: '鉴权成功，准备进入 Wi‑Fi 配置',
       );
       return true;
+    } on AppError catch (error) {
+      state = state.copyWith(
+        isConnecting: false,
+        isAuthenticating: false,
+        errorMessage: _messageForAppError(error),
+        clearInfoMessage: true,
+      );
+      return false;
     } catch (error) {
       state = state.copyWith(
         isConnecting: false,
@@ -374,8 +388,30 @@ class AddDeviceController extends Notifier<AddDeviceState> {
         return false;
       }
 
-      state = state.copyWith(isProvisioningWifi: false, infoMessage: '设备配网成功');
+      final sn = device.sn?.trim() ?? '';
+      if (sn.isEmpty) {
+        state = state.copyWith(
+          isProvisioningWifi: false,
+          errorMessage: '设备信息不完整，请重新扫描',
+          clearInfoMessage: true,
+        );
+        return false;
+      }
+
+      state = state.copyWith(infoMessage: '设备配网成功，正在绑定账号...');
+      await _addForceDoorUseCase(
+        sn: sn,
+        requestId: _nextRequestId('bind-door'),
+      );
+      state = state.copyWith(isProvisioningWifi: false, infoMessage: '设备绑定成功');
       return true;
+    } on AppError catch (error) {
+      state = state.copyWith(
+        isProvisioningWifi: false,
+        errorMessage: _messageForAppError(error),
+        clearInfoMessage: true,
+      );
+      return false;
     } catch (error) {
       state = state.copyWith(
         isProvisioningWifi: false,
@@ -389,5 +425,13 @@ class AddDeviceController extends Notifier<AddDeviceState> {
   String _nextRequestId(String prefix) {
     _requestCounter += 1;
     return '$prefix-${DateTime.now().millisecondsSinceEpoch}-$_requestCounter';
+  }
+
+  String _messageForAppError(AppError error) {
+    return switch (error.messageKey) {
+      'addDevice.deviceKeyFailed' => '获取设备密钥失败，请重试',
+      'addDevice.bindDoorFailed' => '设备绑定失败，请重试',
+      _ => '设备添加失败，请重试',
+    };
   }
 }

@@ -117,73 +117,84 @@ class _ScanResultCard extends StatelessWidget {
         ? device.name!.trim()
         : 'Smart Door';
 
-    return Container(
-      width: double.infinity,
-      constraints: const BoxConstraints(minHeight: 95),
-      padding: const EdgeInsets.fromLTRB(15, 23, 15, 23),
-      decoration: BoxDecoration(
-        color: AppColors.smartOpenerCardSurface,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.door_front_door_outlined,
-            size: 48,
-            color: AppColors.textPrimary,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Container(
+          width: constraints.maxWidth,
+          constraints: const BoxConstraints(minHeight: 95),
+          padding: const EdgeInsets.fromLTRB(15, 23, 15, 23),
+          decoration: BoxDecoration(
+            color: AppColors.smartOpenerCardSurface,
+            borderRadius: BorderRadius.circular(14),
           ),
-          const SizedBox(width: 13),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextTokens.smartOpenerResultCardTitle(textTheme),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.smartOpenerDefaultDeviceSubtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextTokens.smartOpenerResultCardSubtitle(textTheme),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 14),
-          SizedBox(
-            height: 32,
-            child: FilledButton(
-              onPressed: onAddPressed,
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.smartOpenerAddButton,
-                foregroundColor: Colors.white,
-                disabledBackgroundColor: AppColors.textHint,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(7),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.door_front_door_outlined,
+                size: 48,
+                color: AppColors.textPrimary,
+              ),
+              const SizedBox(width: 13),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextTokens.smartOpenerResultCardTitle(
+                        textTheme,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.smartOpenerDefaultDeviceSubtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextTokens.smartOpenerResultCardSubtitle(
+                        textTheme,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              child: isPending
-                  ? const SizedBox.square(
-                      dimension: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Text(
-                      l10n.smartOpenerAddAction,
-                      style: AppTextTokens.smartOpenerSmallButton(textTheme),
+              const SizedBox(width: 14),
+              SizedBox(
+                width: 72,
+                height: 32,
+                child: FilledButton(
+                  onPressed: onAddPressed,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.smartOpenerAddButton,
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: AppColors.textHint,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(7),
                     ),
-            ),
+                  ),
+                  child: isPending
+                      ? const SizedBox.square(
+                          dimension: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          l10n.smartOpenerAddAction,
+                          style: AppTextTokens.smartOpenerSmallButton(
+                            textTheme,
+                          ),
+                        ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
