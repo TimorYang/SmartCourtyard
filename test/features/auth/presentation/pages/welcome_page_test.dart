@@ -2,12 +2,40 @@ import 'package:flinx/app/flinx_app.dart';
 import 'package:flinx/features/auth/application/providers.dart';
 import 'package:flinx/features/auth/domain/entities/auth_session.dart';
 import 'package:flinx/features/home/application/providers.dart';
+import 'package:flinx/features/home/domain/entities/home_scene.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  const homeSceneFixtures = [
+    HomeScene(id: 1, name: 'Home', doorCount: 2, isDefault: true),
+  ];
+
+  const homeDeviceFixtures = [
+    DeviceSummary(
+      id: 'door-1',
+      name: 'Garage door',
+      onlineState: DeviceOnlineState.online,
+      bleState: BleConnectionState.connected,
+      doorState: DoorState.closing,
+      cycleCount: 8,
+      remainingLifePercent: 96,
+      sceneId: 1,
+    ),
+    DeviceSummary(
+      id: 'door-2',
+      name: 'Roller door',
+      onlineState: DeviceOnlineState.offline,
+      bleState: BleConnectionState.disconnected,
+      doorState: DoorState.open,
+      cycleCount: 12,
+      remainingLifePercent: 89,
+      sceneId: 1,
+    ),
+  ];
+
   Future<void> pumpSignedInApp(WidgetTester tester) async {
     await tester.pumpWidget(
       ProviderScope(
@@ -16,6 +44,8 @@ void main() {
             (ref) async =>
                 const AuthSession(isAuthenticated: true, userId: 'test-user'),
           ),
+          homeScenesProvider.overrideWith((ref) async => homeSceneFixtures),
+          homeDevicesProvider.overrideWith((ref) async => homeDeviceFixtures),
         ],
         child: const FlinxApp(),
       ),
@@ -81,28 +111,8 @@ void main() {
             (ref) async =>
                 const AuthSession(isAuthenticated: true, userId: 'test-user'),
           ),
-          homeDevicesProvider.overrideWith((ref) async {
-            return const [
-              DeviceSummary(
-                id: 'door-1',
-                name: 'Garage door',
-                onlineState: DeviceOnlineState.online,
-                bleState: BleConnectionState.connected,
-                doorState: DoorState.closing,
-                cycleCount: 8,
-                remainingLifePercent: 96,
-              ),
-              DeviceSummary(
-                id: 'door-2',
-                name: 'Roller door',
-                onlineState: DeviceOnlineState.offline,
-                bleState: BleConnectionState.disconnected,
-                doorState: DoorState.open,
-                cycleCount: 12,
-                remainingLifePercent: 89,
-              ),
-            ];
-          }),
+          homeScenesProvider.overrideWith((ref) async => homeSceneFixtures),
+          homeDevicesProvider.overrideWith((ref) async => homeDeviceFixtures),
         ],
         child: const FlinxApp(),
       ),
@@ -147,8 +157,28 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('CHOOSE A SCENE'), findsOneWidget);
-    expect(find.text('Home/Smart Door'), findsOneWidget);
+    expect(find.text('333/TestFoor'), findsOneWidget);
+    expect(find.text('2222'), findsOneWidget);
+    expect(find.text('4444'), findsOneWidget);
     expect(find.text('Device editing'), findsNothing);
+  });
+
+  testWidgets('closes choose scene page after selecting a scene', (
+    tester,
+  ) async {
+    await pumpSignedInApp(tester);
+
+    await tester.longPress(find.text('Roller door'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Move Scene'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('2222'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('CHOOSE A SCENE'), findsNothing);
+    expect(find.text('Welcome'), findsOneWidget);
   });
 
   testWidgets('opens device name dialog from device editing name action', (
@@ -288,6 +318,8 @@ void main() {
             (ref) async =>
                 const AuthSession(isAuthenticated: true, userId: 'user-1'),
           ),
+          homeScenesProvider.overrideWith((ref) async => homeSceneFixtures),
+          homeDevicesProvider.overrideWith((ref) async => homeDeviceFixtures),
         ],
         child: const FlinxApp(),
       ),

@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
-import '../../../../shared/widgets/flinx_navigation_bar.dart';
+import '../../domain/entities/home_scene.dart';
 
 class ChooseSceneAssetPaths {
   const ChooseSceneAssetPaths._();
 
-  static const warehousePlaceholder =
-      'assets/icons/home/scene_warehouse_placeholder.png';
   static const garagePlaceholder =
       'assets/icons/home/scene_garage_placeholder.png';
 }
@@ -19,27 +18,24 @@ class ChooseScenePage extends StatelessWidget {
   static const routeName = 'choose-scene';
   static const routePath = '/choose-scene';
 
-  static const _breadcrumb = 'Home/Smart Door';
-  static const _scenes = <_SceneItem>[
-    _SceneItem(
-      name: 'Warehouse A',
-      deviceCount: 5,
-      iconAssetPath: ChooseSceneAssetPaths.warehousePlaceholder,
-      fallbackIcon: Icons.home_work_outlined,
-      selected: true,
-    ),
-    _SceneItem(
-      name: 'Home Garage A',
-      deviceCount: 2,
-      iconAssetPath: ChooseSceneAssetPaths.garagePlaceholder,
-      fallbackIcon: Icons.home_outlined,
-    ),
-    _SceneItem(
-      name: 'Home Garage B',
-      deviceCount: 2,
-      iconAssetPath: ChooseSceneAssetPaths.garagePlaceholder,
-      fallbackIcon: Icons.home_outlined,
-    ),
+  static const _breadcrumb = '333/TestFoor';
+  static const _currentSceneId = 333;
+  static const _sceneResponses = <Map<String, Object>>[
+    {'defaultScene': true, 'doorCount': 5, 'id': 1, 'name': 'Home'},
+    {'defaultScene': false, 'doorCount': 0, 'id': 2222, 'name': '2222'},
+    {'defaultScene': false, 'doorCount': 1, 'id': 333, 'name': '333'},
+    {'defaultScene': false, 'doorCount': 1, 'id': 4444, 'name': '4444'},
+    {'defaultScene': false, 'doorCount': 0, 'id': 555, 'name': '555'},
+  ];
+
+  static final _scenes = [
+    for (final response in _sceneResponses)
+      HomeScene(
+        id: response['id'] as int,
+        name: response['name'] as String,
+        doorCount: response['doorCount'] as int,
+        isDefault: response['defaultScene'] as bool,
+      ),
   ];
 
   @override
@@ -49,193 +45,146 @@ class ChooseScenePage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.backgroundPrimary,
-      appBar: FlinxNavigationBar(
-        title: '',
-        showBottomDivider: false,
-        actions: [
-          IconButton(
-            tooltip: l10n.chooseSceneEditTooltip,
-            visualDensity: VisualDensity.compact,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints.tightFor(width: 34, height: 34),
-            onPressed: () {},
-            icon: const Icon(
-              Icons.edit_outlined,
-              color: AppColors.iconHomeAction,
-              size: 20,
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 28),
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: IconButton(
+                tooltip: l10n.chooseSceneBackTooltip,
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints.tightFor(
+                  width: 36,
+                  height: 36,
+                ),
+                onPressed: () => context.pop(),
+                icon: const Icon(
+                  Icons.chevron_left_rounded,
+                  color: AppColors.iconHomeAction,
+                  size: 40,
+                ),
+              ),
             ),
-          ),
-          const SizedBox(width: 16),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(5, 10, 0, 0),
-            child: Text(
+            const SizedBox(height: 42),
+            Text(
               l10n.chooseSceneTitle,
               style: AppTextTokens.sceneTitle(textTheme),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(10, 4, 0, 0),
-            child: Text(
-              _breadcrumb,
-              style: AppTextTokens.sceneBreadcrumb(textTheme),
-            ),
-          ),
-          const SizedBox(height: 46),
-          for (final scene in _scenes) ...[
-            _SceneCard(scene: scene),
-            const SizedBox(height: 16),
+            const SizedBox(height: 2),
+            Text(_breadcrumb, style: AppTextTokens.sceneBreadcrumb(textTheme)),
+            const SizedBox(height: 38),
+            for (var index = 0; index < _scenes.length; index++) ...[
+              _SceneCard(
+                scene: _scenes[index],
+                selected: _scenes[index].id == _currentSceneId,
+                onPressed: () => context.pop(_scenes[index]),
+              ),
+              if (index != _scenes.length - 1)
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 2),
+                  child: Divider(
+                    height: 18,
+                    color: AppColors.borderHomeDivider,
+                  ),
+                ),
+            ],
           ],
-          const SizedBox(height: 2),
-          const _NewSceneCard(),
-        ],
+        ),
       ),
     );
   }
 }
 
-class _SceneItem {
-  const _SceneItem({
-    required this.name,
-    required this.deviceCount,
-    required this.iconAssetPath,
-    required this.fallbackIcon,
-    this.selected = false,
+class _SceneCard extends StatelessWidget {
+  const _SceneCard({
+    required this.scene,
+    required this.selected,
+    required this.onPressed,
   });
 
-  final String name;
-  final int deviceCount;
-  final String iconAssetPath;
-  final IconData fallbackIcon;
+  final HomeScene scene;
   final bool selected;
-}
-
-class _SceneCard extends StatelessWidget {
-  const _SceneCard({required this.scene});
-
-  final _SceneItem scene;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final textTheme = Theme.of(context).textTheme;
 
-    return Container(
-      height: 88,
-      decoration: BoxDecoration(
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: Material(
         color: AppColors.surfaceItemSceneCard,
         borderRadius: BorderRadius.circular(14),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 28),
-      child: Row(
-        children: [
-          _SceneIcon(assetPath: scene.iconAssetPath, icon: scene.fallbackIcon),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: onPressed,
+          child: Container(
+            height: 108,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              border: selected
+                  ? Border.all(
+                      color: AppColors.borderSelectedSceneCard,
+                      width: 1,
+                    )
+                  : null,
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 34),
+            child: Row(
               children: [
-                Text(
-                  scene.name,
-                  style: AppTextTokens.sceneCardTitle(textTheme),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  l10n.chooseSceneDeviceCount(scene.deviceCount),
-                  style: AppTextTokens.sceneCardMeta(textTheme),
+                const _SceneIcon(),
+                const SizedBox(width: 28),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        scene.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextTokens.sceneCardTitle(textTheme),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        l10n.chooseSceneDeviceCount(scene.doorCount),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextTokens.sceneCardMeta(textTheme),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
-          if (scene.selected) const _SelectedSceneIndicator(),
-        ],
+        ),
       ),
     );
   }
 }
 
 class _SceneIcon extends StatelessWidget {
-  const _SceneIcon({required this.assetPath, required this.icon});
-
-  final String assetPath;
-  final IconData icon;
+  const _SceneIcon();
 
   @override
   Widget build(BuildContext context) {
     return Image.asset(
-      assetPath,
-      width: 48,
-      height: 48,
+      ChooseSceneAssetPaths.garagePlaceholder,
+      width: 42,
+      height: 42,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) {
-        return Icon(icon, color: AppColors.iconHomeAction, size: 48);
+        return const Icon(
+          Icons.home_outlined,
+          color: AppColors.iconHomeAction,
+          size: 42,
+        );
       },
-    );
-  }
-}
-
-class _SelectedSceneIndicator extends StatelessWidget {
-  const _SelectedSceneIndicator();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 22,
-      height: 22,
-      decoration: const BoxDecoration(
-        color: AppColors.authSuccess,
-        shape: BoxShape.circle,
-      ),
-      child: const Icon(
-        Icons.check_rounded,
-        color: AppColors.backgroundPrimary,
-        size: 15,
-      ),
-    );
-  }
-}
-
-class _NewSceneCard extends StatelessWidget {
-  const _NewSceneCard();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-
-    return Container(
-      height: 88,
-      decoration: BoxDecoration(
-        color: AppColors.surfaceItemSceneCard,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 24,
-            height: 24,
-            decoration: const BoxDecoration(
-              color: AppColors.authSuccess,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.add_rounded,
-              color: AppColors.backgroundPrimary,
-              size: 24,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            l10n.chooseSceneNewSceneAction,
-            style: AppTextTokens.sceneNewScene(Theme.of(context).textTheme),
-          ),
-        ],
-      ),
     );
   }
 }

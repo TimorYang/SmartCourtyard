@@ -128,6 +128,7 @@ class AppColors {
   static const surfaceAccountMenu = Colors.white;
   static const surfaceSceneCard = Color(0xFFF4F5F7);
   static const surfaceItemSceneCard = Color(0xFFF1F3F5);
+  static const borderSelectedSceneCard = Color(0xFF176CFF);
   static const sceneDeleteAction = Color(0xFFFF1010);
   static const sceneDialogCancelButton = Color(0xFFF4F5F6);
   static const sceneDialogInputBorder = Color(0xFFC8C8C8);
