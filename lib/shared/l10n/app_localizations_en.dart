@@ -299,6 +299,63 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeDeviceEditCustomizeAction => 'Customize';
 
   @override
+  String get deviceShareTitle => 'Share';
+
+  @override
+  String get deviceShareSubtitle => 'Enjoy the smart life with your family!';
+
+  @override
+  String get deviceSharePermissionsLabel => 'Permissions';
+
+  @override
+  String get deviceShareAdministratorRole => 'Administrator';
+
+  @override
+  String get deviceShareGuestRole => 'Guest';
+
+  @override
+  String get deviceShareEmailLabel => 'Email';
+
+  @override
+  String get deviceShareEmailPlaceholder => 'Email/Account';
+
+  @override
+  String get deviceSharePeriodLabel => 'Sharing period';
+
+  @override
+  String get deviceShareNeverExpired => 'Never expired';
+
+  @override
+  String get deviceShareTwoHours => '2 hours';
+
+  @override
+  String get deviceShareCustomize => 'Customize';
+
+  @override
+  String get deviceShareTimeLabel => 'Time';
+
+  @override
+  String get deviceShareSendEmailLabel => 'Send email';
+
+  @override
+  String get deviceShareCapabilitiesTitle => 'Capabilities';
+
+  @override
+  String get deviceShareCapabilityDoorControl => 'Open/stop/close';
+
+  @override
+  String get deviceShareCapabilityPartialOpen => 'Partial open';
+
+  @override
+  String get deviceShareCapabilityLedDelay => 'LED off delay';
+
+  @override
+  String get deviceShareCancelAction => 'Cancel';
+
+  @override
+  String get deviceShareConfirmAction => 'Confirm';
+
+  @override
   String get accountProfileTitle => 'Account profile';
 
   @override

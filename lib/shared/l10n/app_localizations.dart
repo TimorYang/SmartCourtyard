@@ -626,6 +626,120 @@ abstract class AppLocalizations {
   /// **'Customize'**
   String get homeDeviceEditCustomizeAction;
 
+  /// Title of the device sharing page
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get deviceShareTitle;
+
+  /// Subtitle of the device sharing page
+  ///
+  /// In en, this message translates to:
+  /// **'Enjoy the smart life with your family!'**
+  String get deviceShareSubtitle;
+
+  /// Permissions field label on the device sharing page
+  ///
+  /// In en, this message translates to:
+  /// **'Permissions'**
+  String get deviceSharePermissionsLabel;
+
+  /// Administrator role option on the device sharing page
+  ///
+  /// In en, this message translates to:
+  /// **'Administrator'**
+  String get deviceShareAdministratorRole;
+
+  /// Guest role option on the device sharing page
+  ///
+  /// In en, this message translates to:
+  /// **'Guest'**
+  String get deviceShareGuestRole;
+
+  /// Email field label on the device sharing page
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get deviceShareEmailLabel;
+
+  /// Email input placeholder on the device sharing page
+  ///
+  /// In en, this message translates to:
+  /// **'Email/Account'**
+  String get deviceShareEmailPlaceholder;
+
+  /// Sharing period field label on the device sharing page
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing period'**
+  String get deviceSharePeriodLabel;
+
+  /// Never expired sharing period option
+  ///
+  /// In en, this message translates to:
+  /// **'Never expired'**
+  String get deviceShareNeverExpired;
+
+  /// Two-hour sharing period option
+  ///
+  /// In en, this message translates to:
+  /// **'2 hours'**
+  String get deviceShareTwoHours;
+
+  /// Custom sharing period option
+  ///
+  /// In en, this message translates to:
+  /// **'Customize'**
+  String get deviceShareCustomize;
+
+  /// Time summary and custom time dialog label on the device sharing page
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get deviceShareTimeLabel;
+
+  /// Send email toggle label on the device sharing page
+  ///
+  /// In en, this message translates to:
+  /// **'Send email'**
+  String get deviceShareSendEmailLabel;
+
+  /// Capabilities section title on the device sharing page
+  ///
+  /// In en, this message translates to:
+  /// **'Capabilities'**
+  String get deviceShareCapabilitiesTitle;
+
+  /// Door control capability label on the device sharing page
+  ///
+  /// In en, this message translates to:
+  /// **'Open/stop/close'**
+  String get deviceShareCapabilityDoorControl;
+
+  /// Partial open capability label on the device sharing page
+  ///
+  /// In en, this message translates to:
+  /// **'Partial open'**
+  String get deviceShareCapabilityPartialOpen;
+
+  /// LED off delay capability label on the device sharing page
+  ///
+  /// In en, this message translates to:
+  /// **'LED off delay'**
+  String get deviceShareCapabilityLedDelay;
+
+  /// Cancel button label on the device sharing page
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get deviceShareCancelAction;
+
+  /// Confirm button label on the device sharing page
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get deviceShareConfirmAction;
+
   /// Title and accessibility label for the account profile menu page
   ///
   /// In en, this message translates to:

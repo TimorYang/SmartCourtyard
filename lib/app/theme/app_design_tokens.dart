@@ -145,6 +145,13 @@ class AppColors {
   static const smartOpenerSuccess = Color(0xFF20D667);
   static const smartOpenerProgressTrack = Color(0xFFF0F1F3);
   static const smartOpenerWarning = Color(0xFFFF3D12);
+  static const deviceShareFieldBorder = Color(0xFFEDEEEF);
+  static const deviceShareFieldShadow = Color(0x0F000000);
+  static const deviceShareFieldDisabled = Color(0xFFFBFBFC);
+  static const deviceShareCheckbox = Color(0xFF176CFF);
+  static const deviceShareCancelButton = Color(0xFFF1F2F4);
+  static const deviceShareDialogOverlay = Color(0x99000000);
+  static const deviceShareHourSelected = Color(0xFFE0E0E0);
 
   static const borderSubtle = Color(0xFFDBDBDB);
   static const borderMuted = Color(0xFFC8C8C8);
@@ -428,7 +435,7 @@ class AppTextTokens {
 
   static TextStyle homeTabLabel(TextTheme textTheme) {
     return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
-      fontSize: 12,
+      fontSize: 13,
       fontWeight: FontWeight.w600,
     );
   }
@@ -442,6 +449,7 @@ class AppTextTokens {
 
   static TextStyle homeDoorCount(TextTheme textTheme) {
     return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      fontSize: 14,
       color: AppColors.textSecondary,
       fontWeight: FontWeight.w400,
     );
@@ -505,6 +513,139 @@ class AppTextTokens {
   }
 
   static TextStyle homeDeviceEditingAction(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 15,
+      fontWeight: FontWeight.w500,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle deviceShareTitle(TextTheme textTheme) {
+    return (textTheme.displaySmall ?? const TextStyle()).copyWith(
+      color: AppColors.textSecondary,
+      fontSize: 31,
+      fontWeight: FontWeight.w700,
+      height: 1.05,
+    );
+  }
+
+  static TextStyle deviceShareSubtitle(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 17,
+      fontWeight: FontWeight.w400,
+      height: 1.25,
+    );
+  }
+
+  static TextStyle deviceShareLabel(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 16,
+      fontWeight: FontWeight.w500,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle deviceShareField(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 16,
+      fontWeight: FontWeight.w500,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle deviceShareSummaryValue(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.brandPrimary,
+      fontSize: 14,
+      fontWeight: FontWeight.w500,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle deviceShareHint(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.borderHomePlaceholder,
+      fontSize: 15,
+      fontWeight: FontWeight.w500,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle deviceShareSectionTitle(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 18,
+      fontWeight: FontWeight.w700,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle deviceShareButton(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      fontSize: 18,
+      fontWeight: FontWeight.w700,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle deviceShareDialogOption(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 14,
+      fontWeight: FontWeight.w500,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle deviceShareTimeSeparator(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 20,
+      fontWeight: FontWeight.w700,
+      height: 1,
+    );
+  }
+
+  static TextStyle deviceShareCalendarTitle(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 15,
+      fontWeight: FontWeight.w700,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle deviceShareCalendarWeekday(TextTheme textTheme) {
+    return (textTheme.bodySmall ?? const TextStyle()).copyWith(
+      color: AppColors.textHint,
+      fontSize: 13,
+      fontWeight: FontWeight.w500,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle deviceShareCalendarDay(
+    TextTheme textTheme, {
+    required bool isSelected,
+    required bool isToday,
+  }) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: isSelected
+          ? Colors.white
+          : isToday
+          ? AppColors.brandPrimary
+          : AppColors.textMuted,
+      fontSize: 13,
+      fontWeight: FontWeight.w500,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle deviceShareHourOption(TextTheme textTheme) {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
       color: AppColors.textMuted,
       fontSize: 15,

@@ -29,6 +29,7 @@ import '../../features/auth/presentation/pages/welcome_page.dart';
 import '../../features/device_control/presentation/pages/device_command_page.dart';
 import '../../features/hardware_debug/presentation/pages/ble_debug_page.dart';
 import '../../features/home/presentation/pages/choose_scene_page.dart';
+import '../../features/home/presentation/pages/device_share_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/home/presentation/pages/scene_page.dart';
 import '../../features/notification/presentation/pages/after_sales_appointment_page.dart';
@@ -61,7 +62,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           location == RegisterPage.routePath ||
           location == RegisterCodePage.routePath ||
           location == RegisterPasswordPage.routePath;
-      final isPublicRoute = isAuthRoute || location == AppWebViewPage.routePath;
+      final isPublicRoute =
+          isAuthRoute ||
+          location == AppWebViewPage.routePath ||
+          location == DeviceSharePage.routePath;
 
       if (!isSignedIn && !isPublicRoute) {
         return WelcomePage.routePath;
@@ -178,6 +182,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: ChooseScenePage.routePath,
         name: ChooseScenePage.routeName,
         builder: (context, state) => const ChooseScenePage(),
+      ),
+      GoRoute(
+        path: DeviceSharePage.routePath,
+        name: DeviceSharePage.routeName,
+        builder: (context, state) => const DeviceSharePage(),
       ),
       GoRoute(
         path: ScenePage.routePath,

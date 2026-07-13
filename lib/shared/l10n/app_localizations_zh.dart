@@ -281,6 +281,63 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeDeviceEditCustomizeAction => '自定义';
 
   @override
+  String get deviceShareTitle => '分享';
+
+  @override
+  String get deviceShareSubtitle => '与家人一起享受智能生活！';
+
+  @override
+  String get deviceSharePermissionsLabel => '权限';
+
+  @override
+  String get deviceShareAdministratorRole => '管理员';
+
+  @override
+  String get deviceShareGuestRole => '访客';
+
+  @override
+  String get deviceShareEmailLabel => '邮箱';
+
+  @override
+  String get deviceShareEmailPlaceholder => '邮箱/账号';
+
+  @override
+  String get deviceSharePeriodLabel => '分享期限';
+
+  @override
+  String get deviceShareNeverExpired => '永不过期';
+
+  @override
+  String get deviceShareTwoHours => '2 小时';
+
+  @override
+  String get deviceShareCustomize => '自定义';
+
+  @override
+  String get deviceShareTimeLabel => '时间';
+
+  @override
+  String get deviceShareSendEmailLabel => '发送邮件';
+
+  @override
+  String get deviceShareCapabilitiesTitle => '能力';
+
+  @override
+  String get deviceShareCapabilityDoorControl => '打开/停止/关闭';
+
+  @override
+  String get deviceShareCapabilityPartialOpen => '部分打开';
+
+  @override
+  String get deviceShareCapabilityLedDelay => 'LED 延时关闭';
+
+  @override
+  String get deviceShareCancelAction => '取消';
+
+  @override
+  String get deviceShareConfirmAction => '确认';
+
+  @override
   String get accountProfileTitle => '账户资料';
 
   @override

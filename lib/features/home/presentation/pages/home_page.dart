@@ -16,6 +16,7 @@ import '../widgets/device_name_dialog.dart';
 import '../widgets/scene_name_dialog.dart';
 import '../../../device_control/presentation/pages/device_command_page.dart';
 import 'choose_scene_page.dart';
+import 'device_share_page.dart';
 import 'scene_page.dart';
 
 class HomeAssetPaths {
@@ -829,6 +830,11 @@ class _DeviceEditingSheet extends StatelessWidget {
         label: l10n.homeDeviceEditShareAction,
         assetPath: HomeAssetPaths.deviceEditShareIcon,
         fallbackIcon: Icons.person_add_alt_1_outlined,
+        onPressed: () {
+          final router = GoRouter.of(context);
+          Navigator.of(context).pop();
+          router.push(DeviceSharePage.routePath);
+        },
       ),
       _DeviceEditingAction(
         label: l10n.homeDeviceEditMoveSceneAction,

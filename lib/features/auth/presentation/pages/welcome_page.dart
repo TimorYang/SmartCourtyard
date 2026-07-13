@@ -1,11 +1,11 @@
 import 'dart:ui';
 
+import 'package:flinx/features/home/presentation/pages/device_share_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
-import '../../../home/presentation/pages/home_page.dart';
 import 'login_page.dart';
 import 'register_page.dart';
 
@@ -60,7 +60,7 @@ class WelcomePage extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton(
-                      onPressed: () => context.push(HomePage.routePath),
+                      onPressed: () => context.push(DeviceSharePage.routePath),
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.brandPrimary,
                         foregroundColor: AppColors.backgroundPrimary,

@@ -354,6 +354,82 @@
   "@homeDeviceEditCustomizeAction": {
     "description": "Customize action in the home device editing sheet"
   },
+  "deviceShareTitle": "Share",
+  "@deviceShareTitle": {
+    "description": "Title of the device sharing page"
+  },
+  "deviceShareSubtitle": "Enjoy the smart life with your family!",
+  "@deviceShareSubtitle": {
+    "description": "Subtitle of the device sharing page"
+  },
+  "deviceSharePermissionsLabel": "Permissions",
+  "@deviceSharePermissionsLabel": {
+    "description": "Permissions field label on the device sharing page"
+  },
+  "deviceShareAdministratorRole": "Administrator",
+  "@deviceShareAdministratorRole": {
+    "description": "Administrator role option on the device sharing page"
+  },
+  "deviceShareGuestRole": "Guest",
+  "@deviceShareGuestRole": {
+    "description": "Guest role option on the device sharing page"
+  },
+  "deviceShareEmailLabel": "Email",
+  "@deviceShareEmailLabel": {
+    "description": "Email field label on the device sharing page"
+  },
+  "deviceShareEmailPlaceholder": "Email/Account",
+  "@deviceShareEmailPlaceholder": {
+    "description": "Email input placeholder on the device sharing page"
+  },
+  "deviceSharePeriodLabel": "Sharing period",
+  "@deviceSharePeriodLabel": {
+    "description": "Sharing period field label on the device sharing page"
+  },
+  "deviceShareNeverExpired": "Never expired",
+  "@deviceShareNeverExpired": {
+    "description": "Never expired sharing period option"
+  },
+  "deviceShareTwoHours": "2 hours",
+  "@deviceShareTwoHours": {
+    "description": "Two-hour sharing period option"
+  },
+  "deviceShareCustomize": "Customize",
+  "@deviceShareCustomize": {
+    "description": "Custom sharing period option"
+  },
+  "deviceShareTimeLabel": "Time",
+  "@deviceShareTimeLabel": {
+    "description": "Time summary and custom time dialog label on the device sharing page"
+  },
+  "deviceShareSendEmailLabel": "Send email",
+  "@deviceShareSendEmailLabel": {
+    "description": "Send email toggle label on the device sharing page"
+  },
+  "deviceShareCapabilitiesTitle": "Capabilities",
+  "@deviceShareCapabilitiesTitle": {
+    "description": "Capabilities section title on the device sharing page"
+  },
+  "deviceShareCapabilityDoorControl": "Open/stop/close",
+  "@deviceShareCapabilityDoorControl": {
+    "description": "Door control capability label on the device sharing page"
+  },
+  "deviceShareCapabilityPartialOpen": "Partial open",
+  "@deviceShareCapabilityPartialOpen": {
+    "description": "Partial open capability label on the device sharing page"
+  },
+  "deviceShareCapabilityLedDelay": "LED off delay",
+  "@deviceShareCapabilityLedDelay": {
+    "description": "LED off delay capability label on the device sharing page"
+  },
+  "deviceShareCancelAction": "Cancel",
+  "@deviceShareCancelAction": {
+    "description": "Cancel button label on the device sharing page"
+  },
+  "deviceShareConfirmAction": "Confirm",
+  "@deviceShareConfirmAction": {
+    "description": "Confirm button label on the device sharing page"
+  },
   "accountProfileTitle": "Account profile",
   "@accountProfileTitle": {
     "description": "Title and accessibility label for the account profile menu page"
