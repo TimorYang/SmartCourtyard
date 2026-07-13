@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../application/providers.dart';
 
 class SceneNameDialogAssetPaths {
   const SceneNameDialogAssetPaths._();
@@ -18,15 +20,16 @@ Future<void> showSceneNameDialog(BuildContext context) {
   );
 }
 
-class SceneNameDialog extends StatefulWidget {
+class SceneNameDialog extends ConsumerStatefulWidget {
   const SceneNameDialog({super.key});
 
   @override
-  State<SceneNameDialog> createState() => _SceneNameDialogState();
+  ConsumerState<SceneNameDialog> createState() => _SceneNameDialogState();
 }
 
-class _SceneNameDialogState extends State<SceneNameDialog> {
+class _SceneNameDialogState extends ConsumerState<SceneNameDialog> {
   late final TextEditingController _controller;
+  var _isSubmitting = false;
 
   @override
   void initState() {
@@ -75,7 +78,9 @@ class _SceneNameDialogState extends State<SceneNameDialog> {
                         child: SizedBox(
                           height: 52,
                           child: FilledButton(
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: _isSubmitting
+                                ? null
+                                : () => Navigator.pop(context),
                             style: FilledButton.styleFrom(
                               backgroundColor:
                                   AppColors.sceneDialogCancelButton,
@@ -94,7 +99,7 @@ class _SceneNameDialogState extends State<SceneNameDialog> {
                         child: SizedBox(
                           height: 52,
                           child: FilledButton(
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: _isSubmitting ? null : _submit,
                             style: FilledButton.styleFrom(
                               backgroundColor: AppColors.brandPrimary,
                               foregroundColor: AppColors.backgroundPrimary,
@@ -103,7 +108,16 @@ class _SceneNameDialogState extends State<SceneNameDialog> {
                                 textTheme,
                               ),
                             ),
-                            child: Text(l10n.sceneNameConfirmAction),
+                            child: _isSubmitting
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppColors.backgroundPrimary,
+                                    ),
+                                  )
+                                : Text(l10n.sceneNameConfirmAction),
                           ),
                         ),
                       ),
@@ -116,6 +130,45 @@ class _SceneNameDialogState extends State<SceneNameDialog> {
         ),
       ),
     );
+  }
+
+  Future<void> _submit() async {
+    final name = _controller.text.trim();
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(const SnackBar(content: Text('input scene name')));
+      return;
+    }
+    setState(() {
+      _isSubmitting = true;
+    });
+    final requestId =
+        'home-create-scene-${DateTime.now().toUtc().microsecondsSinceEpoch}';
+    try {
+      await ref.read(createHomeSceneUseCaseProvider)(
+        name: name,
+        requestId: requestId,
+      );
+      ref.invalidate(homeScenesProvider);
+      if (mounted) {
+        Navigator.pop(context);
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(content: Text('Failed to create scene')),
+          );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
   }
 }
 

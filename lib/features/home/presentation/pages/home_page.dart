@@ -10,6 +10,7 @@ import '../../../add_device/presentation/pages/add_new_doors_page.dart';
 import '../../../../features/hardware_debug/presentation/pages/ble_debug_page.dart';
 import '../../../../platform_bridge/hardware_models.dart';
 import '../../application/providers.dart';
+import '../../domain/entities/home_scene.dart';
 import '../widgets/device_customize_dialog.dart';
 import '../widgets/device_delete_dialog.dart';
 import '../widgets/device_name_dialog.dart';
@@ -89,18 +90,34 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
     final devices = ref.watch(homeDevicesProvider);
+    final scenes = ref.watch(homeScenesProvider);
     final homeDevices = devices.when(
       data: (items) => items.isEmpty ? _demoHomeDevices : items,
       loading: () => _demoHomeDevices,
       error: (error, stackTrace) => _demoHomeDevices,
     );
-    final homes = <_HomeGroup>[
-      _HomeGroup(label: 'Home', devices: homeDevices),
-      const _HomeGroup(label: 'home2', devices: <DeviceSummary>[]),
-      const _HomeGroup(label: 'home3', devices: <DeviceSummary>[]),
-    ];
+    final homes = scenes.when(
+      data: (items) => _buildHomeGroups(items, homeDevices),
+      loading: () => <_HomeGroup>[
+        _HomeGroup(
+          label: 'Home',
+          doorCount: homeDevices.length,
+          devices: homeDevices,
+        ),
+      ],
+      error: (error, stackTrace) => <_HomeGroup>[
+        _HomeGroup(
+          label: 'Home',
+          doorCount: homeDevices.length,
+          devices: homeDevices,
+        ),
+      ],
+    );
+    final isLoading = devices.isLoading || scenes.isLoading;
+    final hasError = devices.hasError || scenes.hasError;
 
     return DefaultTabController(
+      key: ValueKey(homes.map((home) => home.label).join('|')),
       length: homes.length,
       child: Scaffold(
         backgroundColor: AppColors.homeBackground,
@@ -120,17 +137,16 @@ class _HomePageState extends ConsumerState<HomePage> {
                   _HomeTabs(homes: homes),
                   const Divider(height: 1, color: AppColors.borderHomeDivider),
                   Expanded(
-                    child: devices.when(
-                      data: (_) => TabBarView(
-                        children: [
-                          for (final home in homes)
-                            _HomeDevicePanel(home: home),
-                        ],
-                      ),
-                      loading: () =>
-                          const Center(child: CircularProgressIndicator()),
-                      error: (error, stackTrace) => const _HomeErrorState(),
-                    ),
+                    child: hasError
+                        ? const _HomeErrorState()
+                        : isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : TabBarView(
+                            children: [
+                              for (final home in homes)
+                                _HomeDevicePanel(home: home),
+                            ],
+                          ),
                   ),
                 ],
               ),
@@ -147,6 +163,33 @@ class _HomePageState extends ConsumerState<HomePage> {
         ),
       ),
     );
+  }
+
+  List<_HomeGroup> _buildHomeGroups(
+    List<HomeScene> scenes,
+    List<DeviceSummary> devices,
+  ) {
+    if (scenes.isEmpty) {
+      return [
+        _HomeGroup(label: 'Home', doorCount: devices.length, devices: devices),
+      ];
+    }
+
+    final defaultSceneIndex = scenes.indexWhere((scene) => scene.isDefault);
+    final deviceSceneIndex = defaultSceneIndex == -1 ? 0 : defaultSceneIndex;
+
+    return [
+      for (var index = 0; index < scenes.length; index++)
+        _HomeGroup(
+          label: scenes[index].name.trim().isEmpty
+              ? 'Home'
+              : scenes[index].name.trim(),
+          doorCount: scenes[index].doorCount,
+          devices: index == deviceSceneIndex
+              ? devices
+              : const <DeviceSummary>[],
+        ),
+    ];
   }
 }
 
@@ -364,9 +407,14 @@ class _HomeHeader extends StatelessWidget {
 }
 
 class _HomeGroup {
-  const _HomeGroup({required this.label, required this.devices});
+  const _HomeGroup({
+    required this.label,
+    required this.doorCount,
+    required this.devices,
+  });
 
   final String label;
+  final int doorCount;
   final List<DeviceSummary> devices;
 }
 
@@ -441,13 +489,13 @@ class _HomeDevicePanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (home.devices.isEmpty) {
-      return _EmptyHomeState(doorCount: home.devices.length);
+      return _EmptyHomeState(doorCount: home.doorCount);
     }
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(18, 10, 18, 24),
       children: [
-        _DoorCount(count: home.devices.length),
+        _DoorCount(count: home.doorCount),
         const SizedBox(height: 16),
         GridView.builder(
           itemCount: home.devices.length,

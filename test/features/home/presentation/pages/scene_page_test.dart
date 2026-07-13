@@ -1,6 +1,10 @@
 import 'package:flinx/app/flinx_app.dart';
 import 'package:flinx/features/auth/application/providers.dart';
 import 'package:flinx/features/auth/domain/entities/auth_session.dart';
+import 'package:flinx/features/home/application/providers.dart';
+import 'package:flinx/features/home/domain/entities/home_scene.dart';
+import 'package:flinx/features/home/domain/use_cases/create_home_scene_use_case.dart';
+import 'package:flinx/features/home/domain/repositories/home_scene_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,6 +17,14 @@ void main() {
           authSessionProvider.overrideWith(
             (ref) async =>
                 const AuthSession(isAuthenticated: true, userId: 'test-user'),
+          ),
+          homeScenesProvider.overrideWith(
+            (ref) async => const [
+              HomeScene(id: 1, name: 'Home', doorCount: 2, isDefault: true),
+            ],
+          ),
+          createHomeSceneUseCaseProvider.overrideWith(
+            (ref) => CreateHomeSceneUseCase(repository: _FakeSceneRepository()),
           ),
         ],
         child: const FlinxApp(),
@@ -72,6 +84,25 @@ void main() {
     expect(find.text('Scene Name'), findsNothing);
   });
 
+  testWidgets('keeps scene name dialog open when name is empty', (
+    tester,
+  ) async {
+    await pumpSignedInApp(tester);
+
+    await tester.tap(find.byTooltip('Scene'));
+    await tester.pumpAndSettle();
+    await tester.drag(find.byType(ListView), const Offset(0, -300));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('New scene'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('confirm'));
+    await tester.pump();
+
+    expect(find.text('Scene Name'), findsOneWidget);
+    expect(find.text('input scene name'), findsOneWidget);
+  });
+
   testWidgets('toggles scene editing mode from the top-right action', (
     tester,
   ) async {
@@ -94,4 +125,21 @@ void main() {
     expect(find.text('SCENE'), findsOneWidget);
     expect(find.byTooltip('Edit scene'), findsOneWidget);
   });
+}
+
+class _FakeSceneRepository implements HomeSceneRepository {
+  @override
+  Future<List<HomeScene>> fetchScenes({required String requestId}) async {
+    return const [
+      HomeScene(id: 1, name: 'Home', doorCount: 2, isDefault: true),
+    ];
+  }
+
+  @override
+  Future<HomeScene> createScene({
+    required String name,
+    required String requestId,
+  }) async {
+    return HomeScene(id: 2, name: name, doorCount: 0, isDefault: false);
+  }
 }
