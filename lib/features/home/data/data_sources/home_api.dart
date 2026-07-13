@@ -21,4 +21,17 @@ abstract class HomeApi {
     @Body() CreateHomeSceneRequestDto request,
     @DioOptions() Options options,
   );
+
+  @DELETE('app/scenes/{sceneId}')
+  Future<ApiEnvelopeDto<dynamic>> deleteScene(
+    @Path('sceneId') int sceneId,
+    @DioOptions() Options options,
+  );
+
+  @PUT('app/scenes/{sceneId}/name')
+  Future<ApiEnvelopeDto<bool>> renameScene(
+    @Path('sceneId') int sceneId,
+    @Body() CreateHomeSceneRequestDto request,
+    @DioOptions() Options options,
+  );
 }

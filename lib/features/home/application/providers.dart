@@ -10,7 +10,9 @@ import '../data/repositories/home_scene_repository_impl.dart';
 import '../domain/entities/home_scene.dart';
 import '../domain/repositories/home_scene_repository.dart';
 import '../domain/use_cases/create_home_scene_use_case.dart';
+import '../domain/use_cases/delete_home_scene_use_case.dart';
 import '../domain/use_cases/fetch_home_scenes_use_case.dart';
+import '../domain/use_cases/rename_home_scene_use_case.dart';
 
 final homeDevicesProvider = FutureProvider<List<DeviceSummary>>((ref) {
   final hardwareGateway = ref.watch(hardwareGatewayProvider);
@@ -41,6 +43,18 @@ final fetchHomeScenesUseCaseProvider = Provider<FetchHomeScenesUseCase>((ref) {
 
 final createHomeSceneUseCaseProvider = Provider<CreateHomeSceneUseCase>((ref) {
   return CreateHomeSceneUseCase(
+    repository: ref.watch(homeSceneRepositoryProvider),
+  );
+});
+
+final deleteHomeSceneUseCaseProvider = Provider<DeleteHomeSceneUseCase>((ref) {
+  return DeleteHomeSceneUseCase(
+    repository: ref.watch(homeSceneRepositoryProvider),
+  );
+});
+
+final renameHomeSceneUseCaseProvider = Provider<RenameHomeSceneUseCase>((ref) {
+  return RenameHomeSceneUseCase(
     repository: ref.watch(homeSceneRepositoryProvider),
   );
 });

@@ -64,6 +64,62 @@ class HomeSceneRepositoryImpl implements HomeSceneRepository {
     }
   }
 
+  @override
+  Future<void> deleteScene({
+    required int sceneId,
+    required String requestId,
+  }) async {
+    try {
+      await remoteDataSource.deleteScene(
+        sceneId: sceneId,
+        requestId: requestId,
+      );
+      logger.info(
+        'Deleted home scene.',
+        requestId: requestId,
+        context: {'sceneId': sceneId},
+      );
+    } on HomeSceneRemoteException catch (error, stackTrace) {
+      logger.error(
+        'Failed to delete home scene.',
+        requestId: requestId,
+        error: error,
+        stackTrace: stackTrace,
+        context: {'sceneId': sceneId, 'statusCode': error.statusCode},
+      );
+      throw _mapError(error, requestId);
+    }
+  }
+
+  @override
+  Future<void> renameScene({
+    required int sceneId,
+    required String name,
+    required String requestId,
+  }) async {
+    try {
+      await remoteDataSource.renameScene(
+        sceneId: sceneId,
+        name: name,
+        requestId: requestId,
+      );
+      logger.info(
+        'Renamed home scene.',
+        requestId: requestId,
+        context: {'sceneId': sceneId},
+      );
+    } on HomeSceneRemoteException catch (error, stackTrace) {
+      logger.error(
+        'Failed to rename home scene.',
+        requestId: requestId,
+        error: error,
+        stackTrace: stackTrace,
+        context: {'sceneId': sceneId, 'statusCode': error.statusCode},
+      );
+      throw _mapError(error, requestId);
+    }
+  }
+
   AppError _mapError(HomeSceneRemoteException error, String requestId) {
     if (error.kind == HomeSceneRemoteErrorKind.network) {
       return AppError(

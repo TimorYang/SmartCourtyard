@@ -1,9 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
+import '../../application/providers.dart';
+import '../../domain/entities/home_scene.dart';
 import '../widgets/scene_name_dialog.dart';
+import '../widgets/scene_rename_dialog.dart';
 
 class SceneAssetPaths {
   const SceneAssetPaths._();
@@ -14,45 +20,26 @@ class SceneAssetPaths {
       'assets/icons/home/scene_edit_done_placeholder.png';
 }
 
-class ScenePage extends StatefulWidget {
+class ScenePage extends ConsumerStatefulWidget {
   const ScenePage({super.key});
 
   static const routeName = 'scene';
   static const routePath = '/scene';
 
   @override
-  State<ScenePage> createState() => _ScenePageState();
+  ConsumerState<ScenePage> createState() => _ScenePageState();
 }
 
-class _ScenePageState extends State<ScenePage> {
-  static const _sceneCount = 5;
-  static const _scenes = <_SceneItem>[
-    _SceneItem(
-      name: 'Warehouse A',
-      deviceCount: 5,
-      iconAssetPath: SceneAssetPaths.warehousePlaceholder,
-      fallbackIcon: Icons.home_outlined,
-    ),
-    _SceneItem(
-      name: 'Home Garage A',
-      deviceCount: 2,
-      iconAssetPath: SceneAssetPaths.warehousePlaceholder,
-      fallbackIcon: Icons.home_outlined,
-    ),
-    _SceneItem(
-      name: 'Home Garage B',
-      deviceCount: 2,
-      iconAssetPath: SceneAssetPaths.warehousePlaceholder,
-      fallbackIcon: Icons.home_outlined,
-    ),
-  ];
-
+class _ScenePageState extends ConsumerState<ScenePage> {
   var _isEditing = false;
+  final _deletingSceneIds = <int>{};
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final textTheme = Theme.of(context).textTheme;
+    final scenesState = ref.watch(homeScenesProvider);
+    final sceneCount = scenesState.asData?.value.length ?? 0;
 
     return Scaffold(
       backgroundColor: AppColors.backgroundPrimary,
@@ -96,83 +83,216 @@ class _ScenePageState extends State<ScenePage> {
           Padding(
             padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
             child: Text(
-              l10n.sceneCount(_sceneCount),
+              l10n.sceneCount(sceneCount),
               style: AppTextTokens.sceneBreadcrumb(textTheme),
             ),
           ),
           const SizedBox(height: 46),
-          for (final scene in _scenes) ...[
-            _SceneCard(scene: scene, isEditing: _isEditing),
-            const SizedBox(height: 16),
-          ],
-          if (!_isEditing) ...[
-            const SizedBox(height: 2),
-            _NewSceneCard(onPressed: () => showSceneNameDialog(context)),
-          ],
+          scenesState.when(
+            data: (scenes) => _SceneList(
+              scenes: scenes,
+              isEditing: _isEditing,
+              deletingSceneIds: _deletingSceneIds,
+              onCreateScene: () => unawaited(_showCreateSceneDialog()),
+              onDeleteScene: (scene) => unawaited(_deleteScene(scene)),
+              onRenameScene: (scene) =>
+                  unawaited(_showRenameSceneDialog(scene)),
+            ),
+            loading: () => const _SceneLoadingState(),
+            error: (error, stackTrace) => _SceneErrorState(
+              onRetry: () => ref.invalidate(homeScenesProvider),
+            ),
+          ),
         ],
       ),
     );
   }
+
+  Future<void> _showCreateSceneDialog() async {
+    await showSceneNameDialog(context);
+    if (mounted) {
+      ref.invalidate(homeScenesProvider);
+    }
+  }
+
+  Future<void> _showRenameSceneDialog(HomeScene scene) async {
+    await showSceneRenameDialog(context, scene: scene);
+    if (mounted) {
+      ref.invalidate(homeScenesProvider);
+    }
+  }
+
+  Future<void> _deleteScene(HomeScene scene) async {
+    if (_deletingSceneIds.contains(scene.id)) {
+      return;
+    }
+    setState(() {
+      _deletingSceneIds.add(scene.id);
+    });
+    final requestId =
+        'home-delete-scene-${DateTime.now().toUtc().microsecondsSinceEpoch}';
+    try {
+      await ref.read(deleteHomeSceneUseCaseProvider)(
+        sceneId: scene.id,
+        requestId: requestId,
+      );
+      ref.invalidate(homeScenesProvider);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(content: Text('Failed to delete scene')),
+          );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _deletingSceneIds.remove(scene.id);
+        });
+      }
+    }
+  }
 }
 
-class _SceneItem {
-  const _SceneItem({
-    required this.name,
-    required this.deviceCount,
-    required this.iconAssetPath,
-    required this.fallbackIcon,
+class _SceneList extends StatelessWidget {
+  const _SceneList({
+    required this.scenes,
+    required this.isEditing,
+    required this.deletingSceneIds,
+    required this.onCreateScene,
+    required this.onDeleteScene,
+    required this.onRenameScene,
   });
 
-  final String name;
-  final int deviceCount;
-  final String iconAssetPath;
-  final IconData fallbackIcon;
+  final List<HomeScene> scenes;
+  final bool isEditing;
+  final Set<int> deletingSceneIds;
+  final VoidCallback onCreateScene;
+  final ValueChanged<HomeScene> onDeleteScene;
+  final ValueChanged<HomeScene> onRenameScene;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final scene in scenes) ...[
+          _SceneCard(
+            scene: scene,
+            isEditing: isEditing,
+            isDeleting: deletingSceneIds.contains(scene.id),
+            onDelete: () => onDeleteScene(scene),
+            onRename: () => onRenameScene(scene),
+          ),
+          const SizedBox(height: 16),
+        ],
+        if (!isEditing) ...[
+          const SizedBox(height: 2),
+          _NewSceneCard(onPressed: onCreateScene),
+        ],
+      ],
+    );
+  }
 }
 
 class _SceneCard extends StatelessWidget {
-  const _SceneCard({required this.scene, required this.isEditing});
+  const _SceneCard({
+    required this.scene,
+    required this.isEditing,
+    required this.isDeleting,
+    required this.onDelete,
+    required this.onRename,
+  });
 
-  final _SceneItem scene;
+  final HomeScene scene;
   final bool isEditing;
+  final bool isDeleting;
+  final VoidCallback onDelete;
+  final VoidCallback onRename;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final textTheme = Theme.of(context).textTheme;
 
-    return Container(
-      height: 88,
-      decoration: BoxDecoration(
-        color: AppColors.surfaceItemSceneCard,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 28),
-      child: Row(
-        children: [
-          if (isEditing) ...[
-            const _DeleteSceneButton(),
-            const SizedBox(width: 15),
-          ],
-          _SceneIcon(assetPath: scene.iconAssetPath, icon: scene.fallbackIcon),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  scene.name,
-                  style: AppTextTokens.sceneCardTitle(textTheme),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  l10n.sceneDeviceCount(scene.deviceCount),
-                  style: AppTextTokens.sceneCardMeta(textTheme),
-                ),
-              ],
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onLongPress: onRename,
+      child: Container(
+        height: 88,
+        decoration: BoxDecoration(
+          color: AppColors.surfaceItemSceneCard,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 28),
+        child: Row(
+          children: [
+            if (isEditing) ...[
+              _DeleteSceneButton(isDeleting: isDeleting, onPressed: onDelete),
+              const SizedBox(width: 15),
+            ],
+            const _SceneIcon(
+              assetPath: SceneAssetPaths.warehousePlaceholder,
+              icon: Icons.home_outlined,
             ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    scene.name.trim().isEmpty ? 'Home' : scene.name.trim(),
+                    style: AppTextTokens.sceneCardTitle(textTheme),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    l10n.sceneDeviceCount(scene.doorCount),
+                    style: AppTextTokens.sceneCardMeta(textTheme),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SceneLoadingState extends StatelessWidget {
+  const _SceneLoadingState();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(
+      height: 88,
+      child: Center(child: CircularProgressIndicator()),
+    );
+  }
+}
+
+class _SceneErrorState extends StatelessWidget {
+  const _SceneErrorState({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return SizedBox(
+      height: 120,
+      child: Center(
+        child: TextButton.icon(
+          onPressed: onRetry,
+          icon: const Icon(Icons.refresh_rounded),
+          label: Text(
+            'Failed to load scenes',
+            style: AppTextTokens.sceneCardMeta(textTheme),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -200,21 +320,36 @@ class _EditDoneIcon extends StatelessWidget {
 }
 
 class _DeleteSceneButton extends StatelessWidget {
-  const _DeleteSceneButton();
+  const _DeleteSceneButton({required this.isDeleting, required this.onPressed});
+
+  final bool isDeleting;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 24,
-      height: 24,
-      decoration: const BoxDecoration(
-        color: AppColors.sceneDeleteAction,
-        shape: BoxShape.circle,
-      ),
-      child: const Icon(
-        Icons.remove_rounded,
-        color: AppColors.backgroundPrimary,
-        size: 24,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: isDeleting ? null : onPressed,
+      child: Container(
+        width: 24,
+        height: 24,
+        decoration: const BoxDecoration(
+          color: AppColors.sceneDeleteAction,
+          shape: BoxShape.circle,
+        ),
+        child: isDeleting
+            ? const Padding(
+                padding: EdgeInsets.all(5),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.backgroundPrimary,
+                ),
+              )
+            : const Icon(
+                Icons.remove_rounded,
+                color: AppColors.backgroundPrimary,
+                size: 24,
+              ),
       ),
     );
   }

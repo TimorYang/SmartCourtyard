@@ -7,7 +7,6 @@ import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../features/account/presentation/pages/account_profile_page.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../add_device/presentation/pages/add_new_doors_page.dart';
-import '../../../../features/hardware_debug/presentation/pages/ble_debug_page.dart';
 import '../../../../platform_bridge/hardware_models.dart';
 import '../../application/providers.dart';
 import '../../domain/entities/home_scene.dart';
@@ -27,6 +26,8 @@ class HomeAssetPaths {
   static const emptyDoorsPlaceholder =
       'assets/icons/home/home_empty_doors_placeholder.png';
   static const headerMenuIcon = 'assets/icons/home/home_header_menu_icon.png';
+  static const headerGridPlaceholder =
+      'assets/icons/home/home_header_grid_placeholder.png';
   static const headerSceneIcon = 'assets/icons/home/home_header_scene_icon.png';
   static const headerAddIcon = 'assets/icons/home/home_header_add_icon.png';
   static const addScenePlaceholder =
@@ -86,6 +87,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   ];
 
   var _isAddMenuVisible = false;
+  var _isSingleColumnDeviceList = false;
 
   @override
   Widget build(BuildContext context) {
@@ -128,6 +130,12 @@ class _HomePageState extends ConsumerState<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _HomeHeader(
+                    isSingleColumnDeviceList: _isSingleColumnDeviceList,
+                    onToggleDeviceLayout: () {
+                      setState(() {
+                        _isSingleColumnDeviceList = !_isSingleColumnDeviceList;
+                      });
+                    },
                     onAddPressed: () {
                       setState(() {
                         _isAddMenuVisible = true;
@@ -144,7 +152,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                         : TabBarView(
                             children: [
                               for (final home in homes)
-                                _HomeDevicePanel(home: home),
+                                _HomeDevicePanel(
+                                  home: home,
+                                  isSingleColumn: _isSingleColumnDeviceList,
+                                ),
                             ],
                           ),
                   ),
@@ -352,8 +363,14 @@ class _HomeAddMenuIcon extends StatelessWidget {
 }
 
 class _HomeHeader extends StatelessWidget {
-  const _HomeHeader({required this.onAddPressed});
+  const _HomeHeader({
+    required this.isSingleColumnDeviceList,
+    required this.onToggleDeviceLayout,
+    required this.onAddPressed,
+  });
 
+  final bool isSingleColumnDeviceList;
+  final VoidCallback onToggleDeviceLayout;
   final VoidCallback onAddPressed;
 
   @override
@@ -378,9 +395,13 @@ class _HomeHeader extends StatelessWidget {
               const Spacer(),
               _HeaderIconButton(
                 tooltip: l10n.homeMenuTooltip,
-                assetPath: HomeAssetPaths.headerMenuIcon,
-                fallbackIcon: Icons.menu_rounded,
-                onPressed: () => context.push(BleDebugPage.routePath),
+                assetPath: isSingleColumnDeviceList
+                    ? HomeAssetPaths.headerGridPlaceholder
+                    : HomeAssetPaths.headerMenuIcon,
+                fallbackIcon: isSingleColumnDeviceList
+                    ? Icons.grid_view_rounded
+                    : Icons.menu_rounded,
+                onPressed: onToggleDeviceLayout,
               ),
               _HeaderIconButton(
                 tooltip: l10n.sceneHomeShortcutTooltip,
@@ -482,9 +503,10 @@ class _HomeTabs extends StatelessWidget {
 }
 
 class _HomeDevicePanel extends StatelessWidget {
-  const _HomeDevicePanel({required this.home});
+  const _HomeDevicePanel({required this.home, required this.isSingleColumn});
 
   final _HomeGroup home;
+  final bool isSingleColumn;
 
   @override
   Widget build(BuildContext context) {
@@ -497,20 +519,26 @@ class _HomeDevicePanel extends StatelessWidget {
       children: [
         _DoorCount(count: home.doorCount),
         const SizedBox(height: 16),
-        GridView.builder(
-          itemCount: home.devices.length,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            mainAxisSpacing: 18,
-            crossAxisSpacing: 22,
-            childAspectRatio: 0.96,
+        if (isSingleColumn)
+          for (final device in home.devices) ...[
+            SizedBox(height: 160, child: _DeviceCard(device: device)),
+            const SizedBox(height: 18),
+          ]
+        else
+          GridView.builder(
+            itemCount: home.devices.length,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 18,
+              crossAxisSpacing: 22,
+              childAspectRatio: 0.96,
+            ),
+            itemBuilder: (context, index) {
+              return _DeviceCard(device: home.devices[index]);
+            },
           ),
-          itemBuilder: (context, index) {
-            return _DeviceCard(device: home.devices[index]);
-          },
-        ),
       ],
     );
   }

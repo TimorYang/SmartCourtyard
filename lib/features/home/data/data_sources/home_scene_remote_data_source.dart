@@ -13,6 +13,14 @@ abstract interface class HomeSceneRemoteDataSource {
     required String name,
     required String requestId,
   });
+
+  Future<void> deleteScene({required int sceneId, required String requestId});
+
+  Future<void> renameScene({
+    required int sceneId,
+    required String name,
+    required String requestId,
+  });
 }
 
 class HomeSceneRemoteDataSourceImpl implements HomeSceneRemoteDataSource {
@@ -57,6 +65,54 @@ class HomeSceneRemoteDataSourceImpl implements HomeSceneRemoteDataSource {
         throw const HomeSceneRemoteException.invalidResponse();
       }
       return data;
+    } on DioException catch (error) {
+      throw HomeSceneRemoteException.fromNetwork(
+        NetworkException.fromDio(error),
+      );
+    } on HomeSceneRemoteException {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> deleteScene({
+    required int sceneId,
+    required String requestId,
+  }) async {
+    try {
+      final response = await api.deleteScene(
+        sceneId,
+        Options(extra: {NetworkRequestExtras.requestId: requestId}),
+      );
+      if (!_isSuccessCode(response.code) || !response.success) {
+        throw const HomeSceneRemoteException.invalidResponse();
+      }
+    } on DioException catch (error) {
+      throw HomeSceneRemoteException.fromNetwork(
+        NetworkException.fromDio(error),
+      );
+    } on HomeSceneRemoteException {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> renameScene({
+    required int sceneId,
+    required String name,
+    required String requestId,
+  }) async {
+    try {
+      final response = await api.renameScene(
+        sceneId,
+        CreateHomeSceneRequestDto(name: name),
+        Options(extra: {NetworkRequestExtras.requestId: requestId}),
+      );
+      if (!_isSuccessCode(response.code) ||
+          !response.success ||
+          response.data != true) {
+        throw const HomeSceneRemoteException.invalidResponse();
+      }
     } on DioException catch (error) {
       throw HomeSceneRemoteException.fromNetwork(
         NetworkException.fromDio(error),
