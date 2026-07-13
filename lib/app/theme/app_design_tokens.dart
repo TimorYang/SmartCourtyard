@@ -55,6 +55,11 @@ class AppColors {
   static const deviceControlDivider = Color(0xFFD8DADD);
   static const deviceControlWireless = Color(0xFF006DFF);
   static const deviceControlMetricMuted = Color(0xFF6A6F77);
+  static const deviceSettingsValue = Color(0xFF176CFF);
+  static const deviceSettingsDivider = Color(0xFFEDEFF2);
+  static const deviceSettingsSectionLabel = Color(0xFFB5BAC1);
+  static const deviceSettingsSheetScrim = Color(0x66000000);
+  static const deviceSettingsSheetCancel = Color(0xFFF2F3F5);
   static const deviceDetailNavigationBackground = Color(0xFFFDFDFD);
   static const deviceDetailNavigationDivider = Color(0xFFE6E7EB);
   static const deviceDetailNavigationSelected = Color(0xFF34383F);
@@ -726,6 +731,86 @@ class AppTextTokens {
       fontSize: 10,
       fontWeight: FontWeight.w400,
       height: 1.15,
+    );
+  }
+
+  static TextStyle deviceSettingsTitle(TextTheme textTheme) {
+    return (textTheme.headlineLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 26,
+      fontWeight: FontWeight.w700,
+      height: 1.1,
+    );
+  }
+
+  static TextStyle deviceSettingsSectionLabel(TextTheme textTheme) {
+    return (textTheme.bodySmall ?? const TextStyle()).copyWith(
+      color: AppColors.deviceSettingsSectionLabel,
+      fontSize: 12,
+      fontWeight: FontWeight.w400,
+      height: 1.15,
+    );
+  }
+
+  static TextStyle deviceSettingsRowTitle(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 16,
+      fontWeight: FontWeight.w700,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle deviceSettingsRowValue(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.deviceSettingsValue,
+      fontSize: 16,
+      fontWeight: FontWeight.w500,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle deviceSettingsSheetTitle(TextTheme textTheme) {
+    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 24,
+      fontWeight: FontWeight.w700,
+      height: 1.15,
+    );
+  }
+
+  static TextStyle deviceSettingsSheetOption(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textHint,
+      fontSize: 16,
+      fontWeight: FontWeight.w500,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle deviceSettingsSheetSelectedOption(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 22,
+      fontWeight: FontWeight.w600,
+      height: 1.15,
+    );
+  }
+
+  static TextStyle deviceSettingsSheetCaption(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textHint,
+      fontSize: 13,
+      fontWeight: FontWeight.w500,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle deviceSettingsSheetButton(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      fontSize: 16,
+      fontWeight: FontWeight.w500,
+      height: 1.2,
     );
   }
 

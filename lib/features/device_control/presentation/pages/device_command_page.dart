@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
@@ -7,6 +8,7 @@ import '../../../records/presentation/pages/operation_record_page.dart';
 import '../../../security_center/presentation/pages/security_center_page.dart';
 import '../../application/device_command_controller.dart';
 import '../widgets/device_detail_bottom_navigation.dart';
+import 'device_settings_page.dart';
 
 class DeviceCommandPage extends ConsumerStatefulWidget {
   const DeviceCommandPage({required this.deviceId, super.key});
@@ -166,8 +168,10 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                 deviceId: widget.deviceId,
                 action: DeviceCommandAction.partialOpenDoor,
               ),
-              onMoreSettings: () =>
-                  controller.queryRemotes(deviceId: widget.deviceId),
+              onMoreSettings: () => context.push(
+                '${DeviceSettingsPage.routePath}'
+                '?deviceId=${Uri.encodeComponent(widget.deviceId)}',
+              ),
             ),
             const SizedBox(height: 22),
           ],

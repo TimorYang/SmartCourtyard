@@ -2,12 +2,14 @@ import 'dart:async';
 
 import 'package:flinx/features/device_control/application/device_command_controller.dart';
 import 'package:flinx/features/device_control/presentation/pages/device_command_page.dart';
+import 'package:flinx/features/device_control/presentation/pages/device_settings_page.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
 import 'package:flinx/platform_bridge/mock_hardware_gateway.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
 void main() {
   testWidgets('renders garage door controls and sends primary commands', (
@@ -44,7 +46,7 @@ void main() {
     expect(find.text('关门指令已发送（0x1002）。'), findsOneWidget);
   });
 
-  testWidgets('quick actions send light, partial open, and query requests', (
+  testWidgets('quick actions send light, partial open, and open settings', (
     tester,
   ) async {
     final gateway = _RecordingHardwareGateway();
@@ -78,8 +80,9 @@ void main() {
     await tester.tap(moreSettingsAction);
     await tester.pumpAndSettle();
 
-    expect(gateway.queryCount, 1);
-    expect(find.text('已查询到 2/2 个遥控器。'), findsOneWidget);
+    expect(gateway.queryCount, 0);
+    expect(find.text('DEVICE SETTINGS'), findsOneWidget);
+    expect(find.text('Transmitter management'), findsOneWidget);
   });
 
   testWidgets('shows pending state while a command is in progress', (
@@ -164,10 +167,26 @@ Widget _buildPage(MockHardwareGateway gateway) {
     overrides: [
       deviceCommandHardwareGatewayProvider.overrideWithValue(gateway),
     ],
-    child: const MaterialApp(
+    child: MaterialApp.router(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: DeviceCommandPage(deviceId: 'mock-device'),
+      routerConfig: GoRouter(
+        initialLocation: '${DeviceCommandPage.routePath}?deviceId=mock-device',
+        routes: [
+          GoRoute(
+            path: DeviceCommandPage.routePath,
+            builder: (context, state) => DeviceCommandPage(
+              deviceId: state.uri.queryParameters['deviceId'] ?? '',
+            ),
+          ),
+          GoRoute(
+            path: DeviceSettingsPage.routePath,
+            builder: (context, state) => DeviceSettingsPage(
+              deviceId: state.uri.queryParameters['deviceId'] ?? '',
+            ),
+          ),
+        ],
+      ),
     ),
   );
 }
