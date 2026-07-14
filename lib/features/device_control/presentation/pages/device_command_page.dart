@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
-import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../../records/presentation/pages/operation_record_page.dart';
 import '../../../security_center/presentation/pages/security_center_page.dart';
 import '../../application/device_command_controller.dart';
@@ -29,7 +28,6 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
       'assets/icons/add_device/add_new_doors_garage_door.png';
 
   bool _ledEnabled = false;
-  bool _unclosedReminderEnabled = false;
   bool _autoCloseEnabled = false;
   DeviceDetailTab _selectedTab = DeviceDetailTab.command;
 
@@ -75,16 +73,35 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     required TextTheme textTheme,
   }) {
     return Scaffold(
-      appBar: FlinxNavigationBar(
-        title: 'TestFoor',
-        showBottomDivider: false,
+      backgroundColor: AppColors.backgroundPrimary,
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: AppColors.backgroundPrimary,
+        centerTitle: true,
+        elevation: 0,
+        leadingWidth: 44,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        leading: IconButton(
+          tooltip: 'Back',
+          onPressed: () => Navigator.maybePop(context),
+          icon: const Icon(Icons.chevron_left, size: 28),
+        ),
+        title: Text(
+          'Garage door',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            color: AppColors.textPrimary,
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         actions: [
           IconButton(
             tooltip: 'More',
             onPressed: isBusy ? null : () {},
-            icon: const Icon(Icons.more_horiz),
+            icon: const Icon(Icons.more_horiz, size: 24),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 4),
         ],
       ),
       bottomNavigationBar: DeviceDetailBottomNavigation(
@@ -95,23 +112,24 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
         top: false,
         child: ListView(
           key: const PageStorageKey<String>('device-command-scroll'),
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
           children: [
             _CycleSummary(textTheme: textTheme),
-            const SizedBox(height: 16),
+            const SizedBox(height: 5),
             const _DeviceConnectionStrip(),
-            const SizedBox(height: 18),
+            const SizedBox(height: 12),
             _DoorHeroImage(
               assetPath: _garageDoorClosedAsset,
               fallbackAssetPath: _garageDoorFallbackAsset,
             ),
+            const SizedBox(height: 4),
             Center(
               child: Text(
                 'Closed',
                 style: AppTextTokens.deviceControlDoorState(textTheme),
               ),
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
             _DoorCommandRow(
               busy: isBusy,
               pendingAction: commandState.pendingAction,
@@ -146,7 +164,6 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
             ],
             _QuickActionGrid(
               ledEnabled: _ledEnabled,
-              unclosedReminderEnabled: _unclosedReminderEnabled,
               autoCloseEnabled: _autoCloseEnabled,
               busy: isBusy,
               onLedChanged: (enabled) async {
@@ -160,9 +177,6 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
               },
               onAutoCloseChanged: (enabled) {
                 setState(() => _autoCloseEnabled = enabled);
-              },
-              onUnclosedReminderChanged: (enabled) {
-                setState(() => _unclosedReminderEnabled = enabled);
               },
               onPartialOpen: () => controller.runAction(
                 deviceId: widget.deviceId,
@@ -181,6 +195,35 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
   }
 }
 
+abstract final class _DeviceCommandAssetPaths {
+  static const video =
+      'assets/icons/device_control/device_command_video_placeholder.png';
+  static const motor =
+      'assets/icons/device_control/device_command_motor_placeholder.png';
+  static const remote =
+      'assets/icons/device_control/device_command_remote_placeholder.png';
+  static const sensor =
+      'assets/icons/device_control/device_command_sensor_placeholder.png';
+  static const solar =
+      'assets/icons/device_control/device_command_solar_placeholder.png';
+  static const bluetoothActive =
+      'assets/icons/device_control/device_command_bluetooth_active_placeholder.png';
+  static const bluetoothInactive =
+      'assets/icons/device_control/device_command_bluetooth_inactive_placeholder.png';
+  static const wifiActive =
+      'assets/icons/device_control/device_command_wifi_active_placeholder.png';
+  static const wifiInactive =
+      'assets/icons/device_control/device_command_wifi_inactive_placeholder.png';
+  static const led =
+      'assets/icons/device_control/device_command_led_placeholder.png';
+  static const autoClose =
+      'assets/icons/device_control/device_command_auto_close_placeholder.png';
+  static const partialOpen =
+      'assets/icons/device_control/device_command_partial_open_placeholder.png';
+  static const moreSetting =
+      'assets/icons/device_control/device_command_more_setting_placeholder.png';
+}
+
 class _CycleSummary extends StatelessWidget {
   const _CycleSummary({required this.textTheme});
 
@@ -188,20 +231,102 @@ class _CycleSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return SizedBox(
+      height: 60,
+      child: Row(
+        children: [
+          Expanded(
+            child: _CycleMetric(
+              label: 'Operated cycles',
+              value: '100',
+              textTheme: textTheme,
+            ),
+          ),
+          Padding(
+            padding: EdgeInsetsGeometry.only(top: 10, bottom: 10),
+            child: VerticalDivider(
+              width: 58,
+              thickness: 1,
+              color: AppColors.deviceControlDivider,
+            ),
+          ),
+          Expanded(
+            child: _CycleMetric(
+              label: 'Remaining',
+              value: '4900',
+              textTheme: textTheme,
+            ),
+          ),
+          const _CommandVideoButton(),
+        ],
+      ),
+    );
+  }
+}
+
+class _CycleMetric extends StatelessWidget {
+  const _CycleMetric({
+    required this.label,
+    required this.value,
+    required this.textTheme,
+  });
+
+  final String label;
+  final String value;
+  final TextTheme textTheme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Operated cycles:',
-          style: AppTextTokens.deviceControlMetricLabel(textTheme),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            label,
+            maxLines: 1,
+            style: AppTextTokens.deviceControlMetricLabel(textTheme),
+          ),
         ),
-        const SizedBox(width: 3),
-        Text(
-          '3',
-          style: AppTextTokens.deviceControlMetricValue(
-            textTheme,
-          ).copyWith(fontSize: 18),
+        const SizedBox(height: 6),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            value,
+            maxLines: 1,
+            style: AppTextTokens.deviceControlMetricValue(textTheme),
+          ),
         ),
       ],
+    );
+  }
+}
+
+class _CommandVideoButton extends StatelessWidget {
+  const _CommandVideoButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 30,
+      height: 30,
+      margin: const EdgeInsets.only(left: 8),
+      decoration: const BoxDecoration(
+        color: AppColors.deviceControlPanel,
+        shape: BoxShape.circle,
+      ),
+      child: IconButton(
+        tooltip: 'Video',
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints.tightFor(width: 30, height: 30),
+        onPressed: () {},
+        icon: const _DeviceControlAssetIcon(
+          assetPath: _DeviceCommandAssetPaths.video,
+        ),
+      ),
     );
   }
 }
@@ -211,34 +336,42 @@ class _DeviceConnectionStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FittedBox(
-      fit: BoxFit.scaleDown,
-      child: SizedBox(
-        width: 353,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: const [
-            _ConnectionGroup(
-              deviceIcon: Icons.sensors_outlined,
-              bluetoothActive: true,
-              wifiActive: true,
-            ),
-            _ConnectionGroup(
-              deviceIcon: Icons.settings_remote_outlined,
-              bluetoothActive: false,
-              wifiActive: true,
-            ),
-            _ConnectionGroup(
-              deviceIcon: Icons.sensor_occupied_outlined,
-              bluetoothActive: false,
-              wifiActive: false,
-            ),
-            _ConnectionGroup(
-              deviceIcon: Icons.solar_power_outlined,
-              bluetoothActive: false,
-              wifiActive: true,
-            ),
-          ],
+    return const DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: AppColors.deviceControlDivider)),
+      ),
+      child: Padding(
+        padding: EdgeInsets.only(top: 9),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Row(
+            children: [
+              _ConnectionGroup(
+                deviceIconAsset: _DeviceCommandAssetPaths.motor,
+                bluetoothActive: true,
+                wifiActive: true,
+              ),
+              SizedBox(width: 22),
+              _ConnectionGroup(
+                deviceIconAsset: _DeviceCommandAssetPaths.remote,
+                bluetoothActive: false,
+                wifiActive: true,
+              ),
+              SizedBox(width: 22),
+              _ConnectionGroup(
+                deviceIconAsset: _DeviceCommandAssetPaths.sensor,
+                bluetoothActive: false,
+                wifiActive: false,
+              ),
+              SizedBox(width: 22),
+              _ConnectionGroup(
+                deviceIconAsset: _DeviceCommandAssetPaths.solar,
+                bluetoothActive: false,
+                wifiActive: true,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -247,38 +380,48 @@ class _DeviceConnectionStrip extends StatelessWidget {
 
 class _ConnectionGroup extends StatelessWidget {
   const _ConnectionGroup({
-    required this.deviceIcon,
+    required this.deviceIconAsset,
     required this.bluetoothActive,
     required this.wifiActive,
   });
 
-  final IconData deviceIcon;
+  final String deviceIconAsset;
   final bool bluetoothActive;
   final bool wifiActive;
 
   @override
   Widget build(BuildContext context) {
-    final inactiveColor = AppColors.deviceControlInactive.withValues(
-      alpha: 0.66,
-    );
     return Row(
       children: [
-        Icon(deviceIcon, size: 28, color: AppColors.textPrimary),
-        const SizedBox(width: 8),
-        Icon(
-          Icons.bluetooth,
-          size: 16,
-          color: bluetoothActive
-              ? AppColors.deviceControlWireless
-              : inactiveColor,
+        _DeviceControlAssetIcon(assetPath: deviceIconAsset),
+        const SizedBox(width: 7),
+        _DeviceControlAssetIcon(
+          assetPath: bluetoothActive
+              ? _DeviceCommandAssetPaths.bluetoothActive
+              : _DeviceCommandAssetPaths.bluetoothInactive,
         ),
-        const SizedBox(width: 8),
-        Icon(
-          Icons.wifi,
-          size: 18,
-          color: wifiActive ? AppColors.deviceControlWireless : inactiveColor,
+        const SizedBox(width: 7),
+        _DeviceControlAssetIcon(
+          assetPath: wifiActive
+              ? _DeviceCommandAssetPaths.wifiActive
+              : _DeviceCommandAssetPaths.wifiInactive,
         ),
       ],
+    );
+  }
+}
+
+class _DeviceControlAssetIcon extends StatelessWidget {
+  const _DeviceControlAssetIcon({required this.assetPath});
+
+  final String assetPath;
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.asset(
+      assetPath,
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
     );
   }
 }
@@ -295,9 +438,9 @@ class _DoorHeroImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AspectRatio(
-      aspectRatio: 1.55,
+      aspectRatio: 1.95,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 26),
         child: Image.asset(
           assetPath,
           fit: BoxFit.contain,
@@ -339,7 +482,7 @@ class _DoorCommandRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         _DoorCommandButton(
           tooltip: 'Close',
@@ -347,12 +490,14 @@ class _DoorCommandRow extends StatelessWidget {
           pending: pendingAction == DeviceCommandAction.closeDoor,
           onPressed: busy ? null : onClose,
         ),
+        const SizedBox(width: 34),
         _DoorCommandButton(
           tooltip: 'Stop',
           icon: Icons.pause,
           pending: pendingAction == DeviceCommandAction.stopDoor,
           onPressed: busy ? null : onStop,
         ),
+        const SizedBox(width: 34),
         _DoorCommandButton(
           tooltip: 'Open',
           icon: Icons.keyboard_arrow_up,
@@ -383,17 +528,17 @@ class _DoorCommandButton extends StatelessWidget {
       tooltip: tooltip,
       onPressed: onPressed,
       style: IconButton.styleFrom(
-        fixedSize: const Size.square(55),
+        fixedSize: const Size.square(46),
         backgroundColor: AppColors.deviceControlPrimaryAction,
         disabledBackgroundColor: AppColors.deviceControlPrimaryAction
             .withValues(alpha: 0.5),
         foregroundColor: AppColors.deviceControlPrimaryActionForeground,
         disabledForegroundColor: AppColors.deviceControlPrimaryActionForeground,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
       icon: pending
           ? const SizedBox.square(
-              dimension: 28,
+              dimension: 24,
               child: CircularProgressIndicator(
                 strokeWidth: 3,
                 color: AppColors.deviceControlPrimaryActionForeground,
@@ -447,22 +592,18 @@ class _CommandFeedback extends StatelessWidget {
 class _QuickActionGrid extends StatelessWidget {
   const _QuickActionGrid({
     required this.ledEnabled,
-    required this.unclosedReminderEnabled,
     required this.autoCloseEnabled,
     required this.busy,
     required this.onLedChanged,
-    required this.onUnclosedReminderChanged,
     required this.onAutoCloseChanged,
     required this.onPartialOpen,
     required this.onMoreSettings,
   });
 
   final bool ledEnabled;
-  final bool unclosedReminderEnabled;
   final bool autoCloseEnabled;
   final bool busy;
   final ValueChanged<bool> onLedChanged;
-  final ValueChanged<bool> onUnclosedReminderChanged;
   final ValueChanged<bool> onAutoCloseChanged;
   final VoidCallback onPartialOpen;
   final VoidCallback onMoreSettings;
@@ -471,7 +612,7 @@ class _QuickActionGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     return SizedBox(
-      height: 250,
+      height: 230,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -479,7 +620,7 @@ class _QuickActionGrid extends StatelessWidget {
             child: Column(
               children: [
                 Expanded(
-                  flex: 64,
+                  flex: 1,
                   child: _LedActionCard(
                     enabled: ledEnabled,
                     busy: busy,
@@ -487,23 +628,11 @@ class _QuickActionGrid extends StatelessWidget {
                     onChanged: onLedChanged,
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 Expanded(
-                  flex: 78,
+                  flex: 1,
                   child: _ToggleActionCard(
-                    icon: Icons.door_front_door_outlined,
-                    title: 'Unclosed reminding',
-                    enabled: unclosedReminderEnabled,
-                    busy: busy,
-                    textTheme: textTheme,
-                    onChanged: onUnclosedReminderChanged,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Expanded(
-                  flex: 72,
-                  child: _ToggleActionCard(
-                    icon: Icons.door_back_door_outlined,
+                    iconAssetPath: _DeviceCommandAssetPaths.autoClose,
                     title: 'Auto close',
                     enabled: autoCloseEnabled,
                     busy: busy,
@@ -519,16 +648,16 @@ class _QuickActionGrid extends StatelessWidget {
             child: Column(
               children: [
                 Expanded(
-                  flex: 152,
+                  flex: 140,
                   child: _PartialOpenCard(
                     busy: busy,
                     textTheme: textTheme,
                     onPressed: onPartialOpen,
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 Expanded(
-                  flex: 72,
+                  flex: 44,
                   child: _MoreSettingsCard(
                     busy: busy,
                     textTheme: textTheme,
@@ -560,42 +689,39 @@ class _LedActionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _ControlCard(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: Row(
+      padding: const EdgeInsets.fromLTRB(10, 12, 10, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.light_mode_outlined, size: 27),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'LED',
-                    maxLines: 1,
-                    style: AppTextTokens.deviceControlQuickActionTitle(
-                      textTheme,
-                    ),
-                  ),
-                ),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    '3 min',
-                    maxLines: 1,
-                    style: AppTextTokens.deviceControlQuickActionMeta(
-                      textTheme,
-                    ),
-                  ),
-                ),
-              ],
+          Row(
+            children: [
+              const _DeviceControlAssetIcon(
+                assetPath: _DeviceCommandAssetPaths.led,
+              ),
+              const Spacer(),
+              _FlinxSwitch(
+                key: const ValueKey<String>('led-switch'),
+                value: enabled,
+                enabled: !busy,
+                onChanged: onChanged,
+              ),
+            ],
+          ),
+          const Spacer(),
+          Padding(
+            padding: EdgeInsetsGeometry.only(left: 4),
+            child: Text(
+              'LED',
+              maxLines: 1,
+              style: AppTextTokens.deviceControlQuickActionTitle(textTheme),
             ),
           ),
-          _FlinxSwitch(value: enabled, enabled: !busy, onChanged: onChanged),
+          const SizedBox(height: 4),
+          Text(
+            '1 min',
+            maxLines: 1,
+            style: AppTextTokens.deviceControlQuickActionMeta(textTheme),
+          ),
         ],
       ),
     );
@@ -604,7 +730,7 @@ class _LedActionCard extends StatelessWidget {
 
 class _ToggleActionCard extends StatelessWidget {
   const _ToggleActionCard({
-    required this.icon,
+    required this.iconAssetPath,
     required this.title,
     required this.enabled,
     required this.busy,
@@ -612,7 +738,7 @@ class _ToggleActionCard extends StatelessWidget {
     required this.onChanged,
   });
 
-  final IconData icon;
+  final String iconAssetPath;
   final String title;
   final bool enabled;
   final bool busy;
@@ -622,15 +748,16 @@ class _ToggleActionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _ControlCard(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      padding: const EdgeInsets.fromLTRB(10, 12, 10, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, size: 27),
+              _DeviceControlAssetIcon(assetPath: iconAssetPath),
               const Spacer(),
               _FlinxSwitch(
+                key: const ValueKey<String>('auto-close-switch'),
                 value: enabled,
                 enabled: !busy,
                 onChanged: onChanged,
@@ -676,12 +803,9 @@ class _PartialOpenCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
                 child: Text(
-                  'Off',
+                  '60cm',
                   style: AppTextTokens.deviceControlBadge(textTheme),
                 ),
               ),
@@ -694,19 +818,19 @@ class _PartialOpenCard extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  width: 2,
+                  width: 1.4,
                   color: AppColors.deviceControlPrimaryAction,
                 ),
               ),
-              child: const Icon(
-                Icons.sensor_door_outlined,
-                size: 44,
-                color: AppColors.textPrimary,
+              child: const Center(
+                child: _DeviceControlAssetIcon(
+                  assetPath: _DeviceCommandAssetPaths.partialOpen,
+                ),
               ),
             ),
           ),
           Align(
-            alignment: Alignment.bottomCenter,
+            alignment: const Alignment(0, 1),
             child: Text(
               'Partial open',
               style: AppTextTokens.deviceControlQuickActionTitle(textTheme),
@@ -734,10 +858,12 @@ class _MoreSettingsCard extends StatelessWidget {
     return _ControlCard(
       key: const ValueKey<String>('more-settings-action'),
       onTap: busy ? null : onPressed,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       child: Row(
         children: [
-          const Icon(Icons.settings_outlined, size: 27),
+          const _DeviceControlAssetIcon(
+            assetPath: _DeviceCommandAssetPaths.moreSetting,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -767,10 +893,10 @@ class _ControlCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: AppColors.deviceControlPanel,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(7),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(7),
         child: Padding(padding: padding, child: child),
       ),
     );
@@ -779,6 +905,7 @@ class _ControlCard extends StatelessWidget {
 
 class _FlinxSwitch extends StatelessWidget {
   const _FlinxSwitch({
+    super.key,
     required this.value,
     required this.enabled,
     required this.onChanged,
@@ -790,22 +917,40 @@ class _FlinxSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 46,
-      height: 32,
-      child: FittedBox(
-        fit: BoxFit.contain,
-        child: Switch(
-          value: value,
-          onChanged: enabled ? onChanged : null,
-          activeThumbColor: AppColors.backgroundPrimary,
-          activeTrackColor: AppColors.toggleSelected,
-          inactiveThumbColor: AppColors.backgroundPrimary,
-          inactiveTrackColor: AppColors.deviceControlInactive.withValues(
-            alpha: 0.58,
+    final trackColor = value
+        ? AppColors.toggleSelected
+        : AppColors.deviceControlInactive.withValues(alpha: 0.58);
+
+    return Semantics(
+      button: true,
+      toggled: value,
+      enabled: enabled,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: enabled ? () => onChanged(!value) : null,
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 120),
+          opacity: enabled ? 1 : 0.55,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
+            width: 50,
+            height: 26,
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              color: trackColor,
+              borderRadius: BorderRadius.circular(13),
+            ),
+            alignment: value ? Alignment.centerRight : Alignment.centerLeft,
+            child: Container(
+              width: 22,
+              height: 22,
+              decoration: const BoxDecoration(
+                color: AppColors.backgroundPrimary,
+                shape: BoxShape.circle,
+              ),
+            ),
           ),
-          trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
       ),
     );

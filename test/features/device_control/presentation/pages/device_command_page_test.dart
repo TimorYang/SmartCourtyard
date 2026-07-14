@@ -19,11 +19,12 @@ void main() {
 
     await _pumpDevicePage(tester, gateway);
 
-    expect(find.text('TestFoor'), findsOneWidget);
-    expect(find.text('Operated cycles:'), findsOneWidget);
+    expect(find.text('Garage door'), findsOneWidget);
+    expect(find.text('Operated cycles'), findsOneWidget);
+    expect(find.text('Remaining'), findsOneWidget);
     expect(find.text('Closed'), findsOneWidget);
     expect(find.text('LED'), findsOneWidget);
-    expect(find.text('Unclosed reminding'), findsOneWidget);
+    expect(find.text('Auto close'), findsOneWidget);
     expect(find.text('Partial open'), findsOneWidget);
     expect(find.text('More setting'), findsOneWidget);
 
@@ -53,7 +54,7 @@ void main() {
 
     await _pumpDevicePage(tester, gateway);
 
-    await tester.tap(find.byType(Switch).first);
+    await tester.tap(find.byKey(const ValueKey<String>('led-switch')));
     await tester.pumpAndSettle();
 
     expect(gateway.commands.last, DoorCommand.lightOn);
@@ -140,7 +141,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Closed'), findsOneWidget);
-    expect(find.text('TestFoor'), findsOneWidget);
+    expect(find.text('Garage door'), findsOneWidget);
   });
 
   testWidgets('renders on a compact screen without overflow', (tester) async {
