@@ -1,11 +1,42 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/errors/app_error.dart';
+import '../../../core/logging/providers.dart';
+import '../../../core/network/providers.dart';
 import '../../../platform_bridge/hardware_gateway.dart';
 import '../../../platform_bridge/hardware_models.dart';
 import '../../../platform_bridge/providers.dart';
+import '../data/data_sources/door_detail_api.dart';
+import '../data/data_sources/door_detail_remote_data_source.dart';
+import '../data/repositories/door_detail_repository_impl.dart';
+import '../domain/entities/door_detail.dart';
+import '../domain/repositories/door_detail_repository.dart';
+import '../domain/use_cases/fetch_door_detail_use_case.dart';
 
 final deviceCommandHardwareGatewayProvider = Provider<HardwareGateway>((ref) {
   return ref.watch(nativeHardwareGatewayProvider);
+});
+
+final doorDetailApiProvider = Provider<DoorDetailApi>((ref) {
+  return DoorDetailApi(ref.watch(dioProvider));
+});
+
+final doorDetailRemoteDataSourceProvider = Provider<DoorDetailRemoteDataSource>(
+  (ref) =>
+      DoorDetailRemoteDataSourceImpl(api: ref.watch(doorDetailApiProvider)),
+);
+
+final doorDetailRepositoryProvider = Provider<DoorDetailRepository>((ref) {
+  return DoorDetailRepositoryImpl(
+    remoteDataSource: ref.watch(doorDetailRemoteDataSourceProvider),
+    logger: ref.watch(appLoggerProvider),
+  );
+});
+
+final fetchDoorDetailUseCaseProvider = Provider<FetchDoorDetailUseCase>((ref) {
+  return FetchDoorDetailUseCase(
+    repository: ref.watch(doorDetailRepositoryProvider),
+  );
 });
 
 final deviceCommandControllerProvider =
@@ -34,6 +65,9 @@ enum DeviceCommandAction {
 
 class DeviceCommandState {
   const DeviceCommandState({
+    this.doorDetail,
+    this.isLoadingDoorDetail = false,
+    this.doorDetailErrorMessage,
     this.pendingAction,
     this.pendingRemotePairingAction,
     this.pendingRemoteManagementAction,
@@ -46,6 +80,9 @@ class DeviceCommandState {
     this.errorMessage,
   });
 
+  final DoorDetail? doorDetail;
+  final bool isLoadingDoorDetail;
+  final String? doorDetailErrorMessage;
   final DeviceCommandAction? pendingAction;
   final RemotePairingAction? pendingRemotePairingAction;
   final String? pendingRemoteManagementAction;
@@ -58,6 +95,11 @@ class DeviceCommandState {
   final String? errorMessage;
 
   DeviceCommandState copyWith({
+    DoorDetail? doorDetail,
+    bool clearDoorDetail = false,
+    bool? isLoadingDoorDetail,
+    String? doorDetailErrorMessage,
+    bool clearDoorDetailErrorMessage = false,
     DeviceCommandAction? pendingAction,
     bool clearPendingAction = false,
     RemotePairingAction? pendingRemotePairingAction,
@@ -75,6 +117,11 @@ class DeviceCommandState {
     bool clearErrorMessage = false,
   }) {
     return DeviceCommandState(
+      doorDetail: clearDoorDetail ? null : doorDetail ?? this.doorDetail,
+      isLoadingDoorDetail: isLoadingDoorDetail ?? this.isLoadingDoorDetail,
+      doorDetailErrorMessage: clearDoorDetailErrorMessage
+          ? null
+          : doorDetailErrorMessage ?? this.doorDetailErrorMessage,
       pendingAction: clearPendingAction
           ? null
           : pendingAction ?? this.pendingAction,
@@ -99,12 +146,52 @@ class DeviceCommandState {
 
 class DeviceCommandController extends Notifier<DeviceCommandState> {
   late final HardwareGateway _gateway;
+  late final FetchDoorDetailUseCase _fetchDoorDetailUseCase;
   int _requestCounter = 0;
 
   @override
   DeviceCommandState build() {
     _gateway = ref.watch(deviceCommandHardwareGatewayProvider);
+    _fetchDoorDetailUseCase = ref.watch(fetchDoorDetailUseCaseProvider);
     return const DeviceCommandState();
+  }
+
+  Future<void> loadDoorDetail({required String doorId}) async {
+    final trimmedDoorId = doorId.trim();
+    if (trimmedDoorId.isEmpty) {
+      state = state.copyWith(
+        isLoadingDoorDetail: false,
+        doorDetailErrorMessage: '未找到当前门，请返回重新进入。',
+      );
+      return;
+    }
+
+    state = state.copyWith(
+      isLoadingDoorDetail: true,
+      clearDoorDetailErrorMessage: true,
+    );
+
+    try {
+      final detail = await _fetchDoorDetailUseCase(
+        doorId: trimmedDoorId,
+        requestId: _nextDoorDetailRequestId(trimmedDoorId),
+      );
+      state = state.copyWith(
+        doorDetail: detail,
+        isLoadingDoorDetail: false,
+        clearDoorDetailErrorMessage: true,
+      );
+    } on AppError catch (error) {
+      state = state.copyWith(
+        isLoadingDoorDetail: false,
+        doorDetailErrorMessage: _doorDetailErrorMessage(error),
+      );
+    } catch (error) {
+      state = state.copyWith(
+        isLoadingDoorDetail: false,
+        doorDetailErrorMessage: error.toString(),
+      );
+    }
   }
 
   Future<void> runAction({
@@ -351,6 +438,12 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
     return 'device-command-${action.name}-$timestamp-$_requestCounter';
   }
 
+  String _nextDoorDetailRequestId(String doorId) {
+    _requestCounter += 1;
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    return 'door-detail-$doorId-$timestamp-$_requestCounter';
+  }
+
   String _nextRemotePairingRequestId(RemotePairingAction action) {
     _requestCounter += 1;
     final timestamp = DateTime.now().millisecondsSinceEpoch;
@@ -427,5 +520,13 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
 
   String _serialNumberLabel(int serialNumber) {
     return '0x${serialNumber.toRadixString(16).padLeft(8, '0').toUpperCase()}';
+  }
+
+  String _doorDetailErrorMessage(AppError error) {
+    return switch (error.code) {
+      AppErrorCode.networkUnavailable => '网络不可用，门详情加载失败。',
+      AppErrorCode.serverError => '门详情数据异常，请稍后重试。',
+      _ => '门详情加载失败。',
+    };
   }
 }

@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flinx/features/device_control/application/device_command_controller.dart';
+import 'package:flinx/features/device_control/domain/entities/door_detail.dart';
+import 'package:flinx/features/device_control/domain/repositories/door_detail_repository.dart';
 import 'package:flinx/features/device_control/presentation/pages/device_command_page.dart';
 import 'package:flinx/features/device_control/presentation/pages/device_settings_page.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
@@ -21,7 +23,9 @@ void main() {
 
     expect(find.text('Garage door'), findsOneWidget);
     expect(find.text('Operated cycles'), findsOneWidget);
+    expect(find.text('123'), findsOneWidget);
     expect(find.text('Remaining'), findsOneWidget);
+    expect(find.text('4567'), findsOneWidget);
     expect(find.text('Closed'), findsOneWidget);
     expect(find.text('LED'), findsOneWidget);
     expect(find.text('Auto close'), findsOneWidget);
@@ -32,6 +36,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(gateway.commands.last, DoorCommand.open);
+    expect(gateway.deviceIds.last, 'SN-001');
     expect(find.text('开门指令已发送（0x1001）。'), findsOneWidget);
 
     await tester.tap(find.byTooltip('Stop'));
@@ -167,16 +172,21 @@ Widget _buildPage(MockHardwareGateway gateway) {
   return ProviderScope(
     overrides: [
       deviceCommandHardwareGatewayProvider.overrideWithValue(gateway),
+      doorDetailRepositoryProvider.overrideWithValue(
+        const _FakeDoorDetailRepository(),
+      ),
     ],
     child: MaterialApp.router(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: GoRouter(
-        initialLocation: '${DeviceCommandPage.routePath}?deviceId=mock-device',
+        initialLocation:
+            '${DeviceCommandPage.routePath}?doorId=12&deviceId=mock-device',
         routes: [
           GoRoute(
             path: DeviceCommandPage.routePath,
             builder: (context, state) => DeviceCommandPage(
+              doorId: state.uri.queryParameters['doorId'] ?? '',
               deviceId: state.uri.queryParameters['deviceId'] ?? '',
             ),
           ),
@@ -202,10 +212,12 @@ Future<void> _pumpDevicePage(
   addTearDown(tester.view.resetDevicePixelRatio);
 
   await tester.pumpWidget(_buildPage(gateway));
+  await tester.pumpAndSettle();
 }
 
 class _RecordingHardwareGateway extends MockHardwareGateway {
   final List<DoorCommand> commands = <DoorCommand>[];
+  final List<String> deviceIds = <String>[];
   int queryCount = 0;
 
   @override
@@ -215,6 +227,7 @@ class _RecordingHardwareGateway extends MockHardwareGateway {
     required DoorCommand command,
   }) async {
     commands.add(command);
+    deviceIds.add(deviceId);
     return super.sendDoorCommand(
       requestId: requestId,
       deviceId: deviceId,
@@ -229,6 +242,26 @@ class _RecordingHardwareGateway extends MockHardwareGateway {
   }) async {
     queryCount += 1;
     return super.queryRemotes(requestId: requestId, deviceId: deviceId);
+  }
+}
+
+class _FakeDoorDetailRepository implements DoorDetailRepository {
+  const _FakeDoorDetailRepository();
+
+  @override
+  Future<DoorDetail> fetchDoorDetail({
+    required String doorId,
+    required String requestId,
+  }) async {
+    return const DoorDetail(
+      id: '12',
+      name: 'Garage door',
+      doorState: DoorState.closed,
+      doorStateLabel: 'Closed',
+      operatedCycles: 123,
+      remainingCycles: 4567,
+      hardwareSn: 'SN-001',
+    );
   }
 }
 

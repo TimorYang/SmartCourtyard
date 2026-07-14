@@ -724,8 +724,10 @@ class _DeviceCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        final deviceId = Uri.encodeQueryComponent(device.id);
-        context.push('${DeviceCommandPage.routePath}?deviceId=$deviceId');
+        final doorId = Uri.encodeQueryComponent(device.id);
+        context.push(
+          '${DeviceCommandPage.routePath}?doorId=$doorId&deviceId=$doorId',
+        );
       },
       onLongPress: () {
         HapticFeedback.mediumImpact();

@@ -10,11 +10,16 @@ import '../widgets/device_detail_bottom_navigation.dart';
 import 'device_settings_page.dart';
 
 class DeviceCommandPage extends ConsumerStatefulWidget {
-  const DeviceCommandPage({required this.deviceId, super.key});
+  const DeviceCommandPage({
+    required this.doorId,
+    this.deviceId = '',
+    super.key,
+  });
 
   static const routeName = 'device-command';
   static const routePath = '/device-command';
 
+  final String doorId;
   final String deviceId;
 
   @override
@@ -30,6 +35,20 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
   bool _ledEnabled = false;
   bool _autoCloseEnabled = false;
   DeviceDetailTab _selectedTab = DeviceDetailTab.command;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(_loadDoorDetail);
+  }
+
+  @override
+  void didUpdateWidget(covariant DeviceCommandPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.doorId != widget.doorId) {
+      Future.microtask(_loadDoorDetail);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +71,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
           textTheme: textTheme,
         ),
         SecurityCenterPage(
-          deviceId: widget.deviceId,
+          deviceId: _hardwareDeviceId(commandState),
           onTabSelected: _selectTab,
         ),
       ],
@@ -66,12 +85,31 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     setState(() => _selectedTab = tab);
   }
 
+  void _loadDoorDetail() {
+    ref
+        .read(deviceCommandControllerProvider.notifier)
+        .loadDoorDetail(doorId: widget.doorId);
+  }
+
+  String _hardwareDeviceId(DeviceCommandState commandState) {
+    final detailDeviceId = commandState.doorDetail?.hardwareDeviceId ?? '';
+    if (detailDeviceId.trim().isNotEmpty) {
+      return detailDeviceId.trim();
+    }
+    if (widget.deviceId.trim().isNotEmpty) {
+      return widget.deviceId.trim();
+    }
+    return widget.doorId.trim();
+  }
+
   Widget _buildCommandPage({
     required DeviceCommandState commandState,
     required DeviceCommandController controller,
     required bool isBusy,
     required TextTheme textTheme,
   }) {
+    final doorDetail = commandState.doorDetail;
+    final hardwareDeviceId = _hardwareDeviceId(commandState);
     return Scaffold(
       backgroundColor: AppColors.backgroundPrimary,
       appBar: AppBar(
@@ -88,7 +126,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
           icon: const Icon(Icons.chevron_left, size: 28),
         ),
         title: Text(
-          'Garage door',
+          doorDetail?.name ?? 'Garage door',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             color: AppColors.textPrimary,
             fontSize: 17,
@@ -114,7 +152,11 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
           key: const PageStorageKey<String>('device-command-scroll'),
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
           children: [
-            _CycleSummary(textTheme: textTheme),
+            _CycleSummary(
+              operatedCycles: doorDetail?.operatedCycles,
+              remainingCycles: doorDetail?.remainingCycles,
+              textTheme: textTheme,
+            ),
             const SizedBox(height: 5),
             const _DeviceConnectionStrip(),
             const SizedBox(height: 12),
@@ -125,24 +167,39 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
             const SizedBox(height: 4),
             Center(
               child: Text(
-                'Closed',
+                doorDetail?.doorStateLabel ?? 'Closed',
                 style: AppTextTokens.deviceControlDoorState(textTheme),
               ),
             ),
             const SizedBox(height: 16),
+            if (commandState.isLoadingDoorDetail) ...[
+              const _CommandFeedback(
+                message: '正在加载门详情...',
+                icon: Icons.info_outline,
+                foregroundColor: AppColors.textMuted,
+              ),
+              const SizedBox(height: 12),
+            ] else if (commandState.doorDetailErrorMessage != null) ...[
+              _CommandFeedback(
+                message: commandState.doorDetailErrorMessage!,
+                icon: Icons.error_outline,
+                foregroundColor: AppColors.textPrimary,
+              ),
+              const SizedBox(height: 12),
+            ],
             _DoorCommandRow(
               busy: isBusy,
               pendingAction: commandState.pendingAction,
               onClose: () => controller.runAction(
-                deviceId: widget.deviceId,
+                deviceId: hardwareDeviceId,
                 action: DeviceCommandAction.closeDoor,
               ),
               onStop: () => controller.runAction(
-                deviceId: widget.deviceId,
+                deviceId: hardwareDeviceId,
                 action: DeviceCommandAction.stopDoor,
               ),
               onOpen: () => controller.runAction(
-                deviceId: widget.deviceId,
+                deviceId: hardwareDeviceId,
                 action: DeviceCommandAction.openDoor,
               ),
             ),
@@ -169,7 +226,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
               onLedChanged: (enabled) async {
                 setState(() => _ledEnabled = enabled);
                 await controller.runAction(
-                  deviceId: widget.deviceId,
+                  deviceId: hardwareDeviceId,
                   action: enabled
                       ? DeviceCommandAction.turnLightOn
                       : DeviceCommandAction.turnLightOff,
@@ -179,12 +236,12 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                 setState(() => _autoCloseEnabled = enabled);
               },
               onPartialOpen: () => controller.runAction(
-                deviceId: widget.deviceId,
+                deviceId: hardwareDeviceId,
                 action: DeviceCommandAction.partialOpenDoor,
               ),
               onMoreSettings: () => context.push(
                 '${DeviceSettingsPage.routePath}'
-                '?deviceId=${Uri.encodeComponent(widget.deviceId)}',
+                '?deviceId=${Uri.encodeComponent(hardwareDeviceId)}',
               ),
             ),
             const SizedBox(height: 22),
@@ -225,8 +282,14 @@ abstract final class _DeviceCommandAssetPaths {
 }
 
 class _CycleSummary extends StatelessWidget {
-  const _CycleSummary({required this.textTheme});
+  const _CycleSummary({
+    required this.operatedCycles,
+    required this.remainingCycles,
+    required this.textTheme,
+  });
 
+  final int? operatedCycles;
+  final int? remainingCycles;
   final TextTheme textTheme;
 
   @override
@@ -238,7 +301,7 @@ class _CycleSummary extends StatelessWidget {
           Expanded(
             child: _CycleMetric(
               label: 'Operated cycles',
-              value: '100',
+              value: operatedCycles?.toString() ?? '100',
               textTheme: textTheme,
             ),
           ),
@@ -253,7 +316,7 @@ class _CycleSummary extends StatelessWidget {
           Expanded(
             child: _CycleMetric(
               label: 'Remaining',
-              value: '4900',
+              value: remainingCycles?.toString() ?? '4900',
               textTheme: textTheme,
             ),
           ),

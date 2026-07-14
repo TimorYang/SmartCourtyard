@@ -168,7 +168,8 @@ class _WifiConfigurationPageState extends ConsumerState<WifiConfigurationPage> {
                         selectedDevice.id,
                       );
                       context.go(
-                        '${DeviceCommandPage.routePath}?deviceId=$deviceId',
+                        '${DeviceCommandPage.routePath}'
+                        '?doorId=$deviceId&deviceId=$deviceId',
                       );
                     },
               child: Text(state.isProvisioningWifi ? '连接中...' : '开始连接'),
