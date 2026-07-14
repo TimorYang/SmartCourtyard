@@ -1085,7 +1085,7 @@ abstract class AppLocalizations {
   /// Add device page title
   ///
   /// In en, this message translates to:
-  /// **'Add Device'**
+  /// **'Add New Device'**
   String get addDeviceTitle;
 
   /// Add device page subtitle
@@ -1127,13 +1127,13 @@ abstract class AppLocalizations {
   /// Smart Opener option on the add device page
   ///
   /// In en, this message translates to:
-  /// **'Smart Opener'**
+  /// **'Smart Opener (Built-in Wi-Fi)'**
   String get addDeviceSmartOpener;
 
   /// Solar Energy System option on the add device page
   ///
   /// In en, this message translates to:
-  /// **'Solar Energy System'**
+  /// **'Evolution module'**
   String get addDeviceSolarEnergySystem;
 
   /// Camera option on the add device page

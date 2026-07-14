@@ -670,7 +670,7 @@
   "@addDoorNameConfirmAction": {
     "description": "Confirm button label in the add door name dialog"
   },
-  "addDeviceTitle": "Add Device",
+  "addDeviceTitle": "Add New Device",
   "@addDeviceTitle": {
     "description": "Add device page title"
   },
@@ -698,11 +698,11 @@
   "@addDeviceUsbWifiModule": {
     "description": "USB WIFI module option on the add device page"
   },
-  "addDeviceSmartOpener": "Smart Opener",
+  "addDeviceSmartOpener": "Smart Opener (Built-in Wi-Fi)",
   "@addDeviceSmartOpener": {
     "description": "Smart Opener option on the add device page"
   },
-  "addDeviceSolarEnergySystem": "Solar Energy System",
+  "addDeviceSolarEnergySystem": "Evolution module",
   "@addDeviceSolarEnergySystem": {
     "description": "Solar Energy System option on the add device page"
   },

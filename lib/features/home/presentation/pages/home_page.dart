@@ -8,6 +8,8 @@ import '../../../../features/account/presentation/pages/account_profile_page.dar
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../add_device/presentation/pages/add_new_doors_page.dart';
 import '../../../../platform_bridge/hardware_models.dart';
+import '../../../hardware_debug/presentation/pages/ble_debug_page.dart';
+import '../../../notification/presentation/pages/notification_list_page.dart';
 import '../../application/providers.dart';
 import '../../domain/entities/home_scene.dart';
 import '../widgets/device_customize_dialog.dart';
@@ -30,6 +32,8 @@ class HomeAssetPaths {
   static const headerGridPlaceholder =
       'assets/icons/home/home_header_grid_placeholder.png';
   static const headerSceneIcon = 'assets/icons/home/home_header_scene_icon.png';
+  static const headerMessageIcon =
+      'assets/icons/home/home_header_message_icon.png';
   static const headerAddIcon = 'assets/icons/home/home_header_add_icon.png';
   static const addScenePlaceholder =
       'assets/icons/home/home_add_scene_placeholder.png';
@@ -383,6 +387,12 @@ class _HomeHeader extends StatelessWidget {
               ),
               const Spacer(),
               _HeaderIconButton(
+                tooltip: "",
+                assetPath: HomeAssetPaths.headerMessageIcon,
+                fallbackIcon: Icons.message,
+                onPressed: () => context.push(NotificationListPage.routePath),
+              ),
+              _HeaderIconButton(
                 tooltip: l10n.homeMenuTooltip,
                 assetPath: isSingleColumnDeviceList
                     ? HomeAssetPaths.headerGridPlaceholder
@@ -407,7 +417,13 @@ class _HomeHeader extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          Text(l10n.homeGreeting, style: AppTextTokens.homeGreeting(textTheme)),
+          GestureDetector(
+            child: Text(
+              l10n.homeGreeting,
+              style: AppTextTokens.homeGreeting(textTheme),
+            ),
+            onTap: () => context.push(BleDebugPage.routePath),
+          ),
           const SizedBox(height: 2),
           Text(l10n.homeWelcome, style: AppTextTokens.homeWelcome(textTheme)),
         ],
@@ -447,15 +463,12 @@ class _HeaderIconButton extends StatelessWidget {
       tooltip: tooltip,
       visualDensity: VisualDensity.compact,
       padding: EdgeInsets.zero,
-      constraints: const BoxConstraints.tightFor(width: 32, height: 32),
       onPressed: onPressed,
       icon: Image.asset(
         assetPath,
-        width: 16,
-        height: 16,
         fit: BoxFit.contain,
         errorBuilder: (context, error, stackTrace) {
-          return Icon(fallbackIcon, color: AppColors.iconHomeAction, size: 16);
+          return Icon(fallbackIcon, color: AppColors.iconHomeAction);
         },
       ),
     );

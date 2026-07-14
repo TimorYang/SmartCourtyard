@@ -532,7 +532,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addDoorNameConfirmAction => 'Confirm';
 
   @override
-  String get addDeviceTitle => 'Add Device';
+  String get addDeviceTitle => 'Add New Device';
 
   @override
   String get addDeviceSubtitle => 'Select the device to be added';
@@ -553,10 +553,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addDeviceUsbWifiModule => 'USB WIFI module';
 
   @override
-  String get addDeviceSmartOpener => 'Smart Opener';
+  String get addDeviceSmartOpener => 'Smart Opener (Built-in Wi-Fi)';
 
   @override
-  String get addDeviceSolarEnergySystem => 'Solar Energy System';
+  String get addDeviceSolarEnergySystem => 'Evolution module';
 
   @override
   String get addDeviceCamera => 'Camera';

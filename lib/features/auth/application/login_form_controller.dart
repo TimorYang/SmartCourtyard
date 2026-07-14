@@ -4,8 +4,8 @@ import '../../../core/validation/input_validators.dart';
 
 class LoginFormState {
   const LoginFormState({
-    this.account = '',
-    this.password = '',
+    this.account = defaultLoginAccount,
+    this.password = defaultLoginPassword,
     this.agreedToTerms = false,
   });
 
@@ -33,6 +33,9 @@ class LoginFormState {
     );
   }
 }
+
+const defaultLoginAccount = '19901462575@163.com';
+const defaultLoginPassword = '12345678';
 
 class LoginFormController extends Notifier<LoginFormState> {
   @override

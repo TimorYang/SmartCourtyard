@@ -12,18 +12,22 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('renders the login form and third-party sign-in options', (
-    tester,
-  ) async {
-    await openLoginPage(tester);
+  testWidgets(
+    'renders the login form with default credentials and third-party sign-in options',
+    (tester) async {
+      await openLoginPage(tester);
 
-    expect(find.text('Enter your email address'), findsOneWidget);
-    expect(find.text('Enter password'), findsOneWidget);
-    expect(find.text('Login in'), findsOneWidget);
-    expect(find.text('Continue Sign in with Apple'), findsOneWidget);
-    expect(find.text('Continue Sign in with Google'), findsOneWidget);
-    expect(find.text('Continue Sign in with Alexa'), findsOneWidget);
-  });
+      final fields = tester
+          .widgetList<TextField>(find.byType(TextField))
+          .toList();
+      expect(fields[0].controller?.text, '19901462575@163.com');
+      expect(fields[1].controller?.text, '12345678');
+      expect(find.text('Login in'), findsOneWidget);
+      expect(find.text('Continue Sign in with Apple'), findsOneWidget);
+      expect(find.text('Continue Sign in with Google'), findsOneWidget);
+      expect(find.text('Continue Sign in with Alexa'), findsOneWidget);
+    },
+  );
 
   testWidgets('keeps third-party sign-in fixed when keyboard insets change', (
     tester,

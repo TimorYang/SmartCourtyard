@@ -109,6 +109,7 @@ class AppColors {
   static const textPrimary = Color(0xFF26292F);
   static const textSecondary = Color(0xFF202020);
   static const textMuted = Color(0xFF5B5B60);
+  static const textMuted1A232C = Color(0xFF1A232C);
   static const textHint = Color(0xFF7A7A7A);
   static const textIcon = Color(0xFF5A5D64);
   static const textAccountHeader = Colors.white;
@@ -184,7 +185,7 @@ class AppTextTokens {
   static TextStyle welcomeHeadline(TextTheme textTheme) {
     return (textTheme.displaySmall ?? const TextStyle()).copyWith(
       color: Colors.white,
-      fontWeight: FontWeight.w700,
+      fontWeight: FontWeight.w600,
       height: 1.06,
     );
   }
@@ -206,7 +207,7 @@ class AppTextTokens {
 
   static TextStyle welcomePrimaryButton(TextTheme textTheme) {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
-      fontWeight: FontWeight.w700,
+      fontWeight: FontWeight.w600,
     );
   }
 
@@ -219,7 +220,7 @@ class AppTextTokens {
   static TextStyle loginTitle(TextTheme textTheme) {
     return (textTheme.displaySmall ?? const TextStyle()).copyWith(
       fontSize: 28,
-      fontWeight: FontWeight.w700,
+      fontWeight: FontWeight.w600,
       color: AppColors.textPrimary,
     );
   }
@@ -256,7 +257,7 @@ class AppTextTokens {
   static TextStyle registerTitle(TextTheme textTheme) {
     return (textTheme.displaySmall ?? const TextStyle()).copyWith(
       fontSize: 28,
-      fontWeight: FontWeight.w700,
+      fontWeight: FontWeight.w600,
       color: AppColors.textPrimary,
     );
   }
@@ -293,7 +294,7 @@ class AppTextTokens {
   static TextStyle forgotPasswordTitle(TextTheme textTheme) {
     return (textTheme.displaySmall ?? const TextStyle()).copyWith(
       fontSize: 28,
-      fontWeight: FontWeight.w700,
+      fontWeight: FontWeight.w600,
       color: AppColors.textPrimary,
     );
   }
@@ -322,7 +323,7 @@ class AppTextTokens {
   static TextStyle authFlowTitle(TextTheme textTheme) {
     return (textTheme.displaySmall ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
-      fontWeight: FontWeight.w700,
+      fontWeight: FontWeight.w600,
     );
   }
 
@@ -337,7 +338,7 @@ class AppTextTokens {
   static TextStyle verificationTitle(TextTheme textTheme) {
     return (textTheme.displaySmall ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
-      fontWeight: FontWeight.w700,
+      fontWeight: FontWeight.w600,
     );
   }
 
@@ -366,7 +367,7 @@ class AppTextTokens {
   static TextStyle registerPasswordTitle(TextTheme textTheme) {
     return (textTheme.displaySmall ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
-      fontWeight: FontWeight.w700,
+      fontWeight: FontWeight.w600,
     );
   }
 
@@ -399,7 +400,7 @@ class AppTextTokens {
   static TextStyle authSuccessTitle(TextTheme textTheme) {
     return (textTheme.headlineMedium ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
-      fontWeight: FontWeight.w700,
+      fontWeight: FontWeight.w600,
     );
   }
 
@@ -533,7 +534,7 @@ class AppTextTokens {
     return (textTheme.displaySmall ?? const TextStyle()).copyWith(
       color: AppColors.textSecondary,
       fontSize: 31,
-      fontWeight: FontWeight.w700,
+      fontWeight: FontWeight.w600,
       height: 1.05,
     );
   }
@@ -587,7 +588,7 @@ class AppTextTokens {
     return (textTheme.titleLarge ?? const TextStyle()).copyWith(
       color: AppColors.textMuted,
       fontSize: 18,
-      fontWeight: FontWeight.w700,
+      fontWeight: FontWeight.w600,
       height: 1.2,
     );
   }
@@ -595,7 +596,7 @@ class AppTextTokens {
   static TextStyle deviceShareButton(TextTheme textTheme) {
     return (textTheme.titleLarge ?? const TextStyle()).copyWith(
       fontSize: 18,
-      fontWeight: FontWeight.w700,
+      fontWeight: FontWeight.w600,
       height: 1.2,
     );
   }
@@ -613,7 +614,7 @@ class AppTextTokens {
     return (textTheme.titleLarge ?? const TextStyle()).copyWith(
       color: AppColors.textMuted,
       fontSize: 20,
-      fontWeight: FontWeight.w700,
+      fontWeight: FontWeight.w600,
       height: 1,
     );
   }
@@ -622,7 +623,7 @@ class AppTextTokens {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
       color: AppColors.textMuted,
       fontSize: 15,
-      fontWeight: FontWeight.w700,
+      fontWeight: FontWeight.w600,
       height: 1.2,
     );
   }
@@ -665,7 +666,7 @@ class AppTextTokens {
   static TextStyle deviceControlMetricLabel(TextTheme textTheme) {
     return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
       color: AppColors.deviceControlMetricMuted,
-      fontSize: 14,
+      fontSize: 12,
       fontWeight: FontWeight.w400,
       height: 1.2,
     );
@@ -674,8 +675,8 @@ class AppTextTokens {
   static TextStyle deviceControlMetricValue(TextTheme textTheme) {
     return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
-      fontSize: 26,
-      fontWeight: FontWeight.w600,
+      fontSize: 18,
+      fontWeight: FontWeight.w400,
       height: 1.05,
     );
   }
@@ -719,18 +720,18 @@ class AppTextTokens {
   static TextStyle deviceControlQuickActionTitle(TextTheme textTheme) {
     return (textTheme.labelLarge ?? const TextStyle()).copyWith(
       color: AppColors.textSecondary,
-      fontSize: 12,
-      fontWeight: FontWeight.w600,
-      height: 1.15,
+      fontSize: 15,
+      fontWeight: FontWeight.w400,
+      height: 1,
     );
   }
 
   static TextStyle deviceControlQuickActionMeta(TextTheme textTheme) {
     return (textTheme.labelSmall ?? const TextStyle()).copyWith(
       color: AppColors.textHint,
-      fontSize: 10,
+      fontSize: 13,
       fontWeight: FontWeight.w400,
-      height: 1.15,
+      height: 1,
     );
   }
 
@@ -738,7 +739,7 @@ class AppTextTokens {
     return (textTheme.headlineLarge ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
       fontSize: 26,
-      fontWeight: FontWeight.w700,
+      fontWeight: FontWeight.w600,
       height: 1.1,
     );
   }
@@ -756,7 +757,7 @@ class AppTextTokens {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
       color: AppColors.textMuted,
       fontSize: 16,
-      fontWeight: FontWeight.w700,
+      fontWeight: FontWeight.w600,
       height: 1.2,
     );
   }
@@ -774,7 +775,7 @@ class AppTextTokens {
     return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
       fontSize: 24,
-      fontWeight: FontWeight.w700,
+      fontWeight: FontWeight.w600,
       height: 1.15,
     );
   }
@@ -903,7 +904,7 @@ class AppTextTokens {
     return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
       color: Colors.white,
       fontSize: 22,
-      fontWeight: FontWeight.w700,
+      fontWeight: FontWeight.w600,
     );
   }
 
@@ -911,7 +912,7 @@ class AppTextTokens {
     return (textTheme.headlineMedium ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
       fontSize: 24,
-      fontWeight: FontWeight.w700,
+      fontWeight: FontWeight.w600,
     );
   }
 
@@ -1049,15 +1050,15 @@ class AppTextTokens {
   static TextStyle notificationCardTitle(TextTheme textTheme) {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
-      fontSize: 16,
-      fontWeight: FontWeight.w700,
+      fontSize: 15,
+      fontWeight: FontWeight.w400,
       height: 1.25,
     );
   }
 
   static TextStyle notificationCategory(TextTheme textTheme) {
     return (textTheme.labelSmall ?? const TextStyle()).copyWith(
-      fontSize: 10,
+      fontSize: 12,
       fontWeight: FontWeight.w400,
       height: 1,
     );
@@ -1065,7 +1066,7 @@ class AppTextTokens {
 
   static TextStyle notificationBody(TextTheme textTheme) {
     return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
-      color: AppColors.textMuted,
+      color: AppColors.textMuted1A232C,
       fontSize: 13,
       fontWeight: FontWeight.w400,
       height: 1.35,
@@ -1084,7 +1085,7 @@ class AppTextTokens {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
       fontSize: 15,
-      fontWeight: FontWeight.w700,
+      fontWeight: FontWeight.w600,
       height: 1.25,
     );
   }
@@ -1101,14 +1102,14 @@ class AppTextTokens {
     return (textTheme.titleSmall ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
       fontSize: 14,
-      fontWeight: FontWeight.w700,
+      fontWeight: FontWeight.w600,
     );
   }
 
   static TextStyle afterSalesField(TextTheme textTheme) {
     return (textTheme.bodySmall ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
-      fontSize: 11,
+      fontSize: 13,
       fontWeight: FontWeight.w400,
       height: 1.35,
     );
@@ -1151,7 +1152,7 @@ class AppTextTokens {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
       color: AppColors.textMuted,
       fontSize: 16,
-      fontWeight: FontWeight.w700,
+      fontWeight: FontWeight.w600,
       height: 1.2,
     );
   }
@@ -1178,7 +1179,7 @@ class AppTextTokens {
     return (textTheme.titleLarge ?? const TextStyle()).copyWith(
       color: AppColors.textMuted,
       fontSize: 20,
-      fontWeight: FontWeight.w700,
+      fontWeight: FontWeight.w600,
       height: 1.2,
     );
   }

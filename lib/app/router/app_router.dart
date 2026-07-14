@@ -66,7 +66,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final isPublicRoute =
           isAuthRoute ||
           location == AppWebViewPage.routePath ||
-          location == DeviceSharePage.routePath;
+          location == FullReportPage.routePath;
 
       if (!isSignedIn && !isPublicRoute) {
         return WelcomePage.routePath;

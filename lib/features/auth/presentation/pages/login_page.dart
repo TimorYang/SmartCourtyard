@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/config/app_links.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../home/presentation/pages/home_page.dart';
+import '../../application/login_form_controller.dart';
 import '../../application/providers.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
@@ -26,6 +27,19 @@ class LoginPage extends ConsumerStatefulWidget {
 
 class _LoginPageState extends ConsumerState<LoginPage> {
   bool _isSubmitting = false;
+  final _accountTextController = TextEditingController(
+    text: defaultLoginAccount,
+  );
+  final _passwordTextController = TextEditingController(
+    text: defaultLoginPassword,
+  );
+
+  @override
+  void dispose() {
+    _accountTextController.dispose();
+    _passwordTextController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,6 +75,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       ),
                       const SizedBox(height: 24),
                       AuthTextField(
+                        controller: _accountTextController,
                         hintText: l10n.loginAccountPlaceholder,
                         icon: const AuthAssetIcon(
                           assetPath: AuthAssetPaths.accountFieldIcon,
@@ -77,6 +92,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       ),
                       const SizedBox(height: 20),
                       AuthTextField(
+                        controller: _passwordTextController,
                         hintText: l10n.loginPasswordPlaceholder,
                         icon: const AuthAssetIcon(
                           assetPath: AuthAssetPaths.passwordFieldIcon,
