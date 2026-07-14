@@ -40,7 +40,10 @@ class AddDeviceOnboardingRemoteDataSourceImpl
           !response.success ||
           data == null ||
           !data.isValid) {
-        throw const AddDeviceOnboardingRemoteException.invalidResponse();
+        throw AddDeviceOnboardingRemoteException.invalidResponse(
+          serverCode: response.code,
+          serverMessageKey: response.messageKey,
+        );
       }
       return data;
     } on DioException catch (error) {
@@ -67,7 +70,10 @@ class AddDeviceOnboardingRemoteDataSourceImpl
           !response.success ||
           data == null ||
           !data.isValid) {
-        throw const AddDeviceOnboardingRemoteException.invalidResponse();
+        throw AddDeviceOnboardingRemoteException.invalidResponse(
+          serverCode: response.code,
+          serverMessageKey: response.messageKey,
+        );
       }
       return data;
     } on DioException catch (error) {
@@ -83,7 +89,12 @@ class AddDeviceOnboardingRemoteDataSourceImpl
 }
 
 class AddDeviceOnboardingRemoteException implements Exception {
-  const AddDeviceOnboardingRemoteException._(this.kind, {this.statusCode});
+  const AddDeviceOnboardingRemoteException._(
+    this.kind, {
+    this.statusCode,
+    this.serverCode,
+    this.serverMessageKey,
+  });
 
   AddDeviceOnboardingRemoteException.fromNetwork(NetworkException exception)
     : this._(
@@ -91,11 +102,19 @@ class AddDeviceOnboardingRemoteException implements Exception {
         statusCode: exception.statusCode,
       );
 
-  const AddDeviceOnboardingRemoteException.invalidResponse()
-    : this._(AddDeviceOnboardingRemoteErrorKind.invalidResponse);
+  const AddDeviceOnboardingRemoteException.invalidResponse({
+    int? serverCode,
+    String? serverMessageKey,
+  }) : this._(
+         AddDeviceOnboardingRemoteErrorKind.invalidResponse,
+         serverCode: serverCode,
+         serverMessageKey: serverMessageKey,
+       );
 
   final AddDeviceOnboardingRemoteErrorKind kind;
   final int? statusCode;
+  final int? serverCode;
+  final String? serverMessageKey;
 }
 
 enum AddDeviceOnboardingRemoteErrorKind { network, invalidResponse }

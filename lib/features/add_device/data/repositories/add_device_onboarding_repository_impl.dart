@@ -78,10 +78,12 @@ class AddDeviceOnboardingRepositoryImpl
     String requestId,
     String messageKey,
   ) {
+    final resolvedMessageKey =
+        _messageKeyForServerMessageKey(error.serverMessageKey) ?? messageKey;
     if (error.kind == AddDeviceOnboardingRemoteErrorKind.network) {
       return AppError(
         code: AppErrorCode.networkUnavailable,
-        messageKey: messageKey,
+        messageKey: resolvedMessageKey,
         action: AppErrorAction.retry,
         requestId: requestId,
         retryable: true,
@@ -89,11 +91,18 @@ class AddDeviceOnboardingRepositoryImpl
     }
     return AppError(
       code: AppErrorCode.serverError,
-      messageKey: messageKey,
+      messageKey: resolvedMessageKey,
       action: AppErrorAction.retry,
       requestId: requestId,
       retryable: true,
     );
+  }
+
+  String? _messageKeyForServerMessageKey(String? serverMessageKey) {
+    return switch (serverMessageKey) {
+      'app.door.device_not_exists' => 'addDevice.deviceNotExists',
+      _ => null,
+    };
   }
 }
 

@@ -6,10 +6,12 @@ import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
+import '../../../../platform_bridge/hardware_models.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/add_device_controller.dart';
 import '../../application/providers.dart';
+import 'smart_opener_choose_wifi_page.dart';
 import 'smart_opener_device_not_found_page.dart';
 import 'smart_opener_scan_results_page.dart';
 import 'smart_opener_scan_guide_page.dart';
@@ -35,6 +37,7 @@ class _SmartOpenerBleScanPageState extends ConsumerState<SmartOpenerBleScanPage>
   late final AddDeviceController _controller;
   Timer? _scanTimer;
   var _hasCompletedScan = false;
+  String? _pendingDeviceId;
 
   @override
   void initState() {
@@ -105,10 +108,37 @@ class _SmartOpenerBleScanPageState extends ConsumerState<SmartOpenerBleScanPage>
     );
   }
 
+  Future<void> _addDevice(BleDevice device) async {
+    setState(() {
+      _pendingDeviceId = device.id;
+    });
+    _scanTimer?.cancel();
+    _scanTimer = null;
+    await _controller.stopScan();
+    final connected = await _controller.connectAndAuthenticate(device);
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _pendingDeviceId = null;
+    });
+    if (connected) {
+      context.push(SmartOpenerChooseWifiPage.routePath);
+      return;
+    }
+
+    final state = ref.read(addDeviceControllerProvider);
+    final message = state.errorMessage ?? 'Unable to connect device.';
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final textTheme = Theme.of(context).textTheme;
+    final devices = ref.watch(addDeviceControllerProvider).sortedDevices();
 
     return Scaffold(
       backgroundColor: AppColors.backgroundPrimary,
@@ -145,10 +175,149 @@ class _SmartOpenerBleScanPageState extends ConsumerState<SmartOpenerBleScanPage>
                     style: AppTextTokens.smartOpenerScanningStatus(textTheme),
                   ),
                 ),
+                if (devices.isNotEmpty) ...[
+                  const SizedBox(height: 24),
+                  _ScanningDevicePreviewList(
+                    devices: devices,
+                    pendingDeviceId: _pendingDeviceId,
+                    onAddDevice: _pendingDeviceId == null ? _addDevice : null,
+                  ),
+                ],
               ],
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _ScanningDevicePreviewList extends StatelessWidget {
+  const _ScanningDevicePreviewList({
+    required this.devices,
+    required this.pendingDeviceId,
+    required this.onAddDevice,
+  });
+
+  final List<BleDevice> devices;
+  final String? pendingDeviceId;
+  final ValueChanged<BleDevice>? onAddDevice;
+
+  @override
+  Widget build(BuildContext context) {
+    final itemExtent = 84.0;
+    final listHeight = (devices.length * itemExtent).clamp(0.0, 252.0);
+
+    return SizedBox(
+      height: listHeight,
+      child: ListView.separated(
+        padding: EdgeInsets.zero,
+        itemCount: devices.length,
+        separatorBuilder: (context, index) => const SizedBox(height: 10),
+        itemBuilder: (context, index) {
+          final device = devices[index];
+          return _ScanningDevicePreviewCard(
+            device: device,
+            isPending: pendingDeviceId == device.id,
+            onAddPressed: onAddDevice == null
+                ? null
+                : () => onAddDevice!(device),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _ScanningDevicePreviewCard extends StatelessWidget {
+  const _ScanningDevicePreviewCard({
+    required this.device,
+    required this.isPending,
+    required this.onAddPressed,
+  });
+
+  final BleDevice device;
+  final bool isPending;
+  final VoidCallback? onAddPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final textTheme = Theme.of(context).textTheme;
+    final name = device.name?.trim().isNotEmpty == true
+        ? device.name!.trim()
+        : 'Smart Door';
+
+    return Container(
+      constraints: const BoxConstraints(minHeight: 74),
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+      decoration: BoxDecoration(
+        color: AppColors.smartOpenerCardSurface,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.door_front_door_outlined,
+            size: 34,
+            color: AppColors.textIcon,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextTokens.smartOpenerResultCardTitle(
+                    textTheme,
+                  ).copyWith(fontSize: 14),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  l10n.smartOpenerDefaultDeviceSubtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextTokens.smartOpenerResultCardSubtitle(
+                    textTheme,
+                  ).copyWith(fontSize: 11),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          SizedBox(
+            width: 72,
+            height: 32,
+            child: FilledButton(
+              onPressed: onAddPressed,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.smartOpenerAddButton,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: AppColors.textHint,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(7),
+                ),
+              ),
+              child: isPending
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Text(
+                      l10n.smartOpenerAddAction,
+                      style: AppTextTokens.smartOpenerSmallButton(textTheme),
+                    ),
+            ),
+          ),
+        ],
       ),
     );
   }

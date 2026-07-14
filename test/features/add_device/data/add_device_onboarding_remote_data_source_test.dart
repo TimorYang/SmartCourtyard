@@ -93,6 +93,32 @@ void main() {
       throwsA(isA<AddDeviceOnboardingRemoteException>()),
     );
   });
+
+  test('addForceDoor preserves server message key from failed envelope', () {
+    final dataSource = AddDeviceOnboardingRemoteDataSourceImpl(
+      api: _FakeAddDeviceOnboardingApi(
+        addDoorResponse: const ApiEnvelopeDto(
+          code: 100408,
+          success: false,
+          msg: '设备不存在',
+          messageKey: 'app.door.device_not_exists',
+        ),
+      ),
+    );
+
+    expect(
+      () => dataSource.addForceDoor(sn: 'SN-001', requestId: 'request-2'),
+      throwsA(
+        isA<AddDeviceOnboardingRemoteException>()
+            .having((error) => error.serverCode, 'serverCode', 100408)
+            .having(
+              (error) => error.serverMessageKey,
+              'serverMessageKey',
+              'app.door.device_not_exists',
+            ),
+      ),
+    );
+  });
 }
 
 class _FakeAddDeviceOnboardingApi implements AddDeviceOnboardingApi {

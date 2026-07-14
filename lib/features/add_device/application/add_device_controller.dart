@@ -7,6 +7,7 @@ import '../../../platform_bridge/hardware_gateway.dart';
 import '../../../platform_bridge/hardware_models.dart';
 import '../domain/use_cases/add_force_door_use_case.dart';
 import '../domain/use_cases/fetch_onboarding_device_key_use_case.dart';
+import 'ble_auth_token.dart';
 import 'providers.dart';
 
 const String addDeviceBleNamePrefix = 'opener_';
@@ -273,7 +274,7 @@ class AddDeviceController extends Notifier<AddDeviceState> {
         sn: sn,
         requestId: _nextRequestId('device-key'),
       );
-      final fixedAesKeyHex = deviceKey.aesKey.trim();
+      final authenticationToken = buildBleAuthenticationToken(deviceKey.aesKey);
       state = state.copyWith(
         isAuthenticating: true,
         infoMessage: '设备密钥获取成功，正在鉴权...',
@@ -281,7 +282,7 @@ class AddDeviceController extends Notifier<AddDeviceState> {
       final authResult = await _gateway.authenticateBleDevice(
         requestId: _nextRequestId('ble-auth'),
         deviceId: device.id,
-        token: fixedAesKeyHex,
+        token: authenticationToken,
       );
       if (!authResult.authenticated) {
         state = state.copyWith(
@@ -297,6 +298,14 @@ class AddDeviceController extends Notifier<AddDeviceState> {
         infoMessage: '鉴权成功，准备进入 Wi‑Fi 配置',
       );
       return true;
+    } on FormatException {
+      state = state.copyWith(
+        isConnecting: false,
+        isAuthenticating: false,
+        errorMessage: '设备密钥格式错误，请重试',
+        clearInfoMessage: true,
+      );
+      return false;
     } on AppError catch (error) {
       state = state.copyWith(
         isConnecting: false,
@@ -430,6 +439,7 @@ class AddDeviceController extends Notifier<AddDeviceState> {
   String _messageForAppError(AppError error) {
     return switch (error.messageKey) {
       'addDevice.deviceKeyFailed' => '获取设备密钥失败，请重试',
+      'addDevice.deviceNotExists' => '设备不存在，请确认设备后重试',
       'addDevice.bindDoorFailed' => '设备绑定失败，请重试',
       _ => '设备添加失败，请重试',
     };

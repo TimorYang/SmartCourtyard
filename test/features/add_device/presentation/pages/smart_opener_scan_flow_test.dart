@@ -84,6 +84,41 @@ void main() {
     expect(find.text('Found 1 Devices'), findsOneWidget);
   });
 
+  testWidgets('BLE scan shows discovered opener devices before timeout', (
+    tester,
+  ) async {
+    await _pumpScanFlowTestApp(
+      tester,
+      SmartOpenerBleScanPage.routePath,
+      scanDuration: const Duration(seconds: 30),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('Scanning'), findsOneWidget);
+    expect(find.text('opener_MOCK-SN-001'), findsOneWidget);
+    expect(find.text('SCAN RESULTS'), findsNothing);
+  });
+
+  testWidgets('BLE scan Add connects and opens Choose Wi-Fi before timeout', (
+    tester,
+  ) async {
+    await _pumpScanFlowTestApp(
+      tester,
+      SmartOpenerBleScanPage.routePath,
+      scanDuration: const Duration(seconds: 30),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    await _tapAddDevice(tester);
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    expect(find.text('CHOOSE WIFI'), findsOneWidget);
+    expect(find.text('Select Wi-Fi'), findsWidgets);
+  });
+
   testWidgets('BLE scan opens not found when no device is discovered', (
     tester,
   ) async {
@@ -152,6 +187,28 @@ void main() {
     await tester.pump(const Duration(milliseconds: 350));
 
     expect(find.byType(SmartOpenerConnectingPage), findsOneWidget);
+    expect(
+      tester
+          .widget<LinearProgressIndicator>(find.byType(LinearProgressIndicator))
+          .value,
+      closeTo(0.95 * 0.35 / 8, 0.01),
+    );
+
+    await tester.pump(const Duration(seconds: 4));
+    expect(
+      tester
+          .widget<LinearProgressIndicator>(find.byType(LinearProgressIndicator))
+          .value,
+      closeTo(0.95 * 4.35 / 8, 0.01),
+    );
+
+    await tester.pump(const Duration(seconds: 5));
+    expect(
+      tester
+          .widget<LinearProgressIndicator>(find.byType(LinearProgressIndicator))
+          .value,
+      0.95,
+    );
   });
 
   testWidgets('Skip reaches connecting flow', (tester) async {
@@ -193,6 +250,16 @@ void main() {
         'Connection failed. Please check Wi-Fi password and try again.',
       ),
       findsOneWidget,
+    );
+    final stoppedProgress = tester
+        .widget<LinearProgressIndicator>(find.byType(LinearProgressIndicator))
+        .value;
+    await tester.pump(const Duration(seconds: 2));
+    expect(
+      tester
+          .widget<LinearProgressIndicator>(find.byType(LinearProgressIndicator))
+          .value,
+      stoppedProgress,
     );
     await tester.tap(find.text('OK'));
     await tester.pumpAndSettle();
@@ -321,7 +388,7 @@ Future<void> _tapAction(WidgetTester tester, String label) async {
 
 Future<void> _tapAddDevice(WidgetTester tester) async {
   final button = find.widgetWithText(FilledButton, '+ Add');
-  final topLeft = tester.getTopLeft(button);
+  final topLeft = tester.getTopLeft(button.last);
   await tester.tapAt(topLeft + const Offset(4, 16));
 }
 

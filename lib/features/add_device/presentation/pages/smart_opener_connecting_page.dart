@@ -26,15 +26,27 @@ class SmartOpenerConnectingPage extends ConsumerStatefulWidget {
 }
 
 class _SmartOpenerConnectingPageState
-    extends ConsumerState<SmartOpenerConnectingPage> {
+    extends ConsumerState<SmartOpenerConnectingPage>
+    with SingleTickerProviderStateMixin {
   var _started = false;
+  late final AnimationController _progressController;
 
   @override
   void initState() {
     super.initState();
+    _progressController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 8),
+    )..forward();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(_configureWifi());
     });
+  }
+
+  @override
+  void dispose() {
+    _progressController.dispose();
+    super.dispose();
   }
 
   Future<void> _configureWifi() async {
@@ -53,6 +65,7 @@ class _SmartOpenerConnectingPageState
       return;
     }
 
+    _progressController.stop();
     final l10n = AppLocalizations.of(context);
     await showDialog<void>(
       context: context,
@@ -138,7 +151,9 @@ class _SmartOpenerConnectingPageState
                   const SizedBox(height: 16),
                   Padding(
                     padding: EdgeInsetsGeometry.only(left: 50, right: 50),
-                    child: const _ConnectingProgressBar(),
+                    child: _ConnectingProgressBar(
+                      animation: _progressController,
+                    ),
                   ),
                   const SizedBox(height: 28),
                   Padding(
@@ -166,7 +181,9 @@ class _SmartOpenerConnectingAssets {
 }
 
 class _ConnectingProgressBar extends StatelessWidget {
-  const _ConnectingProgressBar();
+  const _ConnectingProgressBar({required this.animation});
+
+  final Animation<double> animation;
 
   @override
   Widget build(BuildContext context) {
@@ -176,10 +193,13 @@ class _ConnectingProgressBar extends StatelessWidget {
         child: SizedBox(
           width: 353,
           height: 10,
-          child: LinearProgressIndicator(
-            value: 0.4,
-            backgroundColor: AppColors.smartOpenerProgressTrack,
-            color: AppColors.brandPrimary,
+          child: AnimatedBuilder(
+            animation: animation,
+            builder: (context, child) => LinearProgressIndicator(
+              value: animation.value * 0.95,
+              backgroundColor: AppColors.smartOpenerProgressTrack,
+              color: AppColors.brandPrimary,
+            ),
           ),
         ),
       ),
