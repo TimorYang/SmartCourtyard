@@ -102,10 +102,11 @@ class _NotificationCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(6),
                   ),
                   alignment: Alignment.center,
-                  child: Icon(
+                  child: Image.asset(
                     _iconFor(notification.kind),
-                    color: AppColors.notificationIcon,
-                    size: 20,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) =>
+                        const SizedBox.shrink(),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -177,11 +178,21 @@ class _NotificationCard extends StatelessWidget {
     );
   }
 
-  IconData _iconFor(NotificationKind kind) => switch (kind) {
-    NotificationKind.appointmentConfirmed => Icons.event_available_outlined,
-    NotificationKind.appointmentReminder => Icons.alarm_on_outlined,
-    NotificationKind.upgrade => Icons.system_update_alt_rounded,
-    NotificationKind.lowBattery => Icons.battery_1_bar_rounded,
+  String _iconFor(NotificationKind kind) => switch (kind) {
+    NotificationKind.appointmentConfirmed =>
+      'assets/icons/notification/notification_after_sales_confirmed_placeholder.png',
+    NotificationKind.appointmentReminder =>
+      'assets/icons/notification/notification_after_sales_reminder_placeholder.png',
+    NotificationKind.upgrade =>
+      'assets/icons/notification/notification_upgrade_prompt_placeholder.png',
+    NotificationKind.lowBattery =>
+      'assets/icons/notification/notification_low_battery_placeholder.png',
+    NotificationKind.motorResetWarning =>
+      'assets/icons/notification/notification_motor_reset_placeholder.png',
+    NotificationKind.sensorAbnormality =>
+      'assets/icons/notification/notification_sensor_abnormality_placeholder.png',
+    NotificationKind.systemMaintenance =>
+      'assets/icons/notification/notification_system_maintenance_placeholder.png',
   };
 
   (Color, Color) _categoryColors(NotificationKind kind) => switch (kind) {
@@ -189,7 +200,9 @@ class _NotificationCard extends StatelessWidget {
       AppColors.notificationUpgradeTag,
       AppColors.notificationUpgradeText,
     ),
-    NotificationKind.lowBattery => (
+    NotificationKind.lowBattery ||
+    NotificationKind.motorResetWarning ||
+    NotificationKind.sensorAbnormality => (
       AppColors.notificationEquipmentTag,
       AppColors.notificationEquipmentText,
     ),

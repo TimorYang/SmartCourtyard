@@ -60,6 +60,49 @@ abstract final class NotificationFixtures {
           'below the recommended threshold of 15%.',
       action: NotificationAction.appointmentAfterSales,
     ),
+    AppNotification(
+      id: 'motor-reset-warning',
+      kind: NotificationKind.motorResetWarning,
+      title:
+          'The remaining number of times the motor is about to be reset to zero',
+      category: 'equipment',
+      summary:
+          'The remaining operating count of the motor is close to zero. '
+          'Please check the device status in a timely manner.',
+      timestamp: '2026-07-01 08:45',
+      detail:
+          'The remaining number of motor operations is close to zero. '
+          'Please arrange inspection or maintenance before continued use.',
+      action: NotificationAction.appointmentAfterSales,
+    ),
+    AppNotification(
+      id: 'sensor-abnormality',
+      kind: NotificationKind.sensorAbnormality,
+      title: 'Sensor abnormality',
+      category: 'equipment',
+      summary:
+          'A sensor abnormality has been detected. Please check the sensor '
+          'installation and device safety status.',
+      timestamp: '2026-07-01 08:30',
+      detail:
+          'The safety sensor reported an abnormal state. Please inspect the '
+          'sensor position, battery, and connection before operating the door.',
+      action: NotificationAction.viewDetails,
+    ),
+    AppNotification(
+      id: 'system-maintenance',
+      kind: NotificationKind.systemMaintenance,
+      title: 'System Maintenance Notice',
+      category: 'System',
+      summary:
+          'The system will undergo scheduled maintenance. Some services may '
+          'be temporarily unavailable during the maintenance window.',
+      timestamp: '2026-06-30 21:00',
+      detail:
+          'Scheduled maintenance will be performed to improve system '
+          'stability. Device control is not expected to be affected.',
+      action: NotificationAction.viewDetails,
+    ),
   ];
 
   static AppNotification? findById(String id) {

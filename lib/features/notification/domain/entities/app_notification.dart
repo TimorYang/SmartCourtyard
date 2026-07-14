@@ -1,10 +1,13 @@
 enum NotificationAction { viewDetails, appointmentAfterSales, upgrade }
 
 enum NotificationKind {
-  appointmentConfirmed,
-  appointmentReminder,
-  upgrade,
-  lowBattery,
+  appointmentConfirmed, //预约已确认
+  appointmentReminder, //预约提醒
+  upgrade, //升级
+  lowBattery, //电池电量低
+  motorResetWarning, //电机次数即将清零
+  sensorAbnormality, //传感器异常
+  systemMaintenance, //系统维护
 }
 
 class AppNotification {
