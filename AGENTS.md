@@ -380,6 +380,11 @@ Rules:
   committed to shared branches.
 - Widget tests and controller tests must override providers or repositories and
   must never call real servers.
+- During API integration, if the response contract has not been provided, only
+  wire and verify that the request can be issued. Do not guess response DTOs,
+  success conditions, field mappings, persistence, or UI behavior. Wait for a
+  captured real response from the debugging proxy, then implement the response
+  handling in a follow-up change.
 
 Code generation rules:
 
