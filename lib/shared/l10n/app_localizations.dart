@@ -1436,6 +1436,30 @@ abstract class AppLocalizations {
   /// **'Try it'**
   String get smartOpenerTryAction;
 
+  /// No description provided for @smartOpenerShareDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'SHARE DEVICE'**
+  String get smartOpenerShareDialogTitle;
+
+  /// No description provided for @smartOpenerShareDialogDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Enjoy the smart life with your family!'**
+  String get smartOpenerShareDialogDescription;
+
+  /// No description provided for @smartOpenerShareDialogAccountHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Email/Amazon account /Google account'**
+  String get smartOpenerShareDialogAccountHint;
+
+  /// No description provided for @smartOpenerDisconnectFailedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to disconnect device. Scanning continues.'**
+  String get smartOpenerDisconnectFailedMessage;
+
   /// Choose scene page title
   ///
   /// In en, this message translates to:

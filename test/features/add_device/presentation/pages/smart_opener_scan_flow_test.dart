@@ -14,6 +14,7 @@ import 'package:flinx/features/add_device/presentation/pages/smart_opener_device
 import 'package:flinx/features/add_device/presentation/pages/smart_opener_qr_scan_page.dart';
 import 'package:flinx/features/add_device/presentation/pages/smart_opener_scan_guide_page.dart';
 import 'package:flinx/features/add_device/presentation/pages/smart_opener_scan_results_page.dart';
+import 'package:flinx/features/device_control/presentation/pages/device_command_page.dart';
 import 'package:flinx/features/home/application/providers.dart';
 import 'package:flinx/features/home/domain/entities/home_scene.dart';
 import 'package:flinx/features/home/presentation/pages/home_page.dart';
@@ -34,7 +35,7 @@ void main() {
     await _pumpScanFlowTestApp(tester, AddDevicePage.routePath);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Smart Opener'));
+    await tester.tap(find.text('Smart Opener (Built-in Wi-Fi)'));
     await tester.pumpAndSettle();
 
     expect(
@@ -298,23 +299,58 @@ void main() {
     expect(find.text('SCAN RESULTS'), findsOneWidget);
   });
 
-  testWidgets('configure success opens success page and actions return home', (
-    tester,
-  ) async {
-    await _openChooseWifi(tester, scanDuration: scanDuration);
+  testWidgets(
+    'configure success opens success page and Try it opens bound door',
+    (tester) async {
+      await _openChooseWifi(tester, scanDuration: scanDuration);
 
-    await tester.tap(find.text('FLINX Office'));
-    await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextField), 'password123');
-    await _scrollToAction(tester, 'NEXT');
-    await _tapAction(tester, 'NEXT');
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('FLINX Office'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'password123');
+      await _scrollToAction(tester, 'NEXT');
+      await _tapAction(tester, 'NEXT');
+      await tester.pumpAndSettle();
 
-    expect(find.text('Connection successful'), findsOneWidget);
-    await tester.tap(find.widgetWithText(FilledButton, 'Try it'));
-    await tester.pumpAndSettle();
-    expect(find.byType(HomePage), findsOneWidget);
-  });
+      expect(find.text('Connection successful'), findsOneWidget);
+      await tester.tap(find.widgetWithText(FilledButton, 'Try it'));
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Device command door=1 device=mock-ble-device'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'success page share dialog opens in the screen center and closes',
+    (tester) async {
+      await _pumpScanFlowTestApp(
+        tester,
+        SmartOpenerConnectionSuccessPage.routePath,
+      );
+      await tester.pumpAndSettle();
+
+      await _scrollToAction(tester, 'To share');
+      await tester.tap(find.widgetWithText(FilledButton, 'To share'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('SHARE DEVICE'), findsOneWidget);
+      expect(find.byType(Dialog), findsOneWidget);
+      expect(find.byType(TextField), findsOneWidget);
+      final dialogCenter = tester.getCenter(find.byType(Dialog));
+      expect(dialogCenter.dy, closeTo(tester.view.physicalSize.height / 2, 80));
+
+      await tester.tap(find.widgetWithText(FilledButton, 'Cancel'));
+      await tester.pumpAndSettle();
+      expect(find.byType(Dialog), findsNothing);
+
+      await tester.tap(find.widgetWithText(FilledButton, 'To share'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Confirm'));
+      await tester.pumpAndSettle();
+      expect(find.byType(Dialog), findsNothing);
+    },
+  );
 
   testWidgets('connecting page fits a normal phone viewport', (tester) async {
     await _openChooseWifi(
@@ -481,6 +517,15 @@ Widget _scanFlowTestApp(
       GoRoute(
         path: SmartOpenerConnectionSuccessPage.routePath,
         builder: (context, state) => const SmartOpenerConnectionSuccessPage(),
+      ),
+      GoRoute(
+        path: DeviceCommandPage.routePath,
+        builder: (context, state) => Scaffold(
+          body: Text(
+            'Device command door=${state.uri.queryParameters['doorId']} '
+            'device=${state.uri.queryParameters['deviceId']}',
+          ),
+        ),
       ),
     ],
   );

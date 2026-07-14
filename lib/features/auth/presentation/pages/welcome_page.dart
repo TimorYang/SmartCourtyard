@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../../add_device/presentation/pages/smart_opener_connection_success_page.dart';
 import '../../../device_control/presentation/pages/device_settings_page.dart';
 import '../../../home/presentation/pages/choose_scene_page.dart';
 import '../../../security_center/presentation/pages/full_report_page.dart';
@@ -64,7 +65,8 @@ class WelcomePage extends StatelessWidget {
                     width: double.infinity,
                     child: FilledButton(
                       // onPressed: () => context.push(DeviceSharePage.routePath),
-                      onPressed: () => context.push(DeviceSettingsPage.routePath),
+                      // onPressed: () => context.push(DeviceSettingsPage.routePath),
+                      onPressed: () => context.push(SmartOpenerConnectionSuccessPage.routePath),
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.brandPrimary,
                         foregroundColor: AppColors.backgroundPrimary,

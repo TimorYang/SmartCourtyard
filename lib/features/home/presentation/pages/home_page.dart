@@ -886,7 +886,7 @@ class _DeviceEditingSheetState extends ConsumerState<_DeviceEditingSheet> {
         fallbackIcon: Icons.delete_outline_rounded,
         onPressed: () {
           Navigator.of(context).pop();
-          showDeviceDeleteDialog(widget.parentContext);
+          showDeviceDeleteDialog(widget.parentContext, device: widget.device);
         },
       ),
       _DeviceEditingAction(

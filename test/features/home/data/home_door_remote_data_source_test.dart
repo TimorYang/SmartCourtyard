@@ -105,6 +105,30 @@ void main() {
     );
   });
 
+  test('unbinds a door with request id', () async {
+    final api = _FakeHomeApi(
+      doorResponse: const ApiEnvelopeDto(
+        code: 200,
+        success: true,
+        data: <HomeDoorResponseDto>[],
+      ),
+      unbindResponse: const ApiEnvelopeDto(
+        code: 200,
+        success: true,
+        data: true,
+      ),
+    );
+    final dataSource = HomeDoorRemoteDataSourceImpl(api: api);
+
+    await dataSource.unbindDoor(doorId: 12, requestId: 'home-unbind-door-123');
+
+    expect(api.unbindDoorId, 12);
+    expect(
+      api.unbindOptions.extra?[NetworkRequestExtras.requestId],
+      'home-unbind-door-123',
+    );
+  });
+
   test('rejects unsuccessful business response', () async {
     final dataSource = HomeDoorRemoteDataSourceImpl(
       api: _FakeHomeApi(
@@ -152,14 +176,21 @@ void main() {
 }
 
 class _FakeHomeApi implements HomeApi {
-  _FakeHomeApi({required this.doorResponse, this.topResponse});
+  _FakeHomeApi({
+    required this.doorResponse,
+    this.topResponse,
+    this.unbindResponse,
+  });
 
   final ApiEnvelopeDto<List<HomeDoorResponseDto>> doorResponse;
   final ApiEnvelopeDto<bool>? topResponse;
+  final ApiEnvelopeDto<bool>? unbindResponse;
   late final Options options;
   late final int sceneId;
   late final Options topOptions;
   late final int topDoorId;
+  late final Options unbindOptions;
+  late final int unbindDoorId;
 
   @override
   Future<ApiEnvelopeDto<bool>> topDoor(
@@ -169,6 +200,17 @@ class _FakeHomeApi implements HomeApi {
     topDoorId = doorId;
     topOptions = requestOptions;
     return topResponse ??
+        const ApiEnvelopeDto<bool>(code: 200, success: true, data: true);
+  }
+
+  @override
+  Future<ApiEnvelopeDto<bool>> unbindDoor(
+    int doorId,
+    Options requestOptions,
+  ) async {
+    unbindDoorId = doorId;
+    unbindOptions = requestOptions;
+    return unbindResponse ??
         const ApiEnvelopeDto<bool>(code: 200, success: true, data: true);
   }
 
@@ -223,6 +265,11 @@ class _ThrowingHomeApi implements HomeApi {
 
   @override
   Future<ApiEnvelopeDto<bool>> topDoor(int doorId, Options options) {
+    throw error;
+  }
+
+  @override
+  Future<ApiEnvelopeDto<bool>> unbindDoor(int doorId, Options options) {
     throw error;
   }
 

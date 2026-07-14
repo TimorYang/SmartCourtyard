@@ -727,6 +727,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get smartOpenerTryAction => 'Try it';
 
   @override
+  String get smartOpenerShareDialogTitle => 'SHARE DEVICE';
+
+  @override
+  String get smartOpenerShareDialogDescription =>
+      'Enjoy the smart life with your family!';
+
+  @override
+  String get smartOpenerShareDialogAccountHint =>
+      'Email/Amazon account /Google account';
+
+  @override
+  String get smartOpenerDisconnectFailedMessage =>
+      'Unable to disconnect device. Scanning continues.';
+
+  @override
   String get chooseSceneTitle => 'CHOOSE A SCENE';
 
   @override

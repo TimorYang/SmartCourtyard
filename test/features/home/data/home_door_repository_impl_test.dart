@@ -80,6 +80,19 @@ void main() {
     expect(dataSource.topDoorId, 12);
     expect(dataSource.topRequestId, 'home-top-door-123');
   });
+
+  test('unbinds a door', () async {
+    final dataSource = _FakeHomeDoorRemoteDataSource(const []);
+    final repository = HomeDoorRepositoryImpl(
+      remoteDataSource: dataSource,
+      logger: const _NoopLogger(),
+    );
+
+    await repository.unbindDoor(doorId: 12, requestId: 'home-unbind-door-123');
+
+    expect(dataSource.unbindDoorId, 12);
+    expect(dataSource.unbindRequestId, 'home-unbind-door-123');
+  });
 }
 
 class _FakeHomeDoorRemoteDataSource implements HomeDoorRemoteDataSource {
@@ -88,11 +101,22 @@ class _FakeHomeDoorRemoteDataSource implements HomeDoorRemoteDataSource {
   final List<HomeDoorResponseDto> doors;
   int? topDoorId;
   String? topRequestId;
+  int? unbindDoorId;
+  String? unbindRequestId;
 
   @override
   Future<void> topDoor({required int doorId, required String requestId}) async {
     topDoorId = doorId;
     topRequestId = requestId;
+  }
+
+  @override
+  Future<void> unbindDoor({
+    required int doorId,
+    required String requestId,
+  }) async {
+    unbindDoorId = doorId;
+    unbindRequestId = requestId;
   }
 
   @override
@@ -111,6 +135,11 @@ class _FailingHomeDoorRemoteDataSource implements HomeDoorRemoteDataSource {
 
   @override
   Future<void> topDoor({required int doorId, required String requestId}) {
+    throw error;
+  }
+
+  @override
+  Future<void> unbindDoor({required int doorId, required String requestId}) {
     throw error;
   }
 

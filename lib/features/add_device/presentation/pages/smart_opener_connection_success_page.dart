@@ -1,21 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
-import '../../../home/presentation/pages/home_page.dart';
+import '../../application/providers.dart';
+import '../../../device_control/presentation/pages/device_command_page.dart';
 
-class SmartOpenerConnectionSuccessPage extends StatelessWidget {
+class SmartOpenerConnectionSuccessPage extends ConsumerWidget {
   const SmartOpenerConnectionSuccessPage({super.key});
 
   static const routeName = 'smart-opener-connection-success';
   static const routePath = '/add-device/smart-opener/success';
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final textTheme = Theme.of(context).textTheme;
+    final addDeviceState = ref.watch(addDeviceControllerProvider);
+    final onboardedDoor = addDeviceState.onboardedDoor;
+    final deviceId = addDeviceState.selectedDevice?.id ?? '';
 
     return Scaffold(
       backgroundColor: AppColors.backgroundPrimary,
@@ -42,7 +47,7 @@ class SmartOpenerConnectionSuccessPage extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: AppTextTokens.smartOpenerBodyCenter(textTheme),
                 ),
-                SizedBox(height: 76),
+                SizedBox(height: 80),
                 Padding(
                   padding: EdgeInsetsGeometry.only(left: 10, right: 10),
                   child: _SuccessFormRow(
@@ -70,7 +75,7 @@ class SmartOpenerConnectionSuccessPage extends StatelessWidget {
                   child: _SuccessActionButton(
                     label: l10n.smartOpenerShareAction,
                     isPrimary: false,
-                    onPressed: () => context.go(HomePage.routePath),
+                    onPressed: () => _showShareDialog(context),
                   ),
                 ),
                 const SizedBox(height: 19),
@@ -78,7 +83,20 @@ class SmartOpenerConnectionSuccessPage extends StatelessWidget {
                   padding: EdgeInsetsGeometry.only(left: 10, right: 10),
                   child: _SuccessActionButton(
                     label: l10n.smartOpenerTryAction,
-                    onPressed: () => context.go(HomePage.routePath),
+                    onPressed: onboardedDoor == null
+                        ? null
+                        : () {
+                            final doorId = Uri.encodeQueryComponent(
+                              onboardedDoor.id.toString(),
+                            );
+                            final encodedDeviceId = Uri.encodeQueryComponent(
+                              deviceId,
+                            );
+                            context.go(
+                              '${DeviceCommandPage.routePath}'
+                              '?doorId=$doorId&deviceId=$encodedDeviceId',
+                            );
+                          },
                   ),
                 ),
               ],
@@ -86,6 +104,14 @@ class SmartOpenerConnectionSuccessPage extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+
+  Future<void> _showShareDialog(BuildContext context) {
+    return showDialog<void>(
+      context: context,
+      barrierColor: AppColors.overlayStrong,
+      builder: (context) => const _ShareDeviceDialog(),
     );
   }
 }
@@ -96,13 +122,13 @@ class _SuccessCheck extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 108,
-      height: 108,
+      width: 80,
+      height: 80,
       decoration: const BoxDecoration(
         color: AppColors.smartOpenerSuccess,
         shape: BoxShape.circle,
       ),
-      child: const Icon(Icons.check, color: Colors.white, size: 60),
+      child: const Icon(Icons.check, color: Colors.white, size: 40),
     );
   }
 }
@@ -155,7 +181,7 @@ class _SuccessActionButton extends StatelessWidget {
   });
 
   final String label;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final bool isPrimary;
 
   @override
@@ -181,6 +207,129 @@ class _SuccessActionButton extends StatelessWidget {
               ? AppTextTokens.smartOpenerActionButton(textTheme)
               : AppTextTokens.smartOpenerSecondaryActionButton(textTheme),
         ),
+      ),
+    );
+  }
+}
+
+class _ShareDeviceDialog extends StatelessWidget {
+  const _ShareDeviceDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final textTheme = Theme.of(context).textTheme;
+
+    return Dialog(
+      backgroundColor: AppColors.backgroundPrimary,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 0),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 360),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(18, 20, 18, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.smartOpenerShareDialogTitle,
+                style: AppTextTokens.smartOpenerShareDialogTitle(textTheme),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.smartOpenerShareDialogDescription,
+                style: AppTextTokens.smartOpenerShareDialogDescription(
+                  textTheme,
+                ),
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                height: 38,
+                child: TextField(
+                  keyboardType: TextInputType.emailAddress,
+                  style: AppTextTokens.smartOpenerShareDialogAccountHint(
+                    textTheme,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: l10n.smartOpenerShareDialogAccountHint,
+                    hintStyle: AppTextTokens.smartOpenerShareDialogAccountHint(
+                      textTheme,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(22),
+                      borderSide: const BorderSide(
+                        color: AppColors.deviceShareFieldBorder,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(22),
+                      borderSide: const BorderSide(
+                        color: AppColors.brandPrimary,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 22),
+              Row(
+                children: [
+                  Expanded(
+                    child: _ShareDialogActionButton(
+                      label: l10n.smartOpenerCancelAction,
+                      backgroundColor: AppColors.deviceShareCancelButton,
+                      foregroundColor: AppColors.textPrimary,
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ),
+                  const SizedBox(width: 30),
+                  Expanded(
+                    child: _ShareDialogActionButton(
+                      label: l10n.smartOpenerConfirmAction,
+                      backgroundColor: AppColors.brandPrimary,
+                      foregroundColor: Colors.white,
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ShareDialogActionButton extends StatelessWidget {
+  const _ShareDialogActionButton({
+    required this.label,
+    required this.backgroundColor,
+    required this.foregroundColor,
+    required this.onPressed,
+  });
+
+  final String label;
+  final Color backgroundColor;
+  final Color foregroundColor;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 52,
+      child: FilledButton(
+        onPressed: onPressed,
+        style: FilledButton.styleFrom(
+          backgroundColor: backgroundColor,
+          foregroundColor: foregroundColor,
+          shape: const StadiumBorder(),
+          textStyle: AppTextTokens.smartOpenerShareDialogAccountHint2(
+            Theme.of(context).textTheme,
+          ).copyWith(fontWeight: FontWeight.w500),
+        ),
+        child: Text(label),
       ),
     );
   }

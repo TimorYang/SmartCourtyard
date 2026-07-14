@@ -1495,6 +1495,42 @@ class AppTextTokens {
     );
   }
 
+  static TextStyle smartOpenerShareDialogTitle(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textSecondary,
+      fontSize: 20,
+      fontWeight: FontWeight.w600,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle smartOpenerShareDialogDescription(TextTheme textTheme) {
+    return (textTheme.bodySmall ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 13,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle smartOpenerShareDialogAccountHint(TextTheme textTheme) {
+    return (textTheme.bodySmall ?? const TextStyle()).copyWith(
+      color: AppColors.textHint,
+      fontSize: 15,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle smartOpenerShareDialogAccountHint2(TextTheme textTheme) {
+    return (textTheme.bodySmall ?? const TextStyle()).copyWith(
+      color: AppColors.textHint,
+      fontSize: 18,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
   static TextStyle smartOpenerSheetTitle(TextTheme textTheme) {
     return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
@@ -1518,8 +1554,8 @@ class AppTextTokens {
   static TextStyle smartOpenerBodyCenter(TextTheme textTheme) {
     return (textTheme.titleLarge ?? const TextStyle()).copyWith(
       color: AppColors.textMuted,
-      fontSize: 14,
-      fontWeight: FontWeight.w300,
+      fontSize: 13,
+      fontWeight: FontWeight.w400,
       height: 1,
       letterSpacing: 0,
     );

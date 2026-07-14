@@ -7,4 +7,6 @@ abstract interface class HomeDoorRepository {
   });
 
   Future<void> topDoor({required int doorId, required String requestId});
+
+  Future<void> unbindDoor({required int doorId, required String requestId});
 }

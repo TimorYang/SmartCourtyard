@@ -814,6 +814,10 @@
   "smartOpenerInviteFamilyTip": "Invite the family to use it",
   "smartOpenerShareAction": "To share",
   "smartOpenerTryAction": "Try it",
+  "smartOpenerShareDialogTitle": "SHARE DEVICE",
+  "smartOpenerShareDialogDescription": "Enjoy the smart life with your family!",
+  "smartOpenerShareDialogAccountHint": "Email/Amazon account /Google account",
+  "smartOpenerDisconnectFailedMessage": "Unable to disconnect device. Scanning continues.",
   "chooseSceneTitle": "CHOOSE A SCENE",
   "@chooseSceneTitle": {
     "description": "Choose scene page title"

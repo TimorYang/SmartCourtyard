@@ -12,6 +12,8 @@ abstract interface class HomeDoorRemoteDataSource {
   });
 
   Future<void> topDoor({required int doorId, required String requestId});
+
+  Future<void> unbindDoor({required int doorId, required String requestId});
 }
 
 class HomeDoorRemoteDataSourceImpl implements HomeDoorRemoteDataSource {
@@ -47,6 +49,28 @@ class HomeDoorRemoteDataSourceImpl implements HomeDoorRemoteDataSource {
   Future<void> topDoor({required int doorId, required String requestId}) async {
     try {
       final response = await api.topDoor(
+        doorId,
+        Options(extra: {NetworkRequestExtras.requestId: requestId}),
+      );
+      if (!_isSuccessCode(response.code) || !response.success) {
+        throw const HomeDoorRemoteException.invalidResponse();
+      }
+    } on DioException catch (error) {
+      throw HomeDoorRemoteException.fromNetwork(
+        NetworkException.fromDio(error),
+      );
+    } on HomeDoorRemoteException {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> unbindDoor({
+    required int doorId,
+    required String requestId,
+  }) async {
+    try {
+      final response = await api.unbindDoor(
         doorId,
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );

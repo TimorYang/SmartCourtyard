@@ -696,6 +696,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get smartOpenerTryAction => '试一下';
 
   @override
+  String get smartOpenerShareDialogTitle => '分享设备';
+
+  @override
+  String get smartOpenerShareDialogDescription => '与家人一起享受智能生活！';
+
+  @override
+  String get smartOpenerShareDialogAccountHint => '邮箱/Amazon 账号/Google 账号';
+
+  @override
+  String get smartOpenerDisconnectFailedMessage => '设备断开失败，仍将继续扫描。';
+
+  @override
   String get chooseSceneTitle => '选择场景';
 
   @override

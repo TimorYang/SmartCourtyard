@@ -2,7 +2,7 @@
 ///
 /// Keep these disabled unless a developer explicitly needs to inspect traffic.
 abstract final class NetworkDebugSettings {
-  static const proxy = 'PROXY 192.168.10.154:8887';
+  static const proxy = 'PROXY 192.168.1.66:8887';
   // static const proxy = '';
 
   /// Never enable this outside a short-lived, local debugging session.

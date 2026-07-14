@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/errors/app_error.dart';
 import '../../../platform_bridge/hardware_gateway.dart';
 import '../../../platform_bridge/hardware_models.dart';
+import '../domain/entities/onboarded_force_door.dart';
 import '../domain/use_cases/add_force_door_use_case.dart';
 import '../domain/use_cases/fetch_onboarding_device_key_use_case.dart';
 import 'ble_auth_token.dart';
@@ -25,6 +26,7 @@ class AddDeviceState {
     required this.wifiPassword,
     required this.wifiNetworks,
     this.selectedDevice,
+    this.onboardedDoor,
     this.errorMessage,
     this.infoMessage,
   });
@@ -55,6 +57,7 @@ class AddDeviceState {
   final String wifiPassword;
   final List<WifiNetwork> wifiNetworks;
   final BleDevice? selectedDevice;
+  final OnboardedForceDoor? onboardedDoor;
   final String? errorMessage;
   final String? infoMessage;
 
@@ -81,6 +84,8 @@ class AddDeviceState {
     List<WifiNetwork>? wifiNetworks,
     BleDevice? selectedDevice,
     bool clearSelectedDevice = false,
+    OnboardedForceDoor? onboardedDoor,
+    bool clearOnboardedDoor = false,
     String? errorMessage,
     bool clearErrorMessage = false,
     String? infoMessage,
@@ -100,6 +105,9 @@ class AddDeviceState {
       selectedDevice: clearSelectedDevice
           ? null
           : selectedDevice ?? this.selectedDevice,
+      onboardedDoor: clearOnboardedDoor
+          ? null
+          : onboardedDoor ?? this.onboardedDoor,
       errorMessage: clearErrorMessage
           ? null
           : errorMessage ?? this.errorMessage,
@@ -185,6 +193,7 @@ class AddDeviceController extends Notifier<AddDeviceState> {
       devices: const <String, BleDevice>{},
       connectionStates: const <String, BleConnectionState>{},
       clearSelectedDevice: true,
+      clearOnboardedDoor: true,
       clearErrorMessage: true,
       clearInfoMessage: true,
     );
@@ -232,6 +241,37 @@ class AddDeviceController extends Notifier<AddDeviceState> {
         state = state.copyWith(isScanning: false, infoMessage: '蓝牙扫描已停止');
       }
     }
+  }
+
+  Future<bool> disconnectConnectedBleDevices() async {
+    final connectedDeviceIds = state.connectionStates.entries
+        .where((entry) => entry.value == BleConnectionState.connected)
+        .map((entry) => entry.key)
+        .toList(growable: false);
+    if (connectedDeviceIds.isEmpty) {
+      return true;
+    }
+
+    var allDisconnected = true;
+    final nextStates = Map<String, BleConnectionState>.from(
+      state.connectionStates,
+    );
+    for (final deviceId in connectedDeviceIds) {
+      try {
+        final event = await _gateway.disconnectBleDevice(
+          requestId: _nextRequestId('ble-disconnect'),
+          deviceId: deviceId,
+        );
+        nextStates[deviceId] = event.state;
+      } catch (_) {
+        allDisconnected = false;
+      }
+    }
+    state = state.copyWith(
+      connectionStates: nextStates,
+      infoMessage: allDisconnected ? '已断开当前蓝牙设备' : '部分蓝牙设备断开失败，仍将继续扫描',
+    );
+    return allDisconnected;
   }
 
   Future<bool> connectAndAuthenticate(BleDevice device) async {
@@ -408,11 +448,15 @@ class AddDeviceController extends Notifier<AddDeviceState> {
       }
 
       state = state.copyWith(infoMessage: '设备配网成功，正在绑定账号...');
-      await _addForceDoorUseCase(
+      final onboardedDoor = await _addForceDoorUseCase(
         sn: sn,
         requestId: _nextRequestId('bind-door'),
       );
-      state = state.copyWith(isProvisioningWifi: false, infoMessage: '设备绑定成功');
+      state = state.copyWith(
+        isProvisioningWifi: false,
+        onboardedDoor: onboardedDoor,
+        infoMessage: '设备绑定成功',
+      );
       return true;
     } on AppError catch (error) {
       state = state.copyWith(

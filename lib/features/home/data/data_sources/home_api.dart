@@ -29,6 +29,12 @@ abstract class HomeApi {
     @DioOptions() Options options,
   );
 
+  @DELETE('app/doors/{doorId}')
+  Future<ApiEnvelopeDto<bool>> unbindDoor(
+    @Path('doorId') int doorId,
+    @DioOptions() Options options,
+  );
+
   @POST('app/scenes')
   Future<ApiEnvelopeDto<HomeSceneResponseDto>> createScene(
     @Body() CreateHomeSceneRequestDto request,

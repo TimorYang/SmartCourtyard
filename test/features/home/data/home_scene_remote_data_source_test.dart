@@ -172,6 +172,15 @@ class _FakeHomeApi implements HomeApi {
   }
 
   @override
+  Future<ApiEnvelopeDto<bool>> unbindDoor(
+    int doorId,
+    Options requestOptions,
+  ) async {
+    options = requestOptions;
+    return const ApiEnvelopeDto<bool>(code: 200, success: true, data: true);
+  }
+
+  @override
   Future<ApiEnvelopeDto<List<HomeSceneResponseDto>>> fetchScenes(
     Options requestOptions,
   ) async {
@@ -230,6 +239,11 @@ class _ThrowingHomeApi implements HomeApi {
 
   @override
   Future<ApiEnvelopeDto<bool>> topDoor(int doorId, Options options) {
+    throw error;
+  }
+
+  @override
+  Future<ApiEnvelopeDto<bool>> unbindDoor(int doorId, Options options) {
     throw error;
   }
 

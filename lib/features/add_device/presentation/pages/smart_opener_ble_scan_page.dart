@@ -48,7 +48,7 @@ class _SmartOpenerBleScanPageState extends ConsumerState<SmartOpenerBleScanPage>
       if (!mounted) {
         return;
       }
-      _startTimedScan();
+      unawaited(_prepareAndStartTimedScan());
     });
   }
 
@@ -68,8 +68,27 @@ class _SmartOpenerBleScanPageState extends ConsumerState<SmartOpenerBleScanPage>
       return;
     }
     if (state == AppLifecycleState.resumed && !_hasCompletedScan) {
-      _startTimedScan(clearResults: false);
+      unawaited(_prepareAndStartTimedScan(clearResults: false));
     }
+  }
+
+  Future<void> _prepareAndStartTimedScan({bool clearResults = true}) async {
+    final allDisconnected = await _controller.disconnectConnectedBleDevices();
+    if (!mounted) {
+      return;
+    }
+    if (!allDisconnected) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).smartOpenerDisconnectFailedMessage,
+            ),
+          ),
+        );
+    }
+    _startTimedScan(clearResults: clearResults);
   }
 
   void _startTimedScan({bool clearResults = true}) {
