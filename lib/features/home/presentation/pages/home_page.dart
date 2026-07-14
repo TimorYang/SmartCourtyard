@@ -822,7 +822,7 @@ class _DeviceCard extends StatelessWidget {
   }
 }
 
-class _DeviceEditingSheet extends StatelessWidget {
+class _DeviceEditingSheet extends ConsumerStatefulWidget {
   const _DeviceEditingSheet({
     required this.device,
     required this.parentContext,
@@ -830,6 +830,14 @@ class _DeviceEditingSheet extends StatelessWidget {
 
   final DeviceSummary device;
   final BuildContext parentContext;
+
+  @override
+  ConsumerState<_DeviceEditingSheet> createState() =>
+      _DeviceEditingSheetState();
+}
+
+class _DeviceEditingSheetState extends ConsumerState<_DeviceEditingSheet> {
+  var _isTopping = false;
 
   @override
   Widget build(BuildContext context) {
@@ -840,6 +848,8 @@ class _DeviceEditingSheet extends StatelessWidget {
         label: l10n.homeDeviceEditTopAction,
         assetPath: HomeAssetPaths.deviceEditTopIcon,
         fallbackIcon: Icons.vertical_align_top_rounded,
+        isPending: _isTopping,
+        onPressed: _isTopping ? null : _topDevice,
       ),
       _DeviceEditingAction(
         label: l10n.homeDeviceEditShareAction,
@@ -867,7 +877,7 @@ class _DeviceEditingSheet extends StatelessWidget {
         fallbackIcon: Icons.drive_file_rename_outline_rounded,
         onPressed: () {
           Navigator.of(context).pop();
-          showDeviceNameDialog(parentContext);
+          showDeviceNameDialog(widget.parentContext);
         },
       ),
       _DeviceEditingAction(
@@ -876,7 +886,7 @@ class _DeviceEditingSheet extends StatelessWidget {
         fallbackIcon: Icons.delete_outline_rounded,
         onPressed: () {
           Navigator.of(context).pop();
-          showDeviceDeleteDialog(parentContext);
+          showDeviceDeleteDialog(widget.parentContext);
         },
       ),
       _DeviceEditingAction(
@@ -885,7 +895,7 @@ class _DeviceEditingSheet extends StatelessWidget {
         fallbackIcon: Icons.image_outlined,
         onPressed: () {
           Navigator.of(context).pop();
-          showDeviceCustomizeDialog(parentContext);
+          showDeviceCustomizeDialog(widget.parentContext);
         },
       ),
     ];
@@ -903,7 +913,7 @@ class _DeviceEditingSheet extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  _DeviceDoorIcon(deviceName: device.name),
+                  _DeviceDoorIcon(deviceName: widget.device.name),
                   const SizedBox(width: 14),
                   Expanded(
                     child: Column(
@@ -917,7 +927,7 @@ class _DeviceEditingSheet extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          device.name,
+                          widget.device.name,
                           style: AppTextTokens.homeDeviceEditingSubtitle(
                             textTheme,
                           ),
@@ -939,6 +949,46 @@ class _DeviceEditingSheet extends StatelessWidget {
       ),
     );
   }
+
+  Future<void> _topDevice() async {
+    final doorId = int.tryParse(widget.device.id);
+    if (doorId == null) {
+      _showTopFailure();
+      return;
+    }
+
+    setState(() {
+      _isTopping = true;
+    });
+    final requestId =
+        'home-top-door-$doorId-${DateTime.now().toUtc().microsecondsSinceEpoch}';
+    try {
+      await ref.read(topHomeDoorUseCaseProvider)(
+        doorId: doorId,
+        requestId: requestId,
+      );
+      ref.invalidate(homeDevicesProvider);
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    } catch (_) {
+      if (mounted) {
+        _showTopFailure();
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isTopping = false;
+        });
+      }
+    }
+  }
+
+  void _showTopFailure() {
+    ScaffoldMessenger.of(widget.parentContext)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(const SnackBar(content: Text('Failed to top device')));
+  }
 }
 
 class _DeviceEditingAction {
@@ -946,12 +996,14 @@ class _DeviceEditingAction {
     required this.label,
     required this.assetPath,
     required this.fallbackIcon,
+    this.isPending = false,
     this.onPressed,
   });
 
   final String label;
   final String assetPath;
   final IconData fallbackIcon;
+  final bool isPending;
   final VoidCallback? onPressed;
 }
 
@@ -963,7 +1015,7 @@ class _DeviceEditingActionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: action.onPressed,
+      onTap: action.isPending ? null : action.onPressed,
       child: SizedBox(
         height: 62,
         child: Row(
@@ -978,11 +1030,17 @@ class _DeviceEditingActionTile extends StatelessWidget {
                 ),
               ),
             ),
-            const Icon(
-              Icons.chevron_right_rounded,
-              color: AppColors.textPrimary,
-              size: 25,
-            ),
+            action.isPending
+                ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppColors.textPrimary,
+                    size: 25,
+                  ),
           ],
         ),
       ),

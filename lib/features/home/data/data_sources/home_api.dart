@@ -23,6 +23,12 @@ abstract class HomeApi {
     @DioOptions() Options options,
   );
 
+  @PUT('app/doors/{doorId}/top')
+  Future<ApiEnvelopeDto<bool>> topDoor(
+    @Path('doorId') int doorId,
+    @DioOptions() Options options,
+  );
+
   @POST('app/scenes')
   Future<ApiEnvelopeDto<HomeSceneResponseDto>> createScene(
     @Body() CreateHomeSceneRequestDto request,

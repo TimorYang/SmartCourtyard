@@ -16,6 +16,7 @@ import '../domain/use_cases/delete_home_scene_use_case.dart';
 import '../domain/use_cases/fetch_home_doors_use_case.dart';
 import '../domain/use_cases/fetch_home_scenes_use_case.dart';
 import '../domain/use_cases/rename_home_scene_use_case.dart';
+import '../domain/use_cases/top_home_door_use_case.dart';
 
 final homeApiProvider = Provider<HomeApi>((ref) {
   return HomeApi(ref.watch(dioProvider));
@@ -53,6 +54,10 @@ final fetchHomeDoorsUseCaseProvider = Provider<FetchHomeDoorsUseCase>((ref) {
   return FetchHomeDoorsUseCase(
     repository: ref.watch(homeDoorRepositoryProvider),
   );
+});
+
+final topHomeDoorUseCaseProvider = Provider<TopHomeDoorUseCase>((ref) {
+  return TopHomeDoorUseCase(repository: ref.watch(homeDoorRepositoryProvider));
 });
 
 final createHomeSceneUseCaseProvider = Provider<CreateHomeSceneUseCase>((ref) {

@@ -68,7 +68,7 @@ void main() {
     );
   });
 
-  test('accepts code 0 response', () async {
+  test('rejects code 0 response', () async {
     final dataSource = HomeDoorRemoteDataSourceImpl(
       api: _FakeHomeApi(
         doorResponse: const ApiEnvelopeDto(
@@ -79,12 +79,30 @@ void main() {
       ),
     );
 
-    final doors = await dataSource.fetchDoors(
-      sceneId: 7,
-      requestId: 'home-doors-123',
+    await expectLater(
+      dataSource.fetchDoors(sceneId: 7, requestId: 'home-doors-123'),
+      throwsA(isA<HomeDoorRemoteException>()),
     );
+  });
 
-    expect(doors, isEmpty);
+  test('tops a door with request id', () async {
+    final api = _FakeHomeApi(
+      doorResponse: const ApiEnvelopeDto(
+        code: 200,
+        success: true,
+        data: <HomeDoorResponseDto>[],
+      ),
+      topResponse: const ApiEnvelopeDto(code: 200, success: true, data: true),
+    );
+    final dataSource = HomeDoorRemoteDataSourceImpl(api: api);
+
+    await dataSource.topDoor(doorId: 12, requestId: 'home-top-door-123');
+
+    expect(api.topDoorId, 12);
+    expect(
+      api.topOptions.extra?[NetworkRequestExtras.requestId],
+      'home-top-door-123',
+    );
   });
 
   test('rejects unsuccessful business response', () async {
@@ -134,11 +152,25 @@ void main() {
 }
 
 class _FakeHomeApi implements HomeApi {
-  _FakeHomeApi({required this.doorResponse});
+  _FakeHomeApi({required this.doorResponse, this.topResponse});
 
   final ApiEnvelopeDto<List<HomeDoorResponseDto>> doorResponse;
+  final ApiEnvelopeDto<bool>? topResponse;
   late final Options options;
   late final int sceneId;
+  late final Options topOptions;
+  late final int topDoorId;
+
+  @override
+  Future<ApiEnvelopeDto<bool>> topDoor(
+    int doorId,
+    Options requestOptions,
+  ) async {
+    topDoorId = doorId;
+    topOptions = requestOptions;
+    return topResponse ??
+        const ApiEnvelopeDto<bool>(code: 200, success: true, data: true);
+  }
 
   @override
   Future<ApiEnvelopeDto<List<HomeDoorResponseDto>>> fetchDoors(
@@ -188,6 +220,11 @@ class _ThrowingHomeApi implements HomeApi {
   const _ThrowingHomeApi(this.error);
 
   final DioException error;
+
+  @override
+  Future<ApiEnvelopeDto<bool>> topDoor(int doorId, Options options) {
+    throw error;
+  }
 
   @override
   Future<ApiEnvelopeDto<List<HomeDoorResponseDto>>> fetchDoors(

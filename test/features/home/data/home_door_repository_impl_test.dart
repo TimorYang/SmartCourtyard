@@ -11,7 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   test('maps door dto to device summary', () async {
     final repository = HomeDoorRepositoryImpl(
-      remoteDataSource: const _FakeHomeDoorRemoteDataSource([
+      remoteDataSource: _FakeHomeDoorRemoteDataSource([
         HomeDoorResponseDto(
           id: 12,
           name: 'Main Gate',
@@ -67,12 +67,33 @@ void main() {
       ),
     );
   });
+
+  test('tops a door', () async {
+    final dataSource = _FakeHomeDoorRemoteDataSource(const []);
+    final repository = HomeDoorRepositoryImpl(
+      remoteDataSource: dataSource,
+      logger: const _NoopLogger(),
+    );
+
+    await repository.topDoor(doorId: 12, requestId: 'home-top-door-123');
+
+    expect(dataSource.topDoorId, 12);
+    expect(dataSource.topRequestId, 'home-top-door-123');
+  });
 }
 
 class _FakeHomeDoorRemoteDataSource implements HomeDoorRemoteDataSource {
-  const _FakeHomeDoorRemoteDataSource(this.doors);
+  _FakeHomeDoorRemoteDataSource(this.doors);
 
   final List<HomeDoorResponseDto> doors;
+  int? topDoorId;
+  String? topRequestId;
+
+  @override
+  Future<void> topDoor({required int doorId, required String requestId}) async {
+    topDoorId = doorId;
+    topRequestId = requestId;
+  }
 
   @override
   Future<List<HomeDoorResponseDto>> fetchDoors({
@@ -87,6 +108,11 @@ class _FailingHomeDoorRemoteDataSource implements HomeDoorRemoteDataSource {
   const _FailingHomeDoorRemoteDataSource(this.error);
 
   final HomeDoorRemoteException error;
+
+  @override
+  Future<void> topDoor({required int doorId, required String requestId}) {
+    throw error;
+  }
 
   @override
   Future<List<HomeDoorResponseDto>> fetchDoors({

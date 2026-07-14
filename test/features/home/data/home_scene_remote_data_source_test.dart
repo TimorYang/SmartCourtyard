@@ -163,6 +163,15 @@ class _FakeHomeApi implements HomeApi {
   late CreateHomeSceneRequestDto createRequest;
 
   @override
+  Future<ApiEnvelopeDto<bool>> topDoor(
+    int doorId,
+    Options requestOptions,
+  ) async {
+    options = requestOptions;
+    return const ApiEnvelopeDto<bool>(code: 200, success: true, data: true);
+  }
+
+  @override
   Future<ApiEnvelopeDto<List<HomeSceneResponseDto>>> fetchScenes(
     Options requestOptions,
   ) async {
@@ -218,6 +227,11 @@ class _ThrowingHomeApi implements HomeApi {
   const _ThrowingHomeApi(this.error);
 
   final DioException error;
+
+  @override
+  Future<ApiEnvelopeDto<bool>> topDoor(int doorId, Options options) {
+    throw error;
+  }
 
   @override
   Future<ApiEnvelopeDto<List<HomeSceneResponseDto>>> fetchScenes(

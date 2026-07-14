@@ -5,4 +5,6 @@ abstract interface class HomeDoorRepository {
     required int sceneId,
     required String requestId,
   });
+
+  Future<void> topDoor({required int doorId, required String requestId});
 }

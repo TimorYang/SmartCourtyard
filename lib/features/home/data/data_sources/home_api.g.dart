@@ -98,6 +98,36 @@ class _HomeApi implements HomeApi {
   }
 
   @override
+  Future<ApiEnvelopeDto<bool>> topDoor(int doorId, Options options) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final newOptions = newRequestOptions(options);
+    newOptions.extra.addAll(_extra);
+    newOptions.headers.addAll(_dio.options.headers);
+    newOptions.headers.addAll(_headers);
+    final _options = newOptions.copyWith(
+      method: 'PUT',
+      baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl),
+      queryParameters: queryParameters,
+      path: 'app/doors/${doorId}/top',
+    )..data = _data;
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late ApiEnvelopeDto<bool> _value;
+    try {
+      _value = ApiEnvelopeDto<bool>.fromJson(
+        _result.data!,
+        (json) => json as bool,
+      );
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, response: _result);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
   Future<ApiEnvelopeDto<HomeSceneResponseDto>> createScene(
     CreateHomeSceneRequestDto request,
     Options options,

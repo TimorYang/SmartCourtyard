@@ -42,6 +42,27 @@ class HomeDoorRepositoryImpl implements HomeDoorRepository {
     }
   }
 
+  @override
+  Future<void> topDoor({required int doorId, required String requestId}) async {
+    try {
+      await remoteDataSource.topDoor(doorId: doorId, requestId: requestId);
+      logger.info(
+        'Topped home door.',
+        requestId: requestId,
+        context: {'doorId': doorId},
+      );
+    } on HomeDoorRemoteException catch (error, stackTrace) {
+      logger.error(
+        'Failed to top home door.',
+        requestId: requestId,
+        error: error,
+        stackTrace: stackTrace,
+        context: {'doorId': doorId, 'statusCode': error.statusCode},
+      );
+      throw _mapError(error, requestId);
+    }
+  }
+
   AppError _mapError(HomeDoorRemoteException error, String requestId) {
     if (error.kind == HomeDoorRemoteErrorKind.network) {
       return AppError(
