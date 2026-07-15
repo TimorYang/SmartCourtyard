@@ -1904,6 +1904,66 @@ abstract class AppLocalizations {
   /// **'Confirm'**
   String get deviceSettingsConfirmAction;
 
+  /// No description provided for @transmitterManagementTipsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tips'**
+  String get transmitterManagementTipsTitle;
+
+  /// No description provided for @transmitterManagementSafetyTip.
+  ///
+  /// In en, this message translates to:
+  /// **'1. For safety consideration, we suggest to manage all the transmitters through the app.'**
+  String get transmitterManagementSafetyTip;
+
+  /// No description provided for @transmitterManagementHowToTip.
+  ///
+  /// In en, this message translates to:
+  /// **'2. How to manage the transmitters?\nJust relearning the transmitter through the app.'**
+  String get transmitterManagementHowToTip;
+
+  /// No description provided for @transmitterManagementEditAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit transmitter'**
+  String get transmitterManagementEditAction;
+
+  /// No description provided for @transmitterManagementDeleteAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete transmitter'**
+  String get transmitterManagementDeleteAction;
+
+  /// No description provided for @transmitterManagementAddAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add transmitter'**
+  String get transmitterManagementAddAction;
+
+  /// No description provided for @transmitterManagementInfoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Transmitter info'**
+  String get transmitterManagementInfoTitle;
+
+  /// No description provided for @transmitterManagementNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Input transmitter name'**
+  String get transmitterManagementNameHint;
+
+  /// No description provided for @transmitterManagementDeletePromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Prompt'**
+  String get transmitterManagementDeletePromptTitle;
+
+  /// No description provided for @transmitterManagementDeletePromptMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Please confirm whether you want to delete the transmitter'**
+  String get transmitterManagementDeletePromptMessage;
+
   /// No description provided for @deviceSettingsMinutes.
   ///
   /// In en, this message translates to:

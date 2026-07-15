@@ -1002,6 +1002,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deviceSettingsConfirmAction => 'Confirm';
 
   @override
+  String get transmitterManagementTipsTitle => 'Tips';
+
+  @override
+  String get transmitterManagementSafetyTip =>
+      '1. For safety consideration, we suggest to manage all the transmitters through the app.';
+
+  @override
+  String get transmitterManagementHowToTip =>
+      '2. How to manage the transmitters?\nJust relearning the transmitter through the app.';
+
+  @override
+  String get transmitterManagementEditAction => 'Edit transmitter';
+
+  @override
+  String get transmitterManagementDeleteAction => 'Delete transmitter';
+
+  @override
+  String get transmitterManagementAddAction => 'Add transmitter';
+
+  @override
+  String get transmitterManagementInfoTitle => 'Transmitter info';
+
+  @override
+  String get transmitterManagementNameHint => 'Input transmitter name';
+
+  @override
+  String get transmitterManagementDeletePromptTitle => 'Prompt';
+
+  @override
+  String get transmitterManagementDeletePromptMessage =>
+      'Please confirm whether you want to delete the transmitter';
+
+  @override
   String deviceSettingsMinutes(int minutes) {
     return '$minutes min';
   }

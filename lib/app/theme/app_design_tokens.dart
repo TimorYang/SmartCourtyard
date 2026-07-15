@@ -63,6 +63,9 @@ class AppColors {
   static const deviceSettingsCancelAction = Color(0xFFF1F3F5);
   static const deviceSettingsForceMarginWarningText = Color(0xFFE26B65);
   static const deviceSettingsForceMarginConfirm = Color(0xFF0066FF);
+  static const transmitterManagementActionSurface = Color(0xFFF1F3F5);
+  static const transmitterManagementPrimaryAction = Color(0xFF151D27);
+  static const transmitterManagementSheetInputBorder = Color(0xFFD8DADD);
   static const deviceDetailNavigationBackground = Color(0xFFFDFDFD);
   static const deviceDetailNavigationDivider = Color(0xFFE6E7EB);
   static const deviceDetailNavigationSelected = Color(0xFF34383F);
@@ -823,6 +826,78 @@ class AppTextTokens {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
       fontSize: 16,
       fontWeight: FontWeight.w500,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle transmitterManagementRowTitle(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 15,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle transmitterManagementTitle(TextTheme textTheme) {
+    return (textTheme.headlineLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 27,
+      fontWeight: FontWeight.w600,
+      height: 1.1,
+    );
+  }
+
+  static TextStyle transmitterManagementTipsTitle(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 15,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle transmitterManagementTipsBody(TextTheme textTheme) {
+    return (textTheme.bodyLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 11.5,
+      fontWeight: FontWeight.w400,
+      height: 1.7,
+    );
+  }
+
+  static TextStyle transmitterManagementSheetTitle(TextTheme textTheme) {
+    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 26,
+      fontWeight: FontWeight.w400,
+      height: 1.15,
+    );
+  }
+
+  static TextStyle transmitterManagementSheetBody(TextTheme textTheme) {
+    return (textTheme.bodyLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 14,
+      fontWeight: FontWeight.w400,
+      height: 1.4,
+    );
+  }
+
+  static TextStyle transmitterManagementSheetInput(TextTheme textTheme) {
+    return (textTheme.bodyLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 16,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle transmitterManagementSheetButton(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.backgroundPrimary,
+      fontSize: 18,
+      fontWeight: FontWeight.w400,
       height: 1.2,
     );
   }

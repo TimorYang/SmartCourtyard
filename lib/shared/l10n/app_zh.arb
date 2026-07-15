@@ -311,6 +311,16 @@
   "deviceSettingsAnyPosition": "任意位置",
   "deviceSettingsCancelAction": "取消",
   "deviceSettingsConfirmAction": "确认",
+  "transmitterManagementTipsTitle": "提示",
+  "transmitterManagementSafetyTip": "1. 为确保安全，建议通过 App 管理所有遥控器。",
+  "transmitterManagementHowToTip": "2. 如何管理遥控器？\n请通过 App 重新学习遥控器。",
+  "transmitterManagementEditAction": "编辑遥控器",
+  "transmitterManagementDeleteAction": "删除遥控器",
+  "transmitterManagementAddAction": "添加遥控器",
+  "transmitterManagementInfoTitle": "遥控器信息",
+  "transmitterManagementNameHint": "输入遥控器名称",
+  "transmitterManagementDeletePromptTitle": "提示",
+  "transmitterManagementDeletePromptMessage": "请确认是否删除该遥控器",
   "deviceSettingsMinutes": "{minutes} 分钟",
   "@deviceSettingsMinutes": {
     "placeholders": {

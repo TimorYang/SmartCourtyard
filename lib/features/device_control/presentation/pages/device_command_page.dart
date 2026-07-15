@@ -174,14 +174,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
               ),
             ),
             const SizedBox(height: 16),
-            if (commandState.isLoadingDoorDetail) ...[
-              const _CommandFeedback(
-                message: '正在加载门详情...',
-                icon: Icons.info_outline,
-                foregroundColor: AppColors.textMuted,
-              ),
-              const SizedBox(height: 12),
-            ] else if (commandState.doorDetailErrorMessage != null) ...[
+            if (commandState.doorDetailErrorMessage != null) ...[
               _CommandFeedback(
                 message: commandState.doorDetailErrorMessage!,
                 icon: Icons.error_outline,

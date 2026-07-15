@@ -1036,6 +1036,16 @@
   "deviceSettingsAnyPosition": "Any position",
   "deviceSettingsCancelAction": "Cancel",
   "deviceSettingsConfirmAction": "Confirm",
+  "transmitterManagementTipsTitle": "Tips",
+  "transmitterManagementSafetyTip": "1. For safety consideration, we suggest to manage all the transmitters through the app.",
+  "transmitterManagementHowToTip": "2. How to manage the transmitters?\nJust relearning the transmitter through the app.",
+  "transmitterManagementEditAction": "Edit transmitter",
+  "transmitterManagementDeleteAction": "Delete transmitter",
+  "transmitterManagementAddAction": "Add transmitter",
+  "transmitterManagementInfoTitle": "Transmitter info",
+  "transmitterManagementNameHint": "Input transmitter name",
+  "transmitterManagementDeletePromptTitle": "Prompt",
+  "transmitterManagementDeletePromptMessage": "Please confirm whether you want to delete the transmitter",
   "deviceSettingsMinutes": "{minutes} min",
   "@deviceSettingsMinutes": {
     "placeholders": {

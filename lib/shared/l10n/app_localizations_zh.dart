@@ -941,6 +941,36 @@ class AppLocalizationsZh extends AppLocalizations {
   String get deviceSettingsConfirmAction => '确认';
 
   @override
+  String get transmitterManagementTipsTitle => '提示';
+
+  @override
+  String get transmitterManagementSafetyTip => '1. 为确保安全，建议通过 App 管理所有遥控器。';
+
+  @override
+  String get transmitterManagementHowToTip => '2. 如何管理遥控器？\n请通过 App 重新学习遥控器。';
+
+  @override
+  String get transmitterManagementEditAction => '编辑遥控器';
+
+  @override
+  String get transmitterManagementDeleteAction => '删除遥控器';
+
+  @override
+  String get transmitterManagementAddAction => '添加遥控器';
+
+  @override
+  String get transmitterManagementInfoTitle => '遥控器信息';
+
+  @override
+  String get transmitterManagementNameHint => '输入遥控器名称';
+
+  @override
+  String get transmitterManagementDeletePromptTitle => '提示';
+
+  @override
+  String get transmitterManagementDeletePromptMessage => '请确认是否删除该遥控器';
+
+  @override
   String deviceSettingsMinutes(int minutes) {
     return '$minutes 分钟';
   }
