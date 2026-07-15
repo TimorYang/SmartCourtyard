@@ -5,7 +5,10 @@ import 'package:go_router/go_router.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
+import '../../application/forgot_password_reset_controller.dart';
+import '../widgets/auth_alerts.dart';
 import '../widgets/auth_flow_widgets.dart';
+import 'forgot_password_page.dart';
 import 'forgot_password_success_page.dart';
 
 class ForgotPasswordResetPage extends ConsumerStatefulWidget {
@@ -38,9 +41,12 @@ class _ForgotPasswordResetPageState
     _confirmPasswordTextController = TextEditingController();
     _passwordFocusNode = FocusNode();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _passwordFocusNode.requestFocus();
+      if (!mounted) return;
+      if (ref.read(passwordResetFlowStoreProvider).passwordResetToken == null) {
+        context.go(ForgotPasswordPage.routePath);
+        return;
       }
+      _passwordFocusNode.requestFocus();
     });
   }
 
@@ -61,6 +67,16 @@ class _ForgotPasswordResetPageState
     ref.listen(forgotPasswordResetControllerProvider, (previous, next) {
       _syncTextController(_passwordTextController, next.password);
       _syncTextController(_confirmPasswordTextController, next.confirmPassword);
+      if (next.errorMessageKey != null &&
+          next.errorMessageKey != previous?.errorMessageKey) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              passwordResetErrorMessage(context, next.errorMessageKey),
+            ),
+          ),
+        );
+      }
     });
 
     return AuthFlowScaffold(
@@ -90,21 +106,29 @@ class _ForgotPasswordResetPageState
           onChanged: controller.updateConfirmPassword,
           onSubmitted: (_) {
             if (state.canSubmit) {
-              _openSuccessPage(context);
+              _submit(context, controller);
             }
           },
         ),
         const SizedBox(height: 55),
         AuthPrimaryButton(
           label: l10n.finishAction,
-          onPressed: state.canSubmit ? () => _openSuccessPage(context) : null,
+          onPressed: state.canSubmit
+              ? () => _submit(context, controller)
+              : null,
         ),
       ],
     );
   }
 
-  void _openSuccessPage(BuildContext context) {
-    context.push(ForgotPasswordSuccessPage.routePath);
+  Future<void> _submit(
+    BuildContext context,
+    ForgotPasswordResetController controller,
+  ) async {
+    final completed = await controller.submit();
+    if (completed && context.mounted) {
+      context.push(ForgotPasswordSuccessPage.routePath);
+    }
   }
 
   static void _syncTextController(

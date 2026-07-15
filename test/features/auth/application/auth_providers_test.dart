@@ -46,6 +46,12 @@ class _FakeAuthApi implements AuthApi {
   ) => throw UnimplementedError();
 
   @override
+  Future<ApiEnvelopeDto<dynamic>> completePasswordReset(
+    Map<String, dynamic> body,
+    Options options,
+  ) => throw UnimplementedError();
+
+  @override
   Future<ApiEnvelopeDto<AuthPublicKeyResponseDto>> fetchPublicKey(
     Options options,
   ) {
@@ -59,7 +65,19 @@ class _FakeAuthApi implements AuthApi {
   ) => throw UnimplementedError();
 
   @override
+  Future<ApiEnvelopeDto<dynamic>> sendPasswordResetEmailCode(
+    Map<String, dynamic> body,
+    Options options,
+  ) => throw UnimplementedError();
+
+  @override
   Future<ApiEnvelopeDto<dynamic>> verifyRegistrationEmailCode(
+    Map<String, dynamic> body,
+    Options options,
+  ) => throw UnimplementedError();
+
+  @override
+  Future<ApiEnvelopeDto<dynamic>> verifyPasswordResetEmailCode(
     Map<String, dynamic> body,
     Options options,
   ) => throw UnimplementedError();

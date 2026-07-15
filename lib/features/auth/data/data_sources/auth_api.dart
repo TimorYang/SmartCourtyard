@@ -45,4 +45,22 @@ abstract class AuthApi {
     @Body() Map<String, dynamic> body,
     @DioOptions() Options options,
   );
+
+  @POST('app/auth/password-reset/email-code')
+  Future<ApiEnvelopeDto<dynamic>> sendPasswordResetEmailCode(
+    @Body() Map<String, dynamic> body,
+    @DioOptions() Options options,
+  );
+
+  @POST('app/auth/password-reset/verify-code')
+  Future<ApiEnvelopeDto<dynamic>> verifyPasswordResetEmailCode(
+    @Body() Map<String, dynamic> body,
+    @DioOptions() Options options,
+  );
+
+  @POST('app/auth/password-reset')
+  Future<ApiEnvelopeDto<dynamic>> completePasswordReset(
+    @Body() Map<String, dynamic> body,
+    @DioOptions() Options options,
+  );
 }

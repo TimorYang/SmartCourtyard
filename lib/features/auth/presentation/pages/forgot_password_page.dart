@@ -23,6 +23,19 @@ class ForgotPasswordPage extends ConsumerWidget {
     final state = ref.watch(forgotPasswordControllerProvider);
     final controller = ref.read(forgotPasswordControllerProvider.notifier);
 
+    ref.listen(forgotPasswordControllerProvider, (previous, next) {
+      if (next.errorMessageKey != null &&
+          next.errorMessageKey != previous?.errorMessageKey) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              passwordResetErrorMessage(context, next.errorMessageKey),
+            ),
+          ),
+        );
+      }
+    });
+
     return Scaffold(
       appBar: FlinxNavigationBar(title: '', showBottomDivider: false),
       backgroundColor: AppColors.backgroundPrimary,
@@ -82,6 +95,8 @@ class ForgotPasswordPage extends ConsumerWidget {
                               await showAuthEmailInvalidDialog(context);
                               return;
                             }
+                            final sent = await controller.sendCode();
+                            if (!sent || !context.mounted) return;
                             context.push(
                               ForgotPasswordCodePage.locationFor(
                                 state.trimmedEmail,
@@ -101,7 +116,11 @@ class ForgotPasswordPage extends ConsumerWidget {
                         theme.textTheme,
                       ),
                     ),
-                    child: Text(l10n.sendCodeAction),
+                    child: Text(
+                      state.isSendingCode
+                          ? l10n.registerCodeResending
+                          : l10n.sendCodeAction,
+                    ),
                   ),
                 ),
               ],

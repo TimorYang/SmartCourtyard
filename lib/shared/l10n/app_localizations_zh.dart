@@ -135,6 +135,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get forgotPasswordResetPending => '重置密码功能暂未接入';
 
   @override
+  String get passwordResetRequestFailed => '密码重置失败，请重试。';
+
+  @override
+  String get passwordResetNetworkUnavailable => '网络不可用，请重试。';
+
+  @override
+  String get passwordResetAuthorizationFailed => '密码重置暂不可用，请稍后再试。';
+
+  @override
+  String get passwordResetRestartRequired => '密码重置会话已失效，请重新开始。';
+
+  @override
+  String get passwordResetResponseContractPending => '验证码校验成功，待确认响应协议后即可设置新密码。';
+
+  @override
   String get passwordResetSucceededTitle => '重置成功';
 
   @override

@@ -21,3 +21,15 @@ String registrationErrorMessage(BuildContext context, String? messageKey) {
     _ => l10n.registerRequestFailed,
   };
 }
+
+String passwordResetErrorMessage(BuildContext context, String? messageKey) {
+  final l10n = AppLocalizations.of(context);
+  return switch (messageKey) {
+    'auth.passwordReset.networkUnavailable' =>
+      l10n.passwordResetNetworkUnavailable,
+    'auth.passwordReset.clientAuthorizationFailed' =>
+      l10n.passwordResetAuthorizationFailed,
+    'auth.passwordReset.restartRequired' => l10n.passwordResetRestartRequired,
+    _ => l10n.passwordResetRequestFailed,
+  };
+}

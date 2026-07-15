@@ -6,6 +6,7 @@ import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
+import '../widgets/auth_alerts.dart';
 import '../widgets/auth_flow_widgets.dart';
 import 'forgot_password_reset_page.dart';
 
@@ -63,6 +64,16 @@ class _ForgotPasswordCodePageState
           selection: TextSelection.collapsed(offset: next.code.length),
         );
       }
+      if (next.errorMessageKey != null &&
+          next.errorMessageKey != previous?.errorMessageKey) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              passwordResetErrorMessage(context, next.errorMessageKey),
+            ),
+          ),
+        );
+      }
     });
 
     return AuthFlowScaffold(
@@ -80,16 +91,21 @@ class _ForgotPasswordCodePageState
           focusNode: _focusNode,
           textController: _textController,
           inputLabel: l10n.registerCodeInputLabel,
-          onChanged: (value) {
+          onChanged: (value) async {
             controller.updateCode(value);
             if (value.replaceAll(RegExp(r'\D'), '').length >= 6) {
-              context.push(ForgotPasswordResetPage.locationFor(widget.email));
+              final verified = await controller.verifyCode(widget.email);
+              if (verified && context.mounted) {
+                context.push(ForgotPasswordResetPage.locationFor(widget.email));
+              }
             }
           },
         ),
         const SizedBox(height: 24),
         TextButton(
-          onPressed: state.canResend ? controller.resetResendCountdown : null,
+          onPressed: state.canResend && !state.isResending
+              ? () => controller.resendCode(widget.email)
+              : null,
           style: TextButton.styleFrom(
             padding: EdgeInsets.zero,
             minimumSize: const Size(0, 28),
@@ -101,7 +117,9 @@ class _ForgotPasswordCodePageState
             ),
           ),
           child: Text(
-            state.canResend
+            state.isResending
+                ? l10n.registerCodeResending
+                : state.canResend
                 ? l10n.registerCodeResendAction
                 : l10n.registerCodeResend(state.resendSecondsRemaining),
           ),
