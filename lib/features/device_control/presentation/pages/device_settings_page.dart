@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -27,15 +25,46 @@ class DeviceSettingsAssetPaths {
       'assets/icons/device_settings/device_settings_door_open_reminder_icon.png';
   static const forceMargin =
       'assets/icons/device_settings/device_settings_force_margin_icon.png';
+  static const management =
+      'assets/icons/device_settings/device_settings_management_icon.png';
+  static const openingSpeedIndicatorPlaceholder =
+      'assets/icons/device_settings/opening_speed_indicator_placeholder.png';
+  static const forceMarginWarningPlaceholder =
+      'assets/icons/device_settings/opening_speed_indicator_placeholder.png';
+  static const forceMarginIndicatorPlaceholder =
+      'assets/icons/device_settings/opening_speed_indicator_placeholder.png';
+}
+
+class OpeningSpeedConfig {
+  const OpeningSpeedConfig({
+    required this.minimum,
+    required this.maximum,
+    required this.current,
+  }) : assert(minimum <= current && current <= maximum);
+
+  final int minimum;
+  final int maximum;
+  final int current;
 }
 
 class DeviceSettingsPage extends StatefulWidget {
-  const DeviceSettingsPage({required this.deviceId, super.key});
+  const DeviceSettingsPage({
+    required this.deviceId,
+    this.forceMarginDialogState = 2,
+    this.openingSpeedConfig = const OpeningSpeedConfig(
+      minimum: 80,
+      maximum: 100,
+      current: 80,
+    ),
+    super.key,
+  }) : assert(forceMarginDialogState >= 0 && forceMarginDialogState <= 2);
 
   static const routeName = 'device-settings';
   static const routePath = '/device-settings';
 
   final String deviceId;
+  final int forceMarginDialogState;
+  final OpeningSpeedConfig openingSpeedConfig;
 
   @override
   State<DeviceSettingsPage> createState() => _DeviceSettingsPageState();
@@ -113,6 +142,7 @@ class _DeviceSettingsPageState extends State<DeviceSettingsPage> {
                       fallbackIcon: Icons.speed_outlined,
                       title: l10n.deviceSettingsOpeningSpeed,
                       value: l10n.deviceSettingsOpeningSpeedValue,
+                      onTap: _showOpeningSpeedSheet,
                     ),
                     _SettingsRowData(
                       assetPath: DeviceSettingsAssetPaths.aboutDevice,
@@ -150,6 +180,7 @@ class _DeviceSettingsPageState extends State<DeviceSettingsPage> {
                       assetPath: DeviceSettingsAssetPaths.forceMargin,
                       fallbackIcon: Icons.tune_rounded,
                       title: l10n.deviceSettingsForceMargin,
+                      onTap: _showForceMargin,
                     ),
                   ],
                 ),
@@ -165,8 +196,9 @@ class _DeviceSettingsPageState extends State<DeviceSettingsPage> {
     final value = await _showOptionSheet(
       context: context,
       title: AppLocalizations.of(context).deviceSettingsLedOffDelay,
-      options: _zeroToOneHundredOptions,
-      initialValue: '5',
+      options: _ledOffDelayOptions,
+      initialValue: _ledOffDelay,
+      heightFactor: 0.50,
     );
     if (value == null || !mounted) {
       return;
@@ -180,6 +212,7 @@ class _DeviceSettingsPageState extends State<DeviceSettingsPage> {
       title: AppLocalizations.of(context).deviceSettingsPartialOpenHeight,
       options: _zeroToOneHundredOptions,
       initialValue: '20',
+      heightFactor: 0.50,
     );
     if (value == null || !mounted) {
       return;
@@ -197,6 +230,7 @@ class _DeviceSettingsPageState extends State<DeviceSettingsPage> {
         return _AutoCloseSheet(
           initialPosition: _autoClosePosition,
           initialTime: '1min',
+          heightFactor: 0.65,
         );
       },
     );
@@ -208,12 +242,83 @@ class _DeviceSettingsPageState extends State<DeviceSettingsPage> {
       _autoClosePosition = result.position;
     });
   }
+
+  Future<void> _showOpeningSpeedSheet() async {
+    await _showSpeedSheet(
+      title: AppLocalizations.of(context).deviceSettingsOpeningSpeed,
+      currentSetting: AppLocalizations.of(
+        context,
+      ).deviceSettingsOpeningSpeedCurrent(widget.openingSpeedConfig.current),
+      speedConfig: widget.openingSpeedConfig,
+      placeholderAssetPath:
+          DeviceSettingsAssetPaths.openingSpeedIndicatorPlaceholder,
+    );
+  }
+
+  Future<void> _showForceMargin() async {
+    final l10n = AppLocalizations.of(context);
+    switch (widget.forceMarginDialogState) {
+      case 0:
+        await showDialog<void>(
+          context: context,
+          builder: (context) => _ForceMarginWarningDialog(
+            description: l10n.deviceSettingsForceMarginWarning15Days,
+          ),
+        );
+      case 1:
+        await _showSpeedSheet(
+          title: l10n.deviceSettingsForceMargin,
+          currentSetting: l10n.deviceSettingsForceMarginTemporaryCurrent,
+          notice: l10n.deviceSettingsForceMarginWarning3Days,
+          placeholderAssetPath:
+              DeviceSettingsAssetPaths.forceMarginIndicatorPlaceholder,
+        );
+      case 2:
+        await showModalBottomSheet<void>(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          barrierColor: AppColors.deviceSettingsSheetScrim,
+          builder: (context) => _ForceMarginLevelSheet(),
+        );
+    }
+  }
+
+  Future<void> _showSpeedSheet({
+    required String title,
+    required String currentSetting,
+    OpeningSpeedConfig speedConfig = const OpeningSpeedConfig(
+      minimum: 80,
+      maximum: 100,
+      current: 80,
+    ),
+    String? notice,
+    required String placeholderAssetPath,
+  }) {
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: AppColors.deviceSettingsSheetScrim,
+      builder: (context) => _SpeedAdjustmentSheet(
+        title: title,
+        currentSetting: currentSetting,
+        speedConfig: speedConfig,
+        notice: notice,
+        placeholderAssetPath: placeholderAssetPath,
+      ),
+    );
+  }
 }
 
 final _zeroToOneHundredOptions = List<String>.generate(
   101,
   (index) => index.toString(),
 );
+
+final _ledOffDelayOptions = [
+  for (var minute = 1; minute <= 9; minute++) '${minute}min',
+];
 
 final _autoCloseTimeOptions = [
   '0s',
@@ -339,7 +444,7 @@ class TransmitterManagementPage extends StatelessWidget {
                       title: l10n.deviceSettingsTransmitterLearning,
                     ),
                     _SettingsRowData(
-                      assetPath: DeviceSettingsAssetPaths.transmitterManagement,
+                      assetPath: DeviceSettingsAssetPaths.management,
                       fallbackIcon: Icons.settings_outlined,
                       title: l10n.deviceSettingsManagement,
                     ),
@@ -485,6 +590,7 @@ Future<String?> _showOptionSheet({
   required String title,
   required List<String> options,
   required String initialValue,
+  required double heightFactor,
 }) {
   return showModalBottomSheet<String>(
     context: context,
@@ -496,6 +602,7 @@ Future<String?> _showOptionSheet({
         title: title,
         options: options,
         initialValue: initialValue,
+        heightFactor: heightFactor,
       );
     },
   );
@@ -506,11 +613,13 @@ class _OptionSheet extends StatefulWidget {
     required this.title,
     required this.options,
     required this.initialValue,
+    required this.heightFactor,
   });
 
   final String title;
   final List<String> options;
   final String initialValue;
+  final double heightFactor;
 
   @override
   State<_OptionSheet> createState() => _OptionSheetState();
@@ -518,24 +627,14 @@ class _OptionSheet extends StatefulWidget {
 
 class _OptionSheetState extends State<_OptionSheet> {
   late String _selectedValue = widget.initialValue;
-  late final ScrollController _scrollController = ScrollController(
-    initialScrollOffset: _initialOptionOffset(
-      options: widget.options,
-      selectedValue: widget.initialValue,
-    ),
-  );
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
 
     return _SettingsSheetFrame(
+      heightFactor: widget.heightFactor,
       child: Column(
         children: [
           Text(
@@ -545,17 +644,11 @@ class _OptionSheetState extends State<_OptionSheet> {
           ),
           const SizedBox(height: 12),
           Expanded(
-            child: ListView(
-              controller: _scrollController,
-              padding: EdgeInsets.zero,
-              children: [
-                for (final option in widget.options)
-                  _SheetOption(
-                    label: option,
-                    selected: option == _selectedValue,
-                    onTap: () => setState(() => _selectedValue = option),
-                  ),
-              ],
+            child: _FixedSelectionList<String>(
+              values: widget.options,
+              initialValue: _selectedValue,
+              labelBuilder: (option) => _formatDuration(l10n, option),
+              onSelected: (option) => setState(() => _selectedValue = option),
             ),
           ),
           const SizedBox(height: 20),
@@ -572,10 +665,12 @@ class _AutoCloseSheet extends StatefulWidget {
   const _AutoCloseSheet({
     required this.initialPosition,
     required this.initialTime,
+    required this.heightFactor,
   });
 
   final _AutoClosePosition initialPosition;
   final String initialTime;
+  final double heightFactor;
 
   @override
   State<_AutoCloseSheet> createState() => _AutoCloseSheetState();
@@ -589,18 +684,6 @@ class _AutoCloseSheetState extends State<_AutoCloseSheet> {
 
   late _AutoClosePosition _position = widget.initialPosition;
   late String _time = widget.initialTime;
-  late final ScrollController _timeScrollController = ScrollController(
-    initialScrollOffset: _initialOptionOffset(
-      options: _autoCloseTimeOptions,
-      selectedValue: widget.initialTime,
-    ),
-  );
-
-  @override
-  void dispose() {
-    _timeScrollController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -608,6 +691,7 @@ class _AutoCloseSheetState extends State<_AutoCloseSheet> {
     final l10n = AppLocalizations.of(context);
 
     return _SettingsSheetFrame(
+      heightFactor: widget.heightFactor,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -649,17 +733,11 @@ class _AutoCloseSheetState extends State<_AutoCloseSheet> {
           ),
           const SizedBox(height: 18),
           Expanded(
-            child: ListView(
-              controller: _timeScrollController,
-              padding: EdgeInsets.zero,
-              children: [
-                for (final time in _autoCloseTimeOptions)
-                  _SheetOption(
-                    label: _formatDuration(l10n, time),
-                    selected: time == _time,
-                    onTap: () => setState(() => _time = time),
-                  ),
-              ],
+            child: _FixedSelectionList<String>(
+              values: _autoCloseTimeOptions,
+              initialValue: _time,
+              labelBuilder: (time) => _formatDuration(l10n, time),
+              onSelected: (time) => setState(() => _time = time),
             ),
           ),
           const SizedBox(height: 20),
@@ -683,17 +761,6 @@ String _positionLabel(AppLocalizations l10n, _AutoClosePosition position) =>
 
 enum _AutoClosePosition { upLimit, anyPosition }
 
-double _initialOptionOffset({
-  required List<String> options,
-  required String selectedValue,
-}) {
-  final selectedIndex = options.indexOf(selectedValue);
-  if (selectedIndex <= 0) {
-    return 0;
-  }
-  return math.max(0, selectedIndex * 46.0 - 92);
-}
-
 class _AutoCloseSelection {
   const _AutoCloseSelection({required this.position, required this.time});
 
@@ -701,15 +768,321 @@ class _AutoCloseSelection {
   final String time;
 }
 
-class _SettingsSheetFrame extends StatelessWidget {
-  const _SettingsSheetFrame({required this.child});
+class _SpeedAdjustmentSheet extends StatefulWidget {
+  const _SpeedAdjustmentSheet({
+    required this.title,
+    required this.currentSetting,
+    required this.speedConfig,
+    this.notice,
+    required this.placeholderAssetPath,
+  });
 
+  final String title;
+  final String currentSetting;
+  final OpeningSpeedConfig speedConfig;
+  final String? notice;
+  final String placeholderAssetPath;
+
+  @override
+  State<_SpeedAdjustmentSheet> createState() => _SpeedAdjustmentSheetState();
+}
+
+class _SpeedAdjustmentSheetState extends State<_SpeedAdjustmentSheet> {
+  late double _value = widget.speedConfig.current.toDouble();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final textTheme = Theme.of(context).textTheme;
+    return _SettingsSheetFrame(
+      heightFactor: 0.61,
+      child: Column(
+        children: [
+          Text(
+            widget.title,
+            style: AppTextTokens.deviceSettingsSheetTitle(textTheme),
+          ),
+          const SizedBox(height: 24),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              widget.currentSetting,
+              style: AppTextTokens.deviceSettingsSheetCaption(textTheme),
+            ),
+          ),
+          if (widget.notice != null) ...[
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                widget.notice!,
+                style: AppTextTokens.deviceSettingsSheetCaption(textTheme),
+              ),
+            ),
+          ],
+          const SizedBox(height: 35),
+          Expanded(
+            child: Row(
+              children: [
+                _SpeedIndicatorCluster(assetPath: widget.placeholderAssetPath),
+                const SizedBox(width: 30),
+                _VerticalSpeedSlider(
+                  value: _value,
+                  minimum: widget.speedConfig.minimum,
+                  maximum: widget.speedConfig.maximum,
+                  onChanged: (value) => setState(() => _value = value),
+                ),
+                const SizedBox(width: 40),
+                SizedBox(
+                  width: 84,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${widget.speedConfig.maximum}%',
+                        style: AppTextTokens.deviceSettingsSheetCaption(
+                          textTheme,
+                        ),
+                      ),
+                      Text(
+                        '${(widget.speedConfig.minimum + widget.speedConfig.maximum) ~/ 2}%',
+                        style: AppTextTokens.deviceSettingsSheetCaption(
+                          textTheme,
+                        ),
+                      ),
+                      Text(
+                        '${_value.round()}%\n(STD)',
+                        style: AppTextTokens.deviceSettingsSheetCaption(
+                          textTheme,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          _SheetActionRow(onConfirm: () => Navigator.pop(context)),
+        ],
+      ),
+    );
+  }
+}
+
+class _SpeedIndicatorCluster extends StatelessWidget {
+  const _SpeedIndicatorCluster({required this.assetPath});
+
+  final String assetPath;
+
+  @override
+  Widget build(BuildContext context) {
+    const placements = [
+      Offset(22, 0),
+      Offset(62, 0),
+      Offset(102, 0),
+      Offset(22, 122),
+      Offset(62, 122),
+      Offset(22, 244),
+    ];
+
+    return SizedBox(
+      width: 152,
+      height: _VerticalSpeedSlider._height,
+      child: Stack(
+        children: [
+          for (final placement in placements)
+            Positioned(
+              left: placement.dx,
+              top: placement.dy,
+              child: _CutAssetPlaceholder(assetPath: assetPath, height: 28),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _VerticalSpeedSlider extends StatelessWidget {
+  const _VerticalSpeedSlider({
+    required this.value,
+    required this.minimum,
+    required this.maximum,
+    required this.onChanged,
+  });
+
+  final double value;
+  final int minimum;
+  final int maximum;
+  final ValueChanged<double> onChanged;
+
+  static const _height = 300.0;
+  static const _thumbHeight = 60.0;
+
+  void _updateValue(Offset localPosition) {
+    final progress = (1 - localPosition.dy / (_height - _thumbHeight)).clamp(
+      0.0,
+      1.0,
+    );
+    final steppedValue = (minimum + (progress * (maximum - minimum)).round())
+        .toDouble();
+    onChanged(steppedValue);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = (value - minimum) / (maximum - minimum);
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onVerticalDragStart: (details) => _updateValue(details.localPosition),
+      onVerticalDragUpdate: (details) => _updateValue(details.localPosition),
+      onTapDown: (details) => _updateValue(details.localPosition),
+      child: SizedBox(
+        width: 40,
+        height: _height,
+        child: LayoutBuilder(
+          builder: (context, constraints) => Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(
+                width: 56,
+                height: _height,
+                decoration: BoxDecoration(
+                  color: AppColors.deviceSettingsSheetCancel,
+                  borderRadius: BorderRadius.circular(28),
+                ),
+              ),
+              Positioned(
+                bottom: progress * (_height - _thumbHeight),
+                child: Container(
+                  width: 28,
+                  height: _thumbHeight,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: AppColors.brandPrimary,
+                    borderRadius: BorderRadius.circular(23),
+                  ),
+                  child: const Icon(
+                    Icons.drag_handle,
+                    color: AppColors.backgroundPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ForceMarginWarningDialog extends StatelessWidget {
+  const _ForceMarginWarningDialog({required this.description});
+
+  final String description;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return AlertDialog(
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const _CutAssetPlaceholder(
+            assetPath: DeviceSettingsAssetPaths.forceMarginWarningPlaceholder,
+            height: 72,
+          ),
+          const SizedBox(height: 24),
+          Text(description, style: Theme.of(context).textTheme.bodyMedium),
+          const SizedBox(height: 28),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(l10n.deviceSettingsConfirmAction),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ForceMarginLevelSheet extends StatefulWidget {
+  @override
+  State<_ForceMarginLevelSheet> createState() => _ForceMarginLevelSheetState();
+}
+
+class _ForceMarginLevelSheetState extends State<_ForceMarginLevelSheet> {
+  var _level = 5;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final options = [
+      for (var level = 3; level <= 7; level++)
+        l10n.deviceSettingsForceMarginLevel(level),
+    ];
+    return _SettingsSheetFrame(
+      heightFactor: 0.64,
+      child: Column(
+        children: [
+          Text(
+            l10n.deviceSettingsForceMargin,
+            style: AppTextTokens.deviceSettingsSheetTitle(
+              Theme.of(context).textTheme,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            l10n.deviceSettingsForceMarginLevelCurrent(_level),
+            style: AppTextTokens.deviceSettingsSheetCaption(
+              Theme.of(context).textTheme,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Expanded(
+            child: _FixedSelectionList<String>(
+              values: options,
+              initialValue: l10n.deviceSettingsForceMarginLevel(_level),
+              labelBuilder: (value) => value,
+              onSelected: (value) =>
+                  setState(() => _level = options.indexOf(value) + 3),
+            ),
+          ),
+          _SheetActionRow(onConfirm: () => Navigator.pop(context)),
+        ],
+      ),
+    );
+  }
+}
+
+class _CutAssetPlaceholder extends StatelessWidget {
+  const _CutAssetPlaceholder({required this.assetPath, this.height});
+
+  final String assetPath;
+  final double? height;
+
+  @override
+  Widget build(BuildContext context) => Image.asset(
+    assetPath,
+    width: height,
+    height: height,
+    fit: BoxFit.contain,
+    errorBuilder: (context, error, stackTrace) => SizedBox(height: height),
+  );
+}
+
+class _SettingsSheetFrame extends StatelessWidget {
+  const _SettingsSheetFrame({required this.heightFactor, required this.child});
+
+  final double heightFactor;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
     return FractionallySizedBox(
-      heightFactor: 0.72,
+      heightFactor: heightFactor,
       alignment: Alignment.bottomCenter,
       child: SafeArea(
         top: false,
@@ -728,45 +1101,100 @@ class _SettingsSheetFrame extends StatelessWidget {
   }
 }
 
-class _SheetOption extends StatelessWidget {
-  const _SheetOption({
-    required this.label,
-    required this.selected,
-    required this.onTap,
+class _FixedSelectionList<T> extends StatefulWidget {
+  const _FixedSelectionList({
+    required this.values,
+    required this.initialValue,
+    required this.labelBuilder,
+    required this.onSelected,
   });
 
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
+  static const itemExtent = 46.0;
+
+  final List<T> values;
+  final T initialValue;
+  final String Function(T value) labelBuilder;
+  final ValueChanged<T> onSelected;
+
+  @override
+  State<_FixedSelectionList<T>> createState() => _FixedSelectionListState<T>();
+}
+
+class _FixedSelectionListState<T> extends State<_FixedSelectionList<T>> {
+  late int _selectedIndex = _initialIndex;
+  late final FixedExtentScrollController _controller =
+      FixedExtentScrollController(initialItem: _selectedIndex);
+
+  int get _initialIndex {
+    final index = widget.values.indexOf(widget.initialValue);
+    return index < 0 ? 0 : index;
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return InkWell(
-      onTap: onTap,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          border: selected
-              ? const Border.symmetric(
-                  horizontal: BorderSide(
-                    color: AppColors.deviceSettingsDivider,
-                  ),
-                )
-              : null,
-        ),
-        child: SizedBox(
-          height: 46,
-          child: Center(
-            child: Text(
-              label,
-              style: selected
-                  ? AppTextTokens.deviceSettingsSheetSelectedOption(textTheme)
-                  : AppTextTokens.deviceSettingsSheetOption(textTheme),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final selectionTop =
+            (constraints.maxHeight - _FixedSelectionList.itemExtent) / 2;
+
+        return Stack(
+          children: [
+            ListWheelScrollView.useDelegate(
+              controller: _controller,
+              physics: const FixedExtentScrollPhysics(),
+              itemExtent: _FixedSelectionList.itemExtent,
+              onSelectedItemChanged: (index) {
+                setState(() => _selectedIndex = index);
+                widget.onSelected(widget.values[index]);
+              },
+              childDelegate: ListWheelChildBuilderDelegate(
+                childCount: widget.values.length,
+                builder: (context, index) {
+                  if (index == null) {
+                    return null;
+                  }
+                  final selected = index == _selectedIndex;
+                  return Center(
+                    child: Text(
+                      widget.labelBuilder(widget.values[index]),
+                      style: selected
+                          ? AppTextTokens.deviceSettingsSheetSelectedOption(
+                              textTheme,
+                            )
+                          : AppTextTokens.deviceSettingsSheetOption(textTheme),
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
-        ),
-      ),
+            Positioned(
+              top: selectionTop,
+              left: 0,
+              right: 0,
+              height: _FixedSelectionList.itemExtent,
+              child: IgnorePointer(
+                child: const DecoratedBox(
+                  decoration: BoxDecoration(
+                    border: Border.symmetric(
+                      horizontal: BorderSide(
+                        color: AppColors.deviceSettingsDivider,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

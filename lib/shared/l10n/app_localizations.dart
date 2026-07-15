@@ -1885,6 +1885,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{seconds}s'**
   String deviceSettingsSeconds(int seconds);
+
+  /// No description provided for @deviceSettingsOpeningSpeedCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current setting: {value}% (motor setting)'**
+  String deviceSettingsOpeningSpeedCurrent(int value);
+
+  /// No description provided for @deviceSettingsForceMarginWarning15Days.
+  ///
+  /// In en, this message translates to:
+  /// **'1. This function is temporarily used when you can\'t operate the door due to the spring being loose or the track being blocked.\n\n2. This function is only effective for 15 days. Please contact the maintenance party as soon as possible.'**
+  String get deviceSettingsForceMarginWarning15Days;
+
+  /// No description provided for @deviceSettingsForceMarginWarning3Days.
+  ///
+  /// In en, this message translates to:
+  /// **'This temporary setting is effective for three days only. Please contact the maintenance party as soon as possible.'**
+  String get deviceSettingsForceMarginWarning3Days;
+
+  /// No description provided for @deviceSettingsForceMarginTemporaryCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current setting: standard (motor setting)'**
+  String get deviceSettingsForceMarginTemporaryCurrent;
+
+  /// No description provided for @deviceSettingsForceMarginLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Level {level}'**
+  String deviceSettingsForceMarginLevel(int level);
+
+  /// No description provided for @deviceSettingsForceMarginLevelCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current setting: Level {level} (motor setting)'**
+  String deviceSettingsForceMarginLevelCurrent(int level);
 }
 
 class _AppLocalizationsDelegate

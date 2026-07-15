@@ -783,8 +783,8 @@ class AppTextTokens {
   static TextStyle deviceSettingsSheetTitle(TextTheme textTheme) {
     return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
-      fontSize: 24,
-      fontWeight: FontWeight.w600,
+      fontSize: 23,
+      fontWeight: FontWeight.w500,
       height: 1.15,
     );
   }
@@ -792,8 +792,8 @@ class AppTextTokens {
   static TextStyle deviceSettingsSheetOption(TextTheme textTheme) {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
       color: AppColors.textHint,
-      fontSize: 16,
-      fontWeight: FontWeight.w500,
+      fontSize: 15,
+      fontWeight: FontWeight.w400,
       height: 1.2,
     );
   }
@@ -802,7 +802,7 @@ class AppTextTokens {
     return (textTheme.titleLarge ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
       fontSize: 22,
-      fontWeight: FontWeight.w600,
+      fontWeight: FontWeight.w400,
       height: 1.15,
     );
   }

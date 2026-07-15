@@ -55,18 +55,15 @@ void main() {
     await tester.tap(find.text('LED off delay'));
     await tester.pumpAndSettle();
 
-    expect(find.text('5'), findsOneWidget);
-    await tester.scrollUntilVisible(
-      find.text('100'),
-      500,
-      scrollable: find.byType(Scrollable).last,
-    );
-    expect(find.text('100'), findsOneWidget);
+    expect(find.text('1 min'), findsOneWidget);
+    expect(find.byType(ListWheelScrollView), findsOneWidget);
+    await tester.drag(find.byType(ListWheelScrollView), const Offset(0, -92));
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('Confirm'));
     await tester.pumpAndSettle();
 
-    expect(find.text('5'), findsOneWidget);
+    expect(find.text('5 min'), findsOneWidget);
   });
 
   testWidgets('updates partial open height from bottom sheet', (tester) async {
@@ -77,12 +74,7 @@ void main() {
 
     expect(find.text('Partial open height'), findsOneWidget);
     expect(find.text('20'), findsOneWidget);
-    await tester.scrollUntilVisible(
-      find.text('100'),
-      500,
-      scrollable: find.byType(Scrollable).last,
-    );
-    expect(find.text('100'), findsOneWidget);
+    expect(find.byType(ListWheelScrollView), findsOneWidget);
 
     await tester.tap(find.text('Confirm'));
     await tester.pumpAndSettle();
@@ -98,13 +90,7 @@ void main() {
 
     expect(find.text('Auto closing setting'), findsOneWidget);
     expect(find.text('Any position'), findsOneWidget);
-    expect(find.text('1 min'), findsOneWidget);
-    await tester.scrollUntilVisible(
-      find.text('60 min'),
-      500,
-      scrollable: find.byType(Scrollable).last,
-    );
-    expect(find.text('60 min'), findsOneWidget);
+    expect(find.byType(ListWheelScrollView), findsOneWidget);
 
     await tester.tap(find.text('Confirm'));
     await tester.pumpAndSettle();

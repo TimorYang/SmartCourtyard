@@ -990,4 +990,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String deviceSettingsSeconds(int seconds) {
     return '${seconds}s';
   }
+
+  @override
+  String deviceSettingsOpeningSpeedCurrent(int value) {
+    return 'Current setting: $value% (motor setting)';
+  }
+
+  @override
+  String get deviceSettingsForceMarginWarning15Days =>
+      '1. This function is temporarily used when you can\'t operate the door due to the spring being loose or the track being blocked.\n\n2. This function is only effective for 15 days. Please contact the maintenance party as soon as possible.';
+
+  @override
+  String get deviceSettingsForceMarginWarning3Days =>
+      'This temporary setting is effective for three days only. Please contact the maintenance party as soon as possible.';
+
+  @override
+  String get deviceSettingsForceMarginTemporaryCurrent =>
+      'Current setting: standard (motor setting)';
+
+  @override
+  String deviceSettingsForceMarginLevel(int level) {
+    return 'Level $level';
+  }
+
+  @override
+  String deviceSettingsForceMarginLevelCurrent(int level) {
+    return 'Current setting: Level $level (motor setting)';
+  }
 }
