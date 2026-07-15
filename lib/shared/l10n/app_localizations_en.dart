@@ -1005,6 +1005,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'This temporary setting is effective for three days only. Please contact the maintenance party as soon as possible.';
 
   @override
+  String get deviceSettingsForceMarginWarning3DaysFull =>
+      '1. This function is temporarily used when you can\'t operate the door due to the spring being loose or the track being blocked.\n\n2. This function is only effective for three days. Please contact the maintenance party as soon as possible.';
+
+  @override
   String get deviceSettingsForceMarginTemporaryCurrent =>
       'Current setting: standard (motor setting)';
 

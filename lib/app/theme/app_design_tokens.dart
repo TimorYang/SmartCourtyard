@@ -60,6 +60,8 @@ class AppColors {
   static const deviceSettingsSectionLabel = Color(0xFFB5BAC1);
   static const deviceSettingsSheetScrim = Color(0x66000000);
   static const deviceSettingsSheetCancel = Color(0xFFF2F3F5);
+  static const deviceSettingsForceMarginWarningText = Color(0xFFE26B65);
+  static const deviceSettingsForceMarginConfirm = Color(0xFF0066FF);
   static const deviceDetailNavigationBackground = Color(0xFFFDFDFD);
   static const deviceDetailNavigationDivider = Color(0xFFE6E7EB);
   static const deviceDetailNavigationSelected = Color(0xFF34383F);

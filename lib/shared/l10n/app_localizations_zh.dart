@@ -948,6 +948,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get deviceSettingsForceMarginWarning3Days => '此临时设置仅在三天内有效，请尽快联系维修人员。';
 
   @override
+  String get deviceSettingsForceMarginWarning3DaysFull =>
+      '1. 当弹簧松动或轨道堵塞导致无法操作门时，可暂时使用此功能。\n\n2. 此功能仅在三天内有效，请尽快联系维修人员。';
+
+  @override
   String get deviceSettingsForceMarginTemporaryCurrent => '当前设置：标准（电机设置）';
 
   @override

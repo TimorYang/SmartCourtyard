@@ -30,9 +30,9 @@ class DeviceSettingsAssetPaths {
   static const openingSpeedIndicatorPlaceholder =
       'assets/icons/device_settings/opening_speed_indicator_placeholder.png';
   static const forceMarginWarningPlaceholder =
-      'assets/icons/device_settings/opening_speed_indicator_placeholder.png';
+      'assets/icons/device_settings/force_margin_warning_placeholder.png';
   static const forceMarginIndicatorPlaceholder =
-      'assets/icons/device_settings/opening_speed_indicator_placeholder.png';
+      'assets/icons/device_settings/force_margin_indicator_placeholder.png';
 }
 
 class OpeningSpeedConfig {
@@ -50,7 +50,7 @@ class OpeningSpeedConfig {
 class DeviceSettingsPage extends StatefulWidget {
   const DeviceSettingsPage({
     required this.deviceId,
-    this.forceMarginDialogState = 2,
+    this.forceMarginDialogState = 1,
     this.openingSpeedConfig = const OpeningSpeedConfig(
       minimum: 80,
       maximum: 100,
@@ -266,12 +266,16 @@ class _DeviceSettingsPageState extends State<DeviceSettingsPage> {
           ),
         );
       case 1:
-        await _showSpeedSheet(
-          title: l10n.deviceSettingsForceMargin,
-          currentSetting: l10n.deviceSettingsForceMarginTemporaryCurrent,
-          notice: l10n.deviceSettingsForceMarginWarning3Days,
-          placeholderAssetPath:
-              DeviceSettingsAssetPaths.forceMarginIndicatorPlaceholder,
+        await showModalBottomSheet<void>(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          barrierColor: AppColors.deviceSettingsSheetScrim,
+          builder: (context) => _ForceMarginAdjustmentSheet(
+            description: l10n.deviceSettingsForceMarginWarning3DaysFull,
+            placeholderAssetPath:
+                DeviceSettingsAssetPaths.forceMarginIndicatorPlaceholder,
+          ),
         );
       case 2:
         await showModalBottomSheet<void>(
@@ -976,6 +980,126 @@ class _VerticalSpeedSlider extends StatelessWidget {
   }
 }
 
+class _ForceMarginAdjustmentSheet extends StatefulWidget {
+  const _ForceMarginAdjustmentSheet({
+    required this.description,
+    required this.placeholderAssetPath,
+  });
+
+  final String description;
+  final String placeholderAssetPath;
+
+  @override
+  State<_ForceMarginAdjustmentSheet> createState() =>
+      _ForceMarginAdjustmentSheetState();
+}
+
+class _ForceMarginAdjustmentSheetState
+    extends State<_ForceMarginAdjustmentSheet> {
+  var _value = 0.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return _SettingsSheetFrame(
+      heightFactor: 0.72,
+      child: Column(
+        children: [
+          Text(
+            AppLocalizations.of(context).deviceSettingsForceMargin,
+            style: AppTextTokens.deviceSettingsSheetTitle(textTheme),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            widget.description,
+            style: AppTextTokens.deviceSettingsSheetCaption(
+              textTheme,
+            ).copyWith(color: AppColors.deviceSettingsForceMarginWarningText),
+          ),
+          const SizedBox(height: 24),
+          Expanded(
+            child: Row(
+              children: [
+                _ForceMarginIndicatorCluster(
+                  assetPath: widget.placeholderAssetPath,
+                ),
+                const SizedBox(width: 50),
+                _VerticalSpeedSlider(
+                  value: _value,
+                  minimum: 0,
+                  maximum: 15,
+                  onChanged: (value) => setState(() => _value = value),
+                ),
+                const _ForceMarginScaleLabels(),
+              ],
+            ),
+          ),
+          _SheetActionRow(onConfirm: () => Navigator.pop(context)),
+        ],
+      ),
+    );
+  }
+}
+
+class _ForceMarginIndicatorCluster extends StatelessWidget {
+  const _ForceMarginIndicatorCluster({required this.assetPath});
+
+  final String assetPath;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    width: 112,
+    height: _VerticalSpeedSlider._height,
+    child: Stack(
+      children: [
+        Positioned(
+          left: 8,
+          top: 0,
+          child: _CutAssetPlaceholder(assetPath: assetPath, height: 28),
+        ),
+        Positioned(
+          left: 58,
+          top: 0,
+          child: _CutAssetPlaceholder(assetPath: assetPath, height: 28),
+        ),
+        Positioned(
+          left: 8,
+          bottom: 0,
+          child: _CutAssetPlaceholder(assetPath: assetPath, height: 28),
+        ),
+      ],
+    ),
+  );
+}
+
+class _ForceMarginScaleLabels extends StatelessWidget {
+  const _ForceMarginScaleLabels();
+
+  @override
+  Widget build(BuildContext context) {
+    final style = AppTextTokens.deviceSettingsSheetCaption(
+      Theme.of(context).textTheme,
+    );
+    return SizedBox(
+      width: 76,
+      height: _VerticalSpeedSlider._height,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Align(
+            alignment: Alignment.centerRight,
+            child: Text('+15%', textAlign: TextAlign.right, style: style),
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Text('STD', textAlign: TextAlign.right, style: style),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _ForceMarginWarningDialog extends StatelessWidget {
   const _ForceMarginWarningDialog({required this.description});
 
@@ -988,17 +1112,28 @@ class _ForceMarginWarningDialog extends StatelessWidget {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          const SizedBox(height: 32),
           const _CutAssetPlaceholder(
             assetPath: DeviceSettingsAssetPaths.forceMarginWarningPlaceholder,
             height: 72,
           ),
           const SizedBox(height: 24),
-          Text(description, style: Theme.of(context).textTheme.bodyMedium),
+          Text(
+            description,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              fontSize: 13,
+              color: AppColors.deviceSettingsForceMarginWarningText,
+            ),
+          ),
           const SizedBox(height: 28),
           SizedBox(
-            width: double.infinity,
+            width: 182,
+            height: 50,
             child: FilledButton(
               onPressed: () => Navigator.pop(context),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.deviceSettingsForceMarginConfirm,
+              ),
               child: Text(l10n.deviceSettingsConfirmAction),
             ),
           ),
@@ -1024,7 +1159,7 @@ class _ForceMarginLevelSheetState extends State<_ForceMarginLevelSheet> {
         l10n.deviceSettingsForceMarginLevel(level),
     ];
     return _SettingsSheetFrame(
-      heightFactor: 0.64,
+      heightFactor: 0.5,
       child: Column(
         children: [
           Text(
