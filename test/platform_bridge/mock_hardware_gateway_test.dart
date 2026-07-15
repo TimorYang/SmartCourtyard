@@ -14,7 +14,7 @@ void main() {
         isA<BleDevice>()
             .having((device) => device.id, 'id', 'mock-ble-device')
             .having((device) => device.name, 'name', 'opener_MOCK-SN-001')
-            .having((device) => device.sn, 'sn', 'MOCK-SN-001')
+            .having((device) => device.sn, 'sn', 'opener_MOCK-SN-001')
             .having((device) => device.requestId, 'requestId', 'scan-1')
             .having(
               (device) => device.scanSessionId,

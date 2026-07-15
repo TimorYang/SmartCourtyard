@@ -2131,7 +2131,7 @@ class BleManager(
   private fun parseSmartOpenerSn(name: String?): String? {
     val prefix = "opener_"
     if (name == null || !name.startsWith(prefix)) return null
-    return name.removePrefix(prefix).trim().takeIf { it.isNotEmpty() }
+    return name.trim().takeIf { it.isNotEmpty() }
   }
 
   private fun buildScanFilters(filter: BleScanFilterDto): List<ScanFilter> {
