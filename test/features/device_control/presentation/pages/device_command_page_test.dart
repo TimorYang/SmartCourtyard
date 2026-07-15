@@ -87,7 +87,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(gateway.queryCount, 0);
-    expect(find.text('DEVICE SETTINGS'), findsOneWidget);
+    expect(find.text('Setting'), findsOneWidget);
     expect(find.text('Transmitter management'), findsOneWidget);
   });
 

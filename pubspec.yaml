@@ -25,7 +25,7 @@ dependencies:
   intl: ^0.20.2
   json_annotation: ^4.12.0
   lottie: ^3.5.0
-  mobile_scanner: ^7.2.0
+  mobile_scanner: 7.2.0
   pinput: ^6.0.2
   retrofit: ^4.9.2
   pointycastle: ^4.0.0
@@ -59,4 +59,5 @@ flutter:
     - assets/icons/home/
     - assets/icons/notification/
     - assets/icons/device_control/
+    - assets/icons/device_settings/
     - assets/icons/security_center/

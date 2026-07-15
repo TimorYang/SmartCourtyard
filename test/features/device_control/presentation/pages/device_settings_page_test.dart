@@ -1,5 +1,8 @@
+import 'dart:ui' show Tristate;
+
 import 'package:flinx/features/device_control/presentation/pages/device_settings_page.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
+import 'package:flinx/shared/widgets/flinx_switch.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -8,16 +11,42 @@ void main() {
   testWidgets('renders settings rows and default values', (tester) async {
     await _pumpSettingsRouter(tester);
 
-    expect(find.text('DEVICE SETTINGS'), findsOneWidget);
+    expect(find.text('Setting'), findsOneWidget);
     expect(find.text('For users'), findsOneWidget);
     expect(find.text('Transmitter management'), findsOneWidget);
     expect(find.text('LED off delay'), findsOneWidget);
-    expect(find.text('3min'), findsOneWidget);
+    expect(find.text('3 min'), findsOneWidget);
     expect(find.text('Partial open'), findsOneWidget);
-    expect(find.text('12cm'), findsOneWidget);
+    expect(find.text('12 min'), findsOneWidget);
     expect(find.text('Auto close'), findsOneWidget);
-    expect(find.text('0s'), findsOneWidget);
+    expect(find.text('15s'), findsOneWidget);
+    expect(find.text('Opening speed'), findsOneWidget);
+    expect(find.text('GMT+8:00'), findsOneWidget);
     expect(find.text('About the device'), findsOneWidget);
+    expect(find.text('Door open reminder'), findsOneWidget);
+    expect(find.text('For installers'), findsOneWidget);
+    expect(find.text('Force margin'), findsOneWidget);
+    expect(find.byType(FlinxSwitch), findsOneWidget);
+  });
+
+  testWidgets('toggles door open reminder with the shared switch', (
+    tester,
+  ) async {
+    await _pumpSettingsRouter(tester);
+
+    final toggle = find.byType(FlinxSwitch);
+    expect(
+      tester.getSemantics(toggle).flagsCollection.isToggled,
+      Tristate.isTrue,
+    );
+
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.getSemantics(toggle).flagsCollection.isToggled,
+      Tristate.isFalse,
+    );
   });
 
   testWidgets('updates LED off delay from bottom sheet', (tester) async {
@@ -69,18 +98,18 @@ void main() {
 
     expect(find.text('Auto closing setting'), findsOneWidget);
     expect(find.text('Any position'), findsOneWidget);
-    expect(find.text('1min'), findsOneWidget);
+    expect(find.text('1 min'), findsOneWidget);
     await tester.scrollUntilVisible(
-      find.text('60min'),
+      find.text('60 min'),
       500,
       scrollable: find.byType(Scrollable).last,
     );
-    expect(find.text('60min'), findsOneWidget);
+    expect(find.text('60 min'), findsOneWidget);
 
     await tester.tap(find.text('Confirm'));
     await tester.pumpAndSettle();
 
-    expect(find.text('1min'), findsOneWidget);
+    expect(find.text('1 min'), findsOneWidget);
   });
 
   testWidgets('cancel dismisses setting sheet without updating value', (
@@ -94,7 +123,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('LED off delay'), findsOneWidget);
-    expect(find.text('3min'), findsOneWidget);
+    expect(find.text('3 min'), findsOneWidget);
     expect(find.text('5'), findsNothing);
   });
 

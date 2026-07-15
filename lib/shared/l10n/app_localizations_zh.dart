@@ -861,4 +861,92 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get afterSalesSubmitSuccess => 'Appointment submitted successfully';
+
+  @override
+  String get deviceSettingsTitle => '设置';
+
+  @override
+  String get deviceSettingsForUsers => '用户设置';
+
+  @override
+  String get deviceSettingsForInstallers => '安装人员设置';
+
+  @override
+  String get deviceSettingsTransmitterManagement => '遥控器管理';
+
+  @override
+  String get deviceSettingsLedOffDelay => 'LED 熄灭延时';
+
+  @override
+  String get deviceSettingsPartialOpen => '部分开启';
+
+  @override
+  String get deviceSettingsPartialOpenHeight => '部分开启高度';
+
+  @override
+  String get deviceSettingsAutoClose => '自动关闭';
+
+  @override
+  String get deviceSettingsOpeningSpeed => '开启速度';
+
+  @override
+  String get deviceSettingsOpeningSpeedValue => 'GMT+8:00';
+
+  @override
+  String get deviceSettingsAboutDevice => '关于设备';
+
+  @override
+  String get deviceSettingsDoorOpenReminder => '开门提醒';
+
+  @override
+  String get deviceSettingsForceMargin => '力矩余量';
+
+  @override
+  String get deviceSettingsBluetoothName => '蓝牙名称';
+
+  @override
+  String get deviceSettingsFirmwareVersion => '固件版本';
+
+  @override
+  String get deviceSettingsHardwareVersion => '硬件版本';
+
+  @override
+  String get deviceSettingsCheckVersion => '检查版本';
+
+  @override
+  String get deviceSettingsTransmitterLearning => '遥控器学习';
+
+  @override
+  String get deviceSettingsManagement => '管理';
+
+  @override
+  String get deviceSettingsAutoClosingSetting => '自动关闭设置';
+
+  @override
+  String get deviceSettingsAutoCloseCaption => '当前设置：120 秒（电机设置）\n自动关闭位置';
+
+  @override
+  String get deviceSettingsAutoCloseTime => '自动关闭时间';
+
+  @override
+  String get deviceSettingsUpLimit => '上限位置';
+
+  @override
+  String get deviceSettingsAnyPosition => '任意位置';
+
+  @override
+  String get deviceSettingsCancelAction => '取消';
+
+  @override
+  String get deviceSettingsConfirmAction => '确认';
+
+  @override
+  String deviceSettingsMinutes(int minutes) {
+    return '$minutes 分钟';
+  }
+
+  @override
+  String deviceSettingsSeconds(int seconds) {
+    return '$seconds 秒';
+  }
 }

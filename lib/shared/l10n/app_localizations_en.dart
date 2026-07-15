@@ -921,4 +921,93 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get afterSalesSubmitSuccess => 'Appointment submitted successfully';
+
+  @override
+  String get deviceSettingsTitle => 'Setting';
+
+  @override
+  String get deviceSettingsForUsers => 'For users';
+
+  @override
+  String get deviceSettingsForInstallers => 'For installers';
+
+  @override
+  String get deviceSettingsTransmitterManagement => 'Transmitter management';
+
+  @override
+  String get deviceSettingsLedOffDelay => 'LED off delay';
+
+  @override
+  String get deviceSettingsPartialOpen => 'Partial open';
+
+  @override
+  String get deviceSettingsPartialOpenHeight => 'Partial open height';
+
+  @override
+  String get deviceSettingsAutoClose => 'Auto close';
+
+  @override
+  String get deviceSettingsOpeningSpeed => 'Opening speed';
+
+  @override
+  String get deviceSettingsOpeningSpeedValue => 'GMT+8:00';
+
+  @override
+  String get deviceSettingsAboutDevice => 'About the device';
+
+  @override
+  String get deviceSettingsDoorOpenReminder => 'Door open reminder';
+
+  @override
+  String get deviceSettingsForceMargin => 'Force margin';
+
+  @override
+  String get deviceSettingsBluetoothName => 'Bluetooth name';
+
+  @override
+  String get deviceSettingsFirmwareVersion => 'Firmware version';
+
+  @override
+  String get deviceSettingsHardwareVersion => 'Hardware version';
+
+  @override
+  String get deviceSettingsCheckVersion => 'Check version';
+
+  @override
+  String get deviceSettingsTransmitterLearning => 'Transmitter learning';
+
+  @override
+  String get deviceSettingsManagement => 'Management';
+
+  @override
+  String get deviceSettingsAutoClosingSetting => 'Auto closing setting';
+
+  @override
+  String get deviceSettingsAutoCloseCaption =>
+      'Current setting: 120s (motor setting)\nAuto close position';
+
+  @override
+  String get deviceSettingsAutoCloseTime => 'Auto close time';
+
+  @override
+  String get deviceSettingsUpLimit => 'Up limit';
+
+  @override
+  String get deviceSettingsAnyPosition => 'Any position';
+
+  @override
+  String get deviceSettingsCancelAction => 'Cancel';
+
+  @override
+  String get deviceSettingsConfirmAction => 'Confirm';
+
+  @override
+  String deviceSettingsMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String deviceSettingsSeconds(int seconds) {
+    return '${seconds}s';
+  }
 }
