@@ -1927,6 +1927,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Current setting: Level {level} (motor setting)'**
   String deviceSettingsForceMarginLevelCurrent(int level);
+
+  /// No description provided for @transmitterLearningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Transmitter learning'**
+  String get transmitterLearningTitle;
+
+  /// No description provided for @transmitterLearningOnSiteTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Be sure to operate on site!'**
+  String get transmitterLearningOnSiteTip;
+
+  /// No description provided for @transmitterLearningKeepBluetoothOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Bluetooth on'**
+  String get transmitterLearningKeepBluetoothOn;
+
+  /// No description provided for @transmitterLearningReadyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Make sure the distance between the mobile phone and the opener is less than 5 meters.\n\n2. The learning will end automatically if there\'s no operation within 20 seconds.'**
+  String get transmitterLearningReadyDescription;
+
+  /// No description provided for @transmitterLearningInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Learning...'**
+  String get transmitterLearningInProgress;
+
+  /// No description provided for @transmitterLearningInProgressDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Click any button (the same button) continuously at least 3 times.'**
+  String get transmitterLearningInProgressDescription;
+
+  /// No description provided for @transmitterLearningFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Transmitter Learning Failed'**
+  String get transmitterLearningFailed;
+
+  /// No description provided for @transmitterLearningSucceeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Transmitter Learning Succeed'**
+  String get transmitterLearningSucceeded;
+
+  /// No description provided for @transmitterLearningRemoteInstruction.
+  ///
+  /// In en, this message translates to:
+  /// **'Please use the remote control to try'**
+  String get transmitterLearningRemoteInstruction;
+
+  /// No description provided for @transmitterLearningStartAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Learning'**
+  String get transmitterLearningStartAction;
+
+  /// No description provided for @transmitterLearningRestartAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Restart'**
+  String get transmitterLearningRestartAction;
+
+  /// No description provided for @transmitterLearningCompleteAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete'**
+  String get transmitterLearningCompleteAction;
 }
 
 class _AppLocalizationsDelegate

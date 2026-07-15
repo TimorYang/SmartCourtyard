@@ -1021,4 +1021,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String deviceSettingsForceMarginLevelCurrent(int level) {
     return 'Current setting: Level $level (motor setting)';
   }
+
+  @override
+  String get transmitterLearningTitle => 'Transmitter learning';
+
+  @override
+  String get transmitterLearningOnSiteTip => 'Be sure to operate on site!';
+
+  @override
+  String get transmitterLearningKeepBluetoothOn => 'Keep Bluetooth on';
+
+  @override
+  String get transmitterLearningReadyDescription =>
+      '1. Make sure the distance between the mobile phone and the opener is less than 5 meters.\n\n2. The learning will end automatically if there\'s no operation within 20 seconds.';
+
+  @override
+  String get transmitterLearningInProgress => 'Learning...';
+
+  @override
+  String get transmitterLearningInProgressDescription =>
+      'Click any button (the same button) continuously at least 3 times.';
+
+  @override
+  String get transmitterLearningFailed => 'Transmitter Learning Failed';
+
+  @override
+  String get transmitterLearningSucceeded => 'Transmitter Learning Succeed';
+
+  @override
+  String get transmitterLearningRemoteInstruction =>
+      'Please use the remote control to try';
+
+  @override
+  String get transmitterLearningStartAction => 'Start Learning';
+
+  @override
+  String get transmitterLearningRestartAction => 'Restart';
+
+  @override
+  String get transmitterLearningCompleteAction => 'Complete';
 }

@@ -963,4 +963,41 @@ class AppLocalizationsZh extends AppLocalizations {
   String deviceSettingsForceMarginLevelCurrent(int level) {
     return '当前设置：等级 $level（电机设置）';
   }
+
+  @override
+  String get transmitterLearningTitle => '遥控器学习';
+
+  @override
+  String get transmitterLearningOnSiteTip => '请务必在现场操作！';
+
+  @override
+  String get transmitterLearningKeepBluetoothOn => '保持蓝牙开启';
+
+  @override
+  String get transmitterLearningReadyDescription =>
+      '1. 请确保手机与开门机之间的距离小于 5 米。\n\n2. 若 20 秒内没有操作，学习将自动结束。';
+
+  @override
+  String get transmitterLearningInProgress => '学习中…';
+
+  @override
+  String get transmitterLearningInProgressDescription => '请连续按同一个按键至少 3 次。';
+
+  @override
+  String get transmitterLearningFailed => '遥控器学习失败';
+
+  @override
+  String get transmitterLearningSucceeded => '遥控器学习成功';
+
+  @override
+  String get transmitterLearningRemoteInstruction => '请使用遥控器进行尝试';
+
+  @override
+  String get transmitterLearningStartAction => '开始学习';
+
+  @override
+  String get transmitterLearningRestartAction => '重新开始';
+
+  @override
+  String get transmitterLearningCompleteAction => '完成';
 }

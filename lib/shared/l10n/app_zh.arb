@@ -331,5 +331,17 @@
   "deviceSettingsForceMarginLevel": "等级 {level}",
   "@deviceSettingsForceMarginLevel": {"placeholders": {"level": {"type": "int"}}},
   "deviceSettingsForceMarginLevelCurrent": "当前设置：等级 {level}（电机设置）",
-  "@deviceSettingsForceMarginLevelCurrent": {"placeholders": {"level": {"type": "int"}}}
+  "@deviceSettingsForceMarginLevelCurrent": {"placeholders": {"level": {"type": "int"}}},
+  "transmitterLearningTitle": "遥控器学习",
+  "transmitterLearningOnSiteTip": "请务必在现场操作！",
+  "transmitterLearningKeepBluetoothOn": "保持蓝牙开启",
+  "transmitterLearningReadyDescription": "1. 请确保手机与开门机之间的距离小于 5 米。\n\n2. 若 20 秒内没有操作，学习将自动结束。",
+  "transmitterLearningInProgress": "学习中…",
+  "transmitterLearningInProgressDescription": "请连续按同一个按键至少 3 次。",
+  "transmitterLearningFailed": "遥控器学习失败",
+  "transmitterLearningSucceeded": "遥控器学习成功",
+  "transmitterLearningRemoteInstruction": "请使用遥控器进行尝试",
+  "transmitterLearningStartAction": "开始学习",
+  "transmitterLearningRestartAction": "重新开始",
+  "transmitterLearningCompleteAction": "完成"
 }

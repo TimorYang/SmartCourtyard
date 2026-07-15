@@ -1056,5 +1056,17 @@
   "deviceSettingsForceMarginLevel": "Level {level}",
   "@deviceSettingsForceMarginLevel": {"placeholders": {"level": {"type": "int"}}},
   "deviceSettingsForceMarginLevelCurrent": "Current setting: Level {level} (motor setting)",
-  "@deviceSettingsForceMarginLevelCurrent": {"placeholders": {"level": {"type": "int"}}}
+  "@deviceSettingsForceMarginLevelCurrent": {"placeholders": {"level": {"type": "int"}}},
+  "transmitterLearningTitle": "Transmitter learning",
+  "transmitterLearningOnSiteTip": "Be sure to operate on site!",
+  "transmitterLearningKeepBluetoothOn": "Keep Bluetooth on",
+  "transmitterLearningReadyDescription": "1. Make sure the distance between the mobile phone and the opener is less than 5 meters.\n\n2. The learning will end automatically if there's no operation within 20 seconds.",
+  "transmitterLearningInProgress": "Learning...",
+  "transmitterLearningInProgressDescription": "Click any button (the same button) continuously at least 3 times.",
+  "transmitterLearningFailed": "Transmitter Learning Failed",
+  "transmitterLearningSucceeded": "Transmitter Learning Succeed",
+  "transmitterLearningRemoteInstruction": "Please use the remote control to try",
+  "transmitterLearningStartAction": "Start Learning",
+  "transmitterLearningRestartAction": "Restart",
+  "transmitterLearningCompleteAction": "Complete"
 }
