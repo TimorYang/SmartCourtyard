@@ -16,23 +16,30 @@ import 'register_password_controller.dart';
 import '../../account/application/providers.dart';
 import '../data/data_sources/auth_crypto_remote_data_source.dart';
 import '../data/data_sources/auth_login_remote_data_source.dart';
+import '../data/data_sources/auth_password_reset_remote_data_source.dart';
 import '../data/data_sources/auth_registration_remote_data_source.dart';
 import '../data/data_sources/auth_api.dart';
 import '../data/repositories/auth_registration_repository_impl.dart';
 import '../data/repositories/auth_crypto_repository_impl.dart';
 import '../data/repositories/auth_login_repository_impl.dart';
+import '../data/repositories/auth_password_reset_repository_impl.dart';
 import '../data/services/rsa_oaep_password_ciphertext_encryptor.dart';
 import '../domain/entities/auth_session.dart';
 import '../domain/entities/registration_device_context.dart';
 import '../domain/repositories/auth_crypto_repository.dart';
 import '../domain/repositories/auth_login_repository.dart';
+import '../domain/repositories/auth_password_reset_repository.dart';
 import '../domain/repositories/auth_registration_repository.dart';
 import '../domain/services/password_ciphertext_encryptor.dart';
 import '../domain/use_cases/complete_registration_use_case.dart';
+import '../domain/use_cases/complete_password_reset_use_case.dart';
 import '../domain/use_cases/login_use_case.dart';
 import '../domain/use_cases/send_registration_email_code_use_case.dart';
+import '../domain/use_cases/send_password_reset_email_code_use_case.dart';
 import '../domain/use_cases/verify_registration_email_code_use_case.dart';
+import '../domain/use_cases/verify_password_reset_email_code_use_case.dart';
 import 'registration_flow_store.dart';
+import 'password_reset_flow_store.dart';
 
 final authSessionProvider = FutureProvider<AuthSession>((ref) async {
   final activeSession = ref.watch(activeAuthSessionProvider);
@@ -116,6 +123,22 @@ final authRegistrationRepositoryProvider = Provider<AuthRegistrationRepository>(
   },
 );
 
+final authPasswordResetRemoteDataSourceProvider =
+    Provider<AuthPasswordResetRemoteDataSource>((ref) {
+      return AuthPasswordResetRemoteDataSourceImpl(
+        api: ref.watch(authApiProvider),
+        clientAuthorization: ref.watch(authClientAuthorizationProvider),
+      );
+    });
+
+final authPasswordResetRepositoryProvider =
+    Provider<AuthPasswordResetRepository>((ref) {
+      return AuthPasswordResetRepositoryImpl(
+        remoteDataSource: ref.watch(authPasswordResetRemoteDataSourceProvider),
+        logger: ref.watch(appLoggerProvider),
+      );
+    });
+
 final passwordCiphertextEncryptorProvider =
     Provider<PasswordCiphertextEncryptor>((ref) {
       return RsaOaepPasswordCiphertextEncryptor();
@@ -123,6 +146,10 @@ final passwordCiphertextEncryptorProvider =
 
 final registrationFlowStoreProvider = Provider<RegistrationFlowStore>((ref) {
   return RegistrationFlowStore();
+});
+
+final passwordResetFlowStoreProvider = Provider<PasswordResetFlowStore>((ref) {
+  return PasswordResetFlowStore();
 });
 
 final registrationDeviceContextProvider =
@@ -157,6 +184,29 @@ final completeRegistrationUseCaseProvider =
     Provider<CompleteRegistrationUseCase>((ref) {
       return CompleteRegistrationUseCase(
         registrationRepository: ref.watch(authRegistrationRepositoryProvider),
+        cryptoRepository: ref.watch(authCryptoRepositoryProvider),
+        encryptor: ref.watch(passwordCiphertextEncryptorProvider),
+      );
+    });
+
+final sendPasswordResetEmailCodeUseCaseProvider =
+    Provider<SendPasswordResetEmailCodeUseCase>((ref) {
+      return SendPasswordResetEmailCodeUseCase(
+        repository: ref.watch(authPasswordResetRepositoryProvider),
+      );
+    });
+
+final verifyPasswordResetEmailCodeUseCaseProvider =
+    Provider<VerifyPasswordResetEmailCodeUseCase>((ref) {
+      return VerifyPasswordResetEmailCodeUseCase(
+        repository: ref.watch(authPasswordResetRepositoryProvider),
+      );
+    });
+
+final completePasswordResetUseCaseProvider =
+    Provider<CompletePasswordResetUseCase>((ref) {
+      return CompletePasswordResetUseCase(
+        passwordResetRepository: ref.watch(authPasswordResetRepositoryProvider),
         cryptoRepository: ref.watch(authCryptoRepositoryProvider),
         encryptor: ref.watch(passwordCiphertextEncryptorProvider),
       );

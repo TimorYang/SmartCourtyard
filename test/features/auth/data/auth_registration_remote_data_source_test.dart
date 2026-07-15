@@ -79,6 +79,12 @@ class _FakeAuthApi implements AuthApi {
   }
 
   @override
+  Future<ApiEnvelopeDto<dynamic>> completePasswordReset(
+    Map<String, dynamic> body,
+    Options requestOptions,
+  ) => throw UnimplementedError();
+
+  @override
   Future<ApiEnvelopeDto<AuthPublicKeyResponseDto>> fetchPublicKey(
     Options options,
   ) => throw UnimplementedError();
@@ -94,6 +100,12 @@ class _FakeAuthApi implements AuthApi {
   }
 
   @override
+  Future<ApiEnvelopeDto<dynamic>> sendPasswordResetEmailCode(
+    Map<String, dynamic> body,
+    Options requestOptions,
+  ) => throw UnimplementedError();
+
+  @override
   Future<ApiEnvelopeDto<dynamic>> verifyRegistrationEmailCode(
     Map<String, dynamic> body,
     Options requestOptions,
@@ -106,4 +118,10 @@ class _FakeAuthApi implements AuthApi {
       data: {'registrationToken': 'one-time-token', 'expiresIn': '300'},
     );
   }
+
+  @override
+  Future<ApiEnvelopeDto<dynamic>> verifyPasswordResetEmailCode(
+    Map<String, dynamic> body,
+    Options requestOptions,
+  ) => throw UnimplementedError();
 }

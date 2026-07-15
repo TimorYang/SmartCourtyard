@@ -157,6 +157,11 @@
   "@forgotPasswordResetPending": {
     "description": "Temporary message shown when the user submits the reset password form"
   },
+  "passwordResetRequestFailed": "Unable to reset password. Please try again.",
+  "passwordResetNetworkUnavailable": "Network unavailable. Please try again.",
+  "passwordResetAuthorizationFailed": "Password reset is temporarily unavailable.",
+  "passwordResetRestartRequired": "Your password reset session has expired. Please start again.",
+  "passwordResetResponseContractPending": "Verification succeeded. Password reset will be enabled after the response contract is confirmed.",
   "passwordResetSucceededTitle": "Reset Succeeded",
   "@passwordResetSucceededTitle": {
     "description": "Password reset success page heading"

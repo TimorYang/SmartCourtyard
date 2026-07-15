@@ -338,6 +338,36 @@ abstract class AppLocalizations {
   /// **'Password reset is not connected yet'**
   String get forgotPasswordResetPending;
 
+  /// No description provided for @passwordResetRequestFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to reset password. Please try again.'**
+  String get passwordResetRequestFailed;
+
+  /// No description provided for @passwordResetNetworkUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Network unavailable. Please try again.'**
+  String get passwordResetNetworkUnavailable;
+
+  /// No description provided for @passwordResetAuthorizationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Password reset is temporarily unavailable.'**
+  String get passwordResetAuthorizationFailed;
+
+  /// No description provided for @passwordResetRestartRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Your password reset session has expired. Please start again.'**
+  String get passwordResetRestartRequired;
+
+  /// No description provided for @passwordResetResponseContractPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification succeeded. Password reset will be enabled after the response contract is confirmed.'**
+  String get passwordResetResponseContractPending;
+
   /// Password reset success page heading
   ///
   /// In en, this message translates to:

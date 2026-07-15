@@ -146,6 +146,26 @@ class AppLocalizationsEn extends AppLocalizations {
       'Password reset is not connected yet';
 
   @override
+  String get passwordResetRequestFailed =>
+      'Unable to reset password. Please try again.';
+
+  @override
+  String get passwordResetNetworkUnavailable =>
+      'Network unavailable. Please try again.';
+
+  @override
+  String get passwordResetAuthorizationFailed =>
+      'Password reset is temporarily unavailable.';
+
+  @override
+  String get passwordResetRestartRequired =>
+      'Your password reset session has expired. Please start again.';
+
+  @override
+  String get passwordResetResponseContractPending =>
+      'Verification succeeded. Password reset will be enabled after the response contract is confirmed.';
+
+  @override
   String get passwordResetSucceededTitle => 'Reset Succeeded';
 
   @override

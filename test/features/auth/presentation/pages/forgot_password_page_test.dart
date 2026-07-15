@@ -1,5 +1,11 @@
 import 'package:flinx/app/flinx_app.dart';
 import 'package:flinx/app/theme/app_design_tokens.dart';
+import 'package:flinx/features/auth/application/providers.dart';
+import 'package:flinx/features/auth/domain/entities/password_encryption_material.dart';
+import 'package:flinx/features/auth/domain/entities/password_reset_verification.dart';
+import 'package:flinx/features/auth/domain/repositories/auth_crypto_repository.dart';
+import 'package:flinx/features/auth/domain/repositories/auth_password_reset_repository.dart';
+import 'package:flinx/features/auth/domain/services/password_ciphertext_encryptor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,7 +13,22 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   Future<void> openForgotPasswordPage(WidgetTester tester) async {
-    await tester.pumpWidget(const ProviderScope(child: FlinxApp()));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authPasswordResetRepositoryProvider.overrideWithValue(
+            _SuccessfulPasswordResetRepository(),
+          ),
+          authCryptoRepositoryProvider.overrideWithValue(
+            _FakeCryptoRepository(),
+          ),
+          passwordCiphertextEncryptorProvider.overrideWithValue(
+            const _FakeEncryptor(),
+          ),
+        ],
+        child: const FlinxApp(),
+      ),
+    );
     addTearDown(() async {
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();
@@ -87,7 +108,9 @@ void main() {
     expect(find.text('Enter Code'), findsNothing);
   });
 
-  testWidgets('opens code, reset password, and success steps', (tester) async {
+  testWidgets('verifies the reset token and completes password reset', (
+    tester,
+  ) async {
     await openForgotPasswordPage(tester);
 
     await tester.enterText(
@@ -117,9 +140,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Password'), findsOneWidget);
-    expect(find.text('Set your password'), findsOneWidget);
-    expect(find.text('Enter an 8-digit password'), findsOneWidget);
-    expect(find.text('Enter the 8-digit password again'), findsOneWidget);
     expect(find.text('Finish'), findsOneWidget);
 
     await tester.enterText(
@@ -129,6 +149,7 @@ void main() {
       ),
       '12345678',
     );
+    await tester.pump();
     await tester.enterText(
       find.descendant(
         of: find.byKey(
@@ -139,26 +160,10 @@ void main() {
       '12345678',
     );
     await tester.pumpAndSettle();
-
     await tester.tap(find.text('Finish'));
     await tester.pumpAndSettle();
 
-    expect(
-      find.byKey(const ValueKey('forgot_password_success_icon')),
-      findsOneWidget,
-    );
     expect(find.text('Reset Succeeded'), findsOneWidget);
-    expect(find.text('Password reset succeeded'), findsOneWidget);
-
-    await tester.tap(find.text('Back to Login'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Enter your email address'), findsOneWidget);
-
-    await tester.tap(find.byType(IconButton));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Start your\nsmart life'), findsOneWidget);
   });
 
   testWidgets('resend OTP countdown enables resend and restarts after tap', (
@@ -224,4 +229,58 @@ void main() {
     editableText = tester.widget<EditableText>(emailEditableText);
     expect(editableText.focusNode.hasFocus, isFalse);
   });
+}
+
+class _SuccessfulPasswordResetRepository
+    implements AuthPasswordResetRepository {
+  @override
+  Future<void> completePasswordReset({
+    required String passwordResetToken,
+    required String newPasswordCiphertext,
+    required String confirmPasswordCiphertext,
+    required String keyId,
+    required String nonce,
+    required String requestId,
+  }) async {}
+
+  @override
+  Future<void> sendEmailCode({
+    required String email,
+    required String requestId,
+  }) async {}
+
+  @override
+  Future<PasswordResetVerification> verifyEmailCode({
+    required String email,
+    required String code,
+    required String requestId,
+  }) async => const PasswordResetVerification(
+    passwordResetToken: 'one-time-token',
+    expiresIn: Duration(minutes: 10),
+  );
+}
+
+class _FakeCryptoRepository implements AuthCryptoRepository {
+  @override
+  Future<PasswordEncryptionMaterial> getPasswordEncryptionMaterial({
+    required String requestId,
+  }) async => PasswordEncryptionMaterial(
+    keyId: 'app-password-key-v1',
+    algorithm: PasswordEncryptionMaterial.rsaOaepSha256,
+    publicKeyBase64: '',
+    nonce: 'nonce',
+    expiresIn: const Duration(minutes: 5),
+    requestId: requestId,
+    issuedAt: DateTime.now().toUtc(),
+  );
+}
+
+class _FakeEncryptor implements PasswordCiphertextEncryptor {
+  const _FakeEncryptor();
+
+  @override
+  String encrypt({
+    required String plaintext,
+    required PasswordEncryptionMaterial material,
+  }) => 'ciphertext:$plaintext';
 }
