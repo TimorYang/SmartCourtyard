@@ -279,5 +279,47 @@
   "sceneNameDialogTitle": "场景名称",
   "sceneNameInputPlaceholder": "请输入场景名称",
   "sceneNameCancelAction": "取消",
-  "sceneNameConfirmAction": "确认"
+  "sceneNameConfirmAction": "确认",
+  "deviceSettingsTitle": "设置",
+  "deviceSettingsForUsers": "用户设置",
+  "deviceSettingsForInstallers": "安装人员设置",
+  "deviceSettingsTransmitterManagement": "遥控器管理",
+  "deviceSettingsLedOffDelay": "LED 熄灭延时",
+  "deviceSettingsPartialOpen": "部分开启",
+  "deviceSettingsPartialOpenHeight": "部分开启高度",
+  "deviceSettingsAutoClose": "自动关闭",
+  "deviceSettingsOpeningSpeed": "开启速度",
+  "deviceSettingsOpeningSpeedValue": "GMT+8:00",
+  "deviceSettingsAboutDevice": "关于设备",
+  "deviceSettingsDoorOpenReminder": "开门提醒",
+  "deviceSettingsForceMargin": "力矩余量",
+  "deviceSettingsBluetoothName": "蓝牙名称",
+  "deviceSettingsFirmwareVersion": "固件版本",
+  "deviceSettingsHardwareVersion": "硬件版本",
+  "deviceSettingsCheckVersion": "检查版本",
+  "deviceSettingsTransmitterLearning": "遥控器学习",
+  "deviceSettingsManagement": "管理",
+  "deviceSettingsAutoClosingSetting": "自动关闭设置",
+  "deviceSettingsAutoCloseCaption": "当前设置：120 秒（电机设置）\n自动关闭位置",
+  "deviceSettingsAutoCloseTime": "自动关闭时间",
+  "deviceSettingsUpLimit": "上限位置",
+  "deviceSettingsAnyPosition": "任意位置",
+  "deviceSettingsCancelAction": "取消",
+  "deviceSettingsConfirmAction": "确认",
+  "deviceSettingsMinutes": "{minutes} 分钟",
+  "@deviceSettingsMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "deviceSettingsSeconds": "{seconds} 秒",
+  "@deviceSettingsSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  }
 }

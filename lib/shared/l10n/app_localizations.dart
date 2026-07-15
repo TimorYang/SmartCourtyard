@@ -1717,6 +1717,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Appointment submitted successfully'**
   String get afterSalesSubmitSuccess;
+
+  /// No description provided for @deviceSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Setting'**
+  String get deviceSettingsTitle;
+
+  /// No description provided for @deviceSettingsForUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'For users'**
+  String get deviceSettingsForUsers;
+
+  /// No description provided for @deviceSettingsForInstallers.
+  ///
+  /// In en, this message translates to:
+  /// **'For installers'**
+  String get deviceSettingsForInstallers;
+
+  /// No description provided for @deviceSettingsTransmitterManagement.
+  ///
+  /// In en, this message translates to:
+  /// **'Transmitter management'**
+  String get deviceSettingsTransmitterManagement;
+
+  /// No description provided for @deviceSettingsLedOffDelay.
+  ///
+  /// In en, this message translates to:
+  /// **'LED off delay'**
+  String get deviceSettingsLedOffDelay;
+
+  /// No description provided for @deviceSettingsPartialOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Partial open'**
+  String get deviceSettingsPartialOpen;
+
+  /// No description provided for @deviceSettingsPartialOpenHeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Partial open height'**
+  String get deviceSettingsPartialOpenHeight;
+
+  /// No description provided for @deviceSettingsAutoClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto close'**
+  String get deviceSettingsAutoClose;
+
+  /// No description provided for @deviceSettingsOpeningSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening speed'**
+  String get deviceSettingsOpeningSpeed;
+
+  /// No description provided for @deviceSettingsOpeningSpeedValue.
+  ///
+  /// In en, this message translates to:
+  /// **'GMT+8:00'**
+  String get deviceSettingsOpeningSpeedValue;
+
+  /// No description provided for @deviceSettingsAboutDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'About the device'**
+  String get deviceSettingsAboutDevice;
+
+  /// No description provided for @deviceSettingsDoorOpenReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Door open reminder'**
+  String get deviceSettingsDoorOpenReminder;
+
+  /// No description provided for @deviceSettingsForceMargin.
+  ///
+  /// In en, this message translates to:
+  /// **'Force margin'**
+  String get deviceSettingsForceMargin;
+
+  /// No description provided for @deviceSettingsBluetoothName.
+  ///
+  /// In en, this message translates to:
+  /// **'Bluetooth name'**
+  String get deviceSettingsBluetoothName;
+
+  /// No description provided for @deviceSettingsFirmwareVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Firmware version'**
+  String get deviceSettingsFirmwareVersion;
+
+  /// No description provided for @deviceSettingsHardwareVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Hardware version'**
+  String get deviceSettingsHardwareVersion;
+
+  /// No description provided for @deviceSettingsCheckVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Check version'**
+  String get deviceSettingsCheckVersion;
+
+  /// No description provided for @deviceSettingsTransmitterLearning.
+  ///
+  /// In en, this message translates to:
+  /// **'Transmitter learning'**
+  String get deviceSettingsTransmitterLearning;
+
+  /// No description provided for @deviceSettingsManagement.
+  ///
+  /// In en, this message translates to:
+  /// **'Management'**
+  String get deviceSettingsManagement;
+
+  /// No description provided for @deviceSettingsAutoClosingSetting.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto closing setting'**
+  String get deviceSettingsAutoClosingSetting;
+
+  /// No description provided for @deviceSettingsAutoCloseCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Current setting: 120s (motor setting)\nAuto close position'**
+  String get deviceSettingsAutoCloseCaption;
+
+  /// No description provided for @deviceSettingsAutoCloseTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto close time'**
+  String get deviceSettingsAutoCloseTime;
+
+  /// No description provided for @deviceSettingsUpLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Up limit'**
+  String get deviceSettingsUpLimit;
+
+  /// No description provided for @deviceSettingsAnyPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'Any position'**
+  String get deviceSettingsAnyPosition;
+
+  /// No description provided for @deviceSettingsCancelAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get deviceSettingsCancelAction;
+
+  /// No description provided for @deviceSettingsConfirmAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get deviceSettingsConfirmAction;
+
+  /// No description provided for @deviceSettingsMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String deviceSettingsMinutes(int minutes);
+
+  /// No description provided for @deviceSettingsSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds}s'**
+  String deviceSettingsSeconds(int seconds);
 }
 
 class _AppLocalizationsDelegate

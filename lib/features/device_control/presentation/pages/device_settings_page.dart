@@ -4,7 +4,30 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
+import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
+import '../../../../shared/widgets/flinx_switch.dart';
+
+class DeviceSettingsAssetPaths {
+  const DeviceSettingsAssetPaths._();
+
+  static const transmitterManagement =
+      'assets/icons/device_settings/device_settings_transmitter_management_icon.png';
+  static const ledOffDelay =
+      'assets/icons/device_settings/device_settings_led_off_delay_icon.png';
+  static const partialOpen =
+      'assets/icons/device_settings/device_settings_partial_open_icon.png';
+  static const autoClose =
+      'assets/icons/device_settings/device_settings_auto_close_icon.png';
+  static const openingSpeed =
+      'assets/icons/device_settings/device_settings_opening_speed_icon.png';
+  static const aboutDevice =
+      'assets/icons/device_settings/device_settings_about_device_icon.png';
+  static const doorOpenReminder =
+      'assets/icons/device_settings/device_settings_door_open_reminder_icon.png';
+  static const forceMargin =
+      'assets/icons/device_settings/device_settings_force_margin_icon.png';
+}
 
 class DeviceSettingsPage extends StatefulWidget {
   const DeviceSettingsPage({required this.deviceId, super.key});
@@ -20,13 +43,15 @@ class DeviceSettingsPage extends StatefulWidget {
 
 class _DeviceSettingsPageState extends State<DeviceSettingsPage> {
   String _ledOffDelay = '3min';
-  String _partialOpen = '12cm';
-  String _autoClose = '0s';
-  String _autoClosePosition = 'Any position';
+  String _partialOpen = '12min';
+  String _autoClose = '15s';
+  var _autoClosePosition = _AutoClosePosition.anyPosition;
+  var _doorOpenReminderEnabled = true;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: const FlinxNavigationBar(title: '', showBottomDivider: false),
@@ -37,53 +62,94 @@ class _DeviceSettingsPageState extends State<DeviceSettingsPage> {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 430),
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(24, 42, 24, 24),
+              padding: const EdgeInsets.fromLTRB(20, 25, 20, 24),
               children: [
                 Text(
-                  'DEVICE SETTINGS',
+                  l10n.deviceSettingsTitle,
                   style: AppTextTokens.deviceSettingsTitle(textTheme),
                 ),
-                const SizedBox(height: 44),
+                const SizedBox(height: 4),
                 Text(
-                  'For users',
-                  style: AppTextTokens.deviceSettingsSectionLabel(textTheme),
+                  l10n.deviceSettingsForUsers,
+                  style: AppTextTokens.deviceSettingsMainSectionLabel(
+                    textTheme,
+                  ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 _SettingsRows(
                   rows: [
                     _SettingsRowData(
-                      icon: Icons.settings_remote_outlined,
-                      title: 'Transmitter management',
+                      assetPath: DeviceSettingsAssetPaths.transmitterManagement,
+                      fallbackIcon: Icons.settings_remote_outlined,
+                      title: l10n.deviceSettingsTransmitterManagement,
                       onTap: () => context.push(
                         '${TransmitterManagementPage.routePath}'
                         '?deviceId=${Uri.encodeComponent(widget.deviceId)}',
                       ),
                     ),
                     _SettingsRowData(
-                      icon: Icons.light_mode_outlined,
-                      title: 'LED off delay',
-                      value: _ledOffDelay,
+                      assetPath: DeviceSettingsAssetPaths.ledOffDelay,
+                      fallbackIcon: Icons.light_mode_outlined,
+                      title: l10n.deviceSettingsLedOffDelay,
+                      value: _formatDuration(l10n, _ledOffDelay),
                       onTap: _showLedOffDelaySheet,
                     ),
                     _SettingsRowData(
-                      icon: Icons.sensor_door_outlined,
-                      title: 'Partial open',
-                      value: _partialOpen,
+                      assetPath: DeviceSettingsAssetPaths.partialOpen,
+                      fallbackIcon: Icons.sensor_door_outlined,
+                      title: l10n.deviceSettingsPartialOpen,
+                      value: _formatDuration(l10n, _partialOpen),
                       onTap: _showPartialOpenSheet,
                     ),
                     _SettingsRowData(
-                      icon: Icons.door_back_door_outlined,
-                      title: 'Auto close',
-                      value: _autoClose,
+                      assetPath: DeviceSettingsAssetPaths.autoClose,
+                      fallbackIcon: Icons.door_back_door_outlined,
+                      title: l10n.deviceSettingsAutoClose,
+                      value: _formatDuration(l10n, _autoClose),
                       onTap: _showAutoCloseSheet,
                     ),
                     _SettingsRowData(
-                      icon: Icons.info_outline,
-                      title: 'About the device',
+                      assetPath: DeviceSettingsAssetPaths.openingSpeed,
+                      fallbackIcon: Icons.speed_outlined,
+                      title: l10n.deviceSettingsOpeningSpeed,
+                      value: l10n.deviceSettingsOpeningSpeedValue,
+                    ),
+                    _SettingsRowData(
+                      assetPath: DeviceSettingsAssetPaths.aboutDevice,
+                      fallbackIcon: Icons.info_outline,
+                      title: l10n.deviceSettingsAboutDevice,
                       onTap: () => context.push(
                         '${AboutDevicePage.routePath}'
                         '?deviceId=${Uri.encodeComponent(widget.deviceId)}',
                       ),
+                    ),
+                    _SettingsRowData(
+                      assetPath: DeviceSettingsAssetPaths.doorOpenReminder,
+                      fallbackIcon: Icons.notifications_active_outlined,
+                      title: l10n.deviceSettingsDoorOpenReminder,
+                      trailing: FlinxSwitch(
+                        value: _doorOpenReminderEnabled,
+                        onChanged: (value) {
+                          setState(() => _doorOpenReminderEnabled = value);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 22),
+                Text(
+                  l10n.deviceSettingsForInstallers,
+                  style: AppTextTokens.deviceSettingsMainSectionLabel(
+                    textTheme,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                _SettingsRows(
+                  rows: [
+                    _SettingsRowData(
+                      assetPath: DeviceSettingsAssetPaths.forceMargin,
+                      fallbackIcon: Icons.tune_rounded,
+                      title: l10n.deviceSettingsForceMargin,
                     ),
                   ],
                 ),
@@ -98,7 +164,7 @@ class _DeviceSettingsPageState extends State<DeviceSettingsPage> {
   Future<void> _showLedOffDelaySheet() async {
     final value = await _showOptionSheet(
       context: context,
-      title: 'LED off delay',
+      title: AppLocalizations.of(context).deviceSettingsLedOffDelay,
       options: _zeroToOneHundredOptions,
       initialValue: '5',
     );
@@ -111,7 +177,7 @@ class _DeviceSettingsPageState extends State<DeviceSettingsPage> {
   Future<void> _showPartialOpenSheet() async {
     final value = await _showOptionSheet(
       context: context,
-      title: 'Partial open height',
+      title: AppLocalizations.of(context).deviceSettingsPartialOpenHeight,
       options: _zeroToOneHundredOptions,
       initialValue: '20',
     );
@@ -155,6 +221,20 @@ final _autoCloseTimeOptions = [
   for (var minute = 1; minute <= 60; minute++) '${minute}min',
 ];
 
+String _formatDuration(AppLocalizations l10n, String value) {
+  if (value.endsWith('min')) {
+    return l10n.deviceSettingsMinutes(
+      int.parse(value.substring(0, value.length - 3)),
+    );
+  }
+  if (value.endsWith('s')) {
+    return l10n.deviceSettingsSeconds(
+      int.parse(value.substring(0, value.length - 1)),
+    );
+  }
+  return value;
+}
+
 class AboutDevicePage extends StatelessWidget {
   const AboutDevicePage({required this.deviceId, super.key});
 
@@ -166,6 +246,7 @@ class AboutDevicePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: const FlinxNavigationBar(title: '', showBottomDivider: false),
@@ -179,27 +260,31 @@ class AboutDevicePage extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 28, 16, 24),
               children: [
                 Text(
-                  'About the device',
+                  l10n.deviceSettingsAboutDevice,
                   style: AppTextTokens.deviceSettingsTitle(textTheme),
                 ),
                 const SizedBox(height: 28),
                 _SettingsRows(
-                  rows: const [
+                  rows: [
                     _SettingsRowData(
-                      icon: Icons.bluetooth,
-                      title: 'Bluetooth name',
+                      assetPath: DeviceSettingsAssetPaths.aboutDevice,
+                      fallbackIcon: Icons.bluetooth,
+                      title: l10n.deviceSettingsBluetoothName,
                     ),
                     _SettingsRowData(
-                      icon: Icons.developer_board_outlined,
-                      title: 'Firmware version',
+                      assetPath: DeviceSettingsAssetPaths.aboutDevice,
+                      fallbackIcon: Icons.developer_board_outlined,
+                      title: l10n.deviceSettingsFirmwareVersion,
                     ),
                     _SettingsRowData(
-                      icon: Icons.memory_outlined,
-                      title: 'Hardware version',
+                      assetPath: DeviceSettingsAssetPaths.aboutDevice,
+                      fallbackIcon: Icons.memory_outlined,
+                      title: l10n.deviceSettingsHardwareVersion,
                     ),
                     _SettingsRowData(
-                      icon: Icons.manage_search_outlined,
-                      title: 'Check version',
+                      assetPath: DeviceSettingsAssetPaths.aboutDevice,
+                      fallbackIcon: Icons.manage_search_outlined,
+                      title: l10n.deviceSettingsCheckVersion,
                     ),
                   ],
                 ),
@@ -223,6 +308,7 @@ class TransmitterManagementPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: const FlinxNavigationBar(title: '', showBottomDivider: false),
@@ -236,24 +322,26 @@ class TransmitterManagementPage extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
               children: [
                 Text(
-                  'Setting',
+                  l10n.deviceSettingsTitle,
                   style: AppTextTokens.deviceSettingsTitle(textTheme),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'For users',
+                  l10n.deviceSettingsForUsers,
                   style: AppTextTokens.deviceSettingsSectionLabel(textTheme),
                 ),
                 const SizedBox(height: 8),
                 _SettingsRows(
-                  rows: const [
+                  rows: [
                     _SettingsRowData(
-                      icon: Icons.settings_remote_outlined,
-                      title: 'Transmitter learning',
+                      assetPath: DeviceSettingsAssetPaths.transmitterManagement,
+                      fallbackIcon: Icons.settings_remote_outlined,
+                      title: l10n.deviceSettingsTransmitterLearning,
                     ),
                     _SettingsRowData(
-                      icon: Icons.settings_outlined,
-                      title: 'Management',
+                      assetPath: DeviceSettingsAssetPaths.transmitterManagement,
+                      fallbackIcon: Icons.settings_outlined,
+                      title: l10n.deviceSettingsManagement,
                     ),
                   ],
                 ),
@@ -284,15 +372,19 @@ class _SettingsRows extends StatelessWidget {
 
 class _SettingsRowData {
   const _SettingsRowData({
-    required this.icon,
+    required this.assetPath,
+    required this.fallbackIcon,
     required this.title,
     this.value,
+    this.trailing,
     this.onTap,
   });
 
-  final IconData icon;
+  final String assetPath;
+  final IconData fallbackIcon;
   final String title;
   final String? value;
+  final Widget? trailing;
   final VoidCallback? onTap;
 }
 
@@ -320,10 +412,13 @@ class _SettingsRow extends StatelessWidget {
             ),
           ),
           child: SizedBox(
-            height: 58,
+            height: 77,
             child: Row(
               children: [
-                Icon(data.icon, size: 22, color: AppColors.textIcon),
+                _DeviceSettingsAssetIcon(
+                  assetPath: data.assetPath,
+                  fallbackIcon: data.fallbackIcon,
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -340,16 +435,46 @@ class _SettingsRow extends StatelessWidget {
                     style: AppTextTokens.deviceSettingsRowValue(textTheme),
                   ),
                 ],
-                const SizedBox(width: 12),
-                const Icon(
-                  Icons.chevron_right,
-                  size: 28,
-                  color: AppColors.deviceControlInactive,
-                ),
+                if (data.trailing != null) ...[
+                  const SizedBox(width: 12),
+                  data.trailing!,
+                ] else ...[
+                  const SizedBox(width: 12),
+                  const Icon(
+                    Icons.chevron_right,
+                    size: 28,
+                    color: AppColors.textPrimary,
+                  ),
+                ],
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _DeviceSettingsAssetIcon extends StatelessWidget {
+  const _DeviceSettingsAssetIcon({
+    required this.assetPath,
+    required this.fallbackIcon,
+  });
+
+  final String assetPath;
+  final IconData fallbackIcon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.asset(
+      assetPath,
+      width: 34,
+      height: 34,
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) => SizedBox(
+        width: 34,
+        height: 34,
+        child: Icon(fallbackIcon, size: 24, color: AppColors.textIcon),
       ),
     );
   }
@@ -449,7 +574,7 @@ class _AutoCloseSheet extends StatefulWidget {
     required this.initialTime,
   });
 
-  final String initialPosition;
+  final _AutoClosePosition initialPosition;
   final String initialTime;
 
   @override
@@ -457,9 +582,12 @@ class _AutoCloseSheet extends StatefulWidget {
 }
 
 class _AutoCloseSheetState extends State<_AutoCloseSheet> {
-  static const _positions = ['Up limit', 'Any position'];
+  static const _positions = [
+    _AutoClosePosition.upLimit,
+    _AutoClosePosition.anyPosition,
+  ];
 
-  late String _position = widget.initialPosition;
+  late _AutoClosePosition _position = widget.initialPosition;
   late String _time = widget.initialTime;
   late final ScrollController _timeScrollController = ScrollController(
     initialScrollOffset: _initialOptionOffset(
@@ -477,13 +605,14 @@ class _AutoCloseSheetState extends State<_AutoCloseSheet> {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
 
     return _SettingsSheetFrame(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Auto closing setting',
+            l10n.deviceSettingsAutoClosingSetting,
             textAlign: TextAlign.center,
             style: AppTextTokens.deviceSettingsSheetTitle(textTheme),
           ),
@@ -491,7 +620,7 @@ class _AutoCloseSheetState extends State<_AutoCloseSheet> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14),
             child: Text(
-              'Current setting: 120s (motor setting)\nAuto close position',
+              l10n.deviceSettingsAutoCloseCaption,
               style: AppTextTokens.deviceSettingsSheetCaption(textTheme),
             ),
           ),
@@ -501,7 +630,7 @@ class _AutoCloseSheetState extends State<_AutoCloseSheet> {
               for (final position in _positions) ...[
                 Expanded(
                   child: _SegmentButton(
-                    label: position,
+                    label: _positionLabel(l10n, position),
                     selected: _position == position,
                     onTap: () => setState(() => _position = position),
                   ),
@@ -514,7 +643,7 @@ class _AutoCloseSheetState extends State<_AutoCloseSheet> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14),
             child: Text(
-              'Auto close time',
+              l10n.deviceSettingsAutoCloseTime,
               style: AppTextTokens.deviceSettingsSheetCaption(textTheme),
             ),
           ),
@@ -526,7 +655,7 @@ class _AutoCloseSheetState extends State<_AutoCloseSheet> {
               children: [
                 for (final time in _autoCloseTimeOptions)
                   _SheetOption(
-                    label: time,
+                    label: _formatDuration(l10n, time),
                     selected: time == _time,
                     onTap: () => setState(() => _time = time),
                   ),
@@ -546,6 +675,14 @@ class _AutoCloseSheetState extends State<_AutoCloseSheet> {
   }
 }
 
+String _positionLabel(AppLocalizations l10n, _AutoClosePosition position) =>
+    switch (position) {
+      _AutoClosePosition.upLimit => l10n.deviceSettingsUpLimit,
+      _AutoClosePosition.anyPosition => l10n.deviceSettingsAnyPosition,
+    };
+
+enum _AutoClosePosition { upLimit, anyPosition }
+
 double _initialOptionOffset({
   required List<String> options,
   required String selectedValue,
@@ -560,7 +697,7 @@ double _initialOptionOffset({
 class _AutoCloseSelection {
   const _AutoCloseSelection({required this.position, required this.time});
 
-  final String position;
+  final _AutoClosePosition position;
   final String time;
 }
 
@@ -681,6 +818,7 @@ class _SheetActionRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
 
     return Row(
       children: [
@@ -695,7 +833,7 @@ class _SheetActionRow extends StatelessWidget {
                 shape: const StadiumBorder(),
               ),
               child: Text(
-                'Cancel',
+                l10n.deviceSettingsCancelAction,
                 style: AppTextTokens.deviceSettingsSheetButton(
                   textTheme,
                 ).copyWith(color: AppColors.textMuted),
@@ -715,7 +853,7 @@ class _SheetActionRow extends StatelessWidget {
                 shape: const StadiumBorder(),
               ),
               child: Text(
-                'Confirm',
+                l10n.deviceSettingsConfirmAction,
                 style: AppTextTokens.deviceSettingsSheetButton(
                   textTheme,
                 ).copyWith(color: AppColors.backgroundPrimary),

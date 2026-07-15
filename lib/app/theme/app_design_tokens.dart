@@ -753,11 +753,20 @@ class AppTextTokens {
     );
   }
 
+  static TextStyle deviceSettingsMainSectionLabel(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 13,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
   static TextStyle deviceSettingsRowTitle(TextTheme textTheme) {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
-      color: AppColors.textMuted,
-      fontSize: 16,
-      fontWeight: FontWeight.w600,
+      color: AppColors.textMuted1A232C,
+      fontSize: 15,
+      fontWeight: FontWeight.w400,
       height: 1.2,
     );
   }

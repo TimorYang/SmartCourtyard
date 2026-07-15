@@ -1004,5 +1004,47 @@
   "afterSalesSubmitSuccess": "Appointment submitted successfully",
   "@afterSalesSubmitSuccess": {
     "description": "Local confirmation after submitting an appointment"
+  },
+  "deviceSettingsTitle": "Setting",
+  "deviceSettingsForUsers": "For users",
+  "deviceSettingsForInstallers": "For installers",
+  "deviceSettingsTransmitterManagement": "Transmitter management",
+  "deviceSettingsLedOffDelay": "LED off delay",
+  "deviceSettingsPartialOpen": "Partial open",
+  "deviceSettingsPartialOpenHeight": "Partial open height",
+  "deviceSettingsAutoClose": "Auto close",
+  "deviceSettingsOpeningSpeed": "Opening speed",
+  "deviceSettingsOpeningSpeedValue": "GMT+8:00",
+  "deviceSettingsAboutDevice": "About the device",
+  "deviceSettingsDoorOpenReminder": "Door open reminder",
+  "deviceSettingsForceMargin": "Force margin",
+  "deviceSettingsBluetoothName": "Bluetooth name",
+  "deviceSettingsFirmwareVersion": "Firmware version",
+  "deviceSettingsHardwareVersion": "Hardware version",
+  "deviceSettingsCheckVersion": "Check version",
+  "deviceSettingsTransmitterLearning": "Transmitter learning",
+  "deviceSettingsManagement": "Management",
+  "deviceSettingsAutoClosingSetting": "Auto closing setting",
+  "deviceSettingsAutoCloseCaption": "Current setting: 120s (motor setting)\nAuto close position",
+  "deviceSettingsAutoCloseTime": "Auto close time",
+  "deviceSettingsUpLimit": "Up limit",
+  "deviceSettingsAnyPosition": "Any position",
+  "deviceSettingsCancelAction": "Cancel",
+  "deviceSettingsConfirmAction": "Confirm",
+  "deviceSettingsMinutes": "{minutes} min",
+  "@deviceSettingsMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "deviceSettingsSeconds": "{seconds}s",
+  "@deviceSettingsSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
   }
 }
