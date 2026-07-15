@@ -52,6 +52,7 @@ flutter:
     - assets/animations/add_device/
     - assets/images/
     - assets/images/account/
+    - assets/images/auth/
     - assets/icons/
     - assets/icons/auth/
     - assets/icons/add_device/
