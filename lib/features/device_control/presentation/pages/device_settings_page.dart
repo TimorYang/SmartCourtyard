@@ -33,6 +33,14 @@ class DeviceSettingsAssetPaths {
       'assets/icons/device_settings/force_margin_warning_placeholder.png';
   static const forceMarginIndicatorPlaceholder =
       'assets/icons/device_settings/force_margin_indicator_placeholder.png';
+  static const aboutDeviceBluetoothName =
+      'assets/icons/device_settings/about_device_bluetooth_name.png';
+  static const aboutDeviceFirmwareVersion =
+      'assets/icons/device_settings/about_device_firmware_version.png';
+  static const aboutDeviceHardwareVersion =
+      'assets/icons/device_settings/about_device_hardware_version.png';
+  static const aboutDeviceCheckVersion =
+      'assets/icons/device_settings/about_device_check_version.png';
 }
 
 class OpeningSpeedConfig {
@@ -366,32 +374,32 @@ class AboutDevicePage extends StatelessWidget {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 430),
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 28, 16, 24),
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
               children: [
-                Text(
+                Padding(padding: EdgeInsetsGeometry.only(left: 20),child: Text(
                   l10n.deviceSettingsAboutDevice,
                   style: AppTextTokens.deviceSettingsTitle(textTheme),
-                ),
+                ),),
                 const SizedBox(height: 28),
                 _SettingsRows(
                   rows: [
                     _SettingsRowData(
-                      assetPath: DeviceSettingsAssetPaths.aboutDevice,
+                      assetPath: DeviceSettingsAssetPaths.aboutDeviceBluetoothName,
                       fallbackIcon: Icons.bluetooth,
                       title: l10n.deviceSettingsBluetoothName,
                     ),
                     _SettingsRowData(
-                      assetPath: DeviceSettingsAssetPaths.aboutDevice,
+                      assetPath: DeviceSettingsAssetPaths.aboutDeviceFirmwareVersion,
                       fallbackIcon: Icons.developer_board_outlined,
                       title: l10n.deviceSettingsFirmwareVersion,
                     ),
                     _SettingsRowData(
-                      assetPath: DeviceSettingsAssetPaths.aboutDevice,
+                      assetPath: DeviceSettingsAssetPaths.aboutDeviceHardwareVersion,
                       fallbackIcon: Icons.memory_outlined,
                       title: l10n.deviceSettingsHardwareVersion,
                     ),
                     _SettingsRowData(
-                      assetPath: DeviceSettingsAssetPaths.aboutDevice,
+                      assetPath: DeviceSettingsAssetPaths.aboutDeviceCheckVersion,
                       fallbackIcon: Icons.manage_search_outlined,
                       title: l10n.deviceSettingsCheckVersion,
                     ),
