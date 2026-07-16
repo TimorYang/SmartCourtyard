@@ -300,14 +300,11 @@ class _TransmitterSheetSurface extends StatelessWidget {
   final BorderRadius borderRadius;
 
   @override
-  Widget build(BuildContext context) => SafeArea(
-    top: false,
-    child: Material(
-      color: AppColors.backgroundPrimary,
-      borderRadius: borderRadius,
-      clipBehavior: Clip.antiAlias,
-      child: child,
-    ),
+  Widget build(BuildContext context) => Material(
+    color: AppColors.backgroundPrimary,
+    borderRadius: borderRadius,
+    clipBehavior: Clip.antiAlias,
+    child: SafeArea(top: false, child: child),
   );
 }
 

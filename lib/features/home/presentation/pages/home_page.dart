@@ -900,12 +900,12 @@ class _DeviceEditingSheetState extends ConsumerState<_DeviceEditingSheet> {
       ),
     ];
 
-    return SafeArea(
-      top: false,
-      child: Material(
-        color: AppColors.backgroundPrimary,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-        clipBehavior: Clip.antiAlias,
+    return Material(
+      color: AppColors.backgroundPrimary,
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+      clipBehavior: Clip.antiAlias,
+      child: SafeArea(
+        top: false,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(18, 34, 28, 18),
           child: Column(
