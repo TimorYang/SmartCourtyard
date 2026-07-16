@@ -1017,6 +1017,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deviceSettingsConfirmAction => 'Confirm';
 
   @override
+  String get transmitterManagementTipsTitle => 'Tips';
+
+  @override
+  String get transmitterManagementSafetyTip =>
+      '1. For safety consideration, we suggest to manage all the transmitters through the app.';
+
+  @override
+  String get transmitterManagementHowToTip =>
+      '2. How to manage the transmitters?\nJust relearning the transmitter through the app.';
+
+  @override
+  String get transmitterManagementEditAction => 'Edit transmitter';
+
+  @override
+  String get transmitterManagementDeleteAction => 'Delete transmitter';
+
+  @override
+  String get transmitterManagementAddAction => 'Add transmitter';
+
+  @override
+  String get transmitterManagementInfoTitle => 'Transmitter info';
+
+  @override
+  String get transmitterManagementNameHint => 'Input transmitter name';
+
+  @override
+  String get transmitterManagementDeletePromptTitle => 'Prompt';
+
+  @override
+  String get transmitterManagementDeletePromptMessage =>
+      'Please confirm whether you want to delete the transmitter';
+
+  @override
   String deviceSettingsMinutes(int minutes) {
     return '$minutes min';
   }
@@ -1025,4 +1058,74 @@ class AppLocalizationsEn extends AppLocalizations {
   String deviceSettingsSeconds(int seconds) {
     return '${seconds}s';
   }
+
+  @override
+  String deviceSettingsOpeningSpeedCurrent(int value) {
+    return 'Current setting: $value% (motor setting)';
+  }
+
+  @override
+  String get deviceSettingsForceMarginWarning15Days =>
+      '1. This function is temporarily used when you can\'t operate the door due to the spring being loose or the track being blocked.\n\n2. This function is only effective for 15 days. Please contact the maintenance party as soon as possible.';
+
+  @override
+  String get deviceSettingsForceMarginWarning3Days =>
+      'This temporary setting is effective for three days only. Please contact the maintenance party as soon as possible.';
+
+  @override
+  String get deviceSettingsForceMarginWarning3DaysFull =>
+      '1. This function is temporarily used when you can\'t operate the door due to the spring being loose or the track being blocked.\n\n2. This function is only effective for three days. Please contact the maintenance party as soon as possible.';
+
+  @override
+  String get deviceSettingsForceMarginTemporaryCurrent =>
+      'Current setting: standard (motor setting)';
+
+  @override
+  String deviceSettingsForceMarginLevel(int level) {
+    return 'Level $level';
+  }
+
+  @override
+  String deviceSettingsForceMarginLevelCurrent(int level) {
+    return 'Current setting: Level $level (motor setting)';
+  }
+
+  @override
+  String get transmitterLearningTitle => 'Transmitter learning';
+
+  @override
+  String get transmitterLearningOnSiteTip => 'Be sure to operate on site!';
+
+  @override
+  String get transmitterLearningKeepBluetoothOn => 'Keep Bluetooth on';
+
+  @override
+  String get transmitterLearningReadyDescription =>
+      '1. Make sure the distance between the mobile phone and the opener is less than 5 meters.\n\n2. The learning will end automatically if there\'s no operation within 20 seconds.';
+
+  @override
+  String get transmitterLearningInProgress => 'Learning...';
+
+  @override
+  String get transmitterLearningInProgressDescription =>
+      'Click any button (the same button) continuously at least 3 times.';
+
+  @override
+  String get transmitterLearningFailed => 'Transmitter Learning Failed';
+
+  @override
+  String get transmitterLearningSucceeded => 'Transmitter Learning Succeed';
+
+  @override
+  String get transmitterLearningRemoteInstruction =>
+      'Please use the remote control to try';
+
+  @override
+  String get transmitterLearningStartAction => 'Start Learning';
+
+  @override
+  String get transmitterLearningRestartAction => 'Restart';
+
+  @override
+  String get transmitterLearningCompleteAction => 'Complete';
 }

@@ -28,6 +28,8 @@ import '../../features/auth/presentation/pages/register_password_page.dart';
 import '../../features/auth/presentation/pages/welcome_page.dart';
 import '../../features/device_control/presentation/pages/device_command_page.dart';
 import '../../features/device_control/presentation/pages/device_settings_page.dart';
+import '../../features/device_control/presentation/pages/transmitter_learning_page.dart';
+import '../../features/device_control/presentation/pages/transmitter_list_page.dart';
 import '../../features/hardware_debug/presentation/pages/ble_debug_page.dart';
 import '../../features/home/presentation/pages/choose_scene_page.dart';
 import '../../features/home/presentation/pages/device_share_page.dart';
@@ -282,6 +284,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: TransmitterManagementPage.routePath,
         name: TransmitterManagementPage.routeName,
         builder: (context, state) => TransmitterManagementPage(
+          deviceId: state.uri.queryParameters['deviceId'] ?? '',
+        ),
+      ),
+      GoRoute(
+        path: TransmitterLearningPage.routePath,
+        name: TransmitterLearningPage.routeName,
+        builder: (context, state) => TransmitterLearningPage(
+          deviceId: state.uri.queryParameters['deviceId'] ?? '',
+        ),
+      ),
+      GoRoute(
+        path: TransmitterListPage.routePath,
+        name: TransmitterListPage.routeName,
+        builder: (context, state) => TransmitterListPage(
           deviceId: state.uri.queryParameters['deviceId'] ?? '',
         ),
       ),

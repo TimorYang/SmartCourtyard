@@ -63,7 +63,7 @@ class MockHardwareGateway implements HardwareGateway {
       scanSessionId: '$requestId-mock-session',
       id: 'mock-ble-device',
       name: filter.exactName ?? 'opener_MOCK-SN-001',
-      sn: 'MOCK-SN-001',
+      sn: filter.exactName ?? 'opener_MOCK-SN-001',
       rssi: -52,
       seenAtMillis: DateTime.now().millisecondsSinceEpoch,
       advertisementServiceUuids: filter.serviceUuids,

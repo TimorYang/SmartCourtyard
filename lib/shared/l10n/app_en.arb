@@ -1056,6 +1056,16 @@
   "deviceSettingsAnyPosition": "Any position",
   "deviceSettingsCancelAction": "Cancel",
   "deviceSettingsConfirmAction": "Confirm",
+  "transmitterManagementTipsTitle": "Tips",
+  "transmitterManagementSafetyTip": "1. For safety consideration, we suggest to manage all the transmitters through the app.",
+  "transmitterManagementHowToTip": "2. How to manage the transmitters?\nJust relearning the transmitter through the app.",
+  "transmitterManagementEditAction": "Edit transmitter",
+  "transmitterManagementDeleteAction": "Delete transmitter",
+  "transmitterManagementAddAction": "Add transmitter",
+  "transmitterManagementInfoTitle": "Transmitter info",
+  "transmitterManagementNameHint": "Input transmitter name",
+  "transmitterManagementDeletePromptTitle": "Prompt",
+  "transmitterManagementDeletePromptMessage": "Please confirm whether you want to delete the transmitter",
   "deviceSettingsMinutes": "{minutes} min",
   "@deviceSettingsMinutes": {
     "placeholders": {
@@ -1071,5 +1081,27 @@
         "type": "int"
       }
     }
-  }
+  },
+  "deviceSettingsOpeningSpeedCurrent": "Current setting: {value}% (motor setting)",
+  "@deviceSettingsOpeningSpeedCurrent": {"placeholders": {"value": {"type": "int"}}},
+  "deviceSettingsForceMarginWarning15Days": "1. This function is temporarily used when you can't operate the door due to the spring being loose or the track being blocked.\n\n2. This function is only effective for 15 days. Please contact the maintenance party as soon as possible.",
+  "deviceSettingsForceMarginWarning3Days": "This temporary setting is effective for three days only. Please contact the maintenance party as soon as possible.",
+  "deviceSettingsForceMarginWarning3DaysFull": "1. This function is temporarily used when you can't operate the door due to the spring being loose or the track being blocked.\n\n2. This function is only effective for three days. Please contact the maintenance party as soon as possible.",
+  "deviceSettingsForceMarginTemporaryCurrent": "Current setting: standard (motor setting)",
+  "deviceSettingsForceMarginLevel": "Level {level}",
+  "@deviceSettingsForceMarginLevel": {"placeholders": {"level": {"type": "int"}}},
+  "deviceSettingsForceMarginLevelCurrent": "Current setting: Level {level} (motor setting)",
+  "@deviceSettingsForceMarginLevelCurrent": {"placeholders": {"level": {"type": "int"}}},
+  "transmitterLearningTitle": "Transmitter learning",
+  "transmitterLearningOnSiteTip": "Be sure to operate on site!",
+  "transmitterLearningKeepBluetoothOn": "Keep Bluetooth on",
+  "transmitterLearningReadyDescription": "1. Make sure the distance between the mobile phone and the opener is less than 5 meters.\n\n2. The learning will end automatically if there's no operation within 20 seconds.",
+  "transmitterLearningInProgress": "Learning...",
+  "transmitterLearningInProgressDescription": "Click any button (the same button) continuously at least 3 times.",
+  "transmitterLearningFailed": "Transmitter Learning Failed",
+  "transmitterLearningSucceeded": "Transmitter Learning Succeed",
+  "transmitterLearningRemoteInstruction": "Please use the remote control to try",
+  "transmitterLearningStartAction": "Start Learning",
+  "transmitterLearningRestartAction": "Restart",
+  "transmitterLearningCompleteAction": "Complete"
 }

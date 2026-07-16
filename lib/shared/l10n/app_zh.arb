@@ -316,6 +316,16 @@
   "deviceSettingsAnyPosition": "任意位置",
   "deviceSettingsCancelAction": "取消",
   "deviceSettingsConfirmAction": "确认",
+  "transmitterManagementTipsTitle": "提示",
+  "transmitterManagementSafetyTip": "1. 为确保安全，建议通过 App 管理所有遥控器。",
+  "transmitterManagementHowToTip": "2. 如何管理遥控器？\n请通过 App 重新学习遥控器。",
+  "transmitterManagementEditAction": "编辑遥控器",
+  "transmitterManagementDeleteAction": "删除遥控器",
+  "transmitterManagementAddAction": "添加遥控器",
+  "transmitterManagementInfoTitle": "遥控器信息",
+  "transmitterManagementNameHint": "输入遥控器名称",
+  "transmitterManagementDeletePromptTitle": "提示",
+  "transmitterManagementDeletePromptMessage": "请确认是否删除该遥控器",
   "deviceSettingsMinutes": "{minutes} 分钟",
   "@deviceSettingsMinutes": {
     "placeholders": {
@@ -331,5 +341,27 @@
         "type": "int"
       }
     }
-  }
+  },
+  "deviceSettingsOpeningSpeedCurrent": "当前设置：{value}%（电机设置）",
+  "@deviceSettingsOpeningSpeedCurrent": {"placeholders": {"value": {"type": "int"}}},
+  "deviceSettingsForceMarginWarning15Days": "1. 当弹簧松动或轨道堵塞导致无法操作门时，可暂时使用此功能。\n\n2. 此功能仅在 15 天内有效，请尽快联系维修人员。",
+  "deviceSettingsForceMarginWarning3Days": "此临时设置仅在三天内有效，请尽快联系维修人员。",
+  "deviceSettingsForceMarginWarning3DaysFull": "1. 当弹簧松动或轨道堵塞导致无法操作门时，可暂时使用此功能。\n\n2. 此功能仅在三天内有效，请尽快联系维修人员。",
+  "deviceSettingsForceMarginTemporaryCurrent": "当前设置：标准（电机设置）",
+  "deviceSettingsForceMarginLevel": "等级 {level}",
+  "@deviceSettingsForceMarginLevel": {"placeholders": {"level": {"type": "int"}}},
+  "deviceSettingsForceMarginLevelCurrent": "当前设置：等级 {level}（电机设置）",
+  "@deviceSettingsForceMarginLevelCurrent": {"placeholders": {"level": {"type": "int"}}},
+  "transmitterLearningTitle": "遥控器学习",
+  "transmitterLearningOnSiteTip": "请务必在现场操作！",
+  "transmitterLearningKeepBluetoothOn": "保持蓝牙开启",
+  "transmitterLearningReadyDescription": "1. 请确保手机与开门机之间的距离小于 5 米。\n\n2. 若 20 秒内没有操作，学习将自动结束。",
+  "transmitterLearningInProgress": "学习中…",
+  "transmitterLearningInProgressDescription": "请连续按同一个按键至少 3 次。",
+  "transmitterLearningFailed": "遥控器学习失败",
+  "transmitterLearningSucceeded": "遥控器学习成功",
+  "transmitterLearningRemoteInstruction": "请使用遥控器进行尝试",
+  "transmitterLearningStartAction": "开始学习",
+  "transmitterLearningRestartAction": "重新开始",
+  "transmitterLearningCompleteAction": "完成"
 }

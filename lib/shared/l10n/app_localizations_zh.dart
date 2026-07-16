@@ -956,6 +956,36 @@ class AppLocalizationsZh extends AppLocalizations {
   String get deviceSettingsConfirmAction => '确认';
 
   @override
+  String get transmitterManagementTipsTitle => '提示';
+
+  @override
+  String get transmitterManagementSafetyTip => '1. 为确保安全，建议通过 App 管理所有遥控器。';
+
+  @override
+  String get transmitterManagementHowToTip => '2. 如何管理遥控器？\n请通过 App 重新学习遥控器。';
+
+  @override
+  String get transmitterManagementEditAction => '编辑遥控器';
+
+  @override
+  String get transmitterManagementDeleteAction => '删除遥控器';
+
+  @override
+  String get transmitterManagementAddAction => '添加遥控器';
+
+  @override
+  String get transmitterManagementInfoTitle => '遥控器信息';
+
+  @override
+  String get transmitterManagementNameHint => '输入遥控器名称';
+
+  @override
+  String get transmitterManagementDeletePromptTitle => '提示';
+
+  @override
+  String get transmitterManagementDeletePromptMessage => '请确认是否删除该遥控器';
+
+  @override
   String deviceSettingsMinutes(int minutes) {
     return '$minutes 分钟';
   }
@@ -964,4 +994,70 @@ class AppLocalizationsZh extends AppLocalizations {
   String deviceSettingsSeconds(int seconds) {
     return '$seconds 秒';
   }
+
+  @override
+  String deviceSettingsOpeningSpeedCurrent(int value) {
+    return '当前设置：$value%（电机设置）';
+  }
+
+  @override
+  String get deviceSettingsForceMarginWarning15Days =>
+      '1. 当弹簧松动或轨道堵塞导致无法操作门时，可暂时使用此功能。\n\n2. 此功能仅在 15 天内有效，请尽快联系维修人员。';
+
+  @override
+  String get deviceSettingsForceMarginWarning3Days => '此临时设置仅在三天内有效，请尽快联系维修人员。';
+
+  @override
+  String get deviceSettingsForceMarginWarning3DaysFull =>
+      '1. 当弹簧松动或轨道堵塞导致无法操作门时，可暂时使用此功能。\n\n2. 此功能仅在三天内有效，请尽快联系维修人员。';
+
+  @override
+  String get deviceSettingsForceMarginTemporaryCurrent => '当前设置：标准（电机设置）';
+
+  @override
+  String deviceSettingsForceMarginLevel(int level) {
+    return '等级 $level';
+  }
+
+  @override
+  String deviceSettingsForceMarginLevelCurrent(int level) {
+    return '当前设置：等级 $level（电机设置）';
+  }
+
+  @override
+  String get transmitterLearningTitle => '遥控器学习';
+
+  @override
+  String get transmitterLearningOnSiteTip => '请务必在现场操作！';
+
+  @override
+  String get transmitterLearningKeepBluetoothOn => '保持蓝牙开启';
+
+  @override
+  String get transmitterLearningReadyDescription =>
+      '1. 请确保手机与开门机之间的距离小于 5 米。\n\n2. 若 20 秒内没有操作，学习将自动结束。';
+
+  @override
+  String get transmitterLearningInProgress => '学习中…';
+
+  @override
+  String get transmitterLearningInProgressDescription => '请连续按同一个按键至少 3 次。';
+
+  @override
+  String get transmitterLearningFailed => '遥控器学习失败';
+
+  @override
+  String get transmitterLearningSucceeded => '遥控器学习成功';
+
+  @override
+  String get transmitterLearningRemoteInstruction => '请使用遥控器进行尝试';
+
+  @override
+  String get transmitterLearningStartAction => '开始学习';
+
+  @override
+  String get transmitterLearningRestartAction => '重新开始';
+
+  @override
+  String get transmitterLearningCompleteAction => '完成';
 }

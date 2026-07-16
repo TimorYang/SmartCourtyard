@@ -875,7 +875,7 @@ extension BleManager: CBCentralManagerDelegate {
     guard let name, name.hasPrefix(prefix) else {
       return nil
     }
-    let sn = String(name.dropFirst(prefix.count)).trimmingCharacters(in: .whitespacesAndNewlines)
+    let sn = name.trimmingCharacters(in: .whitespacesAndNewlines)
     return sn.isEmpty ? nil : sn
   }
 }

@@ -1934,6 +1934,66 @@ abstract class AppLocalizations {
   /// **'Confirm'**
   String get deviceSettingsConfirmAction;
 
+  /// No description provided for @transmitterManagementTipsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tips'**
+  String get transmitterManagementTipsTitle;
+
+  /// No description provided for @transmitterManagementSafetyTip.
+  ///
+  /// In en, this message translates to:
+  /// **'1. For safety consideration, we suggest to manage all the transmitters through the app.'**
+  String get transmitterManagementSafetyTip;
+
+  /// No description provided for @transmitterManagementHowToTip.
+  ///
+  /// In en, this message translates to:
+  /// **'2. How to manage the transmitters?\nJust relearning the transmitter through the app.'**
+  String get transmitterManagementHowToTip;
+
+  /// No description provided for @transmitterManagementEditAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit transmitter'**
+  String get transmitterManagementEditAction;
+
+  /// No description provided for @transmitterManagementDeleteAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete transmitter'**
+  String get transmitterManagementDeleteAction;
+
+  /// No description provided for @transmitterManagementAddAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add transmitter'**
+  String get transmitterManagementAddAction;
+
+  /// No description provided for @transmitterManagementInfoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Transmitter info'**
+  String get transmitterManagementInfoTitle;
+
+  /// No description provided for @transmitterManagementNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Input transmitter name'**
+  String get transmitterManagementNameHint;
+
+  /// No description provided for @transmitterManagementDeletePromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Prompt'**
+  String get transmitterManagementDeletePromptTitle;
+
+  /// No description provided for @transmitterManagementDeletePromptMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Please confirm whether you want to delete the transmitter'**
+  String get transmitterManagementDeletePromptMessage;
+
   /// No description provided for @deviceSettingsMinutes.
   ///
   /// In en, this message translates to:
@@ -1945,6 +2005,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{seconds}s'**
   String deviceSettingsSeconds(int seconds);
+
+  /// No description provided for @deviceSettingsOpeningSpeedCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current setting: {value}% (motor setting)'**
+  String deviceSettingsOpeningSpeedCurrent(int value);
+
+  /// No description provided for @deviceSettingsForceMarginWarning15Days.
+  ///
+  /// In en, this message translates to:
+  /// **'1. This function is temporarily used when you can\'t operate the door due to the spring being loose or the track being blocked.\n\n2. This function is only effective for 15 days. Please contact the maintenance party as soon as possible.'**
+  String get deviceSettingsForceMarginWarning15Days;
+
+  /// No description provided for @deviceSettingsForceMarginWarning3Days.
+  ///
+  /// In en, this message translates to:
+  /// **'This temporary setting is effective for three days only. Please contact the maintenance party as soon as possible.'**
+  String get deviceSettingsForceMarginWarning3Days;
+
+  /// No description provided for @deviceSettingsForceMarginWarning3DaysFull.
+  ///
+  /// In en, this message translates to:
+  /// **'1. This function is temporarily used when you can\'t operate the door due to the spring being loose or the track being blocked.\n\n2. This function is only effective for three days. Please contact the maintenance party as soon as possible.'**
+  String get deviceSettingsForceMarginWarning3DaysFull;
+
+  /// No description provided for @deviceSettingsForceMarginTemporaryCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current setting: standard (motor setting)'**
+  String get deviceSettingsForceMarginTemporaryCurrent;
+
+  /// No description provided for @deviceSettingsForceMarginLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Level {level}'**
+  String deviceSettingsForceMarginLevel(int level);
+
+  /// No description provided for @deviceSettingsForceMarginLevelCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current setting: Level {level} (motor setting)'**
+  String deviceSettingsForceMarginLevelCurrent(int level);
+
+  /// No description provided for @transmitterLearningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Transmitter learning'**
+  String get transmitterLearningTitle;
+
+  /// No description provided for @transmitterLearningOnSiteTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Be sure to operate on site!'**
+  String get transmitterLearningOnSiteTip;
+
+  /// No description provided for @transmitterLearningKeepBluetoothOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Bluetooth on'**
+  String get transmitterLearningKeepBluetoothOn;
+
+  /// No description provided for @transmitterLearningReadyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Make sure the distance between the mobile phone and the opener is less than 5 meters.\n\n2. The learning will end automatically if there\'s no operation within 20 seconds.'**
+  String get transmitterLearningReadyDescription;
+
+  /// No description provided for @transmitterLearningInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Learning...'**
+  String get transmitterLearningInProgress;
+
+  /// No description provided for @transmitterLearningInProgressDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Click any button (the same button) continuously at least 3 times.'**
+  String get transmitterLearningInProgressDescription;
+
+  /// No description provided for @transmitterLearningFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Transmitter Learning Failed'**
+  String get transmitterLearningFailed;
+
+  /// No description provided for @transmitterLearningSucceeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Transmitter Learning Succeed'**
+  String get transmitterLearningSucceeded;
+
+  /// No description provided for @transmitterLearningRemoteInstruction.
+  ///
+  /// In en, this message translates to:
+  /// **'Please use the remote control to try'**
+  String get transmitterLearningRemoteInstruction;
+
+  /// No description provided for @transmitterLearningStartAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Learning'**
+  String get transmitterLearningStartAction;
+
+  /// No description provided for @transmitterLearningRestartAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Restart'**
+  String get transmitterLearningRestartAction;
+
+  /// No description provided for @transmitterLearningCompleteAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete'**
+  String get transmitterLearningCompleteAction;
 }
 
 class _AppLocalizationsDelegate
