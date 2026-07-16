@@ -257,49 +257,51 @@ class _StopAdditionSheet extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final textTheme = Theme.of(context).textTheme;
 
-    return SafeArea(
-      top: false,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(38, 48, 38, 28),
-        decoration: const BoxDecoration(
-          color: AppColors.backgroundPrimary,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.smartOpenerStopAdditionTitle,
-              style: AppTextTokens.smartOpenerSheetTitle(textTheme),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              l10n.smartOpenerStopAdditionDescription,
-              style: AppTextTokens.smartOpenerBodyCenter(
-                textTheme,
-              ).copyWith(fontSize: 17),
-            ),
-            const SizedBox(height: 35),
-            Row(
-              children: [
-                Expanded(
-                  child: _SheetActionButton(
-                    label: l10n.smartOpenerCancelAction,
-                    isPrimary: false,
-                    onPressed: () => Navigator.of(context).pop(false),
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.backgroundPrimary,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(38, 48, 38, 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.smartOpenerStopAdditionTitle,
+                style: AppTextTokens.smartOpenerSheetTitle(textTheme),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                l10n.smartOpenerStopAdditionDescription,
+                style: AppTextTokens.smartOpenerBodyCenter(
+                  textTheme,
+                ).copyWith(fontSize: 17),
+              ),
+              const SizedBox(height: 35),
+              Row(
+                children: [
+                  Expanded(
+                    child: _SheetActionButton(
+                      label: l10n.smartOpenerCancelAction,
+                      isPrimary: false,
+                      onPressed: () => Navigator.of(context).pop(false),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 18),
-                Expanded(
-                  child: _SheetActionButton(
-                    label: l10n.smartOpenerConfirmAction,
-                    onPressed: () => Navigator.of(context).pop(true),
+                  const SizedBox(width: 18),
+                  Expanded(
+                    child: _SheetActionButton(
+                      label: l10n.smartOpenerConfirmAction,
+                      onPressed: () => Navigator.of(context).pop(true),
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

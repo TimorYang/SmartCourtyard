@@ -1246,13 +1246,13 @@ class _SettingsSheetFrame extends StatelessWidget {
     return FractionallySizedBox(
       heightFactor: heightFactor,
       alignment: Alignment.bottomCenter,
-      child: SafeArea(
-        top: false,
-        child: DecoratedBox(
-          decoration: const BoxDecoration(
-            color: AppColors.backgroundPrimary,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
-          ),
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          color: AppColors.backgroundPrimary,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
+        ),
+        child: SafeArea(
+          top: false,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
             child: child,

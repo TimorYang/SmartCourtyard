@@ -41,12 +41,12 @@ class _DeviceDeleteDialogState extends ConsumerState<DeviceDeleteDialog> {
     final l10n = AppLocalizations.of(context);
     final textTheme = Theme.of(context).textTheme;
 
-    return SafeArea(
-      top: false,
-      child: Material(
-        color: AppColors.backgroundPrimary,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-        clipBehavior: Clip.antiAlias,
+    return Material(
+      color: AppColors.backgroundPrimary,
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+      clipBehavior: Clip.antiAlias,
+      child: SafeArea(
+        top: false,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(28, 28, 28, 30),
           child: Column(
