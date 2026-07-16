@@ -14,6 +14,9 @@
 # Local Flutter environment definitions. Commit only *.json.example templates.
 config/env/*.json
 
+# Local network debugging configuration.
+lib/core/network/network_debug_settings.dart
+
 
 
 # Flutter repo-specific
