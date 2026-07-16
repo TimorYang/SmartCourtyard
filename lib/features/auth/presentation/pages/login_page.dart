@@ -27,6 +27,7 @@ class LoginPage extends ConsumerStatefulWidget {
 
 class _LoginPageState extends ConsumerState<LoginPage> {
   bool _isSubmitting = false;
+  bool _isPasswordObscured = true;
   final _accountTextController = TextEditingController(
     text: defaultLoginAccount,
   );
@@ -89,6 +90,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         textInputAction: TextInputAction.next,
                         autocorrect: false,
                         onChanged: controller.updateAccount,
+                        rightView: _LoginFieldAction(
+                          label: l10n.loginClearAccountAction,
+                          icon: Icons.close_rounded,
+                          onTap: () {
+                            _accountTextController.clear();
+                            controller.updateAccount('');
+                          },
+                        ),
                       ),
                       const SizedBox(height: 20),
                       AuthTextField(
@@ -102,9 +111,20 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         ),
                         compact: true,
                         ultraCompact: true,
-                        obscureText: true,
+                        obscureText: _isPasswordObscured,
                         textInputAction: TextInputAction.done,
                         onChanged: controller.updatePassword,
+                        rightView: _LoginFieldAction(
+                          label: _isPasswordObscured
+                              ? l10n.loginShowPasswordAction
+                              : l10n.loginHidePasswordAction,
+                          icon: _isPasswordObscured
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                          onTap: () => setState(() {
+                            _isPasswordObscured = !_isPasswordObscured;
+                          }),
+                        ),
                       ),
                       const SizedBox(height: 18),
                       Row(
@@ -266,71 +286,39 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               Positioned(
                 left: 30,
                 right: 30,
-                bottom: 40,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _ProviderButton(
-                      label: l10n.continueWithApple,
-                      backgroundColor: AppColors.backgroundInverse,
-                      foregroundColor: Colors.white,
-                      borderColor: AppColors.backgroundInverse,
-                      minHeight: 40,
-                      compact: true,
-                      icon: const _ProviderAssetIcon(
-                        assetPath: _LoginPageAssetPaths.appleProviderMark,
-                        size: 24,
-                        fallback: Icon(
-                          Icons.apple,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _ProviderButton(
-                      label: l10n.continueWithGoogle,
-                      backgroundColor: AppColors.backgroundPrimary,
-                      foregroundColor: AppColors.textProviderDark,
-                      borderColor: AppColors.borderProvider,
-                      minHeight: 40,
-                      compact: true,
-                      icon: const _ProviderAssetIcon(
-                        assetPath: _LoginPageAssetPaths.googleProviderMark,
-                        size: 24,
-                        fallback: _LetterBadge(
-                          text: 'G',
-                          foregroundColor: AppColors.brandGoogleBlue,
-                          backgroundColor: Colors.white,
-                          compact: true,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _ProviderButton(
-                      label: l10n.continueWithAlexa,
-                      backgroundColor: AppColors.brandAlexa,
-                      foregroundColor: Colors.white,
-                      borderColor: AppColors.brandAlexa,
-                      minHeight: 40,
-                      compact: true,
-                      icon: const _ProviderAssetIcon(
-                        assetPath:
-                            _LoginPageAssetPaths.voiceAssistantProviderMark,
-                        size: 24,
-                        fallback: _LetterBadge(
-                          text: 'a',
-                          foregroundColor: Colors.white,
-                          backgroundColor: AppColors.brandAlexaDark,
-                          compact: true,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                bottom: 100,
+                child: const _ThirdPartyLoginSection(),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LoginFieldAction extends StatelessWidget {
+  const _LoginFieldAction({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: label,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: SizedBox.square(
+          dimension: 44,
+          child: Icon(icon, color: AppColors.textIcon, size: 22),
         ),
       ),
     );
@@ -343,10 +331,97 @@ class _LoginPageAssetPaths {
   static const appleProviderMark = 'assets/icons/auth/provider_apple_mark.png';
   static const googleProviderMark =
       'assets/icons/auth/provider_google_mark.png';
-  static const voiceAssistantProviderMark =
-      'assets/icons/auth/provider_voice_assistant_mark.png';
+  static const facebookProviderMark =
+      'assets/icons/auth/provider_facebook_mark.png';
   static const agreementCheckedIcon =
       'assets/icons/auth/login_agreement_checked_icon.png';
+}
+
+class _ThirdPartyLoginSection extends StatelessWidget {
+  const _ThirdPartyLoginSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _ProviderSectionHeader(label: l10n.otherWaysToLogin),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _CompactProviderButton(
+              label: l10n.continueWithGoogle,
+              icon: const ColorFiltered(
+                colorFilter: ColorFilter.mode(
+                  AppColors.loginProviderForeground,
+                  BlendMode.srcIn,
+                ),
+                child: _ProviderAssetIcon(
+                  assetPath: _LoginPageAssetPaths.googleProviderMark,
+                  size: 24,
+                  fallback: SizedBox.shrink(),
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            _CompactProviderButton(
+              label: l10n.continueWithApple,
+              icon: const _ProviderAssetIcon(
+                assetPath: _LoginPageAssetPaths.appleProviderMark,
+                size: 23,
+                fallback: Icon(
+                  Icons.apple,
+                  color: AppColors.loginProviderForeground,
+                  size: 25,
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            _CompactProviderButton(
+              label: l10n.continueWithFacebook,
+              icon: const _ProviderAssetIcon(
+                assetPath: _LoginPageAssetPaths.facebookProviderMark,
+                size: 23,
+                fallback: Icon(
+                  Icons.facebook,
+                  color: AppColors.loginProviderForeground,
+                  size: 24,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _ProviderSectionHeader extends StatelessWidget {
+  const _ProviderSectionHeader({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const Expanded(child: _ProviderDivider()),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Text(
+            label,
+            style: AppTextTokens.loginProviderSectionLabel(
+              Theme.of(context).textTheme,
+            ),
+          ),
+        ),
+        const Expanded(child: _ProviderDivider()),
+      ],
+    );
+  }
 }
 
 class _AgreementToggle extends StatelessWidget {
@@ -401,50 +476,49 @@ class _AgreementToggle extends StatelessWidget {
   }
 }
 
-class _ProviderButton extends StatelessWidget {
-  const _ProviderButton({
-    required this.label,
-    required this.backgroundColor,
-    required this.foregroundColor,
-    required this.borderColor,
-    required this.minHeight,
-    required this.compact,
-    required this.icon,
-  });
+class _ProviderDivider extends StatelessWidget {
+  const _ProviderDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Divider(
+      height: 1,
+      thickness: 1,
+      color: AppColors.loginProviderDivider,
+    );
+  }
+}
+
+class _CompactProviderButton extends StatelessWidget {
+  const _CompactProviderButton({required this.label, required this.icon});
 
   final String label;
-  final Color backgroundColor;
-  final Color foregroundColor;
-  final Color borderColor;
-  final double minHeight;
-  final bool compact;
   final Widget icon;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton(
-        onPressed: () {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(label)));
-        },
-        style: OutlinedButton.styleFrom(
-          backgroundColor: backgroundColor,
-          foregroundColor: foregroundColor,
-          minimumSize: Size.fromHeight(minHeight),
-          side: BorderSide(color: borderColor, width: 1.6),
-          shape: const StadiumBorder(),
-          textStyle: AppTextTokens.providerButton(Theme.of(context).textTheme),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            icon,
-            SizedBox(width: compact ? 10 : 14),
-            Flexible(child: Text(label)),
-          ],
+    return Semantics(
+      button: true,
+      label: label,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(label))),
+        child: SizedBox.square(
+          dimension: 48,
+          child: Center(
+            child: Container(
+              width: 36,
+              height: 36,
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(
+                color: AppColors.loginProviderSurface,
+                shape: BoxShape.circle,
+              ),
+              child: icon,
+            ),
+          ),
         ),
       ),
     );
@@ -470,42 +544,6 @@ class _ProviderAssetIcon extends StatelessWidget {
       height: size,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) => fallback,
-    );
-  }
-}
-
-class _LetterBadge extends StatelessWidget {
-  const _LetterBadge({
-    required this.text,
-    required this.foregroundColor,
-    required this.backgroundColor,
-    required this.compact,
-  });
-
-  final String text;
-  final Color foregroundColor;
-  final Color backgroundColor;
-  final bool compact;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: compact ? 28 : 32,
-      height: compact ? 28 : 32,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.borderMuted),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: foregroundColor,
-          fontSize: compact ? 18 : 22,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
     );
   }
 }

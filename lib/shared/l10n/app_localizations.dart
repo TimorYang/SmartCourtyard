@@ -446,6 +446,24 @@ abstract class AppLocalizations {
   /// **'Forgot password'**
   String get forgotPasswordAction;
 
+  /// Accessibility label for clearing the login account field
+  ///
+  /// In en, this message translates to:
+  /// **'Clear account'**
+  String get loginClearAccountAction;
+
+  /// Accessibility label for showing the login password
+  ///
+  /// In en, this message translates to:
+  /// **'Show password'**
+  String get loginShowPasswordAction;
+
+  /// Accessibility label for hiding the login password
+  ///
+  /// In en, this message translates to:
+  /// **'Hide password'**
+  String get loginHidePasswordAction;
+
   /// Third-party sign in with Apple label
   ///
   /// In en, this message translates to:
@@ -457,6 +475,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Continue Sign in with Google'**
   String get continueWithGoogle;
+
+  /// Third-party sign in with Facebook label
+  ///
+  /// In en, this message translates to:
+  /// **'Continue Sign in with Facebook'**
+  String get continueWithFacebook;
+
+  /// Heading above the compact third-party login options
+  ///
+  /// In en, this message translates to:
+  /// **'Other ways to login'**
+  String get otherWaysToLogin;
 
   /// Third-party sign in with Alexa label
   ///

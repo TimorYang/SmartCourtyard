@@ -214,6 +214,18 @@
   "@forgotPasswordAction": {
     "description": "Forgot password action label"
   },
+  "loginClearAccountAction": "Clear account",
+  "@loginClearAccountAction": {
+    "description": "Accessibility label for clearing the login account field"
+  },
+  "loginShowPasswordAction": "Show password",
+  "@loginShowPasswordAction": {
+    "description": "Accessibility label for showing the login password"
+  },
+  "loginHidePasswordAction": "Hide password",
+  "@loginHidePasswordAction": {
+    "description": "Accessibility label for hiding the login password"
+  },
   "continueWithApple": "Continue Sign in with Apple",
   "@continueWithApple": {
     "description": "Third-party sign in with Apple label"
@@ -221,6 +233,14 @@
   "continueWithGoogle": "Continue Sign in with Google",
   "@continueWithGoogle": {
     "description": "Third-party sign in with Google label"
+  },
+  "continueWithFacebook": "Continue Sign in with Facebook",
+  "@continueWithFacebook": {
+    "description": "Third-party sign in with Facebook label"
+  },
+  "otherWaysToLogin": "Other ways to login",
+  "@otherWaysToLogin": {
+    "description": "Heading above the compact third-party login options"
   },
   "continueWithAlexa": "Continue Sign in with Alexa",
   "@continueWithAlexa": {

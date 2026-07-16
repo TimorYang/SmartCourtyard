@@ -117,7 +117,7 @@ class AppColors {
   static const textAccountMenuValue = Color(0xFF4F535A);
   static const textAccountDetailsValue = Color(0xFFA7ADB7);
   static const textAgreement = Color(0xFFC0C0C3);
-  static const textAgreementLink = Color(0xFF4C4B4A);
+  static const textAgreementLink = Color(0xFF006DFF);
   static const textAuthBody = Color(0xFF555A62);
   static const textRegisterAgreement = Color(0xFF707070);
   static const textRegisterLink = Color(0xFF0D6EFF);
@@ -165,6 +165,9 @@ class AppColors {
   static const borderSubtle = Color(0xFFDBDBDB);
   static const borderMuted = Color(0xFFC8C8C8);
   static const borderProvider = Color(0xFFADADAD);
+  static const loginProviderDivider = Color(0xFFD9D9D9);
+  static const loginProviderSurface = Color(0xFF303036);
+  static const loginProviderForeground = Color(0xFFFFFFFF);
   static const borderCodeCell = Color(0xFFE1E1E1);
   static const navigationBackground = Colors.white;
   static const navigationForeground = Color(0xFF26292F);
@@ -250,6 +253,14 @@ class AppTextTokens {
   static TextStyle loginTextButton(TextTheme textTheme) {
     return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
       fontSize: 13,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle loginProviderSectionLabel(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 14,
       fontWeight: FontWeight.w400,
     );
   }

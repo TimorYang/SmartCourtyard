@@ -205,10 +205,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get forgotPasswordAction => 'Forgot password';
 
   @override
+  String get loginClearAccountAction => 'Clear account';
+
+  @override
+  String get loginShowPasswordAction => 'Show password';
+
+  @override
+  String get loginHidePasswordAction => 'Hide password';
+
+  @override
   String get continueWithApple => 'Continue Sign in with Apple';
 
   @override
   String get continueWithGoogle => 'Continue Sign in with Google';
+
+  @override
+  String get continueWithFacebook => 'Continue Sign in with Facebook';
+
+  @override
+  String get otherWaysToLogin => 'Other ways to login';
 
   @override
   String get continueWithAlexa => 'Continue Sign in with Alexa';

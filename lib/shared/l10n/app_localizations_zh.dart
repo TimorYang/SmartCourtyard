@@ -189,10 +189,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get forgotPasswordAction => '忘记密码';
 
   @override
+  String get loginClearAccountAction => '清空账号';
+
+  @override
+  String get loginShowPasswordAction => '显示密码';
+
+  @override
+  String get loginHidePasswordAction => '隐藏密码';
+
+  @override
   String get continueWithApple => '使用 Apple 继续登录';
 
   @override
   String get continueWithGoogle => '使用 Google 继续登录';
+
+  @override
+  String get continueWithFacebook => '使用 Facebook 继续登录';
+
+  @override
+  String get otherWaysToLogin => '其他登录方式';
 
   @override
   String get continueWithAlexa => '使用 Alexa 继续登录';

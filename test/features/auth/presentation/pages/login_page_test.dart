@@ -1,4 +1,5 @@
 import 'package:flinx/app/flinx_app.dart';
+import 'package:flinx/features/auth/presentation/widgets/auth_flow_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,9 +24,19 @@ void main() {
       expect(fields[0].controller?.text, '19901462575@163.com');
       expect(fields[1].controller?.text, '12345678');
       expect(find.text('Login in'), findsOneWidget);
-      expect(find.text('Continue Sign in with Apple'), findsOneWidget);
-      expect(find.text('Continue Sign in with Google'), findsOneWidget);
-      expect(find.text('Continue Sign in with Alexa'), findsOneWidget);
+      expect(find.text('Other ways to login'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel('Continue Sign in with Apple'),
+        findsOneWidget,
+      );
+      expect(
+        find.bySemanticsLabel('Continue Sign in with Google'),
+        findsOneWidget,
+      );
+      expect(
+        find.bySemanticsLabel('Continue Sign in with Facebook'),
+        findsOneWidget,
+      );
     },
   );
 
@@ -35,13 +46,46 @@ void main() {
     addTearDown(tester.view.resetViewInsets);
     await openLoginPage(tester);
 
-    final appleButton = find.text('Continue Sign in with Apple');
+    final appleButton = find.bySemanticsLabel('Continue Sign in with Apple');
     final initialTop = tester.getTopLeft(appleButton).dy;
 
     tester.view.viewInsets = const FakeViewPadding(bottom: 320);
     await tester.pump();
 
     expect(tester.getTopLeft(appleButton).dy, initialTop);
+  });
+
+  testWidgets('clears the account and toggles password visibility', (
+    tester,
+  ) async {
+    await openLoginPage(tester);
+
+    var fields = tester.widgetList<TextField>(find.byType(TextField)).toList();
+    final accountField = find.byType(AuthTextField).first;
+    final initialAccountFieldSize = tester.getSize(accountField);
+    expect(fields[0].controller?.text, isNotEmpty);
+    expect(fields[1].obscureText, isTrue);
+
+    await tester.tap(find.bySemanticsLabel('Clear account'));
+    await tester.pump();
+    fields = tester.widgetList<TextField>(find.byType(TextField)).toList();
+    expect(fields[0].controller?.text, isEmpty);
+    expect(find.bySemanticsLabel('Clear account').hitTestable(), findsNothing);
+    expect(tester.getSize(accountField), initialAccountFieldSize);
+
+    await tester.enterText(find.byType(TextField).at(0), 'demo@example.com');
+    await tester.pump();
+    expect(
+      find.bySemanticsLabel('Clear account').hitTestable(),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.bySemanticsLabel('Show password'));
+    await tester.pump();
+    fields = tester.widgetList<TextField>(find.byType(TextField)).toList();
+    expect(fields[1].obscureText, isFalse);
+    expect(fields[1].controller?.text, '12345678');
+    expect(find.bySemanticsLabel('Hide password'), findsOneWidget);
   });
 
   testWidgets('validates email format when login in is tapped', (tester) async {

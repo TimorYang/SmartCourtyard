@@ -180,6 +180,7 @@ class AuthTextField extends StatelessWidget {
     this.inputFormatters,
     this.onSubmitted,
     this.onTapOutside,
+    this.rightView,
     this.compact = true,
     this.ultraCompact = true,
   });
@@ -199,8 +200,35 @@ class AuthTextField extends StatelessWidget {
   final List<TextInputFormatter>? inputFormatters;
   final ValueChanged<String>? onSubmitted;
   final TapRegionCallback? onTapOutside;
+  final Widget? rightView;
   final bool compact;
   final bool ultraCompact;
+
+  Widget _buildRightView() {
+    final rightView = this.rightView;
+    if (rightView == null) {
+      return const SizedBox.shrink();
+    }
+
+    final controller = this.controller;
+    if (controller == null) {
+      return rightView;
+    }
+
+    return ValueListenableBuilder<TextEditingValue>(
+      valueListenable: controller,
+      child: rightView,
+      builder: (context, value, child) {
+        return Visibility(
+          visible: value.text.isNotEmpty,
+          maintainState: true,
+          maintainAnimation: true,
+          maintainSize: true,
+          child: child!,
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -249,6 +277,7 @@ class AuthTextField extends StatelessWidget {
               ),
             ),
           ),
+          _buildRightView(),
         ],
       ),
     );
