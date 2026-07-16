@@ -94,9 +94,10 @@ class PigeonHardwareGateway implements HardwareGateway {
     required String requestId,
     required String deviceId,
     required String token,
+    required String aesKey,
   }) async {
     final dto = await _mapPigeonCall(
-      () => _hostApi.authenticateBleDevice(requestId, deviceId, token),
+      () => _hostApi.authenticateBleDevice(requestId, deviceId, token, aesKey),
       requestId: requestId,
       deviceId: deviceId,
     );

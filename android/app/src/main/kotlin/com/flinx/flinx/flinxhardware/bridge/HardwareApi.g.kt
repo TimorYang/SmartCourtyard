@@ -1491,7 +1491,7 @@ interface HardwareHostApi {
   fun startBleScan(requestId: String, filter: BleScanFilterDto)
   fun stopBleScan(requestId: String)
   fun connectBleDevice(requestId: String, deviceId: String, callback: (Result<BleConnectionEventDto>) -> Unit)
-  fun authenticateBleDevice(requestId: String, deviceId: String, token: String, callback: (Result<BleAuthenticationResultDto>) -> Unit)
+  fun authenticateBleDevice(requestId: String, deviceId: String, token: String, aesKey: String, callback: (Result<BleAuthenticationResultDto>) -> Unit)
   fun scanWifiNetworks(requestId: String, deviceId: String, callback: (Result<WifiScanResultDto>) -> Unit)
   fun configureWifi(requestId: String, deviceId: String, ssid: String, password: String, callback: (Result<WifiProvisionResultDto>) -> Unit)
   fun disconnectBleDevice(requestId: String, deviceId: String, callback: (Result<BleConnectionEventDto>) -> Unit)
@@ -1612,7 +1612,8 @@ interface HardwareHostApi {
             val requestIdArg = args[0] as String
             val deviceIdArg = args[1] as String
             val tokenArg = args[2] as String
-            api.authenticateBleDevice(requestIdArg, deviceIdArg, tokenArg) { result: Result<BleAuthenticationResultDto> ->
+            val aesKeyArg = args[3] as String
+            api.authenticateBleDevice(requestIdArg, deviceIdArg, tokenArg, aesKeyArg) { result: Result<BleAuthenticationResultDto> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(HardwareApiPigeonUtils.wrapError(error))

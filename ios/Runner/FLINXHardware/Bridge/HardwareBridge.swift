@@ -7,6 +7,7 @@ final class HardwareBridge: HardwareHostApi {
     private let flutterApi: HardwareFlutterApi
     private var provisioningReadiness: [String: Bool] = [:]
     private var provisioningBuffers: [String: Data] = [:]
+    private var provisioningAesKeys: [String: Data] = [:]
     private var pendingProvisioningRequests: [String: PendingProvisioningRequest] = [:]
     private var provisioningSequences: [String: UInt16] = [:]
     
@@ -55,6 +56,7 @@ final class HardwareBridge: HardwareHostApi {
         requestId: String,
         deviceId: String,
         token: String,
+        aesKey: String,
         completion: @escaping (Result<BleAuthenticationResultDto, Error>) -> Void
     ) {
         logger.info("ble_authenticate", requestId: requestId, deviceId: deviceId, state: "started")
@@ -81,6 +83,23 @@ final class HardwareBridge: HardwareHostApi {
             )
             return
         }
+
+        let normalizedAesKey = aesKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard normalizedAesKey.count == 32,
+              let aesKeyBytes = Data(hexString: normalizedAesKey),
+              aesKeyBytes.count == kCCKeySizeAES128 else {
+            completion(
+                .failure(
+                    PigeonError(
+                        code: "invalid_aes_key",
+                        message: "BLE AES key must be a 32-character hexadecimal string.",
+                        details: nil
+                    )
+                )
+            )
+            return
+        }
+        provisioningAesKeys[deviceId] = aesKeyBytes
         
         ensureProvisioningChannel(requestId: requestId, deviceId: deviceId) { [weak self] result in
             guard let self else { return }
@@ -326,11 +345,13 @@ final class HardwareBridge: HardwareHostApi {
     ) {
         let control = command.doorControlCode
         let sequence = nextProvisioningSequence(for: deviceId)
-        guard let frame = Self.makeFrame(
+        guard let aesKey = provisioningAesKeys[deviceId],
+              let frame = Self.makeFrame(
             sequence: sequence,
             command: DoorControlCommand.commandControlDoor,
             payload: Data(Self.bigEndianBytes(control)),
-            encrypted: true
+            encrypted: true,
+            aesKey: aesKey
         ) else {
             completion(
                 .failure(
@@ -669,6 +690,7 @@ extension HardwareBridge: BleManagerDelegate {
         if event.state == .disconnected {
             provisioningReadiness[event.deviceId] = nil
             provisioningBuffers[event.deviceId] = nil
+            provisioningAesKeys[event.deviceId] = nil
             pendingProvisioningRequests.removeValue(forKey: event.deviceId)?.timeout.cancel()
         }
         flutterApi.onBleConnectionChanged(event: event.toDto()) { _ in }
@@ -772,11 +794,13 @@ private extension HardwareBridge {
         
         let sequence = nextProvisioningSequence(for: deviceId)
         let encryptRequest = command.requiresEncryptedRequest
+        let aesKey = provisioningAesKeys[deviceId]
         guard let frame = Self.makeFrame(
             sequence: sequence,
             command: command.rawValue,
             payload: payload,
-            encrypted: encryptRequest
+            encrypted: encryptRequest,
+            aesKey: aesKey
         ) else {
             logger.error(
                 "provisioning_request",
@@ -998,11 +1022,20 @@ private extension HardwareBridge {
         deviceId: String
     ) -> BleProtocolFrame? {
         let pending = pendingProvisioningRequests[deviceId]
+        guard let aesKey = provisioningAesKeys[deviceId] else {
+            logger.warning(
+                "provisioning_decrypt",
+                requestId: pending?.requestId,
+                deviceId: deviceId,
+                state: "missing_aes_key"
+            )
+            return nil
+        }
         
         for mode in BleAesMode.candidateModes {
             guard let plaintext = Self.decryptAes128(
                 frame.encryptedPayload,
-                key: BleProvisioningCommand.candidateAesKey,
+                key: aesKey,
                 mode: mode
             ) else {
                 logger.warning(
@@ -1213,7 +1246,8 @@ private extension HardwareBridge {
         sequence: UInt16,
         command: UInt16,
         payload: Data,
-        encrypted: Bool = false
+        encrypted: Bool = false,
+        aesKey: Data? = nil
     ) -> Data? {
         var frame = Data()
         frame.append(contentsOf: [0x55, 0x55])
@@ -1221,9 +1255,10 @@ private extension HardwareBridge {
         let crypto: UInt8 = encrypted ? 0x01 : 0x00
         let transmittedData: Data
         if encrypted,
+           let aesKey,
            let encryptedData = encryptAes128(
             frameData,
-            key: BleProvisioningCommand.candidateAesKey,
+            key: aesKey,
             mode: BleAesMode.ecb
            ) {
             transmittedData = encryptedData
@@ -1656,7 +1691,6 @@ private enum BleProvisioningCommand: UInt16 {
     static let serviceUuid = "02362AF7-CF3A-11E1-EFDC-000215D5C51B"
     static let writeCharacteristicUuid = "02362A10-CF3A-11E1-EFDC-000215D5C51B"
     static let notifyCharacteristicUuid = "02362A11-CF3A-11E1-EFDC-000215D5C51B"
-    static let candidateAesKey = Data(hexString: "1BEE89494F466512FF584DDF85B39AA6") ?? Data()
     
     var hexCode: String {
         String(format: "0x%04X", Int(rawValue))

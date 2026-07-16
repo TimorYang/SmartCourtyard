@@ -73,6 +73,7 @@ void main() {
       requestId: 'auth-1',
       deviceId: 'mock-ble-device',
       token: '0123456789abcdef0123456789abcdef',
+      aesKey: '0123456789abcdef0123456789abcdef',
     );
     final wifiList = await gateway.scanWifiNetworks(
       requestId: 'wifi-scan-1',

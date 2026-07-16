@@ -1563,14 +1563,14 @@ class HardwareHostApi {
     return pigeonVar_replyValue! as BleConnectionEventDto;
   }
 
-  Future<BleAuthenticationResultDto> authenticateBleDevice(String requestId, String deviceId, String token) async {
+  Future<BleAuthenticationResultDto> authenticateBleDevice(String requestId, String deviceId, String token, String aesKey) async {
     final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.authenticateBleDevice$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[requestId, deviceId, token]);
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[requestId, deviceId, token, aesKey]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(

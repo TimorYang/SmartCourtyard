@@ -344,6 +344,7 @@ abstract class HardwareHostApi {
     String requestId,
     String deviceId,
     String token,
+    String aesKey,
   );
 
   @async

@@ -1395,7 +1395,7 @@ protocol HardwareHostApi {
   func startBleScan(requestId: String, filter: BleScanFilterDto) throws
   func stopBleScan(requestId: String) throws
   func connectBleDevice(requestId: String, deviceId: String, completion: @escaping (Result<BleConnectionEventDto, Error>) -> Void)
-  func authenticateBleDevice(requestId: String, deviceId: String, token: String, completion: @escaping (Result<BleAuthenticationResultDto, Error>) -> Void)
+  func authenticateBleDevice(requestId: String, deviceId: String, token: String, aesKey: String, completion: @escaping (Result<BleAuthenticationResultDto, Error>) -> Void)
   func scanWifiNetworks(requestId: String, deviceId: String, completion: @escaping (Result<WifiScanResultDto, Error>) -> Void)
   func configureWifi(requestId: String, deviceId: String, ssid: String, password: String, completion: @escaping (Result<WifiProvisionResultDto, Error>) -> Void)
   func disconnectBleDevice(requestId: String, deviceId: String, completion: @escaping (Result<BleConnectionEventDto, Error>) -> Void)
@@ -1500,7 +1500,8 @@ class HardwareHostApiSetup {
         let requestIdArg = args[0] as! String
         let deviceIdArg = args[1] as! String
         let tokenArg = args[2] as! String
-        api.authenticateBleDevice(requestId: requestIdArg, deviceId: deviceIdArg, token: tokenArg) { result in
+        let aesKeyArg = args[3] as! String
+        api.authenticateBleDevice(requestId: requestIdArg, deviceId: deviceIdArg, token: tokenArg, aesKey: aesKeyArg) { result in
           switch result {
           case .success(let res):
             reply(wrapResult(res))

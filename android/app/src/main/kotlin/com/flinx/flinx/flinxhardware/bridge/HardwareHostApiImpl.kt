@@ -74,6 +74,7 @@ class HardwareHostApiImpl(
     requestId: String,
     deviceId: String,
     token: String,
+    aesKey: String,
     callback: (Result<BleAuthenticationResultDto>) -> Unit,
   ) {
     permissionManager.ensureBleConnectPreconditions()

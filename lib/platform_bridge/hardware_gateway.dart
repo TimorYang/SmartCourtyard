@@ -35,6 +35,7 @@ abstract interface class HardwareGateway {
     required String requestId,
     required String deviceId,
     required String token,
+    required String aesKey,
   });
 
   Future<WifiScanResult> scanWifiNetworks({

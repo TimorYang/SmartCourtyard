@@ -323,6 +323,7 @@ class AddDeviceController extends Notifier<AddDeviceState> {
         requestId: _nextRequestId('ble-auth'),
         deviceId: device.id,
         token: authenticationToken,
+        aesKey: deviceKey.aesKey,
       );
       if (!authResult.authenticated) {
         state = state.copyWith(

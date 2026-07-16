@@ -101,13 +101,16 @@ class MockHardwareGateway implements HardwareGateway {
     required String requestId,
     required String deviceId,
     required String token,
+    required String aesKey,
   }) async {
     return BleAuthenticationResult(
       requestId: requestId,
       deviceId: deviceId,
-      authenticated: token.isNotEmpty,
+      authenticated: token.isNotEmpty && aesKey.isNotEmpty,
       bindingState: 0xF1,
-      nativeCode: token.isNotEmpty ? null : 'mock_missing_token',
+      nativeCode: token.isNotEmpty && aesKey.isNotEmpty
+          ? null
+          : 'mock_missing_credentials',
     );
   }
 
