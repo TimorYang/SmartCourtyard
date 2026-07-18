@@ -1,23 +1,27 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../application/providers.dart';
 import 'smart_opener_ble_scan_page.dart';
 import 'wifi_configuration_page.dart';
 
 class SmartOpenerQrScanAssetPaths {
   const SmartOpenerQrScanAssetPaths._();
 
-  static const galleryIcon = 'assets/icons/add_device/smart_opener_qr_gallery_icon.png';
-  static const flashlightIcon = 'assets/icons/add_device/smart_opener_qr_flashlight_icon.png';
+  static const galleryIcon =
+      'assets/icons/add_device/smart_opener_qr_gallery_icon.png';
+  static const flashlightIcon =
+      'assets/icons/add_device/smart_opener_qr_flashlight_icon.png';
 }
 
-class SmartOpenerQrScanPage extends StatefulWidget {
+class SmartOpenerQrScanPage extends ConsumerStatefulWidget {
   const SmartOpenerQrScanPage({super.key, this.enableCamera = true});
 
   static const routeName = 'smart-opener-qr-scan';
@@ -26,10 +30,11 @@ class SmartOpenerQrScanPage extends StatefulWidget {
   final bool enableCamera;
 
   @override
-  State<SmartOpenerQrScanPage> createState() => _SmartOpenerQrScanPageState();
+  ConsumerState<SmartOpenerQrScanPage> createState() =>
+      _SmartOpenerQrScanPageState();
 }
 
-class _SmartOpenerQrScanPageState extends State<SmartOpenerQrScanPage> {
+class _SmartOpenerQrScanPageState extends ConsumerState<SmartOpenerQrScanPage> {
   late final MobileScannerController _scannerController;
   final ImagePicker _imagePicker = ImagePicker();
   bool _hasNavigated = false;
@@ -37,7 +42,13 @@ class _SmartOpenerQrScanPageState extends State<SmartOpenerQrScanPage> {
   @override
   void initState() {
     super.initState();
-    _scannerController = MobileScannerController(detectionSpeed: DetectionSpeed.noDuplicates, formats: const <BarcodeFormat>[BarcodeFormat.qrCode]);
+    _scannerController = MobileScannerController(
+      detectionSpeed: DetectionSpeed.noDuplicates,
+      formats: const <BarcodeFormat>[BarcodeFormat.qrCode],
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_disconnectConnectedBleDevices());
+    });
   }
 
   @override
@@ -55,6 +66,18 @@ class _SmartOpenerQrScanPageState extends State<SmartOpenerQrScanPage> {
       }
       _showMessage(AppLocalizations.of(context).smartOpenerScannerUnknownError);
     }
+  }
+
+  Future<void> _disconnectConnectedBleDevices() async {
+    final allDisconnected = await ref
+        .read(addDeviceControllerProvider.notifier)
+        .disconnectConnectedBleDevices();
+    if (!mounted || allDisconnected) {
+      return;
+    }
+    _showMessage(
+      AppLocalizations.of(context).smartOpenerDisconnectFailedMessage,
+    );
   }
 
   Future<void> _pickFromGallery() async {
@@ -97,7 +120,9 @@ class _SmartOpenerQrScanPageState extends State<SmartOpenerQrScanPage> {
       return;
     }
     final encodedPayload = Uri.encodeQueryComponent(rawValue);
-    context.push('${WifiConfigurationPage.routePath}?qrPayload=$encodedPayload');
+    context.push(
+      '${WifiConfigurationPage.routePath}?qrPayload=$encodedPayload',
+    );
   }
 
   String? _firstQrPayload(BarcodeCapture? capture) {
@@ -129,7 +154,10 @@ class _SmartOpenerQrScanPageState extends State<SmartOpenerQrScanPage> {
         builder: (context, constraints) {
           final scanWindowSize = constraints.maxWidth * 0.58;
           final scanWindow = Rect.fromCenter(
-            center: Offset(constraints.maxWidth / 2, constraints.maxHeight * 0.36),
+            center: Offset(
+              constraints.maxWidth / 2,
+              constraints.maxHeight * 0.36,
+            ),
             width: scanWindowSize,
             height: scanWindowSize,
           );
@@ -153,14 +181,21 @@ class _SmartOpenerQrScanPageState extends State<SmartOpenerQrScanPage> {
                 const ColoredBox(color: AppColors.scannerBackground),
               Positioned.fill(
                 child: CustomPaint(
-                  painter: _ScannerOverlayPainter(scanWindow: scanWindow, paintWindowFill: !widget.enableCamera),
+                  painter: _ScannerOverlayPainter(
+                    scanWindow: scanWindow,
+                    paintWindowFill: !widget.enableCamera,
+                  ),
                 ),
               ),
               Positioned(
                 left: scanWindow.left,
                 right: scanWindow.left,
                 top: scanWindow.bottom + 26,
-                child: Center(child: _ScannerChip(label: l10n.smartOpenerScannerManualAction)),
+                child: Center(
+                  child: _ScannerChip(
+                    label: l10n.smartOpenerScannerManualAction,
+                  ),
+                ),
               ),
               SafeArea(
                 child: Padding(
@@ -176,7 +211,8 @@ class _SmartOpenerQrScanPageState extends State<SmartOpenerQrScanPage> {
                       const Spacer(),
                       IconButton(
                         tooltip: l10n.smartOpenerScannerBluetoothTooltip,
-                        onPressed: () => context.push(SmartOpenerBleScanPage.routePath),
+                        onPressed: () =>
+                            context.push(SmartOpenerBleScanPage.routePath),
                         icon: const Icon(Icons.bluetooth),
                         color: Colors.white,
                       ),
@@ -214,7 +250,10 @@ class _SmartOpenerQrScanPageState extends State<SmartOpenerQrScanPage> {
     );
   }
 
-  String _scannerMessage(AppLocalizations l10n, MobileScannerException exception) {
+  String _scannerMessage(
+    AppLocalizations l10n,
+    MobileScannerException exception,
+  ) {
     if (exception.errorCode == MobileScannerErrorCode.permissionDenied) {
       return l10n.smartOpenerScannerPermissionError;
     }
@@ -234,7 +273,13 @@ class _ScannerError extends StatelessWidget {
       child: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Text(message, textAlign: TextAlign.center, style: AppTextTokens.scannerControlLabel(Theme.of(context).textTheme)),
+          child: Text(
+            message,
+            textAlign: TextAlign.center,
+            style: AppTextTokens.scannerControlLabel(
+              Theme.of(context).textTheme,
+            ),
+          ),
         ),
       ),
     );
@@ -249,17 +294,28 @@ class _ScannerChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: const ShapeDecoration(color: AppColors.scannerChipBackground, shape: StadiumBorder()),
+      decoration: const ShapeDecoration(
+        color: AppColors.scannerChipBackground,
+        shape: StadiumBorder(),
+      ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-        child: Text(label, style: AppTextTokens.scannerChip(Theme.of(context).textTheme)),
+        child: Text(
+          label,
+          style: AppTextTokens.scannerChip(Theme.of(context).textTheme),
+        ),
       ),
     );
   }
 }
 
 class _ScannerActionButton extends StatelessWidget {
-  const _ScannerActionButton({required this.label, required this.assetPath, required this.fallbackIcon, required this.onPressed});
+  const _ScannerActionButton({
+    required this.label,
+    required this.assetPath,
+    required this.fallbackIcon,
+    required this.onPressed,
+  });
 
   final String label;
   final String assetPath;
@@ -279,14 +335,20 @@ class _ScannerActionButton extends StatelessWidget {
           },
         ),
         const SizedBox(height: 8),
-        Text(label, style: AppTextTokens.scannerControlLabel(Theme.of(context).textTheme)),
+        Text(
+          label,
+          style: AppTextTokens.scannerControlLabel(Theme.of(context).textTheme),
+        ),
       ],
     );
   }
 }
 
 class _ScannerOverlayPainter extends CustomPainter {
-  const _ScannerOverlayPainter({required this.scanWindow, required this.paintWindowFill});
+  const _ScannerOverlayPainter({
+    required this.scanWindow,
+    required this.paintWindowFill,
+  });
 
   final Rect scanWindow;
   final bool paintWindowFill;
@@ -305,18 +367,51 @@ class _ScannerOverlayPainter extends CustomPainter {
     const cornerLength = 12.0;
 
     canvas
-      ..drawLine(scanWindow.topLeft, scanWindow.topLeft + const Offset(cornerLength, 0), cornerPaint)
-      ..drawLine(scanWindow.topLeft, scanWindow.topLeft + const Offset(0, cornerLength), cornerPaint)
-      ..drawLine(scanWindow.topRight, scanWindow.topRight + const Offset(-cornerLength, 0), cornerPaint)
-      ..drawLine(scanWindow.topRight, scanWindow.topRight + const Offset(0, cornerLength), cornerPaint)
-      ..drawLine(scanWindow.bottomLeft, scanWindow.bottomLeft + const Offset(cornerLength, 0), cornerPaint)
-      ..drawLine(scanWindow.bottomLeft, scanWindow.bottomLeft + const Offset(0, -cornerLength), cornerPaint)
-      ..drawLine(scanWindow.bottomRight, scanWindow.bottomRight + const Offset(-cornerLength, 0), cornerPaint)
-      ..drawLine(scanWindow.bottomRight, scanWindow.bottomRight + const Offset(0, -cornerLength), cornerPaint);
+      ..drawLine(
+        scanWindow.topLeft,
+        scanWindow.topLeft + const Offset(cornerLength, 0),
+        cornerPaint,
+      )
+      ..drawLine(
+        scanWindow.topLeft,
+        scanWindow.topLeft + const Offset(0, cornerLength),
+        cornerPaint,
+      )
+      ..drawLine(
+        scanWindow.topRight,
+        scanWindow.topRight + const Offset(-cornerLength, 0),
+        cornerPaint,
+      )
+      ..drawLine(
+        scanWindow.topRight,
+        scanWindow.topRight + const Offset(0, cornerLength),
+        cornerPaint,
+      )
+      ..drawLine(
+        scanWindow.bottomLeft,
+        scanWindow.bottomLeft + const Offset(cornerLength, 0),
+        cornerPaint,
+      )
+      ..drawLine(
+        scanWindow.bottomLeft,
+        scanWindow.bottomLeft + const Offset(0, -cornerLength),
+        cornerPaint,
+      )
+      ..drawLine(
+        scanWindow.bottomRight,
+        scanWindow.bottomRight + const Offset(-cornerLength, 0),
+        cornerPaint,
+      )
+      ..drawLine(
+        scanWindow.bottomRight,
+        scanWindow.bottomRight + const Offset(0, -cornerLength),
+        cornerPaint,
+      );
   }
 
   @override
   bool shouldRepaint(covariant _ScannerOverlayPainter oldDelegate) {
-    return oldDelegate.scanWindow != scanWindow || oldDelegate.paintWindowFill != paintWindowFill;
+    return oldDelegate.scanWindow != scanWindow ||
+        oldDelegate.paintWindowFill != paintWindowFill;
   }
 }

@@ -7,6 +7,7 @@ import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../../device_control/presentation/pages/device_command_page.dart';
+import '../../../home/application/providers.dart';
 
 class WifiConfigurationPage extends ConsumerStatefulWidget {
   const WifiConfigurationPage({super.key, this.qrPayload});
@@ -164,6 +165,7 @@ class _WifiConfigurationPageState extends ConsumerState<WifiConfigurationPage> {
                       if (!context.mounted || !success) {
                         return;
                       }
+                      ref.invalidate(homeDevicesProvider);
                       final deviceId = Uri.encodeQueryComponent(
                         selectedDevice.id,
                       );

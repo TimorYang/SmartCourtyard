@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flinx/app/theme/app_theme.dart';
+import 'package:flinx/features/add_device/application/add_device_controller.dart';
 import 'package:flinx/features/add_device/application/providers.dart';
 import 'package:flinx/features/add_device/domain/entities/onboarded_force_door.dart';
 import 'package:flinx/features/add_device/domain/entities/onboarding_device_key.dart';
@@ -53,6 +54,31 @@ void main() {
 
     expect(find.text('Gallery'), findsOneWidget);
     expect(find.text('Flashlight'), findsOneWidget);
+  });
+
+  testWidgets('QR scanner disconnects devices connected by the add flow', (
+    tester,
+  ) async {
+    final tracker = _DisconnectTracker();
+    await tester.pumpWidget(_qrScanTestApp(tracker));
+    await tester.pump();
+
+    expect(tracker.callCount, 1);
+    expect(find.byType(SmartOpenerQrScanPage), findsOneWidget);
+  });
+
+  testWidgets('QR scanner remains usable when disconnect fails', (
+    tester,
+  ) async {
+    final tracker = _DisconnectTracker(allDisconnected: false);
+    await tester.pumpWidget(_qrScanTestApp(tracker));
+    await tester.pump();
+
+    expect(find.byType(SmartOpenerQrScanPage), findsOneWidget);
+    expect(
+      find.text('Unable to disconnect device. Scanning continues.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('opens Bluetooth scanning page from QR scanner shortcut', (
@@ -302,7 +328,30 @@ void main() {
   testWidgets(
     'configure success opens success page and Try it opens bound door',
     (tester) async {
-      await _openChooseWifi(tester, scanDuration: scanDuration);
+      var homeDeviceRequests = 0;
+      final container = ProviderContainer(
+        overrides: [
+          addDeviceHardwareGatewayProvider.overrideWithValue(
+            MockHardwareGateway(),
+          ),
+          addDeviceOnboardingRepositoryProvider.overrideWithValue(
+            const _FakeAddDeviceOnboardingRepository(),
+          ),
+          homeDevicesProvider.overrideWith((ref) async {
+            homeDeviceRequests += 1;
+            return const <DeviceSummary>[];
+          }),
+        ],
+      );
+      addTearDown(container.dispose);
+      await container.read(homeDevicesProvider.future);
+      expect(homeDeviceRequests, 1);
+
+      await _openChooseWifi(
+        tester,
+        scanDuration: scanDuration,
+        container: container,
+      );
 
       await tester.tap(find.text('FLINX Office'));
       await tester.pumpAndSettle();
@@ -312,6 +361,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Connection successful'), findsOneWidget);
+      await container.read(homeDevicesProvider.future);
+      expect(homeDeviceRequests, 2);
       await tester.tap(find.widgetWithText(FilledButton, 'Try it'));
       await tester.pumpAndSettle();
       expect(
@@ -388,6 +439,7 @@ void main() {
 Future<void> _openScanResults(
   WidgetTester tester, {
   MockHardwareGateway? gateway,
+  ProviderContainer? container,
   Duration scanDuration = const Duration(milliseconds: 20),
   Size viewSize = const Size(393, 1200),
 }) async {
@@ -395,6 +447,7 @@ Future<void> _openScanResults(
     tester,
     SmartOpenerBleScanPage.routePath,
     gateway: gateway,
+    container: container,
     scanDuration: scanDuration,
     viewSize: viewSize,
   );
@@ -432,6 +485,7 @@ Future<void> _pumpScanFlowTestApp(
   WidgetTester tester,
   String initialLocation, {
   MockHardwareGateway? gateway,
+  ProviderContainer? container,
   Duration scanDuration = const Duration(seconds: 30),
   Size viewSize = const Size(393, 1200),
 }) async {
@@ -443,6 +497,7 @@ Future<void> _pumpScanFlowTestApp(
     _scanFlowTestApp(
       initialLocation,
       gateway: gateway,
+      container: container,
       scanDuration: scanDuration,
     ),
   );
@@ -451,12 +506,14 @@ Future<void> _pumpScanFlowTestApp(
 Future<void> _openChooseWifi(
   WidgetTester tester, {
   MockHardwareGateway? gateway,
+  ProviderContainer? container,
   Duration scanDuration = const Duration(milliseconds: 20),
   Size viewSize = const Size(393, 1200),
 }) async {
   await _openScanResults(
     tester,
     gateway: gateway,
+    container: container,
     scanDuration: scanDuration,
     viewSize: viewSize,
   );
@@ -469,6 +526,7 @@ Future<void> _openChooseWifi(
 Widget _scanFlowTestApp(
   String initialLocation, {
   MockHardwareGateway? gateway,
+  ProviderContainer? container,
   Duration scanDuration = const Duration(seconds: 30),
 }) {
   final router = GoRouter(
@@ -530,6 +588,17 @@ Widget _scanFlowTestApp(
     ],
   );
 
+  final app = MaterialApp.router(
+    theme: AppTheme.light(),
+    routerConfig: router,
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+  );
+
+  if (container != null) {
+    return UncontrolledProviderScope(container: container, child: app);
+  }
+
   return ProviderScope(
     overrides: [
       addDeviceHardwareGatewayProvider.overrideWithValue(
@@ -541,11 +610,22 @@ Widget _scanFlowTestApp(
       homeDevicesProvider.overrideWith((ref) async => const <DeviceSummary>[]),
       homeScenesProvider.overrideWith((ref) async => const <HomeScene>[]),
     ],
-    child: MaterialApp.router(
+    child: app,
+  );
+}
+
+Widget _qrScanTestApp(_DisconnectTracker tracker) {
+  return ProviderScope(
+    overrides: [
+      addDeviceControllerProvider.overrideWith(
+        () => _TrackingAddDeviceController(tracker),
+      ),
+    ],
+    child: MaterialApp(
       theme: AppTheme.light(),
-      routerConfig: router,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
+      home: const SmartOpenerQrScanPage(enableCamera: false),
     ),
   );
 }
@@ -613,5 +693,27 @@ class _PendingWifiHardwareGateway extends MockHardwareGateway {
     required String password,
   }) {
     return _completer.future;
+  }
+}
+
+class _DisconnectTracker {
+  _DisconnectTracker({this.allDisconnected = true});
+
+  final bool allDisconnected;
+  var callCount = 0;
+}
+
+class _TrackingAddDeviceController extends AddDeviceController {
+  _TrackingAddDeviceController(this._tracker);
+
+  final _DisconnectTracker _tracker;
+
+  @override
+  AddDeviceState build() => AddDeviceState.initial();
+
+  @override
+  Future<bool> disconnectConnectedBleDevices() async {
+    _tracker.callCount += 1;
+    return _tracker.allDisconnected;
   }
 }
