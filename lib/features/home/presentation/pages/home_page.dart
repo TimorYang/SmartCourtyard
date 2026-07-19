@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/widgets/app_toast.dart';
+import '../../../../features/account/application/providers.dart';
+import '../../../../features/account/domain/entities/account_profile.dart';
 import '../../../../features/account/presentation/pages/account_profile_page.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../add_device/presentation/pages/add_new_doors_page.dart';
@@ -78,6 +80,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget build(BuildContext context) {
     final devices = ref.watch(homeDevicesProvider);
     final scenes = ref.watch(homeScenesProvider);
+    final accountProfile = ref.watch(accountControllerProvider).asData?.value;
     final homeDevices = devices.when(
       data: (items) => items,
       loading: () => const <DeviceSummary>[],
@@ -115,6 +118,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _HomeHeader(
+                    profile: accountProfile,
                     isSingleColumnDeviceList: _isSingleColumnDeviceList,
                     onToggleDeviceLayout: () {
                       setState(() {
@@ -358,11 +362,13 @@ class _HomeAddMenuIcon extends StatelessWidget {
 
 class _HomeHeader extends StatelessWidget {
   const _HomeHeader({
+    required this.profile,
     required this.isSingleColumnDeviceList,
     required this.onToggleDeviceLayout,
     required this.onAddPressed,
   });
 
+  final AccountProfile? profile;
   final bool isSingleColumnDeviceList;
   final VoidCallback onToggleDeviceLayout;
   final VoidCallback onAddPressed;
@@ -382,6 +388,7 @@ class _HomeHeader extends StatelessWidget {
             children: [
               _AvatarPlaceholder(
                 assetPath: HomeAssetPaths.avatarPlaceholder,
+                imageUrl: profile?.avatarUrl,
                 size: 58,
                 tooltip: l10n.accountProfileTitle,
                 onPressed: () => context.push(AccountProfilePage.routePath),
@@ -420,7 +427,9 @@ class _HomeHeader extends StatelessWidget {
           const SizedBox(height: 10),
           GestureDetector(
             child: Text(
-              l10n.homeGreeting,
+              profile?.nickname.isNotEmpty == true
+                  ? 'Hi ${profile!.nickname}'
+                  : l10n.homeGreeting,
               style: AppTextTokens.homeGreeting(textTheme),
             ),
             onTap: () => context.push(BleDebugPage.routePath),
@@ -638,36 +647,35 @@ class _AvatarPlaceholder extends StatelessWidget {
   const _AvatarPlaceholder({
     required this.assetPath,
     required this.size,
+    this.imageUrl,
     this.tooltip,
     this.onPressed,
   });
 
   final String assetPath;
   final double size;
+  final String? imageUrl;
   final String? tooltip;
   final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
+    final avatarUrl = imageUrl?.trim();
     final avatar = ClipOval(
       child: SizedBox(
         width: size,
         height: size,
-        child: Image.asset(
-          assetPath,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            return Container(
-              color: AppColors.surfaceHomeAvatar,
-              alignment: Alignment.center,
-              child: Icon(
-                Icons.person,
-                color: AppColors.iconHomePlaceholder,
-                size: size * 0.64,
+        child: avatarUrl == null || avatarUrl.isEmpty
+            ? Image.asset(
+                assetPath,
+                fit: BoxFit.cover,
+                errorBuilder: _buildFallback,
+              )
+            : Image.network(
+                avatarUrl,
+                fit: BoxFit.cover,
+                errorBuilder: _buildFallback,
               ),
-            );
-          },
-        ),
       ),
     );
 
@@ -685,6 +693,22 @@ class _AvatarPlaceholder extends StatelessWidget {
           onTap: onPressed,
           child: SizedBox(width: size, height: size, child: avatar),
         ),
+      ),
+    );
+  }
+
+  Widget _buildFallback(
+    BuildContext context,
+    Object error,
+    StackTrace? stackTrace,
+  ) {
+    return Container(
+      color: AppColors.surfaceHomeAvatar,
+      alignment: Alignment.center,
+      child: Icon(
+        Icons.person,
+        color: AppColors.iconHomePlaceholder,
+        size: size * 0.64,
       ),
     );
   }
