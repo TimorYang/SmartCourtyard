@@ -115,7 +115,9 @@ class _AccountDetailsContent extends StatelessWidget {
                       rows: [
                         _AccountDetailsRowData(
                           label: l10n.accountDetailsHeadPortrait,
-                          trailing: const _AccountDetailsAvatar(),
+                          trailing: _AccountDetailsAvatar(
+                            imageUrl: profile?.avatarUrl,
+                          ),
                           showChevron: true,
                           onTap: () => _showAccountAvatarSheet(context),
                         ),
@@ -876,28 +878,43 @@ class _AccountSheetActionButton extends StatelessWidget {
 }
 
 class _AccountDetailsAvatar extends StatelessWidget {
-  const _AccountDetailsAvatar();
+  const _AccountDetailsAvatar({this.imageUrl});
+
+  final String? imageUrl;
 
   @override
   Widget build(BuildContext context) {
+    final avatarUrl = imageUrl?.trim();
     return SizedBox(
       width: 52,
       height: 52,
       child: ClipOval(
-        child: Image.asset(
-          AccountProfileAssetPaths.avatarPlaceholder,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            return const ColoredBox(
-              color: AppColors.accountDetailsAvatarSurface,
-              child: Icon(
-                Icons.person,
-                color: AppColors.accountDetailsAvatarForeground,
-                size: 36,
+        child: avatarUrl == null || avatarUrl.isEmpty
+            ? Image.asset(
+                AccountProfileAssetPaths.avatarPlaceholder,
+                fit: BoxFit.cover,
+                errorBuilder: _buildFallback,
+              )
+            : Image.network(
+                avatarUrl,
+                fit: BoxFit.cover,
+                errorBuilder: _buildFallback,
               ),
-            );
-          },
-        ),
+      ),
+    );
+  }
+
+  Widget _buildFallback(
+    BuildContext context,
+    Object error,
+    StackTrace? stackTrace,
+  ) {
+    return const ColoredBox(
+      color: AppColors.accountDetailsAvatarSurface,
+      child: Icon(
+        Icons.person,
+        color: AppColors.accountDetailsAvatarForeground,
+        size: 36,
       ),
     );
   }

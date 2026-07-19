@@ -1,4 +1,7 @@
 import 'package:flinx/app/theme/app_theme.dart';
+import 'package:flinx/features/account/application/providers.dart';
+import 'package:flinx/features/account/data/data_sources/account_local_data_source.dart';
+import 'package:flinx/features/account/data/dto/account_profile_dto.dart';
 import 'package:flinx/features/account/presentation/pages/account_details_page.dart';
 import 'package:flinx/features/account/presentation/pages/account_profile_page.dart';
 import 'package:flinx/features/auth/application/providers.dart';
@@ -190,6 +193,39 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Photo album'), findsNothing);
+  });
+
+  testWidgets('shows cached account details', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          accountLocalDataSourceProvider.overrideWithValue(
+            InMemoryAccountLocalDataSource(
+              initialProfile: const AccountProfileDto(
+                schemaVersion: AccountProfileDto.currentSchemaVersion,
+                userId: 'user-1',
+                email: 'alex@example.com',
+                nickname: 'Alex',
+                avatarUrl: ' ',
+                registeredAtIso8601: '',
+                country: 'CN',
+              ),
+            ),
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const AccountDetailsPage(),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('Alex'), findsOneWidget);
+    expect(find.text('alex@example.com'), findsNWidgets(2));
   });
 
   testWidgets('opens rename and password sheets from account details rows', (
