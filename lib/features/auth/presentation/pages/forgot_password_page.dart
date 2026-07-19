@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../application/providers.dart';
 import 'forgot_password_code_page.dart';
 import '../widgets/auth_alerts.dart';
@@ -26,12 +27,9 @@ class ForgotPasswordPage extends ConsumerWidget {
     ref.listen(forgotPasswordControllerProvider, (previous, next) {
       if (next.errorMessageKey != null &&
           next.errorMessageKey != previous?.errorMessageKey) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              passwordResetErrorMessage(context, next.errorMessageKey),
-            ),
-          ),
+        AppToast.error(
+          context,
+          passwordResetErrorMessage(context, next.errorMessageKey),
         );
       }
     });

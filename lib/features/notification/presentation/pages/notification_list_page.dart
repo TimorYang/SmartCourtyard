@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../data/notification_fixtures.dart';
 import '../../domain/entities/app_notification.dart';
@@ -26,11 +27,7 @@ class NotificationListPage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () {
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  SnackBar(content: Text(l10n.notificationAllReadMessage)),
-                );
+              AppToast.success(context, l10n.notificationAllReadMessage);
             },
             child: Text(
               l10n.notificationAllRead,

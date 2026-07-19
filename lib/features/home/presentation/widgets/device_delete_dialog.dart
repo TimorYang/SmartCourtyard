@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../../../platform_bridge/hardware_models.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../application/providers.dart';
@@ -146,8 +147,6 @@ class _DeviceDeleteDialogState extends ConsumerState<DeviceDeleteDialog> {
   }
 
   void _showFailure() {
-    ScaffoldMessenger.of(widget.parentContext)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(const SnackBar(content: Text('Failed to unbind device')));
+    AppToast.error(widget.parentContext, 'Failed to unbind device');
   }
 }

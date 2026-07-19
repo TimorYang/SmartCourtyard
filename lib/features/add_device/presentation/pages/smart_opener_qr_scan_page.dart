@@ -8,6 +8,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../application/providers.dart';
 import 'smart_opener_ble_scan_page.dart';
 import 'wifi_configuration_page.dart';
@@ -139,9 +140,7 @@ class _SmartOpenerQrScanPageState extends ConsumerState<SmartOpenerQrScanPage> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+    AppToast.error(context, message);
   }
 
   @override

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:toastification/toastification.dart';
 
 void main() {
   testWidgets('shows fallback profile header and account menu rows', (
@@ -43,16 +44,22 @@ void main() {
     expect(find.text('English'), findsOneWidget);
   });
 
-  testWidgets('shows a placeholder snackbar from account menu rows', (
+  testWidgets('shows a placeholder toast from account menu rows', (
     tester,
   ) async {
     await tester.pumpWidget(
       ProviderScope(
-        child: MaterialApp(
-          theme: AppTheme.light(),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: const AccountProfilePage(),
+        child: ToastificationWrapper(
+          child: MaterialApp(
+            theme: AppTheme.light(),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            builder: (context, child) => ToastificationConfigProvider(
+              config: const ToastificationConfig(),
+              child: child!,
+            ),
+            home: const AccountProfilePage(),
+          ),
         ),
       ),
     );
@@ -61,8 +68,13 @@ void main() {
 
     await tester.tap(find.text('Region'));
     await tester.pump();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.text('Region is coming soon'), findsOneWidget);
+
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pumpAndSettle();
   });
 
   testWidgets('opens account details page when tapping the avatar', (

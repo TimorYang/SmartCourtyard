@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
 import '../../application/forgot_password_reset_controller.dart';
@@ -70,12 +71,9 @@ class _ForgotPasswordResetPageState
       _syncTextController(_confirmPasswordTextController, next.confirmPassword);
       if (next.errorMessageKey != null &&
           next.errorMessageKey != previous?.errorMessageKey) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              passwordResetErrorMessage(context, next.errorMessageKey),
-            ),
-          ),
+        AppToast.error(
+          context,
+          passwordResetErrorMessage(context, next.errorMessageKey),
         );
       }
     });

@@ -8,6 +8,7 @@ import '../../../../app/config/app_links.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../application/providers.dart';
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import 'register_code_page.dart';
 import '../widgets/auth_alerts.dart';
 import '../widgets/auth_flow_widgets.dart';
@@ -28,12 +29,9 @@ class RegisterPage extends ConsumerWidget {
     ref.listen(registerFormControllerProvider, (previous, next) {
       if (next.errorMessageKey != null &&
           next.errorMessageKey != previous?.errorMessageKey) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              registrationErrorMessage(context, next.errorMessageKey),
-            ),
-          ),
+        AppToast.error(
+          context,
+          registrationErrorMessage(context, next.errorMessageKey),
         );
       }
     });

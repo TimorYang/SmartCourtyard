@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../application/providers.dart';
 
@@ -135,9 +136,7 @@ class _SceneNameDialogState extends ConsumerState<SceneNameDialog> {
   Future<void> _submit() async {
     final name = _controller.text.trim();
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(const SnackBar(content: Text('input scene name')));
+      AppToast.error(context, 'input scene name');
       return;
     }
     setState(() {
@@ -156,11 +155,7 @@ class _SceneNameDialogState extends ConsumerState<SceneNameDialog> {
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            const SnackBar(content: Text('Failed to create scene')),
-          );
+        AppToast.error(context, 'Failed to create scene');
       }
     } finally {
       if (mounted) {

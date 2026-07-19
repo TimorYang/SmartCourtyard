@@ -8,6 +8,7 @@ import 'package:lottie/lottie.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../platform_bridge/hardware_models.dart';
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/add_device_controller.dart';
 import '../../application/providers.dart';
@@ -78,15 +79,10 @@ class _SmartOpenerBleScanPageState extends ConsumerState<SmartOpenerBleScanPage>
       return;
     }
     if (!allDisconnected) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context).smartOpenerDisconnectFailedMessage,
-            ),
-          ),
-        );
+      AppToast.error(
+        context,
+        AppLocalizations.of(context).smartOpenerDisconnectFailedMessage,
+      );
     }
     _startTimedScan(clearResults: clearResults);
   }
@@ -148,9 +144,7 @@ class _SmartOpenerBleScanPageState extends ConsumerState<SmartOpenerBleScanPage>
 
     final state = ref.read(addDeviceControllerProvider);
     final message = state.errorMessage ?? 'Unable to connect device.';
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    AppToast.error(context, message);
   }
 
   @override

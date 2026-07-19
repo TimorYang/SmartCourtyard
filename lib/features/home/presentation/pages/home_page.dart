@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../../../features/account/presentation/pages/account_profile_page.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../add_device/presentation/pages/add_new_doors_page.dart';
@@ -985,9 +986,7 @@ class _DeviceEditingSheetState extends ConsumerState<_DeviceEditingSheet> {
   }
 
   void _showTopFailure() {
-    ScaffoldMessenger.of(widget.parentContext)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(const SnackBar(content: Text('Failed to top device')));
+    AppToast.error(widget.parentContext, 'Failed to top device');
   }
 }
 

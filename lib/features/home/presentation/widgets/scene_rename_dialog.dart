@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../application/providers.dart';
 import '../../domain/entities/home_scene.dart';
@@ -139,9 +140,7 @@ class _SceneRenameDialogState extends ConsumerState<SceneRenameDialog> {
   Future<void> _submit() async {
     final name = _controller.text.trim();
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(const SnackBar(content: Text('input scene name')));
+      AppToast.error(context, 'input scene name');
       return;
     }
     setState(() {
@@ -161,11 +160,7 @@ class _SceneRenameDialogState extends ConsumerState<SceneRenameDialog> {
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            const SnackBar(content: Text('Failed to rename scene')),
-          );
+        AppToast.error(context, 'Failed to rename scene');
       }
     } finally {
       if (mounted) {
@@ -193,7 +188,7 @@ class _SceneRenameTextField extends StatelessWidget {
         borderRadius: BorderRadius.circular(32),
         border: Border.all(color: AppColors.sceneDialogInputBorder),
       ),
-      padding: const EdgeInsets.only(left: 24,right: 10),
+      padding: const EdgeInsets.only(left: 24, right: 10),
       child: Row(
         children: [
           const Icon(

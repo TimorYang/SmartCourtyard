@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
 import '../../application/register_password_controller.dart';
@@ -68,12 +69,9 @@ class _RegisterPasswordPageState extends ConsumerState<RegisterPasswordPage> {
       _syncTextController(_confirmPasswordTextController, next.confirmPassword);
       if (next.errorMessageKey != null &&
           next.errorMessageKey != previous?.errorMessageKey) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              registrationErrorMessage(context, next.errorMessageKey),
-            ),
-          ),
+        AppToast.error(
+          context,
+          registrationErrorMessage(context, next.errorMessageKey),
         );
       }
     });
@@ -119,9 +117,7 @@ class _RegisterPasswordPageState extends ConsumerState<RegisterPasswordPage> {
   ) async {
     final completed = await controller.submit();
     if (!completed || !context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(AppLocalizations.of(context).registerSucceeded)),
-    );
+    AppToast.success(context, AppLocalizations.of(context).registerSucceeded);
     context.go(LoginPage.routePath);
   }
 

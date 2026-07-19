@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_debug_tools/flutter_debug_tools.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:toastification/toastification.dart';
 
 import '../shared/l10n/app_localizations.dart';
 import 'router/app_router.dart';
@@ -55,15 +56,24 @@ class _FlinxAppState extends ConsumerState<FlinxApp> {
     required GoRouter router,
     required bool showPerformanceOverlay,
   }) {
-    return MaterialApp.router(
-      onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
-      theme: AppTheme.light(),
-      darkTheme: AppTheme.dark(),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      routerConfig: router,
-      showPerformanceOverlay: showPerformanceOverlay,
-      debugShowCheckedModeBanner: false,
+    return ToastificationWrapper(
+      child: MaterialApp.router(
+        onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
+        theme: AppTheme.light(),
+        darkTheme: AppTheme.dark(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        routerConfig: router,
+        builder: (context, child) => ToastificationConfigProvider(
+          config: const ToastificationConfig(
+            alignment: Alignment.topCenter,
+            animationDuration: Duration(milliseconds: 220),
+          ),
+          child: child!,
+        ),
+        showPerformanceOverlay: showPerformanceOverlay,
+        debugShowCheckedModeBanner: false,
+      ),
     );
   }
 }

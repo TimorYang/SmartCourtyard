@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 
 class AfterSalesAppointmentPage extends StatefulWidget {
@@ -208,16 +209,10 @@ class _AfterSalesAppointmentPageState extends State<AfterSalesAppointmentPage> {
   void _submit() {
     final l10n = AppLocalizations.of(context);
     if (_descriptionController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(content: Text(l10n.afterSalesDescriptionRequired)),
-        );
+      AppToast.error(context, l10n.afterSalesDescriptionRequired);
       return;
     }
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(l10n.afterSalesSubmitSuccess)));
+    AppToast.success(context, l10n.afterSalesSubmitSuccess);
   }
 }
 

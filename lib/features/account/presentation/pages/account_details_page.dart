@@ -6,6 +6,7 @@ import '../../../../app/theme/app_design_tokens.dart';
 import '../../../auth/application/providers.dart';
 import '../../../auth/presentation/pages/welcome_page.dart';
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
 import '../../domain/entities/account_profile.dart';
@@ -232,13 +233,7 @@ class _AccountDetailsRow extends StatelessWidget {
         data.onTap ??
         (data.showChevron
             ? () {
-                ScaffoldMessenger.of(context)
-                  ..hideCurrentSnackBar()
-                  ..showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.accountMenuComingSoon(data.label)),
-                    ),
-                  );
+                AppToast.info(context, l10n.accountMenuComingSoon(data.label));
               }
             : null);
 

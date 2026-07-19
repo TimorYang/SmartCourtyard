@@ -160,6 +160,10 @@ class AppColors {
   static const smartOpenerSuccess = Color(0xFF20D667);
   static const smartOpenerProgressTrack = Color(0xFFF0F1F3);
   static const smartOpenerWarning = Color(0xFFFF3D12);
+  static const toastInfo = Color(0xFF176CFF);
+  static const toastSuccess = Color(0xFF12C76B);
+  static const toastError = Color(0xFFFF3D12);
+  static const toastForeground = Color(0xFFFFFFFF);
   static const deviceShareFieldBorder = Color(0xFFEDEEEF);
   static const deviceShareFieldShadow = Color(0x0F000000);
   static const deviceShareFieldDisabled = Color(0xFFFBFBFC);

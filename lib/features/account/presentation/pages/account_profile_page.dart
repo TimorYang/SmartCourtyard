@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
 import '../../domain/entities/account_profile.dart';
@@ -359,13 +360,7 @@ class _AccountMenuRow extends StatelessWidget {
         onTap:
             item.onTap ??
             () {
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  SnackBar(
-                    content: Text(l10n.accountMenuComingSoon(item.label)),
-                  ),
-                );
+              AppToast.info(context, l10n.accountMenuComingSoon(item.label));
             },
         child: SizedBox(
           height: 48,

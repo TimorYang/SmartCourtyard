@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
 import '../widgets/auth_alerts.dart';
@@ -64,12 +65,9 @@ class _RegisterCodePageState extends ConsumerState<RegisterCodePage> {
       }
       if (next.errorMessageKey != null &&
           next.errorMessageKey != previous?.errorMessageKey) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              registrationErrorMessage(context, next.errorMessageKey),
-            ),
-          ),
+        AppToast.error(
+          context,
+          registrationErrorMessage(context, next.errorMessageKey),
         );
       }
     });

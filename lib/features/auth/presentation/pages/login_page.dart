@@ -9,6 +9,7 @@ import '../../../home/presentation/pages/home_page.dart';
 import '../../application/login_form_controller.dart';
 import '../../application/providers.dart';
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import 'forgot_password_page.dart';
 import 'register_page.dart';
@@ -212,9 +213,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                     if (!context.mounted) {
                                       return;
                                     }
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text(l10n.loginFailed)),
-                                    );
+                                    AppToast.error(context, l10n.loginFailed);
                                   } finally {
                                     if (mounted) {
                                       setState(() {
@@ -460,9 +459,7 @@ class _CompactProviderButton extends StatelessWidget {
       label: label,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: () => ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(label))),
+        onTap: () => AppToast.info(context, label),
         child: SizedBox.square(
           dimension: 48,
           child: Center(

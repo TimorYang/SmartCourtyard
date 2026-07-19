@@ -6,6 +6,7 @@ import 'package:flutter/rendering.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../core/platform/gallery_image_saver.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../widgets/security_report_widgets.dart';
 
@@ -50,19 +51,13 @@ class _FullReportPageState extends State<FullReportPage> {
       }
       await widget.saveReportImage(bytes);
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Report saved to album.')));
+      AppToast.success(context, 'Report saved to album.');
     } on GalleryImageSaveException catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(_saveErrorMessage(error))));
+      AppToast.error(context, _saveErrorMessage(error));
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Unable to create report image.')),
-      );
+      AppToast.error(context, 'Unable to create report image.');
     } finally {
       if (mounted) {
         setState(() => _isSaving = false);
