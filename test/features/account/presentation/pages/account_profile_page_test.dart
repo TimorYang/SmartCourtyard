@@ -299,7 +299,9 @@ void main() {
     final container = ProviderScope.containerOf(
       tester.element(find.byType(AccountDetailsPage)),
     );
-    container.read(activeAuthSessionProvider.notifier).markAuthenticated();
+    container
+        .read(activeAuthSessionProvider.notifier)
+        .markAuthenticated(userId: 'test-user');
     expect(container.read(activeAuthSessionProvider).isAuthenticated, isTrue);
 
     await tester.tap(find.text('Log out'));

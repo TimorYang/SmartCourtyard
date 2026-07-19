@@ -1,4 +1,5 @@
 import '../../../account/domain/repositories/account_repository.dart';
+import '../entities/auth_login_result.dart';
 import '../repositories/auth_crypto_repository.dart';
 import '../repositories/auth_login_repository.dart';
 import '../services/password_ciphertext_encryptor.dart';
@@ -18,7 +19,10 @@ class LoginUseCase {
   final AccountRepository accountRepository;
   final String Function() _requestIdGenerator;
 
-  Future<void> call({required String email, required String password}) async {
+  Future<AuthLoginResult> call({
+    required String email,
+    required String password,
+  }) async {
     final requestId = _requestIdGenerator();
     final material = await cryptoRepository.getPasswordEncryptionMaterial(
       requestId: requestId,
@@ -38,6 +42,7 @@ class LoginUseCase {
     );
     await accountRepository.saveProfile(result.profile);
     await accountRepository.saveTokenSet(result.tokenSet);
+    return result;
   }
 
   static String _defaultRequestId() =>

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/logging/providers.dart';
 import '../../../core/network/providers.dart';
 import '../../../platform_bridge/hardware_models.dart';
+import '../../auth/application/providers.dart';
 import '../data/data_sources/home_api.dart';
 import '../data/data_sources/home_door_remote_data_source.dart';
 import '../data/data_sources/home_scene_remote_data_source.dart';
@@ -85,7 +86,11 @@ final renameHomeSceneUseCaseProvider = Provider<RenameHomeSceneUseCase>((ref) {
   );
 });
 
-final homeScenesProvider = FutureProvider<List<HomeScene>>((ref) {
+final homeScenesProvider = FutureProvider<List<HomeScene>>((ref) async {
+  final session = await ref.watch(authSessionProvider.future);
+  if (!session.isAuthenticated || session.userId?.isEmpty != false) {
+    return const <HomeScene>[];
+  }
   final useCase = ref.watch(fetchHomeScenesUseCaseProvider);
   return useCase(
     requestId:
@@ -94,6 +99,10 @@ final homeScenesProvider = FutureProvider<List<HomeScene>>((ref) {
 });
 
 final homeDevicesProvider = FutureProvider<List<DeviceSummary>>((ref) async {
+  final session = await ref.watch(authSessionProvider.future);
+  if (!session.isAuthenticated || session.userId?.isEmpty != false) {
+    return const <DeviceSummary>[];
+  }
   final scenes = await ref.watch(homeScenesProvider.future);
   if (scenes.isEmpty) {
     return const <DeviceSummary>[];

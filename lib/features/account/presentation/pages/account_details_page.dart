@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../auth/application/providers.dart';
 import '../../../auth/presentation/pages/welcome_page.dart';
+import '../../../home/application/providers.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
@@ -36,10 +37,13 @@ class AccountDetailsPage extends ConsumerWidget {
                 profile: profile,
                 maxHeight: constraints.maxHeight,
                 onLogout: () async {
+                  ref.read(activeAuthSessionProvider.notifier).clear();
+                  ref.invalidate(homeScenesProvider);
+                  ref.invalidate(homeDevicesProvider);
+                  ref.invalidate(cachedAccountProfileProvider);
                   await ref
                       .read(accountControllerProvider.notifier)
                       .clearAccount();
-                  ref.read(activeAuthSessionProvider.notifier).clear();
                   ref.invalidate(authSessionProvider);
                   if (!context.mounted) {
                     return;

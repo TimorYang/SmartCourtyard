@@ -22,6 +22,10 @@ class AccountController extends AsyncNotifier<AccountProfile?> {
     }
   }
 
+  void setSessionProfile(AccountProfile profile) {
+    state = AsyncData(profile);
+  }
+
   Future<void> clearAccount() async {
     state = const AsyncData<AccountProfile?>(null);
     await _repository.clearAccount();

@@ -6,8 +6,8 @@ class AuthSessionController extends Notifier<AuthSession> {
   @override
   AuthSession build() => const AuthSession.signedOut();
 
-  void markAuthenticated() {
-    state = const AuthSession(isAuthenticated: true);
+  void markAuthenticated({required String userId}) {
+    state = AuthSession(isAuthenticated: true, userId: userId);
   }
 
   void clear() {

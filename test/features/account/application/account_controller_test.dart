@@ -73,4 +73,22 @@ void main() {
 
     expect(container.read(accountControllerProvider).requireValue, isNull);
   });
+
+  test('updates only the in-memory profile after a successful login', () async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final profile = AccountProfile(
+      userId: 'user-2',
+      email: 'second@example.com',
+      nickname: 'Second User',
+      registeredAt: DateTime.utc(2026, 2, 3),
+    );
+
+    await container.read(accountControllerProvider.future);
+    container
+        .read(accountControllerProvider.notifier)
+        .setSessionProfile(profile);
+
+    expect(container.read(accountControllerProvider).requireValue, profile);
+  });
 }

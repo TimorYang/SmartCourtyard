@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/config/app_links.dart';
 import '../../../../app/theme/app_design_tokens.dart';
+import '../../../account/application/providers.dart';
 import '../../../home/presentation/pages/home_page.dart';
 import '../../application/login_form_controller.dart';
 import '../../application/providers.dart';
@@ -196,15 +197,23 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                     _isSubmitting = true;
                                   });
                                   try {
-                                    await ref.read(loginUseCaseProvider)(
-                                      email: state.trimmedEmail,
-                                      password: state.password,
-                                    );
+                                    final result =
+                                        await ref.read(loginUseCaseProvider)(
+                                          email: state.trimmedEmail,
+                                          password: state.password,
+                                        );
+                                    ref
+                                        .read(
+                                          accountControllerProvider.notifier,
+                                        )
+                                        .setSessionProfile(result.profile);
                                     ref
                                         .read(
                                           activeAuthSessionProvider.notifier,
                                         )
-                                        .markAuthenticated();
+                                        .markAuthenticated(
+                                          userId: result.profile.userId,
+                                        );
                                     if (!context.mounted) {
                                       return;
                                     }
