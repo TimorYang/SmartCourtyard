@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/errors/app_error.dart';
+import '../domain/entities/password_policy.dart';
 import 'providers.dart';
 
 class ForgotPasswordResetState {
@@ -16,14 +17,12 @@ class ForgotPasswordResetState {
   final bool isSubmitting;
   final String? errorMessageKey;
 
-  bool get hasCompletePassword => password.length == 8;
+  bool get hasValidPassword => PasswordPolicy.isValid(password);
 
-  bool get hasCompleteConfirmation => confirmPassword.length == 8;
+  bool get hasValidConfirmation => PasswordPolicy.isValid(confirmPassword);
 
   bool get passwordsMatch =>
-      hasCompletePassword &&
-      hasCompleteConfirmation &&
-      password == confirmPassword;
+      hasValidPassword && hasValidConfirmation && password == confirmPassword;
 
   bool get canSubmit => passwordsMatch && !isSubmitting;
 
@@ -46,8 +45,6 @@ class ForgotPasswordResetState {
 }
 
 class ForgotPasswordResetController extends Notifier<ForgotPasswordResetState> {
-  static final _digitsOnlyPattern = RegExp(r'\D');
-
   @override
   ForgotPasswordResetState build() {
     return const ForgotPasswordResetState();
@@ -68,8 +65,9 @@ class ForgotPasswordResetController extends Notifier<ForgotPasswordResetState> {
   }
 
   static String _normalizedPassword(String value) {
-    final digits = value.replaceAll(_digitsOnlyPattern, '');
-    return digits.length > 8 ? digits.substring(0, 8) : digits;
+    return value.length > PasswordPolicy.maxLength
+        ? value.substring(0, PasswordPolicy.maxLength)
+        : value;
   }
 
   Future<bool> submit() async {

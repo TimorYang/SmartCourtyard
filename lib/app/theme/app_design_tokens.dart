@@ -4,7 +4,7 @@ class AppColors {
   const AppColors._();
 
   static const brandPrimary = Color(0xFF176CFF);
-  static const brandPrimaryLight = Color(0xFF90CAF8);
+  static const brandPrimaryLight = Color(0xFF0066FF);
   static const brandPrimaryDisabled = Color(0xFFB5D8F5);
   static const authPrimaryButtonDisabledForeground = Color(0xFFFFFFFF);
   static const authSuccess = Color(0xFF12C76B);
@@ -340,6 +340,7 @@ class AppTextTokens {
   static TextStyle authFlowTitle(TextTheme textTheme) {
     return (textTheme.displaySmall ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
+      fontSize: 26,
       fontWeight: FontWeight.w600,
     );
   }
@@ -407,6 +408,14 @@ class AppTextTokens {
     fontSize: 15,
     fontWeight: FontWeight.w400,
   );
+
+  static TextStyle authPasswordRule(TextTheme textTheme) {
+    return (textTheme.bodySmall ?? const TextStyle()).copyWith(
+      color: AppColors.textAuthBody,
+      fontSize: 13,
+      fontWeight: FontWeight.w400,
+    );
+  }
 
   static TextStyle registerPasswordPrimaryButton(TextTheme textTheme) {
     return (textTheme.titleLarge ?? const TextStyle()).copyWith(

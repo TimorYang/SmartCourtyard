@@ -101,11 +101,6 @@ class _RegisterPasswordPageState extends ConsumerState<RegisterPasswordPage> {
           hintText: l10n.registerConfirmPasswordPlaceholder,
           textInputAction: TextInputAction.done,
           onChanged: controller.updateConfirmPassword,
-          onSubmitted: (_) {
-            if (state.canSubmit) {
-              _submit(context, controller);
-            }
-          },
         ),
         const SizedBox(height: 55),
         AuthPrimaryButton(

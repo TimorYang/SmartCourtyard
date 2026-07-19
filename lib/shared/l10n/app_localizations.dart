@@ -233,13 +233,13 @@ abstract class AppLocalizations {
   /// Register password input placeholder
   ///
   /// In en, this message translates to:
-  /// **'Enter an 8-digit password'**
+  /// **'Enter password'**
   String get registerPasswordPlaceholder;
 
   /// Register confirm password input placeholder
   ///
   /// In en, this message translates to:
-  /// **'Enter the 8-digit password again'**
+  /// **'Enter password again'**
   String get registerConfirmPasswordPlaceholder;
 
   /// Temporary message shown when the user submits the register password form
@@ -325,6 +325,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Set your password'**
   String get forgotPasswordResetDescription;
+
+  /// Password complexity requirements shown below password confirmation fields
+  ///
+  /// In en, this message translates to:
+  /// **'Password: 8-16 chars, 1 uppercase, lowercase & number'**
+  String get authPasswordRule;
 
   /// Finish button label
   ///
@@ -437,7 +443,7 @@ abstract class AppLocalizations {
   /// Login submit button label
   ///
   /// In en, this message translates to:
-  /// **'Login in'**
+  /// **'Sign in'**
   String get signInAction;
 
   /// Forgot password action label

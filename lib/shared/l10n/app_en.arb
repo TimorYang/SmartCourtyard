@@ -97,11 +97,11 @@
   "@registerPasswordDescription": {
     "description": "Register password setup helper text"
   },
-  "registerPasswordPlaceholder": "Enter an 8-digit password",
+  "registerPasswordPlaceholder": "Enter password",
   "@registerPasswordPlaceholder": {
     "description": "Register password input placeholder"
   },
-  "registerConfirmPasswordPlaceholder": "Enter the 8-digit password again",
+  "registerConfirmPasswordPlaceholder": "Enter password again",
   "@registerConfirmPasswordPlaceholder": {
     "description": "Register confirm password input placeholder"
   },
@@ -148,6 +148,10 @@
   "forgotPasswordResetDescription": "Set your password",
   "@forgotPasswordResetDescription": {
     "description": "Forgot password reset helper text"
+  },
+  "authPasswordRule": "Password: 8-16 chars, 1 uppercase, lowercase & number",
+  "@authPasswordRule": {
+    "description": "Password complexity requirements shown below password confirmation fields"
   },
   "finishAction": "Finish",
   "@finishAction": {
@@ -206,7 +210,7 @@
   "@privacyPolicyLabel": {
     "description": "Privacy policy link label"
   },
-  "signInAction": "Login in",
+  "signInAction": "Sign in",
   "@signInAction": {
     "description": "Login submit button label"
   },

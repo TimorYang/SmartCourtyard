@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
@@ -88,7 +89,7 @@ class _ForgotPasswordResetPageState
         'forgot_password_reset_keyboard_dismiss_area',
       ),
       children: [
-        const SizedBox(height: 44),
+        const SizedBox(height: 30),
         AuthPasswordField(
           key: const ValueKey('forgot_password_reset_password_input'),
           controller: _passwordTextController,
@@ -104,11 +105,11 @@ class _ForgotPasswordResetPageState
           hintText: l10n.registerConfirmPasswordPlaceholder,
           textInputAction: TextInputAction.done,
           onChanged: controller.updateConfirmPassword,
-          onSubmitted: (_) {
-            if (state.canSubmit) {
-              _submit(context, controller);
-            }
-          },
+        ),
+        const SizedBox(height: 8),
+        Text(
+          l10n.authPasswordRule,
+          style: AppTextTokens.authPasswordRule(Theme.of(context).textTheme),
         ),
         const SizedBox(height: 55),
         AuthPrimaryButton(

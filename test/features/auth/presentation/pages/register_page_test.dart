@@ -63,11 +63,17 @@ void main() {
     await tester.pumpAndSettle();
 
     button = tester.widget<FilledButton>(find.byType(FilledButton));
-    expect(button.onPressed, isNotNull);
+    expect(button.onPressed, isNull);
 
     final privacyToggle = find.byKey(
       const ValueKey('register_privacy_agreement_toggle'),
     );
+
+    await tester.tap(privacyToggle);
+    await tester.pumpAndSettle();
+
+    button = tester.widget<FilledButton>(find.byType(FilledButton));
+    expect(button.onPressed, isNotNull);
 
     await tester.tap(privacyToggle);
     await tester.pumpAndSettle();
@@ -112,6 +118,11 @@ void main() {
     await tester.enterText(find.byType(TextField), 'demo-account');
     await tester.pumpAndSettle();
 
+    await tester.tap(
+      find.byKey(const ValueKey('register_privacy_agreement_toggle')),
+    );
+    await tester.pumpAndSettle();
+
     await tester.tap(find.text('Send code'));
     await tester.pumpAndSettle();
 
@@ -132,6 +143,10 @@ void main() {
 
       await tester.enterText(find.byType(TextField), 'user@example.com');
       await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const ValueKey('register_privacy_agreement_toggle')),
+      );
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Send code'));
       await tester.pump();
       await tester.pump(const Duration(seconds: 1));
@@ -150,8 +165,8 @@ void main() {
 
       expect(find.text('Password'), findsOneWidget);
       expect(find.text('Set your password'), findsOneWidget);
-      expect(find.text('Enter an 8-digit password'), findsOneWidget);
-      expect(find.text('Enter the 8-digit password again'), findsOneWidget);
+      expect(find.text('Enter password'), findsOneWidget);
+      expect(find.text('Enter password again'), findsOneWidget);
       expect(find.text('Login'), findsOneWidget);
     },
   );
@@ -162,6 +177,10 @@ void main() {
     await openRegisterPage(tester);
 
     await tester.enterText(find.byType(TextField), 'user@example.com');
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey('register_privacy_agreement_toggle')),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.text('Send code'));
     await tester.pump();
@@ -197,12 +216,16 @@ void main() {
     expect(find.text('Send Again OTP (59s)'), findsOneWidget);
   });
 
-  testWidgets('password step requires matching 8-digit passwords', (
+  testWidgets('password step requires matching passwords that meet the rule', (
     tester,
   ) async {
     await openRegisterPage(tester);
 
     await tester.enterText(find.byType(TextField), 'user@example.com');
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey('register_privacy_agreement_toggle')),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.text('Send code'));
     await tester.pump();
@@ -229,7 +252,16 @@ void main() {
     );
     expect(button.onPressed, isNull);
 
-    await tester.enterText(passwordField, '1234abcd56789');
+    await tester.enterText(passwordField, 'password123');
+    await tester.pump();
+
+    expect(find.bySemanticsLabel('Show password'), findsOneWidget);
+    await tester.tap(find.bySemanticsLabel('Show password'));
+    await tester.pump();
+
+    final passwordTextField = tester.widget<TextField>(passwordField);
+    expect(passwordTextField.obscureText, isFalse);
+
     await tester.enterText(confirmPasswordField, '12345670');
     await tester.pumpAndSettle();
 
@@ -239,16 +271,30 @@ void main() {
         matching: find.byType(EditableText),
       ),
     );
-    expect(editablePassword.controller.text, '12345678');
+    expect(editablePassword.controller.text, 'password123');
 
     button = tester.widget<FilledButton>(find.byType(FilledButton));
     expect(button.onPressed, isNull);
 
-    await tester.enterText(confirmPasswordField, '12345678');
+    await tester.enterText(confirmPasswordField, 'Password123');
+    await tester.pumpAndSettle();
+
+    button = tester.widget<FilledButton>(find.byType(FilledButton));
+    expect(button.onPressed, isNull);
+
+    await tester.enterText(passwordField, 'Password123');
     await tester.pumpAndSettle();
 
     button = tester.widget<FilledButton>(find.byType(FilledButton));
     expect(button.onPressed, isNotNull);
+
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('register_password_input')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('password step dismisses keyboard when tapping blank area', (
@@ -257,6 +303,10 @@ void main() {
     await openRegisterPage(tester);
 
     await tester.enterText(find.byType(TextField), 'user@example.com');
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey('register_privacy_agreement_toggle')),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.text('Send code'));
     await tester.pump();

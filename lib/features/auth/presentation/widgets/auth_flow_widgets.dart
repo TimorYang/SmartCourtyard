@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:pinput/pinput.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
+import '../../../../shared/l10n/app_localizations.dart';
+import '../../domain/entities/password_policy.dart';
 
 class AuthFlowScaffold extends StatelessWidget {
   const AuthFlowScaffold({
@@ -32,11 +34,11 @@ class AuthFlowScaffold extends StatelessWidget {
     final theme = Theme.of(context);
     final shouldShowBodyBackButton = showBodyBackButton ?? appBar == null;
     final effectiveHeadingTopSpacing =
-        headingTopSpacing ?? (shouldShowBodyBackButton ? 124.0 : 10.0);
+        headingTopSpacing ?? (shouldShowBodyBackButton ? 124.0 : 0.0);
     final content = SafeArea(
       top: appBar == null,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(30, 10, 30, 0),
+        padding: const EdgeInsets.fromLTRB(30, 40, 30, 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -284,7 +286,36 @@ class AuthTextField extends StatelessWidget {
   }
 }
 
-class AuthPasswordField extends StatelessWidget {
+class AuthTextFieldAction extends StatelessWidget {
+  const AuthTextFieldAction({
+    super.key,
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: label,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: SizedBox.square(
+          dimension: 44,
+          child: Icon(icon, color: AppColors.textIcon, size: 22),
+        ),
+      ),
+    );
+  }
+}
+
+class AuthPasswordField extends StatefulWidget {
   const AuthPasswordField({
     super.key,
     required this.controller,
@@ -303,28 +334,47 @@ class AuthPasswordField extends StatelessWidget {
   final ValueChanged<String>? onSubmitted;
 
   @override
+  State<AuthPasswordField> createState() => _AuthPasswordFieldState();
+}
+
+class _AuthPasswordFieldState extends State<AuthPasswordField> {
+  bool _isPasswordObscured = true;
+
+  @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return AuthTextField(
-      controller: controller,
-      focusNode: focusNode,
-      hintText: hintText,
+      controller: widget.controller,
+      focusNode: widget.focusNode,
+      hintText: widget.hintText,
       icon: const AuthAssetIcon(
         assetPath: AuthAssetPaths.passwordLockIcon,
         width: 22,
         height: 22,
         fallback: SizedBox(width: 22, height: 22),
       ),
-      keyboardType: TextInputType.number,
-      textInputAction: textInputAction,
+      keyboardType: TextInputType.visiblePassword,
+      textInputAction: widget.textInputAction,
       autocorrect: false,
-      obscureText: true,
+      obscureText: _isPasswordObscured,
       enableSuggestions: false,
       inputFormatters: [
-        FilteringTextInputFormatter.digitsOnly,
-        LengthLimitingTextInputFormatter(8),
+        LengthLimitingTextInputFormatter(PasswordPolicy.maxLength),
       ],
-      onChanged: onChanged,
-      onSubmitted: onSubmitted,
+      onChanged: widget.onChanged,
+      onSubmitted: widget.onSubmitted,
+      rightView: AuthTextFieldAction(
+        label: _isPasswordObscured
+            ? l10n.loginShowPasswordAction
+            : l10n.loginHidePasswordAction,
+        icon: _isPasswordObscured
+            ? Icons.visibility_off_outlined
+            : Icons.visibility_outlined,
+        onTap: () => setState(() {
+          _isPasswordObscured = !_isPasswordObscured;
+        }),
+      ),
     );
   }
 }

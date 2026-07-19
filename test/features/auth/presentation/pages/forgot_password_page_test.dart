@@ -147,9 +147,22 @@ void main() {
         of: find.byKey(const ValueKey('forgot_password_reset_password_input')),
         matching: find.byType(TextField),
       ),
-      '12345678',
+      'Password123',
     );
     await tester.pump();
+
+    expect(find.bySemanticsLabel('Show password'), findsOneWidget);
+    await tester.tap(find.bySemanticsLabel('Show password'));
+    await tester.pump();
+
+    final resetPasswordTextField = tester.widget<TextField>(
+      find.descendant(
+        of: find.byKey(const ValueKey('forgot_password_reset_password_input')),
+        matching: find.byType(TextField),
+      ),
+    );
+    expect(resetPasswordTextField.obscureText, isFalse);
+
     await tester.enterText(
       find.descendant(
         of: find.byKey(
@@ -157,9 +170,15 @@ void main() {
         ),
         matching: find.byType(TextField),
       ),
-      '12345678',
+      'Password123',
     );
     await tester.pumpAndSettle();
+
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Reset Succeeded'), findsNothing);
+
     await tester.tap(find.text('Finish'));
     await tester.pumpAndSettle();
 

@@ -46,11 +46,10 @@ class ForgotPasswordPage extends ConsumerWidget {
         onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(30, 10, 30, 0),
+            padding: const EdgeInsets.fromLTRB(30, 40, 30, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 10),
                 Text(
                   l10n.forgotPasswordTitle,
                   style: AppTextTokens.forgotPasswordTitle(theme.textTheme),
@@ -62,7 +61,7 @@ class ForgotPasswordPage extends ConsumerWidget {
                     theme.textTheme,
                   ),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 46),
                 AuthTextField(
                   fieldKey: const ValueKey('forgot_password_email_input'),
                   hintText: l10n.registerEmailPlaceholder,

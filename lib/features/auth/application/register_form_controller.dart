@@ -8,7 +8,7 @@ import 'providers.dart';
 class RegisterFormState {
   const RegisterFormState({
     this.email = '',
-    this.agreedToPrivacyPolicy = true,
+    this.agreedToPrivacyPolicy = false,
     this.isSubmitting = false,
     this.errorMessageKey,
   });

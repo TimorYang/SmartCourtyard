@@ -66,7 +66,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 left: false,
                 right: false,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(30, 10, 30, 0),
+                  padding: const EdgeInsets.fromLTRB(30, 40, 30, 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -74,7 +74,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         l10n.loginTitle,
                         style: AppTextTokens.loginTitle(theme.textTheme),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 55),
                       AuthTextField(
                         controller: _accountTextController,
                         hintText: l10n.loginAccountPlaceholder,
@@ -90,7 +90,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         textInputAction: TextInputAction.next,
                         autocorrect: false,
                         onChanged: controller.updateAccount,
-                        rightView: _LoginFieldAction(
+                        rightView: AuthTextFieldAction(
                           label: l10n.loginClearAccountAction,
                           icon: Icons.close_rounded,
                           onTap: () {
@@ -99,7 +99,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           },
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 30),
                       AuthTextField(
                         controller: _passwordTextController,
                         hintText: l10n.loginPasswordPlaceholder,
@@ -114,7 +114,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         obscureText: _isPasswordObscured,
                         textInputAction: TextInputAction.done,
                         onChanged: controller.updatePassword,
-                        rightView: _LoginFieldAction(
+                        rightView: AuthTextFieldAction(
                           label: _isPasswordObscured
                               ? l10n.loginShowPasswordAction
                               : l10n.loginHidePasswordAction,
@@ -126,7 +126,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           }),
                         ),
                       ),
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 24),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
@@ -180,7 +180,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 25),
+                      const SizedBox(height: 30),
                       SizedBox(
                         width: double.infinity,
                         height: 52,
@@ -249,7 +249,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               : Text(l10n.signInAction),
                         ),
                       ),
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 20),
                       Row(
                         children: [
                           TextButton(
@@ -286,39 +286,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               Positioned(
                 left: 30,
                 right: 30,
-                bottom: 100,
+                bottom: 60,
                 child: const _ThirdPartyLoginSection(),
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _LoginFieldAction extends StatelessWidget {
-  const _LoginFieldAction({
-    required this.label,
-    required this.icon,
-    required this.onTap,
-  });
-
-  final String label;
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: label,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: SizedBox.square(
-          dimension: 44,
-          child: Icon(icon, color: AppColors.textIcon, size: 22),
         ),
       ),
     );
@@ -332,7 +304,7 @@ class _LoginPageAssetPaths {
   static const googleProviderMark =
       'assets/icons/auth/provider_google_mark.png';
   static const facebookProviderMark =
-      'assets/icons/auth/provider_facebook_mark.png';
+      'assets/icons/auth/provider_meta_mark.png';
   static const agreementCheckedIcon =
       'assets/icons/auth/login_agreement_checked_icon.png';
 }
@@ -354,42 +326,28 @@ class _ThirdPartyLoginSection extends StatelessWidget {
           children: [
             _CompactProviderButton(
               label: l10n.continueWithGoogle,
-              icon: const ColorFiltered(
-                colorFilter: ColorFilter.mode(
-                  AppColors.loginProviderForeground,
-                  BlendMode.srcIn,
-                ),
-                child: _ProviderAssetIcon(
-                  assetPath: _LoginPageAssetPaths.googleProviderMark,
-                  size: 24,
-                  fallback: SizedBox.shrink(),
-                ),
+              icon: const _ProviderAssetIcon(
+                assetPath: _LoginPageAssetPaths.googleProviderMark,
+                size: 36,
+                fallback: SizedBox.shrink(),
               ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 18),
             _CompactProviderButton(
               label: l10n.continueWithApple,
               icon: const _ProviderAssetIcon(
                 assetPath: _LoginPageAssetPaths.appleProviderMark,
-                size: 23,
-                fallback: Icon(
-                  Icons.apple,
-                  color: AppColors.loginProviderForeground,
-                  size: 25,
-                ),
+                size: 36,
+                fallback: SizedBox.shrink(),
               ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 18),
             _CompactProviderButton(
               label: l10n.continueWithFacebook,
               icon: const _ProviderAssetIcon(
                 assetPath: _LoginPageAssetPaths.facebookProviderMark,
-                size: 23,
-                fallback: Icon(
-                  Icons.facebook,
-                  color: AppColors.loginProviderForeground,
-                  size: 24,
-                ),
+                size: 36,
+                fallback: SizedBox.shrink(),
               ),
             ),
           ],

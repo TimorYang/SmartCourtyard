@@ -47,7 +47,7 @@ class RegisterPage extends ConsumerWidget {
         left: false,
         right: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(30, 10, 30, 0),
+          padding: const EdgeInsets.fromLTRB(30, 40, 30, 0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -78,7 +78,7 @@ class RegisterPage extends ConsumerWidget {
                 autocorrect: false,
                 onChanged: controller.updateEmail,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -113,7 +113,7 @@ class RegisterPage extends ConsumerWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 30),
               SizedBox(
                 width: double.infinity,
                 height: 52,

@@ -79,10 +79,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get registerPasswordDescription => '设置您的密码';
 
   @override
-  String get registerPasswordPlaceholder => '请输入 8 位数字密码';
+  String get registerPasswordPlaceholder => '请输入密码';
 
   @override
-  String get registerConfirmPasswordPlaceholder => '请再次输入 8 位数字密码';
+  String get registerConfirmPasswordPlaceholder => '请再次输入密码';
 
   @override
   String get registerPasswordPending => '密码注册功能暂未接入';
@@ -127,6 +127,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get forgotPasswordResetDescription => '设置您的密码';
+
+  @override
+  String get authPasswordRule =>
+      'Password: 8-16 chars, 1 uppercase, lowercase & number';
 
   @override
   String get finishAction => '完成';

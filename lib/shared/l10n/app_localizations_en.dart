@@ -81,11 +81,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get registerPasswordDescription => 'Set your password';
 
   @override
-  String get registerPasswordPlaceholder => 'Enter an 8-digit password';
+  String get registerPasswordPlaceholder => 'Enter password';
 
   @override
-  String get registerConfirmPasswordPlaceholder =>
-      'Enter the 8-digit password again';
+  String get registerConfirmPasswordPlaceholder => 'Enter password again';
 
   @override
   String get registerPasswordPending =>
@@ -137,6 +136,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get forgotPasswordResetDescription => 'Set your password';
+
+  @override
+  String get authPasswordRule =>
+      'Password: 8-16 chars, 1 uppercase, lowercase & number';
 
   @override
   String get finishAction => 'Finish';
@@ -199,7 +202,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get privacyPolicyLabel => 'Privacy Policy';
 
   @override
-  String get signInAction => 'Login in';
+  String get signInAction => 'Sign in';
 
   @override
   String get forgotPasswordAction => 'Forgot password';
