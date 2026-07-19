@@ -35,7 +35,7 @@ class InMemoryAccountSecureDataSource implements AccountSecureDataSource {
 class PlatformAccountSecureDataSource implements AccountSecureDataSource {
   const PlatformAccountSecureDataSource({
     required this.storage,
-    this.legacyPlaintextTokenFile,
+    this.legacyPlaintextTokenFiles = const [],
   });
 
   static const _accessTokenKey = 'account.access_token';
@@ -44,7 +44,7 @@ class PlatformAccountSecureDataSource implements AccountSecureDataSource {
   static const _tokenTypeKey = 'account.token_type';
 
   final FlutterSecureStorage storage;
-  final File? legacyPlaintextTokenFile;
+  final List<File> legacyPlaintextTokenFiles;
 
   @override
   Future<AccountTokenSet?> readTokenSet() async {
@@ -64,14 +64,14 @@ class PlatformAccountSecureDataSource implements AccountSecureDataSource {
         tokenType: values[_tokenTypeKey] ?? 'Bearer',
       );
     }
-    await _deleteLegacyPlaintextTokenFile();
+    await _deleteLegacyPlaintextTokenFiles();
     return tokenSet;
   }
 
   @override
   Future<void> saveTokenSet(AccountTokenSet tokenSet) async {
     await _writeTokenSet(tokenSet);
-    await _deleteLegacyPlaintextTokenFile();
+    await _deleteLegacyPlaintextTokenFiles();
   }
 
   Future<void> _writeTokenSet(AccountTokenSet tokenSet) async {
@@ -94,39 +94,46 @@ class PlatformAccountSecureDataSource implements AccountSecureDataSource {
     ]) {
       await storage.delete(key: key);
     }
-    await _deleteLegacyPlaintextTokenFile();
+    await _deleteLegacyPlaintextTokenFiles();
   }
 
-  Future<void> _deleteLegacyPlaintextTokenFile() async {
-    final file = legacyPlaintextTokenFile;
-    if (file != null && await file.exists()) {
-      await file.delete();
+  Future<void> _deleteLegacyPlaintextTokenFiles() async {
+    for (final file in legacyPlaintextTokenFiles) {
+      try {
+        if (await file.exists()) {
+          await file.delete();
+        }
+      } on Object {
+        continue;
+      }
     }
   }
 
   Future<AccountTokenSet?> _readLegacyPlaintextTokenSet() async {
-    final file = legacyPlaintextTokenFile;
-    if (file == null || !await file.exists()) {
-      return null;
-    }
-    try {
-      final json = jsonDecode(await file.readAsString());
-      if (json is! Map) {
-        return null;
+    for (final file in legacyPlaintextTokenFiles) {
+      try {
+        if (!await file.exists()) {
+          continue;
+        }
+        final json = jsonDecode(await file.readAsString());
+        if (json is! Map) {
+          continue;
+        }
+        final accessToken = json['accessToken'] as String?;
+        if (accessToken == null || accessToken.trim().isEmpty) {
+          continue;
+        }
+        return AccountTokenSet(
+          accessToken: accessToken,
+          refreshToken: json['refreshToken'] as String?,
+          expiresAt: _parseDateTime(json['expiresAt'] as String?),
+          tokenType: json['tokenType'] as String? ?? 'Bearer',
+        );
+      } on Object {
+        continue;
       }
-      final accessToken = json['accessToken'] as String?;
-      if (accessToken == null || accessToken.trim().isEmpty) {
-        return null;
-      }
-      return AccountTokenSet(
-        accessToken: accessToken,
-        refreshToken: json['refreshToken'] as String?,
-        expiresAt: _parseDateTime(json['expiresAt'] as String?),
-        tokenType: json['tokenType'] as String? ?? 'Bearer',
-      );
-    } on Object {
-      return null;
     }
+    return null;
   }
 
   DateTime? _parseDateTime(String? value) {

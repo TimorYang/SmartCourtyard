@@ -11,11 +11,23 @@ import '../domain/entities/account_profile.dart';
 import '../domain/repositories/account_repository.dart';
 import 'account_controller.dart';
 
+final appStorageLocationsProvider = Provider<AppStorageLocations?>(
+  (ref) => null,
+);
+
 final accountLocalDataSourceProvider = Provider<AccountLocalDataSource>((ref) {
   if (!AppStoragePaths.isFlutterTest) {
-    final storageDirectory = AppStoragePaths.defaultStorageDirectory();
+    final locations = ref.watch(appStorageLocationsProvider);
+    if (locations == null) {
+      return InMemoryAccountLocalDataSource();
+    }
     return JsonFileAccountLocalDataSource(
-      profileFile: File('${storageDirectory.path}/account_profile.json'),
+      profileFile: File(
+        '${locations.persistentDirectory.path}/account_profile.json',
+      ),
+      legacyProfileFiles: locations.legacyDirectories
+          .map((directory) => File('${directory.path}/account_profile.json'))
+          .toList(growable: false),
     );
   }
 
@@ -26,7 +38,10 @@ final accountSecureDataSourceProvider = Provider<AccountSecureDataSource>((
   ref,
 ) {
   if (!AppStoragePaths.isFlutterTest) {
-    final storageDirectory = AppStoragePaths.defaultStorageDirectory();
+    final locations = ref.watch(appStorageLocationsProvider);
+    if (locations == null) {
+      return InMemoryAccountSecureDataSource();
+    }
     return PlatformAccountSecureDataSource(
       storage: const FlutterSecureStorage(
         aOptions: AndroidOptions(),
@@ -34,9 +49,9 @@ final accountSecureDataSourceProvider = Provider<AccountSecureDataSource>((
           accessibility: KeychainAccessibility.unlocked_this_device,
         ),
       ),
-      legacyPlaintextTokenFile: File(
-        '${storageDirectory.path}/account_token.json',
-      ),
+      legacyPlaintextTokenFiles: locations.legacyDirectories
+          .map((directory) => File('${directory.path}/account_token.json'))
+          .toList(growable: false),
     );
   }
 

@@ -1,4 +1,9 @@
 import 'package:flinx/app/flinx_app.dart';
+import 'package:flinx/features/account/application/providers.dart';
+import 'package:flinx/features/account/data/data_sources/account_local_data_source.dart';
+import 'package:flinx/features/account/data/data_sources/account_secure_data_source.dart';
+import 'package:flinx/features/account/data/dto/account_profile_dto.dart';
+import 'package:flinx/features/account/domain/entities/account_token_set.dart';
 import 'package:flinx/features/auth/application/providers.dart';
 import 'package:flinx/features/auth/domain/entities/auth_session.dart';
 import 'package:flinx/features/home/application/providers.dart';
@@ -330,4 +335,51 @@ void main() {
     expect(find.text('2 Doors'), findsOneWidget);
     expect(find.text('Login'), findsNothing);
   });
+
+  testWidgets('redirects a restored cold-start session to the home page', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          accountLocalDataSourceProvider.overrideWithValue(
+            InMemoryAccountLocalDataSource(
+              initialProfile: const AccountProfileDto(
+                schemaVersion: 1,
+                userId: 'user-1',
+                email: 'user@example.com',
+                nickname: 'User',
+                registeredAtIso8601: '2026-01-02T03:04:05Z',
+              ),
+            ),
+          ),
+          accountSecureDataSourceProvider.overrideWithValue(
+            _InitialTokenDataSource(
+              AccountTokenSet(
+                accessToken: 'valid-access',
+                expiresAt: DateTime.now().toUtc().add(const Duration(hours: 1)),
+              ),
+            ),
+          ),
+          homeScenesProvider.overrideWith((ref) async => homeSceneFixtures),
+          homeDevicesProvider.overrideWith((ref) async => homeDeviceFixtures),
+        ],
+        child: const FlinxApp(),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('2 Doors'), findsOneWidget);
+    expect(find.text('Login'), findsNothing);
+  });
+}
+
+class _InitialTokenDataSource extends InMemoryAccountSecureDataSource {
+  _InitialTokenDataSource(this.initialTokenSet);
+
+  final AccountTokenSet initialTokenSet;
+
+  @override
+  Future<AccountTokenSet?> readTokenSet() async => initialTokenSet;
 }

@@ -4,10 +4,48 @@ import 'package:flinx/features/account/data/data_sources/account_secure_data_sou
 import 'package:flinx/features/account/data/dto/account_profile_dto.dart';
 import 'package:flinx/features/account/domain/entities/account_token_set.dart';
 import 'package:flinx/features/auth/application/providers.dart';
+import 'package:flinx/features/auth/domain/entities/auth_session.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test(
+    'restores a session on cold start with a valid profile and token',
+    () async {
+      final container = ProviderContainer(
+        overrides: [
+          accountLocalDataSourceProvider.overrideWithValue(
+            InMemoryAccountLocalDataSource(
+              initialProfile: const AccountProfileDto(
+                schemaVersion: 1,
+                userId: 'user-1',
+                email: 'user@example.com',
+                nickname: 'User',
+                registeredAtIso8601: '2026-01-02T03:04:05Z',
+              ),
+            ),
+          ),
+          accountSecureDataSourceProvider.overrideWithValue(
+            _InitialTokenDataSource(
+              AccountTokenSet(
+                accessToken: 'valid-access',
+                expiresAt: DateTime.now().toUtc().add(const Duration(hours: 1)),
+              ),
+            ),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final session = await container.read(authSessionProvider.future);
+
+      expect(
+        session,
+        const AuthSession(isAuthenticated: true, userId: 'user-1'),
+      );
+    },
+  );
+
   test('does not restore a session when the cached token is missing', () async {
     final container = ProviderContainer(
       overrides: [

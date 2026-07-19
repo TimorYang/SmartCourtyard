@@ -46,20 +46,32 @@ class InMemoryAccountLocalDataSource implements AccountLocalDataSource {
 }
 
 class JsonFileAccountLocalDataSource implements AccountLocalDataSource {
-  JsonFileAccountLocalDataSource({required this.profileFile});
+  JsonFileAccountLocalDataSource({
+    required this.profileFile,
+    this.legacyProfileFiles = const [],
+  });
 
   final File profileFile;
+  final List<File> legacyProfileFiles;
   final StreamController<AccountProfileDto?> _profileController =
       StreamController<AccountProfileDto?>.broadcast();
 
   @override
   Future<AccountProfileDto?> readProfile() async {
     try {
-      if (!await profileFile.exists()) {
-        return null;
+      if (await profileFile.exists()) {
+        return _readProfileFile(profileFile);
       }
 
-      final json = jsonDecode(await profileFile.readAsString());
+      return _migrateLegacyProfile();
+    } on Object {
+      return null;
+    }
+  }
+
+  Future<AccountProfileDto?> _readProfileFile(File file) async {
+    try {
+      final json = jsonDecode(await file.readAsString());
       if (json is! Map) {
         return null;
       }
@@ -68,6 +80,27 @@ class JsonFileAccountLocalDataSource implements AccountLocalDataSource {
     } catch (_) {
       return null;
     }
+  }
+
+  Future<AccountProfileDto?> _migrateLegacyProfile() async {
+    for (final legacyProfileFile in legacyProfileFiles) {
+      if (!await legacyProfileFile.exists()) {
+        continue;
+      }
+      final profile = await _readProfileFile(legacyProfileFile);
+      if (profile == null) {
+        continue;
+      }
+      try {
+        await profileFile.parent.create(recursive: true);
+        await profileFile.writeAsString(jsonEncode(profile.toJson()));
+        await legacyProfileFile.delete();
+        return profile;
+      } on Object {
+        return null;
+      }
+    }
+    return null;
   }
 
   @override
@@ -84,8 +117,21 @@ class JsonFileAccountLocalDataSource implements AccountLocalDataSource {
 
   @override
   Future<void> clearProfile() async {
-    if (await profileFile.exists()) {
-      await profileFile.delete();
+    try {
+      if (await profileFile.exists()) {
+        await profileFile.delete();
+      }
+    } on Object {
+      // Best-effort cleanup must not prevent the signed-out state transition.
+    }
+    for (final legacyProfileFile in legacyProfileFiles) {
+      try {
+        if (await legacyProfileFile.exists()) {
+          await legacyProfileFile.delete();
+        }
+      } on Object {
+        continue;
+      }
     }
     _profileController.add(null);
   }
