@@ -9,7 +9,7 @@
         android:maxSdkVersion="29" />
 
     <application
-        android:label="flinx"
+        android:label="F-linx"
         android:name="${applicationName}"
         android:allowBackup="false"
         android:requestLegacyExternalStorage="true"
