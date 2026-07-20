@@ -12,6 +12,28 @@ enum RemoteOperationStatus { success, failure, unknown }
 
 enum DoorState { open, opening, stopped, closing, closed, unknown }
 
+enum DoorType {
+  garage(0),
+  roller(1),
+  industrial(2),
+  swing(3),
+  sliding(4);
+
+  const DoorType(this.wireValue);
+
+  final int wireValue;
+
+  static DoorType fromWireValue(int? value) {
+    return switch (value) {
+      1 => DoorType.roller,
+      2 => DoorType.industrial,
+      3 => DoorType.swing,
+      4 => DoorType.sliding,
+      _ => DoorType.garage,
+    };
+  }
+}
+
 enum DeviceOnlineState { online, offline, unknown }
 
 enum BleConnectionState { disconnected, connecting, connected }
@@ -95,6 +117,8 @@ class DeviceSummary {
     required this.remainingLifePercent,
     this.sceneId,
     this.lastSeenAt,
+    this.doorType = DoorType.garage,
+    this.coverFileId,
   });
 
   final String id;
@@ -106,6 +130,8 @@ class DeviceSummary {
   final int remainingLifePercent;
   final int? sceneId;
   final DateTime? lastSeenAt;
+  final DoorType doorType;
+  final int? coverFileId;
 }
 
 class CommandResult {

@@ -38,6 +38,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
 
   bool _ledEnabled = false;
   bool _autoCloseEnabled = false;
+  bool _openReminderEnabled = true;
   DeviceDetailTab _selectedTab = DeviceDetailTab.command;
   late final DeviceCommandController _controller;
 
@@ -230,6 +231,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
             _QuickActionGrid(
               ledEnabled: _ledEnabled,
               autoCloseEnabled: _autoCloseEnabled,
+              openReminderEnabled: _openReminderEnabled,
               busy: isBusy,
               onLedChanged: (enabled) async {
                 setState(() => _ledEnabled = enabled);
@@ -242,6 +244,9 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
               },
               onAutoCloseChanged: (enabled) {
                 setState(() => _autoCloseEnabled = enabled);
+              },
+              onOpenReminderChanged: (enabled) {
+                setState(() => _openReminderEnabled = enabled);
               },
               onPartialOpen: () => controller.runAction(
                 deviceId: hardwareDeviceId,
@@ -287,6 +292,8 @@ abstract final class _DeviceCommandAssetPaths {
       'assets/icons/device_control/device_command_partial_open_placeholder.png';
   static const moreSetting =
       'assets/icons/device_control/device_command_more_setting_placeholder.png';
+  static const openReminder =
+      'assets/icons/device_settings/device_settings_door_open_reminder_icon.png';
 }
 
 class _CycleSummary extends StatelessWidget {
@@ -664,18 +671,22 @@ class _QuickActionGrid extends StatelessWidget {
   const _QuickActionGrid({
     required this.ledEnabled,
     required this.autoCloseEnabled,
+    required this.openReminderEnabled,
     required this.busy,
     required this.onLedChanged,
     required this.onAutoCloseChanged,
+    required this.onOpenReminderChanged,
     required this.onPartialOpen,
     required this.onMoreSettings,
   });
 
   final bool ledEnabled;
   final bool autoCloseEnabled;
+  final bool openReminderEnabled;
   final bool busy;
   final ValueChanged<bool> onLedChanged;
   final ValueChanged<bool> onAutoCloseChanged;
+  final ValueChanged<bool> onOpenReminderChanged;
   final VoidCallback onPartialOpen;
   final VoidCallback onMoreSettings;
 
@@ -683,7 +694,7 @@ class _QuickActionGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     return SizedBox(
-      height: 230,
+      height: 270,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -691,7 +702,6 @@ class _QuickActionGrid extends StatelessWidget {
             child: Column(
               children: [
                 Expanded(
-                  flex: 1,
                   child: _LedActionCard(
                     enabled: ledEnabled,
                     busy: busy,
@@ -699,16 +709,30 @@ class _QuickActionGrid extends StatelessWidget {
                     onChanged: onLedChanged,
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
                 Expanded(
-                  flex: 1,
                   child: _ToggleActionCard(
+                    switchKey: const ValueKey<String>('auto-close-switch'),
                     iconAssetPath: _DeviceCommandAssetPaths.autoClose,
                     title: 'Auto close',
                     enabled: autoCloseEnabled,
                     busy: busy,
                     textTheme: textTheme,
                     onChanged: onAutoCloseChanged,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Expanded(
+                  child: _ToggleActionCard(
+                    key: const ValueKey<String>('open-reminder-action'),
+                    switchKey: const ValueKey<String>('open-reminder-switch'),
+                    iconAssetPath: _DeviceCommandAssetPaths.openReminder,
+                    title: 'Open reminder',
+                    subtitle: '10 min',
+                    enabled: openReminderEnabled,
+                    busy: busy,
+                    textTheme: textTheme,
+                    onChanged: onOpenReminderChanged,
                   ),
                 ),
               ],
@@ -760,7 +784,7 @@ class _LedActionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _ControlCard(
-      padding: const EdgeInsets.fromLTRB(10, 12, 10, 10),
+      padding: const EdgeInsets.fromLTRB(10, 6, 10, 6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -801,8 +825,11 @@ class _LedActionCard extends StatelessWidget {
 
 class _ToggleActionCard extends StatelessWidget {
   const _ToggleActionCard({
+    super.key,
     required this.iconAssetPath,
     required this.title,
+    this.subtitle,
+    required this.switchKey,
     required this.enabled,
     required this.busy,
     required this.textTheme,
@@ -811,6 +838,8 @@ class _ToggleActionCard extends StatelessWidget {
 
   final String iconAssetPath;
   final String title;
+  final String? subtitle;
+  final Key switchKey;
   final bool enabled;
   final bool busy;
   final TextTheme textTheme;
@@ -819,7 +848,7 @@ class _ToggleActionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _ControlCard(
-      padding: const EdgeInsets.fromLTRB(10, 12, 10, 12),
+      padding: const EdgeInsets.fromLTRB(10, 6, 10, 6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -828,7 +857,7 @@ class _ToggleActionCard extends StatelessWidget {
               _DeviceControlAssetIcon(assetPath: iconAssetPath),
               const Spacer(),
               FlinxSwitch(
-                key: const ValueKey<String>('auto-close-switch'),
+                key: switchKey,
                 value: enabled,
                 enabled: !busy,
                 onChanged: onChanged,
@@ -842,6 +871,14 @@ class _ToggleActionCard extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: AppTextTokens.deviceControlQuickActionTitle(textTheme),
           ),
+          if (subtitle != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              subtitle!,
+              maxLines: 1,
+              style: AppTextTokens.deviceControlQuickActionMeta(textTheme),
+            ),
+          ],
         ],
       ),
     );

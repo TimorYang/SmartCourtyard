@@ -5,6 +5,7 @@ import '../../../../core/network/api_envelope_dto.dart';
 import '../dto/create_home_scene_request_dto.dart';
 import '../dto/home_door_response_dto.dart';
 import '../dto/home_scene_response_dto.dart';
+import '../dto/rename_home_door_request_dto.dart';
 
 part 'home_api.g.dart';
 
@@ -32,6 +33,19 @@ abstract class HomeApi {
   @DELETE('app/doors/{doorId}')
   Future<ApiEnvelopeDto<bool>> unbindDoor(
     @Path('doorId') int doorId,
+    @DioOptions() Options options,
+  );
+
+  @PUT('app/doors/{doorId}/cover/default')
+  Future<ApiEnvelopeDto<bool>> resetDoorCover(
+    @Path('doorId') int doorId,
+    @DioOptions() Options options,
+  );
+
+  @PUT('app/doors/{doorId}/name')
+  Future<ApiEnvelopeDto<bool>> renameDoor(
+    @Path('doorId') int doorId,
+    @Body() RenameHomeDoorRequestDto request,
     @DioOptions() Options options,
   );
 

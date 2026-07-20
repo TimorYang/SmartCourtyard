@@ -6,6 +6,7 @@ import 'package:flinx/features/home/data/data_sources/home_scene_remote_data_sou
 import 'package:flinx/features/home/data/dto/create_home_scene_request_dto.dart';
 import 'package:flinx/features/home/data/dto/home_door_response_dto.dart';
 import 'package:flinx/features/home/data/dto/home_scene_response_dto.dart';
+import 'package:flinx/features/home/data/dto/rename_home_door_request_dto.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -181,6 +182,25 @@ class _FakeHomeApi implements HomeApi {
   }
 
   @override
+  Future<ApiEnvelopeDto<bool>> resetDoorCover(
+    int doorId,
+    Options requestOptions,
+  ) async {
+    options = requestOptions;
+    return const ApiEnvelopeDto<bool>(code: 200, success: true, data: true);
+  }
+
+  @override
+  Future<ApiEnvelopeDto<bool>> renameDoor(
+    int doorId,
+    RenameHomeDoorRequestDto request,
+    Options requestOptions,
+  ) async {
+    options = requestOptions;
+    return const ApiEnvelopeDto<bool>(code: 200, success: true, data: true);
+  }
+
+  @override
   Future<ApiEnvelopeDto<List<HomeSceneResponseDto>>> fetchScenes(
     Options requestOptions,
   ) async {
@@ -244,6 +264,20 @@ class _ThrowingHomeApi implements HomeApi {
 
   @override
   Future<ApiEnvelopeDto<bool>> unbindDoor(int doorId, Options options) {
+    throw error;
+  }
+
+  @override
+  Future<ApiEnvelopeDto<bool>> resetDoorCover(int doorId, Options options) {
+    throw error;
+  }
+
+  @override
+  Future<ApiEnvelopeDto<bool>> renameDoor(
+    int doorId,
+    RenameHomeDoorRequestDto request,
+    Options options,
+  ) {
     throw error;
   }
 

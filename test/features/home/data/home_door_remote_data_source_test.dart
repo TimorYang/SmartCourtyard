@@ -6,6 +6,7 @@ import 'package:flinx/features/home/data/data_sources/home_door_remote_data_sour
 import 'package:flinx/features/home/data/dto/create_home_scene_request_dto.dart';
 import 'package:flinx/features/home/data/dto/home_door_response_dto.dart';
 import 'package:flinx/features/home/data/dto/home_scene_response_dto.dart';
+import 'package:flinx/features/home/data/dto/rename_home_door_request_dto.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -129,6 +130,93 @@ void main() {
     );
   });
 
+  test('resets a door cover with request id', () async {
+    final api = _FakeHomeApi(
+      doorResponse: const ApiEnvelopeDto(
+        code: 200,
+        success: true,
+        data: <HomeDoorResponseDto>[],
+      ),
+      resetCoverResponse: const ApiEnvelopeDto(
+        code: 200,
+        success: true,
+        data: true,
+      ),
+    );
+    final dataSource = HomeDoorRemoteDataSourceImpl(api: api);
+
+    await dataSource.resetDoorCover(
+      doorId: 12,
+      requestId: 'home-reset-door-cover-123',
+    );
+
+    expect(api.resetCoverDoorId, 12);
+    expect(
+      api.resetCoverOptions.extra?[NetworkRequestExtras.requestId],
+      'home-reset-door-cover-123',
+    );
+  });
+
+  test('renames a door with request body and request id', () async {
+    final api = _FakeHomeApi(
+      doorResponse: const ApiEnvelopeDto(
+        code: 200,
+        success: true,
+        data: <HomeDoorResponseDto>[],
+      ),
+      renameDoorResponse: const ApiEnvelopeDto(
+        code: 200,
+        success: true,
+        data: true,
+      ),
+    );
+    final dataSource = HomeDoorRemoteDataSourceImpl(api: api);
+
+    await dataSource.renameDoor(
+      doorId: 12,
+      name: 'Garage Door',
+      requestId: 'home-rename-door-123',
+    );
+
+    expect(api.renameDoorId, 12);
+    expect(api.renameDoorRequest.name, 'Garage Door');
+    expect(
+      api.renameDoorOptions.extra?[NetworkRequestExtras.requestId],
+      'home-rename-door-123',
+    );
+  });
+
+  test('rejects unsuccessful reset cover response', () async {
+    final dataSource = HomeDoorRemoteDataSourceImpl(
+      api: _FakeHomeApi(
+        doorResponse: const ApiEnvelopeDto(
+          code: 200,
+          success: true,
+          data: <HomeDoorResponseDto>[],
+        ),
+        resetCoverResponse: const ApiEnvelopeDto(
+          code: 200,
+          success: true,
+          data: false,
+        ),
+      ),
+    );
+
+    await expectLater(
+      dataSource.resetDoorCover(
+        doorId: 12,
+        requestId: 'home-reset-door-cover-123',
+      ),
+      throwsA(
+        isA<HomeDoorRemoteException>().having(
+          (error) => error.kind,
+          'kind',
+          HomeDoorRemoteErrorKind.invalidResponse,
+        ),
+      ),
+    );
+  });
+
   test('rejects unsuccessful business response', () async {
     final dataSource = HomeDoorRemoteDataSourceImpl(
       api: _FakeHomeApi(
@@ -180,17 +268,26 @@ class _FakeHomeApi implements HomeApi {
     required this.doorResponse,
     this.topResponse,
     this.unbindResponse,
+    this.resetCoverResponse,
+    this.renameDoorResponse,
   });
 
   final ApiEnvelopeDto<List<HomeDoorResponseDto>> doorResponse;
   final ApiEnvelopeDto<bool>? topResponse;
   final ApiEnvelopeDto<bool>? unbindResponse;
+  final ApiEnvelopeDto<bool>? resetCoverResponse;
+  final ApiEnvelopeDto<bool>? renameDoorResponse;
   late final Options options;
   late final int sceneId;
   late final Options topOptions;
   late final int topDoorId;
   late final Options unbindOptions;
   late final int unbindDoorId;
+  late final Options resetCoverOptions;
+  late final int resetCoverDoorId;
+  late final Options renameDoorOptions;
+  late final int renameDoorId;
+  late final RenameHomeDoorRequestDto renameDoorRequest;
 
   @override
   Future<ApiEnvelopeDto<bool>> topDoor(
@@ -211,6 +308,30 @@ class _FakeHomeApi implements HomeApi {
     unbindDoorId = doorId;
     unbindOptions = requestOptions;
     return unbindResponse ??
+        const ApiEnvelopeDto<bool>(code: 200, success: true, data: true);
+  }
+
+  @override
+  Future<ApiEnvelopeDto<bool>> resetDoorCover(
+    int doorId,
+    Options requestOptions,
+  ) async {
+    resetCoverDoorId = doorId;
+    resetCoverOptions = requestOptions;
+    return resetCoverResponse ??
+        const ApiEnvelopeDto<bool>(code: 200, success: true, data: true);
+  }
+
+  @override
+  Future<ApiEnvelopeDto<bool>> renameDoor(
+    int doorId,
+    RenameHomeDoorRequestDto request,
+    Options requestOptions,
+  ) async {
+    renameDoorId = doorId;
+    renameDoorRequest = request;
+    renameDoorOptions = requestOptions;
+    return renameDoorResponse ??
         const ApiEnvelopeDto<bool>(code: 200, success: true, data: true);
   }
 
@@ -270,6 +391,20 @@ class _ThrowingHomeApi implements HomeApi {
 
   @override
   Future<ApiEnvelopeDto<bool>> unbindDoor(int doorId, Options options) {
+    throw error;
+  }
+
+  @override
+  Future<ApiEnvelopeDto<bool>> resetDoorCover(int doorId, Options options) {
+    throw error;
+  }
+
+  @override
+  Future<ApiEnvelopeDto<bool>> renameDoor(
+    int doorId,
+    RenameHomeDoorRequestDto request,
+    Options options,
+  ) {
     throw error;
   }
 

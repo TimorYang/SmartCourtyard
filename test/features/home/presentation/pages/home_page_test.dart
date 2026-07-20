@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flinx/app/flinx_app.dart';
 import 'package:flinx/features/add_device/application/add_device_controller.dart';
 import 'package:flinx/features/add_device/application/providers.dart';
@@ -138,6 +140,43 @@ void main() {
 
     expect(sceneRequestCount, 2);
     expect(deviceRequestCount, 2);
+  });
+
+  testWidgets('does not replace the home content with a loading spinner', (
+    tester,
+  ) async {
+    final scenes = Completer<List<HomeScene>>();
+    final devices = Completer<List<DeviceSummary>>();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authSessionProvider.overrideWith(
+            (ref) async =>
+                const AuthSession(isAuthenticated: true, userId: 'user-1'),
+          ),
+          accountLocalDataSourceProvider.overrideWithValue(
+            InMemoryAccountLocalDataSource(),
+          ),
+          homeScenesProvider.overrideWith((ref) => scenes.future),
+          homeDevicesProvider.overrideWith((ref) => devices.future),
+          addDeviceControllerProvider.overrideWith(
+            () => _HomeBleDisconnectController(_HomeBleDisconnectTracker()),
+          ),
+        ],
+        child: const FlinxApp(),
+      ),
+    );
+
+    await tester.pump();
+
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+
+    scenes.complete(const [
+      HomeScene(id: 1, name: 'Home', doorCount: 0, isDefault: true),
+    ]);
+    devices.complete(const <DeviceSummary>[]);
+    await tester.pumpAndSettle();
   });
 }
 

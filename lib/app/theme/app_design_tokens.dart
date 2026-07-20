@@ -132,6 +132,8 @@ class AppColors {
   static const textCodeResendDisabled = Color(0xFFC0C0C3);
 
   static const iconHomeAction = Color(0xFF3F424A);
+  static const homeDeviceOnlineStatus = Color(0xFF12C76B);
+  static const homeDeviceUnavailableStatus = Colors.black;
   static const iconHomePlaceholder = Color(0xFFD5D9E0);
   static const iconAccountMenu = Color(0xFF4D535B);
   static const iconAccountChevron = Color(0xFFA2A7AE);
@@ -555,7 +557,7 @@ class AppTextTokens {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
       color: AppColors.textMuted,
       fontSize: 15,
-      fontWeight: FontWeight.w500,
+      fontWeight: FontWeight.w400,
       height: 1.2,
     );
   }

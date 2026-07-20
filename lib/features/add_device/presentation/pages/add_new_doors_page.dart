@@ -2,20 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
+import '../../../../platform_bridge/hardware_models.dart';
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../../../shared/design_system/door_type_visuals.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import 'add_device_page.dart';
-import '../widgets/add_door_name_dialog.dart';
-
-class AddNewDoorsAssetPaths {
-  const AddNewDoorsAssetPaths._();
-
-  static const garageDoor = 'assets/icons/add_device/add_new_doors_garage_door.png';
-  static const rollerDoor = 'assets/icons/add_device/add_new_doors_roller_door.png';
-  static const industrialDoor = 'assets/icons/add_device/add_new_doors_industrial_door.png';
-  static const swingGate = 'assets/icons/add_device/add_new_doors_swing_gate.png';
-  static const slidingGate = 'assets/icons/add_device/add_new_doors_sliding_gate.png';
-}
 
 class AddNewDoorsPage extends StatelessWidget {
   const AddNewDoorsPage({super.key});
@@ -27,23 +18,34 @@ class AddNewDoorsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final textTheme = Theme.of(context).textTheme;
-    final doorTypes = [
-      _DoorTypeOption(label: l10n.addNewDoorsGarageDoor, assetPath: AddNewDoorsAssetPaths.garageDoor, fallbackIcon: Icons.garage_outlined),
-      _DoorTypeOption(label: l10n.addNewDoorsRollerDoor, assetPath: AddNewDoorsAssetPaths.industrialDoor, fallbackIcon: Icons.window_outlined),
-      _DoorTypeOption(label: l10n.addNewDoorsIndustrialDoor, assetPath: AddNewDoorsAssetPaths.rollerDoor, fallbackIcon: Icons.warehouse_outlined),
-      _DoorTypeOption(label: l10n.addNewDoorsSwingGate, assetPath: AddNewDoorsAssetPaths.slidingGate, fallbackIcon: Icons.door_front_door_outlined),
-      _DoorTypeOption(label: l10n.addNewDoorsSlidingGate, assetPath: AddNewDoorsAssetPaths.swingGate, fallbackIcon: Icons.door_sliding_outlined),
-    ];
+    final doorTypes = DoorType.values
+        .map(
+          (type) => _DoorTypeOption(
+            label: _labelForType(l10n, type),
+            visual: DoorTypeVisuals.forType(type),
+          ),
+        )
+        .toList(growable: false);
 
     return Scaffold(
       backgroundColor: AppColors.backgroundPrimary,
-      appBar: FlinxNavigationBar(title: '', showBottomDivider: false, automaticallyImplyLeading: context.canPop()),
+      appBar: FlinxNavigationBar(
+        title: '',
+        showBottomDivider: false,
+        automaticallyImplyLeading: context.canPop(),
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 36, 18, 46),
         children: [
-          Text(l10n.addNewDoorsTitle, style: AppTextTokens.addNewDoorsTitle(textTheme)),
+          Text(
+            l10n.addNewDoorsTitle,
+            style: AppTextTokens.addNewDoorsTitle(textTheme),
+          ),
           const SizedBox(height: 2),
-          Text(l10n.addNewDoorsSubtitle, style: AppTextTokens.addNewDoorsSubtitle(textTheme)),
+          Text(
+            l10n.addNewDoorsSubtitle,
+            style: AppTextTokens.addNewDoorsSubtitle(textTheme),
+          ),
           const SizedBox(height: 46),
           for (final option in doorTypes) ...[
             _DoorTypeCard(
@@ -57,14 +59,23 @@ class AddNewDoorsPage extends StatelessWidget {
       ),
     );
   }
+
+  String _labelForType(AppLocalizations l10n, DoorType type) {
+    return switch (type) {
+      DoorType.garage => l10n.addNewDoorsGarageDoor,
+      DoorType.roller => l10n.addNewDoorsRollerDoor,
+      DoorType.industrial => l10n.addNewDoorsIndustrialDoor,
+      DoorType.swing => l10n.addNewDoorsSwingGate,
+      DoorType.sliding => l10n.addNewDoorsSlidingGate,
+    };
+  }
 }
 
 class _DoorTypeOption {
-  const _DoorTypeOption({required this.label, required this.assetPath, required this.fallbackIcon});
+  const _DoorTypeOption({required this.label, required this.visual});
 
   final String label;
-  final String assetPath;
-  final IconData fallbackIcon;
+  final DoorTypeVisual visual;
 }
 
 class _DoorTypeCard extends StatelessWidget {
@@ -86,9 +97,19 @@ class _DoorTypeCard extends StatelessWidget {
           child: Row(
             children: [
               const SizedBox(width: 30),
-              _DoorTypeIcon(assetPath: option.assetPath, fallbackIcon: option.fallbackIcon),
+              _DoorTypeIcon(
+                assetPath: option.visual.assetPath,
+                fallbackIcon: option.visual.fallbackIcon,
+              ),
               const SizedBox(width: 34),
-              Expanded(child: Text(option.label, style: AppTextTokens.addNewDoorsCardTitle(Theme.of(context).textTheme))),
+              Expanded(
+                child: Text(
+                  option.label,
+                  style: AppTextTokens.addNewDoorsCardTitle(
+                    Theme.of(context).textTheme,
+                  ),
+                ),
+              ),
               const SizedBox(width: 18),
             ],
           ),

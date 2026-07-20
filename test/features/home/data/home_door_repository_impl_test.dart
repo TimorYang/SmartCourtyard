@@ -16,8 +16,11 @@ void main() {
           id: 12,
           name: 'Main Gate',
           sceneId: 7,
+          onlineStatus: 1,
           onlineStatusLabel: '在线',
           doorStateLabel: '正在关门',
+          doorType: 3,
+          coverFileId: 30001,
         ),
       ]),
       logger: const _NoopLogger(),
@@ -35,7 +38,40 @@ void main() {
     expect(doors.single.onlineState, DeviceOnlineState.online);
     expect(doors.single.bleState, BleConnectionState.connected);
     expect(doors.single.doorState, DoorState.closing);
+    expect(doors.single.doorType, DoorType.swing);
+    expect(doors.single.coverFileId, 30001);
   });
+
+  for (final fixture in [
+    (wireValue: 0, expected: DeviceOnlineState.offline),
+    (wireValue: 1, expected: DeviceOnlineState.online),
+    (wireValue: 2, expected: DeviceOnlineState.unknown),
+  ]) {
+    test(
+      'maps onlineStatus ${fixture.wireValue} to ${fixture.expected.name}',
+      () async {
+        final repository = HomeDoorRepositoryImpl(
+          remoteDataSource: _FakeHomeDoorRemoteDataSource([
+            HomeDoorResponseDto(
+              id: 12,
+              name: 'Main Gate',
+              sceneId: 7,
+              onlineStatus: fixture.wireValue,
+              onlineStatusLabel: '在线',
+            ),
+          ]),
+          logger: const _NoopLogger(),
+        );
+
+        final doors = await repository.fetchDoors(
+          sceneId: 7,
+          requestId: 'home-doors-123',
+        );
+
+        expect(doors.single.onlineState, fixture.expected);
+      },
+    );
+  }
 
   test('maps network failure to retryable app error', () async {
     final repository = HomeDoorRepositoryImpl(
@@ -93,6 +129,40 @@ void main() {
     expect(dataSource.unbindDoorId, 12);
     expect(dataSource.unbindRequestId, 'home-unbind-door-123');
   });
+
+  test('resets a door cover', () async {
+    final dataSource = _FakeHomeDoorRemoteDataSource(const []);
+    final repository = HomeDoorRepositoryImpl(
+      remoteDataSource: dataSource,
+      logger: const _NoopLogger(),
+    );
+
+    await repository.resetDoorCover(
+      doorId: 12,
+      requestId: 'home-reset-door-cover-123',
+    );
+
+    expect(dataSource.resetDoorCoverId, 12);
+    expect(dataSource.resetDoorCoverRequestId, 'home-reset-door-cover-123');
+  });
+
+  test('renames a door', () async {
+    final dataSource = _FakeHomeDoorRemoteDataSource(const []);
+    final repository = HomeDoorRepositoryImpl(
+      remoteDataSource: dataSource,
+      logger: const _NoopLogger(),
+    );
+
+    await repository.renameDoor(
+      doorId: 12,
+      name: 'Garage Door',
+      requestId: 'home-rename-door-123',
+    );
+
+    expect(dataSource.renameDoorId, 12);
+    expect(dataSource.renameDoorName, 'Garage Door');
+    expect(dataSource.renameDoorRequestId, 'home-rename-door-123');
+  });
 }
 
 class _FakeHomeDoorRemoteDataSource implements HomeDoorRemoteDataSource {
@@ -103,6 +173,11 @@ class _FakeHomeDoorRemoteDataSource implements HomeDoorRemoteDataSource {
   String? topRequestId;
   int? unbindDoorId;
   String? unbindRequestId;
+  int? resetDoorCoverId;
+  String? resetDoorCoverRequestId;
+  int? renameDoorId;
+  String? renameDoorName;
+  String? renameDoorRequestId;
 
   @override
   Future<void> topDoor({required int doorId, required String requestId}) async {
@@ -117,6 +192,26 @@ class _FakeHomeDoorRemoteDataSource implements HomeDoorRemoteDataSource {
   }) async {
     unbindDoorId = doorId;
     unbindRequestId = requestId;
+  }
+
+  @override
+  Future<void> resetDoorCover({
+    required int doorId,
+    required String requestId,
+  }) async {
+    resetDoorCoverId = doorId;
+    resetDoorCoverRequestId = requestId;
+  }
+
+  @override
+  Future<void> renameDoor({
+    required int doorId,
+    required String name,
+    required String requestId,
+  }) async {
+    renameDoorId = doorId;
+    renameDoorName = name;
+    renameDoorRequestId = requestId;
   }
 
   @override
@@ -140,6 +235,23 @@ class _FailingHomeDoorRemoteDataSource implements HomeDoorRemoteDataSource {
 
   @override
   Future<void> unbindDoor({required int doorId, required String requestId}) {
+    throw error;
+  }
+
+  @override
+  Future<void> resetDoorCover({
+    required int doorId,
+    required String requestId,
+  }) {
+    throw error;
+  }
+
+  @override
+  Future<void> renameDoor({
+    required int doorId,
+    required String name,
+    required String requestId,
+  }) {
     throw error;
   }
 

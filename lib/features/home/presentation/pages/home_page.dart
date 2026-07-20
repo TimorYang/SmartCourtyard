@@ -12,6 +12,7 @@ import '../../../../features/account/application/providers.dart';
 import '../../../../features/account/domain/entities/account_profile.dart';
 import '../../../../features/account/presentation/pages/account_profile_page.dart';
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../../../shared/design_system/door_type_visuals.dart';
 import '../../../add_device/presentation/pages/add_new_doors_page.dart';
 import '../../../add_device/application/providers.dart';
 import '../../../../platform_bridge/hardware_models.dart';
@@ -188,7 +189,6 @@ class _HomePageState extends ConsumerState<HomePage>
         ),
       ],
     );
-    final isLoading = devices.isLoading || scenes.isLoading;
     final hasError = devices.hasError || scenes.hasError;
 
     return DefaultTabController(
@@ -223,13 +223,6 @@ class _HomePageState extends ConsumerState<HomePage>
                         ? _HomeRefreshableState(
                             onRefresh: _refreshHome,
                             child: const _HomeErrorState(),
-                          )
-                        : isLoading
-                        ? _HomeRefreshableState(
-                            onRefresh: _refreshHome,
-                            child: const Center(
-                              child: CircularProgressIndicator(),
-                            ),
                           )
                         : TabBarView(
                             children: [
@@ -918,7 +911,7 @@ class _DeviceCard extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      _DeviceDoorIcon(deviceName: device.name),
+                      _DeviceDoorIcon(device: device),
                       const SizedBox(height: 20),
                       Text(
                         device.name,
@@ -1005,6 +998,18 @@ class _DeviceEditingSheetState extends ConsumerState<_DeviceEditingSheet> {
         onPressed: _isTopping ? null : _topDevice,
       ),
       _DeviceEditingAction(
+        label: l10n.homeDeviceEditCustomizeAction,
+        assetPath: HomeAssetPaths.deviceEditCustomizeIcon,
+        fallbackIcon: Icons.image_outlined,
+        onPressed: () {
+          Navigator.of(context).pop();
+          showDeviceCustomizeDialog(
+            widget.parentContext,
+            device: widget.device,
+          );
+        },
+      ),
+      _DeviceEditingAction(
         label: l10n.homeDeviceEditShareAction,
         assetPath: HomeAssetPaths.deviceEditShareIcon,
         fallbackIcon: Icons.person_add_alt_1_outlined,
@@ -1030,7 +1035,7 @@ class _DeviceEditingSheetState extends ConsumerState<_DeviceEditingSheet> {
         fallbackIcon: Icons.drive_file_rename_outline_rounded,
         onPressed: () {
           Navigator.of(context).pop();
-          showDeviceNameDialog(widget.parentContext);
+          showDeviceNameDialog(widget.parentContext, device: widget.device);
         },
       ),
       _DeviceEditingAction(
@@ -1040,15 +1045,6 @@ class _DeviceEditingSheetState extends ConsumerState<_DeviceEditingSheet> {
         onPressed: () {
           Navigator.of(context).pop();
           showDeviceDeleteDialog(widget.parentContext, device: widget.device);
-        },
-      ),
-      _DeviceEditingAction(
-        label: l10n.homeDeviceEditCustomizeAction,
-        assetPath: HomeAssetPaths.deviceEditCustomizeIcon,
-        fallbackIcon: Icons.image_outlined,
-        onPressed: () {
-          Navigator.of(context).pop();
-          showDeviceCustomizeDialog(widget.parentContext);
         },
       ),
     ];
@@ -1066,7 +1062,7 @@ class _DeviceEditingSheetState extends ConsumerState<_DeviceEditingSheet> {
             children: [
               Row(
                 children: [
-                  _DeviceDoorIcon(deviceName: widget.device.name),
+                  _DeviceDoorIcon(device: widget.device),
                   const SizedBox(width: 14),
                   Expanded(
                     child: Column(
@@ -1231,33 +1227,30 @@ class _DeviceStatusDot extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: onlineState == DeviceOnlineState.online
-            ? AppColors.authSuccess
-            : AppColors.iconHomeAction,
+            ? AppColors.homeDeviceOnlineStatus
+            : AppColors.homeDeviceUnavailableStatus,
       ),
     );
   }
 }
 
 class _DeviceDoorIcon extends StatelessWidget {
-  const _DeviceDoorIcon({required this.deviceName});
+  const _DeviceDoorIcon({required this.device});
 
-  final String deviceName;
+  final DeviceSummary device;
 
   @override
   Widget build(BuildContext context) {
-    final isRoller = deviceName.toLowerCase().contains('roller');
-    final assetPath = isRoller
-        ? HomeAssetPaths.rollerDoorIcon
-        : HomeAssetPaths.garageDoorIcon;
+    final visual = DoorTypeVisuals.forType(device.doorType);
 
     return Image.asset(
-      assetPath,
+      visual.assetPath,
       width: 45,
       height: 45,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) {
         return Icon(
-          isRoller ? Icons.window_outlined : Icons.garage_outlined,
+          visual.fallbackIcon,
           color: AppColors.iconHomeAction,
           size: 45,
         );

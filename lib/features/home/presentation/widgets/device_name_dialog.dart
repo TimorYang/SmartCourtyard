@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
+import '../../../../platform_bridge/hardware_models.dart';
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../../../shared/widgets/app_toast.dart';
+import '../../application/providers.dart';
 
 class DeviceNameDialogAssetPaths {
   const DeviceNameDialogAssetPaths._();
@@ -10,34 +14,57 @@ class DeviceNameDialogAssetPaths {
       'assets/icons/home/device_name_input_placeholder.png';
 }
 
-Future<void> showDeviceNameDialog(BuildContext context) {
+Future<void> showDeviceNameDialog(
+  BuildContext context, {
+  required DeviceSummary device,
+}) {
   return showDialog<void>(
     context: context,
     barrierColor: AppColors.overlaySoft,
-    builder: (context) => const DeviceNameDialog(),
+    builder: (context) =>
+        DeviceNameDialog(device: device, parentContext: context),
   );
 }
 
-class DeviceNameDialog extends StatefulWidget {
-  const DeviceNameDialog({super.key});
+class DeviceNameDialog extends ConsumerStatefulWidget {
+  const DeviceNameDialog({
+    super.key,
+    required this.device,
+    required this.parentContext,
+  });
+
+  final DeviceSummary device;
+  final BuildContext parentContext;
 
   @override
-  State<DeviceNameDialog> createState() => _DeviceNameDialogState();
+  ConsumerState<DeviceNameDialog> createState() => _DeviceNameDialogState();
 }
 
-class _DeviceNameDialogState extends State<DeviceNameDialog> {
+class _DeviceNameDialogState extends ConsumerState<DeviceNameDialog> {
   late final TextEditingController _controller;
+  var _hasName = false;
+  var _isSubmitting = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController();
+    _controller = TextEditingController()..addListener(_onNameChanged);
   }
 
   @override
   void dispose() {
+    _controller.removeListener(_onNameChanged);
     _controller.dispose();
     super.dispose();
+  }
+
+  void _onNameChanged() {
+    final hasName = _controller.text.trim().isNotEmpty;
+    if (hasName != _hasName) {
+      setState(() {
+        _hasName = hasName;
+      });
+    }
   }
 
   @override
@@ -75,7 +102,9 @@ class _DeviceNameDialogState extends State<DeviceNameDialog> {
                         child: SizedBox(
                           height: 52,
                           child: FilledButton(
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: _isSubmitting
+                                ? null
+                                : () => Navigator.pop(context),
                             style: FilledButton.styleFrom(
                               backgroundColor:
                                   AppColors.sceneDialogCancelButton,
@@ -94,16 +123,31 @@ class _DeviceNameDialogState extends State<DeviceNameDialog> {
                         child: SizedBox(
                           height: 52,
                           child: FilledButton(
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: _hasName && !_isSubmitting
+                                ? _submit
+                                : null,
                             style: FilledButton.styleFrom(
                               backgroundColor: AppColors.brandPrimary,
+                              disabledBackgroundColor:
+                                  AppColors.brandPrimaryDisabled,
                               foregroundColor: AppColors.backgroundPrimary,
+                              disabledForegroundColor:
+                                  AppColors.backgroundPrimary,
                               shape: const StadiumBorder(),
                               textStyle: AppTextTokens.sceneDialogButton(
                                 textTheme,
                               ),
                             ),
-                            child: Text(l10n.sceneNameConfirmAction),
+                            child: _isSubmitting
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppColors.backgroundPrimary,
+                                    ),
+                                  )
+                                : Text(l10n.sceneNameConfirmAction),
                           ),
                         ),
                       ),
@@ -116,6 +160,49 @@ class _DeviceNameDialogState extends State<DeviceNameDialog> {
         ),
       ),
     );
+  }
+
+  Future<void> _submit() async {
+    if (_isSubmitting) {
+      return;
+    }
+    final doorId = int.tryParse(widget.device.id);
+    final name = _controller.text.trim();
+    if (doorId == null || name.isEmpty) {
+      _showFailure();
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+    });
+    final requestId =
+        'home-rename-door-$doorId-${DateTime.now().toUtc().microsecondsSinceEpoch}';
+    try {
+      await ref.read(renameHomeDoorUseCaseProvider)(
+        doorId: doorId,
+        name: name,
+        requestId: requestId,
+      );
+      ref.invalidate(homeDevicesProvider);
+      if (mounted) {
+        Navigator.pop(context);
+      }
+    } catch (_) {
+      if (mounted) {
+        _showFailure();
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
+  }
+
+  void _showFailure() {
+    AppToast.error(widget.parentContext, 'Failed to rename device');
   }
 }
 

@@ -87,6 +87,62 @@ class HomeDoorRepositoryImpl implements HomeDoorRepository {
     }
   }
 
+  @override
+  Future<void> resetDoorCover({
+    required int doorId,
+    required String requestId,
+  }) async {
+    try {
+      await remoteDataSource.resetDoorCover(
+        doorId: doorId,
+        requestId: requestId,
+      );
+      logger.info(
+        'Reset home door cover.',
+        requestId: requestId,
+        context: {'doorId': doorId},
+      );
+    } on HomeDoorRemoteException catch (error, stackTrace) {
+      logger.error(
+        'Failed to reset home door cover.',
+        requestId: requestId,
+        error: error,
+        stackTrace: stackTrace,
+        context: {'doorId': doorId, 'statusCode': error.statusCode},
+      );
+      throw _mapError(error, requestId);
+    }
+  }
+
+  @override
+  Future<void> renameDoor({
+    required int doorId,
+    required String name,
+    required String requestId,
+  }) async {
+    try {
+      await remoteDataSource.renameDoor(
+        doorId: doorId,
+        name: name,
+        requestId: requestId,
+      );
+      logger.info(
+        'Renamed home door.',
+        requestId: requestId,
+        context: {'doorId': doorId},
+      );
+    } on HomeDoorRemoteException catch (error, stackTrace) {
+      logger.error(
+        'Failed to rename home door.',
+        requestId: requestId,
+        error: error,
+        stackTrace: stackTrace,
+        context: {'doorId': doorId, 'statusCode': error.statusCode},
+      );
+      throw _mapError(error, requestId);
+    }
+  }
+
   AppError _mapError(HomeDoorRemoteException error, String requestId) {
     if (error.kind == HomeDoorRemoteErrorKind.network) {
       return AppError(
@@ -120,20 +176,16 @@ extension HomeDoorResponseDtoMapper on HomeDoorResponseDto {
       cycleCount: 0,
       remainingLifePercent: 100,
       sceneId: sceneId,
+      doorType: DoorType.fromWireValue(doorType),
+      coverFileId: coverFileId,
     );
   }
 
   DeviceOnlineState _onlineState() {
-    final label = onlineStatusLabel?.trim().toLowerCase() ?? '';
-    if (label.contains('online') || label.contains('在线')) {
-      return DeviceOnlineState.online;
-    }
-    if (label.contains('offline') || label.contains('离线')) {
-      return DeviceOnlineState.offline;
-    }
     return switch (onlineStatus) {
       1 => DeviceOnlineState.online,
       0 => DeviceOnlineState.offline,
+      2 => DeviceOnlineState.unknown,
       _ => DeviceOnlineState.unknown,
     };
   }

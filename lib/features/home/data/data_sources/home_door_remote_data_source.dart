@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../../../../core/network/dio_factory.dart';
 import '../../../../core/network/network_exception.dart';
 import '../dto/home_door_response_dto.dart';
+import '../dto/rename_home_door_request_dto.dart';
 import 'home_api.dart';
 
 abstract interface class HomeDoorRemoteDataSource {
@@ -14,6 +15,14 @@ abstract interface class HomeDoorRemoteDataSource {
   Future<void> topDoor({required int doorId, required String requestId});
 
   Future<void> unbindDoor({required int doorId, required String requestId});
+
+  Future<void> resetDoorCover({required int doorId, required String requestId});
+
+  Future<void> renameDoor({
+    required int doorId,
+    required String name,
+    required String requestId,
+  });
 }
 
 class HomeDoorRemoteDataSourceImpl implements HomeDoorRemoteDataSource {
@@ -75,6 +84,56 @@ class HomeDoorRemoteDataSourceImpl implements HomeDoorRemoteDataSource {
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       if (!_isSuccessCode(response.code) || !response.success) {
+        throw const HomeDoorRemoteException.invalidResponse();
+      }
+    } on DioException catch (error) {
+      throw HomeDoorRemoteException.fromNetwork(
+        NetworkException.fromDio(error),
+      );
+    } on HomeDoorRemoteException {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> resetDoorCover({
+    required int doorId,
+    required String requestId,
+  }) async {
+    try {
+      final response = await api.resetDoorCover(
+        doorId,
+        Options(extra: {NetworkRequestExtras.requestId: requestId}),
+      );
+      if (!_isSuccessCode(response.code) ||
+          !response.success ||
+          response.data != true) {
+        throw const HomeDoorRemoteException.invalidResponse();
+      }
+    } on DioException catch (error) {
+      throw HomeDoorRemoteException.fromNetwork(
+        NetworkException.fromDio(error),
+      );
+    } on HomeDoorRemoteException {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> renameDoor({
+    required int doorId,
+    required String name,
+    required String requestId,
+  }) async {
+    try {
+      final response = await api.renameDoor(
+        doorId,
+        RenameHomeDoorRequestDto(name: name),
+        Options(extra: {NetworkRequestExtras.requestId: requestId}),
+      );
+      if (!_isSuccessCode(response.code) ||
+          !response.success ||
+          response.data != true) {
         throw const HomeDoorRemoteException.invalidResponse();
       }
     } on DioException catch (error) {

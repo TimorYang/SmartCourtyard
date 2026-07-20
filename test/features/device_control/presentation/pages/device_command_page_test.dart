@@ -13,6 +13,7 @@ import 'package:flinx/features/device_control/presentation/pages/device_settings
 import 'package:flinx/platform_bridge/hardware_models.dart';
 import 'package:flinx/platform_bridge/mock_hardware_gateway.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
+import 'package:flinx/shared/widgets/flinx_switch.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -34,6 +35,8 @@ void main() {
     expect(find.text('Closed'), findsOneWidget);
     expect(find.text('LED'), findsOneWidget);
     expect(find.text('Auto close'), findsOneWidget);
+    expect(find.text('Open reminder'), findsOneWidget);
+    expect(find.text('10 min'), findsOneWidget);
     expect(find.text('Partial open'), findsOneWidget);
     expect(find.text('More setting'), findsOneWidget);
 
@@ -95,6 +98,20 @@ void main() {
     expect(gateway.queryCount, 0);
     expect(find.text('Setting'), findsOneWidget);
     expect(find.text('Transmitter management'), findsOneWidget);
+  });
+
+  testWidgets('toggles the open reminder quick action', (tester) async {
+    await _pumpDevicePage(tester, _RecordingHardwareGateway());
+
+    final reminderSwitch = find.byKey(
+      const ValueKey<String>('open-reminder-switch'),
+    );
+    expect(tester.widget<FlinxSwitch>(reminderSwitch).value, isTrue);
+
+    await tester.tap(reminderSwitch);
+    await tester.pump();
+
+    expect(tester.widget<FlinxSwitch>(reminderSwitch).value, isFalse);
   });
 
   testWidgets('shows pending state while a command is in progress', (
