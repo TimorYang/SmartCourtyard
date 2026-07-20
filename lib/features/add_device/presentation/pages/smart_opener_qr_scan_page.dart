@@ -8,6 +8,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/app_toast.dart';
+import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import 'smart_opener_ble_scan_page.dart';
 import 'wifi_configuration_page.dart';
 
@@ -131,6 +132,21 @@ class _SmartOpenerQrScanPageState extends State<SmartOpenerQrScanPage> {
 
     return Scaffold(
       backgroundColor: AppColors.scannerBackground,
+      extendBodyBehindAppBar: true,
+      appBar: FlinxNavigationBar(
+        title: '',
+        automaticallyImplyLeading: context.canPop(),
+        showBottomDivider: false,
+        isTransparent: true,
+        foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            tooltip: l10n.smartOpenerScannerBluetoothTooltip,
+            onPressed: () => context.push(SmartOpenerBleScanPage.routePath),
+            icon: const Icon(Icons.bluetooth),
+          ),
+        ],
+      ),
       body: LayoutBuilder(
         builder: (context, constraints) {
           final scanWindowSize = constraints.maxWidth * 0.58;
@@ -144,6 +160,7 @@ class _SmartOpenerQrScanPageState extends State<SmartOpenerQrScanPage> {
           );
 
           return Stack(
+            fit: StackFit.expand,
             children: [
               if (widget.enableCamera)
                 MobileScanner(
@@ -175,29 +192,6 @@ class _SmartOpenerQrScanPageState extends State<SmartOpenerQrScanPage> {
                 child: Center(
                   child: _ScannerChip(
                     label: l10n.smartOpenerScannerManualAction,
-                  ),
-                ),
-              ),
-              SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(7, 16, 12, 0),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        tooltip: l10n.smartOpenerScannerBackTooltip,
-                        onPressed: () => Navigator.maybePop(context),
-                        icon: const BackButtonIcon(),
-                        color: Colors.white,
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        tooltip: l10n.smartOpenerScannerBluetoothTooltip,
-                        onPressed: () =>
-                            context.push(SmartOpenerBleScanPage.routePath),
-                        icon: const Icon(Icons.bluetooth),
-                        color: Colors.white,
-                      ),
-                    ],
                   ),
                 ),
               ),
