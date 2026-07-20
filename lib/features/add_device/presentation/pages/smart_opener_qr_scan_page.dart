@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -9,7 +8,6 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/app_toast.dart';
-import '../../application/providers.dart';
 import 'smart_opener_ble_scan_page.dart';
 import 'wifi_configuration_page.dart';
 
@@ -22,7 +20,7 @@ class SmartOpenerQrScanAssetPaths {
       'assets/icons/add_device/smart_opener_qr_flashlight_icon.png';
 }
 
-class SmartOpenerQrScanPage extends ConsumerStatefulWidget {
+class SmartOpenerQrScanPage extends StatefulWidget {
   const SmartOpenerQrScanPage({super.key, this.enableCamera = true});
 
   static const routeName = 'smart-opener-qr-scan';
@@ -31,11 +29,10 @@ class SmartOpenerQrScanPage extends ConsumerStatefulWidget {
   final bool enableCamera;
 
   @override
-  ConsumerState<SmartOpenerQrScanPage> createState() =>
-      _SmartOpenerQrScanPageState();
+  State<SmartOpenerQrScanPage> createState() => _SmartOpenerQrScanPageState();
 }
 
-class _SmartOpenerQrScanPageState extends ConsumerState<SmartOpenerQrScanPage> {
+class _SmartOpenerQrScanPageState extends State<SmartOpenerQrScanPage> {
   late final MobileScannerController _scannerController;
   final ImagePicker _imagePicker = ImagePicker();
   bool _hasNavigated = false;
@@ -47,9 +44,6 @@ class _SmartOpenerQrScanPageState extends ConsumerState<SmartOpenerQrScanPage> {
       detectionSpeed: DetectionSpeed.noDuplicates,
       formats: const <BarcodeFormat>[BarcodeFormat.qrCode],
     );
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      unawaited(_disconnectConnectedBleDevices());
-    });
   }
 
   @override
@@ -67,18 +61,6 @@ class _SmartOpenerQrScanPageState extends ConsumerState<SmartOpenerQrScanPage> {
       }
       _showMessage(AppLocalizations.of(context).smartOpenerScannerUnknownError);
     }
-  }
-
-  Future<void> _disconnectConnectedBleDevices() async {
-    final allDisconnected = await ref
-        .read(addDeviceControllerProvider.notifier)
-        .disconnectConnectedBleDevices();
-    if (!mounted || allDisconnected) {
-      return;
-    }
-    _showMessage(
-      AppLocalizations.of(context).smartOpenerDisconnectFailedMessage,
-    );
   }
 
   Future<void> _pickFromGallery() async {

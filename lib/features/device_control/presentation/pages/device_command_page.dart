@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flinx/features/home/presentation/pages/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -37,10 +39,12 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
   bool _ledEnabled = false;
   bool _autoCloseEnabled = false;
   DeviceDetailTab _selectedTab = DeviceDetailTab.command;
+  late final DeviceCommandController _controller;
 
   @override
   void initState() {
     super.initState();
+    _controller = ref.read(deviceCommandControllerProvider.notifier);
     Future.microtask(_loadDoorDetail);
   }
 
@@ -53,9 +57,15 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
   }
 
   @override
+  void dispose() {
+    unawaited(_controller.disposeBleSession());
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final commandState = ref.watch(deviceCommandControllerProvider);
-    final controller = ref.read(deviceCommandControllerProvider.notifier);
+    final controller = _controller;
     final isBusy =
         commandState.pendingAction != null ||
         commandState.pendingRemotePairingAction != null ||
@@ -88,12 +98,15 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
   }
 
   void _loadDoorDetail() {
-    ref
-        .read(deviceCommandControllerProvider.notifier)
-        .loadDoorDetail(doorId: widget.doorId);
+    _controller.loadDoorDetail(doorId: widget.doorId);
   }
 
   String _hardwareDeviceId(DeviceCommandState commandState) {
+    if (commandState.bleConnectionStatus ==
+            DeviceBleConnectionStatus.connected &&
+        (commandState.bleDeviceId?.trim().isNotEmpty ?? false)) {
+      return commandState.bleDeviceId!.trim();
+    }
     final detailDeviceId = commandState.doorDetail?.hardwareDeviceId ?? '';
     if (detailDeviceId.trim().isNotEmpty) {
       return detailDeviceId.trim();

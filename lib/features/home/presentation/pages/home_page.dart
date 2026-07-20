@@ -1,15 +1,19 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
+import '../../../../app/router/app_route_observer.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../features/account/application/providers.dart';
 import '../../../../features/account/domain/entities/account_profile.dart';
 import '../../../../features/account/presentation/pages/account_profile_page.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../add_device/presentation/pages/add_new_doors_page.dart';
+import '../../../add_device/application/providers.dart';
 import '../../../../platform_bridge/hardware_models.dart';
 import '../../../hardware_debug/presentation/pages/ble_debug_page.dart';
 import '../../../notification/presentation/pages/notification_list_page.dart';
@@ -72,9 +76,90 @@ class HomePage extends ConsumerStatefulWidget {
   ConsumerState<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends ConsumerState<HomePage> {
+class _HomePageState extends ConsumerState<HomePage>
+    with WidgetsBindingObserver, RouteAware {
   var _isAddMenuVisible = false;
   var _isSingleColumnDeviceList = false;
+  ModalRoute<dynamic>? _route;
+  var _isDisconnectingBle = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_disconnectConnectedBleDevices());
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (_route == route) {
+      return;
+    }
+    if (_route != null) {
+      appRouteObserver.unsubscribe(this);
+    }
+    _route = route;
+    if (route != null) {
+      appRouteObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void didPopNext() {
+    unawaited(_disconnectConnectedBleDevices());
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_disconnectConnectedBleDevices());
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    appRouteObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  Future<void> _disconnectConnectedBleDevices() async {
+    if (_isDisconnectingBle) {
+      return;
+    }
+    _isDisconnectingBle = true;
+    try {
+      final allDisconnected = await ref
+          .read(addDeviceControllerProvider.notifier)
+          .disconnectConnectedBleDevices();
+      if (!mounted || allDisconnected) {
+        return;
+      }
+      AppToast.error(
+        context,
+        AppLocalizations.of(context).smartOpenerDisconnectFailedMessage,
+      );
+    } finally {
+      _isDisconnectingBle = false;
+    }
+  }
+
+  Future<void> _refreshHome() async {
+    ref.invalidate(homeScenesProvider);
+    ref.invalidate(homeDevicesProvider);
+    try {
+      await Future.wait([
+        ref.read(homeScenesProvider.future),
+        ref.read(homeDevicesProvider.future),
+      ]);
+    } catch (_) {
+      // Provider error states render the existing home error UI.
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -135,15 +220,24 @@ class _HomePageState extends ConsumerState<HomePage> {
                   const Divider(height: 1, color: AppColors.borderHomeDivider),
                   Expanded(
                     child: hasError
-                        ? const _HomeErrorState()
+                        ? _HomeRefreshableState(
+                            onRefresh: _refreshHome,
+                            child: const _HomeErrorState(),
+                          )
                         : isLoading
-                        ? const Center(child: CircularProgressIndicator())
+                        ? _HomeRefreshableState(
+                            onRefresh: _refreshHome,
+                            child: const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          )
                         : TabBarView(
                             children: [
                               for (final home in homes)
                                 _HomeDevicePanel(
                                   home: home,
                                   isSingleColumn: _isSingleColumnDeviceList,
+                                  onRefresh: _refreshHome,
                                 ),
                             ],
                           ),
@@ -515,43 +609,51 @@ class _HomeTabs extends StatelessWidget {
 }
 
 class _HomeDevicePanel extends StatelessWidget {
-  const _HomeDevicePanel({required this.home, required this.isSingleColumn});
+  const _HomeDevicePanel({
+    required this.home,
+    required this.isSingleColumn,
+    required this.onRefresh,
+  });
 
   final _HomeGroup home;
   final bool isSingleColumn;
+  final RefreshCallback onRefresh;
 
   @override
   Widget build(BuildContext context) {
-    if (home.devices.isEmpty) {
-      return _EmptyHomeState(doorCount: home.doorCount);
-    }
-
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(18, 10, 18, 24),
-      children: [
-        _DoorCount(count: home.doorCount),
-        const SizedBox(height: 16),
-        if (isSingleColumn)
-          for (final device in home.devices) ...[
-            SizedBox(height: 160, child: _DeviceCard(device: device)),
-            const SizedBox(height: 18),
-          ]
-        else
-          GridView.builder(
-            itemCount: home.devices.length,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 18,
-              crossAxisSpacing: 22,
-              childAspectRatio: 0.96,
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      child: home.devices.isEmpty
+          ? _EmptyHomeState(doorCount: home.doorCount)
+          : ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(18, 10, 18, 24),
+              children: [
+                _DoorCount(count: home.doorCount),
+                const SizedBox(height: 16),
+                if (isSingleColumn)
+                  for (final device in home.devices) ...[
+                    SizedBox(height: 160, child: _DeviceCard(device: device)),
+                    const SizedBox(height: 18),
+                  ]
+                else
+                  GridView.builder(
+                    itemCount: home.devices.length,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 18,
+                          crossAxisSpacing: 22,
+                          childAspectRatio: 0.96,
+                        ),
+                    itemBuilder: (context, index) {
+                      return _DeviceCard(device: home.devices[index]);
+                    },
+                  ),
+              ],
             ),
-            itemBuilder: (context, index) {
-              return _DeviceCard(device: home.devices[index]);
-            },
-          ),
-      ],
     );
   }
 }
@@ -580,53 +682,79 @@ class _EmptyHomeState extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context);
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 10, 18, 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _DoorCount(count: doorCount),
-          const Spacer(flex: 2),
-          Center(
-            child: _EmptyDoorsAsset(
-              assetPath: HomeAssetPaths.emptyDoorsPlaceholder,
-              size: 116,
-            ),
-          ),
-          const SizedBox(height: 28),
-          Text(
-            l10n.homeNoDoorsTitle,
-            textAlign: TextAlign.center,
-            style: AppTextTokens.homeEmptyTitle(textTheme),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.homeNoDoorsSubtitle,
-            textAlign: TextAlign.center,
-            style: AppTextTokens.homeEmptySubtitle(textTheme),
-          ),
-          const SizedBox(height: 42),
-          Center(
-            child: SizedBox(
-              width: 152,
-              height: 48,
-              child: FilledButton.icon(
-                onPressed: () => context.push(AddNewDoorsPage.routePath),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.brandPrimary,
-                  foregroundColor: AppColors.backgroundPrimary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24),
+    return CustomScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      slivers: [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(18, 10, 18, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _DoorCount(count: doorCount),
+                const Spacer(flex: 2),
+                Center(
+                  child: _EmptyDoorsAsset(
+                    assetPath: HomeAssetPaths.emptyDoorsPlaceholder,
+                    size: 116,
                   ),
-                  textStyle: AppTextTokens.homePrimaryButton(textTheme),
                 ),
-                icon: const Icon(Icons.add_rounded),
-                label: Text(l10n.homeAddDoorAction),
-              ),
+                const SizedBox(height: 28),
+                Text(
+                  l10n.homeNoDoorsTitle,
+                  textAlign: TextAlign.center,
+                  style: AppTextTokens.homeEmptyTitle(textTheme),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  l10n.homeNoDoorsSubtitle,
+                  textAlign: TextAlign.center,
+                  style: AppTextTokens.homeEmptySubtitle(textTheme),
+                ),
+                const SizedBox(height: 42),
+                Center(
+                  child: SizedBox(
+                    width: 152,
+                    height: 48,
+                    child: FilledButton.icon(
+                      onPressed: () => context.push(AddNewDoorsPage.routePath),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.brandPrimary,
+                        foregroundColor: AppColors.backgroundPrimary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        textStyle: AppTextTokens.homePrimaryButton(textTheme),
+                      ),
+                      icon: const Icon(Icons.add_rounded),
+                      label: Text(l10n.homeAddDoorAction),
+                    ),
+                  ),
+                ),
+                const Spacer(flex: 3),
+              ],
             ),
           ),
-          const Spacer(flex: 3),
-        ],
+        ),
+      ],
+    );
+  }
+}
+
+class _HomeRefreshableState extends StatelessWidget {
+  const _HomeRefreshableState({required this.onRefresh, required this.child});
+
+  final RefreshCallback onRefresh;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [SliverFillRemaining(hasScrollBody: false, child: child)],
       ),
     );
   }

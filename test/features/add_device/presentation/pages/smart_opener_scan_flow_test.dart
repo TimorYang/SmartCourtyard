@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flinx/app/theme/app_theme.dart';
-import 'package:flinx/features/add_device/application/add_device_controller.dart';
 import 'package:flinx/features/add_device/application/providers.dart';
 import 'package:flinx/features/add_device/domain/entities/onboarded_force_door.dart';
 import 'package:flinx/features/add_device/domain/entities/onboarding_device_key.dart';
@@ -54,31 +53,6 @@ void main() {
 
     expect(find.text('Gallery'), findsOneWidget);
     expect(find.text('Flashlight'), findsOneWidget);
-  });
-
-  testWidgets('QR scanner disconnects devices connected by the add flow', (
-    tester,
-  ) async {
-    final tracker = _DisconnectTracker();
-    await tester.pumpWidget(_qrScanTestApp(tracker));
-    await tester.pump();
-
-    expect(tracker.callCount, 1);
-    expect(find.byType(SmartOpenerQrScanPage), findsOneWidget);
-  });
-
-  testWidgets('QR scanner remains usable when disconnect fails', (
-    tester,
-  ) async {
-    final tracker = _DisconnectTracker(allDisconnected: false);
-    await tester.pumpWidget(_qrScanTestApp(tracker));
-    await tester.pump();
-
-    expect(find.byType(SmartOpenerQrScanPage), findsOneWidget);
-    expect(
-      find.text('Unable to disconnect device. Scanning continues.'),
-      findsOneWidget,
-    );
   });
 
   testWidgets('opens Bluetooth scanning page from QR scanner shortcut', (
@@ -614,22 +588,6 @@ Widget _scanFlowTestApp(
   );
 }
 
-Widget _qrScanTestApp(_DisconnectTracker tracker) {
-  return ProviderScope(
-    overrides: [
-      addDeviceControllerProvider.overrideWith(
-        () => _TrackingAddDeviceController(tracker),
-      ),
-    ],
-    child: MaterialApp(
-      theme: AppTheme.light(),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: const SmartOpenerQrScanPage(enableCamera: false),
-    ),
-  );
-}
-
 class _FakeAddDeviceOnboardingRepository
     implements AddDeviceOnboardingRepository {
   const _FakeAddDeviceOnboardingRepository();
@@ -693,27 +651,5 @@ class _PendingWifiHardwareGateway extends MockHardwareGateway {
     required String password,
   }) {
     return _completer.future;
-  }
-}
-
-class _DisconnectTracker {
-  _DisconnectTracker({this.allDisconnected = true});
-
-  final bool allDisconnected;
-  var callCount = 0;
-}
-
-class _TrackingAddDeviceController extends AddDeviceController {
-  _TrackingAddDeviceController(this._tracker);
-
-  final _DisconnectTracker _tracker;
-
-  @override
-  AddDeviceState build() => AddDeviceState.initial();
-
-  @override
-  Future<bool> disconnectConnectedBleDevices() async {
-    _tracker.callCount += 1;
-    return _tracker.allDisconnected;
   }
 }

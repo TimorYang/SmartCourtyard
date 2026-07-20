@@ -1,5 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../add_device/application/ble_auth_token.dart';
+import '../../add_device/application/providers.dart';
+import '../../add_device/domain/use_cases/fetch_onboarding_device_key_use_case.dart';
 import '../../../core/errors/app_error.dart';
 import '../../../core/logging/providers.dart';
 import '../../../core/network/providers.dart';
@@ -15,6 +20,10 @@ import '../domain/use_cases/fetch_door_detail_use_case.dart';
 
 final deviceCommandHardwareGatewayProvider = Provider<HardwareGateway>((ref) {
   return ref.watch(nativeHardwareGatewayProvider);
+});
+
+final deviceCommandBleScanDurationProvider = Provider<Duration>((ref) {
+  return const Duration(seconds: 10);
 });
 
 final doorDetailApiProvider = Provider<DoorDetailApi>((ref) {
@@ -63,6 +72,14 @@ enum DeviceCommandAction {
       '0x${controlCode.toRadixString(16).padLeft(4, '0').toUpperCase()}';
 }
 
+enum DeviceBleConnectionStatus {
+  idle,
+  scanning,
+  connecting,
+  authenticating,
+  connected,
+}
+
 class DeviceCommandState {
   const DeviceCommandState({
     this.doorDetail,
@@ -78,6 +95,8 @@ class DeviceCommandState {
     this.remoteHasMore = false,
     this.infoMessage,
     this.errorMessage,
+    this.bleConnectionStatus = DeviceBleConnectionStatus.idle,
+    this.bleDeviceId,
   });
 
   final DoorDetail? doorDetail;
@@ -93,6 +112,8 @@ class DeviceCommandState {
   final bool remoteHasMore;
   final String? infoMessage;
   final String? errorMessage;
+  final DeviceBleConnectionStatus bleConnectionStatus;
+  final String? bleDeviceId;
 
   DeviceCommandState copyWith({
     DoorDetail? doorDetail,
@@ -115,6 +136,9 @@ class DeviceCommandState {
     bool clearInfoMessage = false,
     String? errorMessage,
     bool clearErrorMessage = false,
+    DeviceBleConnectionStatus? bleConnectionStatus,
+    String? bleDeviceId,
+    bool clearBleDeviceId = false,
   }) {
     return DeviceCommandState(
       doorDetail: clearDoorDetail ? null : doorDetail ?? this.doorDetail,
@@ -140,6 +164,8 @@ class DeviceCommandState {
       errorMessage: clearErrorMessage
           ? null
           : errorMessage ?? this.errorMessage,
+      bleConnectionStatus: bleConnectionStatus ?? this.bleConnectionStatus,
+      bleDeviceId: clearBleDeviceId ? null : bleDeviceId ?? this.bleDeviceId,
     );
   }
 }
@@ -147,16 +173,35 @@ class DeviceCommandState {
 class DeviceCommandController extends Notifier<DeviceCommandState> {
   late final HardwareGateway _gateway;
   late final FetchDoorDetailUseCase _fetchDoorDetailUseCase;
+  late final FetchOnboardingDeviceKeyUseCase _fetchDeviceKeyUseCase;
+  late final Duration _bleScanDuration;
+  final List<StreamSubscription<Object?>> _subscriptions =
+      <StreamSubscription<Object?>>[];
+  Timer? _bleScanTimer;
+  String? _targetHardwareSn;
+  String? _activeBleDeviceId;
+  var _bleSessionId = 0;
   int _requestCounter = 0;
 
   @override
   DeviceCommandState build() {
     _gateway = ref.watch(deviceCommandHardwareGatewayProvider);
     _fetchDoorDetailUseCase = ref.watch(fetchDoorDetailUseCaseProvider);
+    _fetchDeviceKeyUseCase = ref.watch(fetchOnboardingDeviceKeyUseCaseProvider);
+    _bleScanDuration = ref.watch(deviceCommandBleScanDurationProvider);
+    _subscriptions.add(_gateway.bleScanResults.listen(_onBleDeviceFound));
+    ref.onDispose(() {
+      unawaited(disposeBleSession());
+      for (final subscription in _subscriptions) {
+        unawaited(subscription.cancel());
+      }
+      _subscriptions.clear();
+    });
     return const DeviceCommandState();
   }
 
   Future<void> loadDoorDetail({required String doorId}) async {
+    await disposeBleSession();
     final trimmedDoorId = doorId.trim();
     if (trimmedDoorId.isEmpty) {
       state = state.copyWith(
@@ -181,6 +226,10 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
         isLoadingDoorDetail: false,
         clearDoorDetailErrorMessage: true,
       );
+      final hardwareSn = detail.hardwareDeviceId;
+      if (hardwareSn.isNotEmpty) {
+        unawaited(_startBleSession(hardwareSn));
+      }
     } on AppError catch (error) {
       state = state.copyWith(
         isLoadingDoorDetail: false,
@@ -193,6 +242,176 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
       );
     }
   }
+
+  Future<void> disposeBleSession() async {
+    _bleSessionId += 1;
+    _targetHardwareSn = null;
+    _bleScanTimer?.cancel();
+    _bleScanTimer = null;
+    try {
+      await _gateway.stopBleScan(requestId: _nextBleRequestId('scan-stop'));
+    } catch (_) {
+      // Scanning may already be stopped by native code.
+    }
+    final deviceId = _activeBleDeviceId;
+    _activeBleDeviceId = null;
+    if (deviceId != null) {
+      try {
+        await _gateway.disconnectBleDevice(
+          requestId: _nextBleRequestId('disconnect'),
+          deviceId: deviceId,
+        );
+      } catch (_) {
+        // The page is leaving; no user-facing action is required.
+      }
+    }
+    if (ref.mounted) {
+      state = state.copyWith(
+        bleConnectionStatus: DeviceBleConnectionStatus.idle,
+        clearBleDeviceId: true,
+      );
+    }
+  }
+
+  Future<void> _startBleSession(String hardwareSn) async {
+    final sessionId = _bleSessionId;
+    _targetHardwareSn = hardwareSn;
+    state = state.copyWith(
+      bleConnectionStatus: DeviceBleConnectionStatus.scanning,
+      clearBleDeviceId: true,
+    );
+    try {
+      await _gateway.startBleScan(
+        requestId: _nextBleRequestId('scan'),
+        filter: BleScanFilter(exactName: hardwareSn),
+      );
+      if (!_isCurrentBleSession(sessionId)) {
+        return;
+      }
+      _bleScanTimer = Timer(_bleScanDuration, () {
+        unawaited(_stopBleScanAfterTimeout(sessionId));
+      });
+    } catch (_) {
+      if (_isCurrentBleSession(sessionId)) {
+        state = state.copyWith(
+          bleConnectionStatus: DeviceBleConnectionStatus.idle,
+        );
+      }
+    }
+  }
+
+  void _onBleDeviceFound(Object? event) {
+    if (event is! BleDevice ||
+        state.bleConnectionStatus != DeviceBleConnectionStatus.scanning) {
+      return;
+    }
+    final hardwareSn = _targetHardwareSn;
+    if (hardwareSn == null ||
+        (event.name?.trim() != hardwareSn && event.sn?.trim() != hardwareSn)) {
+      return;
+    }
+    final sessionId = _bleSessionId;
+    _targetHardwareSn = null;
+    _bleScanTimer?.cancel();
+    _bleScanTimer = null;
+    unawaited(_connectAndAuthenticate(event, hardwareSn, sessionId));
+  }
+
+  Future<void> _stopBleScanAfterTimeout(int sessionId) async {
+    if (!_isCurrentBleSession(sessionId) ||
+        state.bleConnectionStatus != DeviceBleConnectionStatus.scanning) {
+      return;
+    }
+    try {
+      await _gateway.stopBleScan(requestId: _nextBleRequestId('scan-timeout'));
+    } catch (_) {
+      // Timeout is intentionally silent.
+    }
+    if (_isCurrentBleSession(sessionId)) {
+      state = state.copyWith(
+        bleConnectionStatus: DeviceBleConnectionStatus.idle,
+      );
+    }
+  }
+
+  Future<void> _connectAndAuthenticate(
+    BleDevice device,
+    String hardwareSn,
+    int sessionId,
+  ) async {
+    try {
+      await _gateway.stopBleScan(requestId: _nextBleRequestId('scan-stop'));
+      if (!_isCurrentBleSession(sessionId)) {
+        return;
+      }
+      _activeBleDeviceId = device.id;
+      state = state.copyWith(
+        bleConnectionStatus: DeviceBleConnectionStatus.connecting,
+      );
+      final connection = await _gateway.connectBleDevice(
+        requestId: _nextBleRequestId('connect'),
+        deviceId: device.id,
+      );
+      if (!_isCurrentBleSession(sessionId) ||
+          connection.state != BleConnectionState.connected) {
+        await _failBleSession(sessionId);
+        return;
+      }
+      state = state.copyWith(
+        bleConnectionStatus: DeviceBleConnectionStatus.authenticating,
+      );
+      final deviceKey = await _fetchDeviceKeyUseCase(
+        sn: hardwareSn,
+        requestId: _nextBleRequestId('device-key'),
+      );
+      if (!_isCurrentBleSession(sessionId)) {
+        return;
+      }
+      final authenticated = await _gateway.authenticateBleDevice(
+        requestId: _nextBleRequestId('authenticate'),
+        deviceId: device.id,
+        token: buildBleAuthenticationToken(deviceKey.aesKey),
+        aesKey: deviceKey.aesKey,
+      );
+      if (!_isCurrentBleSession(sessionId) || !authenticated.authenticated) {
+        await _failBleSession(sessionId);
+        return;
+      }
+      state = state.copyWith(
+        bleConnectionStatus: DeviceBleConnectionStatus.connected,
+        bleDeviceId: device.id,
+      );
+    } catch (_) {
+      await _failBleSession(sessionId);
+    }
+  }
+
+  Future<void> _failBleSession(int sessionId) async {
+    if (!_isCurrentBleSession(sessionId)) {
+      return;
+    }
+    final deviceId = _activeBleDeviceId;
+    _activeBleDeviceId = null;
+    if (deviceId != null) {
+      try {
+        await _gateway.disconnectBleDevice(
+          requestId: _nextBleRequestId('disconnect'),
+          deviceId: deviceId,
+        );
+      } catch (_) {
+        // Connection failures are intentionally silent.
+      }
+    }
+    if (_isCurrentBleSession(sessionId)) {
+      state = state.copyWith(
+        bleConnectionStatus: DeviceBleConnectionStatus.idle,
+        clearBleDeviceId: true,
+      );
+    }
+  }
+
+  bool _isCurrentBleSession(int sessionId) =>
+      ref.mounted && sessionId == _bleSessionId;
 
   Future<void> runAction({
     required String deviceId,
@@ -436,6 +655,12 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
     _requestCounter += 1;
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     return 'device-command-${action.name}-$timestamp-$_requestCounter';
+  }
+
+  String _nextBleRequestId(String operation) {
+    _requestCounter += 1;
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    return 'device-detail-ble-$operation-$timestamp-$_requestCounter';
   }
 
   String _nextDoorDetailRequestId(String doorId) {

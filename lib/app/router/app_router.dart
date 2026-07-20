@@ -44,13 +44,14 @@ import '../../features/security_center/presentation/pages/general_evaluation_pag
 import '../../features/security_center/presentation/pages/safety_sensors_evaluation_page.dart';
 import '../../shared/webview/app_web_view_page.dart';
 import '../config/app_links.dart';
+import 'app_route_observer.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   ref.watch(authSessionProvider);
 
   return GoRouter(
     initialLocation: WelcomePage.routePath,
-    observers: kDebugMode ? [DebugNavigatorObserver()] : [],
+    observers: [appRouteObserver, if (kDebugMode) DebugNavigatorObserver()],
     redirect: (context, state) async {
       final session = await ref.read(authSessionProvider.future);
       final isSignedIn = session.isAuthenticated;

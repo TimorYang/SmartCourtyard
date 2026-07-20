@@ -1,5 +1,10 @@
 import 'dart:async';
 
+import 'package:flinx/features/add_device/application/providers.dart';
+import 'package:flinx/features/add_device/domain/entities/onboarding_device_key.dart';
+import 'package:flinx/features/add_device/domain/entities/onboarded_force_door.dart';
+import 'package:flinx/features/add_device/domain/repositories/add_device_onboarding_repository.dart';
+import 'package:flinx/features/add_device/domain/use_cases/fetch_onboarding_device_key_use_case.dart';
 import 'package:flinx/features/device_control/application/device_command_controller.dart';
 import 'package:flinx/features/device_control/domain/entities/door_detail.dart';
 import 'package:flinx/features/device_control/domain/repositories/door_detail_repository.dart';
@@ -36,7 +41,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(gateway.commands.last, DoorCommand.open);
-    expect(gateway.deviceIds.last, 'SN-001');
+    expect(gateway.deviceIds.last, 'mock-ble-device');
+    expect(gateway.authenticatedDeviceIds, ['mock-ble-device']);
     expect(find.text('开门指令已发送（0x1001）。'), findsOneWidget);
 
     await tester.tap(find.byTooltip('Stop'));
@@ -175,6 +181,9 @@ Widget _buildPage(MockHardwareGateway gateway) {
       doorDetailRepositoryProvider.overrideWithValue(
         const _FakeDoorDetailRepository(),
       ),
+      fetchOnboardingDeviceKeyUseCaseProvider.overrideWithValue(
+        const _FakeFetchOnboardingDeviceKeyUseCase(),
+      ),
     ],
     child: MaterialApp.router(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -219,6 +228,23 @@ class _RecordingHardwareGateway extends MockHardwareGateway {
   final List<DoorCommand> commands = <DoorCommand>[];
   final List<String> deviceIds = <String>[];
   int queryCount = 0;
+  final List<String> authenticatedDeviceIds = <String>[];
+
+  @override
+  Future<BleAuthenticationResult> authenticateBleDevice({
+    required String requestId,
+    required String deviceId,
+    required String token,
+    required String aesKey,
+  }) async {
+    authenticatedDeviceIds.add(deviceId);
+    return super.authenticateBleDevice(
+      requestId: requestId,
+      deviceId: deviceId,
+      token: token,
+      aesKey: aesKey,
+    );
+  }
 
   @override
   Future<CommandResult> sendDoorCommand({
@@ -242,6 +268,44 @@ class _RecordingHardwareGateway extends MockHardwareGateway {
   }) async {
     queryCount += 1;
     return super.queryRemotes(requestId: requestId, deviceId: deviceId);
+  }
+}
+
+class _FakeFetchOnboardingDeviceKeyUseCase
+    extends FetchOnboardingDeviceKeyUseCase {
+  const _FakeFetchOnboardingDeviceKeyUseCase()
+    : super(repository: const _UnusedDeviceKeyRepository());
+
+  @override
+  Future<OnboardingDeviceKey> call({
+    required String sn,
+    required String requestId,
+  }) async {
+    return OnboardingDeviceKey(
+      sn: sn,
+      aesKey: '0123456789abcdef0123456789abcdef',
+      aesKeyVersion: 'test',
+    );
+  }
+}
+
+class _UnusedDeviceKeyRepository implements AddDeviceOnboardingRepository {
+  const _UnusedDeviceKeyRepository();
+
+  @override
+  Future<OnboardedForceDoor> addForceDoor({
+    required String sn,
+    required String requestId,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<OnboardingDeviceKey> fetchDeviceKey({
+    required String sn,
+    required String requestId,
+  }) {
+    throw UnimplementedError();
   }
 }
 
