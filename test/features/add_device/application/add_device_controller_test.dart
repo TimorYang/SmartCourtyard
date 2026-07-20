@@ -1,4 +1,6 @@
 import 'package:flinx/features/add_device/application/providers.dart';
+import 'package:flinx/core/logging/app_logger.dart';
+import 'package:flinx/core/logging/providers.dart';
 import 'package:flinx/features/add_device/domain/entities/onboarded_force_door.dart';
 import 'package:flinx/features/add_device/domain/entities/onboarding_device_key.dart';
 import 'package:flinx/features/add_device/domain/repositories/add_device_onboarding_repository.dart';
@@ -50,6 +52,51 @@ void main() {
 
     expect(gateway.scanStarted, isTrue);
   });
+
+  test(
+    'uses one flow id across scan, authentication, provisioning and binding',
+    () async {
+      final gateway = _FlowTrackingGateway();
+      final logger = _RecordingLogger();
+      final container = ProviderContainer(
+        overrides: [
+          addDeviceHardwareGatewayProvider.overrideWithValue(gateway),
+          addDeviceOnboardingRepositoryProvider.overrideWithValue(
+            const _FakeAddDeviceOnboardingRepository(),
+          ),
+          appLoggerProvider.overrideWithValue(logger),
+        ],
+      );
+      addTearDown(container.dispose);
+      final controller = container.read(addDeviceControllerProvider.notifier);
+
+      await controller.startScan();
+      expect(await controller.connectAndAuthenticate(device), isTrue);
+      controller.updateWifiSsid('test-network');
+      controller.updateWifiPassword('never-log-this');
+      expect(await controller.configureWifi(), isTrue);
+
+      final flowId = container
+          .read(addDeviceControllerProvider)
+          .onboardingFlowId;
+      expect(flowId, isNotNull);
+      expect(gateway.requestIds, everyElement(startsWith('$flowId:')));
+      expect(
+        logger.events,
+        containsAllInOrder([
+          'onboarding_flow_started',
+          'ble_scan_started',
+          'ble_connect_started',
+          'device_key_fetch_started',
+          'ble_authentication_started',
+          'wifi_provision_started',
+          'cloud_binding_started',
+          'cloud_binding_completed',
+        ]),
+      );
+      expect(logger.tags, everyElement(AppLogTag.binding));
+    },
+  );
 }
 
 ProviderContainer _createContainer(_DisconnectTrackingGateway gateway) {
@@ -89,6 +136,100 @@ class _DisconnectTrackingGateway extends MockHardwareGateway {
     }
     return super.disconnectBleDevice(requestId: requestId, deviceId: deviceId);
   }
+}
+
+class _FlowTrackingGateway extends MockHardwareGateway {
+  final List<String> requestIds = <String>[];
+
+  @override
+  Future<void> startBleScan({
+    required String requestId,
+    BleScanFilter filter = const BleScanFilter(),
+  }) async {
+    requestIds.add(requestId);
+  }
+
+  @override
+  Future<BleConnectionEvent> connectBleDevice({
+    required String requestId,
+    required String deviceId,
+  }) {
+    requestIds.add(requestId);
+    return super.connectBleDevice(requestId: requestId, deviceId: deviceId);
+  }
+
+  @override
+  Future<BleAuthenticationResult> authenticateBleDevice({
+    required String requestId,
+    required String deviceId,
+    required String token,
+    required String aesKey,
+    required String aesKeyVersion,
+  }) {
+    requestIds.add(requestId);
+    return super.authenticateBleDevice(
+      requestId: requestId,
+      deviceId: deviceId,
+      token: token,
+      aesKey: aesKey,
+      aesKeyVersion: aesKeyVersion,
+    );
+  }
+
+  @override
+  Future<WifiProvisionResult> configureWifi({
+    required String requestId,
+    required String deviceId,
+    required String ssid,
+    required String password,
+  }) {
+    requestIds.add(requestId);
+    return super.configureWifi(
+      requestId: requestId,
+      deviceId: deviceId,
+      ssid: ssid,
+      password: password,
+    );
+  }
+}
+
+class _RecordingLogger implements AppLogger {
+  final List<String> events = <String>[];
+  final List<AppLogTag> tags = <AppLogTag>[];
+
+  void _record(String message, AppLogTag tag) {
+    events.add(message);
+    tags.add(tag);
+  }
+
+  @override
+  void info(
+    String message, {
+    AppLogTag tag = AppLogTag.general,
+    String? flowId,
+    String? requestId,
+    Map<String, Object?> context = const {},
+  }) => _record(message, tag);
+
+  @override
+  void warning(
+    String message, {
+    AppLogTag tag = AppLogTag.general,
+    String? flowId,
+    String? requestId,
+    Map<String, Object?> context = const {},
+  }) => _record(message, tag);
+
+  @override
+  void error(
+    String message, {
+    AppLogTag tag = AppLogTag.general,
+    String? flowId,
+    String? requestId,
+    Object? error,
+    StackTrace? stackTrace,
+    Map<String, Object?> context = const {},
+  }) => _record(message, tag);
 }
 
 class _FakeAddDeviceOnboardingRepository

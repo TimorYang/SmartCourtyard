@@ -17,6 +17,10 @@ final class HardwareBridge: HardwareHostApi {
         self.flutterApi = HardwareFlutterApi(binaryMessenger: binaryMessenger)
         self.bleManager.delegate = self
     }
+
+    func setDetailedHardwareLogging(enabled: Bool) throws {
+        logger.setDetailedLogging(enabled: enabled)
+    }
     
     func getPermissionSnapshot() throws -> PermissionSnapshotDto {
         PermissionSnapshotDto(
@@ -57,9 +61,16 @@ final class HardwareBridge: HardwareHostApi {
         deviceId: String,
         token: String,
         aesKey: String,
+        aesKeyVersion: String,
         completion: @escaping (Result<BleAuthenticationResultDto, Error>) -> Void
     ) {
-        logger.info("ble_authenticate", requestId: requestId, deviceId: deviceId, state: "started")
+        logger.info(
+            "ble_authenticate",
+            requestId: requestId,
+            deviceId: deviceId,
+            state: "started",
+            details: "onboardingFlowId=\(Self.flowId(from: requestId)) aesKeySource=server aesKeyVersion=\(aesKeyVersion)"
+        )
         let normalizedToken = token.trimmingCharacters(in: .whitespacesAndNewlines)
         guard normalizedToken.count == 32,
               let tokenBytes = Data(hexString: normalizedToken),
@@ -371,7 +382,7 @@ final class HardwareBridge: HardwareHostApi {
             deviceId: deviceId,
             state: "sending",
             payloadBytes: frame.count,
-            details: "command=\(DoorControlCommand.hexCode) control=\(DoorControlCommand.hex(control)) sequence=\(DoorControlCommand.hex(sequence)) frame=\(Self.hexString(frame))"
+            details: "command=\(DoorControlCommand.hexCode) control=\(DoorControlCommand.hex(control)) sequence=\(DoorControlCommand.hex(sequence)) frame=\(logger.payloadHex(frame))"
         )
         bleManager.writeCharacteristic(
             requestId: requestId,
@@ -681,6 +692,36 @@ final class HardwareBridge: HardwareHostApi {
     }
 }
 
+extension HardwareBridge {
+    static func makeEncryptedFrameForTesting(
+        sequence: UInt16,
+        command: UInt16,
+        payload: Data,
+        aesKey: Data
+    ) -> Data? {
+        makeFrame(
+            sequence: sequence,
+            command: command,
+            payload: payload,
+            encrypted: true,
+            aesKey: aesKey
+        )
+    }
+
+    static func decryptEcbForTesting(_ encrypted: Data, aesKey: Data) -> Data? {
+        decryptAes128(encrypted, key: aesKey, mode: .ecb)
+    }
+
+    static func parseDecryptedPayloadForTesting(
+        _ plaintext: Data
+    ) -> (sequence: UInt16, command: UInt16, data: Data)? {
+        guard let frame = parseDecryptedPayload(plaintext, crypto: 0x01) else {
+            return nil
+        }
+        return (frame.sequence, frame.command, frame.data)
+    }
+}
+
 extension HardwareBridge: BleManagerDelegate {
     func bleManager(_ manager: BleManager, didDiscover device: BleDiscoveredDevice) {
         flutterApi.onBleScanResult(device: device.toDto()) { _ in }
@@ -856,7 +897,7 @@ private extension HardwareBridge {
             deviceId: deviceId,
             state: "sending",
             payloadBytes: frame.count,
-            details: "command=\(command.hexCode) commandDecimal=\(command.rawValue) sequence=\(sequence) crypto=\(encryptRequest ? 1 : 0) payloadBytes=\(payload.count) frame=\(Self.hexString(frame))"
+            details: "command=\(command.hexCode) commandDecimal=\(command.rawValue) sequence=\(sequence) crypto=\(encryptRequest ? 1 : 0) payloadBytes=\(payload.count) frame=\(logger.payloadHex(frame, sensitive: command == .configureWifi))"
         )
         bleManager.writeCharacteristic(
             requestId: requestId,
@@ -940,18 +981,25 @@ private extension HardwareBridge {
                     )
                     parsedFrames.append(decryptedFrame)
                 } else {
+                    let pendingCommand = pendingProvisioningRequests[notification.deviceId]?.command
+                    let failureCode = pendingCommand == .authenticate
+                        ? "authentication_decrypt_failed"
+                        : "encrypted_provisioning_frame_decrypt_failed"
                     logger.warning(
                         "provisioning_frame",
                         requestId: notification.requestId,
                         deviceId: notification.deviceId,
                         state: "decrypt_failed",
+                        nativeCode: failureCode,
                         payloadBytes: frame.encryptedPayload.count,
-                        details: "crypto=\(frame.crypto) encryptedBytes=\(frame.encryptedPayload.count) remainingBytes=\(remainingBuffer.count)"
+                        details: "crypto=\(frame.crypto) encryptedBytes=\(frame.encryptedPayload.count) rawHex=\(logger.payloadHex(frame.encryptedPayload)) remainingBytes=\(remainingBuffer.count)"
                     )
                     failPendingProvisioningRequest(
                         deviceId: notification.deviceId,
-                        code: "encrypted_provisioning_frame_decrypt_failed",
-                        message: "Received encrypted BLE provisioning frame, but AES128 decrypt did not match the pending command."
+                        code: failureCode,
+                        message: pendingCommand == .authenticate
+                            ? "BLE authentication response could not be decrypted with the server AES key."
+                            : "Received encrypted BLE provisioning frame, but AES128 decrypt did not match the pending command."
                     )
                 }
                 buffer = remainingBuffer
@@ -1053,7 +1101,7 @@ private extension HardwareBridge {
                 deviceId: deviceId,
                 state: "candidate",
                 payloadBytes: plaintext.count,
-                details: "mode=\(mode.name) plaintext=\(Self.hexString(plaintext))"
+                details: "mode=\(mode.name) plainHex=\(logger.payloadHex(plaintext))"
             )
             guard let decryptedFrame = Self.parseDecryptedPayload(plaintext, crypto: frame.crypto) else {
                 continue
@@ -1065,7 +1113,7 @@ private extension HardwareBridge {
                     state: "success_unsolicited",
                     details: "mode=\(mode.name) type=\(decryptedFrame.type) sequence=\(decryptedFrame.sequence) command=\(decryptedFrame.command)"
                 )
-                return decryptedFrame
+                continue
             }
             guard decryptedFrame.type == 0x04,
                   decryptedFrame.command == pending.command.rawValue,
@@ -1108,6 +1156,11 @@ private extension HardwareBridge {
             && characteristicUuids.contains(BleProvisioningCommand.notifyCharacteristicUuid)
         }
     }
+
+    static func flowId(from requestId: String) -> String {
+        requestId.split(separator: ":", maxSplits: 1).first.map(String.init) ?? "-"
+    }
+
     
     static func makeWifiProvisionPayload(ssid: String, password: String) throws -> Data {
         let jsonObject: [String: String] = ["ssid": ssid, "pwd": password]

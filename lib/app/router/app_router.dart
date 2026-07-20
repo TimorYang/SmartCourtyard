@@ -17,6 +17,7 @@ import '../../features/add_device/presentation/pages/wifi_configuration_page.dar
 import '../../features/auth/application/providers.dart';
 import '../../features/account/presentation/pages/account_details_page.dart';
 import '../../features/account/presentation/pages/account_profile_page.dart';
+import '../../features/account/presentation/pages/hardware_diagnostics_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_code_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_reset_page.dart';
@@ -161,6 +162,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const AccountProfilePage(),
       ),
       GoRoute(
+        path: HardwareDiagnosticsPage.routePath,
+        name: HardwareDiagnosticsPage.routeName,
+        builder: (context, state) => const HardwareDiagnosticsPage(),
+      ),
+      GoRoute(
         path: NotificationListPage.routePath,
         name: NotificationListPage.routeName,
         builder: (context, state) => const NotificationListPage(),
@@ -265,6 +271,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               state.uri.queryParameters['deviceId'] ??
               '',
           deviceId: state.uri.queryParameters['deviceId'] ?? '',
+          onboardingFlowId: state.uri.queryParameters['onboardingFlowId'],
         ),
       ),
       GoRoute(

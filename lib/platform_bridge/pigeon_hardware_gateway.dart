@@ -31,6 +31,14 @@ class PigeonHardwareGateway implements HardwareGateway {
   Stream<NativeHardwareError> get nativeErrors => _flutterApi.nativeErrors;
 
   @override
+  Future<void> setDetailedHardwareLogging({required bool enabled}) {
+    return _mapPigeonCall(
+      () => _hostApi.setDetailedHardwareLogging(enabled),
+      requestId: 'hardware-logging-${enabled ? 'enable' : 'disable'}',
+    );
+  }
+
+  @override
   Future<PermissionSnapshot> getPermissionSnapshot() async {
     final dto = await _mapPigeonCall(
       () => _hostApi.getPermissionSnapshot(),
@@ -95,9 +103,16 @@ class PigeonHardwareGateway implements HardwareGateway {
     required String deviceId,
     required String token,
     required String aesKey,
+    required String aesKeyVersion,
   }) async {
     final dto = await _mapPigeonCall(
-      () => _hostApi.authenticateBleDevice(requestId, deviceId, token, aesKey),
+      () => _hostApi.authenticateBleDevice(
+        requestId,
+        deviceId,
+        token,
+        aesKey,
+        aesKeyVersion,
+      ),
       requestId: requestId,
       deviceId: deviceId,
     );
@@ -735,6 +750,10 @@ AppError _platformExceptionToAppError(
       AppErrorCode.provisioningFailed,
     'encrypted_provisioning_frame_decrypt_failed' =>
       AppErrorCode.provisioningFailed,
+    'authentication_decrypt_failed' => AppErrorCode.pairingFailed,
+    'authentication_failed' => AppErrorCode.pairingFailed,
+    'invalid_aes_key' => AppErrorCode.pairingFailed,
+    'missing_aes_key' => AppErrorCode.pairingFailed,
     'invalid_auth_response' => AppErrorCode.pairingFailed,
     'invalid_wifi_scan_response' => AppErrorCode.provisioningFailed,
     'invalid_wifi_provision_response' => AppErrorCode.provisioningFailed,

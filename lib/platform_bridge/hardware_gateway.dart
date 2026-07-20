@@ -11,6 +11,8 @@ abstract interface class HardwareGateway {
 
   Stream<NativeHardwareError> get nativeErrors;
 
+  Future<void> setDetailedHardwareLogging({required bool enabled});
+
   Future<PermissionSnapshot> getPermissionSnapshot();
 
   Future<PermissionSnapshot> requestPermissions({
@@ -36,6 +38,7 @@ abstract interface class HardwareGateway {
     required String deviceId,
     required String token,
     required String aesKey,
+    required String aesKeyVersion,
   });
 
   Future<WifiScanResult> scanWifiNetworks({

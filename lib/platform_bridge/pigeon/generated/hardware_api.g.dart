@@ -1470,6 +1470,24 @@ class HardwareHostApi {
 
   final String pigeonVar_messageChannelSuffix;
 
+  Future<void> setDetailedHardwareLogging(bool enabled) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.setDetailedHardwareLogging$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[enabled]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
   Future<PermissionSnapshotDto> getPermissionSnapshot() async {
     final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.getPermissionSnapshot$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -1563,14 +1581,14 @@ class HardwareHostApi {
     return pigeonVar_replyValue! as BleConnectionEventDto;
   }
 
-  Future<BleAuthenticationResultDto> authenticateBleDevice(String requestId, String deviceId, String token, String aesKey) async {
+  Future<BleAuthenticationResultDto> authenticateBleDevice(String requestId, String deviceId, String token, String aesKey, String aesKeyVersion) async {
     final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.authenticateBleDevice$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[requestId, deviceId, token, aesKey]);
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[requestId, deviceId, token, aesKey, aesKeyVersion]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(

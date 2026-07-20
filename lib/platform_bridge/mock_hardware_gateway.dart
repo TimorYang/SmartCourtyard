@@ -16,6 +16,7 @@ class MockHardwareGateway implements HardwareGateway {
   final StreamController<BleConnectionEvent> _connectionController;
   final StreamController<BleNotification> _notificationController;
   final StreamController<NativeHardwareError> _nativeErrorController;
+  bool detailedHardwareLoggingEnabled = false;
 
   @override
   Stream<BleDevice> get bleScanResults => _scanController.stream;
@@ -30,6 +31,11 @@ class MockHardwareGateway implements HardwareGateway {
 
   @override
   Stream<NativeHardwareError> get nativeErrors => _nativeErrorController.stream;
+
+  @override
+  Future<void> setDetailedHardwareLogging({required bool enabled}) async {
+    detailedHardwareLoggingEnabled = enabled;
+  }
 
   @override
   Future<PermissionSnapshot> getPermissionSnapshot() async {
@@ -102,6 +108,7 @@ class MockHardwareGateway implements HardwareGateway {
     required String deviceId,
     required String token,
     required String aesKey,
+    required String aesKeyVersion,
   }) async {
     return BleAuthenticationResult(
       requestId: requestId,

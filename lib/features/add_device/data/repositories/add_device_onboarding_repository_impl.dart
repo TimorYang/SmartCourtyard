@@ -29,6 +29,8 @@ class AddDeviceOnboardingRepositoryImpl
       );
       logger.info(
         'Fetched onboarding device key.',
+        tag: AppLogTag.binding,
+        flowId: _flowId(requestId),
         requestId: requestId,
         context: {'sn': sn, 'aesKeyVersion': data.aesKeyVersion},
       );
@@ -36,6 +38,8 @@ class AddDeviceOnboardingRepositoryImpl
     } on AddDeviceOnboardingRemoteException catch (error, stackTrace) {
       logger.error(
         'Failed to fetch onboarding device key.',
+        tag: AppLogTag.binding,
+        flowId: _flowId(requestId),
         requestId: requestId,
         error: error,
         stackTrace: stackTrace,
@@ -57,6 +61,8 @@ class AddDeviceOnboardingRepositoryImpl
       );
       logger.info(
         'Added force door after onboarding.',
+        tag: AppLogTag.binding,
+        flowId: _flowId(requestId),
         requestId: requestId,
         context: {'sn': sn, 'doorId': data.id},
       );
@@ -64,6 +70,8 @@ class AddDeviceOnboardingRepositoryImpl
     } on AddDeviceOnboardingRemoteException catch (error, stackTrace) {
       logger.error(
         'Failed to add force door after onboarding.',
+        tag: AppLogTag.binding,
+        flowId: _flowId(requestId),
         requestId: requestId,
         error: error,
         stackTrace: stackTrace,
@@ -104,6 +112,8 @@ class AddDeviceOnboardingRepositoryImpl
       _ => null,
     };
   }
+
+  String _flowId(String requestId) => requestId.split(':').first;
 }
 
 extension OnboardingDeviceKeyResponseDtoMapper

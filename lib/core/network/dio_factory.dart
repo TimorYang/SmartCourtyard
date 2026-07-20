@@ -9,6 +9,8 @@ import 'network_proxy_adapter.dart';
 
 abstract final class NetworkRequestExtras {
   static const requestId = 'requestId';
+  static const logTag = 'logTag';
+  static const flowId = 'flowId';
 }
 
 abstract final class NetworkHeaders {
@@ -88,6 +90,8 @@ class _SafeNetworkLogInterceptor extends Interceptor {
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     _logger.info(
       'HTTP request started.',
+      tag: _logTag(options),
+      flowId: _flowId(options),
       requestId: _requestId(options),
       context: {'method': options.method, 'path': options.path},
     );
@@ -101,6 +105,8 @@ class _SafeNetworkLogInterceptor extends Interceptor {
   ) {
     _logger.info(
       'HTTP request completed.',
+      tag: _logTag(response.requestOptions),
+      flowId: _flowId(response.requestOptions),
       requestId: _requestId(response.requestOptions),
       context: {
         'method': response.requestOptions.method,
@@ -122,6 +128,8 @@ class _SafeNetworkLogInterceptor extends Interceptor {
     }
     _logger.warning(
       'HTTP request failed.',
+      tag: _logTag(error.requestOptions),
+      flowId: _flowId(error.requestOptions),
       requestId: _requestId(error.requestOptions),
       context: {
         'method': error.requestOptions.method,
@@ -137,5 +145,15 @@ class _SafeNetworkLogInterceptor extends Interceptor {
   String? _requestId(RequestOptions options) {
     final value = options.extra[NetworkRequestExtras.requestId];
     return value is String && value.isNotEmpty ? value : null;
+  }
+
+  String? _flowId(RequestOptions options) {
+    final value = options.extra[NetworkRequestExtras.flowId];
+    return value is String && value.isNotEmpty ? value : null;
+  }
+
+  AppLogTag _logTag(RequestOptions options) {
+    final value = options.extra[NetworkRequestExtras.logTag];
+    return value is AppLogTag ? value : AppLogTag.general;
   }
 }

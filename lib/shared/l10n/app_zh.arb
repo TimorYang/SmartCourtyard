@@ -363,5 +363,9 @@
   "transmitterLearningRemoteInstruction": "请使用遥控器进行尝试",
   "transmitterLearningStartAction": "开始学习",
   "transmitterLearningRestartAction": "重新开始",
-  "transmitterLearningCompleteAction": "完成"
+  "transmitterLearningCompleteAction": "完成",
+  "hardwareDiagnosticsTitle": "硬件诊断",
+  "hardwareDiagnosticsDetailedLogging": "详细硬件诊断日志",
+  "hardwareDiagnosticsWarning": "开启后会在系统控制台输出蓝牙原始帧和解密后的协议数据，便于现场排查。AES Key、Token、Wi-Fi 密码等敏感信息始终不会记录。",
+  "hardwareDiagnosticsUpdateFailed": "诊断日志设置更新失败，请重试。"
 }

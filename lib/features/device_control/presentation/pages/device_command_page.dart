@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
+import '../../../../core/logging/app_logger.dart';
+import '../../../../core/logging/providers.dart';
 import '../../../../shared/widgets/flinx_switch.dart';
 import '../../../records/presentation/pages/operation_record_page.dart';
 import '../../../security_center/presentation/pages/security_center_page.dart';
@@ -17,6 +19,7 @@ class DeviceCommandPage extends ConsumerStatefulWidget {
   const DeviceCommandPage({
     required this.doorId,
     this.deviceId = '',
+    this.onboardingFlowId,
     super.key,
   });
 
@@ -25,6 +28,7 @@ class DeviceCommandPage extends ConsumerStatefulWidget {
 
   final String doorId;
   final String deviceId;
+  final String? onboardingFlowId;
 
   @override
   ConsumerState<DeviceCommandPage> createState() => _DeviceCommandPageState();
@@ -46,6 +50,22 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
   void initState() {
     super.initState();
     _controller = ref.read(deviceCommandControllerProvider.notifier);
+    final flowId = widget.onboardingFlowId?.trim();
+    if (flowId != null && flowId.isNotEmpty) {
+      ref
+          .read(appLoggerProvider)
+          .info(
+            'device_detail_entered',
+            tag: AppLogTag.binding,
+            flowId: flowId,
+            context: {
+              'deviceId': widget.deviceId,
+              'doorId': widget.doorId,
+              'stage': 'device_detail',
+              'result': 'entered',
+            },
+          );
+    }
     Future.microtask(_loadDoorDetail);
   }
 
