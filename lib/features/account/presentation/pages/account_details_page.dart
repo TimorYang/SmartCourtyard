@@ -37,14 +37,23 @@ class AccountDetailsPage extends ConsumerWidget {
                 profile: profile,
                 maxHeight: constraints.maxHeight,
                 onLogout: () async {
-                  ref.read(activeAuthSessionProvider.notifier).clear();
+                  final authSessionController = ref.read(
+                    activeAuthSessionProvider.notifier,
+                  );
+                  final accountController = ref.read(
+                    accountControllerProvider.notifier,
+                  );
+
                   ref.invalidate(homeScenesProvider);
                   ref.invalidate(homeDevicesProvider);
                   ref.invalidate(cachedAccountProfileProvider);
-                  await ref
-                      .read(accountControllerProvider.notifier)
-                      .clearAccount();
                   ref.invalidate(authSessionProvider);
+
+                  await accountController.clearAccount();
+
+                  // Clearing the active session redirects away from this page and
+                  // disposes its WidgetRef. Do it only after all ref work is done.
+                  authSessionController.clear();
                   if (!context.mounted) {
                     return;
                   }
