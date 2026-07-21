@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flinx/features/home/presentation/pages/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../core/logging/app_logger.dart';
 import '../../../../core/logging/providers.dart';
+import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../../../shared/widgets/flinx_switch.dart';
 import '../../../records/presentation/pages/operation_record_page.dart';
 import '../../../security_center/presentation/pages/security_center_page.dart';
@@ -148,27 +148,10 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     final hardwareDeviceId = _hardwareDeviceId(commandState);
     return Scaffold(
       backgroundColor: AppColors.backgroundPrimary,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        backgroundColor: AppColors.backgroundPrimary,
-        centerTitle: true,
-        elevation: 0,
-        leadingWidth: 44,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          tooltip: 'Back',
-          onPressed: () => context.go(HomePage.routePath),
-          icon: const Icon(Icons.chevron_left, size: 28),
-        ),
-        title: Text(
-          doorDetail?.name ?? 'Garage door',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: AppColors.textPrimary,
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+      appBar: FlinxNavigationBar(
+        title: doorDetail?.name ?? 'Garage door',
+        showBottomDivider: false,
+        foregroundColor: AppColors.textPrimary,
         actions: [
           IconButton(
             tooltip: 'More',
