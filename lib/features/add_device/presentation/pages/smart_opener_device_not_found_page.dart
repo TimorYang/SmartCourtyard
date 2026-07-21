@@ -55,7 +55,13 @@ class SmartOpenerDeviceNotFoundPage extends StatelessWidget {
                 SizedBox(height: constraints.maxHeight < 660 ? 48 : 78),
                 _SmartOpenerWideButton(
                   label: l10n.smartOpenerRescanAction,
-                  onPressed: () => context.go(SmartOpenerBleScanPage.routePath),
+                  onPressed: () {
+                    if (context.canPop()) {
+                      context.pop(true);
+                      return;
+                    }
+                    context.go(SmartOpenerBleScanPage.routePath);
+                  },
                 ),
                 const SizedBox(height: 19),
                 _SmartOpenerWideButton(

@@ -133,11 +133,20 @@ class _SmartOpenerBleScanPageState extends ConsumerState<SmartOpenerBleScanPage>
       return;
     }
     final devices = ref.read(addDeviceControllerProvider).sortedDevices();
-    context.go(
-      devices.isEmpty
-          ? SmartOpenerDeviceNotFoundPage.routePath
-          : SmartOpenerScanResultsPage.routePath,
-    );
+    if (devices.isEmpty) {
+      final shouldRescan = await context.push<bool>(
+        SmartOpenerDeviceNotFoundPage.routePath,
+      );
+      if (shouldRescan == true && mounted) {
+        setState(() {
+          _hasCompletedScan = false;
+          _isConnectingTarget = false;
+        });
+        await _prepareAndStartTimedScan();
+      }
+      return;
+    }
+    context.push(SmartOpenerScanResultsPage.routePath);
   }
 
   Future<void> _addDevice(BleDevice device) async {
