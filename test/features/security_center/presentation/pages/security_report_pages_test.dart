@@ -8,6 +8,7 @@ import 'package:flinx/features/security_center/presentation/pages/safety_sensors
 import 'package:flinx/features/security_center/presentation/widgets/security_report_widgets.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
@@ -18,6 +19,14 @@ void main() {
     final router = _buildRouter();
     await _pumpRouter(tester, router);
 
+    await tester.tap(find.text('General Evaluation'));
+    await tester.pumpAndSettle();
+    expect(find.text('General Evaluation'), findsOneWidget);
+
+    await tester.tap(find.byType(BackButtonIcon));
+    await tester.pumpAndSettle();
+    expect(find.text('Security Center'), findsOneWidget);
+
     await tester.tap(find.text('Download the full report'));
     await tester.pumpAndSettle();
 
@@ -26,7 +35,7 @@ void main() {
 
     await tester.tap(find.byType(BackButtonIcon));
     await tester.pumpAndSettle();
-    expect(find.text('Security center'), findsOneWidget);
+    expect(find.text('Security Center'), findsOneWidget);
 
     final safetyCard = find.byKey(
       const ValueKey<String>('safety-sensors-evaluation-card'),
@@ -44,19 +53,7 @@ void main() {
 
     await tester.tap(find.byType(BackButtonIcon));
     await tester.pumpAndSettle();
-    expect(find.text('Security center'), findsOneWidget);
-
-    final generalEvaluation = find.text('General Evaluation');
-    await tester.ensureVisible(generalEvaluation);
-    await tester.pumpAndSettle();
-    await tester.tap(generalEvaluation);
-    await tester.pumpAndSettle();
-
-    expect(find.text('General Evaluation'), findsOneWidget);
-
-    await tester.tap(find.byType(BackButtonIcon));
-    await tester.pumpAndSettle();
-    expect(find.text('Security center'), findsOneWidget);
+    expect(find.text('Security Center'), findsOneWidget);
   });
 
   testWidgets('general evaluation segments switch displayed data', (
@@ -345,10 +342,12 @@ Future<void> _pumpRouter(WidgetTester tester, GoRouter router) async {
   addTearDown(router.dispose);
 
   await tester.pumpWidget(
-    MaterialApp.router(
-      routerConfig: router,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
+    ProviderScope(
+      child: MaterialApp.router(
+        routerConfig: router,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+      ),
     ),
   );
   await tester.pumpAndSettle();

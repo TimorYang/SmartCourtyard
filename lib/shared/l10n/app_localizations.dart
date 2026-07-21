@@ -2167,6 +2167,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to update diagnostic logging. Please try again.'**
   String get hardwareDiagnosticsUpdateFailed;
+
+  /// No description provided for @securityCenterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Security Center'**
+  String get securityCenterTitle;
+
+  /// No description provided for @securityCenterProtecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Protecting...'**
+  String get securityCenterProtecting;
+
+  /// No description provided for @securityCenterDownloadFullReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Download the full report'**
+  String get securityCenterDownloadFullReport;
+
+  /// No description provided for @securityCenterGeneralEvaluation.
+  ///
+  /// In en, this message translates to:
+  /// **'General Evaluation'**
+  String get securityCenterGeneralEvaluation;
+
+  /// No description provided for @securityCenterDoorOperationStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Door Operation Status'**
+  String get securityCenterDoorOperationStatus;
+
+  /// No description provided for @securityCenterDoorOperationRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Door Operation Record'**
+  String get securityCenterDoorOperationRecord;
+
+  /// No description provided for @securityCenterSafetySensorsEvaluation.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety Sensors Evaluation'**
+  String get securityCenterSafetySensorsEvaluation;
+
+  /// No description provided for @securityCenterWirelessPhotoBeam.
+  ///
+  /// In en, this message translates to:
+  /// **'Wireless Photo Beam'**
+  String get securityCenterWirelessPhotoBeam;
+
+  /// No description provided for @securityCenterWirelessELock.
+  ///
+  /// In en, this message translates to:
+  /// **'Wireless E-lock'**
+  String get securityCenterWirelessELock;
+
+  /// No description provided for @securityCenterWirelessSensors.
+  ///
+  /// In en, this message translates to:
+  /// **'Wireless Sensors'**
+  String get securityCenterWirelessSensors;
+
+  /// No description provided for @securityCenterWiredSensors.
+  ///
+  /// In en, this message translates to:
+  /// **'Wired Sensors'**
+  String get securityCenterWiredSensors;
+
+  /// No description provided for @securityCenterPhotoBeam.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo beam'**
+  String get securityCenterPhotoBeam;
+
+  /// No description provided for @securityCenterELock.
+  ///
+  /// In en, this message translates to:
+  /// **'E-lock'**
+  String get securityCenterELock;
+
+  /// No description provided for @securityCenterDoorSensor.
+  ///
+  /// In en, this message translates to:
+  /// **'Door sensor'**
+  String get securityCenterDoorSensor;
+
+  /// No description provided for @securityCenterRadar.
+  ///
+  /// In en, this message translates to:
+  /// **'Radar'**
+  String get securityCenterRadar;
+
+  /// No description provided for @securityCenterRemote.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote'**
+  String get securityCenterRemote;
+
+  /// No description provided for @securityCenterSafetyEdge.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety edge'**
+  String get securityCenterSafetyEdge;
+
+  /// No description provided for @securityCenterWiredPhotoBeam.
+  ///
+  /// In en, this message translates to:
+  /// **'Wired photo beam'**
+  String get securityCenterWiredPhotoBeam;
+
+  /// No description provided for @securityCenterWiredELock.
+  ///
+  /// In en, this message translates to:
+  /// **'Wired E-lock'**
+  String get securityCenterWiredELock;
 }
 
 class _AppLocalizationsDelegate

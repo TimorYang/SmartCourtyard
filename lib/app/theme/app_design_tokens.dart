@@ -77,10 +77,12 @@ class AppColors {
   static const securityCenterCard = Color(0xFFFFFFFF);
   static const securityCenterTag = Color(0xFFF7F7F8);
   static const securityCenterSuccess = Color(0xFF19C966);
+  static const securityCenterError = Color(0xFFE52323);
   static const securityCenterLink = Color(0xFF0878D8);
   static const securityCenterShield = Color(0xFF0878ED);
   static const securityCenterSensorSurface = Color(0xFFE9EBEE);
   static const securityCenterSensorIcon = Color(0xFF60646A);
+  static const securityCenterSensorUnavailable = Color(0xFFBFC1C5);
   static const securityReportHeroBlue = Color(0xFF2478F5);
   static const securityReportHeroFade = Color(0xFFDCE9FF);
   static const securityReportWarning = Color(0xFFFF9800);
@@ -127,6 +129,7 @@ class AppColors {
   static const textAuthBody = Color(0xFF555A62);
   static const textRegisterAgreement = Color(0xFF707070);
   static const textRegisterLink = Color(0xFF0D6EFF);
+  static const textRegisterLink0066FF = Color(0xFF0066FF);
   static const textProviderDark = Color(0xFF2D2D2D);
   static const textCodeResend = Color(0xFF7DAEFF);
   static const textCodeResendDisabled = Color(0xFFC0C0C3);
@@ -981,7 +984,7 @@ class AppTextTokens {
 
   static TextStyle securityCenterHeroTitle2(TextTheme textTheme) {
     return (textTheme.headlineLarge ?? const TextStyle()).copyWith(
-      color: AppColors.textRegisterLink,
+      color: AppColors.textRegisterLink0066FF,
       fontSize: 13,
       fontWeight: FontWeight.w400,
       height: 1.1,
@@ -992,7 +995,7 @@ class AppTextTokens {
     return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
       fontSize: 15,
-      fontWeight: FontWeight.w600,
+      fontWeight: FontWeight.w400,
       height: 1.15,
     );
   }
@@ -1001,7 +1004,7 @@ class AppTextTokens {
     return (textTheme.titleLarge ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
       fontSize: 13,
-      fontWeight: FontWeight.w600,
+      fontWeight: FontWeight.w400,
     );
   }
 

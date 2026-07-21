@@ -242,6 +242,15 @@ This is a hard requirement for all UI styling work:
 - Prefer semantic names such as `authPrimaryButtonColor`, `loginTitleStyle`, `inputBorderColor`, or `surfaceBackground` over raw design-only names that are hard to reuse.
 - Do not introduce new repeated visual constants directly inside page widgets when they can live in the shared theme or token layer.
 
+## UI Localization Rule
+
+This is a hard requirement for all UI implementation work:
+
+- Put every user-facing string, including page titles, buttons, labels, empty/error states, dialogs, tooltips, and accessibility labels, in `lib/shared/l10n/app_en.arb` and `lib/shared/l10n/app_zh.arb`.
+- Read UI copy through `AppLocalizations.of(context)`; do not introduce or retain user-facing string literals in pages or widgets.
+- Add descriptive, feature-prefixed localization keys and regenerate localization outputs after changing ARB files. Do not manually edit generated localization Dart files.
+- Keep both English and Chinese translations current in the same change. Use literals only for non-user-visible implementation details such as asset paths, route names, storage keys, and test fixtures.
+
 ## Native Bridge Rules
 
 Long-term hardware APIs should be defined with Pigeon.

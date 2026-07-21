@@ -1158,4 +1158,62 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get hardwareDiagnosticsUpdateFailed =>
       'Failed to update diagnostic logging. Please try again.';
+
+  @override
+  String get securityCenterTitle => 'Security Center';
+
+  @override
+  String get securityCenterProtecting => 'Protecting...';
+
+  @override
+  String get securityCenterDownloadFullReport => 'Download the full report';
+
+  @override
+  String get securityCenterGeneralEvaluation => 'General Evaluation';
+
+  @override
+  String get securityCenterDoorOperationStatus => 'Door Operation Status';
+
+  @override
+  String get securityCenterDoorOperationRecord => 'Door Operation Record';
+
+  @override
+  String get securityCenterSafetySensorsEvaluation =>
+      'Safety Sensors Evaluation';
+
+  @override
+  String get securityCenterWirelessPhotoBeam => 'Wireless Photo Beam';
+
+  @override
+  String get securityCenterWirelessELock => 'Wireless E-lock';
+
+  @override
+  String get securityCenterWirelessSensors => 'Wireless Sensors';
+
+  @override
+  String get securityCenterWiredSensors => 'Wired Sensors';
+
+  @override
+  String get securityCenterPhotoBeam => 'Photo beam';
+
+  @override
+  String get securityCenterELock => 'E-lock';
+
+  @override
+  String get securityCenterDoorSensor => 'Door sensor';
+
+  @override
+  String get securityCenterRadar => 'Radar';
+
+  @override
+  String get securityCenterRemote => 'Remote';
+
+  @override
+  String get securityCenterSafetyEdge => 'Safety edge';
+
+  @override
+  String get securityCenterWiredPhotoBeam => 'Wired photo beam';
+
+  @override
+  String get securityCenterWiredELock => 'Wired E-lock';
 }

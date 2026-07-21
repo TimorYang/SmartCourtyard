@@ -1086,4 +1086,61 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get hardwareDiagnosticsUpdateFailed => '诊断日志设置更新失败，请重试。';
+
+  @override
+  String get securityCenterTitle => '安全中心';
+
+  @override
+  String get securityCenterProtecting => '保护中…';
+
+  @override
+  String get securityCenterDownloadFullReport => '下载完整报告';
+
+  @override
+  String get securityCenterGeneralEvaluation => '常规评估';
+
+  @override
+  String get securityCenterDoorOperationStatus => '门体运行状态';
+
+  @override
+  String get securityCenterDoorOperationRecord => '门体运行记录';
+
+  @override
+  String get securityCenterSafetySensorsEvaluation => '安全传感器评估';
+
+  @override
+  String get securityCenterWirelessPhotoBeam => '无线光电';
+
+  @override
+  String get securityCenterWirelessELock => '无线电锁';
+
+  @override
+  String get securityCenterWirelessSensors => '无线传感器';
+
+  @override
+  String get securityCenterWiredSensors => '有线传感器';
+
+  @override
+  String get securityCenterPhotoBeam => '光电';
+
+  @override
+  String get securityCenterELock => '电锁';
+
+  @override
+  String get securityCenterDoorSensor => '门磁';
+
+  @override
+  String get securityCenterRadar => '雷达';
+
+  @override
+  String get securityCenterRemote => '遥控器';
+
+  @override
+  String get securityCenterSafetyEdge => '安全边';
+
+  @override
+  String get securityCenterWiredPhotoBeam => '有线光电';
+
+  @override
+  String get securityCenterWiredELock => '有线电锁';
 }
