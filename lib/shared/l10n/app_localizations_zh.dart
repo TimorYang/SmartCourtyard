@@ -1064,4 +1064,17 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get transmitterLearningCompleteAction => '完成';
+
+  @override
+  String get hardwareDiagnosticsTitle => '硬件诊断';
+
+  @override
+  String get hardwareDiagnosticsDetailedLogging => '详细硬件诊断日志';
+
+  @override
+  String get hardwareDiagnosticsWarning =>
+      '开启后会在系统控制台输出蓝牙原始帧和解密后的协议数据，便于现场排查。AES Key、Token、Wi-Fi 密码等敏感信息始终不会记录。';
+
+  @override
+  String get hardwareDiagnosticsUpdateFailed => '诊断日志设置更新失败，请重试。';
 }

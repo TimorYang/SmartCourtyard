@@ -1390,12 +1390,13 @@ class HardwareApiPigeonCodec: FlutterStandardMessageCodec, @unchecked Sendable {
 
 /// Generated protocol from Pigeon that represents a handler of messages from Flutter.
 protocol HardwareHostApi {
+  func setDetailedHardwareLogging(enabled: Bool) throws
   func getPermissionSnapshot() throws -> PermissionSnapshotDto
   func requestPermissions(permissions: [PermissionKindDto]) throws -> PermissionSnapshotDto
   func startBleScan(requestId: String, filter: BleScanFilterDto) throws
   func stopBleScan(requestId: String) throws
   func connectBleDevice(requestId: String, deviceId: String, completion: @escaping (Result<BleConnectionEventDto, Error>) -> Void)
-  func authenticateBleDevice(requestId: String, deviceId: String, token: String, aesKey: String, completion: @escaping (Result<BleAuthenticationResultDto, Error>) -> Void)
+  func authenticateBleDevice(requestId: String, deviceId: String, token: String, aesKey: String, aesKeyVersion: String, completion: @escaping (Result<BleAuthenticationResultDto, Error>) -> Void)
   func scanWifiNetworks(requestId: String, deviceId: String, completion: @escaping (Result<WifiScanResultDto, Error>) -> Void)
   func configureWifi(requestId: String, deviceId: String, ssid: String, password: String, completion: @escaping (Result<WifiProvisionResultDto, Error>) -> Void)
   func disconnectBleDevice(requestId: String, deviceId: String, completion: @escaping (Result<BleConnectionEventDto, Error>) -> Void)
@@ -1416,6 +1417,21 @@ class HardwareHostApiSetup {
   /// Sets up an instance of `HardwareHostApi` to handle messages through the `binaryMessenger`.
   static func setUp(binaryMessenger: FlutterBinaryMessenger, api: HardwareHostApi?, messageChannelSuffix: String = "") {
     let channelSuffix = messageChannelSuffix.count > 0 ? ".\(messageChannelSuffix)" : ""
+    let setDetailedHardwareLoggingChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flinx.HardwareHostApi.setDetailedHardwareLogging\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      setDetailedHardwareLoggingChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let enabledArg = args[0] as! Bool
+        do {
+          try api.setDetailedHardwareLogging(enabled: enabledArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      setDetailedHardwareLoggingChannel.setMessageHandler(nil)
+    }
     let getPermissionSnapshotChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flinx.HardwareHostApi.getPermissionSnapshot\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       getPermissionSnapshotChannel.setMessageHandler { _, reply in
@@ -1501,7 +1517,8 @@ class HardwareHostApiSetup {
         let deviceIdArg = args[1] as! String
         let tokenArg = args[2] as! String
         let aesKeyArg = args[3] as! String
-        api.authenticateBleDevice(requestId: requestIdArg, deviceId: deviceIdArg, token: tokenArg, aesKey: aesKeyArg) { result in
+        let aesKeyVersionArg = args[4] as! String
+        api.authenticateBleDevice(requestId: requestIdArg, deviceId: deviceIdArg, token: tokenArg, aesKey: aesKeyArg, aesKeyVersion: aesKeyVersionArg) { result in
           switch result {
           case .success(let res):
             reply(wrapResult(res))

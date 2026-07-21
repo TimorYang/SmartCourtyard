@@ -372,6 +372,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
         deviceId: device.id,
         token: buildBleAuthenticationToken(deviceKey.aesKey),
         aesKey: deviceKey.aesKey,
+        aesKeyVersion: deviceKey.aesKeyVersion,
       );
       if (!_isCurrentBleSession(sessionId) || !authenticated.authenticated) {
         await _failBleSession(sessionId);

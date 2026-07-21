@@ -12,6 +12,10 @@ class HardwareHostApiImpl(
   private val bleManager: BleManager,
   private val hardwareFlutterApi: HardwareFlutterApi,
 ) : HardwareHostApi {
+  override fun setDetailedHardwareLogging(enabled: Boolean) {
+    bleManager.setDetailedLogging(enabled)
+  }
+
   private val mainHandler = Handler(Looper.getMainLooper())
 
   init {
@@ -75,6 +79,7 @@ class HardwareHostApiImpl(
     deviceId: String,
     token: String,
     aesKey: String,
+    aesKeyVersion: String,
     callback: (Result<BleAuthenticationResultDto>) -> Unit,
   ) {
     permissionManager.ensureBleConnectPreconditions()
@@ -82,6 +87,8 @@ class HardwareHostApiImpl(
       requestId = requestId,
       deviceId = deviceId,
       token = token,
+      aesKey = aesKey,
+      aesKeyVersion = aesKeyVersion,
       callback = callback,
     )
   }

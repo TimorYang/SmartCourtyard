@@ -3,7 +3,20 @@ import OSLog
 
 final class BleLogger {
   private let subsystem = Bundle.main.bundleIdentifier ?? "com.flinx.flinx"
-  private let category = "BLE"
+  private let category = "FLINX_BLE"
+  private(set) var detailedLoggingEnabled = false
+
+  func setDetailedLogging(enabled: Bool) {
+    detailedLoggingEnabled = enabled
+    info("diagnostic_logging_changed", state: enabled ? "enabled" : "disabled")
+  }
+
+  func payloadHex(_ data: Data, sensitive: Bool = false) -> String {
+    guard detailedLoggingEnabled else { return "<detailed logging disabled>" }
+    guard !sensitive else { return "<redacted sensitive payload>" }
+    guard !data.isEmpty else { return "none" }
+    return data.map { String(format: "%02X", $0) }.joined()
+  }
 
   func info(
     _ operation: String,

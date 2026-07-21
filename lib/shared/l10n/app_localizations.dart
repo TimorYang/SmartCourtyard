@@ -2125,6 +2125,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Complete'**
   String get transmitterLearningCompleteAction;
+
+  /// No description provided for @hardwareDiagnosticsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hardware diagnostics'**
+  String get hardwareDiagnosticsTitle;
+
+  /// No description provided for @hardwareDiagnosticsDetailedLogging.
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed hardware diagnostics'**
+  String get hardwareDiagnosticsDetailedLogging;
+
+  /// No description provided for @hardwareDiagnosticsWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'When enabled, raw Bluetooth frames and decrypted protocol data are written to the system console for troubleshooting. AES keys, tokens, Wi-Fi passwords, and other credentials are never logged.'**
+  String get hardwareDiagnosticsWarning;
+
+  /// No description provided for @hardwareDiagnosticsUpdateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update diagnostic logging. Please try again.'**
+  String get hardwareDiagnosticsUpdateFailed;
 }
 
 class _AppLocalizationsDelegate

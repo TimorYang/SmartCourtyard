@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:toastification/toastification.dart';
 
 import '../shared/l10n/app_localizations.dart';
+import '../core/diagnostics/diagnostic_logging.dart';
 import 'router/app_router.dart';
 import 'theme/app_theme.dart';
 
@@ -30,6 +31,7 @@ class _FlinxAppState extends ConsumerState<FlinxApp> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(diagnosticLoggingControllerProvider);
     final router = ref.watch(appRouterProvider);
 
     if (!kDebugMode) {

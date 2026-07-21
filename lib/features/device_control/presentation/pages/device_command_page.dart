@@ -1,11 +1,13 @@
 import 'dart:async';
 
-import 'package:flinx/features/home/presentation/pages/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
+import '../../../../core/logging/app_logger.dart';
+import '../../../../core/logging/providers.dart';
+import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../../../shared/widgets/flinx_switch.dart';
 import '../../../records/presentation/pages/operation_record_page.dart';
 import '../../../security_center/presentation/pages/security_center_page.dart';
@@ -14,13 +16,19 @@ import '../widgets/device_detail_bottom_navigation.dart';
 import 'device_settings_page.dart';
 
 class DeviceCommandPage extends ConsumerStatefulWidget {
-  const DeviceCommandPage({required this.doorId, this.deviceId = '', super.key});
+  const DeviceCommandPage({
+    required this.doorId,
+    this.deviceId = '',
+    this.onboardingFlowId,
+    super.key,
+  });
 
   static const routeName = 'device-command';
   static const routePath = '/device-command';
 
   final String doorId;
   final String deviceId;
+  final String? onboardingFlowId;
 
   @override
   ConsumerState<DeviceCommandPage> createState() => _DeviceCommandPageState();
@@ -40,6 +48,22 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
   void initState() {
     super.initState();
     _controller = ref.read(deviceCommandControllerProvider.notifier);
+    final flowId = widget.onboardingFlowId?.trim();
+    if (flowId != null && flowId.isNotEmpty) {
+      ref
+          .read(appLoggerProvider)
+          .info(
+            'device_detail_entered',
+            tag: AppLogTag.binding,
+            flowId: flowId,
+            context: {
+              'deviceId': widget.deviceId,
+              'doorId': widget.doorId,
+              'stage': 'device_detail',
+              'result': 'entered',
+            },
+          );
+    }
     Future.microtask(_loadDoorDetail);
   }
 
@@ -109,19 +133,10 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     final hardwareDeviceId = _hardwareDeviceId(commandState);
     return Scaffold(
       backgroundColor: AppColors.backgroundPrimary,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        backgroundColor: AppColors.backgroundPrimary,
-        centerTitle: true,
-        elevation: 0,
-        leadingWidth: 44,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(tooltip: 'Back', onPressed: () => context.go(HomePage.routePath), icon: const Icon(Icons.chevron_left, size: 28)),
-        title: Text(
-          doorDetail?.name ?? 'Garage door',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppColors.textPrimary, fontSize: 17, fontWeight: FontWeight.w600),
-        ),
+      appBar: FlinxNavigationBar(
+        title: doorDetail?.name ?? 'Garage door',
+        showBottomDivider: false,
+        foregroundColor: AppColors.textPrimary,
         actions: [
           IconButton(tooltip: 'More', onPressed: isBusy ? null : () {}, icon: const Icon(Icons.more_horiz, size: 24)),
           const SizedBox(width: 4),

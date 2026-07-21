@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../../../../core/logging/app_logger.dart';
 import '../../../../core/network/dio_factory.dart';
 import '../../../../core/network/network_exception.dart';
 import '../dto/add_force_door_request_dto.dart';
@@ -33,7 +34,7 @@ class AddDeviceOnboardingRemoteDataSourceImpl
     try {
       final response = await api.fetchDeviceKey(
         sn,
-        Options(extra: {NetworkRequestExtras.requestId: requestId}),
+        Options(extra: _bindingRequestExtras(requestId)),
       );
       final data = response.data;
       if (!_isSuccessCode(response.code) ||
@@ -63,7 +64,7 @@ class AddDeviceOnboardingRemoteDataSourceImpl
     try {
       final response = await api.addForceDoor(
         AddForceDoorRequestDto(sn: sn),
-        Options(extra: {NetworkRequestExtras.requestId: requestId}),
+        Options(extra: _bindingRequestExtras(requestId)),
       );
       final data = response.data;
       if (!_isSuccessCode(response.code) ||
@@ -86,6 +87,14 @@ class AddDeviceOnboardingRemoteDataSourceImpl
   }
 
   bool _isSuccessCode(int code) => code == 0 || code == 200;
+
+  Map<String, Object?> _bindingRequestExtras(String requestId) {
+    return {
+      NetworkRequestExtras.requestId: requestId,
+      NetworkRequestExtras.flowId: requestId.split(':').first,
+      NetworkRequestExtras.logTag: AppLogTag.binding,
+    };
+  }
 }
 
 class AddDeviceOnboardingRemoteException implements Exception {

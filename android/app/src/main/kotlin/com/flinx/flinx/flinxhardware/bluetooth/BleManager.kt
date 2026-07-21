@@ -38,6 +38,7 @@ import com.flinx.flinx.flinxhardware.bridge.WifiProvisionResultDto
 import com.flinx.flinx.flinxhardware.bridge.WifiScanResultDto
 import com.flinx.flinx.flinxhardware.protocol.DeviceBleAesKeyCandidate
 import com.flinx.flinx.flinxhardware.protocol.DeviceBleFrame
+import com.flinx.flinx.flinxhardware.protocol.DeviceBleDecodeStatus
 import com.flinx.flinx.flinxhardware.protocol.DeviceBleProtocolConfig
 import java.nio.charset.StandardCharsets
 import java.time.Instant
@@ -52,7 +53,7 @@ class BleManager(
   private val context: Context,
 ) {
   companion object {
-    private const val TAG = "BleManager"
+    private const val TAG = "FLINX_BLE"
     private const val NO_RESULT_LOG_DELAY_MS = 5_000L
     private const val MAX_RECONNECT_ATTEMPTS = 3
     private const val RECONNECT_DELAY_MS = 2_000L
@@ -102,11 +103,19 @@ class BleManager(
   private val notificationBuffers =
     ConcurrentHashMap<String, ByteArray>()
   private val requestIdsByDevice = ConcurrentHashMap<String, String>()
+  private val aesKeysByDevice = ConcurrentHashMap<String, String>()
+  private val aesKeyVersionsByDevice = ConcurrentHashMap<String, String>()
+  @Volatile private var detailedLoggingEnabled = false
   private val reconnectAttempts = ConcurrentHashMap<String, Int>()
   private val reconnectRunnables = ConcurrentHashMap<String, Runnable>()
   private val explicitDisconnects = ConcurrentHashMap.newKeySet<String>()
   private val serviceDiscoveryInProgress = ConcurrentHashMap.newKeySet<String>()
   private val mtuFallbackRunnables = ConcurrentHashMap<String, Runnable>()
+
+  fun setDetailedLogging(enabled: Boolean) {
+    detailedLoggingEnabled = enabled
+    Log.i(TAG, "event=diagnostic_logging_changed result=${if (enabled) "enabled" else "disabled"}")
+  }
 
   /** 启动 BLE 扫描并通过回调输出扫描结果。 */
   @SuppressLint("MissingPermission")
@@ -177,6 +186,8 @@ class BleManager(
     val device = runCatching { bluetoothAdapter.getRemoteDevice(deviceId) }.getOrNull()
       ?: throw FlutterError("peripheral_unavailable", "BLE device not found.")
     gattMap.remove(deviceId)?.close()
+    aesKeysByDevice.remove(deviceId)
+    aesKeyVersionsByDevice.remove(deviceId)
     explicitDisconnects.remove(deviceId)
     cancelPendingReconnect(deviceId, resetAttempts = true)
     cancelMtuFallbackDiscovery(deviceId)
@@ -213,6 +224,8 @@ class BleManager(
     val gatt = gattMap[deviceId]
       ?: run {
         requestIdsByDevice.remove(deviceId)
+        aesKeysByDevice.remove(deviceId)
+        aesKeyVersionsByDevice.remove(deviceId)
         connectCallbacks.remove(deviceId)
         removeAuthSession(deviceId)
         removePendingAuthDiscovery(deviceId)
@@ -424,11 +437,23 @@ class BleManager(
     requestId: String,
     deviceId: String,
     token: String,
+    aesKey: String,
+    aesKeyVersion: String,
     callback: (Result<BleAuthenticationResultDto>) -> Unit,
   ) {
     val gatt = gattMap[deviceId]
       ?: throw FlutterError("bluetooth_disconnected", "BLE device is not connected.")
+    if (!DeviceBleProtocolConfig.isValidAesKeyHex(aesKey)) {
+      callback(Result.failure(FlutterError("invalid_aes_key", "BLE AES key is invalid.", "deviceId=$deviceId")))
+      return
+    }
     requestIdsByDevice[deviceId] = requestId
+    aesKeysByDevice[deviceId] = aesKey.trim()
+    aesKeyVersionsByDevice[deviceId] = aesKeyVersion
+    Log.i(
+      TAG,
+      "event=authentication_key_configured onboardingFlowId=${flowId(requestId)} requestId=$requestId deviceId=$deviceId aesKeySource=server aesKeyVersion=$aesKeyVersion keyFormatValid=true",
+    )
     if (gatt.getService(DeviceBleProtocolConfig.communicationServiceUuid) == null) {
       waitForAuthenticationServiceDiscovery(
         requestId = requestId,
@@ -485,6 +510,7 @@ class BleManager(
     val payload = DeviceBleProtocolConfig.buildEncryptedCommandFrame(
       sequence = sequence,
       command = DeviceBleProtocolConfig.commandScanWifi,
+      aesKeyHex = requireDeviceAesKey(deviceId),
     )
     val pending = PendingWifiScan(
       requestId = requestId,
@@ -659,6 +685,7 @@ class BleManager(
     val payload = DeviceBleProtocolConfig.buildEncryptedCommandFrame(
       sequence = sequence,
       command = DeviceBleProtocolConfig.commandControlDoor,
+      aesKeyHex = requireDeviceAesKey(deviceId),
       data = byteArrayOf((control shr 8).toByte(), control.toByte()),
     )
 
@@ -922,6 +949,8 @@ class BleManager(
               connectCallbacks.remove(deviceId)?.invoke(Result.success(event))
             }
             requestIdsByDevice.remove(deviceId)
+            aesKeysByDevice.remove(deviceId)
+            aesKeyVersionsByDevice.remove(deviceId)
           }
         }
       }
@@ -1011,7 +1040,7 @@ class BleManager(
         if (reassembledPayloads.isEmpty()) {
           Log.d(
             TAG,
-            "蓝牙接收分片 requestId=${requestId ?: "unknown"} deviceId=$deviceId service=$serviceUuid characteristic=$characteristicUuid chunkLen=${payload.size} chunkHex=${toHexOrEmpty(payload)}",
+            "蓝牙接收分片 requestId=${requestId ?: "unknown"} deviceId=$deviceId service=$serviceUuid characteristic=$characteristicUuid chunkLen=${payload.size} chunkHex=${diagnosticHex(payload)}",
           )
           return
         }
@@ -1163,7 +1192,7 @@ class BleManager(
         val pending = notifyCallbacks.remove(key) ?: return
         Log.d(
           TAG,
-          "蓝牙通知配置结果 requestId=${pending.requestId} deviceId=$deviceId service=${pending.serviceUuid} characteristic=${pending.characteristicUuid} descriptor=${descriptor.uuid} status=$status value=${toHexOrEmpty(descriptor.value)}",
+          "蓝牙通知配置结果 requestId=${pending.requestId} deviceId=$deviceId service=${pending.serviceUuid} characteristic=${pending.characteristicUuid} descriptor=${descriptor.uuid} status=$status value=${diagnosticHex(descriptor.value)}",
         )
         if (status != BluetoothGatt.GATT_SUCCESS) {
           pending.callback(
@@ -1200,11 +1229,15 @@ class BleManager(
     characteristicUuid: String,
     payload: ByteArray,
   ) {
+    if (!detailedLoggingEnabled) {
+      return
+    }
     if (!serviceUuid.equals(DeviceBleProtocolConfig.communicationServiceUuid.toString(), ignoreCase = true)) {
       return
     }
     val encryptedPayload = extractEncryptedPayload(payload) ?: return
-    val candidates = DeviceBleProtocolConfig.candidateAesKeys()
+    val aesKey = aesKeysByDevice[deviceId] ?: return
+    val candidates = DeviceBleProtocolConfig.candidateAesKeys(aesKey)
     val analyses = candidates.joinToString(separator = " | ") { candidate ->
       describeAesCandidate(candidate, encryptedPayload)
     }
@@ -1310,6 +1343,7 @@ class BleManager(
         sequence = sequence,
         utcTimestampSeconds = Instant.now().epochSecond,
         tokenMd5 = token.trim(),
+        aesKeyHex = requireDeviceAesKey(deviceId),
       )
     }.getOrElse { error ->
       callback(
@@ -1497,12 +1531,47 @@ class BleManager(
     ) {
       return
     }
-    val frame = parseProvisioningFrame(payload)
+    val encryptedEnvelope =
+      DeviceBleProtocolConfig.hasValidEnvelope(payload) &&
+        extractEncryptedPayload(payload) != null
+    val decodeResult = if (encryptedEnvelope) {
+      DeviceBleProtocolConfig.decodeExpectedEncryptedResponse(
+        payload = payload,
+        aesKeyHex = requireDeviceAesKey(deviceId),
+        expectedSequence = auth.sequence,
+        expectedCommand = DeviceBleProtocolConfig.commandAuthenticate,
+      )
+    } else {
+      null
+    }
+    if (decodeResult?.status == DeviceBleDecodeStatus.MATCHED) {
+      Log.i(
+        TAG,
+        "event=authentication_decrypt_succeeded onboardingFlowId=${flowId(auth.requestId)} requestId=${auth.requestId} deviceId=$deviceId result=success aesMode=${decodeResult.mode} plainHex=${diagnosticHex(decodeResult.plaintext)}",
+      )
+    }
+    val frame = decodeResult?.frame ?: parseProvisioningFrame(deviceId, payload)
     if (frame == null ||
       frame.command != DeviceBleProtocolConfig.commandAuthenticate ||
       frame.sequence != auth.sequence ||
       frame.frameType != DeviceBleProtocolConfig.frameTypeResponse
     ) {
+      if (encryptedEnvelope) {
+        Log.e(
+          TAG,
+          "event=authentication_decrypt_failed onboardingFlowId=${flowId(auth.requestId)} requestId=${auth.requestId} deviceId=$deviceId result=failed aesKeySource=server aesKeyVersion=${aesKeyVersionsByDevice[deviceId] ?: "-"} rawHex=${if (detailedLoggingEnabled) toHexOrEmpty(payload) else "<detailed logging disabled>"}",
+        )
+        removeAuthSession(deviceId)
+        auth.callback(
+          Result.failure(
+            FlutterError(
+              "authentication_decrypt_failed",
+              "BLE authentication response could not be decrypted with the server AES key.",
+              "requestId=${auth.requestId},deviceId=$deviceId",
+            ),
+          ),
+        )
+      }
       return
     }
     val result = frame.data.firstOrNull()?.toInt()?.and(0xFF)
@@ -1576,7 +1645,7 @@ class BleManager(
     ) {
       return
     }
-    val frame = parseProvisioningFrame(payload)
+    val frame = parseProvisioningFrame(deviceId, payload)
     if (frame == null ||
       frame.command != DeviceBleProtocolConfig.commandScanWifi ||
       frame.frameType != DeviceBleProtocolConfig.frameTypeResponse
@@ -1590,7 +1659,7 @@ class BleManager(
           FlutterError(
             "invalid_wifi_scan_response",
             error.message ?: "Wifi list response is invalid.",
-            "requestId=${pending.requestId},callbackRequestId=${requestId ?: "unknown"},deviceId=$deviceId,dataHex=${toHexOrEmpty(frame.data)}",
+            "requestId=${pending.requestId},callbackRequestId=${requestId ?: "unknown"},deviceId=$deviceId,dataHex=${diagnosticHex(frame.data)}",
           ),
         ),
       )
@@ -1646,7 +1715,7 @@ class BleManager(
     ) {
       return
     }
-    val frame = parseProvisioningFrame(payload)
+    val frame = parseProvisioningFrame(deviceId, payload)
     if (frame == null ||
       frame.command != DeviceBleProtocolConfig.commandConfigureWifi ||
       frame.frameType != DeviceBleProtocolConfig.frameTypeResponse
@@ -1685,13 +1754,14 @@ class BleManager(
     )
   }
 
-  private fun parseProvisioningFrame(payload: ByteArray): DeviceBleFrame? {
+  private fun parseProvisioningFrame(deviceId: String, payload: ByteArray): DeviceBleFrame? {
     val parsedFrame = DeviceBleProtocolConfig.parseFrame(payload)
     if (parsedFrame != null && parsedFrame.cryptoType == DeviceBleProtocolConfig.cryptoNone) {
       return parsedFrame
     }
     val encryptedPayload = extractEncryptedPayload(payload) ?: return null
-    for (candidate in DeviceBleProtocolConfig.candidateAesKeys()) {
+    val aesKey = aesKeysByDevice[deviceId] ?: return null
+    for (candidate in DeviceBleProtocolConfig.candidateAesKeys(aesKey)) {
       val ecbPlaintext = DeviceBleProtocolConfig.tryDecryptAesEcbPkcs7(encryptedPayload, candidate.keyBytes)
       val ecbFrame = ecbPlaintext?.let {
         DeviceBleProtocolConfig.parseDecryptedPayload(
@@ -1774,7 +1844,7 @@ class BleManager(
     val payloadHex = if (redactPayload && payload.isNotEmpty()) {
       "<redacted sensitive payload>"
     } else {
-      toHexOrEmpty(payload)
+      diagnosticHex(payload)
     }
     val trafficType = when {
       direction.contains("REQUEST") -> "蓝牙传输"
@@ -1794,7 +1864,7 @@ class BleManager(
     }
     Log.d(
       TAG,
-      "$trafficType type=$directionLabel requestId=${requestId ?: "unknown"} deviceId=$deviceId service=$serviceUuid characteristic=$characteristicUuid payloadLen=${payload.size} payloadHex=$payloadHex$statusPart$frameSummary",
+      "$trafficType type=$directionLabel onboardingFlowId=${flowId(requestId)} requestId=${requestId ?: "unknown"} deviceId=$deviceId service=$serviceUuid characteristic=$characteristicUuid payloadLen=${payload.size} rawHex=$payloadHex$statusPart$frameSummary",
     )
   }
 
@@ -1846,7 +1916,7 @@ class BleManager(
       append(", cipherLen=")
       append(cipherPayload.size)
       append(", cipherHex=")
-      append(toHexOrEmpty(cipherPayload))
+      append(diagnosticHex(cipherPayload))
       if (bccHex.isNotEmpty()) {
         append(", bcc=0x")
         append(bccHex)
@@ -1870,7 +1940,7 @@ class BleManager(
       append(", dataLen=")
       append(frame.data.size)
       append(", dataHex=")
-      append(toHexOrEmpty(frame.data))
+      append(diagnosticHex(frame.data))
       append("}")
     }
   }
@@ -1900,6 +1970,24 @@ class BleManager(
     return DeviceBleProtocolConfig.toHex(bytes)
   }
 
+  private fun diagnosticHex(bytes: ByteArray?): String {
+    if (!detailedLoggingEnabled) return "<detailed logging disabled>"
+    return toHexOrEmpty(bytes)
+  }
+
+  private fun requireDeviceAesKey(deviceId: String): String {
+    return aesKeysByDevice[deviceId]
+      ?: throw FlutterError(
+        "missing_aes_key",
+        "No server AES key is configured for this BLE device.",
+        "deviceId=$deviceId",
+      )
+  }
+
+  private fun flowId(requestId: String?): String {
+    return requestId?.substringBefore(':')?.takeIf { it.isNotBlank() } ?: "-"
+  }
+
   private fun reassembleNotificationPayloads(
     deviceId: String,
     serviceUuid: String,
@@ -1926,7 +2014,7 @@ class BleManager(
       if (headerIndex > 0) {
         Log.d(
           TAG,
-          "蓝牙接收丢弃帧头前数据 deviceId=$deviceId service=$serviceUuid characteristic=$characteristicUuid discardLen=$headerIndex discardHex=${toHexOrEmpty(working.copyOfRange(0, headerIndex))}",
+          "蓝牙接收丢弃帧头前数据 deviceId=$deviceId service=$serviceUuid characteristic=$characteristicUuid discardLen=$headerIndex discardHex=${diagnosticHex(working.copyOfRange(0, headerIndex))}",
         )
         working = working.copyOfRange(headerIndex, working.size)
       }
@@ -1942,7 +2030,7 @@ class BleManager(
       if (declaredLength < 8) {
         Log.w(
           TAG,
-          "蓝牙接收帧长度非法 deviceId=$deviceId service=$serviceUuid characteristic=$characteristicUuid declaredLength=$declaredLength bufferHex=${toHexOrEmpty(working)}",
+          "蓝牙接收帧长度非法 deviceId=$deviceId service=$serviceUuid characteristic=$characteristicUuid declaredLength=$declaredLength bufferHex=${diagnosticHex(working)}",
         )
         working = working.copyOfRange(1, working.size)
         continue
@@ -1955,7 +2043,7 @@ class BleManager(
       if (!DeviceBleProtocolConfig.hasValidEnvelope(candidate)) {
         Log.w(
           TAG,
-          "蓝牙接收帧校验失败 deviceId=$deviceId service=$serviceUuid characteristic=$characteristicUuid declaredLength=$declaredLength candidateLen=${candidate.size} candidateHex=${toHexOrEmpty(candidate)}",
+          "蓝牙接收帧校验失败 deviceId=$deviceId service=$serviceUuid characteristic=$characteristicUuid declaredLength=$declaredLength candidateLen=${candidate.size} candidateHex=${diagnosticHex(candidate)}",
         )
         working = working.copyOfRange(1, working.size)
         continue

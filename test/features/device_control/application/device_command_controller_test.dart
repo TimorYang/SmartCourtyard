@@ -237,6 +237,7 @@ class _BleSessionGateway extends MockHardwareGateway {
     required String deviceId,
     required String token,
     required String aesKey,
+    required String aesKeyVersion,
   }) async {
     authenticatedDeviceIds.add(deviceId);
     return BleAuthenticationResult(

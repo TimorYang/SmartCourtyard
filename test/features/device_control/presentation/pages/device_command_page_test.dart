@@ -253,6 +253,7 @@ class _RecordingHardwareGateway extends MockHardwareGateway {
     required String deviceId,
     required String token,
     required String aesKey,
+    required String aesKeyVersion,
   }) async {
     authenticatedDeviceIds.add(deviceId);
     return super.authenticateBleDevice(
@@ -260,6 +261,7 @@ class _RecordingHardwareGateway extends MockHardwareGateway {
       deviceId: deviceId,
       token: token,
       aesKey: aesKey,
+      aesKeyVersion: aesKeyVersion,
     );
   }
 

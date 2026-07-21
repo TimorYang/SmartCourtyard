@@ -328,6 +328,8 @@ class RemoteOperationResultDto {
 
 @HostApi()
 abstract class HardwareHostApi {
+  void setDetailedHardwareLogging(bool enabled);
+
   PermissionSnapshotDto getPermissionSnapshot();
 
   PermissionSnapshotDto requestPermissions(List<PermissionKindDto> permissions);
@@ -345,6 +347,7 @@ abstract class HardwareHostApi {
     String deviceId,
     String token,
     String aesKey,
+    String aesKeyVersion,
   );
 
   @async

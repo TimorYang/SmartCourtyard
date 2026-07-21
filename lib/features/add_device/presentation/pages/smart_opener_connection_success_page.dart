@@ -8,14 +8,31 @@ import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
 import '../../../device_control/presentation/pages/device_command_page.dart';
 
-class SmartOpenerConnectionSuccessPage extends ConsumerWidget {
+class SmartOpenerConnectionSuccessPage extends ConsumerStatefulWidget {
   const SmartOpenerConnectionSuccessPage({super.key});
 
   static const routeName = 'smart-opener-connection-success';
   static const routePath = '/add-device/smart-opener/success';
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SmartOpenerConnectionSuccessPage> createState() =>
+      _SmartOpenerConnectionSuccessPageState();
+}
+
+class _SmartOpenerConnectionSuccessPageState
+    extends ConsumerState<SmartOpenerConnectionSuccessPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(addDeviceControllerProvider.notifier).logSuccessPageEntered();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final textTheme = Theme.of(context).textTheme;
     final addDeviceState = ref.watch(addDeviceControllerProvider);
@@ -86,15 +103,22 @@ class SmartOpenerConnectionSuccessPage extends ConsumerWidget {
                     onPressed: onboardedDoor == null
                         ? null
                         : () {
+                            ref
+                                .read(addDeviceControllerProvider.notifier)
+                                .logDeviceDetailNavigation();
                             final doorId = Uri.encodeQueryComponent(
                               onboardedDoor.id.toString(),
                             );
                             final encodedDeviceId = Uri.encodeQueryComponent(
                               deviceId,
                             );
+                            final encodedFlowId = Uri.encodeQueryComponent(
+                              addDeviceState.onboardingFlowId ?? '',
+                            );
                             context.go(
                               '${DeviceCommandPage.routePath}'
-                              '?doorId=$doorId&deviceId=$encodedDeviceId',
+                              '?doorId=$doorId&deviceId=$encodedDeviceId'
+                              '&onboardingFlowId=$encodedFlowId',
                             );
                           },
                   ),

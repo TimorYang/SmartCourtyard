@@ -275,7 +275,7 @@ final class BleManager: NSObject {
       deviceId: deviceId,
       state: "started",
       payloadBytes: payload.count,
-      details: "\(characteristicDetails(characteristic)) writeType=\(writeType == .withoutResponse ? "withoutResponse" : "withResponse") payloadHex=\(diagnosticPayloadHex(payload))"
+      details: "\(characteristicDetails(characteristic)) writeType=\(writeType == .withoutResponse ? "withoutResponse" : "withResponse") rawHex=\(diagnosticPayloadHex(payload, sensitive: requestId.contains(":wifi-provision:")))"
     )
     peripheral.writeValue(payload, for: characteristic, type: cbWriteType)
 
@@ -564,20 +564,16 @@ final class BleManager: NSObject {
       .filter { !$0.isEmpty })).sorted()
   }
 
-  private func hexString(_ data: Data) -> String {
-    guard !data.isEmpty else {
-      return "none"
+  private func diagnosticPayloadHex(_ data: Data, sensitive: Bool = false) -> String {
+    if sensitive {
+      return "<redacted sensitive payload>"
     }
-    return data.map { String(format: "%02X", $0) }.joined(separator: " ")
-  }
-
-  private func diagnosticPayloadHex(_ data: Data) -> String {
     let lowercaseText = String(data: data, encoding: .utf8)?.lowercased() ?? ""
     let sensitiveMarkers = ["password", "\"pwd\"", "token", "secret", "sessionkey", "key_data"]
     if sensitiveMarkers.contains(where: lowercaseText.contains) {
       return "<redacted sensitive payload>"
     }
-    return hexString(data)
+    return logger.payloadHex(data)
   }
 
   private func advertisementKeysSummary(_ advertisementData: [String: Any]) -> String {
@@ -619,7 +615,7 @@ final class BleManager: NSObject {
       return "none"
     }
     let items = serviceData
-      .map { uuid, data in "\(uuid.uuidString.uppercased()):\(hexString(data))" }
+      .map { uuid, data in "\(uuid.uuidString.uppercased()):\(logger.payloadHex(data))" }
       .sorted()
     return items.joined(separator: ",")
   }
@@ -767,7 +763,7 @@ extension BleManager: CBCentralManagerDelegate {
         "localName=\(localName ?? "none") " +
         "rssi=\(rssi) " +
         "services=\(serviceUuids.isEmpty ? "none" : serviceUuids.joined(separator: ",")) " +
-        "manufacturer=\(hexString(manufacturerData)) " +
+        "manufacturer=\(logger.payloadHex(manufacturerData)) " +
         "serviceData=\(serviceData) " +
         "overflowServices=\(overflowServiceUuids) " +
         "solicitedServices=\(solicitedServiceUuids) " +
@@ -979,7 +975,7 @@ extension BleManager: CBPeripheralDelegate {
         state: "success",
         durationMs: pending.durationMs,
         payloadBytes: characteristic.value?.count ?? 0,
-        details: "\(characteristicDetails(characteristic)) payloadHex=\(diagnosticPayloadHex(characteristic.value ?? Data()))"
+        details: "\(characteristicDetails(characteristic)) rawHex=\(diagnosticPayloadHex(characteristic.value ?? Data()))"
       )
       pending.completion(
         .success(
@@ -1013,7 +1009,7 @@ extension BleManager: CBPeripheralDelegate {
         "notification",
         deviceId: deviceId,
         payloadBytes: characteristic.value?.count ?? 0,
-        details: "\(characteristicDetails(characteristic)) sequenceNumber=\(notificationSequence) payloadHex=\(diagnosticPayloadHex(characteristic.value ?? Data()))"
+        details: "\(characteristicDetails(characteristic)) sequenceNumber=\(notificationSequence) rawHex=\(diagnosticPayloadHex(characteristic.value ?? Data()))"
       )
     } else {
       emitNativeError(.operationFailed("notification_failed"), requestId: nil, deviceId: deviceId)

@@ -1131,4 +1131,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get transmitterLearningCompleteAction => 'Complete';
+
+  @override
+  String get hardwareDiagnosticsTitle => 'Hardware diagnostics';
+
+  @override
+  String get hardwareDiagnosticsDetailedLogging =>
+      'Detailed hardware diagnostics';
+
+  @override
+  String get hardwareDiagnosticsWarning =>
+      'When enabled, raw Bluetooth frames and decrypted protocol data are written to the system console for troubleshooting. AES keys, tokens, Wi-Fi passwords, and other credentials are never logged.';
+
+  @override
+  String get hardwareDiagnosticsUpdateFailed =>
+      'Failed to update diagnostic logging. Please try again.';
 }

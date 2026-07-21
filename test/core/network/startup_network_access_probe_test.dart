@@ -49,6 +49,8 @@ class _FakeLogger implements AppLogger {
   @override
   void error(
     String message, {
+    AppLogTag tag = AppLogTag.general,
+    String? flowId,
     String? requestId,
     Object? error,
     StackTrace? stackTrace,
@@ -58,6 +60,8 @@ class _FakeLogger implements AppLogger {
   @override
   void info(
     String message, {
+    AppLogTag tag = AppLogTag.general,
+    String? flowId,
     String? requestId,
     Map<String, Object?> context = const {},
   }) {}
@@ -65,6 +69,8 @@ class _FakeLogger implements AppLogger {
   @override
   void warning(
     String message, {
+    AppLogTag tag = AppLogTag.general,
+    String? flowId,
     String? requestId,
     Map<String, Object?> context = const {},
   }) {}

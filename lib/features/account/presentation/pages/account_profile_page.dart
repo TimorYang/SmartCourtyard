@@ -9,6 +9,7 @@ import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
 import '../../domain/entities/account_profile.dart';
 import 'account_details_page.dart';
+import 'hardware_diagnostics_page.dart';
 import '../../../notification/presentation/pages/notification_list_page.dart';
 
 class AccountProfileAssetPaths {
@@ -123,6 +124,7 @@ class _AccountProfileContent extends StatelessWidget {
       _AccountMenuItem(
         label: l10n.accountAbout,
         icon: Icons.info_outline_rounded,
+        onTap: () => context.pushNamed(HardwareDiagnosticsPage.routeName),
       ),
     ];
 
