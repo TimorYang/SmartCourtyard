@@ -89,6 +89,7 @@ class AppColors {
   static const securityReportSegmentTrack = Color(0xFFF0F2F5);
   static const securityReportSegmentSelected = Color(0xFF0878ED);
   static const securityReportDivider = Color(0xFFE3E5E8);
+  static const securityReportTableBorder = Color(0xFFB4B8BD);
   static const securityReportChartGrid = Color(0xFFB7BCC2);
   static const securityReportChartBar = Color(0xFFFF9800);
   static const securityReportNormal = Color(0xFF19C966);
@@ -1019,15 +1020,39 @@ class AppTextTokens {
   static TextStyle securityReportDeviceName(TextTheme textTheme) {
     return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
       color: Colors.white,
-      fontSize: 22,
+      fontSize: 26,
       fontWeight: FontWeight.w600,
+    );
+  }
+
+  static TextStyle securityReportHeroMeta(TextTheme textTheme) {
+    return (textTheme.bodyLarge ?? const TextStyle()).copyWith(
+      color: Colors.white,
+      fontSize: 13,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle securityReportCardTitle(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 15,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle securityReportSectionTitle(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 15,
+      fontWeight: FontWeight.w400,
     );
   }
 
   static TextStyle securityReportMetric(TextTheme textTheme) {
     return (textTheme.headlineMedium ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
-      fontSize: 24,
+      fontSize: 15,
       fontWeight: FontWeight.w600,
     );
   }
@@ -1043,7 +1068,7 @@ class AppTextTokens {
   static TextStyle securityReportWarning(TextTheme textTheme) {
     return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
       color: AppColors.securityReportWarning,
-      fontSize: 13,
+      fontSize: 12,
       fontWeight: FontWeight.w400,
     );
   }
@@ -1051,7 +1076,7 @@ class AppTextTokens {
   static TextStyle securityReportBody(TextTheme textTheme) {
     return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
-      fontSize: 13,
+      fontSize: 12,
       fontWeight: FontWeight.w400,
     );
   }
@@ -1068,6 +1093,38 @@ class AppTextTokens {
       fontSize: 13,
       fontWeight: FontWeight.w400,
       height: 1.55,
+    );
+  }
+
+  static TextStyle securityReportSuggestionTitle(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 14,
+      fontWeight: FontWeight.w600,
+    );
+  }
+
+  static TextStyle securityReportSensorTitle(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 15,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle securityReportSensorDetail(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: Color(0xFF309415),
+      fontSize: 12,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle securityReportSensorCount(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 24,
+      fontWeight: FontWeight.w600,
     );
   }
 

@@ -1143,4 +1143,163 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get securityCenterWiredELock => '有线电锁';
+
+  @override
+  String get securityReportTitle => '安全报告';
+
+  @override
+  String get securityReportMotorName => '车库门电机 01';
+
+  @override
+  String get securityReportSerialNumber => '序列号：SFD123456789';
+
+  @override
+  String get securityReportDoorName => '车库门 01';
+
+  @override
+  String get securityReportOperatedCycles => '已运行次数';
+
+  @override
+  String get securityReportRemainingCycles => '剩余次数';
+
+  @override
+  String get securityReportMaintenanceWarning => '请尽快维护车库门。';
+
+  @override
+  String get securityReportBalanceEvaluation => '车库门平衡评估';
+
+  @override
+  String get securityReportBalanceNote => '提示：评估仅基于车库门最近一次开/关门操作。';
+
+  @override
+  String get securityReportOpenEvaluation => '开门评估';
+
+  @override
+  String get securityReportCloseEvaluation => '关门评估';
+
+  @override
+  String get securityReportOverload => '过载';
+
+  @override
+  String get securityReportOperationRecord => '车库门运行记录';
+
+  @override
+  String get securityReportLast24Hours => '最近 24 小时';
+
+  @override
+  String get securityReportLast7Days => '最近 7 天';
+
+  @override
+  String get securityReportTimeCyclesAxis => 'X：时间  Y：运行次数';
+
+  @override
+  String get securityReportDateCyclesAxis => 'X：日期  Y：运行次数';
+
+  @override
+  String get securityReportFrequentOperationWarning => '周一操作频率异常，请检查。';
+
+  @override
+  String get securityReportMotorFunctionStatus => '电机功能状态';
+
+  @override
+  String get securityReportWiredSensorsDiagnosis => '有线传感器诊断';
+
+  @override
+  String get securityReportWirelessSensorsDiagnosis => '无线传感器诊断';
+
+  @override
+  String get securityReportNormal => '正常';
+
+  @override
+  String get securityReportDisconnect => '断开';
+
+  @override
+  String get securityReportAbnormal => '异常';
+
+  @override
+  String get securityReportNotTriggered => '未触发';
+
+  @override
+  String get securityReportLocked => '已锁定';
+
+  @override
+  String get securityReportBatteryEnough => '电池电量充足';
+
+  @override
+  String get securityReportWirelessWicketDoor => '无线小门传感器';
+
+  @override
+  String get securityReportWirelessSafetyEdge => '无线安全边';
+
+  @override
+  String get securityReportWirelessPositionSensor => '无线位置传感器';
+
+  @override
+  String get securityReportSafetySuggestion => '安全建议：';
+
+  @override
+  String get securityReportSuggestionCycles => '运行次数已达到维护预警值；';
+
+  @override
+  String get securityReportSuggestionBattery => '安全边电池电量低，请及时更换；';
+
+  @override
+  String get securityReportSuggestionMaintenance => '请联系安装人员进行必要维护，确保车库门安全。';
+
+  @override
+  String get securityReportSuggestionCurrent => '开门机开门电流超过了设定的最大值。';
+
+  @override
+  String get securityReportSaveSuccess => '报告已保存至相册。';
+
+  @override
+  String get securityReportSaveAccessDenied => '保存报告需要照片库权限。';
+
+  @override
+  String get securityReportSaveNoSpace => '没有足够的存储空间保存报告。';
+
+  @override
+  String get securityReportSaveUnsupported => '无法保存该图像格式。';
+
+  @override
+  String get securityReportSaveFailed => '无法保存报告图片。';
+
+  @override
+  String get securityReportCaptureFailed => '无法生成报告图片。';
+
+  @override
+  String get securityReportDoorOpeningForce => '开门力度';
+
+  @override
+  String get securityReportDoorClosingForce => '关门力度';
+
+  @override
+  String get securityReportAutoCloseTime => '自动关门时间';
+
+  @override
+  String get securityReportAutoCloseCondition => '自动关门条件';
+
+  @override
+  String get securityReportLedOffDelay => 'LED 熄灭延迟';
+
+  @override
+  String get securityReportPartialOpen => '部分开启';
+
+  @override
+  String get securityReportIgnoreObstructionHeight => '忽略障碍物高度';
+
+  @override
+  String get securityReportPhotoBeamFunction => '光电功能';
+
+  @override
+  String get securityReportCommunityMode => '社区模式';
+
+  @override
+  String get securityReportLevel1 => '等级 1';
+
+  @override
+  String get securityReportAnyPosition => '任意位置';
+
+  @override
+  String get securityReportOn => '开启';
 }

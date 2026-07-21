@@ -1216,4 +1216,175 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityCenterWiredELock => 'Wired E-lock';
+
+  @override
+  String get securityReportTitle => 'Safety Report';
+
+  @override
+  String get securityReportMotorName => 'Garage door motor 01';
+
+  @override
+  String get securityReportSerialNumber => 'Serial number: SFD123456789';
+
+  @override
+  String get securityReportDoorName => 'Garage door 01';
+
+  @override
+  String get securityReportOperatedCycles => 'Operated cycles';
+
+  @override
+  String get securityReportRemainingCycles => 'Remaining cycles';
+
+  @override
+  String get securityReportMaintenanceWarning =>
+      'Please maintain the door as soon as possible.';
+
+  @override
+  String get securityReportBalanceEvaluation => 'Door balance evaluation';
+
+  @override
+  String get securityReportBalanceNote =>
+      'Mark: Evaluation is limited to the door\'s latest open/close operation.';
+
+  @override
+  String get securityReportOpenEvaluation => 'Open evaluation';
+
+  @override
+  String get securityReportCloseEvaluation => 'Close evaluation';
+
+  @override
+  String get securityReportOverload => 'Over load';
+
+  @override
+  String get securityReportOperationRecord => 'Door operation record';
+
+  @override
+  String get securityReportLast24Hours => 'Last 24 hours';
+
+  @override
+  String get securityReportLast7Days => 'Last 7 days';
+
+  @override
+  String get securityReportTimeCyclesAxis => 'X: Time Y: Operation cycles';
+
+  @override
+  String get securityReportDateCyclesAxis => 'X: Date Y: Operation cycles';
+
+  @override
+  String get securityReportFrequentOperationWarning =>
+      'Unusually frequent operation on Monday. Please check it.';
+
+  @override
+  String get securityReportMotorFunctionStatus => 'Motor function status';
+
+  @override
+  String get securityReportWiredSensorsDiagnosis => 'Wired sensors diagnosis';
+
+  @override
+  String get securityReportWirelessSensorsDiagnosis =>
+      'Wireless sensors diagnosis';
+
+  @override
+  String get securityReportNormal => 'Normal';
+
+  @override
+  String get securityReportDisconnect => 'Disconnect';
+
+  @override
+  String get securityReportAbnormal => 'Abnormal';
+
+  @override
+  String get securityReportNotTriggered => 'Not triggered';
+
+  @override
+  String get securityReportLocked => 'Locked';
+
+  @override
+  String get securityReportBatteryEnough => 'Battery power enough';
+
+  @override
+  String get securityReportWirelessWicketDoor => 'Wireless wicket door';
+
+  @override
+  String get securityReportWirelessSafetyEdge => 'Wireless safety edge';
+
+  @override
+  String get securityReportWirelessPositionSensor => 'Wireless position sensor';
+
+  @override
+  String get securityReportSafetySuggestion => 'Safety suggestion:';
+
+  @override
+  String get securityReportSuggestionCycles =>
+      'Operated cycles has reached the maintenance warning;';
+
+  @override
+  String get securityReportSuggestionBattery =>
+      'Battery power of safety edge is low, replace it in time;';
+
+  @override
+  String get securityReportSuggestionMaintenance =>
+      'Contact your installer for a necessary maintenance to ensure the safety of the door.';
+
+  @override
+  String get securityReportSuggestionCurrent =>
+      'The opening current of your opener exceeds the maximum value we set.';
+
+  @override
+  String get securityReportSaveSuccess => 'Report saved to album.';
+
+  @override
+  String get securityReportSaveAccessDenied =>
+      'Photo library permission is required to save the report.';
+
+  @override
+  String get securityReportSaveNoSpace =>
+      'Not enough storage space to save the report.';
+
+  @override
+  String get securityReportSaveUnsupported =>
+      'Unable to save this image format.';
+
+  @override
+  String get securityReportSaveFailed => 'Unable to save report image.';
+
+  @override
+  String get securityReportCaptureFailed => 'Unable to create report image.';
+
+  @override
+  String get securityReportDoorOpeningForce => 'Door opening force';
+
+  @override
+  String get securityReportDoorClosingForce => 'Door closing force';
+
+  @override
+  String get securityReportAutoCloseTime => 'Auto close time';
+
+  @override
+  String get securityReportAutoCloseCondition => 'Auto close condition';
+
+  @override
+  String get securityReportLedOffDelay => 'LED off delay';
+
+  @override
+  String get securityReportPartialOpen => 'Partial open';
+
+  @override
+  String get securityReportIgnoreObstructionHeight =>
+      'Ignore obstruction height';
+
+  @override
+  String get securityReportPhotoBeamFunction => 'Photo beam function';
+
+  @override
+  String get securityReportCommunityMode => 'Community mode';
+
+  @override
+  String get securityReportLevel1 => 'Level1';
+
+  @override
+  String get securityReportAnyPosition => 'Any position';
+
+  @override
+  String get securityReportOn => 'ON';
 }

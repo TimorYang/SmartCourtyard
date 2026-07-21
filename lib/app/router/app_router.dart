@@ -319,13 +319,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
-        path: GeneralEvaluationPage.routePath,
-        name: GeneralEvaluationPage.routeName,
-        builder: (context, state) => GeneralEvaluationPage(
-          deviceId: state.uri.queryParameters['deviceId'] ?? '',
-        ),
-      ),
-      GoRoute(
         path: SafetySensorsEvaluationPage.routePath,
         name: SafetySensorsEvaluationPage.routeName,
         builder: (context, state) => SafetySensorsEvaluationPage(

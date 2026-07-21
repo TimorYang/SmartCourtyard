@@ -2281,6 +2281,324 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Wired E-lock'**
   String get securityCenterWiredELock;
+
+  /// No description provided for @securityReportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety Report'**
+  String get securityReportTitle;
+
+  /// No description provided for @securityReportMotorName.
+  ///
+  /// In en, this message translates to:
+  /// **'Garage door motor 01'**
+  String get securityReportMotorName;
+
+  /// No description provided for @securityReportSerialNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Serial number: SFD123456789'**
+  String get securityReportSerialNumber;
+
+  /// No description provided for @securityReportDoorName.
+  ///
+  /// In en, this message translates to:
+  /// **'Garage door 01'**
+  String get securityReportDoorName;
+
+  /// No description provided for @securityReportOperatedCycles.
+  ///
+  /// In en, this message translates to:
+  /// **'Operated cycles'**
+  String get securityReportOperatedCycles;
+
+  /// No description provided for @securityReportRemainingCycles.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining cycles'**
+  String get securityReportRemainingCycles;
+
+  /// No description provided for @securityReportMaintenanceWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Please maintain the door as soon as possible.'**
+  String get securityReportMaintenanceWarning;
+
+  /// No description provided for @securityReportBalanceEvaluation.
+  ///
+  /// In en, this message translates to:
+  /// **'Door balance evaluation'**
+  String get securityReportBalanceEvaluation;
+
+  /// No description provided for @securityReportBalanceNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark: Evaluation is limited to the door\'s latest open/close operation.'**
+  String get securityReportBalanceNote;
+
+  /// No description provided for @securityReportOpenEvaluation.
+  ///
+  /// In en, this message translates to:
+  /// **'Open evaluation'**
+  String get securityReportOpenEvaluation;
+
+  /// No description provided for @securityReportCloseEvaluation.
+  ///
+  /// In en, this message translates to:
+  /// **'Close evaluation'**
+  String get securityReportCloseEvaluation;
+
+  /// No description provided for @securityReportOverload.
+  ///
+  /// In en, this message translates to:
+  /// **'Over load'**
+  String get securityReportOverload;
+
+  /// No description provided for @securityReportOperationRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Door operation record'**
+  String get securityReportOperationRecord;
+
+  /// No description provided for @securityReportLast24Hours.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 24 hours'**
+  String get securityReportLast24Hours;
+
+  /// No description provided for @securityReportLast7Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 days'**
+  String get securityReportLast7Days;
+
+  /// No description provided for @securityReportTimeCyclesAxis.
+  ///
+  /// In en, this message translates to:
+  /// **'X: Time Y: Operation cycles'**
+  String get securityReportTimeCyclesAxis;
+
+  /// No description provided for @securityReportDateCyclesAxis.
+  ///
+  /// In en, this message translates to:
+  /// **'X: Date Y: Operation cycles'**
+  String get securityReportDateCyclesAxis;
+
+  /// No description provided for @securityReportFrequentOperationWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Unusually frequent operation on Monday. Please check it.'**
+  String get securityReportFrequentOperationWarning;
+
+  /// No description provided for @securityReportMotorFunctionStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Motor function status'**
+  String get securityReportMotorFunctionStatus;
+
+  /// No description provided for @securityReportWiredSensorsDiagnosis.
+  ///
+  /// In en, this message translates to:
+  /// **'Wired sensors diagnosis'**
+  String get securityReportWiredSensorsDiagnosis;
+
+  /// No description provided for @securityReportWirelessSensorsDiagnosis.
+  ///
+  /// In en, this message translates to:
+  /// **'Wireless sensors diagnosis'**
+  String get securityReportWirelessSensorsDiagnosis;
+
+  /// No description provided for @securityReportNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get securityReportNormal;
+
+  /// No description provided for @securityReportDisconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get securityReportDisconnect;
+
+  /// No description provided for @securityReportAbnormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Abnormal'**
+  String get securityReportAbnormal;
+
+  /// No description provided for @securityReportNotTriggered.
+  ///
+  /// In en, this message translates to:
+  /// **'Not triggered'**
+  String get securityReportNotTriggered;
+
+  /// No description provided for @securityReportLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked'**
+  String get securityReportLocked;
+
+  /// No description provided for @securityReportBatteryEnough.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery power enough'**
+  String get securityReportBatteryEnough;
+
+  /// No description provided for @securityReportWirelessWicketDoor.
+  ///
+  /// In en, this message translates to:
+  /// **'Wireless wicket door'**
+  String get securityReportWirelessWicketDoor;
+
+  /// No description provided for @securityReportWirelessSafetyEdge.
+  ///
+  /// In en, this message translates to:
+  /// **'Wireless safety edge'**
+  String get securityReportWirelessSafetyEdge;
+
+  /// No description provided for @securityReportWirelessPositionSensor.
+  ///
+  /// In en, this message translates to:
+  /// **'Wireless position sensor'**
+  String get securityReportWirelessPositionSensor;
+
+  /// No description provided for @securityReportSafetySuggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety suggestion:'**
+  String get securityReportSafetySuggestion;
+
+  /// No description provided for @securityReportSuggestionCycles.
+  ///
+  /// In en, this message translates to:
+  /// **'Operated cycles has reached the maintenance warning;'**
+  String get securityReportSuggestionCycles;
+
+  /// No description provided for @securityReportSuggestionBattery.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery power of safety edge is low, replace it in time;'**
+  String get securityReportSuggestionBattery;
+
+  /// No description provided for @securityReportSuggestionMaintenance.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact your installer for a necessary maintenance to ensure the safety of the door.'**
+  String get securityReportSuggestionMaintenance;
+
+  /// No description provided for @securityReportSuggestionCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'The opening current of your opener exceeds the maximum value we set.'**
+  String get securityReportSuggestionCurrent;
+
+  /// No description provided for @securityReportSaveSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Report saved to album.'**
+  String get securityReportSaveSuccess;
+
+  /// No description provided for @securityReportSaveAccessDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo library permission is required to save the report.'**
+  String get securityReportSaveAccessDenied;
+
+  /// No description provided for @securityReportSaveNoSpace.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough storage space to save the report.'**
+  String get securityReportSaveNoSpace;
+
+  /// No description provided for @securityReportSaveUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to save this image format.'**
+  String get securityReportSaveUnsupported;
+
+  /// No description provided for @securityReportSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to save report image.'**
+  String get securityReportSaveFailed;
+
+  /// No description provided for @securityReportCaptureFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to create report image.'**
+  String get securityReportCaptureFailed;
+
+  /// No description provided for @securityReportDoorOpeningForce.
+  ///
+  /// In en, this message translates to:
+  /// **'Door opening force'**
+  String get securityReportDoorOpeningForce;
+
+  /// No description provided for @securityReportDoorClosingForce.
+  ///
+  /// In en, this message translates to:
+  /// **'Door closing force'**
+  String get securityReportDoorClosingForce;
+
+  /// No description provided for @securityReportAutoCloseTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto close time'**
+  String get securityReportAutoCloseTime;
+
+  /// No description provided for @securityReportAutoCloseCondition.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto close condition'**
+  String get securityReportAutoCloseCondition;
+
+  /// No description provided for @securityReportLedOffDelay.
+  ///
+  /// In en, this message translates to:
+  /// **'LED off delay'**
+  String get securityReportLedOffDelay;
+
+  /// No description provided for @securityReportPartialOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Partial open'**
+  String get securityReportPartialOpen;
+
+  /// No description provided for @securityReportIgnoreObstructionHeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Ignore obstruction height'**
+  String get securityReportIgnoreObstructionHeight;
+
+  /// No description provided for @securityReportPhotoBeamFunction.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo beam function'**
+  String get securityReportPhotoBeamFunction;
+
+  /// No description provided for @securityReportCommunityMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Community mode'**
+  String get securityReportCommunityMode;
+
+  /// No description provided for @securityReportLevel1.
+  ///
+  /// In en, this message translates to:
+  /// **'Level1'**
+  String get securityReportLevel1;
+
+  /// No description provided for @securityReportAnyPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'Any position'**
+  String get securityReportAnyPosition;
+
+  /// No description provided for @securityReportOn.
+  ///
+  /// In en, this message translates to:
+  /// **'ON'**
+  String get securityReportOn;
 }
 
 class _AppLocalizationsDelegate

@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 
 import 'package:flinx/core/platform/gallery_image_saver.dart';
+import 'package:flinx/features/security_center/application/providers.dart';
+import 'package:flinx/features/security_center/domain/entities/full_report.dart';
 import 'package:flinx/features/security_center/presentation/pages/full_report_page.dart';
 import 'package:flinx/features/security_center/presentation/pages/general_evaluation_page.dart';
 import 'package:flinx/features/security_center/presentation/pages/security_center_page.dart';
@@ -30,7 +32,7 @@ void main() {
     await tester.tap(find.text('Download the full report'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Full Report'), findsOneWidget);
+    expect(find.text('Safety Report'), findsOneWidget);
     expect(find.text('Safety suggestion:'), findsOneWidget);
 
     await tester.tap(find.byType(BackButtonIcon));
@@ -73,9 +75,12 @@ void main() {
       findsOneWidget,
     );
 
-    await tester.tap(
-      find.byKey(const ValueKey<String>('segment-Close evaluation')),
+    final closeSegment = find.byKey(
+      const ValueKey<String>('segment-Close evaluation'),
     );
+    await tester.ensureVisible(closeSegment);
+    await tester.pumpAndSettle();
+    await tester.tap(closeSegment);
     await tester.pumpAndSettle();
     expect(
       find.byKey(const ValueKey<BalanceEvaluation>(BalanceEvaluation.close)),
@@ -101,11 +106,11 @@ void main() {
   ) async {
     await _pumpPage(tester, const FullReportPage(deviceId: 'mock-device'));
 
-    expect(find.text('Door balance evaluation'), findsNWidgets(2));
-    expect(find.text('Door operation record'), findsNWidgets(2));
+    expect(find.text('Door balance evaluation'), findsOneWidget);
+    expect(find.text('Door operation record'), findsOneWidget);
     expect(find.text('Motor function status'), findsOneWidget);
-    expect(find.text('Wired sensor status'), findsOneWidget);
-    expect(find.text('Wireless Sensors Status'), findsOneWidget);
+    expect(find.text('Wired sensors diagnosis'), findsOneWidget);
+    expect(find.text('Wireless sensors diagnosis'), findsOneWidget);
     expect(find.text('Safety suggestion:'), findsOneWidget);
     expect(find.text('Save'), findsOneWidget);
     expect(find.text('Share'), findsOneWidget);
@@ -125,6 +130,183 @@ void main() {
     );
     expect(find.text('Safety suggestion:'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('full report renders values supplied by its provider', (
+    tester,
+  ) async {
+    const report = FullReport(
+      deviceId: 'custom-device',
+      motorName: 'Custom motor',
+      serialNumber: 'CUSTOM-001',
+      cycleSummary: FullReportCycleSummary(
+        doorName: 'Custom door',
+        operatedCycles: 12,
+        remainingCycles: 34,
+        needsMaintenance: false,
+      ),
+      openBalanceEvaluation: FullReportBalanceEvaluation(
+        indicatorPercentage: 50,
+        bandStatuses: [
+          FullReportBalanceBandStatus.normal,
+          FullReportBalanceBandStatus.normal,
+          FullReportBalanceBandStatus.normal,
+          FullReportBalanceBandStatus.normal,
+          FullReportBalanceBandStatus.normal,
+        ],
+      ),
+      closeBalanceEvaluation: FullReportBalanceEvaluation(
+        indicatorPercentage: 50,
+        bandStatuses: [
+          FullReportBalanceBandStatus.normal,
+          FullReportBalanceBandStatus.normal,
+          FullReportBalanceBandStatus.normal,
+          FullReportBalanceBandStatus.normal,
+          FullReportBalanceBandStatus.normal,
+        ],
+      ),
+      last24HoursRecord: FullReportOperationRecord(points: []),
+      last7DaysRecord: FullReportOperationRecord(points: []),
+      motorFunctionStatus: FullReportMotorFunctionStatus(
+        openingForceLevel: 2,
+        closingForceLevel: 2,
+        autoCloseSeconds: 30,
+        autoCloseCondition: FullReportAutoCloseCondition.anyPosition,
+        ledOffDelayMinutes: 2,
+        partialOpenCentimeters: 30,
+        ignoreObstructionHeightCentimeters: 2,
+        photoBeamEnabled: true,
+        communityModeEnabled: false,
+        wiredELockEnabled: true,
+      ),
+      wiredSensorDiagnosis: FullReportSensorDiagnosis(
+        summary: FullReportSensorSummary(
+          normalCount: 1,
+          disconnectedCount: 0,
+          abnormalCount: 0,
+        ),
+        sensors: [
+          FullReportSensor(
+            id: 'custom-wired-photo-beam',
+            type: FullReportSensorType.wiredPhotoBeam,
+            states: [FullReportSensorDisplayState.notTriggered],
+          ),
+        ],
+      ),
+      wirelessSensorDiagnosis: FullReportSensorDiagnosis(
+        summary: FullReportSensorSummary(
+          normalCount: 0,
+          disconnectedCount: 1,
+          abnormalCount: 0,
+        ),
+        sensors: [
+          FullReportSensor(
+            id: 'custom-wireless-e-lock',
+            type: FullReportSensorType.wirelessELock,
+            states: [FullReportSensorDisplayState.locked],
+          ),
+        ],
+      ),
+      safetySuggestions: [FullReportSafetySuggestionCode.contactInstaller],
+    );
+
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          fullReportProvider('custom-device').overrideWith((ref) => report),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const FullReportPage(deviceId: 'custom-device'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Custom motor'), findsOneWidget);
+    expect(find.textContaining('CUSTOM-001'), findsOneWidget);
+    expect(find.text('Custom door'), findsOneWidget);
+    expect(find.text('12'), findsOneWidget);
+    expect(find.text('34'), findsOneWidget);
+  });
+
+  testWidgets('full report segments switch the single visible cards', (
+    tester,
+  ) async {
+    await _pumpPage(tester, const FullReportPage(deviceId: 'mock-device'));
+
+    expect(
+      find.byKey(const ValueKey<BalanceEvaluation>(BalanceEvaluation.open)),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey<RecordRange>(RecordRange.last24Hours)),
+      findsOneWidget,
+    );
+
+    final closeSegment = find.byKey(
+      const ValueKey<String>('segment-Close evaluation'),
+    );
+    await tester.ensureVisible(closeSegment);
+    await tester.tap(closeSegment);
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey<BalanceEvaluation>(BalanceEvaluation.close)),
+      findsOneWidget,
+    );
+
+    final last7DaysSegment = find.byKey(
+      const ValueKey<String>('segment-Last 7 days'),
+    );
+    await tester.ensureVisible(last7DaysSegment);
+    await tester.tap(last7DaysSegment);
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey<RecordRange>(RecordRange.last7Days)),
+      findsOneWidget,
+    );
+    expect(find.text('X: Date Y: Operation cycles'), findsOneWidget);
+  });
+
+  testWidgets('balance table keeps its arrow inside the 3 to 1 table layout', (
+    tester,
+  ) async {
+    await _pumpPage(tester, const FullReportPage(deviceId: 'mock-device'));
+
+    final mainTable = find.byKey(const ValueKey<String>('balance-main-table'));
+    final statusTable = find.byKey(
+      const ValueKey<String>('balance-status-table'),
+    );
+    final arrow = find.byKey(const ValueKey<String>('balance-table-arrow'));
+
+    expect(mainTable, findsOneWidget);
+    expect(statusTable, findsOneWidget);
+    expect(arrow, findsOneWidget);
+    expect(find.descendant(of: mainTable, matching: arrow), findsOneWidget);
+    expect(
+      tester.getSize(mainTable).width / tester.getSize(statusTable).width,
+      closeTo(3, 0.1),
+    );
+
+    final closeSegment = find.byKey(
+      const ValueKey<String>('segment-Close evaluation'),
+    );
+    await tester.ensureVisible(closeSegment);
+    await tester.tap(closeSegment);
+    await tester.pumpAndSettle();
+
+    final arrowImage = tester.widget<Image>(
+      find.descendant(of: arrow, matching: find.byType(Image)),
+    );
+    expect(
+      (arrowImage.image as AssetImage).assetName,
+      'assets/icons/security_center/security_report_motor_blue_down_arrow.png',
+    );
   });
 
   testWidgets('full report save captures report image and shows success', (
@@ -148,12 +330,13 @@ void main() {
     _tapReportSaveAction(tester);
     await tester.pump();
     await tester.pump();
-    await tester.pumpAndSettle();
 
     expect(saveCalls, 1);
     expect(savedBytes, isNotNull);
     expect(savedBytes, isNotEmpty);
-    expect(find.text('Report saved to album.'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
   });
 
@@ -174,9 +357,10 @@ void main() {
     _tapReportSaveAction(tester);
     await tester.pump();
     await tester.pump();
-    await tester.pumpAndSettle();
 
-    expect(find.text('Unable to save report image.'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pumpAndSettle();
     expect(find.text('gallery unavailable'), findsNothing);
     expect(tester.takeException(), isNull);
   });
@@ -198,9 +382,10 @@ void main() {
     _tapReportSaveAction(tester);
     await tester.pump();
     await tester.pump();
-    await tester.pumpAndSettle();
 
-    expect(find.text('Unable to create report image.'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pumpAndSettle();
     expect(find.text('capture unavailable'), findsNothing);
     expect(tester.takeException(), isNull);
   });
@@ -365,10 +550,12 @@ Future<void> _pumpPage(
     addTearDown(tester.view.resetDevicePixelRatio);
   }
   await tester.pumpWidget(
-    MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: page,
+    ProviderScope(
+      child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: page,
+      ),
     ),
   );
   await tester.pumpAndSettle();

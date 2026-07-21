@@ -3,18 +3,21 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../core/platform/gallery_image_saver.dart';
+import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
+import '../../application/providers.dart';
 import '../widgets/security_report_widgets.dart';
 
 typedef ReportImageSaver = Future<void> Function(Uint8List bytes);
 typedef ReportImageCapture =
     Future<Uint8List> Function(GlobalKey boundaryKey, BuildContext context);
 
-class FullReportPage extends StatefulWidget {
+class FullReportPage extends ConsumerStatefulWidget {
   const FullReportPage({
     required this.deviceId,
     this.captureReportImage = captureReportPngBytes,
@@ -30,12 +33,14 @@ class FullReportPage extends StatefulWidget {
   final ReportImageSaver saveReportImage;
 
   @override
-  State<FullReportPage> createState() => _FullReportPageState();
+  ConsumerState<FullReportPage> createState() => _FullReportPageState();
 }
 
-class _FullReportPageState extends State<FullReportPage> {
+class _FullReportPageState extends ConsumerState<FullReportPage> {
   final _reportBoundaryKey = GlobalKey();
   var _isSaving = false;
+  var _balance = BalanceEvaluation.open;
+  var _recordRange = RecordRange.last24Hours;
 
   Future<void> _saveReportImage() async {
     if (_isSaving) return;
@@ -67,62 +72,79 @@ class _FullReportPageState extends State<FullReportPage> {
 
   @override
   Widget build(BuildContext context) {
+    final report = ref.watch(fullReportProvider(widget.deviceId));
+    final balanceEvaluation = _balance == BalanceEvaluation.open
+        ? report.openBalanceEvaluation
+        : report.closeBalanceEvaluation;
+    final operationRecord = _recordRange == RecordRange.last24Hours
+        ? report.last24HoursRecord
+        : report.last7DaysRecord;
     return Scaffold(
       backgroundColor: AppColors.securityCenterBackground,
-      appBar: const FlinxNavigationBar(
-        title: 'Full Report',
+      appBar: FlinxNavigationBar(
+        title: AppLocalizations.of(context).securityReportTitle,
         showBottomDivider: false,
       ),
       body: SingleChildScrollView(
         key: const ValueKey<String>('full-report-scroll'),
-        padding: const EdgeInsets.only(bottom: 112),
         child: RepaintBoundary(
           key: _reportBoundaryKey,
           child: ColoredBox(
             color: AppColors.securityCenterBackground,
-            child: Column(
+            child: Stack(
               children: [
-                const SecurityReportHero(),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    children: [
-                      const CycleSummaryCard(),
-                      const SizedBox(height: 20),
-                      const BalanceEvaluationCard(
-                        selection: BalanceEvaluation.open,
-                      ),
-                      const SizedBox(height: 20),
-                      const BalanceEvaluationCard(
-                        selection: BalanceEvaluation.close,
-                      ),
-                      const SizedBox(height: 20),
-                      const OperationChartCard(range: RecordRange.last24Hours),
-                      const SizedBox(height: 20),
-                      const OperationChartCard(range: RecordRange.last7Days),
-                      const SizedBox(height: 20),
-                      const MotorFunctionStatusCard(),
-                      const SizedBox(height: 20),
-                      const SensorStatusCard(
-                        title: 'Wired sensor status',
-                        sensors: ['Wired photo beam', 'Wired E-lock'],
-                      ),
-                      const SizedBox(height: 20),
-                      const SensorStatusCard(
-                        title: 'Wireless Sensors Status',
-                        sensors: [
-                          'Wireless Photo Beam',
-                          'Wireless wicket door',
-                          'Wireless safety edge',
-                          'Wireless E-lock',
-                          'Wireless rope sensor',
+                const Positioned(
+                  top: 150,
+                  left: 0,
+                  right: 0,
+                  child: SecurityReportBlueBackdrop(),
+                ),
+                Column(
+                  children: [
+                    SecurityReportHero(
+                      motorName: report.motorName,
+                      serialNumber: report.serialNumber,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Column(
+                        children: [
+                          CycleSummaryCard(summary: report.cycleSummary),
+                          const SizedBox(height: 16),
+                          BalanceEvaluationCard(
+                            selection: _balance,
+                            evaluation: balanceEvaluation,
+                            onChanged: (value) =>
+                                setState(() => _balance = value),
+                          ),
+                          const SizedBox(height: 22),
+                          OperationChartCard(
+                            range: _recordRange,
+                            record: operationRecord,
+                            onChanged: (value) =>
+                                setState(() => _recordRange = value),
+                          ),
+                          const SizedBox(height: 16),
+                          MotorFunctionStatusCard(
+                            status: report.motorFunctionStatus,
+                          ),
+                          const SizedBox(height: 16),
+                          SensorDiagnosisSection.wired(
+                            diagnosis: report.wiredSensorDiagnosis,
+                          ),
+                          const SizedBox(height: 16),
+                          SensorDiagnosisSection.wireless(
+                            diagnosis: report.wirelessSensorDiagnosis,
+                          ),
+                          const SizedBox(height: 16),
+                          SafetySuggestionCard(
+                            suggestions: report.safetySuggestions,
+                          ),
+                          const SizedBox(height: 28),
                         ],
                       ),
-                      const SizedBox(height: 20),
-                      const SafetySuggestionCard(),
-                      const SizedBox(height: 28),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ],
             ),
