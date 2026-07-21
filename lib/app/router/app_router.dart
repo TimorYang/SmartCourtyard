@@ -226,7 +226,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: SmartOpenerBleScanPage.routePath,
         name: SmartOpenerBleScanPage.routeName,
-        builder: (context, state) => const SmartOpenerBleScanPage(),
+        builder: (context, state) => SmartOpenerBleScanPage(
+          targetSn: state.uri.queryParameters['targetSn'],
+        ),
       ),
       GoRoute(
         path: SmartOpenerScanResultsPage.routePath,

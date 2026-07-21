@@ -120,6 +120,20 @@ void main() {
     expect(find.text('Select Wi-Fi'), findsWidgets);
   });
 
+  testWidgets(
+    'QR-targeted BLE scan automatically connects the matching device',
+    (tester) async {
+      await _pumpScanFlowTestApp(
+        tester,
+        '${SmartOpenerBleScanPage.routePath}?targetSn=opener_MOCK-SN-001',
+      );
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(find.text('CHOOSE WIFI'), findsOneWidget);
+    },
+  );
+
   testWidgets('BLE scan opens not found when no device is discovered', (
     tester,
   ) async {
@@ -525,8 +539,10 @@ Widget _scanFlowTestApp(
       ),
       GoRoute(
         path: SmartOpenerBleScanPage.routePath,
-        builder: (context, state) =>
-            SmartOpenerBleScanPage(scanDuration: scanDuration),
+        builder: (context, state) => SmartOpenerBleScanPage(
+          scanDuration: scanDuration,
+          targetSn: state.uri.queryParameters['targetSn'],
+        ),
       ),
       GoRoute(
         path: SmartOpenerScanResultsPage.routePath,

@@ -54,6 +54,21 @@ void main() {
   });
 
   test(
+    'passes the QR target serial number as an exact BLE name filter',
+    () async {
+      final gateway = _DisconnectTrackingGateway();
+      final container = _createContainer(gateway);
+      addTearDown(container.dispose);
+
+      await container
+          .read(addDeviceControllerProvider.notifier)
+          .startScan(targetSn: 'opener_B8F86211A9DC');
+
+      expect(gateway.lastScanFilter?.exactName, 'opener_B8F86211A9DC');
+    },
+  );
+
+  test(
     'uses one flow id across scan, authentication, provisioning and binding',
     () async {
       final gateway = _FlowTrackingGateway();
@@ -116,6 +131,7 @@ class _DisconnectTrackingGateway extends MockHardwareGateway {
   final bool throwOnDisconnect;
   final List<String> disconnectedDeviceIds = <String>[];
   var scanStarted = false;
+  BleScanFilter? lastScanFilter;
 
   @override
   Future<void> startBleScan({
@@ -123,6 +139,7 @@ class _DisconnectTrackingGateway extends MockHardwareGateway {
     BleScanFilter filter = const BleScanFilter(),
   }) async {
     scanStarted = true;
+    lastScanFilter = filter;
   }
 
   @override

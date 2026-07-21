@@ -641,6 +641,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Unable to read the selected image.';
 
   @override
+  String get smartOpenerScannerInvalidCode =>
+      'This QR code is not a valid Smart Opener device code.';
+
+  @override
+  String get smartOpenerScannerDeviceNotFound =>
+      'The device matching this QR code was not found. Please try again.';
+
+  @override
+  String get smartOpenerScannerConnectionFailed =>
+      'Unable to connect to the device. Please try scanning again.';
+
+  @override
   String get smartOpenerQrPayloadReceived =>
       'QR code received. Continue by connecting the device.';
 

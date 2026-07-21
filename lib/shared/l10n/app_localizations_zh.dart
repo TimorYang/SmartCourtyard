@@ -613,6 +613,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get smartOpenerScannerImageFailed => '无法读取所选图片。';
 
   @override
+  String get smartOpenerScannerInvalidCode => '该二维码不是有效的 Smart Opener 设备码。';
+
+  @override
+  String get smartOpenerScannerDeviceNotFound => '未找到与该二维码匹配的设备，请重试。';
+
+  @override
+  String get smartOpenerScannerConnectionFailed => '无法连接设备，请重新扫码。';
+
+  @override
   String get smartOpenerQrPayloadReceived => '已收到二维码内容，请继续连接设备。';
 
   @override

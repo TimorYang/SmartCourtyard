@@ -21,12 +21,14 @@ class SmartOpenerBleScanPage extends ConsumerStatefulWidget {
   const SmartOpenerBleScanPage({
     super.key,
     this.scanDuration = const Duration(seconds: 30),
+    this.targetSn,
   });
 
   static const routeName = 'smart-opener-ble-scan';
   static const routePath = '/add-device/smart-opener/ble-scan';
 
   final Duration scanDuration;
+  final String? targetSn;
 
   @override
   ConsumerState<SmartOpenerBleScanPage> createState() =>
@@ -38,6 +40,7 @@ class _SmartOpenerBleScanPageState extends ConsumerState<SmartOpenerBleScanPage>
   late final AddDeviceController _controller;
   Timer? _scanTimer;
   var _hasCompletedScan = false;
+  var _isConnectingTarget = false;
   String? _pendingDeviceId;
 
   @override
@@ -45,6 +48,20 @@ class _SmartOpenerBleScanPageState extends ConsumerState<SmartOpenerBleScanPage>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _controller = ref.read(addDeviceControllerProvider.notifier);
+    if (_targetSn != null) {
+      ref.listenManual(addDeviceControllerProvider, (previous, next) {
+        BleDevice? targetDevice;
+        for (final device in next.devices.values) {
+          if (device.sn?.trim() == _targetSn) {
+            targetDevice = device;
+            break;
+          }
+        }
+        if (targetDevice != null) {
+          unawaited(_connectTargetDevice(targetDevice));
+        }
+      });
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
         return;
@@ -84,18 +101,18 @@ class _SmartOpenerBleScanPageState extends ConsumerState<SmartOpenerBleScanPage>
         AppLocalizations.of(context).smartOpenerDisconnectFailedMessage,
       );
     }
-    _startTimedScan(clearResults: clearResults);
+    await _startTimedScan(clearResults: clearResults);
   }
 
-  void _startTimedScan({bool clearResults = true}) {
+  Future<void> _startTimedScan({bool clearResults = true}) async {
     _scanTimer?.cancel();
     if (clearResults) {
       _controller.clearScanResults();
     }
-    unawaited(_controller.startScan());
     _scanTimer = Timer(widget.scanDuration, () {
       unawaited(_completeScan());
     });
+    await _controller.startScan(targetSn: _targetSn);
   }
 
   void _stopTimedScan() {
@@ -145,6 +162,40 @@ class _SmartOpenerBleScanPageState extends ConsumerState<SmartOpenerBleScanPage>
     final state = ref.read(addDeviceControllerProvider);
     final message = state.errorMessage ?? 'Unable to connect device.';
     AppToast.error(context, message);
+  }
+
+  Future<void> _connectTargetDevice(BleDevice device) async {
+    if (_isConnectingTarget || _hasCompletedScan || !mounted) {
+      return;
+    }
+    _isConnectingTarget = true;
+    _scanTimer?.cancel();
+    _scanTimer = null;
+    await _controller.stopScan();
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _pendingDeviceId = device.id;
+    });
+    final connected = await _controller.connectAndAuthenticate(device);
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _pendingDeviceId = null;
+    });
+    if (connected) {
+      context.push(SmartOpenerChooseWifiPage.routePath);
+      return;
+    }
+    final state = ref.read(addDeviceControllerProvider);
+    AppToast.error(context, state.errorMessage ?? 'Unable to connect device.');
+  }
+
+  String? get _targetSn {
+    final value = widget.targetSn?.trim();
+    return value == null || value.isEmpty ? null : value;
   }
 
   @override

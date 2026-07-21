@@ -1280,6 +1280,24 @@ abstract class AppLocalizations {
   /// **'Unable to read the selected image.'**
   String get smartOpenerScannerImageFailed;
 
+  /// Invalid Smart Opener QR code message
+  ///
+  /// In en, this message translates to:
+  /// **'This QR code is not a valid Smart Opener device code.'**
+  String get smartOpenerScannerInvalidCode;
+
+  /// Target BLE device was not found after QR scanning
+  ///
+  /// In en, this message translates to:
+  /// **'The device matching this QR code was not found. Please try again.'**
+  String get smartOpenerScannerDeviceNotFound;
+
+  /// Target BLE device connection failure after QR scanning
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to connect to the device. Please try scanning again.'**
+  String get smartOpenerScannerConnectionFailed;
+
   /// Wi-Fi page message when a QR payload is handed off
   ///
   /// In en, this message translates to:

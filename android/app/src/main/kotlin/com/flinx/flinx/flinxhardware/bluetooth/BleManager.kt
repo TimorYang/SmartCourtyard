@@ -73,6 +73,7 @@ class BleManager(
 
   private var scanner: BluetoothLeScanner? = null
   private var activeScanCallback: ScanCallback? = null
+  private var activeScanFilter: BleScanFilterDto? = null
   private var activeRequestId: String? = null
   private var hasScanResult = false
   private var onDeviceFound: ((BleDeviceDto) -> Unit)? = null
@@ -144,6 +145,7 @@ class BleManager(
       .build()
     this.scanner = bleScanner
     this.activeScanCallback = callback
+    this.activeScanFilter = filter
     this.activeRequestId = requestId
     this.hasScanResult = false
     this.onDeviceFound = onDeviceFound
@@ -163,6 +165,7 @@ class BleManager(
       currentScanner.stopScan(callback)
     }
     activeScanCallback = null
+    activeScanFilter = null
     scanner = null
     activeRequestId = null
     hasScanResult = false
@@ -2197,6 +2200,9 @@ class BleManager(
     val rawDeviceName = result.device?.name ?: result.scanRecord?.deviceName
     val deviceName = rawDeviceName?.takeIf { it.isNotBlank() && !it.equals("unnamed", ignoreCase = true) }
       ?: return
+    val filter = activeScanFilter ?: return
+    if (filter.exactName != null && deviceName != filter.exactName) return
+    if (filter.namePrefix != null && !deviceName.startsWith(filter.namePrefix)) return
     hasScanResult = true
     val device = BleDeviceDto(
       requestId = requestId,
@@ -2223,11 +2229,17 @@ class BleManager(
   }
 
   private fun buildScanFilters(filter: BleScanFilterDto): List<ScanFilter> {
-    if (filter.serviceUuids.isEmpty()) {
+    if (filter.serviceUuids.isEmpty() && filter.exactName == null) {
       return emptyList()
     }
-    return filter.serviceUuids.map {
-      ScanFilter.Builder().setServiceUuid(ParcelUuid.fromString(it)).build()
+    val serviceUuids = filter.serviceUuids.ifEmpty { listOf<String?>(null) }
+    return serviceUuids.map { serviceUuid ->
+      ScanFilter.Builder().apply {
+        if (serviceUuid != null) {
+          setServiceUuid(ParcelUuid.fromString(serviceUuid))
+        }
+        filter.exactName?.let(::setDeviceName)
+      }.build()
     }
   }
 

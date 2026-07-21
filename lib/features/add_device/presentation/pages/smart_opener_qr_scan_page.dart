@@ -1,16 +1,22 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
+import '../../../../platform_bridge/hardware_models.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
+import '../../application/add_device_controller.dart';
+import '../../application/providers.dart';
+import '../../application/smart_opener_qr_payload_parser.dart';
 import 'smart_opener_ble_scan_page.dart';
-import 'wifi_configuration_page.dart';
+import 'smart_opener_choose_wifi_page.dart';
 
 class SmartOpenerQrScanAssetPaths {
   const SmartOpenerQrScanAssetPaths._();
@@ -21,7 +27,7 @@ class SmartOpenerQrScanAssetPaths {
       'assets/icons/add_device/smart_opener_qr_flashlight_icon.png';
 }
 
-class SmartOpenerQrScanPage extends StatefulWidget {
+class SmartOpenerQrScanPage extends ConsumerStatefulWidget {
   const SmartOpenerQrScanPage({super.key, this.enableCamera = true});
 
   static const routeName = 'smart-opener-qr-scan';
@@ -30,25 +36,47 @@ class SmartOpenerQrScanPage extends StatefulWidget {
   final bool enableCamera;
 
   @override
-  State<SmartOpenerQrScanPage> createState() => _SmartOpenerQrScanPageState();
+  ConsumerState<SmartOpenerQrScanPage> createState() =>
+      _SmartOpenerQrScanPageState();
 }
 
-class _SmartOpenerQrScanPageState extends State<SmartOpenerQrScanPage> {
+class _SmartOpenerQrScanPageState extends ConsumerState<SmartOpenerQrScanPage> {
+  static const _targetScanTimeout = Duration(seconds: 10);
+
   late final MobileScannerController _scannerController;
+  late final AddDeviceController _addDeviceController;
   final ImagePicker _imagePicker = ImagePicker();
-  bool _hasNavigated = false;
+  Timer? _targetScanTimer;
+  String? _targetSn;
+  var _isProcessing = false;
+  var _isConnectingTarget = false;
 
   @override
   void initState() {
     super.initState();
     _scannerController = MobileScannerController(
-      detectionSpeed: DetectionSpeed.noDuplicates,
+      detectionSpeed: DetectionSpeed.normal,
       formats: const <BarcodeFormat>[BarcodeFormat.qrCode],
     );
+    _addDeviceController = ref.read(addDeviceControllerProvider.notifier);
+    ref.listenManual(addDeviceControllerProvider, (previous, next) {
+      final targetSn = _targetSn;
+      if (!_isProcessing || targetSn == null) {
+        return;
+      }
+      for (final device in next.devices.values) {
+        if (device.sn?.trim() == targetSn) {
+          unawaited(_connectTargetDevice(device));
+          return;
+        }
+      }
+    });
   }
 
   @override
   void dispose() {
+    _targetScanTimer?.cancel();
+    unawaited(_addDeviceController.stopScan());
     unawaited(_scannerController.dispose());
     super.dispose();
   }
@@ -95,18 +123,114 @@ class _SmartOpenerQrScanPageState extends State<SmartOpenerQrScanPage> {
   }
 
   Future<void> _handleQrPayload(String rawValue) async {
-    if (_hasNavigated || !mounted) {
+    if (_isProcessing || !mounted) {
       return;
     }
-    _hasNavigated = true;
-    await _scannerController.stop();
+    final serialNumber = parseSmartOpenerSerialNumber(rawValue);
+    if (serialNumber == null) {
+      _showMessage(AppLocalizations.of(context).smartOpenerScannerInvalidCode);
+      return;
+    }
+    unawaited(HapticFeedback.mediumImpact());
+    setState(() {
+      _isProcessing = true;
+      _targetSn = serialNumber;
+    });
+    try {
+      await _scannerController.stop();
+    } catch (_) {
+      await _resumeQrScanning(
+        AppLocalizations.of(context).smartOpenerScannerUnknownError,
+      );
+      return;
+    }
     if (!mounted) {
       return;
     }
-    final encodedPayload = Uri.encodeQueryComponent(rawValue);
-    context.push(
-      '${WifiConfigurationPage.routePath}?qrPayload=$encodedPayload',
+    await _startTargetScan(serialNumber);
+  }
+
+  Future<void> _startTargetScan(String serialNumber) async {
+    final allDisconnected = await _addDeviceController
+        .disconnectConnectedBleDevices();
+    if (!mounted || !_isProcessing) {
+      return;
+    }
+    if (!allDisconnected) {
+      _showMessage(
+        AppLocalizations.of(context).smartOpenerDisconnectFailedMessage,
+      );
+    }
+    _addDeviceController.clearScanResults();
+    _targetSn = serialNumber;
+    _targetScanTimer = Timer(_targetScanTimeout, () {
+      unawaited(_handleTargetScanTimeout());
+    });
+    await _addDeviceController.startScan(targetSn: serialNumber);
+    if (!mounted || !_isProcessing) {
+      return;
+    }
+    final scanState = ref.read(addDeviceControllerProvider);
+    if (!scanState.isScanning && scanState.errorMessage != null) {
+      await _resumeQrScanning(scanState.errorMessage!);
+    }
+  }
+
+  Future<void> _connectTargetDevice(BleDevice device) async {
+    if (_isConnectingTarget || !_isProcessing || !mounted) {
+      return;
+    }
+    _isConnectingTarget = true;
+    _targetScanTimer?.cancel();
+    _targetScanTimer = null;
+    await _addDeviceController.stopScan();
+    final connected = await _addDeviceController.connectAndAuthenticate(device);
+    if (!mounted) {
+      return;
+    }
+    if (connected) {
+      context.push(SmartOpenerChooseWifiPage.routePath);
+      return;
+    }
+    await _resumeQrScanning(
+      ref.read(addDeviceControllerProvider).errorMessage ??
+          AppLocalizations.of(context).smartOpenerScannerConnectionFailed,
     );
+  }
+
+  Future<void> _handleTargetScanTimeout() async {
+    if (!_isProcessing || !mounted) {
+      return;
+    }
+    await _resumeQrScanning(
+      AppLocalizations.of(context).smartOpenerScannerDeviceNotFound,
+    );
+  }
+
+  Future<void> _resumeQrScanning(String message) async {
+    _targetScanTimer?.cancel();
+    _targetScanTimer = null;
+    await _addDeviceController.stopScan();
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _isProcessing = false;
+      _isConnectingTarget = false;
+      _targetSn = null;
+    });
+    _showMessage(message);
+    if (widget.enableCamera) {
+      try {
+        await _scannerController.start();
+      } catch (_) {
+        if (mounted) {
+          _showMessage(
+            AppLocalizations.of(context).smartOpenerScannerUnknownError,
+          );
+        }
+      }
+    }
   }
 
   String? _firstQrPayload(BarcodeCapture? capture) {
@@ -142,7 +266,9 @@ class _SmartOpenerQrScanPageState extends State<SmartOpenerQrScanPage> {
         actions: [
           IconButton(
             tooltip: l10n.smartOpenerScannerBluetoothTooltip,
-            onPressed: () => context.push(SmartOpenerBleScanPage.routePath),
+            onPressed: _isProcessing
+                ? null
+                : () => context.push(SmartOpenerBleScanPage.routePath),
             icon: const Icon(Icons.bluetooth),
           ),
         ],
@@ -206,18 +332,25 @@ class _SmartOpenerQrScanPageState extends State<SmartOpenerQrScanPage> {
                       label: l10n.smartOpenerScannerGalleryAction,
                       assetPath: SmartOpenerQrScanAssetPaths.galleryIcon,
                       fallbackIcon: Icons.image_outlined,
-                      onPressed: _pickFromGallery,
+                      onPressed: _isProcessing ? null : _pickFromGallery,
                     ),
                     const SizedBox(width: 76),
                     _ScannerActionButton(
                       label: l10n.smartOpenerScannerFlashlightAction,
                       assetPath: SmartOpenerQrScanAssetPaths.flashlightIcon,
                       fallbackIcon: Icons.flashlight_on_outlined,
-                      onPressed: _toggleTorch,
+                      onPressed: _isProcessing ? null : _toggleTorch,
                     ),
                   ],
                 ),
               ),
+              if (_isProcessing)
+                const Positioned.fill(
+                  child: ColoredBox(
+                    color: Color(0x99000000),
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                ),
             ],
           );
         },
@@ -295,26 +428,39 @@ class _ScannerActionButton extends StatelessWidget {
   final String label;
   final String assetPath;
   final IconData fallbackIcon;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Image.asset(
-          assetPath,
-          fit: BoxFit.contain,
-          errorBuilder: (context, error, stackTrace) {
-            return Icon(fallbackIcon, size: 22);
-          },
+    return Semantics(
+      button: true,
+      label: label,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onPressed,
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset(
+                assetPath,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return Icon(fallbackIcon, size: 22);
+                },
+              ),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: AppTextTokens.scannerControlLabel(
+                  Theme.of(context).textTheme,
+                ),
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: AppTextTokens.scannerControlLabel(Theme.of(context).textTheme),
-        ),
-      ],
+      ),
     );
   }
 }

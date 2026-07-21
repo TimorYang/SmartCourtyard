@@ -13,8 +13,9 @@ import '../domain/use_cases/add_force_door_use_case.dart';
 import '../domain/use_cases/fetch_onboarding_device_key_use_case.dart';
 import 'ble_auth_token.dart';
 import 'providers.dart';
+import 'smart_opener_qr_payload_parser.dart';
 
-const String addDeviceBleNamePrefix = 'opener_';
+const String addDeviceBleNamePrefix = smartOpenerBleNamePrefix;
 
 class AddDeviceState {
   const AddDeviceState({
@@ -135,6 +136,7 @@ class AddDeviceController extends Notifier<AddDeviceState> {
       <StreamSubscription<Object?>>[];
   int _requestCounter = 0;
   String? _onboardingFlowId;
+  String? _targetBleName;
   var _disposeHookRegistered = false;
 
   @override
@@ -146,6 +148,10 @@ class AddDeviceController extends Notifier<AddDeviceState> {
     _logger = ref.watch(appLoggerProvider);
     _subscriptions.addAll(<StreamSubscription<Object?>>[
       _gateway.bleScanResults.listen((device) {
+        final targetBleName = _targetBleName;
+        if (targetBleName != null && device.sn?.trim() != targetBleName) {
+          return;
+        }
         _log(
           'ble_scan_result',
           requestId: device.requestId,
@@ -226,6 +232,7 @@ class AddDeviceController extends Notifier<AddDeviceState> {
   }
 
   void clearScanResults() {
+    _targetBleName = null;
     _log('flow_reset', stage: 'scan', result: 'cleared');
     state = state.copyWith(
       devices: const <String, BleDevice>{},
@@ -254,14 +261,19 @@ class AddDeviceController extends Notifier<AddDeviceState> {
     );
   }
 
-  Future<void> startScan() async {
+  Future<void> startScan({String? targetSn}) async {
     final flowId = _ensureFlow();
+    final normalizedTargetSn = targetSn?.trim();
+    _targetBleName = normalizedTargetSn?.isEmpty == true
+        ? null
+        : normalizedTargetSn;
     final requestId = _nextRequestId('ble-scan');
     _log(
       'ble_scan_started',
       requestId: requestId,
       stage: 'scan',
       result: 'started',
+      context: {'targetSn': _targetBleName},
     );
     state = state.copyWith(
       onboardingFlowId: flowId,
@@ -272,8 +284,9 @@ class AddDeviceController extends Notifier<AddDeviceState> {
     try {
       await _gateway.startBleScan(
         requestId: requestId,
-        filter: const BleScanFilter(
+        filter: BleScanFilter(
           namePrefix: addDeviceBleNamePrefix,
+          exactName: _targetBleName,
           allowDuplicates: false,
         ),
       );
