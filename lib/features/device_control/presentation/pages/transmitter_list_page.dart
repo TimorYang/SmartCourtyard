@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
+import '../../domain/entities/transmitter.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
+import 'transmitter_learning_page.dart';
 
 class TransmitterListAssetPaths {
   const TransmitterListAssetPaths._();
 
-  static const editActionPlaceholder =
-      'assets/icons/device_settings/transmitter_edit_action_placeholder.png';
-  static const deleteActionPlaceholder =
-      'assets/icons/device_settings/transmitter_delete_action_placeholder.png';
-  static const addActionPlaceholder =
-      'assets/icons/device_settings/transmitter_add_action_placeholder.png';
+  static const editActionPlaceholder = 'assets/icons/device_settings/transmitter_edit_action_placeholder.png';
+  static const deleteActionPlaceholder = 'assets/icons/device_settings/transmitter_delete_action_placeholder.png';
+  static const addActionPlaceholder = 'assets/icons/device_settings/transmitter_add_action_placeholder.png';
 }
 
 class TransmitterListPage extends StatefulWidget {
@@ -28,11 +28,11 @@ class TransmitterListPage extends StatefulWidget {
 }
 
 class _TransmitterListPageState extends State<TransmitterListPage> {
-  final _names = [
-    'Warehouse-01-Daniel',
-    'Warehouse-02-Danyl',
-    'Warehouse-03-Turk',
-    'Workshop-03-Airly',
+  final _transmitters = [
+    const Transmitter(id: 'mock-transmitter-1', name: 'Warehouse-01-Daniel'),
+    const Transmitter(id: 'mock-transmitter-2', name: 'Warehouse-02-Danyl'),
+    const Transmitter(id: 'mock-transmitter-3', name: 'Warehouse-03-Turk'),
+    const Transmitter(id: 'mock-transmitter-4', name: 'Workshop-03-Airly'),
   ];
 
   @override
@@ -53,49 +53,35 @@ class _TransmitterListPageState extends State<TransmitterListPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    l10n.deviceSettingsManagement,
-                    style: AppTextTokens.transmitterManagementTitle(textTheme),
-                  ),
+                  Text(l10n.deviceSettingsManagement, style: AppTextTokens.transmitterManagementTitle(textTheme)),
                   const SizedBox(height: 48),
                   Expanded(
                     child: ListView.separated(
                       padding: EdgeInsets.zero,
-                      itemCount: _names.length,
-                      separatorBuilder: (_, __) => const Divider(
-                        height: 1,
-                        color: AppColors.deviceSettingsDivider,
-                      ),
+                      itemCount: _transmitters.length,
+                      separatorBuilder: (_, __) => const Divider(height: 1, color: AppColors.deviceSettingsDivider),
                       itemBuilder: (context, index) => _TransmitterListRow(
-                        name: _names[index],
+                        transmitter: _transmitters[index],
                         editSemanticLabel: l10n.transmitterManagementEditAction,
-                        deleteSemanticLabel:
-                            l10n.transmitterManagementDeleteAction,
+                        deleteSemanticLabel: l10n.transmitterManagementDeleteAction,
                         onEdit: () => _edit(index),
                         onDelete: () => _delete(index),
                       ),
                     ),
                   ),
                   const SizedBox(height: 24),
-                  Text(
-                    l10n.transmitterManagementTipsTitle,
-                    style: AppTextTokens.transmitterManagementTipsTitle(
-                      textTheme,
-                    ),
-                  ),
+                  Text(l10n.transmitterManagementTipsTitle, style: AppTextTokens.transmitterManagementTipsTitle(textTheme)),
                   const SizedBox(height: 6),
                   Text(
                     '${l10n.transmitterManagementSafetyTip}\n'
                     '${l10n.transmitterManagementHowToTip}',
-                    style: AppTextTokens.transmitterManagementTipsBody(
-                      textTheme,
-                    ),
+                    style: AppTextTokens.transmitterManagementTipsBody(textTheme),
                   ),
                   const SizedBox(height: 28),
                   Center(
                     child: _TransmitterAddButton(
                       semanticLabel: l10n.transmitterManagementAddAction,
-                      onPressed: () => _edit(null),
+                      onPressed: _startLearning,
                     ),
                   ),
                 ],
@@ -104,6 +90,12 @@ class _TransmitterListPageState extends State<TransmitterListPage> {
           ),
         ),
       ),
+    );
+  }
+
+  void _startLearning() {
+    context.push(
+      '${TransmitterLearningPage.routePath}?deviceId=${Uri.encodeComponent(widget.deviceId)}',
     );
   }
 
@@ -122,7 +114,7 @@ class _TransmitterListPageState extends State<TransmitterListPage> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 430),
               child: _TransmitterNameSheet(
-                initialName: index == null ? '' : _names[index],
+                initialName: index == null ? '' : _transmitters[index].name,
                 title: l10n.transmitterManagementInfoTitle,
                 nameHint: l10n.transmitterManagementNameHint,
                 cancelLabel: l10n.deviceSettingsCancelAction,
@@ -131,9 +123,17 @@ class _TransmitterListPageState extends State<TransmitterListPage> {
                 onConfirm: (name) {
                   setState(() {
                     if (index == null) {
-                      _names.add(name);
+                      _transmitters.add(
+                        Transmitter(
+                          id: 'mock-transmitter-${_transmitters.length + 1}',
+                          name: name,
+                        ),
+                      );
                     } else {
-                      _names[index] = name;
+                      _transmitters[index] = Transmitter(
+                        id: _transmitters[index].id,
+                        name: name,
+                      );
                     }
                   });
                   Navigator.of(dialogContext, rootNavigator: true).pop();
@@ -160,7 +160,7 @@ class _TransmitterListPageState extends State<TransmitterListPage> {
         confirmLabel: l10n.deviceSettingsConfirmAction,
         textTheme: textTheme,
         onConfirm: () {
-          setState(() => _names.removeAt(index));
+          setState(() => _transmitters.removeAt(index));
           Navigator.of(sheetContext).pop();
         },
       ),
@@ -170,14 +170,14 @@ class _TransmitterListPageState extends State<TransmitterListPage> {
 
 class _TransmitterListRow extends StatelessWidget {
   const _TransmitterListRow({
-    required this.name,
+    required this.transmitter,
     required this.editSemanticLabel,
     required this.deleteSemanticLabel,
     required this.onEdit,
     required this.onDelete,
   });
 
-  final String name;
+  final Transmitter transmitter;
   final String editSemanticLabel;
   final String deleteSemanticLabel;
   final VoidCallback onEdit;
@@ -189,38 +189,19 @@ class _TransmitterListRow extends StatelessWidget {
     child: Row(
       children: [
         Expanded(
-          child: Text(
-            name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppTextTokens.transmitterManagementRowTitle(
-              Theme.of(context).textTheme,
-            ),
-          ),
+          child: Text(transmitter.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextTokens.transmitterManagementRowTitle(Theme.of(context).textTheme)),
         ),
         const SizedBox(width: 16),
-        _TransmitterActionButton(
-          semanticLabel: editSemanticLabel,
-          assetPath: TransmitterListAssetPaths.editActionPlaceholder,
-          onPressed: onEdit,
-        ),
+        _TransmitterActionButton(semanticLabel: editSemanticLabel, assetPath: TransmitterListAssetPaths.editActionPlaceholder, onPressed: onEdit),
         const SizedBox(width: 15),
-        _TransmitterActionButton(
-          semanticLabel: deleteSemanticLabel,
-          assetPath: TransmitterListAssetPaths.deleteActionPlaceholder,
-          onPressed: onDelete,
-        ),
+        _TransmitterActionButton(semanticLabel: deleteSemanticLabel, assetPath: TransmitterListAssetPaths.deleteActionPlaceholder, onPressed: onDelete),
       ],
     ),
   );
 }
 
 class _TransmitterActionButton extends StatelessWidget {
-  const _TransmitterActionButton({
-    required this.semanticLabel,
-    required this.assetPath,
-    required this.onPressed,
-  });
+  const _TransmitterActionButton({required this.semanticLabel, required this.assetPath, required this.onPressed});
 
   final String semanticLabel;
   final String assetPath;
@@ -252,10 +233,7 @@ class _TransmitterActionButton extends StatelessWidget {
 }
 
 class _TransmitterAddButton extends StatelessWidget {
-  const _TransmitterAddButton({
-    required this.semanticLabel,
-    required this.onPressed,
-  });
+  const _TransmitterAddButton({required this.semanticLabel, required this.onPressed});
 
   final String semanticLabel;
   final VoidCallback onPressed;
@@ -277,10 +255,7 @@ class _TransmitterAddButton extends StatelessWidget {
               height: 53,
               child: Padding(
                 padding: const EdgeInsets.all(13),
-                child: Image.asset(
-                  TransmitterListAssetPaths.addActionPlaceholder,
-                  fit: BoxFit.contain,
-                ),
+                child: Image.asset(TransmitterListAssetPaths.addActionPlaceholder, fit: BoxFit.contain),
               ),
             ),
           ),
@@ -291,10 +266,7 @@ class _TransmitterAddButton extends StatelessWidget {
 }
 
 class _TransmitterSheetSurface extends StatelessWidget {
-  const _TransmitterSheetSurface({
-    required this.child,
-    this.borderRadius = const BorderRadius.vertical(top: Radius.circular(16)),
-  });
+  const _TransmitterSheetSurface({required this.child, this.borderRadius = const BorderRadius.vertical(top: Radius.circular(16))});
 
   final Widget child;
   final BorderRadius borderRadius;
@@ -354,12 +326,7 @@ class _TransmitterNameSheetState extends State<_TransmitterNameSheet> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            widget.title,
-            style: AppTextTokens.transmitterManagementSheetTitle(
-              widget.textTheme,
-            ),
-          ),
+          Text(widget.title, style: AppTextTokens.transmitterManagementSheetTitle(widget.textTheme)),
           const SizedBox(height: 22),
           SizedBox(
             height: 40,
@@ -367,25 +334,14 @@ class _TransmitterNameSheetState extends State<_TransmitterNameSheet> {
               controller: _controller,
               autofocus: true,
               textAlignVertical: TextAlignVertical.center,
-              style: AppTextTokens.transmitterManagementSheetInput(
-                widget.textTheme,
-              ),
+              style: AppTextTokens.transmitterManagementSheetInput(widget.textTheme),
               decoration: InputDecoration(
                 hintText: widget.nameHint,
-                hintStyle: AppTextTokens.transmitterManagementSheetInput(
-                  widget.textTheme,
-                ).copyWith(color: AppColors.textHint),
-                prefixIconConstraints: const BoxConstraints(
-                  minWidth: 52,
-                  minHeight: 24,
-                ),
+                hintStyle: AppTextTokens.transmitterManagementSheetInput(widget.textTheme).copyWith(color: AppColors.textHint),
+                prefixIconConstraints: const BoxConstraints(minWidth: 52, minHeight: 24),
                 prefixIcon: Padding(
                   padding: const EdgeInsets.only(left: 18, right: 12),
-                  child: Image.asset(
-                    TransmitterListAssetPaths.editActionPlaceholder,
-                    width: 18,
-                    height: 18,
-                  ),
+                  child: Image.asset(TransmitterListAssetPaths.editActionPlaceholder, width: 18, height: 18),
                 ),
                 contentPadding: const EdgeInsets.symmetric(vertical: 16),
                 enabledBorder: _transmitterInputBorder,
@@ -430,23 +386,11 @@ class _TransmitterDeleteSheet extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            title,
-            style: AppTextTokens.transmitterManagementSheetTitle(textTheme),
-          ),
+          Text(title, style: AppTextTokens.transmitterManagementSheetTitle(textTheme)),
           const SizedBox(height: 11),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: AppTextTokens.transmitterManagementSheetBody(textTheme),
-          ),
+          Text(message, textAlign: TextAlign.center, style: AppTextTokens.transmitterManagementSheetBody(textTheme)),
           const SizedBox(height: 33),
-          _TransmitterSheetActionRow(
-            cancelLabel: cancelLabel,
-            confirmLabel: confirmLabel,
-            textTheme: textTheme,
-            onConfirm: onConfirm,
-          ),
+          _TransmitterSheetActionRow(cancelLabel: cancelLabel, confirmLabel: confirmLabel, textTheme: textTheme, onConfirm: onConfirm),
         ],
       ),
     ),
@@ -454,12 +398,7 @@ class _TransmitterDeleteSheet extends StatelessWidget {
 }
 
 class _TransmitterSheetActionRow extends StatelessWidget {
-  const _TransmitterSheetActionRow({
-    required this.cancelLabel,
-    required this.confirmLabel,
-    required this.textTheme,
-    required this.onConfirm,
-  });
+  const _TransmitterSheetActionRow({required this.cancelLabel, required this.confirmLabel, required this.textTheme, required this.onConfirm});
 
   final String cancelLabel;
   final String confirmLabel;
@@ -479,12 +418,7 @@ class _TransmitterSheetActionRow extends StatelessWidget {
               foregroundColor: AppColors.textPrimary,
               shape: const StadiumBorder(),
             ),
-            child: Text(
-              cancelLabel,
-              style: AppTextTokens.transmitterManagementSheetButton(
-                textTheme,
-              ).copyWith(color: AppColors.textPrimary),
-            ),
+            child: Text(cancelLabel, style: AppTextTokens.transmitterManagementSheetButton(textTheme).copyWith(color: AppColors.textPrimary)),
           ),
         ),
       ),
@@ -494,15 +428,8 @@ class _TransmitterSheetActionRow extends StatelessWidget {
           height: 52,
           child: FilledButton(
             onPressed: onConfirm,
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.brandPrimary,
-              foregroundColor: AppColors.backgroundPrimary,
-              shape: const StadiumBorder(),
-            ),
-            child: Text(
-              confirmLabel,
-              style: AppTextTokens.transmitterManagementSheetButton(textTheme),
-            ),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.brandPrimary, foregroundColor: AppColors.backgroundPrimary, shape: const StadiumBorder()),
+            child: Text(confirmLabel, style: AppTextTokens.transmitterManagementSheetButton(textTheme)),
           ),
         ),
       ),
@@ -512,7 +439,5 @@ class _TransmitterSheetActionRow extends StatelessWidget {
 
 final _transmitterInputBorder = OutlineInputBorder(
   borderRadius: BorderRadius.circular(30),
-  borderSide: const BorderSide(
-    color: AppColors.transmitterManagementSheetInputBorder,
-  ),
+  borderSide: const BorderSide(color: AppColors.transmitterManagementSheetInputBorder),
 );

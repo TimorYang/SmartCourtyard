@@ -49,6 +49,21 @@ void main() {
     );
   });
 
+  testWidgets('opens the door open reminder time sheet from its setting row', (
+    tester,
+  ) async {
+    await _pumpSettingsRouter(tester);
+
+    await tester.tap(find.text('Door open reminder'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Door open reminder time'), findsOneWidget);
+    expect(find.text('5 min'), findsOneWidget);
+    expect(find.text('10 min'), findsOneWidget);
+    expect(find.text('15 min'), findsOneWidget);
+    expect(find.byType(ListWheelScrollView), findsOneWidget);
+  });
+
   testWidgets('updates LED off delay from bottom sheet', (tester) async {
     await _pumpSettingsRouter(tester);
 

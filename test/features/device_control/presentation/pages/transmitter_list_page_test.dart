@@ -1,7 +1,9 @@
 import 'package:flinx/features/device_control/presentation/pages/transmitter_list_page.dart';
+import 'package:flinx/features/device_control/presentation/pages/transmitter_learning_page.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
 void main() {
   testWidgets('renders the transmitter management design and actions', (
@@ -65,6 +67,42 @@ void main() {
     );
     expect(find.text('Cancel'), findsOneWidget);
     expect(find.text('Confirm'), findsOneWidget);
+  });
+
+  testWidgets('opens transmitter learning from the add action', (tester) async {
+    final router = GoRouter(
+      initialLocation: '${TransmitterListPage.routePath}?deviceId=mock-device',
+      routes: [
+        GoRoute(
+          path: TransmitterListPage.routePath,
+          builder: (_, state) => TransmitterListPage(
+            deviceId: state.uri.queryParameters['deviceId'] ?? '',
+          ),
+        ),
+        GoRoute(
+          path: TransmitterLearningPage.routePath,
+          builder: (_, state) => TransmitterLearningPage(
+            deviceId: state.uri.queryParameters['deviceId'] ?? '',
+          ),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp.router(
+        routerConfig: router,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.bySemanticsLabel('Add transmitter'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(TransmitterLearningPage), findsOneWidget);
+    expect(router.routeInformationProvider.value.uri.queryParameters['deviceId'], 'mock-device');
   });
 }
 

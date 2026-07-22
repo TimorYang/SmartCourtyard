@@ -1061,6 +1061,7 @@
   "deviceSettingsOpeningSpeedValue": "GMT+8:00",
   "deviceSettingsAboutDevice": "About the device",
   "deviceSettingsDoorOpenReminder": "Door open reminder",
+  "deviceSettingsDoorOpenReminderTime": "Door open reminder time",
   "deviceSettingsForceMargin": "Force margin",
   "deviceSettingsBluetoothName": "Bluetooth name",
   "deviceSettingsFirmwareVersion": "Firmware version",

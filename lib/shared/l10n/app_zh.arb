@@ -308,6 +308,7 @@
   "deviceSettingsOpeningSpeedValue": "GMT+8:00",
   "deviceSettingsAboutDevice": "关于设备",
   "deviceSettingsDoorOpenReminder": "开门提醒",
+  "deviceSettingsDoorOpenReminderTime": "开门提醒时间",
   "deviceSettingsForceMargin": "力矩余量",
   "deviceSettingsBluetoothName": "蓝牙名称",
   "deviceSettingsFirmwareVersion": "固件版本",

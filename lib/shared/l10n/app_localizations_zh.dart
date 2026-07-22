@@ -936,6 +936,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get deviceSettingsDoorOpenReminder => '开门提醒';
 
   @override
+  String get deviceSettingsDoorOpenReminderTime => '开门提醒时间';
+
+  @override
   String get deviceSettingsForceMargin => '力矩余量';
 
   @override

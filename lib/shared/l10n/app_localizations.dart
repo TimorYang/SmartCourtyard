@@ -1892,6 +1892,12 @@ abstract class AppLocalizations {
   /// **'Door open reminder'**
   String get deviceSettingsDoorOpenReminder;
 
+  /// No description provided for @deviceSettingsDoorOpenReminderTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Door open reminder time'**
+  String get deviceSettingsDoorOpenReminderTime;
+
   /// No description provided for @deviceSettingsForceMargin.
   ///
   /// In en, this message translates to:

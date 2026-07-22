@@ -1000,6 +1000,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deviceSettingsDoorOpenReminder => 'Door open reminder';
 
   @override
+  String get deviceSettingsDoorOpenReminderTime => 'Door open reminder time';
+
+  @override
   String get deviceSettingsForceMargin => 'Force margin';
 
   @override

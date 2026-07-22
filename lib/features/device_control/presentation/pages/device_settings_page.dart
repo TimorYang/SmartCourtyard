@@ -90,6 +90,7 @@ class _DeviceSettingsPageState extends State<DeviceSettingsPage> {
   String _autoClose = '15s';
   var _autoClosePosition = _AutoClosePosition.anyPosition;
   var _doorOpenReminderEnabled = true;
+  String _doorOpenReminderTime = '10min';
 
   @override
   Widget build(BuildContext context) {
@@ -177,6 +178,7 @@ class _DeviceSettingsPageState extends State<DeviceSettingsPage> {
                           setState(() => _doorOpenReminderEnabled = value);
                         },
                       ),
+                      onTap: _showDoorOpenReminderSheet,
                     ),
                   ],
                 ),
@@ -255,6 +257,22 @@ class _DeviceSettingsPageState extends State<DeviceSettingsPage> {
       _autoClose = result.time;
       _autoClosePosition = result.position;
     });
+  }
+
+  Future<void> _showDoorOpenReminderSheet() async {
+    final value = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: AppColors.deviceSettingsSheetScrim,
+      builder: (context) => _DoorOpenReminderSheet(
+        initialValue: _doorOpenReminderTime,
+      ),
+    );
+    if (value == null || !mounted) {
+      return;
+    }
+    setState(() => _doorOpenReminderTime = value);
   }
 
   Future<void> _showOpeningSpeedSheet() async {
@@ -343,6 +361,8 @@ final _autoCloseTimeOptions = [
   '30s',
   for (var minute = 1; minute <= 60; minute++) '${minute}min',
 ];
+
+const _doorOpenReminderTimeOptions = ['5min', '10min', '15min'];
 
 String _formatDuration(AppLocalizations l10n, String value) {
   if (value.endsWith('min')) {
@@ -680,6 +700,58 @@ class _OptionSheetState extends State<_OptionSheet> {
               initialValue: _selectedValue,
               labelBuilder: (option) => _formatDuration(l10n, option),
               onSelected: (option) => setState(() => _selectedValue = option),
+            ),
+          ),
+          const SizedBox(height: 20),
+          _SheetActionRow(
+            onConfirm: () => Navigator.pop(context, _selectedValue),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DoorOpenReminderSheet extends StatefulWidget {
+  const _DoorOpenReminderSheet({required this.initialValue});
+
+  final String initialValue;
+
+  @override
+  State<_DoorOpenReminderSheet> createState() =>
+      _DoorOpenReminderSheetState();
+}
+
+class _DoorOpenReminderSheetState extends State<_DoorOpenReminderSheet> {
+  late String _selectedValue = widget.initialValue;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final textTheme = Theme.of(context).textTheme;
+
+    return _SettingsSheetFrame(
+      heightFactor: 0.50,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            l10n.deviceSettingsDoorOpenReminder,
+            textAlign: TextAlign.center,
+            style: AppTextTokens.deviceSettingsSheetTitle(textTheme),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            l10n.deviceSettingsDoorOpenReminderTime,
+            style: AppTextTokens.deviceSettingsSheetCaption(textTheme),
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: _FixedSelectionList<String>(
+              values: _doorOpenReminderTimeOptions,
+              initialValue: _selectedValue,
+              labelBuilder: (value) => _formatDuration(l10n, value),
+              onSelected: (value) => setState(() => _selectedValue = value),
             ),
           ),
           const SizedBox(height: 20),
