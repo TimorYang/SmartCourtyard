@@ -13,9 +13,6 @@ import '../domain/use_cases/add_force_door_use_case.dart';
 import '../domain/use_cases/fetch_onboarding_device_key_use_case.dart';
 import 'ble_auth_token.dart';
 import 'providers.dart';
-import 'smart_opener_qr_payload_parser.dart';
-
-const String addDeviceBleNamePrefix = smartOpenerBleNamePrefix;
 
 class AddDeviceState {
   const AddDeviceState({
@@ -187,6 +184,7 @@ class AddDeviceController extends Notifier<AddDeviceState> {
         state = state.copyWith(connectionStates: nextStates);
       }),
       _gateway.nativeErrors.listen((error) {
+        final isScanRequest = error.requestId?.contains(':ble-scan:') == true;
         _logError(
           'native_hardware_error',
           requestId: error.requestId,
@@ -196,6 +194,7 @@ class AddDeviceController extends Notifier<AddDeviceState> {
           context: {'nativeCode': error.code, 'domainCode': error.domainCode},
         );
         state = state.copyWith(
+          isScanning: isScanRequest ? false : state.isScanning,
           errorMessage: error.message ?? error.code,
           infoMessage: null,
         );
@@ -285,7 +284,6 @@ class AddDeviceController extends Notifier<AddDeviceState> {
       await _gateway.startBleScan(
         requestId: requestId,
         filter: BleScanFilter(
-          namePrefix: addDeviceBleNamePrefix,
           exactName: _targetBleName,
           allowDuplicates: false,
         ),

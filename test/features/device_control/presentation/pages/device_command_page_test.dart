@@ -114,6 +114,33 @@ void main() {
     expect(tester.widget<FlinxSwitch>(reminderSwitch).value, isFalse);
   });
 
+  testWidgets('uses association status for connection device icons', (
+    tester,
+  ) async {
+    await _pumpDevicePage(tester, _RecordingHardwareGateway());
+
+    expect(
+      _connectionDeviceAsset(tester, 'dongle'),
+      'assets/icons/device_control/device_command_dongle_inactive.png',
+    );
+    expect(
+      _connectionDeviceAsset(tester, 'fbox'),
+      'assets/icons/device_control/device_command_fbox_active.png',
+    );
+    expect(
+      _connectionDeviceAsset(tester, 'opener'),
+      'assets/icons/device_control/device_command_opener_active.png',
+    );
+    expect(
+      _connectionDeviceAsset(tester, 'video'),
+      'assets/icons/device_control/device_command_video_inactive.png',
+    );
+    expect(
+      _connectionDeviceAsset(tester, 'evo'),
+      'assets/icons/device_control/device_command_evo_inactive.png',
+    );
+  });
+
   testWidgets('shows pending state while a command is in progress', (
     tester,
   ) async {
@@ -241,6 +268,14 @@ Future<void> _pumpDevicePage(
   await tester.pumpAndSettle();
 }
 
+String _connectionDeviceAsset(WidgetTester tester, String deviceType) {
+  final group = find.byKey(ValueKey<String>('connection-device-$deviceType'));
+  final image = tester.widget<Image>(
+    find.descendant(of: group, matching: find.byType(Image)).first,
+  );
+  return (image.image as AssetImage).assetName;
+}
+
 class _RecordingHardwareGateway extends MockHardwareGateway {
   final List<DoorCommand> commands = <DoorCommand>[];
   final List<String> deviceIds = <String>[];
@@ -343,7 +378,26 @@ class _FakeDoorDetailRepository implements DoorDetailRepository {
       doorStateLabel: 'Closed',
       operatedCycles: 123,
       remainingCycles: 4567,
-      hardwareSn: 'SN-001',
+      associatedDevices: [
+        DoorAssociatedDevice(
+          deviceType: 'opener',
+          associated: true,
+          primaryControl: true,
+          bleName: 'SN-001',
+        ),
+        DoorAssociatedDevice(
+          deviceType: 'dongle',
+          associated: false,
+          primaryControl: false,
+          bleName: '',
+        ),
+        DoorAssociatedDevice(
+          deviceType: 'fbox',
+          associated: true,
+          primaryControl: false,
+          bleName: '',
+        ),
+      ],
     );
   }
 }

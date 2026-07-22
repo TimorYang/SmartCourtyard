@@ -7,31 +7,44 @@ import 'package:flinx/features/device_control/data/dto/door_detail_response_dto.
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('parses door detail dto fields and ignores unknown fields', () {
+  test('parses the current door detail response fields', () {
     final dto = DoorDetailResponseDto.fromJson(const {
       'id': '12',
       'name': 'Main Gate',
-      'sceneId': '7',
-      'onlineStatus': '1',
-      'doorState': '2',
-      'doorStateLabel': 'Closed',
-      'positionPercent': '68.5',
-      'operatedCycles': '123',
-      'remainingCycles': '4567',
-      'hardwareSn': 'SN-001',
+      'doorType': 0,
+      'onlineStatus': 2,
+      'doorState': 0,
+      'doorStateLabel': 'Unknown',
+      'positionPercent': null,
+      'operatedCycles': 0,
+      'remainingCycles': 0,
+      'associatedDevices': [
+        {
+          'deviceType': 'opener',
+          'associated': true,
+          'primaryControl': true,
+          'bleName': 'opener_B8F86211A9DC',
+          'capabilities': ['DOOR_CONTROL', 'LED_CONTROL'],
+        },
+      ],
       'ignored': 'value',
     });
 
     expect(dto.id, 12);
     expect(dto.name, 'Main Gate');
-    expect(dto.sceneId, 7);
-    expect(dto.onlineStatus, 1);
-    expect(dto.doorState, 2);
-    expect(dto.doorStateLabel, 'Closed');
-    expect(dto.positionPercent, 68.5);
-    expect(dto.operatedCycles, 123);
-    expect(dto.remainingCycles, 4567);
-    expect(dto.hardwareSn, 'SN-001');
+    expect(dto.doorType, 0);
+    expect(dto.onlineStatus, 2);
+    expect(dto.doorState, 0);
+    expect(dto.doorStateLabel, 'Unknown');
+    expect(dto.positionPercent, isNull);
+    expect(dto.operatedCycles, 0);
+    expect(dto.remainingCycles, 0);
+    expect(dto.associatedDevices, hasLength(1));
+    expect(dto.associatedDevices.single.bleName, 'opener_B8F86211A9DC');
+    expect(dto.associatedDevices.single.capabilities, [
+      'DOOR_CONTROL',
+      'LED_CONTROL',
+    ]);
   });
 
   test('fetches door detail with door id and request id', () async {

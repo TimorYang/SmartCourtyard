@@ -14,7 +14,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test(
-    'connects and authenticates the BLE device matching hardwareSn',
+    'connects and authenticates the primary associated BLE device',
     () async {
       final gateway = _BleSessionGateway();
       final container = _createContainer(gateway: gateway);
@@ -35,12 +35,12 @@ void main() {
   );
 
   test(
-    'does not start BLE discovery when the detail has no hardwareSn',
+    'does not start BLE discovery when the detail has no primary BLE device',
     () async {
       final gateway = _BleSessionGateway();
       final container = _createContainer(
         gateway: gateway,
-        doorDetail: _doorDetail(hardwareSn: null),
+        doorDetail: _doorDetail(associatedDevices: const []),
       );
       addTearDown(container.dispose);
 
@@ -116,7 +116,16 @@ Future<void> _settleBleSession() async {
   await Future<void>.delayed(Duration.zero);
 }
 
-DoorDetail _doorDetail({String? hardwareSn = 'SN-001'}) {
+DoorDetail _doorDetail({
+  List<DoorAssociatedDevice> associatedDevices = const [
+    DoorAssociatedDevice(
+      deviceType: 'opener',
+      associated: true,
+      primaryControl: true,
+      bleName: 'SN-001',
+    ),
+  ],
+}) {
   return DoorDetail(
     id: '12',
     name: 'Test door',
@@ -124,7 +133,7 @@ DoorDetail _doorDetail({String? hardwareSn = 'SN-001'}) {
     doorStateLabel: 'Closed',
     operatedCycles: 0,
     remainingCycles: 0,
-    hardwareSn: hardwareSn,
+    associatedDevices: associatedDevices,
   );
 }
 
