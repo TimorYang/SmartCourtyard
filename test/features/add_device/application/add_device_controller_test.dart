@@ -65,6 +65,7 @@ void main() {
           .startScan(targetSn: 'opener_B8F86211A9DC');
 
       expect(gateway.lastScanFilter?.exactName, 'opener_B8F86211A9DC');
+      expect(gateway.lastScanFilter?.namePrefix, isNull);
     },
   );
 

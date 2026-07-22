@@ -9,6 +9,14 @@ void main() {
       ),
       'opener_B8F86211A9DC',
     );
+
+    for (final prefix in <String>['Noru_', 'evo_', 'Fbox_']) {
+      final serialNumber = '${prefix}B8F86211A9DC';
+      expect(
+        parseSmartOpenerSerialNumber('$serialNumber#SPT#$serialNumber'),
+        serialNumber,
+      );
+    }
   });
 
   test('rejects missing separator, empty serial number, and other devices', () {

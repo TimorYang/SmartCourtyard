@@ -1,5 +1,14 @@
 const String smartOpenerQrPayloadSeparator = '#SPT#';
-const String smartOpenerBleNamePrefix = 'opener_';
+const List<String> smartOpenerBleNamePrefixes = <String>[
+  'Noru_',
+  'opener_',
+  'evo_',
+  'Fbox_',
+];
+
+bool isSupportedSmartOpenerBleName(String name) {
+  return smartOpenerBleNamePrefixes.any(name.startsWith);
+}
 
 String? parseSmartOpenerSerialNumber(String payload) {
   final separatorIndex = payload.indexOf(smartOpenerQrPayloadSeparator);
@@ -8,7 +17,7 @@ String? parseSmartOpenerSerialNumber(String payload) {
   }
 
   final serialNumber = payload.substring(0, separatorIndex).trim();
-  if (!serialNumber.startsWith(smartOpenerBleNamePrefix)) {
+  if (!isSupportedSmartOpenerBleName(serialNumber)) {
     return null;
   }
 
