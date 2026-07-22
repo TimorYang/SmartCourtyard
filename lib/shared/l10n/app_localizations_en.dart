@@ -689,6 +689,47 @@ class AppLocalizationsEn extends AppLocalizations {
   String get smartOpenerAddAction => '+ Add';
 
   @override
+  String get smartOpenerAddedDevicesTitle => 'Already Added';
+
+  @override
+  String get smartOpenerAddedDevicesDescription =>
+      'The following devices have been connected';
+
+  @override
+  String get smartOpenerAddedDeviceName => 'Smart Opener';
+
+  @override
+  String get smartOpenerAddedDeviceIdentifier => 'opener_B8F86211A9DC';
+
+  @override
+  String get smartOpenerAddedAddTooltip => 'Add device';
+
+  @override
+  String get smartOpenerAddedDeleteTooltip => 'Remove device';
+
+  @override
+  String get smartOpenerAddedLoading => 'Loading devices…';
+
+  @override
+  String get smartOpenerAddedEmptyTitle => 'No connected devices';
+
+  @override
+  String get smartOpenerAddedEmptyDescription =>
+      'Connected devices will appear here.';
+
+  @override
+  String get smartOpenerAddedLoadFailed => 'Unable to load connected devices.';
+
+  @override
+  String get smartOpenerAddedRetryAction => 'Retry';
+
+  @override
+  String get smartOpenerAddedNoMore => 'No more devices';
+
+  @override
+  String get deviceCommandMoreTooltip => 'More';
+
+  @override
   String get smartOpenerDefaultDeviceSubtitle => 'Default encoding door|54-89';
 
   @override

@@ -10,6 +10,7 @@ import 'package:flinx/features/device_control/domain/entities/door_detail.dart';
 import 'package:flinx/features/device_control/domain/repositories/door_detail_repository.dart';
 import 'package:flinx/features/device_control/presentation/pages/device_command_page.dart';
 import 'package:flinx/features/device_control/presentation/pages/device_settings_page.dart';
+import 'package:flinx/features/device_control/presentation/pages/already_added_devices_page.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
 import 'package:flinx/platform_bridge/mock_hardware_gateway.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
@@ -114,6 +115,72 @@ void main() {
     expect(tester.widget<FlinxSwitch>(reminderSwitch).value, isFalse);
   });
 
+  testWidgets('opens the already added devices page from the more action', (
+    tester,
+  ) async {
+    await _pumpDevicePage(tester, _RecordingHardwareGateway());
+
+    await tester.tap(find.byTooltip('More'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Already Added'), findsOneWidget);
+    expect(
+      find.text('The following devices have been connected'),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey<String>('already-added-device-card-SN-001')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(
+        const ValueKey<String>('already-added-device-image-placeholder-SN-001'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey<String>('already-added-add-action')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey<String>('already-added-delete-action-SN-001')),
+      findsOneWidget,
+    );
+
+    await tester.tap(
+      find.ancestor(
+        of: find.byType(BackButtonIcon),
+        matching: find.byType(IconButton),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Garage door'), findsOneWidget);
+  });
+
+  testWidgets('renders already added devices copy in Chinese', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          doorDetailRepositoryProvider.overrideWithValue(
+            const _FakeDoorDetailRepository(),
+          ),
+        ],
+        child: MaterialApp(
+          locale: const Locale('zh'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const AlreadyAddedDevicesPage(doorId: '12'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('已添加'), findsOneWidget);
+    expect(find.text('以下设备已连接'), findsOneWidget);
+    expect(find.text('智能开门器'), findsOneWidget);
+  });
+
   testWidgets('uses association status for connection device icons', (
     tester,
   ) async {
@@ -168,9 +235,7 @@ void main() {
     expect(find.text('开门指令已发送（0x1001）。'), findsOneWidget);
   });
 
-  testWidgets('switches between records, command, and security tabs', (
-    tester,
-  ) async {
+  testWidgets('switches between records and command tabs', (tester) async {
     final gateway = _RecordingHardwareGateway();
 
     await _pumpDevicePage(tester, gateway);
@@ -180,17 +245,7 @@ void main() {
     await tester.tap(find.byTooltip('Operation records'));
     await tester.pumpAndSettle();
 
-    expect(find.text('OPERATION RECORD'), findsOneWidget);
-    expect(find.text('Partial open setting'), findsOneWidget);
-    expect(find.text('346054814@qq.com'), findsWidgets);
-
-    await tester.tap(find.byTooltip('Security center'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Security center'), findsOneWidget);
-    expect(find.text('Protecting...'), findsOneWidget);
-    expect(find.text('General Evaluation'), findsOneWidget);
-    expect(find.text('Safety Sensors Evaluation'), findsOneWidget);
+    expect(find.text('Operation Record'), findsOneWidget);
 
     await tester.tap(find.byTooltip('Device command'));
     await tester.pumpAndSettle();
@@ -246,6 +301,13 @@ Widget _buildPage(MockHardwareGateway gateway) {
           GoRoute(
             path: DeviceSettingsPage.routePath,
             builder: (context, state) => DeviceSettingsPage(
+              deviceId: state.uri.queryParameters['deviceId'] ?? '',
+            ),
+          ),
+          GoRoute(
+            path: AlreadyAddedDevicesPage.routePath,
+            builder: (context, state) => AlreadyAddedDevicesPage(
+              doorId: state.uri.queryParameters['doorId'] ?? '',
               deviceId: state.uri.queryParameters['deviceId'] ?? '',
             ),
           ),

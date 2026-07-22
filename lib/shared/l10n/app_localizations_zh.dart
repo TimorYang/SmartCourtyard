@@ -654,6 +654,45 @@ class AppLocalizationsZh extends AppLocalizations {
   String get smartOpenerAddAction => '+ 添加';
 
   @override
+  String get smartOpenerAddedDevicesTitle => '已添加';
+
+  @override
+  String get smartOpenerAddedDevicesDescription => '以下设备已连接';
+
+  @override
+  String get smartOpenerAddedDeviceName => '智能开门器';
+
+  @override
+  String get smartOpenerAddedDeviceIdentifier => 'opener_B8F86211A9DC';
+
+  @override
+  String get smartOpenerAddedAddTooltip => '添加设备';
+
+  @override
+  String get smartOpenerAddedDeleteTooltip => '移除设备';
+
+  @override
+  String get smartOpenerAddedLoading => '正在加载设备…';
+
+  @override
+  String get smartOpenerAddedEmptyTitle => '暂无已连接设备';
+
+  @override
+  String get smartOpenerAddedEmptyDescription => '已连接的设备将显示在这里。';
+
+  @override
+  String get smartOpenerAddedLoadFailed => '无法加载已连接设备。';
+
+  @override
+  String get smartOpenerAddedRetryAction => '重试';
+
+  @override
+  String get smartOpenerAddedNoMore => '没有更多设备了';
+
+  @override
+  String get deviceCommandMoreTooltip => '更多';
+
+  @override
   String get smartOpenerDefaultDeviceSubtitle => '默认编码门|54-89';
 
   @override

@@ -55,12 +55,14 @@ class DoorAssociatedDevice {
     required this.associated,
     required this.primaryControl,
     required this.bleName,
+    this.deviceTypeLabel,
     this.bleUuid,
     this.bleMac,
     this.capabilities = const [],
   });
 
   final String deviceType;
+  final String? deviceTypeLabel;
   final bool associated;
   final bool primaryControl;
   final String bleName;

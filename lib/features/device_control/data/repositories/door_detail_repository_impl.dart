@@ -96,6 +96,7 @@ extension DoorDetailResponseDtoMapper on DoorDetailResponseDto {
           .map(
             (device) => DoorAssociatedDevice(
               deviceType: device.deviceType?.trim() ?? '',
+              deviceTypeLabel: device.deviceTypeLabel?.trim(),
               associated: device.associated,
               primaryControl: device.primaryControl,
               bleName: device.bleName?.trim() ?? '',

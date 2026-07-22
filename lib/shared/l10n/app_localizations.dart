@@ -1358,6 +1358,84 @@ abstract class AppLocalizations {
   /// **'+ Add'**
   String get smartOpenerAddAction;
 
+  /// No description provided for @smartOpenerAddedDevicesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Already Added'**
+  String get smartOpenerAddedDevicesTitle;
+
+  /// No description provided for @smartOpenerAddedDevicesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The following devices have been connected'**
+  String get smartOpenerAddedDevicesDescription;
+
+  /// No description provided for @smartOpenerAddedDeviceName.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Opener'**
+  String get smartOpenerAddedDeviceName;
+
+  /// No description provided for @smartOpenerAddedDeviceIdentifier.
+  ///
+  /// In en, this message translates to:
+  /// **'opener_B8F86211A9DC'**
+  String get smartOpenerAddedDeviceIdentifier;
+
+  /// No description provided for @smartOpenerAddedAddTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Add device'**
+  String get smartOpenerAddedAddTooltip;
+
+  /// No description provided for @smartOpenerAddedDeleteTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove device'**
+  String get smartOpenerAddedDeleteTooltip;
+
+  /// No description provided for @smartOpenerAddedLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading devices…'**
+  String get smartOpenerAddedLoading;
+
+  /// No description provided for @smartOpenerAddedEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No connected devices'**
+  String get smartOpenerAddedEmptyTitle;
+
+  /// No description provided for @smartOpenerAddedEmptyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected devices will appear here.'**
+  String get smartOpenerAddedEmptyDescription;
+
+  /// No description provided for @smartOpenerAddedLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load connected devices.'**
+  String get smartOpenerAddedLoadFailed;
+
+  /// No description provided for @smartOpenerAddedRetryAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get smartOpenerAddedRetryAction;
+
+  /// No description provided for @smartOpenerAddedNoMore.
+  ///
+  /// In en, this message translates to:
+  /// **'No more devices'**
+  String get smartOpenerAddedNoMore;
+
+  /// No description provided for @deviceCommandMoreTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get deviceCommandMoreTooltip;
+
   /// No description provided for @smartOpenerDefaultDeviceSubtitle.
   ///
   /// In en, this message translates to:

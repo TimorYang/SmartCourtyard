@@ -27,6 +27,7 @@ import '../../features/auth/presentation/pages/register_code_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/pages/register_password_page.dart';
 import '../../features/auth/presentation/pages/welcome_page.dart';
+import '../../features/device_control/presentation/pages/already_added_devices_page.dart';
 import '../../features/device_control/presentation/pages/device_command_page.dart';
 import '../../features/device_control/presentation/pages/device_settings_page.dart';
 import '../../features/device_control/presentation/pages/transmitter_learning_page.dart';
@@ -275,6 +276,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               '',
           deviceId: state.uri.queryParameters['deviceId'] ?? '',
           onboardingFlowId: state.uri.queryParameters['onboardingFlowId'],
+        ),
+      ),
+      GoRoute(
+        path: AlreadyAddedDevicesPage.routePath,
+        name: AlreadyAddedDevicesPage.routeName,
+        builder: (context, state) => AlreadyAddedDevicesPage(
+          doorId: state.uri.queryParameters['doorId'] ?? '',
+          deviceId: state.uri.queryParameters['deviceId'] ?? '',
         ),
       ),
       GoRoute(

@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../core/logging/app_logger.dart';
 import '../../../../core/logging/providers.dart';
+import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../../../shared/widgets/flinx_switch.dart';
 import '../../../records/presentation/pages/operation_record_page.dart';
@@ -14,6 +15,7 @@ import '../../../security_center/presentation/pages/security_center_page.dart';
 import '../../application/device_command_controller.dart';
 import '../../domain/entities/door_detail.dart';
 import '../widgets/device_detail_bottom_navigation.dart';
+import 'already_added_devices_page.dart';
 import 'device_settings_page.dart';
 
 class DeviceCommandPage extends ConsumerStatefulWidget {
@@ -147,6 +149,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
   }) {
     final doorDetail = commandState.doorDetail;
     final hardwareDeviceId = _hardwareDeviceId(commandState);
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: AppColors.backgroundPrimary,
       appBar: FlinxNavigationBar(
@@ -155,8 +158,14 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
         foregroundColor: AppColors.textPrimary,
         actions: [
           IconButton(
-            tooltip: 'More',
-            onPressed: isBusy ? null : () {},
+            tooltip: l10n.deviceCommandMoreTooltip,
+            onPressed: isBusy
+                ? null
+                : () => context.push(
+                    '${AlreadyAddedDevicesPage.routePath}'
+                    '?doorId=${Uri.encodeComponent(widget.doorId)}'
+                    '&deviceId=${Uri.encodeComponent(hardwareDeviceId)}',
+                  ),
             icon: const Icon(Icons.more_horiz, size: 24),
           ),
           const SizedBox(width: 4),

@@ -163,6 +163,7 @@ class AppColors {
   static const scannerControlBackground = Colors.white;
   static const scanRadarTint = Color(0xFFEAF9FD);
   static const smartOpenerCardSurface = Color(0xFFF3F4F6);
+  static const smartOpenerAddedDeviceCardSurface = Color(0xFFF2F4F6);
   static const smartOpenerAddButton = Color(0xFF17212C);
   static const smartOpenerSecondaryButton = Color(0xFFF1F2F4);
   static const smartOpenerWifiError = Color(0xFFFF3D1F);
@@ -208,6 +209,16 @@ class AppShapeTokens {
   static const safetySensorMetricIconRadius = 8.0;
   static const safetyBatterySolutionCardRadius = 14.0;
   static const safetyBatterySolutionImageRadius = 10.0;
+  static const smartOpenerAddedDeviceCardRadius = 16.0;
+}
+
+class AppSpacingTokens {
+  const AppSpacingTokens._();
+
+  static const smartOpenerAddedPageHorizontal = 20.0;
+  static const smartOpenerAddedPageTop = 10.0;
+  static const smartOpenerAddedCardPadding = 22.0;
+  static const smartOpenerAddedCardGap = 18.0;
 }
 
 class AppTextTokens {
@@ -1651,6 +1662,46 @@ class AppTextTokens {
       fontSize: 14,
       fontWeight: FontWeight.w400,
       height: 1,
+      letterSpacing: 0,
+    );
+  }
+
+  static TextStyle smartOpenerAddedTitle(TextTheme textTheme) {
+    return (textTheme.displaySmall ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 25,
+      fontWeight: FontWeight.w600,
+      height: 1.05,
+      letterSpacing: 0,
+    );
+  }
+
+  static TextStyle smartOpenerAddedDescription(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 14,
+      fontWeight: FontWeight.w400,
+      height: 1.25,
+      letterSpacing: 0,
+    );
+  }
+
+  static TextStyle smartOpenerAddedDeviceTitle(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textSecondary,
+      fontSize: 14,
+      fontWeight: FontWeight.w400,
+      height: 1.15,
+      letterSpacing: 0,
+    );
+  }
+
+  static TextStyle smartOpenerAddedDeviceIdentifier(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 12,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
       letterSpacing: 0,
     );
   }

@@ -21,6 +21,7 @@ void main() {
           associatedDevices: [
             DoorAssociatedDeviceResponseDto(
               deviceType: 'opener',
+              deviceTypeLabel: 'Smart Opener',
               associated: true,
               primaryControl: true,
               bleName: 'opener_B8F86211A9DC',
@@ -44,6 +45,7 @@ void main() {
     expect(detail.operatedCycles, 123);
     expect(detail.remainingCycles, 4567);
     expect(detail.hardwareDeviceId, 'opener_B8F86211A9DC');
+    expect(detail.associatedDevices.single.deviceTypeLabel, 'Smart Opener');
     expect(detail.associatedDevices.single.capabilities, [
       'DOOR_CONTROL',
       'LED_CONTROL',
