@@ -867,8 +867,8 @@ extension BleManager: CBCentralManagerDelegate {
   }
 
   private func parseSmartOpenerSn(from name: String?) -> String? {
-    let prefix = "opener_"
-    guard let name, name.hasPrefix(prefix) else {
+    let prefixes = ["Noru_", "opener_", "evo_", "Fbox_"]
+    guard let name, prefixes.contains(where: name.hasPrefix) else {
       return nil
     }
     let sn = name.trimmingCharacters(in: .whitespacesAndNewlines)

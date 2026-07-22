@@ -2223,8 +2223,8 @@ class BleManager(
   }
 
   private fun parseSmartOpenerSn(name: String?): String? {
-    val prefix = "opener_"
-    if (name == null || !name.startsWith(prefix)) return null
+    val prefixes = listOf("Noru_", "opener_", "evo_", "Fbox_")
+    if (name == null || prefixes.none { name.startsWith(it) }) return null
     return name.trim().takeIf { it.isNotEmpty() }
   }
 
