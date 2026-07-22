@@ -42,6 +42,7 @@ import '../../features/notification/presentation/pages/notification_detail_page.
 import '../../features/notification/presentation/pages/notification_list_page.dart';
 import '../../features/security_center/presentation/pages/full_report_page.dart';
 import '../../features/security_center/presentation/pages/general_evaluation_page.dart';
+import '../../features/security_center/presentation/pages/safety_sensor_battery_solution_page.dart';
 import '../../features/security_center/presentation/pages/safety_sensors_evaluation_page.dart';
 import '../../shared/webview/app_web_view_page.dart';
 import '../config/app_links.dart';
@@ -319,10 +320,25 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
+        path: GeneralEvaluationPage.routePath,
+        name: GeneralEvaluationPage.routeName,
+        builder: (context, state) => GeneralEvaluationPage(
+          deviceId: state.uri.queryParameters['deviceId'] ?? '',
+        ),
+      ),
+      GoRoute(
         path: SafetySensorsEvaluationPage.routePath,
         name: SafetySensorsEvaluationPage.routeName,
         builder: (context, state) => SafetySensorsEvaluationPage(
           deviceId: state.uri.queryParameters['deviceId'] ?? '',
+        ),
+      ),
+      GoRoute(
+        path: SafetySensorBatterySolutionPage.routePath,
+        name: SafetySensorBatterySolutionPage.routeName,
+        builder: (context, state) => SafetySensorBatterySolutionPage(
+          deviceId: state.uri.queryParameters['deviceId'] ?? '',
+          sensorId: state.uri.queryParameters['sensorId'] ?? '',
         ),
       ),
       GoRoute(

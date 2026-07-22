@@ -413,6 +413,27 @@
   "securityReportWirelessSensorsDiagnosis": "无线传感器诊断",
   "securityReportNormal": "正常",
   "securityReportDisconnect": "断开",
+  "safetySensorTriggered": "已触发",
+  "safetySensorReplaceBattery": "如何更换电池",
+  "safetySensorLowBatterySolution": "低电量解决方案",
+  "safetySensorLowBatteryWarning": "低电量",
+  "safetySensorBatteryModel": "电池型号：{model}",
+  "@safetySensorBatteryModel": {
+    "placeholders": {
+      "model": {"type": "String"}
+    }
+  },
+  "safetySensorBatteryModelLabel": "电池型号：",
+  "safetySensorRatedVoltage": "额定电压：{voltage}",
+  "@safetySensorRatedVoltage": {
+    "placeholders": {
+      "voltage": {"type": "String"}
+    }
+  },
+  "safetySensorRatedVoltageLabel": "额定电压：",
+  "safetySensorLowBatteryInstruction": "*电量不足，请及时更换电池。错误的电池型号可能导致设备无法正常工作。",
+  "safetySensorImagePlaceholder": "图片占位图",
+  "safetySensorDefaultName": "安全传感器",
   "securityReportAbnormal": "异常",
   "securityReportNotTriggered": "未触发",
   "securityReportLocked": "已锁定",

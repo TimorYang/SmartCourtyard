@@ -1214,6 +1214,44 @@ class AppLocalizationsZh extends AppLocalizations {
   String get securityReportDisconnect => '断开';
 
   @override
+  String get safetySensorTriggered => '已触发';
+
+  @override
+  String get safetySensorReplaceBattery => '如何更换电池';
+
+  @override
+  String get safetySensorLowBatterySolution => '低电量解决方案';
+
+  @override
+  String get safetySensorLowBatteryWarning => '低电量';
+
+  @override
+  String safetySensorBatteryModel(String model) {
+    return '电池型号：$model';
+  }
+
+  @override
+  String get safetySensorBatteryModelLabel => '电池型号：';
+
+  @override
+  String safetySensorRatedVoltage(String voltage) {
+    return '额定电压：$voltage';
+  }
+
+  @override
+  String get safetySensorRatedVoltageLabel => '额定电压：';
+
+  @override
+  String get safetySensorLowBatteryInstruction =>
+      '*电量不足，请及时更换电池。错误的电池型号可能导致设备无法正常工作。';
+
+  @override
+  String get safetySensorImagePlaceholder => '图片占位图';
+
+  @override
+  String get safetySensorDefaultName => '安全传感器';
+
+  @override
   String get securityReportAbnormal => '异常';
 
   @override

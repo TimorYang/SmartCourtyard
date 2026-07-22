@@ -154,17 +154,17 @@ class CycleSummaryCard extends StatelessWidget {
             children: [
               Expanded(
                 child: _Metric(
-                  value: '${summary?.operatedCycles ?? 860}',
+                  value: '${summary?.operatedCycles ?? 0}',
                   label: l10n.securityReportOperatedCycles,
                 ),
               ),
               const SizedBox(
-                height: 36,
+                height: 30,
                 child: VerticalDivider(color: AppColors.securityReportDivider),
               ),
               Expanded(
                 child: _Metric(
-                  value: '${summary?.remainingCycles ?? 140}',
+                  value: '${summary?.remainingCycles ?? 0}',
                   label: l10n.securityReportRemainingCycles,
                   alignEnd: true,
                   valueColor: AppColors.securityReportWarning,
@@ -287,7 +287,7 @@ class _BalanceTable extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            flex: 3,
+            flex: 5,
             child: Stack(
               key: const ValueKey<String>('balance-main-table'),
               children: [
@@ -348,7 +348,7 @@ class _BalanceTable extends StatelessWidget {
             ),
           ),
           Expanded(
-            flex: 1,
+            flex: 2,
             child: Column(
               key: const ValueKey<String>('balance-status-table'),
               children: [
@@ -646,15 +646,23 @@ class ReportSegmentedControl<T> extends StatelessWidget {
   }
 }
 
-class MotorFunctionStatusCard extends StatelessWidget {
+class MotorFunctionStatusCard extends StatefulWidget {
   const MotorFunctionStatusCard({this.status, super.key});
 
   final FullReportMotorFunctionStatus? status;
 
   @override
+  State<MotorFunctionStatusCard> createState() =>
+      _MotorFunctionStatusCardState();
+}
+
+class _MotorFunctionStatusCardState extends State<MotorFunctionStatusCard> {
+  var _isExpanded = true;
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final reportStatus = status;
+    final reportStatus = widget.status;
     final values = <String, String>{
       l10n.securityReportDoorOpeningForce: l10n.securityReportLevel1,
       l10n.securityReportDoorClosingForce: l10n.securityReportLevel1,
@@ -700,35 +708,75 @@ class MotorFunctionStatusCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            l10n.securityReportMotorFunctionStatus,
-            style: AppTextTokens.securityReportCardTitle(
-              Theme.of(context).textTheme,
-            ),
-          ),
-          const SizedBox(height: 15),
-          for (final entry in values.entries)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      entry.key,
-                      style: AppTextTokens.securityReportBody(
-                        Theme.of(context).textTheme,
+          Semantics(
+            button: true,
+            expanded: _isExpanded,
+            child: InkWell(
+              key: const ValueKey<String>('motor-function-status-toggle'),
+              onTap: () => setState(() => _isExpanded = !_isExpanded),
+              splashFactory: NoSplash.splashFactory,
+              highlightColor: Colors.transparent,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        l10n.securityReportMotorFunctionStatus,
+                        style: AppTextTokens.securityReportCardTitle(
+                          Theme.of(context).textTheme,
+                        ),
                       ),
                     ),
-                  ),
-                  Text(
-                    entry.value,
-                    style: AppTextTokens.securityReportValue(
-                      Theme.of(context).textTheme,
+                    AnimatedRotation(
+                      turns: _isExpanded ? 0 : 0.5,
+                      duration: const Duration(milliseconds: 180),
+                      curve: Curves.easeInOut,
+                      child: const Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
+          ),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeInOut,
+            child: _isExpanded
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 13),
+                    child: Column(
+                      children: [
+                        for (final entry in values.entries)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    entry.key,
+                                    style: AppTextTokens.securityReportBody(
+                                      Theme.of(context).textTheme,
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  entry.value,
+                                  style: AppTextTokens.securityReportValue(
+                                    Theme.of(context).textTheme,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
         ],
       ),
     );

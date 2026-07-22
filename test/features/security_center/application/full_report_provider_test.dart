@@ -1,4 +1,5 @@
 import 'package:flinx/features/security_center/application/providers.dart';
+import 'package:flinx/features/security_center/domain/entities/safety_sensors_evaluation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -21,5 +22,43 @@ void main() {
     expect(report.wiredSensorDiagnosis.sensors, isNotEmpty);
     expect(report.wirelessSensorDiagnosis.sensors, isNotEmpty);
     expect(report.safetySuggestions, isNotEmpty);
+  });
+
+  test('safety sensors evaluation mock contains page display data', () {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    final evaluation = container.read(
+      safetySensorsEvaluationProvider('mock-device'),
+    );
+
+    expect(evaluation.deviceId, 'mock-device');
+    expect(evaluation.totalSensorCount, greaterThan(0));
+    expect(evaluation.fineSensorCount, greaterThanOrEqualTo(0));
+    expect(evaluation.abnormalSensorCount, greaterThan(0));
+    expect(evaluation.lowPowerSensorCount, greaterThan(0));
+    expect(evaluation.wiredSensorGroup.sensors, isNotEmpty);
+    expect(evaluation.wirelessSensorGroup.sensors, isNotEmpty);
+    expect(
+      evaluation.wirelessSensorGroup.sensors,
+      contains(
+        isA<SafetySensor>()
+            .having(
+              (sensor) => sensor.batteryStatus,
+              'batteryStatus',
+              SafetySensorBatteryStatus.low,
+            )
+            .having(
+              (sensor) => sensor.batteryPercentage,
+              'batteryPercentage',
+              lessThan(100),
+            )
+            .having(
+              (sensor) => sensor.operationPoints,
+              'operationPoints',
+              isNotEmpty,
+            ),
+      ),
+    );
   });
 }

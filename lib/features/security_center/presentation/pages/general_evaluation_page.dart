@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
+import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
+import '../../application/providers.dart';
 import '../widgets/security_report_widgets.dart';
 
-class GeneralEvaluationPage extends StatefulWidget {
+class GeneralEvaluationPage extends ConsumerStatefulWidget {
   const GeneralEvaluationPage({required this.deviceId, super.key});
 
   static const routeName = 'general-evaluation';
@@ -13,47 +16,76 @@ class GeneralEvaluationPage extends StatefulWidget {
   final String deviceId;
 
   @override
-  State<GeneralEvaluationPage> createState() => _GeneralEvaluationPageState();
+  ConsumerState<GeneralEvaluationPage> createState() =>
+      _GeneralEvaluationPageState();
 }
 
-class _GeneralEvaluationPageState extends State<GeneralEvaluationPage> {
+class _GeneralEvaluationPageState extends ConsumerState<GeneralEvaluationPage> {
   BalanceEvaluation _balance = BalanceEvaluation.open;
-  RecordRange _recordRange = RecordRange.last7Days;
+  RecordRange _recordRange = RecordRange.last24Hours;
 
   @override
   Widget build(BuildContext context) {
+    final report = ref.watch(fullReportProvider(widget.deviceId));
+    final balanceEvaluation = _balance == BalanceEvaluation.open
+        ? report.openBalanceEvaluation
+        : report.closeBalanceEvaluation;
+    final operationRecord = _recordRange == RecordRange.last24Hours
+        ? report.last24HoursRecord
+        : report.last7DaysRecord;
+
     return Scaffold(
       backgroundColor: AppColors.securityCenterBackground,
-      appBar: const FlinxNavigationBar(
-        title: 'General Evaluation',
+      appBar: FlinxNavigationBar(
+        title: AppLocalizations.of(context).securityCenterGeneralEvaluation,
         showBottomDivider: false,
       ),
-      body: ListView(
+      body: SingleChildScrollView(
         key: const ValueKey<String>('general-evaluation-scroll'),
-        padding: const EdgeInsets.only(bottom: 28),
-        children: [
-          const SecurityReportHero(),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
+        child: Stack(
+          children: [
+            const Positioned(
+              top: 150,
+              left: 0,
+              right: 0,
+              child: SecurityReportBlueBackdrop(),
+            ),
+            Column(
               children: [
-                const CycleSummaryCard(showWarning: true),
-                const SizedBox(height: 20),
-                BalanceEvaluationCard(
-                  selection: _balance,
-                  onChanged: (value) => setState(() => _balance = value),
+                SecurityReportHero(
+                  motorName: report.motorName,
+                  serialNumber: report.serialNumber,
                 ),
-                const SizedBox(height: 20),
-                OperationChartCard(
-                  range: _recordRange,
-                  onChanged: (value) => setState(() => _recordRange = value),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    children: [
+                      CycleSummaryCard(summary: report.cycleSummary),
+                      const SizedBox(height: 16),
+                      BalanceEvaluationCard(
+                        selection: _balance,
+                        evaluation: balanceEvaluation,
+                        onChanged: (value) => setState(() => _balance = value),
+                      ),
+                      const SizedBox(height: 22),
+                      OperationChartCard(
+                        range: _recordRange,
+                        record: operationRecord,
+                        onChanged: (value) =>
+                            setState(() => _recordRange = value),
+                      ),
+                      const SizedBox(height: 16),
+                      MotorFunctionStatusCard(
+                        status: report.motorFunctionStatus,
+                      ),
+                      const SizedBox(height: 28),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 20),
-                const MotorFunctionStatusCard(),
               ],
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

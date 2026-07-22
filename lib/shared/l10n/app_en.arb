@@ -1166,6 +1166,27 @@
   "securityReportWirelessSensorsDiagnosis": "Wireless sensors diagnosis",
   "securityReportNormal": "Normal",
   "securityReportDisconnect": "Disconnect",
+  "safetySensorTriggered": "Triggered",
+  "safetySensorReplaceBattery": "How to replace the battery",
+  "safetySensorLowBatterySolution": "Solution for low battery power",
+  "safetySensorLowBatteryWarning": "Low battery power",
+  "safetySensorBatteryModel": "Battery model: {model}",
+  "@safetySensorBatteryModel": {
+    "placeholders": {
+      "model": {"type": "String"}
+    }
+  },
+  "safetySensorBatteryModelLabel": "Battery model: ",
+  "safetySensorRatedVoltage": "Rated voltage: {voltage}",
+  "@safetySensorRatedVoltage": {
+    "placeholders": {
+      "voltage": {"type": "String"}
+    }
+  },
+  "safetySensorRatedVoltageLabel": "Rated voltage: ",
+  "safetySensorLowBatteryInstruction": "*Low battery, please replace the battery promptly. Incorrect battery model could cause the device cannot operate",
+  "safetySensorImagePlaceholder": "Image placeholder",
+  "safetySensorDefaultName": "Safety sensor",
   "securityReportAbnormal": "Abnormal",
   "securityReportNotTriggered": "Not triggered",
   "securityReportLocked": "Locked",

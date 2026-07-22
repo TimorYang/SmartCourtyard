@@ -2420,6 +2420,72 @@ abstract class AppLocalizations {
   /// **'Disconnect'**
   String get securityReportDisconnect;
 
+  /// No description provided for @safetySensorTriggered.
+  ///
+  /// In en, this message translates to:
+  /// **'Triggered'**
+  String get safetySensorTriggered;
+
+  /// No description provided for @safetySensorReplaceBattery.
+  ///
+  /// In en, this message translates to:
+  /// **'How to replace the battery'**
+  String get safetySensorReplaceBattery;
+
+  /// No description provided for @safetySensorLowBatterySolution.
+  ///
+  /// In en, this message translates to:
+  /// **'Solution for low battery power'**
+  String get safetySensorLowBatterySolution;
+
+  /// No description provided for @safetySensorLowBatteryWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Low battery power'**
+  String get safetySensorLowBatteryWarning;
+
+  /// No description provided for @safetySensorBatteryModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery model: {model}'**
+  String safetySensorBatteryModel(String model);
+
+  /// No description provided for @safetySensorBatteryModelLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery model: '**
+  String get safetySensorBatteryModelLabel;
+
+  /// No description provided for @safetySensorRatedVoltage.
+  ///
+  /// In en, this message translates to:
+  /// **'Rated voltage: {voltage}'**
+  String safetySensorRatedVoltage(String voltage);
+
+  /// No description provided for @safetySensorRatedVoltageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Rated voltage: '**
+  String get safetySensorRatedVoltageLabel;
+
+  /// No description provided for @safetySensorLowBatteryInstruction.
+  ///
+  /// In en, this message translates to:
+  /// **'*Low battery, please replace the battery promptly. Incorrect battery model could cause the device cannot operate'**
+  String get safetySensorLowBatteryInstruction;
+
+  /// No description provided for @safetySensorImagePlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Image placeholder'**
+  String get safetySensorImagePlaceholder;
+
+  /// No description provided for @safetySensorDefaultName.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety sensor'**
+  String get safetySensorDefaultName;
+
   /// No description provided for @securityReportAbnormal.
   ///
   /// In en, this message translates to:

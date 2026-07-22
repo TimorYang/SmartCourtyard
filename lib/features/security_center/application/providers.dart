@@ -2,6 +2,132 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/entities/security_center_overview.dart';
 import '../domain/entities/full_report.dart';
+import '../domain/entities/safety_sensors_evaluation.dart';
+
+/// 安全传感器评估页面的数据入口。
+///
+/// 当前返回设计稿对应的假数据。接口接入后，仅替换此处的数据来源及数据层映射，
+/// 页面继续消费 [SafetySensorsEvaluation] 领域实体。
+final safetySensorsEvaluationProvider =
+    Provider.family<SafetySensorsEvaluation, String>((ref, deviceId) {
+      return SafetySensorsEvaluation(
+        deviceId: deviceId,
+        totalSensorCount: 6,
+        fineSensorCount: 3,
+        abnormalSensorCount: 3,
+        lowPowerSensorCount: 1,
+        wiredSensorGroup: const SafetySensorGroup(
+          status: SafetySensorGroupStatus.normal,
+          sensors: [
+            SafetySensor(
+              id: 'wired-photo-beam',
+              sensorName: 'Wired photo beam',
+              status: SafetySensorStatus.disconnected,
+              batteryStatus: SafetySensorBatteryStatus.normal,
+              batteryPercentage: 100,
+              operationPoints: [],
+            ),
+            SafetySensor(
+              id: 'wired-e-lock',
+              sensorName: 'Wired E-lock',
+              status: SafetySensorStatus.disconnected,
+              batteryStatus: SafetySensorBatteryStatus.normal,
+              batteryPercentage: 100,
+              operationPoints: [],
+            ),
+          ],
+        ),
+        wirelessSensorGroup: SafetySensorGroup(
+          status: SafetySensorGroupStatus.normal,
+          sensors: [
+            SafetySensor(
+              id: 'wireless-photo-beam',
+              sensorName: 'Wireless Photo Beam',
+              status: SafetySensorStatus.triggered,
+              batteryStatus: SafetySensorBatteryStatus.low,
+              batteryPercentage: 12,
+              operationPoints: [
+                SafetySensorOperationPoint(
+                  occurredAt: DateTime(2026, 7, 20, 9),
+                  cycles: 19,
+                ),
+                SafetySensorOperationPoint(
+                  occurredAt: DateTime(2026, 7, 20, 14),
+                  cycles: 21,
+                ),
+                SafetySensorOperationPoint(
+                  occurredAt: DateTime(2026, 7, 20, 20),
+                  cycles: 24,
+                ),
+              ],
+            ),
+            SafetySensor(
+              id: 'wireless-wicket-door',
+              sensorName: 'Wireless wicket door',
+              status: SafetySensorStatus.normal,
+              batteryStatus: SafetySensorBatteryStatus.normal,
+              batteryPercentage: 84,
+              operationPoints: [
+                SafetySensorOperationPoint(
+                  occurredAt: DateTime(2026, 7, 20, 6),
+                  cycles: 8,
+                ),
+                SafetySensorOperationPoint(
+                  occurredAt: DateTime(2026, 7, 20, 12),
+                  cycles: 14,
+                ),
+                SafetySensorOperationPoint(
+                  occurredAt: DateTime(2026, 7, 20, 18),
+                  cycles: 11,
+                ),
+              ],
+            ),
+            SafetySensor(
+              id: 'wireless-e-lock',
+              sensorName: 'Wireless E-lock',
+              status: SafetySensorStatus.normal,
+              batteryStatus: SafetySensorBatteryStatus.normal,
+              batteryPercentage: 72,
+              operationPoints: [
+                SafetySensorOperationPoint(
+                  occurredAt: DateTime(2026, 7, 20, 4),
+                  cycles: 4,
+                ),
+                SafetySensorOperationPoint(
+                  occurredAt: DateTime(2026, 7, 20, 11),
+                  cycles: 9,
+                ),
+                SafetySensorOperationPoint(
+                  occurredAt: DateTime(2026, 7, 20, 16),
+                  cycles: 13,
+                ),
+              ],
+            ),
+            SafetySensor(
+              id: 'wireless-safety-edge',
+              sensorName: 'Wireless safety edge',
+              status: SafetySensorStatus.normal,
+              batteryStatus: SafetySensorBatteryStatus.normal,
+              batteryPercentage: 68,
+              operationPoints: [
+                SafetySensorOperationPoint(
+                  occurredAt: DateTime(2026, 7, 20, 3),
+                  cycles: 6,
+                ),
+                SafetySensorOperationPoint(
+                  occurredAt: DateTime(2026, 7, 20, 10),
+                  cycles: 12,
+                ),
+                SafetySensorOperationPoint(
+                  occurredAt: DateTime(2026, 7, 20, 21),
+                  cycles: 7,
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    });
 
 /// 完整报告页面的数据入口。
 ///

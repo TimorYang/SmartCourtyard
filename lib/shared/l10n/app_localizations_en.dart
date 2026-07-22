@@ -1291,6 +1291,44 @@ class AppLocalizationsEn extends AppLocalizations {
   String get securityReportDisconnect => 'Disconnect';
 
   @override
+  String get safetySensorTriggered => 'Triggered';
+
+  @override
+  String get safetySensorReplaceBattery => 'How to replace the battery';
+
+  @override
+  String get safetySensorLowBatterySolution => 'Solution for low battery power';
+
+  @override
+  String get safetySensorLowBatteryWarning => 'Low battery power';
+
+  @override
+  String safetySensorBatteryModel(String model) {
+    return 'Battery model: $model';
+  }
+
+  @override
+  String get safetySensorBatteryModelLabel => 'Battery model: ';
+
+  @override
+  String safetySensorRatedVoltage(String voltage) {
+    return 'Rated voltage: $voltage';
+  }
+
+  @override
+  String get safetySensorRatedVoltageLabel => 'Rated voltage: ';
+
+  @override
+  String get safetySensorLowBatteryInstruction =>
+      '*Low battery, please replace the battery promptly. Incorrect battery model could cause the device cannot operate';
+
+  @override
+  String get safetySensorImagePlaceholder => 'Image placeholder';
+
+  @override
+  String get safetySensorDefaultName => 'Safety sensor';
+
+  @override
   String get securityReportAbnormal => 'Abnormal';
 
   @override

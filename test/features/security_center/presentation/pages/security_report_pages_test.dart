@@ -3,9 +3,11 @@ import 'dart:typed_data';
 import 'package:flinx/core/platform/gallery_image_saver.dart';
 import 'package:flinx/features/security_center/application/providers.dart';
 import 'package:flinx/features/security_center/domain/entities/full_report.dart';
+import 'package:flinx/features/security_center/domain/entities/safety_sensors_evaluation.dart';
 import 'package:flinx/features/security_center/presentation/pages/full_report_page.dart';
 import 'package:flinx/features/security_center/presentation/pages/general_evaluation_page.dart';
 import 'package:flinx/features/security_center/presentation/pages/security_center_page.dart';
+import 'package:flinx/features/security_center/presentation/pages/safety_sensor_battery_solution_page.dart';
 import 'package:flinx/features/security_center/presentation/pages/safety_sensors_evaluation_page.dart';
 import 'package:flinx/features/security_center/presentation/widgets/security_report_widgets.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
@@ -71,7 +73,7 @@ void main() {
       findsOneWidget,
     );
     expect(
-      find.byKey(const ValueKey<RecordRange>(RecordRange.last7Days)),
+      find.byKey(const ValueKey<RecordRange>(RecordRange.last24Hours)),
       findsOneWidget,
     );
 
@@ -99,6 +101,58 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('X: Time Y: Operation cycles'), findsOneWidget);
+  });
+
+  testWidgets('general evaluation renders report data without report actions', (
+    tester,
+  ) async {
+    await _pumpPage(
+      tester,
+      const GeneralEvaluationPage(deviceId: 'mock-device'),
+    );
+
+    expect(find.text('Garage door motor 01'), findsOneWidget);
+    expect(find.textContaining('FSD123456789'), findsOneWidget);
+    expect(find.text('Garage door 01'), findsOneWidget);
+    expect(find.text('860'), findsOneWidget);
+    expect(find.text('140'), findsOneWidget);
+    expect(find.text('Motor function status'), findsOneWidget);
+    expect(find.byType(SecurityReportActionBar), findsNothing);
+  });
+
+  testWidgets('general evaluation localizes its navigation title', (
+    tester,
+  ) async {
+    await _pumpPage(
+      tester,
+      const GeneralEvaluationPage(deviceId: 'mock-device'),
+      locale: const Locale('zh'),
+    );
+
+    expect(find.text('常规评估'), findsOneWidget);
+  });
+
+  testWidgets('motor function status card expands and collapses', (
+    tester,
+  ) async {
+    await _pumpPage(tester, const Scaffold(body: MotorFunctionStatusCard()));
+
+    final toggle = find.byKey(
+      const ValueKey<String>('motor-function-status-toggle'),
+    );
+    expect(toggle, findsOneWidget);
+    expect(find.text('Door opening force'), findsOneWidget);
+    expect(find.text('Wired E-lock'), findsOneWidget);
+
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
+    expect(find.text('Door opening force'), findsNothing);
+    expect(find.text('Wired E-lock'), findsNothing);
+
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
+    expect(find.text('Door opening force'), findsOneWidget);
+    expect(find.text('Wired E-lock'), findsOneWidget);
   });
 
   testWidgets('full report contains all sections and safety suggestions', (
@@ -423,6 +477,18 @@ void main() {
     expect(find.text('Fine'), findsOneWidget);
     expect(find.text('Abnormal'), findsOneWidget);
     expect(find.text('Low power'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('sensor-metric-Sensors-value')),
+      findsOneWidget,
+    );
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(const ValueKey<String>('sensor-metric-Sensors-value')),
+          )
+          .data,
+      '6',
+    );
     expect(find.text('Wired sensor status'), findsOneWidget);
     expect(find.text('Wireless Sensors Status'), findsOneWidget);
     expect(find.text('Match'), findsOneWidget);
@@ -433,7 +499,62 @@ void main() {
     expect(find.text('Wireless wicket door'), findsOneWidget);
     expect(find.text('Wireless E-lock'), findsOneWidget);
     expect(find.text('Wireless safety edge'), findsOneWidget);
-    expect(find.text('Disconnect'), findsNWidgets(6));
+    expect(find.text('Disconnect'), findsNWidgets(2));
+    expect(
+      find.byKey(const ValueKey<String>('sensor-status-Wired photo beam')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey<String>('sensor-status-Wired E-lock')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey<String>('sensor-battery')),
+      findsNWidgets(3),
+    );
+    for (final name in [
+      'Wireless Photo Beam',
+      'Wireless wicket door',
+      'Wireless E-lock',
+      'Wireless safety edge',
+    ]) {
+      expect(
+        find.byKey(ValueKey<String>('sensor-navigation-chevron-$name')),
+        findsOneWidget,
+      );
+    }
+    expect(find.text('Triggered'), findsOneWidget);
+    expect(find.text('How to replace the battery'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('sensor-low-battery')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey<String>('sensor-replace-battery-help')),
+      findsOneWidget,
+    );
+    final alertCard = find.byKey(
+      const ValueKey<String>('sensor-Wireless Photo Beam'),
+    );
+    final batteryHelp = find.byKey(
+      const ValueKey<String>('sensor-replace-battery-help'),
+    );
+    expect(
+      tester.getRect(alertCard).right - tester.getRect(batteryHelp).right,
+      closeTo(6, 0.1),
+    );
+    expect(
+      tester
+              .getRect(find.byKey(const ValueKey<String>('sensor-low-battery')))
+              .left -
+          tester.getRect(find.text('Wireless Photo Beam')).right,
+      closeTo(4, 0.1),
+    );
+    final batteryHelpWidget = tester.widget<Container>(batteryHelp);
+    final batteryHelpDecoration =
+        batteryHelpWidget.decoration! as BoxDecoration;
+    final batteryHelpBorder = batteryHelpDecoration.border! as Border;
+    expect(batteryHelpBorder.bottom.width, 0.5);
 
     await tester.scrollUntilVisible(
       find.text('Wireless safety edge'),
@@ -441,6 +562,172 @@ void main() {
       scrollable: _scrollableInside('safety-sensors-scroll-sensor-device'),
     );
     expect(find.text('Wireless safety edge'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('low-battery help opens the battery solution page', (
+    tester,
+  ) async {
+    final router = _buildRouter();
+    await _pumpRouter(tester, router);
+
+    final safetyCard = find.byKey(
+      const ValueKey<String>('safety-sensors-evaluation-card'),
+    );
+    await tester.ensureVisible(safetyCard);
+    await tester.tap(safetyCard);
+    await tester.pumpAndSettle();
+
+    final replaceBatteryAction = find.byKey(
+      const ValueKey<String>('sensor-replace-battery-action'),
+    );
+    await tester.ensureVisible(replaceBatteryAction);
+    await tester.pumpAndSettle();
+    await tester.tap(replaceBatteryAction);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Wireless Photo Beam'), findsOneWidget);
+    expect(find.text('Solution for low battery power'), findsOneWidget);
+    expect(find.text('Battery model: ER14505'), findsOneWidget);
+    expect(
+      find.byKey(
+        const ValueKey<String>('safety-sensor-battery-solution-scroll'),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('battery solution page uses image placeholders', (tester) async {
+    await _pumpPage(
+      tester,
+      const SafetySensorBatterySolutionPage(
+        deviceId: 'sensor-device',
+        sensorId: 'wireless-photo-beam',
+      ),
+    );
+
+    expect(find.text('Wireless Photo Beam'), findsOneWidget);
+    expect(find.text('Low battery power'), findsOneWidget);
+    expect(find.text('Image placeholder'), findsNWidgets(2));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('wireless sensors expand and collapse operation charts', (
+    tester,
+  ) async {
+    await _pumpPage(
+      tester,
+      const SafetySensorsEvaluationPage(deviceId: 'sensor-device'),
+    );
+
+    await tester.tap(
+      find.byKey(const ValueKey<String>('sensor-toggle-Wired photo beam')),
+    );
+    await tester.pumpAndSettle();
+    for (final name in [
+      'Wireless Photo Beam',
+      'Wireless wicket door',
+      'Wireless E-lock',
+      'Wireless safety edge',
+    ]) {
+      expect(
+        find.byKey(ValueKey<String>('sensor-operation-chart-$name')),
+        findsNothing,
+      );
+    }
+
+    for (final name in [
+      'Wireless Photo Beam',
+      'Wireless wicket door',
+      'Wireless E-lock',
+      'Wireless safety edge',
+    ]) {
+      final toggle = find.byKey(ValueKey<String>('sensor-toggle-$name'));
+      await tester.ensureVisible(toggle);
+      await tester.pumpAndSettle();
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(ValueKey<String>('sensor-operation-chart-$name')),
+        findsOneWidget,
+      );
+
+      if (name == 'Wireless Photo Beam') {
+        expect(find.text('Triggered'), findsOneWidget);
+        expect(find.text('How to replace the battery'), findsOneWidget);
+      }
+
+      await tester.ensureVisible(toggle);
+      await tester.pumpAndSettle();
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(ValueKey<String>('sensor-operation-chart-$name')),
+        findsNothing,
+      );
+    }
+  });
+
+  testWidgets('wireless sensor with no operation points opens an empty chart', (
+    tester,
+  ) async {
+    final evaluation = SafetySensorsEvaluation(
+      deviceId: 'empty-history-device',
+      totalSensorCount: 1,
+      fineSensorCount: 1,
+      abnormalSensorCount: 0,
+      lowPowerSensorCount: 0,
+      wiredSensorGroup: const SafetySensorGroup(
+        status: SafetySensorGroupStatus.normal,
+        sensors: [],
+      ),
+      wirelessSensorGroup: const SafetySensorGroup(
+        status: SafetySensorGroupStatus.normal,
+        sensors: [
+          SafetySensor(
+            id: 'wireless-photo-beam',
+            sensorName: 'Empty history sensor',
+            status: SafetySensorStatus.normal,
+            batteryStatus: SafetySensorBatteryStatus.normal,
+            batteryPercentage: 80,
+            operationPoints: [],
+          ),
+        ],
+      ),
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          safetySensorsEvaluationProvider(
+            'empty-history-device',
+          ).overrideWithValue(evaluation),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const SafetySensorsEvaluationPage(
+            deviceId: 'empty-history-device',
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final emptyHistoryToggle = find.byKey(
+      const ValueKey<String>('sensor-toggle-Empty history sensor'),
+    );
+    await tester.ensureVisible(emptyHistoryToggle);
+    await tester.pumpAndSettle();
+    await tester.tap(emptyHistoryToggle);
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(
+        const ValueKey<String>('sensor-operation-chart-Empty history sensor'),
+      ),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
 
@@ -515,6 +802,14 @@ GoRouter _buildRouter() {
           deviceId: state.uri.queryParameters['deviceId'] ?? '',
         ),
       ),
+      GoRoute(
+        path: SafetySensorBatterySolutionPage.routePath,
+        name: SafetySensorBatterySolutionPage.routeName,
+        builder: (context, state) => SafetySensorBatterySolutionPage(
+          deviceId: state.uri.queryParameters['deviceId'] ?? '',
+          sensorId: state.uri.queryParameters['sensorId'] ?? '',
+        ),
+      ),
     ],
   );
 }
@@ -542,6 +837,7 @@ Future<void> _pumpPage(
   WidgetTester tester,
   Widget page, {
   bool setViewport = true,
+  Locale? locale,
 }) async {
   if (setViewport) {
     tester.view.physicalSize = const Size(393, 852);
@@ -552,6 +848,7 @@ Future<void> _pumpPage(
   await tester.pumpWidget(
     ProviderScope(
       child: MaterialApp(
+        locale: locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: page,

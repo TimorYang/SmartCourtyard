@@ -85,10 +85,10 @@ class AppColors {
   static const securityCenterSensorUnavailable = Color(0xFFBFC1C5);
   static const securityReportHeroBlue = Color(0xFF2478F5);
   static const securityReportHeroFade = Color(0xFFDCE9FF);
-  static const securityReportWarning = Color(0xFFFF9800);
+  static const securityReportWarning = Color(0xFFFF7B00);
   static const securityReportSegmentTrack = Color(0xFFF0F2F5);
   static const securityReportSegmentSelected = Color(0xFF0878ED);
-  static const securityReportDivider = Color(0xFFE3E5E8);
+  static const securityReportDivider = Color(0xFF96999E);
   static const securityReportTableBorder = Color(0xFFB4B8BD);
   static const securityReportChartGrid = Color(0xFFB7BCC2);
   static const securityReportChartBar = Color(0xFFFF9800);
@@ -100,10 +100,13 @@ class AppColors {
   static const securityReportBottomBar = Colors.white;
   static const securityReportBottomBarDivider = Color(0xFFE6E7EB);
   static const safetySensorMetricIcon = Color(0xFF0878ED);
+  static const safetySensorMetricIconSurface = Color(0xFFF1F3F5);
   static const safetySensorItemSurface = Color(0xFFF5F7FB);
   static const safetySensorDisconnected = Color(0xFFB1B4BA);
   static const safetySensorAction = Color(0xFF0878ED);
   static const safetySensorPlaceholder = Color(0xFFD8DCE2);
+  static const safetyBatterySolutionPlaceholderSurface = Color(0xFFF1F3F5);
+  static const safetyBatterySolutionHighlightBorder = Color(0xFF176CFF);
   static const backgroundDarkTop = Color(0xFF0D1B30);
   static const backgroundDarkMiddle = Color(0xFF14253D);
   static const backgroundDarkBottom = Color(0xFF1B1D24);
@@ -196,6 +199,14 @@ class AppColors {
   static const overlayStrong = Color(0x7A000000);
   static const overlayMedium = Color(0xA3000000);
   static const overlaySoft = Color(0x57000000);
+}
+
+class AppShapeTokens {
+  const AppShapeTokens._();
+
+  static const safetySensorMetricIconRadius = 8.0;
+  static const safetyBatterySolutionCardRadius = 14.0;
+  static const safetyBatterySolutionImageRadius = 10.0;
 }
 
 class AppTextTokens {
@@ -977,8 +988,8 @@ class AppTextTokens {
   static TextStyle securityCenterHeroTitle(TextTheme textTheme) {
     return (textTheme.headlineLarge ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
-      fontSize: 26,
-      fontWeight: FontWeight.w600,
+      fontSize: 24,
+      fontWeight: FontWeight.w500,
       height: 1.1,
     );
   }
@@ -1139,7 +1150,7 @@ class AppTextTokens {
   static TextStyle safetySensorMetricLabel(TextTheme textTheme) {
     return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
-      fontSize: 13,
+      fontSize: 12,
       fontWeight: FontWeight.w400,
     );
   }
@@ -1147,7 +1158,7 @@ class AppTextTokens {
   static TextStyle safetySensorMetricValue(TextTheme textTheme) {
     return (textTheme.headlineMedium ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
-      fontSize: 28,
+      fontSize: 25,
       fontWeight: FontWeight.w600,
     );
   }
@@ -1155,7 +1166,7 @@ class AppTextTokens {
   static TextStyle safetySensorItemTitle(TextTheme textTheme) {
     return (textTheme.bodyLarge ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
-      fontSize: 14,
+      fontSize: 15,
       fontWeight: FontWeight.w400,
     );
   }
@@ -1163,7 +1174,15 @@ class AppTextTokens {
   static TextStyle safetySensorItemStatus(TextTheme textTheme) {
     return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
       color: AppColors.safetySensorDisconnected,
-      fontSize: 13,
+      fontSize: 12,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle safetySensorItemAlert(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.securityCenterError,
+      fontSize: 12,
       fontWeight: FontWeight.w400,
     );
   }
@@ -1171,8 +1190,45 @@ class AppTextTokens {
   static TextStyle safetySensorAction(TextTheme textTheme) {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
       color: Colors.white,
-      fontSize: 18,
+      fontSize: 12,
       fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle safetyBatterySolutionSectionTitle(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 15,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle safetyBatterySolutionBody(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 12,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle safetyBatterySolutionLabel(TextTheme textTheme) {
+    return safetyBatterySolutionBody(
+      textTheme,
+    ).copyWith(fontWeight: FontWeight.w500);
+  }
+
+  static TextStyle safetyBatterySolutionValue(TextTheme textTheme) {
+    return safetyBatterySolutionBody(
+      textTheme,
+    ).copyWith(color: AppColors.textMuted, fontWeight: FontWeight.w400);
+  }
+
+  static TextStyle safetyBatterySolutionWarning(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.securityReportWarning,
+      fontSize: 12,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
     );
   }
 
