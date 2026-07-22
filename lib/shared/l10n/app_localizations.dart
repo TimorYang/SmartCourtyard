@@ -107,7 +107,7 @@ abstract class AppLocalizations {
   /// Heading of the device operation record page
   ///
   /// In en, this message translates to:
-  /// **'OPERATION RECORD'**
+  /// **'Operation Record'**
   String get operationRecordTitle;
 
   /// Description of the time range shown on the device operation record page
@@ -115,6 +115,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Operation data of the last 14 days'**
   String get operationRecordLast14DaysDescription;
+
+  /// No description provided for @operationRecordLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load operation records. Tap to retry.'**
+  String get operationRecordLoadFailed;
+
+  /// No description provided for @operationRecordLoadMoreFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load more records. Tap to retry.'**
+  String get operationRecordLoadMoreFailed;
+
+  /// No description provided for @operationRecordNoMore.
+  ///
+  /// In en, this message translates to:
+  /// **'No more records'**
+  String get operationRecordNoMore;
 
   /// Headline shown on the unauthenticated welcome page
   ///

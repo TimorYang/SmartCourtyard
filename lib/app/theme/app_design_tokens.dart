@@ -72,6 +72,7 @@ class AppColors {
   static const deviceDetailNavigationUnselected = Color(0xFFB9BDC3);
   static const operationRecordTimeline = Color(0xFF41464D);
   static const operationRecordTimelineLine = Color(0xFFD3D5D8);
+  static const operationRecordDivider = Color(0xFFE1E2E4);
   static const operationRecordAvatarSurface = Color(0xFFE9EAED);
   static const securityCenterBackground = Color(0xFFF5F7FB);
   static const securityCenterCard = Color(0xFFFFFFFF);
@@ -963,8 +964,8 @@ class AppTextTokens {
   static TextStyle operationRecordAction(TextTheme textTheme) {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
-      fontSize: 18,
-      fontWeight: FontWeight.w600,
+      fontSize: 15,
+      fontWeight: FontWeight.w400,
       height: 1.2,
     );
   }

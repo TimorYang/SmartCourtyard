@@ -1,7 +1,7 @@
 {
   "@@locale": "en",
   "appTitle": "FLINX",
-  "operationRecordTitle": "OPERATION RECORD",
+  "operationRecordTitle": "Operation Record",
   "@operationRecordTitle": {
     "description": "Heading of the device operation record page"
   },
@@ -9,6 +9,9 @@
   "@operationRecordLast14DaysDescription": {
     "description": "Description of the time range shown on the device operation record page"
   },
+  "operationRecordLoadFailed": "Unable to load operation records. Tap to retry.",
+  "operationRecordLoadMoreFailed": "Unable to load more records. Tap to retry.",
+  "operationRecordNoMore": "No more records",
   "welcomeHeadline": "Start your\nsmart life",
   "@welcomeHeadline": {
     "description": "Headline shown on the unauthenticated welcome page"

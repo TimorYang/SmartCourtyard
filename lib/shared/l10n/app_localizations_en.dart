@@ -12,11 +12,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'FLINX';
 
   @override
-  String get operationRecordTitle => 'OPERATION RECORD';
+  String get operationRecordTitle => 'Operation Record';
 
   @override
   String get operationRecordLast14DaysDescription =>
       'Operation data of the last 14 days';
+
+  @override
+  String get operationRecordLoadFailed =>
+      'Unable to load operation records. Tap to retry.';
+
+  @override
+  String get operationRecordLoadMoreFailed =>
+      'Unable to load more records. Tap to retry.';
+
+  @override
+  String get operationRecordNoMore => 'No more records';
 
   @override
   String get welcomeHeadline => 'Start your\nsmart life';
