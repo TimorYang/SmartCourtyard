@@ -8,35 +8,21 @@ class DoorDetail {
     required this.doorStateLabel,
     required this.operatedCycles,
     required this.remainingCycles,
-    this.sceneId,
-    this.sceneName,
     this.doorType,
     this.doorTypeLabel,
-    this.controlSource,
-    this.controlSourceLabel,
     this.controlMode,
     this.controlModeLabel,
     this.onlineStatus,
     this.onlineStatusLabel,
     this.positionPercent,
-    this.coverMode,
-    this.coverModeLabel,
     this.coverFileId,
-    this.top = false,
-    this.hardwareSn,
-    this.model,
-    this.firmwareVersion,
-    this.hardwareVersion,
+    this.associatedDevices = const [],
   });
 
   final String id;
   final String name;
-  final int? sceneId;
-  final String? sceneName;
   final int? doorType;
   final String? doorTypeLabel;
-  final int? controlSource;
-  final String? controlSourceLabel;
   final int? controlMode;
   final String? controlModeLabel;
   final int? onlineStatus;
@@ -44,18 +30,41 @@ class DoorDetail {
   final DoorState doorState;
   final String doorStateLabel;
   final double? positionPercent;
-  final int? coverMode;
-  final String? coverModeLabel;
   final int? coverFileId;
-  final bool top;
   final int operatedCycles;
   final int remainingCycles;
-  final String? hardwareSn;
-  final String? model;
-  final String? firmwareVersion;
-  final String? hardwareVersion;
+  final List<DoorAssociatedDevice> associatedDevices;
 
   String get hardwareDeviceId {
-    return hardwareSn?.trim() ?? '';
+    final primaryControlDevice = associatedDevices.where(
+      (device) =>
+          device.associated &&
+          device.primaryControl &&
+          device.bleName.trim().isNotEmpty,
+    );
+    if (primaryControlDevice.isNotEmpty) {
+      return primaryControlDevice.first.bleName.trim();
+    }
+    return '';
   }
+}
+
+class DoorAssociatedDevice {
+  const DoorAssociatedDevice({
+    required this.deviceType,
+    required this.associated,
+    required this.primaryControl,
+    required this.bleName,
+    this.bleUuid,
+    this.bleMac,
+    this.capabilities = const [],
+  });
+
+  final String deviceType;
+  final bool associated;
+  final bool primaryControl;
+  final String bleName;
+  final String? bleUuid;
+  final String? bleMac;
+  final List<String> capabilities;
 }

@@ -15,11 +15,18 @@ void main() {
         DoorDetailResponseDto(
           id: 12,
           name: 'Main Gate',
-          sceneId: 7,
           doorStateLabel: 'Closing',
           operatedCycles: 123,
           remainingCycles: 4567,
-          hardwareSn: 'SN-001',
+          associatedDevices: [
+            DoorAssociatedDeviceResponseDto(
+              deviceType: 'opener',
+              associated: true,
+              primaryControl: true,
+              bleName: 'opener_B8F86211A9DC',
+              capabilities: ['DOOR_CONTROL', 'LED_CONTROL'],
+            ),
+          ],
         ),
       ),
       logger: const _NoopLogger(),
@@ -32,12 +39,15 @@ void main() {
 
     expect(detail.id, '12');
     expect(detail.name, 'Main Gate');
-    expect(detail.sceneId, 7);
     expect(detail.doorState, DoorState.closing);
     expect(detail.doorStateLabel, 'Closing');
     expect(detail.operatedCycles, 123);
     expect(detail.remainingCycles, 4567);
-    expect(detail.hardwareDeviceId, 'SN-001');
+    expect(detail.hardwareDeviceId, 'opener_B8F86211A9DC');
+    expect(detail.associatedDevices.single.capabilities, [
+      'DOOR_CONTROL',
+      'LED_CONTROL',
+    ]);
   });
 
   test('maps network failure to retryable app error', () async {

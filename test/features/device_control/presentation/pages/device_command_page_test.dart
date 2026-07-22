@@ -343,7 +343,14 @@ class _FakeDoorDetailRepository implements DoorDetailRepository {
       doorStateLabel: 'Closed',
       operatedCycles: 123,
       remainingCycles: 4567,
-      hardwareSn: 'SN-001',
+      associatedDevices: [
+        DoorAssociatedDevice(
+          deviceType: 'opener',
+          associated: true,
+          primaryControl: true,
+          bleName: 'SN-001',
+        ),
+      ],
     );
   }
 }

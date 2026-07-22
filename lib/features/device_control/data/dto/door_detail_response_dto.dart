@@ -2,11 +2,8 @@ class DoorDetailResponseDto {
   const DoorDetailResponseDto({
     required this.id,
     required this.name,
-    this.sceneId,
     this.doorType,
     this.doorTypeLabel,
-    this.controlSource,
-    this.controlSourceLabel,
     this.controlMode,
     this.controlModeLabel,
     this.onlineStatus,
@@ -14,26 +11,16 @@ class DoorDetailResponseDto {
     this.doorState,
     this.doorStateLabel,
     this.positionPercent,
-    this.coverMode,
-    this.coverModeLabel,
     this.coverFileId,
-    this.top = false,
-    this.sceneName,
     this.operatedCycles,
     this.remainingCycles,
-    this.hardwareSn,
-    this.model,
-    this.firmwareVersion,
-    this.hardwareVersion,
+    this.associatedDevices = const [],
   });
 
   final int id;
   final String name;
-  final int? sceneId;
   final int? doorType;
   final String? doorTypeLabel;
-  final int? controlSource;
-  final String? controlSourceLabel;
   final int? controlMode;
   final String? controlModeLabel;
   final int? onlineStatus;
@@ -41,27 +28,17 @@ class DoorDetailResponseDto {
   final int? doorState;
   final String? doorStateLabel;
   final double? positionPercent;
-  final int? coverMode;
-  final String? coverModeLabel;
   final int? coverFileId;
-  final bool top;
-  final String? sceneName;
   final int? operatedCycles;
   final int? remainingCycles;
-  final String? hardwareSn;
-  final String? model;
-  final String? firmwareVersion;
-  final String? hardwareVersion;
+  final List<DoorAssociatedDeviceResponseDto> associatedDevices;
 
   factory DoorDetailResponseDto.fromJson(Map<String, dynamic> json) {
     return DoorDetailResponseDto(
       id: _parseInt(json['id']),
       name: json['name'] as String? ?? '',
-      sceneId: _parseNullableInt(json['sceneId']),
       doorType: _parseNullableInt(json['doorType']),
       doorTypeLabel: json['doorTypeLabel'] as String?,
-      controlSource: _parseNullableInt(json['controlSource']),
-      controlSourceLabel: json['controlSourceLabel'] as String?,
       controlMode: _parseNullableInt(json['controlMode']),
       controlModeLabel: json['controlModeLabel'] as String?,
       onlineStatus: _parseNullableInt(json['onlineStatus']),
@@ -69,17 +46,13 @@ class DoorDetailResponseDto {
       doorState: _parseNullableInt(json['doorState']),
       doorStateLabel: json['doorStateLabel'] as String?,
       positionPercent: _parseNullableDouble(json['positionPercent']),
-      coverMode: _parseNullableInt(json['coverMode']),
-      coverModeLabel: json['coverModeLabel'] as String?,
       coverFileId: _parseNullableInt(json['coverFileId']),
-      top: json['top'] as bool? ?? false,
-      sceneName: json['sceneName'] as String?,
       operatedCycles: _parseNullableInt(json['operatedCycles']),
       remainingCycles: _parseNullableInt(json['remainingCycles']),
-      hardwareSn: json['hardwareSn'] as String?,
-      model: json['model'] as String?,
-      firmwareVersion: json['firmwareVersion'] as String?,
-      hardwareVersion: json['hardwareVersion'] as String?,
+      associatedDevices: (json['associatedDevices'] as List<dynamic>? ?? [])
+          .whereType<Map<String, dynamic>>()
+          .map(DoorAssociatedDeviceResponseDto.fromJson)
+          .toList(),
     );
   }
 
@@ -105,5 +78,68 @@ class DoorDetailResponseDto {
       return double.tryParse(value);
     }
     return null;
+  }
+}
+
+class DoorAssociatedDeviceResponseDto {
+  const DoorAssociatedDeviceResponseDto({
+    this.deviceType,
+    this.deviceTypeLabel,
+    this.associated = false,
+    this.primaryControl = false,
+    this.onlineStatus,
+    this.onlineStatusLabel,
+    this.bleName,
+    this.bleUuid,
+    this.bleMac,
+    this.bleConnectionStatus,
+    this.bleConnectionStatusLabel,
+    this.wifiConnectionStatus,
+    this.wifiConnectionStatusLabel,
+    this.ledStatus,
+    this.ledStatusLabel,
+    this.capabilities = const [],
+  });
+
+  final String? deviceType;
+  final String? deviceTypeLabel;
+  final bool associated;
+  final bool primaryControl;
+  final int? onlineStatus;
+  final String? onlineStatusLabel;
+  final String? bleName;
+  final String? bleUuid;
+  final String? bleMac;
+  final String? bleConnectionStatus;
+  final String? bleConnectionStatusLabel;
+  final String? wifiConnectionStatus;
+  final String? wifiConnectionStatusLabel;
+  final String? ledStatus;
+  final String? ledStatusLabel;
+  final List<String> capabilities;
+
+  factory DoorAssociatedDeviceResponseDto.fromJson(Map<String, dynamic> json) {
+    return DoorAssociatedDeviceResponseDto(
+      deviceType: json['deviceType'] as String?,
+      deviceTypeLabel: json['deviceTypeLabel'] as String?,
+      associated: json['associated'] as bool? ?? false,
+      primaryControl: json['primaryControl'] as bool? ?? false,
+      onlineStatus: DoorDetailResponseDto._parseNullableInt(
+        json['onlineStatus'],
+      ),
+      onlineStatusLabel: json['onlineStatusLabel'] as String?,
+      bleName: json['bleName'] as String?,
+      bleUuid: json['bleUuid'] as String?,
+      bleMac: json['bleMac'] as String?,
+      bleConnectionStatus: json['bleConnectionStatus'] as String?,
+      bleConnectionStatusLabel: json['bleConnectionStatusLabel'] as String?,
+      wifiConnectionStatus: json['wifiConnectionStatus'] as String?,
+      wifiConnectionStatusLabel: json['wifiConnectionStatusLabel'] as String?,
+      ledStatus: json['ledStatus'] as String?,
+      ledStatusLabel: json['ledStatusLabel'] as String?,
+      capabilities: (json['capabilities'] as List<dynamic>? ?? [])
+          .whereType<String>()
+          .toList(),
+    );
   }
 }

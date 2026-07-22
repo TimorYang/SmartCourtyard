@@ -80,12 +80,8 @@ extension DoorDetailResponseDtoMapper on DoorDetailResponseDto {
     return DoorDetail(
       id: id.toString(),
       name: name.trim().isEmpty ? 'Garage door' : name.trim(),
-      sceneId: sceneId,
-      sceneName: sceneName,
       doorType: doorType,
       doorTypeLabel: doorTypeLabel,
-      controlSource: controlSource,
-      controlSourceLabel: controlSourceLabel,
       controlMode: controlMode,
       controlModeLabel: controlModeLabel,
       onlineStatus: onlineStatus,
@@ -93,16 +89,22 @@ extension DoorDetailResponseDtoMapper on DoorDetailResponseDto {
       doorState: _doorState(),
       doorStateLabel: _doorStateLabel(),
       positionPercent: positionPercent,
-      coverMode: coverMode,
-      coverModeLabel: coverModeLabel,
       coverFileId: coverFileId,
-      top: top,
       operatedCycles: operatedCycles ?? 0,
       remainingCycles: remainingCycles ?? 0,
-      hardwareSn: hardwareSn,
-      model: model,
-      firmwareVersion: firmwareVersion,
-      hardwareVersion: hardwareVersion,
+      associatedDevices: associatedDevices
+          .map(
+            (device) => DoorAssociatedDevice(
+              deviceType: device.deviceType?.trim() ?? '',
+              associated: device.associated,
+              primaryControl: device.primaryControl,
+              bleName: device.bleName?.trim() ?? '',
+              bleUuid: device.bleUuid,
+              bleMac: device.bleMac,
+              capabilities: device.capabilities,
+            ),
+          )
+          .toList(),
     );
   }
 
