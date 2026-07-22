@@ -17,6 +17,10 @@ final class BleManager: NSObject {
 
   private var peripheralsById: [String: CBPeripheral] = [:]
   private var currentScan: ScanSession?
+  // CBCentralManager reports its initial state asynchronously. Retain a scan
+  // requested during `.unknown`/`.resetting` and begin it once CoreBluetooth is
+  // ready instead of treating the initial state as an unavailable adapter.
+  private var pendingScanStart: ScanSession?
   private var notificationSequence: Int64 = 0
 
   private var pendingConnects:
@@ -49,14 +53,40 @@ final class BleManager: NSObject {
   }
 
   func startScan(requestId: String, filter: BleScanFilter) throws {
-    try ensureBluetoothReady(requestId: requestId)
     let session = ScanSession(requestId: requestId, filter: filter)
+    if #available(iOS 13.1, *), CBCentralManager.authorization == .denied {
+      let error = BleManagerError.bluetoothUnauthorized
+      emitNativeError(error, requestId: requestId, deviceId: nil)
+      throw error
+    }
+
+    switch centralManager.state {
+    case .poweredOn:
+      beginScan(session)
+    case .unknown, .resetting:
+      pendingScanStart = session
+      logger.info(
+        "scan_waiting_for_central_state",
+        requestId: requestId,
+        state: centralStateSummary(centralManager.state),
+        nativeCode: session.sessionId
+      )
+    default:
+      let error = BleManagerError.bluetoothUnavailable
+      emitNativeError(error, requestId: requestId, deviceId: nil)
+      throw error
+    }
+  }
+
+  private func beginScan(_ session: ScanSession) {
+    pendingScanStart = nil
     currentScan = session
 
+    let filter = session.filter
     let serviceUuids = normalizedUuids(filter.serviceUuids).map(CBUUID.init(string:))
     logger.info(
       "scan_start",
-      requestId: requestId,
+      requestId: session.requestId,
       state: "started",
       nativeCode: session.sessionId,
       details:
@@ -72,6 +102,7 @@ final class BleManager: NSObject {
   }
 
   func stopScan(requestId: String) {
+    pendingScanStart = nil
     centralManager.stopScan()
     let session = currentScan
     currentScan = nil
@@ -344,19 +375,6 @@ final class BleManager: NSObject {
       details: characteristicDetails(characteristic)
     )
     peripheral.setNotifyValue(enabled, for: characteristic)
-  }
-
-  private func ensureBluetoothReady(requestId: String) throws {
-    if #available(iOS 13.1, *), CBCentralManager.authorization == .denied {
-      let error = BleManagerError.bluetoothUnauthorized
-      emitNativeError(error, requestId: requestId, deviceId: nil)
-      throw error
-    }
-    guard centralManager.state == .poweredOn else {
-      let error = BleManagerError.bluetoothUnavailable
-      emitNativeError(error, requestId: requestId, deviceId: nil)
-      throw error
-    }
   }
 
   private func connectedPeripheral<T>(
@@ -682,8 +700,21 @@ extension BleManager: CBCentralManagerDelegate {
       state: centralStateSummary(central.state),
       nativeCode: "\(central.state.rawValue)"
     )
-    if central.state != .poweredOn {
-      emitNativeError(.bluetoothUnavailable, requestId: currentScan?.requestId, deviceId: nil)
+    switch central.state {
+    case .poweredOn:
+      if let pendingScanStart {
+        beginScan(pendingScanStart)
+      }
+    case .unknown, .resetting:
+      // CoreBluetooth is still initializing. A pending first scan must wait.
+      return
+    default:
+      if let pendingScanStart {
+        self.pendingScanStart = nil
+        emitNativeError(.bluetoothUnavailable, requestId: pendingScanStart.requestId, deviceId: nil)
+      } else {
+        emitNativeError(.bluetoothUnavailable, requestId: currentScan?.requestId, deviceId: nil)
+      }
     }
   }
 
