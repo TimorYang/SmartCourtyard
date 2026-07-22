@@ -66,7 +66,7 @@ class AddDeviceOnboardingRepositoryImpl
         requestId: requestId,
         context: {'sn': sn, 'doorId': data.id},
       );
-      return data.toDomain();
+      return data.toDomain(sn: sn);
     } on AddDeviceOnboardingRemoteException catch (error, stackTrace) {
       logger.error(
         'Failed to add force door after onboarding.',
@@ -128,7 +128,7 @@ extension OnboardingDeviceKeyResponseDtoMapper
 }
 
 extension ForceDoorResponseDtoMapper on ForceDoorResponseDto {
-  OnboardedForceDoor toDomain() {
-    return OnboardedForceDoor(id: id, sn: hardwareSn, name: name);
+  OnboardedForceDoor toDomain({required String sn}) {
+    return OnboardedForceDoor(id: id, sn: sn, name: name);
   }
 }

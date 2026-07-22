@@ -59,11 +59,7 @@ void main() {
         addDoorResponse: const ApiEnvelopeDto(
           code: 200,
           success: true,
-          data: ForceDoorResponseDto(
-            id: 7,
-            hardwareSn: 'SN-001',
-            name: 'Garage door',
-          ),
+          data: ForceDoorResponseDto(id: 7, name: 'Garage door'),
         ),
       ),
     );
@@ -74,7 +70,61 @@ void main() {
     );
 
     expect(result.id, 7);
-    expect(result.hardwareSn, 'SN-001');
+    expect(result.name, 'Garage door');
+  });
+
+  test(
+    'addForceDoor accepts code 200 regardless of envelope success flag',
+    () async {
+      final dataSource = AddDeviceOnboardingRemoteDataSourceImpl(
+        api: _FakeAddDeviceOnboardingApi(
+          addDoorResponse: const ApiEnvelopeDto(
+            code: 200,
+            success: false,
+            data: ForceDoorResponseDto(id: 7),
+          ),
+        ),
+      );
+
+      final result = await dataSource.addForceDoor(
+        sn: 'SN-001',
+        requestId: 'request-2',
+      );
+
+      expect(result.id, 7);
+    },
+  );
+
+  test('parses the latest force door response data structure', () {
+    final result = ForceDoorResponseDto.fromJson({
+      'id': '16',
+      'name': 'inner dongle-Noru_B8F8620EACA0',
+      'doorType': 0,
+      'controlMode': 2,
+      'onlineStatus': 1,
+      'doorState': 0,
+      'operatedCycles': 14,
+      'remainingCycles': 65535,
+      'associatedDevices': [
+        {
+          'deviceType': 'dongle',
+          'associated': true,
+          'primaryControl': true,
+          'onlineStatus': 1,
+          'bleName': 'Noru_B8F8620EACA0',
+          'wifiConnectionStatus': 'CONNECTED',
+          'capabilities': ['DOOR_CONTROL', 'LED_CONTROL'],
+        },
+      ],
+    });
+
+    expect(result.id, 16);
+    expect(result.associatedDevices, hasLength(1));
+    expect(result.associatedDevices.single.bleName, 'Noru_B8F8620EACA0');
+    expect(result.associatedDevices.single.capabilities, [
+      'DOOR_CONTROL',
+      'LED_CONTROL',
+    ]);
   });
 
   test('addForceDoor rejects failed envelope', () async {
@@ -83,7 +133,7 @@ void main() {
         addDoorResponse: const ApiEnvelopeDto(
           code: 500,
           success: false,
-          data: ForceDoorResponseDto(id: 7, hardwareSn: 'SN-001'),
+          data: ForceDoorResponseDto(id: 7),
         ),
       ),
     );
@@ -154,9 +204,9 @@ class _FakeAddDeviceOnboardingApi implements AddDeviceOnboardingApi {
   ) async {
     return addDoorResponse ??
         const ApiEnvelopeDto(
-          code: 0,
+          code: 200,
           success: true,
-          data: ForceDoorResponseDto(id: 1, hardwareSn: 'SN-001'),
+          data: ForceDoorResponseDto(id: 1),
         );
   }
 }
