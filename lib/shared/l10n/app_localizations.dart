@@ -2857,6 +2857,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'ON'**
   String get securityReportOn;
+
+  /// No description provided for @generalEvaluationLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load. Tap to retry.'**
+  String get generalEvaluationLoadFailed;
 }
 
 class _AppLocalizationsDelegate

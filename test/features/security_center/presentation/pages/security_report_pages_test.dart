@@ -5,6 +5,8 @@ import 'package:flinx/features/security_center/application/providers.dart';
 import 'package:flinx/features/security_center/domain/entities/full_report.dart';
 import 'package:flinx/features/security_center/domain/entities/safety_sensors_evaluation.dart';
 import 'package:flinx/features/security_center/domain/entities/security_center_overview.dart';
+import 'package:flinx/features/security_center/domain/repositories/security_balance_refresh_repository.dart';
+import 'package:flinx/features/security_center/domain/entities/security_balance_refresh_result.dart';
 import 'package:flinx/features/device_control/presentation/widgets/device_detail_bottom_navigation.dart';
 import 'package:flinx/features/security_center/presentation/pages/full_report_page.dart';
 import 'package:flinx/features/security_center/presentation/pages/general_evaluation_page.dart';
@@ -75,6 +77,7 @@ void main() {
     await _pumpPage(
       tester,
       const SecurityCenterPage(
+        doorId: '12',
         deviceId: 'mock-device',
         onTabSelected: _ignoreTab,
       ),
@@ -118,7 +121,7 @@ void main() {
       findsOneWidget,
     );
     expect(
-      find.byKey(const ValueKey<RecordRange>(RecordRange.last24Hours)),
+      find.byKey(const ValueKey<RecordRange>(RecordRange.last7Days)),
       findsOneWidget,
     );
 
@@ -848,8 +851,11 @@ GoRouter _buildRouter() {
     routes: [
       GoRoute(
         path: '/security-center',
-        builder: (context, state) =>
-            SecurityCenterPage(deviceId: 'mock-device', onTabSelected: (_) {}),
+        builder: (context, state) => SecurityCenterPage(
+          doorId: '12',
+          deviceId: 'mock-device',
+          onTabSelected: (_) {},
+        ),
       ),
       GoRoute(
         path: FullReportPage.routePath,
@@ -893,6 +899,11 @@ Future<void> _pumpRouter(WidgetTester tester, GoRouter router) async {
 
   await tester.pumpWidget(
     ProviderScope(
+      overrides: [
+        securityBalanceRefreshRepositoryProvider.overrideWithValue(
+          const _FakeSecurityBalanceRefreshRepository(),
+        ),
+      ],
       child: MaterialApp.router(
         routerConfig: router,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -917,6 +928,11 @@ Future<void> _pumpPage(
   }
   await tester.pumpWidget(
     ProviderScope(
+      overrides: [
+        securityBalanceRefreshRepositoryProvider.overrideWithValue(
+          const _FakeSecurityBalanceRefreshRepository(),
+        ),
+      ],
       child: MaterialApp(
         locale: locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -926,4 +942,18 @@ Future<void> _pumpPage(
     ),
   );
   await tester.pumpAndSettle();
+}
+
+class _FakeSecurityBalanceRefreshRepository
+    implements SecurityBalanceRefreshRepository {
+  const _FakeSecurityBalanceRefreshRepository();
+
+  @override
+  Future<SecurityBalanceRefreshResult> refreshBalance({
+    required String doorId,
+    required String requestId,
+  }) async => const SecurityBalanceRefreshResult(
+    requestId: 'test-request',
+    status: '1',
+  );
 }

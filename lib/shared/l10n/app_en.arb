@@ -1263,5 +1263,6 @@
   "securityReportCommunityMode": "Community mode",
   "securityReportLevel1": "Level1",
   "securityReportAnyPosition": "Any position",
-  "securityReportOn": "ON"
+  "securityReportOn": "ON",
+  "generalEvaluationLoadFailed": "Unable to load. Tap to retry."
 }

@@ -104,6 +104,7 @@ class _FullReportPageState extends ConsumerState<FullReportPage> {
                     SecurityReportHero(
                       motorName: report.motorName,
                       serialNumber: report.serialNumber,
+                      needsMaintenance: report.cycleSummary.needsMaintenance,
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),

@@ -495,5 +495,6 @@
   "securityReportCommunityMode": "社区模式",
   "securityReportLevel1": "等级 1",
   "securityReportAnyPosition": "任意位置",
-  "securityReportOn": "开启"
+  "securityReportOn": "开启",
+  "generalEvaluationLoadFailed": "加载失败，点击重试。"
 }

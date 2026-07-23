@@ -1,6 +1,11 @@
 /// 安全中心页面一次加载所需的完整展示数据。
 class SecurityCenterOverview {
-  const SecurityCenterOverview({required this.deviceId, required this.protectionStatus, required this.generalEvaluation, required this.safetySensorEvaluation});
+  const SecurityCenterOverview({
+    required this.deviceId,
+    required this.protectionStatus,
+    required this.generalEvaluation,
+    required this.safetySensorEvaluation,
+  });
 
   /// 门控设备的业务唯一标识，用于与请求参数及设备详情关联。
   final String deviceId;
@@ -39,7 +44,12 @@ class SecurityEvaluationItem {
 
 /// 传感器评估卡片的数据集合。
 class SecuritySensorEvaluation {
-  const SecuritySensorEvaluation({required this.status, required this.highlightedSensorTypes, required this.wirelessSensors, required this.wiredSensors});
+  const SecuritySensorEvaluation({
+    required this.status,
+    required this.highlightedSensorTypes,
+    required this.wirelessSensors,
+    required this.wiredSensors,
+  });
 
   /// 传感器评估的汇总状态，用于卡片右上角状态图标。
   final SecurityEvaluationStatus status;
@@ -56,7 +66,12 @@ class SecuritySensorEvaluation {
 
 /// 页面上一个传感器的实时展示快照。
 class SecuritySensorSnapshot {
-  const SecuritySensorSnapshot({required this.id, required this.type, required this.status, required this.batteryPercentage});
+  const SecuritySensorSnapshot({
+    required this.id,
+    required this.type,
+    required this.status,
+    required this.batteryPercentage,
+  });
 
   /// 传感器业务唯一标识，用于进入详情、管理或故障排查。
   final String id;
@@ -98,28 +113,52 @@ enum SecurityEvaluationItemType {
 /// 当前安全中心页面支持展示的传感器类型。
 enum SecuritySensorType {
   /// 光电保护传感器。
-  photoBeam('photoBeam', 'assets/icons/security_center/security_center_sensor_photo_beam.png'),
+  photoBeam(
+    'photoBeam',
+    'assets/icons/security_center/security_center_sensor_photo_beam.png',
+  ),
 
   /// 电锁传感器。
-  eLock('eLock', 'assets/icons/security_center/security_center_sensor_e_lock.png'),
+  eLock(
+    'eLock',
+    'assets/icons/security_center/security_center_sensor_e_lock.png',
+  ),
 
   /// 门磁或门体位置传感器。
-  doorSensor('doorSensor', 'assets/icons/security_center/security_center_sensor_door_sensor.png'),
+  doorSensor(
+    'doorSensor',
+    'assets/icons/security_center/security_center_sensor_door_sensor.png',
+  ),
 
   /// 雷达传感器。
-  radar('radar', 'assets/icons/security_center/security_center_sensor_radar.png'),
+  radar(
+    'radar',
+    'assets/icons/security_center/security_center_sensor_radar.png',
+  ),
 
   /// 遥控器传感器。
-  remote('remote', 'assets/icons/security_center/security_center_sensor_remote.png'),
+  remote(
+    'remote',
+    'assets/icons/security_center/security_center_sensor_remote.png',
+  ),
 
   /// 安全边传感器。
-  safetyEdge('safetyEdge', 'assets/icons/security_center/security_center_sensor_safety_edge.png'),
+  safetyEdge(
+    'safetyEdge',
+    'assets/icons/security_center/security_center_sensor_safety_edge.png',
+  ),
 
   /// 有线光电保护传感器。
-  wiredPhotoBeam('wiredPhotoBeam', 'assets/icons/security_center/security_center_sensor_wired_photo_beam.png'),
+  wiredPhotoBeam(
+    'wiredPhotoBeam',
+    'assets/icons/security_center/security_center_sensor_wired_photo_beam.png',
+  ),
 
   /// 有线电锁传感器。
-  wiredELock('wiredELock', 'assets/icons/security_center/security_center_sensor_wired_e_lock.png');
+  wiredELock(
+    'wiredELock',
+    'assets/icons/security_center/security_center_sensor_wired_e_lock.png',
+  );
 
   const SecuritySensorType(this.backendKey, this.imageAsset);
 

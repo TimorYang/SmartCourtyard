@@ -116,6 +116,8 @@ class FullReportOperationCyclePoint {
   const FullReportOperationCyclePoint({
     required this.occurredAt,
     required this.cycles,
+    this.axisLabel,
+    this.isFrequentOperation = false,
   });
 
   /// 数据点对应的发生时间或统计周期起始时间。
@@ -123,6 +125,12 @@ class FullReportOperationCyclePoint {
 
   /// 该时间点内的门体运行次数。
   final int cycles;
+
+  /// 图表 X 轴显示文本；由数据层按统计范围映射。
+  final String? axisLabel;
+
+  /// 该统计 bucket 是否存在频繁运行异常，由接口的 `abnormal` 标记映射。
+  final bool isFrequentOperation;
 }
 
 /// 开门机功能参数。
@@ -138,6 +146,10 @@ class FullReportMotorFunctionStatus {
     required this.photoBeamEnabled,
     required this.communityModeEnabled,
     required this.wiredELockEnabled,
+    this.autoCloseUnit,
+    this.ledOffDelayUnit,
+    this.partialOpenUnit,
+    this.ignoreObstructionHeightUnit,
   });
 
   /// 开门力度等级。
@@ -169,6 +181,18 @@ class FullReportMotorFunctionStatus {
 
   /// 有线电锁功能是否启用。
   final bool wiredELockEnabled;
+
+  /// 自动关门等待时间的接口单位；为空时由 UI 使用既有秒单位。
+  final String? autoCloseUnit;
+
+  /// LED 熄灭延迟的接口单位；为空时由 UI 使用既有分钟单位。
+  final String? ledOffDelayUnit;
+
+  /// 部分开门高度的接口单位；为空时由 UI 使用既有厘米单位。
+  final String? partialOpenUnit;
+
+  /// 忽略障碍物高度的接口单位；为空时由 UI 使用既有厘米单位。
+  final String? ignoreObstructionHeightUnit;
 }
 
 /// 自动关门条件。

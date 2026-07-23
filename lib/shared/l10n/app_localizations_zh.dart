@@ -1436,4 +1436,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get securityReportOn => '开启';
+
+  @override
+  String get generalEvaluationLoadFailed => '加载失败，点击重试。';
 }

@@ -1526,4 +1526,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityReportOn => 'ON';
+
+  @override
+  String get generalEvaluationLoadFailed => 'Unable to load. Tap to retry.';
 }

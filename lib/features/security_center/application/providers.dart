@@ -1,8 +1,74 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/logging/providers.dart';
+import '../../../core/network/providers.dart';
+import '../data/data_sources/security_balance_refresh_api.dart';
+import '../data/data_sources/security_balance_refresh_remote_data_source.dart';
+import '../data/repositories/security_balance_refresh_repository_impl.dart';
 import '../domain/entities/security_center_overview.dart';
 import '../domain/entities/full_report.dart';
 import '../domain/entities/safety_sensors_evaluation.dart';
+import '../domain/repositories/security_balance_refresh_repository.dart';
+import '../domain/use_cases/refresh_security_balance_use_case.dart';
+import '../data/data_sources/general_evaluation_api.dart';
+import '../data/data_sources/general_evaluation_remote_data_source.dart';
+import '../data/repositories/general_evaluation_repository_impl.dart';
+import '../domain/repositories/general_evaluation_repository.dart';
+import '../domain/use_cases/fetch_general_evaluation_use_case.dart';
+
+final securityBalanceRefreshApiProvider = Provider<SecurityBalanceRefreshApi>((
+  ref,
+) {
+  return SecurityBalanceRefreshApi(ref.watch(dioProvider));
+});
+
+final securityBalanceRefreshRemoteDataSourceProvider =
+    Provider<SecurityBalanceRefreshRemoteDataSource>((ref) {
+      return SecurityBalanceRefreshRemoteDataSourceImpl(
+        api: ref.watch(securityBalanceRefreshApiProvider),
+      );
+    });
+
+final securityBalanceRefreshRepositoryProvider =
+    Provider<SecurityBalanceRefreshRepository>((ref) {
+      return SecurityBalanceRefreshRepositoryImpl(
+        remoteDataSource: ref.watch(
+          securityBalanceRefreshRemoteDataSourceProvider,
+        ),
+        logger: ref.watch(appLoggerProvider),
+      );
+    });
+
+final refreshSecurityBalanceUseCaseProvider =
+    Provider<RefreshSecurityBalanceUseCase>((ref) {
+      return RefreshSecurityBalanceUseCase(
+        repository: ref.watch(securityBalanceRefreshRepositoryProvider),
+      );
+    });
+
+final generalEvaluationApiProvider = Provider<GeneralEvaluationApi>(
+  (ref) => GeneralEvaluationApi(ref.watch(dioProvider)),
+);
+final generalEvaluationRemoteDataSourceProvider =
+    Provider<GeneralEvaluationRemoteDataSource>(
+      (ref) => GeneralEvaluationRemoteDataSourceImpl(
+        api: ref.watch(generalEvaluationApiProvider),
+        logger: ref.watch(appLoggerProvider),
+      ),
+    );
+final generalEvaluationRepositoryProvider =
+    Provider<GeneralEvaluationRepository>(
+      (ref) => GeneralEvaluationRepositoryImpl(
+        remote: ref.watch(generalEvaluationRemoteDataSourceProvider),
+        logger: ref.watch(appLoggerProvider),
+      ),
+    );
+final fetchGeneralEvaluationUseCaseProvider =
+    Provider<FetchGeneralEvaluationUseCase>(
+      (ref) => FetchGeneralEvaluationUseCase(
+        repository: ref.watch(generalEvaluationRepositoryProvider),
+      ),
+    );
 
 /// 安全传感器评估页面的数据入口。
 ///

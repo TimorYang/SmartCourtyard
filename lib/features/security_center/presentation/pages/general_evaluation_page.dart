@@ -4,15 +4,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
-import '../../application/providers.dart';
+import '../../application/general_evaluation_controller.dart';
 import '../widgets/security_report_widgets.dart';
 
 class GeneralEvaluationPage extends ConsumerStatefulWidget {
-  const GeneralEvaluationPage({required this.deviceId, super.key});
+  const GeneralEvaluationPage({
+    this.doorId = '',
+    this.deviceId = '',
+    super.key,
+  });
 
   static const routeName = 'general-evaluation';
   static const routePath = '/general-evaluation';
 
+  final String doorId;
   final String deviceId;
 
   @override
@@ -22,11 +27,41 @@ class GeneralEvaluationPage extends ConsumerStatefulWidget {
 
 class _GeneralEvaluationPageState extends ConsumerState<GeneralEvaluationPage> {
   BalanceEvaluation _balance = BalanceEvaluation.open;
-  RecordRange _recordRange = RecordRange.last24Hours;
+  RecordRange _recordRange = RecordRange.last7Days;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(
+      () => ref
+          .read(generalEvaluationControllerProvider.notifier)
+          .load(doorId: widget.doorId),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final report = ref.watch(fullReportProvider(widget.deviceId));
+    final reportState = ref.watch(generalEvaluationControllerProvider);
+    return reportState.when(
+      loading: () =>
+          _stateScaffold(const Center(child: CircularProgressIndicator())),
+      error: (_, _) => _stateScaffold(
+        Center(
+          child: TextButton(
+            onPressed: () => ref
+                .read(generalEvaluationControllerProvider.notifier)
+                .load(doorId: widget.doorId),
+            child: Text(
+              AppLocalizations.of(context).generalEvaluationLoadFailed,
+            ),
+          ),
+        ),
+      ),
+      data: (report) => _buildReport(context, report),
+    );
+  }
+
+  Widget _buildReport(BuildContext context, dynamic report) {
     final balanceEvaluation = _balance == BalanceEvaluation.open
         ? report.openBalanceEvaluation
         : report.closeBalanceEvaluation;
@@ -54,7 +89,8 @@ class _GeneralEvaluationPageState extends ConsumerState<GeneralEvaluationPage> {
               children: [
                 SecurityReportHero(
                   motorName: report.motorName,
-                  serialNumber: report.serialNumber,
+                  serialNumber: '',
+                  needsMaintenance: report.cycleSummary.needsMaintenance,
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -64,7 +100,9 @@ class _GeneralEvaluationPageState extends ConsumerState<GeneralEvaluationPage> {
                       const SizedBox(height: 16),
                       BalanceEvaluationCard(
                         selection: _balance,
-                        evaluation: balanceEvaluation,
+                        evaluation: report.balancePending
+                            ? null
+                            : balanceEvaluation,
                         onChanged: (value) => setState(() => _balance = value),
                       ),
                       const SizedBox(height: 22),
@@ -89,4 +127,13 @@ class _GeneralEvaluationPageState extends ConsumerState<GeneralEvaluationPage> {
       ),
     );
   }
+
+  Widget _stateScaffold(Widget body) => Scaffold(
+    backgroundColor: AppColors.securityCenterBackground,
+    appBar: FlinxNavigationBar(
+      title: AppLocalizations.of(context).securityCenterGeneralEvaluation,
+      showBottomDivider: false,
+    ),
+    body: body,
+  );
 }
