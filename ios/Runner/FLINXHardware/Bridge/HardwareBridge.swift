@@ -935,7 +935,7 @@ private extension HardwareBridge {
             ),
             packet: frame,
             encrypted: encryptRequest,
-            sensitive: command == .configureWifi
+            sensitive: false
         )
         bleManager.writeCharacteristic(
             requestId: requestId,

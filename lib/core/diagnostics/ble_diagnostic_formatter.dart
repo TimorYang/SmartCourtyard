@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../../platform_bridge/hardware_models.dart';
 
 class BleDiagnosticFormatter {
@@ -93,6 +95,9 @@ class BleDiagnosticFormatter {
     _appendDataSection(
       lines,
       protocolPayload: protocolPayload,
+      decodeWifiProvisioningRequest:
+          event.direction == BleDiagnosticDirection.tx &&
+          event.command == 0x0E02,
       divider: sectionDivider,
     );
 
@@ -160,6 +165,7 @@ class BleDiagnosticFormatter {
   static void _appendDataSection(
     List<String> lines, {
     required List<int> protocolPayload,
+    required bool decodeWifiProvisioningRequest,
     required String divider,
   }) {
     final data = protocolPayload.length > 5
@@ -169,7 +175,13 @@ class BleDiagnosticFormatter {
       ..add('')
       ..add('Data')
       ..add(divider)
-      ..add(data.isEmpty ? 'none' : _hex(data));
+      ..add(
+        data.isEmpty
+            ? 'none'
+            : decodeWifiProvisioningRequest
+            ? 'UTF-8 JSON: ${utf8.decode(data, allowMalformed: true)}'
+            : _hex(data),
+      );
   }
 
   static void _appendPayloadSection(

@@ -645,8 +645,13 @@ class BleManager(
       command = DeviceBleProtocolConfig.commandConfigureWifi,
       control = null,
       sequence = sequence,
-      originPayload = ByteArray(0),
-      packet = ByteArray(0),
+      originPayload = protocolPlainPayload(
+        DeviceBleProtocolConfig.frameTypeRequest,
+        sequence,
+        DeviceBleProtocolConfig.commandConfigureWifi,
+        wifiPayload,
+      ),
+      packet = payload,
       encrypted = false,
     )
     val pending = PendingWifiProvision(

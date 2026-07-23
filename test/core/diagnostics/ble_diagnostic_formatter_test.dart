@@ -90,6 +90,104 @@ void main() {
 
     expect(output, contains('Data\n${'─' * 60}\nnone'));
   });
+
+  test('shows a Wi-Fi provisioning response code as hexadecimal', () {
+    final output = BleDiagnosticFormatter().format(
+      BleDiagnosticEvent(
+        direction: BleDiagnosticDirection.rx,
+        timestampMillis: 1_753_251_798_479,
+        transactionId: 'device:3586:3',
+        deviceId: 'device',
+        operation: 'Configure Wi-Fi Ack',
+        command: 0x0E02,
+        sequence: 3,
+        encryption: 'None',
+        originPayload: Uint8List(0),
+        encryptedPayload: Uint8List(0),
+        decryptedPayload: Uint8List.fromList([
+          0x04,
+          0x00,
+          0x03,
+          0x0E,
+          0x02,
+          0x00,
+        ]),
+        packet: Uint8List(0),
+      ),
+    );
+
+    expect(output, contains('Data\n${'─' * 60}\n00'));
+  });
+
+  test(
+    'shows Wi-Fi provisioning payload when diagnostic logging is enabled',
+    () {
+      final output = BleDiagnosticFormatter().format(
+        BleDiagnosticEvent(
+          direction: BleDiagnosticDirection.tx,
+          timestampMillis: 1_753_251_798_479,
+          transactionId: 'device:3586:3',
+          deviceId: 'device',
+          operation: 'Configure Wi-Fi',
+          command: 0x0E02,
+          sequence: 3,
+          encryption: 'None',
+          originPayload: Uint8List.fromList([
+            0x03,
+            0x00,
+            0x03,
+            0x0E,
+            0x02,
+            0x7B,
+            0x22,
+            0x73,
+            0x73,
+            0x69,
+            0x64,
+            0x22,
+            0x3A,
+            0x22,
+            0x6D,
+            0x79,
+            0x2D,
+            0x77,
+            0x69,
+            0x66,
+            0x69,
+            0x22,
+            0x2C,
+            0x22,
+            0x70,
+            0x77,
+            0x64,
+            0x22,
+            0x3A,
+            0x22,
+            0x31,
+            0x32,
+            0x33,
+            0x34,
+            0x35,
+            0x36,
+            0x22,
+            0x7D,
+          ]),
+          encryptedPayload: Uint8List(0),
+          decryptedPayload: Uint8List(0),
+          packet: Uint8List.fromList(List<int>.filled(46, 0)),
+        ),
+      );
+
+      expect(output, contains('Length      : 46 bytes'));
+      expect(
+        output,
+        contains(
+          '7B2273736964223A226D792D77696669222C22707764223A22313233343536227D',
+        ),
+      );
+      expect(output, contains('UTF-8 JSON: {"ssid":"my-wifi","pwd":"123456"}'));
+    },
+  );
 }
 
 BleDiagnosticEvent _event({
