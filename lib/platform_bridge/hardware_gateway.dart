@@ -11,7 +11,12 @@ abstract interface class HardwareGateway {
 
   Stream<NativeHardwareError> get nativeErrors;
 
-  Future<void> setDetailedHardwareLogging({required bool enabled});
+  Stream<BleDiagnosticEvent> get bleDiagnosticEvents;
+
+  Future<void> configureHardwareLogging({
+    required bool flutterConsoleEnabled,
+    required bool nativeConsoleEnabled,
+  });
 
   Future<PermissionSnapshot> getPermissionSnapshot();
 

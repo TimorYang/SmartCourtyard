@@ -10,13 +10,16 @@ class MockHardwareGateway implements HardwareGateway {
       _connectionController = StreamController<BleConnectionEvent>.broadcast(),
       _notificationController = StreamController<BleNotification>.broadcast(),
       _nativeErrorController =
-          StreamController<NativeHardwareError>.broadcast();
+          StreamController<NativeHardwareError>.broadcast(),
+      _diagnosticController = StreamController<BleDiagnosticEvent>.broadcast();
 
   final StreamController<BleDevice> _scanController;
   final StreamController<BleConnectionEvent> _connectionController;
   final StreamController<BleNotification> _notificationController;
   final StreamController<NativeHardwareError> _nativeErrorController;
-  bool detailedHardwareLoggingEnabled = false;
+  final StreamController<BleDiagnosticEvent> _diagnosticController;
+  bool flutterConsoleLoggingEnabled = false;
+  bool nativeConsoleLoggingEnabled = false;
 
   @override
   Stream<BleDevice> get bleScanResults => _scanController.stream;
@@ -33,8 +36,16 @@ class MockHardwareGateway implements HardwareGateway {
   Stream<NativeHardwareError> get nativeErrors => _nativeErrorController.stream;
 
   @override
-  Future<void> setDetailedHardwareLogging({required bool enabled}) async {
-    detailedHardwareLoggingEnabled = enabled;
+  Stream<BleDiagnosticEvent> get bleDiagnosticEvents =>
+      _diagnosticController.stream;
+
+  @override
+  Future<void> configureHardwareLogging({
+    required bool flutterConsoleEnabled,
+    required bool nativeConsoleEnabled,
+  }) async {
+    flutterConsoleLoggingEnabled = flutterConsoleEnabled;
+    nativeConsoleLoggingEnabled = nativeConsoleEnabled;
   }
 
   @override

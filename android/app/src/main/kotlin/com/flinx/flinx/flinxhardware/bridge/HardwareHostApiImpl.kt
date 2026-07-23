@@ -12,14 +12,27 @@ class HardwareHostApiImpl(
   private val bleManager: BleManager,
   private val hardwareFlutterApi: HardwareFlutterApi,
 ) : HardwareHostApi {
-  override fun setDetailedHardwareLogging(enabled: Boolean) {
-    bleManager.setDetailedLogging(enabled)
+  override fun configureHardwareLogging(
+    flutterConsoleEnabled: Boolean,
+    nativeConsoleEnabled: Boolean,
+  ) {
+    bleManager.configureLogging(
+      flutterConsoleEnabled = flutterConsoleEnabled,
+      nativeConsoleEnabled = nativeConsoleEnabled,
+    )
   }
 
   private val mainHandler = Handler(Looper.getMainLooper())
 
   init {
     bleManager.onNotification = ::emitNotification
+    bleManager.onDiagnosticEvent = ::emitDiagnosticEvent
+  }
+
+  private fun emitDiagnosticEvent(event: BleDiagnosticEventDto) {
+    runOnMainThread {
+      hardwareFlutterApi.onBleDiagnosticEvent(event) {}
+    }
   }
 
   /** 获取当前权限状态快照。 */

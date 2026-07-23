@@ -398,3 +398,43 @@ class NativeHardwareError {
     );
   }
 }
+
+enum BleDiagnosticDirection { tx, rx }
+
+class BleDiagnosticEvent {
+  const BleDiagnosticEvent({
+    required this.direction,
+    required this.timestampMillis,
+    required this.transactionId,
+    this.requestId,
+    required this.deviceId,
+    required this.operation,
+    required this.command,
+    this.control,
+    required this.sequence,
+    required this.encryption,
+    required this.originPayload,
+    required this.encryptedPayload,
+    required this.decryptedPayload,
+    required this.packet,
+    this.elapsedMillis,
+    this.result,
+  });
+
+  final BleDiagnosticDirection direction;
+  final int timestampMillis;
+  final String transactionId;
+  final String? requestId;
+  final String deviceId;
+  final String operation;
+  final int command;
+  final int? control;
+  final int sequence;
+  final String encryption;
+  final Uint8List originPayload;
+  final Uint8List encryptedPayload;
+  final Uint8List decryptedPayload;
+  final Uint8List packet;
+  final int? elapsedMillis;
+  final String? result;
+}

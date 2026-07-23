@@ -3,28 +3,80 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../platform_bridge/providers.dart';
 
-abstract interface class DiagnosticLoggingPreferences {
-  Future<bool> readEnabled();
+class DiagnosticLoggingSettings {
+  const DiagnosticLoggingSettings({
+    required this.flutterConsoleEnabled,
+    required this.nativeConsoleEnabled,
+  });
 
-  Future<void> writeEnabled(bool enabled);
+  const DiagnosticLoggingSettings.defaults()
+    : flutterConsoleEnabled = true,
+      nativeConsoleEnabled = false;
+
+  final bool flutterConsoleEnabled;
+  final bool nativeConsoleEnabled;
+
+  DiagnosticLoggingSettings copyWith({
+    bool? flutterConsoleEnabled,
+    bool? nativeConsoleEnabled,
+  }) {
+    return DiagnosticLoggingSettings(
+      flutterConsoleEnabled:
+          flutterConsoleEnabled ?? this.flutterConsoleEnabled,
+      nativeConsoleEnabled: nativeConsoleEnabled ?? this.nativeConsoleEnabled,
+    );
+  }
+}
+
+abstract interface class DiagnosticLoggingPreferences {
+  Future<DiagnosticLoggingSettings> read();
+
+  Future<void> write(DiagnosticLoggingSettings settings);
 }
 
 class SecureDiagnosticLoggingPreferences
     implements DiagnosticLoggingPreferences {
   const SecureDiagnosticLoggingPreferences(this.storage);
 
-  static const _enabledKey = 'diagnostics.detailed_hardware_logging';
+  static const _legacyEnabledKey = 'diagnostics.detailed_hardware_logging';
+  static const _flutterEnabledKey =
+      'diagnostics.flutter_console_hardware_logging';
+  static const _nativeEnabledKey =
+      'diagnostics.native_console_hardware_logging';
 
   final FlutterSecureStorage storage;
 
   @override
-  Future<bool> readEnabled() async {
-    return await storage.read(key: _enabledKey) == 'true';
+  Future<DiagnosticLoggingSettings> read() async {
+    final values = await storage.readAll();
+    final flutterValue = values[_flutterEnabledKey];
+    final nativeValue = values[_nativeEnabledKey];
+    if (flutterValue == null && nativeValue == null) {
+      final legacyEnabled = values[_legacyEnabledKey];
+      if (legacyEnabled != null) {
+        return DiagnosticLoggingSettings(
+          flutterConsoleEnabled: legacyEnabled == 'true',
+          nativeConsoleEnabled: false,
+        );
+      }
+      return const DiagnosticLoggingSettings.defaults();
+    }
+    return DiagnosticLoggingSettings(
+      flutterConsoleEnabled: flutterValue == 'true',
+      nativeConsoleEnabled: nativeValue == 'true',
+    );
   }
 
   @override
-  Future<void> writeEnabled(bool enabled) {
-    return storage.write(key: _enabledKey, value: enabled.toString());
+  Future<void> write(DiagnosticLoggingSettings settings) async {
+    await storage.write(
+      key: _flutterEnabledKey,
+      value: settings.flutterConsoleEnabled.toString(),
+    );
+    await storage.write(
+      key: _nativeEnabledKey,
+      value: settings.nativeConsoleEnabled.toString(),
+    );
   }
 }
 
@@ -41,36 +93,52 @@ final diagnosticLoggingPreferencesProvider =
     });
 
 final diagnosticLoggingControllerProvider =
-    AsyncNotifierProvider<DiagnosticLoggingController, bool>(
-      DiagnosticLoggingController.new,
-    );
+    AsyncNotifierProvider<
+      DiagnosticLoggingController,
+      DiagnosticLoggingSettings
+    >(DiagnosticLoggingController.new);
 
-class DiagnosticLoggingController extends AsyncNotifier<bool> {
+class DiagnosticLoggingController
+    extends AsyncNotifier<DiagnosticLoggingSettings> {
   @override
-  Future<bool> build() async {
-    final enabled = await ref
+  Future<DiagnosticLoggingSettings> build() async {
+    final settings = await ref
         .watch(diagnosticLoggingPreferencesProvider)
-        .readEnabled();
-    await ref
-        .watch(nativeHardwareGatewayProvider)
-        .setDetailedHardwareLogging(enabled: enabled);
-    return enabled;
+        .read();
+    await _apply(settings);
+    return settings;
   }
 
-  Future<void> setEnabled(bool enabled) async {
-    final previous = state.value ?? false;
-    if (previous == enabled && !state.isLoading) {
+  Future<void> setFlutterConsoleEnabled(bool enabled) {
+    final current = state.value ?? const DiagnosticLoggingSettings.defaults();
+    return _set(current.copyWith(flutterConsoleEnabled: enabled));
+  }
+
+  Future<void> setNativeConsoleEnabled(bool enabled) {
+    final current = state.value ?? const DiagnosticLoggingSettings.defaults();
+    return _set(current.copyWith(nativeConsoleEnabled: enabled));
+  }
+
+  Future<void> _set(DiagnosticLoggingSettings settings) async {
+    if (state.value?.flutterConsoleEnabled == settings.flutterConsoleEnabled &&
+        state.value?.nativeConsoleEnabled == settings.nativeConsoleEnabled &&
+        !state.isLoading) {
       return;
     }
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
-      await ref
-          .read(nativeHardwareGatewayProvider)
-          .setDetailedHardwareLogging(enabled: enabled);
-      await ref
-          .read(diagnosticLoggingPreferencesProvider)
-          .writeEnabled(enabled);
-      return enabled;
+      await _apply(settings);
+      await ref.read(diagnosticLoggingPreferencesProvider).write(settings);
+      return settings;
     });
+  }
+
+  Future<void> _apply(DiagnosticLoggingSettings settings) {
+    return ref
+        .read(nativeHardwareGatewayProvider)
+        .configureHardwareLogging(
+          flutterConsoleEnabled: settings.flutterConsoleEnabled,
+          nativeConsoleEnabled: settings.nativeConsoleEnabled,
+        );
   }
 }

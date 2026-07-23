@@ -38,8 +38,8 @@ class RunnerTests: XCTestCase {
 
   func testDetailedBlePayloadLoggingDefaultsToDisabled() {
     let logger = BleLogger()
-    XCTAssertEqual(logger.payloadHex(Data([0x55, 0xAA])), "<detailed logging disabled>")
-    logger.setDetailedLogging(enabled: true)
+    XCTAssertEqual(logger.payloadHex(Data([0x55, 0xAA])), "<native console logging disabled>")
+    logger.setNativeConsoleLogging(enabled: true)
     XCTAssertEqual(logger.payloadHex(Data([0x55, 0xAA])), "55AA")
     XCTAssertEqual(
       logger.payloadHex(Data([0x55]), sensitive: true),
