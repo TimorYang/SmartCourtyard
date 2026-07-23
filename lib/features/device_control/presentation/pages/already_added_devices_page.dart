@@ -21,7 +21,10 @@ class AlreadyAddedDevicesPage extends ConsumerStatefulWidget {
   final String deviceId;
 
   static const _smartOpenerPlaceholderAsset =
-      'assets/icons/device_control/device_command_opener_active.png';
+      'assets/icons/device_control/device_command_dongle_active.png';
+
+  static const _alreadyAddedDeleted =
+      'assets/icons/device_control/device_command_already_deleted.png';
 
   @override
   ConsumerState<AlreadyAddedDevicesPage> createState() =>
@@ -115,14 +118,14 @@ class _AlreadyAddedDevicesPageState
                       l10n.smartOpenerAddedDevicesTitle,
                       style: AppTextTokens.smartOpenerAddedTitle(textTheme),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Text(
                       l10n.smartOpenerAddedDevicesDescription,
                       style: AppTextTokens.smartOpenerAddedDescription(
                         textTheme,
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 30),
                   ],
                 ),
               ),
@@ -164,6 +167,7 @@ class _AlreadyAddedDevicesPageState
                       device: state.devices[index],
                       smartOpenerName: l10n.smartOpenerAddedDeviceName,
                       deleteTooltip: l10n.smartOpenerAddedDeleteTooltip,
+                      onDelete: () => _showDisconnectConfirmation(context),
                     ),
                     separatorBuilder: (context, index) =>
                         const SizedBox(height: 12),
@@ -189,6 +193,15 @@ class _AlreadyAddedDevicesPageState
       ),
     );
   }
+
+  Future<void> _showDisconnectConfirmation(BuildContext context) {
+    return showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      barrierColor: AppColors.overlaySoft,
+      builder: (context) => const _DisconnectDeviceConfirmationSheet(),
+    );
+  }
 }
 
 class _AddedDeviceCard extends StatelessWidget {
@@ -196,11 +209,13 @@ class _AddedDeviceCard extends StatelessWidget {
     required this.device,
     required this.smartOpenerName,
     required this.deleteTooltip,
+    required this.onDelete,
   });
 
   final DoorAssociatedDevice device;
   final String smartOpenerName;
   final String deleteTooltip;
+  final VoidCallback onDelete;
 
   String get _title {
     final label = device.deviceTypeLabel?.trim();
@@ -219,9 +234,7 @@ class _AddedDeviceCard extends StatelessWidget {
     return Container(
       key: ValueKey<String>('already-added-device-card-${device.bleName}'),
       constraints: const BoxConstraints(minHeight: 100),
-      padding: const EdgeInsets.all(
-        AppSpacingTokens.smartOpenerAddedCardPadding,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
       decoration: const BoxDecoration(
         color: AppColors.smartOpenerAddedDeviceCardSurface,
         borderRadius: BorderRadius.all(
@@ -232,6 +245,8 @@ class _AddedDeviceCard extends StatelessWidget {
         children: [
           Image.asset(
             AlreadyAddedDevicesPage._smartOpenerPlaceholderAsset,
+            width: 64,
+            height: 64,
             key: ValueKey<String>(
               'already-added-device-image-placeholder-${device.bleName}',
             ),
@@ -264,10 +279,87 @@ class _AddedDeviceCard extends StatelessWidget {
               'already-added-delete-action-${device.bleName}',
             ),
             tooltip: deleteTooltip,
-            onPressed: () {},
-            icon: const Icon(Icons.delete, size: 22),
+            onPressed: onDelete,
+            icon: Image.asset(
+              AlreadyAddedDevicesPage._alreadyAddedDeleted,
+              fit: BoxFit.contain,
+            ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _DisconnectDeviceConfirmationSheet extends StatelessWidget {
+  const _DisconnectDeviceConfirmationSheet();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final textTheme = Theme.of(context).textTheme;
+
+    return Material(
+      color: AppColors.backgroundPrimary,
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+      clipBehavior: Clip.antiAlias,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(28, 28, 28, 30),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                l10n.smartOpenerAddedDisconnectConfirmMessage,
+                textAlign: TextAlign.center,
+                style: AppTextTokens.deviceDeleteConfirmMessage(textTheme),
+              ),
+              const SizedBox(height: 28),
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 52,
+                      child: FilledButton(
+                        key: const ValueKey<String>(
+                          'already-added-disconnect-cancel-action',
+                        ),
+                        onPressed: () => Navigator.pop(context),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.sceneDialogCancelButton,
+                          foregroundColor: AppColors.textPrimary,
+                          shape: const StadiumBorder(),
+                          textStyle: AppTextTokens.sceneDialogButton(textTheme),
+                        ),
+                        child: Text(l10n.smartOpenerCancelAction),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 40),
+                  Expanded(
+                    child: SizedBox(
+                      height: 50,
+                      child: FilledButton(
+                        key: const ValueKey<String>(
+                          'already-added-disconnect-confirm-action',
+                        ),
+                        onPressed: () => Navigator.pop(context),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.brandPrimary,
+                          foregroundColor: AppColors.backgroundPrimary,
+                          shape: const StadiumBorder(),
+                          textStyle: AppTextTokens.sceneDialogButton(textTheme),
+                        ),
+                        child: Text(l10n.smartOpenerConfirmAction),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

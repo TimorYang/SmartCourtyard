@@ -12,6 +12,16 @@
   "operationRecordLoadFailed": "Unable to load operation records. Tap to retry.",
   "operationRecordLoadMoreFailed": "Unable to load more records. Tap to retry.",
   "operationRecordNoMore": "No more records",
+  "operationRecordEmpty": "No operation records yet",
+  "operationRecordUnknownOperator": "Unknown operator",
+  "operationRecordUnknownTime": "Unknown time",
+  "operationRecordUnknownDoor": "Unknown door",
+  "operationRecordActionOpen": "Open door",
+  "operationRecordActionClose": "Close door",
+  "operationRecordActionStop": "Stop door",
+  "operationRecordActionLedOn": "LED on",
+  "operationRecordActionLedOff": "LED off",
+  "operationRecordActionUnknown": "Unknown action",
   "welcomeHeadline": "Start your\nsmart life",
   "@welcomeHeadline": {
     "description": "Headline shown on the unauthenticated welcome page"
@@ -834,6 +844,10 @@
   "smartOpenerAddedDeviceIdentifier": "opener_B8F86211A9DC",
   "smartOpenerAddedAddTooltip": "Add device",
   "smartOpenerAddedDeleteTooltip": "Remove device",
+  "smartOpenerAddedDisconnectConfirmMessage": "Are you sure to disconnect this device?",
+  "@smartOpenerAddedDisconnectConfirmMessage": {
+    "description": "Confirmation message before disconnecting an already added device"
+  },
   "smartOpenerAddedLoading": "Loading devices…",
   "smartOpenerAddedEmptyTitle": "No connected devices",
   "smartOpenerAddedEmptyDescription": "Connected devices will appear here.",

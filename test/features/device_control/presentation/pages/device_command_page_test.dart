@@ -11,6 +11,9 @@ import 'package:flinx/features/device_control/domain/repositories/door_detail_re
 import 'package:flinx/features/device_control/presentation/pages/device_command_page.dart';
 import 'package:flinx/features/device_control/presentation/pages/device_settings_page.dart';
 import 'package:flinx/features/device_control/presentation/pages/already_added_devices_page.dart';
+import 'package:flinx/features/records/application/providers.dart';
+import 'package:flinx/features/records/domain/entities/operation_record_page_result.dart';
+import 'package:flinx/features/records/domain/repositories/operation_record_repository.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
 import 'package:flinx/platform_bridge/mock_hardware_gateway.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
@@ -181,6 +184,80 @@ void main() {
     expect(find.text('智能开门器'), findsOneWidget);
   });
 
+  testWidgets('shows and dismisses added-device disconnect confirmation', (
+    tester,
+  ) async {
+    await _pumpDevicePage(tester, _RecordingHardwareGateway());
+
+    await tester.tap(find.byTooltip('More'));
+    await tester.pumpAndSettle();
+
+    final deleteAction = find.byKey(
+      const ValueKey<String>('already-added-delete-action-SN-001'),
+    );
+    await tester.tap(deleteAction);
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Are you sure to disconnect this device?'),
+      findsOneWidget,
+    );
+    expect(find.text('Cancel'), findsOneWidget);
+    expect(find.text('Confirm'), findsOneWidget);
+
+    await tester.tap(
+      find.byKey(
+        const ValueKey<String>('already-added-disconnect-cancel-action'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Are you sure to disconnect this device?'), findsNothing);
+    expect(deleteAction, findsOneWidget);
+
+    await tester.tap(deleteAction);
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(
+        const ValueKey<String>('already-added-disconnect-confirm-action'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Are you sure to disconnect this device?'), findsNothing);
+    expect(deleteAction, findsOneWidget);
+  });
+
+  testWidgets('renders added-device disconnect confirmation in Chinese', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          doorDetailRepositoryProvider.overrideWithValue(
+            const _FakeDoorDetailRepository(),
+          ),
+        ],
+        child: MaterialApp(
+          locale: const Locale('zh'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const AlreadyAddedDevicesPage(doorId: '12'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.byKey(const ValueKey<String>('already-added-delete-action-SN-001')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('确定要断开此设备吗？'), findsOneWidget);
+    expect(find.text('取消'), findsOneWidget);
+    expect(find.text('确认'), findsOneWidget);
+  });
+
   testWidgets('uses association status for connection device icons', (
     tester,
   ) async {
@@ -282,6 +359,9 @@ Widget _buildPage(MockHardwareGateway gateway) {
       ),
       fetchOnboardingDeviceKeyUseCaseProvider.overrideWithValue(
         const _FakeFetchOnboardingDeviceKeyUseCase(),
+      ),
+      operationRecordRepositoryProvider.overrideWithValue(
+        const _EmptyOperationRecordRepository(),
       ),
     ],
     child: MaterialApp.router(
@@ -462,6 +542,24 @@ class _FakeDoorDetailRepository implements DoorDetailRepository {
       ],
     );
   }
+}
+
+class _EmptyOperationRecordRepository implements OperationRecordRepository {
+  const _EmptyOperationRecordRepository();
+
+  @override
+  Future<OperationRecordPageResult> fetchOperationRecords({
+    required String doorId,
+    required int page,
+    required int pageSize,
+    required String requestId,
+  }) async => OperationRecordPageResult(
+    records: const [],
+    currentPage: page,
+    pageSize: pageSize,
+    total: 0,
+    hasMore: false,
+  );
 }
 
 class _PendingCommandGateway extends MockHardwareGateway {

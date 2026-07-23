@@ -4,6 +4,8 @@ import 'package:flinx/core/platform/gallery_image_saver.dart';
 import 'package:flinx/features/security_center/application/providers.dart';
 import 'package:flinx/features/security_center/domain/entities/full_report.dart';
 import 'package:flinx/features/security_center/domain/entities/safety_sensors_evaluation.dart';
+import 'package:flinx/features/security_center/domain/entities/security_center_overview.dart';
+import 'package:flinx/features/device_control/presentation/widgets/device_detail_bottom_navigation.dart';
 import 'package:flinx/features/security_center/presentation/pages/full_report_page.dart';
 import 'package:flinx/features/security_center/presentation/pages/general_evaluation_page.dart';
 import 'package:flinx/features/security_center/presentation/pages/security_center_page.dart';
@@ -17,6 +19,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 void main() {
+  test('security sensor type resolves its backend key', () {
+    for (final type in SecuritySensorType.values) {
+      expect(SecuritySensorType.fromBackendKey(type.backendKey), type);
+    }
+    expect(SecuritySensorType.fromBackendKey('unknown'), isNull);
+  });
+
   testWidgets('security center entries open report pages and return', (
     tester,
   ) async {
@@ -58,6 +67,24 @@ void main() {
     await tester.tap(find.byType(BackButtonIcon));
     await tester.pumpAndSettle();
     expect(find.text('Security Center'), findsOneWidget);
+  });
+
+  testWidgets('security center renders each sensor with its enum image asset', (
+    tester,
+  ) async {
+    await _pumpPage(
+      tester,
+      const SecurityCenterPage(
+        deviceId: 'mock-device',
+        onTabSelected: _ignoreTab,
+      ),
+    );
+
+    for (final type in SecuritySensorType.values) {
+      expect(_assetImage(type.imageAsset), findsOneWidget);
+    }
+    expect(find.byIcon(Icons.battery_1_bar_outlined), findsNWidgets(2));
+    expect(find.byIcon(Icons.battery_5_bar_outlined), findsNWidgets(6));
   });
 
   testWidgets('general evaluation segments switch displayed data', (
@@ -759,6 +786,18 @@ Finder _scrollableInside(String key) {
     matching: find.byType(Scrollable),
   );
 }
+
+Finder _assetImage(String assetName) {
+  return find.byWidgetPredicate(
+    (widget) =>
+        widget is Image &&
+        widget.image is AssetImage &&
+        (widget.image as AssetImage).assetName == assetName,
+    description: 'Image.asset($assetName)',
+  );
+}
+
+void _ignoreTab(DeviceDetailTab _) {}
 
 void _tapReportSaveAction(WidgetTester tester) {
   final action = find.byKey(const ValueKey<String>('full-report-save-action'));

@@ -252,13 +252,13 @@ class _SensorEvaluationCard extends StatelessWidget {
 }
 
 class _SensorItem {
-  const _SensorItem(this.icon, this.label, this.snapshot);
+  const _SensorItem(this.imageAsset, this.label, this.snapshot);
 
   factory _SensorItem.fromSnapshot(SecuritySensorSnapshot snapshot, AppLocalizations l10n) {
-    return _SensorItem(_sensorIcon(snapshot.type), _sensorLabel(l10n, snapshot.type), snapshot);
+    return _SensorItem(snapshot.type.imageAsset, _sensorLabel(l10n, snapshot.type), snapshot);
   }
 
-  final IconData icon;
+  final String imageAsset;
   final String label;
   final SecuritySensorSnapshot snapshot;
 }
@@ -289,16 +289,27 @@ class _SensorTile extends StatelessWidget {
     return Semantics(
       label: sensor.label,
       child: SizedBox(
-        width: 44,
         child: Column(
           children: [
             DecoratedBox(
               decoration: BoxDecoration(
                 color: sensor.snapshot.status == SecurityEvaluationStatus.offline ? AppColors.securityCenterSensorUnavailable : Colors.white,
                 shape: BoxShape.circle,
-                border: Border.all(color: _statusColor, width: 3),
+                border: Border.all(color: _statusColor, width: 2),
               ),
-              child: SizedBox.square(dimension: 44, child: Icon(sensor.icon, size: 32, color: AppColors.securityCenterSensorIcon)),
+              child: SizedBox.square(
+                dimension: 44,
+                child: Center(
+                  child: Image.asset(
+                    sensor.imageAsset,
+                    width: 32,
+                    height: 32,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) =>
+                        const SizedBox.square(dimension: 32),
+                  ),
+                ),
+              ),
             ),
             const SizedBox(height: 8),
             Icon(
@@ -336,17 +347,6 @@ class _EvaluationStatusIcon extends StatelessWidget {
     return Icon(icon, color: color, size: 13);
   }
 }
-
-IconData _sensorIcon(SecuritySensorType type) => switch (type) {
-  SecuritySensorType.photoBeam => Icons.door_sliding_outlined,
-  SecuritySensorType.eLock => Icons.sensors,
-  SecuritySensorType.doorSensor => Icons.sensor_door_outlined,
-  SecuritySensorType.radar => Icons.radar,
-  SecuritySensorType.remote => Icons.settings_remote_outlined,
-  SecuritySensorType.safetyEdge => Icons.lock_open_outlined,
-  SecuritySensorType.wiredPhotoBeam => Icons.door_front_door_outlined,
-  SecuritySensorType.wiredELock => Icons.sensor_door_outlined,
-};
 
 String _sensorLabel(AppLocalizations l10n, SecuritySensorType type) => switch (type) {
   SecuritySensorType.photoBeam => l10n.securityCenterPhotoBeam,

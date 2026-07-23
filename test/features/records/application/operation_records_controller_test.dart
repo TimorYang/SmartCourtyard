@@ -19,15 +19,15 @@ void main() {
       operationRecordsControllerProvider.notifier,
     );
 
-    await controller.loadInitial();
+    await controller.loadInitial(doorId: '10001');
     await controller.loadMore();
 
     expect(
       container
           .read(operationRecordsControllerProvider)
           .records
-          .map((record) => record.operationName),
-      <String>['First', 'Second'],
+          .map((record) => record.doorName),
+      <String?>['First', 'Second'],
     );
     expect(repository.requestedPages, <int>[1, 2]);
   });
@@ -42,7 +42,7 @@ void main() {
       operationRecordsControllerProvider.notifier,
     );
 
-    await controller.loadInitial();
+    await controller.loadInitial(doorId: '10001');
     repository.pages[1] = _result(<OperationRecord>[_record('After refresh')]);
     await controller.refresh();
 
@@ -51,7 +51,7 @@ void main() {
           .read(operationRecordsControllerProvider)
           .records
           .single
-          .operationName,
+          .doorName,
       'After refresh',
     );
     expect(repository.requestedPages, <int>[1, 1]);
@@ -67,7 +67,7 @@ void main() {
       operationRecordsControllerProvider.notifier,
     );
 
-    await controller.loadInitial();
+    await controller.loadInitial(doorId: '10001');
     await controller.loadMore();
 
     expect(repository.requestedPages, <int>[1]);
@@ -84,7 +84,7 @@ void main() {
       operationRecordsControllerProvider.notifier,
     );
 
-    await controller.loadInitial();
+    await controller.loadInitial(doorId: '10001');
     final firstRequest = controller.loadMore();
     final duplicateRequest = controller.loadMore();
 
@@ -102,11 +102,11 @@ ProviderContainer _container(OperationRecordRepository repository) {
   );
 }
 
-OperationRecord _record(String operationName) => OperationRecord(
-  operationName: operationName,
-  operationTimeText: '2026-07-09 13:34:52',
-  deviceName: 'Garage door',
-  operatorEmail: 'mark@f-linx.com',
+OperationRecord _record(String doorName) => OperationRecord(
+  action: OperationRecordAction.open,
+  occurredAt: DateTime(2026, 7, 9, 13, 34, 52),
+  doorName: doorName,
+  operatorAccount: 'mark@f-linx.com',
 );
 
 OperationRecordPageResult _result(
@@ -116,6 +116,8 @@ OperationRecordPageResult _result(
 }) => OperationRecordPageResult(
   records: records,
   currentPage: page,
+  pageSize: 20,
+  total: hasMore ? 21 : records.length,
   hasMore: hasMore,
 );
 
@@ -128,8 +130,10 @@ class _RecordingRepository implements OperationRecordRepository {
 
   @override
   Future<OperationRecordPageResult> fetchOperationRecords({
+    required String doorId,
     required int page,
     required int pageSize,
+    required String requestId,
   }) {
     requestedPages.add(page);
     if (page == 2 && pendingPage != null) return pendingPage!.future;

@@ -1,25 +1,42 @@
 /// 操作记录页面展示的单条操作数据。
 class OperationRecord {
   const OperationRecord({
-    required this.operationName,
-    required this.operationTimeText,
-    required this.deviceName,
-    required this.operatorEmail,
-    this.operatorAvatarUrl = '',
+    required this.action,
+    required this.occurredAt,
+    required this.doorName,
+    this.operatorAccount,
+    this.operatorName,
+    this.operationMethodLabel,
+    this.operatorAvatarFileId,
   });
 
-  /// 页面首行展示的操作名称，例如“Open door”。
-  final String operationName;
+  /// 页面首行展示的操作类型；展示层根据当前语言转换为文案。
+  final OperationRecordAction action;
 
-  /// 页面首行右侧展示的操作时间；由后端按展示格式返回。
-  final String operationTimeText;
+  /// 页面首行右侧展示的发生时间，由接口 [occurredAt] 毫秒时间戳映射。
+  final DateTime? occurredAt;
 
-  /// 页面第二行展示的被操作设备名称。
-  final String deviceName;
+  /// 页面第二行展示的被操作门名称，对应接口 [doorName]。
+  final String? doorName;
+  /// 页面第二行展示的被操作方式，对应接口 [operationMethodLabel]。
+  final String? operationMethodLabel;
 
-  /// 页面操作者信息左侧展示的头像图片 URL；为空时显示本地占位头像。
-  final String operatorAvatarUrl;
+  /// 页面操作者信息右侧优先展示的账号，对应接口 [operatorAccount]。
+  final String? operatorAccount;
 
-  /// 页面操作者信息右侧展示的操作者邮箱。
-  final String operatorEmail;
+  /// [operatorAccount] 缺失时的操作者展示名称，对应接口 [operatorName]。
+  final String? operatorName;
+
+  /// 页面头像关联的文件 ID；当前接口未提供可访问 URL，页面使用本地占位图。
+  final int? operatorAvatarFileId;
+
+  /// UI 中的操作者文本，账号优先，缺失时回退为名称。
+  String? get operatorDisplayName {
+    final account = operatorAccount?.trim();
+    if (account != null && account.isNotEmpty) return account;
+    final name = operatorName?.trim();
+    return name != null && name.isNotEmpty ? name : null;
+  }
 }
+
+enum OperationRecordAction { open, close, stop, ledOn, ledOff, unknown }

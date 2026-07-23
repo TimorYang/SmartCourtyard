@@ -134,6 +134,66 @@ abstract class AppLocalizations {
   /// **'No more records'**
   String get operationRecordNoMore;
 
+  /// No description provided for @operationRecordEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No operation records yet'**
+  String get operationRecordEmpty;
+
+  /// No description provided for @operationRecordUnknownOperator.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown operator'**
+  String get operationRecordUnknownOperator;
+
+  /// No description provided for @operationRecordUnknownTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown time'**
+  String get operationRecordUnknownTime;
+
+  /// No description provided for @operationRecordUnknownDoor.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown door'**
+  String get operationRecordUnknownDoor;
+
+  /// No description provided for @operationRecordActionOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open door'**
+  String get operationRecordActionOpen;
+
+  /// No description provided for @operationRecordActionClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close door'**
+  String get operationRecordActionClose;
+
+  /// No description provided for @operationRecordActionStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop door'**
+  String get operationRecordActionStop;
+
+  /// No description provided for @operationRecordActionLedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'LED on'**
+  String get operationRecordActionLedOn;
+
+  /// No description provided for @operationRecordActionLedOff.
+  ///
+  /// In en, this message translates to:
+  /// **'LED off'**
+  String get operationRecordActionLedOff;
+
+  /// No description provided for @operationRecordActionUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown action'**
+  String get operationRecordActionUnknown;
+
   /// Headline shown on the unauthenticated welcome page
   ///
   /// In en, this message translates to:
@@ -1393,6 +1453,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Remove device'**
   String get smartOpenerAddedDeleteTooltip;
+
+  /// Confirmation message before disconnecting an already added device
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure to disconnect this device?'**
+  String get smartOpenerAddedDisconnectConfirmMessage;
 
   /// No description provided for @smartOpenerAddedLoading.
   ///

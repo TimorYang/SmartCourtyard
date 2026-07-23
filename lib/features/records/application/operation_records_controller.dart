@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/entities/operation_record.dart';
-import '../domain/repositories/operation_record_repository.dart';
+import '../domain/use_cases/fetch_operation_records_use_case.dart';
 import 'providers.dart';
 
 class OperationRecordsState {
@@ -51,22 +51,29 @@ class OperationRecordsState {
 class OperationRecordsController extends Notifier<OperationRecordsState> {
   static const pageSize = 20;
 
-  late final OperationRecordRepository _repository;
+  late final FetchOperationRecordsUseCase _fetchOperationRecordsUseCase;
+  int _requestCounter = 0;
+  String? _doorId;
 
   @override
   OperationRecordsState build() {
-    _repository = ref.watch(operationRecordRepositoryProvider);
-    Future<void>.microtask(loadInitial);
+    _fetchOperationRecordsUseCase = ref.watch(
+      fetchOperationRecordsUseCaseProvider,
+    );
     return const OperationRecordsState();
   }
 
-  Future<void> loadInitial() async {
+  Future<void> loadInitial({required String doorId}) async {
     if (state.isInitialLoading || state.isRefreshing) return;
+    final normalizedDoorId = doorId.trim();
+    _doorId = normalizedDoorId;
     state = state.copyWith(isInitialLoading: true, initialLoadFailed: false);
     try {
-      final result = await _repository.fetchOperationRecords(
+      final result = await _fetchOperationRecordsUseCase(
+        doorId: normalizedDoorId,
         page: 1,
         pageSize: pageSize,
+        requestId: _nextRequestId(normalizedDoorId, 'initial'),
       );
       state = state.copyWith(
         records: result.records,
@@ -82,11 +89,15 @@ class OperationRecordsController extends Notifier<OperationRecordsState> {
 
   Future<void> refresh() async {
     if (state.isInitialLoading || state.isRefreshing) return;
+    final doorId = _doorId;
+    if (doorId == null) return;
     state = state.copyWith(isRefreshing: true, initialLoadFailed: false);
     try {
-      final result = await _repository.fetchOperationRecords(
+      final result = await _fetchOperationRecordsUseCase(
+        doorId: doorId,
         page: 1,
         pageSize: pageSize,
+        requestId: _nextRequestId(doorId, 'refresh'),
       );
       state = state.copyWith(
         records: result.records,
@@ -111,11 +122,15 @@ class OperationRecordsController extends Notifier<OperationRecordsState> {
         !state.hasMore) {
       return;
     }
+    final doorId = _doorId;
+    if (doorId == null) return;
     state = state.copyWith(isLoadingMore: true, loadMoreFailed: false);
     try {
-      final result = await _repository.fetchOperationRecords(
+      final result = await _fetchOperationRecordsUseCase(
+        doorId: doorId,
         page: state.currentPage + 1,
         pageSize: pageSize,
+        requestId: _nextRequestId(doorId, 'more'),
       );
       state = state.copyWith(
         records: <OperationRecord>[...state.records, ...result.records],
@@ -127,5 +142,11 @@ class OperationRecordsController extends Notifier<OperationRecordsState> {
     } catch (_) {
       state = state.copyWith(isLoadingMore: false, loadMoreFailed: true);
     }
+  }
+
+  String _nextRequestId(String doorId, String operation) {
+    _requestCounter += 1;
+    return 'operation-record-$operation-$doorId-'
+        '${DateTime.now().toUtc().microsecondsSinceEpoch}-$_requestCounter';
   }
 }

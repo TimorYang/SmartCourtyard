@@ -99,7 +99,11 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     return IndexedStack(
       index: _selectedTab.index,
       children: [
-        OperationRecordPage(onTabSelected: _selectTab),
+        OperationRecordPage(
+          doorId: widget.doorId,
+          onTabSelected: _selectTab,
+          isActive: _selectedTab == DeviceDetailTab.operationRecords,
+        ),
         _buildCommandPage(
           commandState: commandState,
           controller: controller,

@@ -30,6 +30,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get operationRecordNoMore => 'No more records';
 
   @override
+  String get operationRecordEmpty => 'No operation records yet';
+
+  @override
+  String get operationRecordUnknownOperator => 'Unknown operator';
+
+  @override
+  String get operationRecordUnknownTime => 'Unknown time';
+
+  @override
+  String get operationRecordUnknownDoor => 'Unknown door';
+
+  @override
+  String get operationRecordActionOpen => 'Open door';
+
+  @override
+  String get operationRecordActionClose => 'Close door';
+
+  @override
+  String get operationRecordActionStop => 'Stop door';
+
+  @override
+  String get operationRecordActionLedOn => 'LED on';
+
+  @override
+  String get operationRecordActionLedOff => 'LED off';
+
+  @override
+  String get operationRecordActionUnknown => 'Unknown action';
+
+  @override
   String get welcomeHeadline => 'Start your\nsmart life';
 
   @override
@@ -706,6 +736,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get smartOpenerAddedDeleteTooltip => 'Remove device';
+
+  @override
+  String get smartOpenerAddedDisconnectConfirmMessage =>
+      'Are you sure to disconnect this device?';
 
   @override
   String get smartOpenerAddedLoading => 'Loading devices…';

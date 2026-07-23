@@ -17,8 +17,8 @@ void main() {
       repository: _FakeOperationRecordRepository(
         pages: <int, OperationRecordPageResult>{
           1: _result(<OperationRecord>[
-            _record('Open door'),
-            _record('Close door'),
+            _record('Garage door'),
+            _record('Garage door'),
           ]),
         },
       ),
@@ -26,7 +26,7 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    expect(find.text('Open door'), findsOneWidget);
+    expect(find.text('Open door'), findsNWidgets(2));
     expect(find.text('2026-07-09 13:34:52'), findsNWidgets(2));
     expect(find.text('Garage door'), findsNWidgets(2));
     expect(find.text('mark@f-linx.com'), findsNWidgets(2));
@@ -68,7 +68,7 @@ void main() {
       tester,
       repository: _FakeOperationRecordRepository(
         pages: <int, OperationRecordPageResult>{
-          1: _result(<OperationRecord>[_record('Open door')]),
+          1: _result(<OperationRecord>[_record('Garage door')]),
         },
       ),
     );
@@ -97,17 +97,17 @@ Future<void> _pumpPage(
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: OperationRecordPage(onTabSelected: (_) {}),
+        home: OperationRecordPage(doorId: '10001', onTabSelected: (_) {}),
       ),
     ),
   );
 }
 
-OperationRecord _record(String operationName) => OperationRecord(
-  operationName: operationName,
-  operationTimeText: '2026-07-09 13:34:52',
-  deviceName: 'Garage door',
-  operatorEmail: 'mark@f-linx.com',
+OperationRecord _record(String doorName) => OperationRecord(
+  action: OperationRecordAction.open,
+  occurredAt: DateTime(2026, 7, 9, 13, 34, 52),
+  doorName: doorName,
+  operatorAccount: 'mark@f-linx.com',
 );
 
 OperationRecordPageResult _result(
@@ -117,6 +117,8 @@ OperationRecordPageResult _result(
 }) => OperationRecordPageResult(
   records: records,
   currentPage: page,
+  pageSize: 20,
+  total: hasMore ? 21 : records.length,
   hasMore: hasMore,
 );
 
@@ -127,7 +129,9 @@ class _FakeOperationRecordRepository implements OperationRecordRepository {
 
   @override
   Future<OperationRecordPageResult> fetchOperationRecords({
+    required String doorId,
     required int page,
     required int pageSize,
+    required String requestId,
   }) async => pages[page]!;
 }

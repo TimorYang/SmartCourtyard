@@ -27,6 +27,36 @@ class AppLocalizationsZh extends AppLocalizations {
   String get operationRecordNoMore => '没有更多操作记录了';
 
   @override
+  String get operationRecordEmpty => '暂无操作记录';
+
+  @override
+  String get operationRecordUnknownOperator => '未知操作人';
+
+  @override
+  String get operationRecordUnknownTime => '未知时间';
+
+  @override
+  String get operationRecordUnknownDoor => '未知门';
+
+  @override
+  String get operationRecordActionOpen => '开门';
+
+  @override
+  String get operationRecordActionClose => '关门';
+
+  @override
+  String get operationRecordActionStop => '停止';
+
+  @override
+  String get operationRecordActionLedOn => '开灯';
+
+  @override
+  String get operationRecordActionLedOff => '关灯';
+
+  @override
+  String get operationRecordActionUnknown => '未知操作';
+
+  @override
   String get welcomeHeadline => '开启您的\n智慧生活';
 
   @override
@@ -670,6 +700,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get smartOpenerAddedDeleteTooltip => '移除设备';
+
+  @override
+  String get smartOpenerAddedDisconnectConfirmMessage => '确定要断开此设备吗？';
 
   @override
   String get smartOpenerAddedLoading => '正在加载设备…';

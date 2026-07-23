@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
@@ -10,9 +11,16 @@ import '../../application/providers.dart';
 import '../../domain/entities/operation_record.dart';
 
 class OperationRecordPage extends ConsumerStatefulWidget {
-  const OperationRecordPage({required this.onTabSelected, super.key});
+  const OperationRecordPage({
+    required this.doorId,
+    required this.onTabSelected,
+    this.isActive = true,
+    super.key,
+  });
 
+  final String doorId;
   final ValueChanged<DeviceDetailTab> onTabSelected;
+  final bool isActive;
 
   @override
   ConsumerState<OperationRecordPage> createState() =>
@@ -28,6 +36,24 @@ class _OperationRecordPageState extends ConsumerState<OperationRecordPage> {
   void initState() {
     super.initState();
     _scrollController = ScrollController()..addListener(_onScroll);
+    if (widget.isActive) _loadInitial();
+  }
+
+  @override
+  void didUpdateWidget(covariant OperationRecordPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if ((oldWidget.doorId != widget.doorId && widget.isActive) ||
+        (!oldWidget.isActive && widget.isActive)) {
+      _loadInitial();
+    }
+  }
+
+  void _loadInitial() {
+    Future<void>.microtask(
+      () => ref
+          .read(operationRecordsControllerProvider.notifier)
+          .loadInitial(doorId: widget.doorId),
+    );
   }
 
   @override
@@ -93,7 +119,20 @@ class _OperationRecordPageState extends ConsumerState<OperationRecordPage> {
               else if (recordsState.initialLoadFailed)
                 SliverFillRemaining(
                   hasScrollBody: false,
-                  child: _InitialLoadFailure(onRetry: controller.loadInitial),
+                  child: _InitialLoadFailure(
+                    onRetry: () =>
+                        controller.loadInitial(doorId: widget.doorId),
+                  ),
+                )
+              else if (recordsState.records.isEmpty)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: Text(
+                      l10n.operationRecordEmpty,
+                      style: AppTextTokens.operationRecordMeta(textTheme),
+                    ),
+                  ),
                 )
               else ...[
                 SliverPadding(
@@ -200,6 +239,7 @@ class _OperationTimelineItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
 
     return IntrinsicHeight(
       child: Row(
@@ -235,20 +275,24 @@ class _OperationTimelineItem extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          record.operationName,
+                          record.action.label(l10n),
                           style: AppTextTokens.operationRecordAction(textTheme),
                         ),
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        record.operationTimeText,
+                        _formatOccurredAt(record.occurredAt, l10n),
                         style: AppTextTokens.operationRecordTime(textTheme),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    record.deviceName,
+                    _displayDoorName(
+                      record.doorName,
+                      record.operationMethodLabel,
+                      l10n,
+                    ),
                     style: AppTextTokens.operationRecordMeta(textTheme),
                   ),
                   const SizedBox(height: 10),
@@ -258,13 +302,14 @@ class _OperationTimelineItem extends StatelessWidget {
                         key: const ValueKey<String>('operation-record-avatar'),
                         radius: 10,
                         backgroundColor: AppColors.operationRecordAvatarSurface,
-                        backgroundImage: _avatarImage(record.operatorAvatarUrl),
+                        backgroundImage: _avatarImage(),
                         onBackgroundImageError: (_, _) {},
                       ),
                       const SizedBox(width: 11.5),
                       Expanded(
                         child: Text(
-                          record.operatorEmail,
+                          record.operatorDisplayName ??
+                              l10n.operationRecordUnknownOperator,
                           style: AppTextTokens.operationRecordMeta(textTheme),
                         ),
                       ),
@@ -288,8 +333,36 @@ class _OperationTimelineItem extends StatelessWidget {
     );
   }
 
-  ImageProvider<Object> _avatarImage(String avatarUrl) {
-    if (avatarUrl.isEmpty) return const AssetImage(_avatarPlaceholderAsset);
-    return NetworkImage(avatarUrl);
+  ImageProvider<Object> _avatarImage() {
+    return const AssetImage(_avatarPlaceholderAsset);
   }
+}
+
+String _formatOccurredAt(DateTime? occurredAt, AppLocalizations l10n) {
+  if (occurredAt == null) return l10n.operationRecordUnknownTime;
+  return DateFormat('yyyy-MM-dd HH:mm:ss').format(occurredAt);
+}
+
+String _displayDoorName(
+  String? doorName,
+  String? operationMethodLabel,
+  AppLocalizations l10n,
+) {
+  final parts = <String>[
+    if (doorName?.trim().isNotEmpty ?? false) doorName!.trim(),
+    if (operationMethodLabel?.trim().isNotEmpty ?? false)
+      operationMethodLabel!.trim(),
+  ];
+  return parts.isEmpty ? l10n.operationRecordUnknownDoor : parts.join(' / ');
+}
+
+extension on OperationRecordAction {
+  String label(AppLocalizations l10n) => switch (this) {
+    OperationRecordAction.open => l10n.operationRecordActionOpen,
+    OperationRecordAction.close => l10n.operationRecordActionClose,
+    OperationRecordAction.stop => l10n.operationRecordActionStop,
+    OperationRecordAction.ledOn => l10n.operationRecordActionLedOn,
+    OperationRecordAction.ledOff => l10n.operationRecordActionLedOff,
+    OperationRecordAction.unknown => l10n.operationRecordActionUnknown,
+  };
 }
