@@ -33,56 +33,70 @@ class SecurityCenterPage extends ConsumerWidget {
       bottomNavigationBar: DeviceDetailBottomNavigation(selectedTab: DeviceDetailTab.securityCenter, onSelected: onTabSelected),
       body: ListView(
         key: const PageStorageKey<String>('security-center-scroll'),
-        padding: const EdgeInsets.fromLTRB(20, 28, 20, 28),
         children: [
           SizedBox(
             height: 145,
             child: Stack(
               children: [
                 Positioned(
-                  right: -20,
+                  right: 0,
+                  top: 20,
                   child: Image.asset(_heroAsset, fit: BoxFit.contain, errorBuilder: (context, error, stackTrace) => const _SecurityHeroFallback()),
                 ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(l10n.securityCenterProtecting, style: AppTextTokens.securityCenterHeroTitle(textTheme)),
-                      TextButton.icon(
-                        onPressed: () => context.pushNamed(FullReportPage.routeName, queryParameters: {'deviceId': deviceId}),
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          foregroundColor: AppColors.securityCenterLink,
-                          splashFactory: NoSplash.splashFactory,
+                Padding(
+                  padding: EdgeInsetsGeometry.fromLTRB(20, 28, 20, 0),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(l10n.securityCenterProtecting, style: AppTextTokens.securityCenterHeroTitle(textTheme)),
+                        TextButton.icon(
+                          onPressed: () => context.pushNamed(FullReportPage.routeName, queryParameters: {'deviceId': deviceId}),
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            foregroundColor: AppColors.securityCenterLink,
+                            splashFactory: NoSplash.splashFactory,
+                          ),
+                          icon: Image.asset(_download, fit: BoxFit.contain),
+                          label: Text(
+                            l10n.securityCenterDownloadFullReport,
+                            style: AppTextTokens.securityCenterHeroTitle2(textTheme).copyWith(
+                              color: AppColors.securityCenterLink,
+                              decoration: TextDecoration.underline,
+                              decorationColor: AppColors.securityCenterLink,
+                            ),
+                          ),
                         ),
-                        icon: Image.asset(_download, fit: BoxFit.contain),
-                        label: Text(
-                          l10n.securityCenterDownloadFullReport,
-                          style: AppTextTokens.securityCenterHeroTitle2(textTheme).copyWith(decoration: TextDecoration.underline),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 34),
-          _EvaluationCard(
-            title: l10n.securityCenterGeneralEvaluation,
-            status: overview.generalEvaluation.status,
-            tags: [for (final item in overview.generalEvaluation.items) _evaluationItemLabel(l10n, item.type)],
-            onTap: () => context.pushNamed(GeneralEvaluationPage.routeName, queryParameters: {'deviceId': deviceId}),
+          Padding(
+            padding: EdgeInsetsGeometry.only(left: 20, right: 20),
+            child: _EvaluationCard(
+              title: l10n.securityCenterGeneralEvaluation,
+              status: overview.generalEvaluation.status,
+              tags: [for (final item in overview.generalEvaluation.items) _evaluationItemLabel(l10n, item.type)],
+              onTap: () => context.pushNamed(GeneralEvaluationPage.routeName, queryParameters: {'deviceId': deviceId}),
+            ),
           ),
           const SizedBox(height: 20),
-          _SensorEvaluationCard(
-            textTheme: textTheme,
-            l10n: l10n,
-            evaluation: overview.safetySensorEvaluation,
-            onTap: () => context.pushNamed(SafetySensorsEvaluationPage.routeName, queryParameters: {'deviceId': deviceId}),
+          Padding(
+            padding: EdgeInsetsGeometry.only(left: 20, right: 20),
+            child: _SensorEvaluationCard(
+              textTheme: textTheme,
+              l10n: l10n,
+              evaluation: overview.safetySensorEvaluation,
+              onTap: () => context.pushNamed(SafetySensorsEvaluationPage.routeName, queryParameters: {'deviceId': deviceId}),
+            ),
           ),
+          const SizedBox(height: 30),
         ],
       ),
     );
@@ -282,6 +296,10 @@ class _SensorGrid extends StatelessWidget {
 class _SensorTile extends StatelessWidget {
   const _SensorTile({required this.sensor});
 
+  static const _batteryFullAsset = 'assets/icons/security_center/security_center_sensor_battery_full.png';
+  static const _batteryLowAsset = 'assets/icons/security_center/security_center_sensor_battery_low.png';
+  static const _batteryOfflineAsset = 'assets/icons/security_center/security_center_sensor_battery_offline.png';
+
   final _SensorItem sensor;
 
   @override
@@ -305,18 +323,13 @@ class _SensorTile extends StatelessWidget {
                     width: 32,
                     height: 32,
                     fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) =>
-                        const SizedBox.square(dimension: 32),
+                    errorBuilder: (context, error, stackTrace) => const SizedBox.square(dimension: 32),
                   ),
                 ),
               ),
             ),
             const SizedBox(height: 8),
-            Icon(
-              sensor.snapshot.batteryPercentage <= 20 ? Icons.battery_1_bar_outlined : Icons.battery_5_bar_outlined,
-              size: 14,
-              color: sensor.snapshot.batteryPercentage <= 20 ? AppColors.securityCenterError : AppColors.securityCenterSuccess,
-            ),
+            Image.asset(_batteryAsset, fit: BoxFit.contain, errorBuilder: (context, error, stackTrace) => const SizedBox.square(dimension: 14)),
           ],
         ),
       ),
@@ -329,6 +342,13 @@ class _SensorTile extends StatelessWidget {
     SecurityEvaluationStatus.critical => AppColors.securityCenterError,
     SecurityEvaluationStatus.offline => AppColors.securityCenterSensorUnavailable,
   };
+
+  String get _batteryAsset {
+    if (sensor.snapshot.status == SecurityEvaluationStatus.offline) {
+      return _batteryOfflineAsset;
+    }
+    return sensor.snapshot.batteryPercentage <= 20 ? _batteryLowAsset : _batteryFullAsset;
+  }
 }
 
 class _EvaluationStatusIcon extends StatelessWidget {

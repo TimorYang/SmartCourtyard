@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../../home/application/providers.dart';
+import '../../../home/domain/entities/home_scene.dart';
+import '../../domain/entities/add_door_draft.dart';
 
 class AddDoorNameDialogAssetPaths {
   const AddDoorNameDialogAssetPaths._();
 
-  static const nameInputPlaceholder =
-      'assets/icons/add_device/add_door_name_input_placeholder.png';
-  static const sceneSelectPlaceholder =
-      'assets/icons/add_device/add_door_name_input_placeholder.png';
+  static const nameInputPlaceholder = 'assets/icons/add_device/add_door_name_input_placeholder.png';
+  static const sceneSelectPlaceholder = 'assets/icons/add_device/add_door_name_input_placeholder.png';
 }
 
 Future<void> showAddDoorNameDialog(
   BuildContext context, {
-  VoidCallback? onConfirmed,
+  ValueChanged<AddDoorDraft>? onConfirmed,
 }) {
   return showDialog<void>(
     context: context,
@@ -23,28 +25,41 @@ Future<void> showAddDoorNameDialog(
   );
 }
 
-class AddDoorNameDialog extends StatefulWidget {
+class AddDoorNameDialog extends ConsumerStatefulWidget {
   const AddDoorNameDialog({super.key, this.onConfirmed});
 
-  final VoidCallback? onConfirmed;
+  final ValueChanged<AddDoorDraft>? onConfirmed;
 
   @override
-  State<AddDoorNameDialog> createState() => _AddDoorNameDialogState();
+  ConsumerState<AddDoorNameDialog> createState() => _AddDoorNameDialogState();
 }
 
-class _AddDoorNameDialogState extends State<AddDoorNameDialog> {
+class _AddDoorNameDialogState extends ConsumerState<AddDoorNameDialog> {
   late final TextEditingController _controller;
+  var _hasDoorName = false;
+  HomeScene? _selectedScene;
 
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController();
+    _controller.addListener(_onDoorNameChanged);
   }
 
   @override
   void dispose() {
+    _controller.removeListener(_onDoorNameChanged);
     _controller.dispose();
     super.dispose();
+  }
+
+  void _onDoorNameChanged() {
+    final hasDoorName = _controller.text.trim().isNotEmpty;
+    if (_hasDoorName != hasDoorName) {
+      setState(() {
+        _hasDoorName = hasDoorName;
+      });
+    }
   }
 
   @override
@@ -52,6 +67,9 @@ class _AddDoorNameDialogState extends State<AddDoorNameDialog> {
     final l10n = AppLocalizations.of(context);
     final textTheme = Theme.of(context).textTheme;
     final viewInsets = MediaQuery.viewInsetsOf(context);
+    final scenesState = ref.watch(homeScenesProvider);
+    final selectedScene = _selectedSceneFor(scenesState);
+    final canConfirm = _hasDoorName && selectedScene != null;
 
     return AnimatedPadding(
       duration: const Duration(milliseconds: 180),
@@ -69,14 +87,20 @@ class _AddDoorNameDialogState extends State<AddDoorNameDialog> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    l10n.addDoorNameDialogTitle,
-                    style: AppTextTokens.addDoorDialogTitle(textTheme),
-                  ),
+                  Text(l10n.addDoorNameDialogTitle, style: AppTextTokens.addDoorDialogTitle(textTheme)),
                   const SizedBox(height: 24),
                   _AddDoorNameTextField(controller: _controller),
                   const SizedBox(height: 22),
-                  _AddDoorSceneSelector(label: l10n.addDoorSceneDefault),
+                  _AddDoorSceneSelector(
+                    scenesState: scenesState,
+                    selectedScene: selectedScene,
+                    onSelected: (scene) {
+                      setState(() {
+                        _selectedScene = scene;
+                      });
+                    },
+                    onRetry: () => ref.invalidate(homeScenesProvider),
+                  ),
                   const SizedBox(height: 40),
                   Row(
                     children: [
@@ -86,13 +110,10 @@ class _AddDoorNameDialogState extends State<AddDoorNameDialog> {
                           child: FilledButton(
                             onPressed: () => Navigator.pop(context),
                             style: FilledButton.styleFrom(
-                              backgroundColor:
-                                  AppColors.sceneDialogCancelButton,
+                              backgroundColor: AppColors.sceneDialogCancelButton,
                               foregroundColor: AppColors.textPrimary,
                               shape: const StadiumBorder(),
-                              textStyle: AppTextTokens.addDoorDialogButton(
-                                textTheme,
-                              ),
+                              textStyle: AppTextTokens.addDoorDialogButton(textTheme),
                             ),
                             child: Text(l10n.addDoorNameCancelAction),
                           ),
@@ -103,17 +124,26 @@ class _AddDoorNameDialogState extends State<AddDoorNameDialog> {
                         child: SizedBox(
                           height: 52,
                           child: FilledButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                              widget.onConfirmed?.call();
-                            },
+                            onPressed: canConfirm
+                                ? () {
+                                    final draft = AddDoorDraft(
+                                      name: _controller.text.trim(),
+                                      sceneId: selectedScene.id,
+                                      sceneName: _sceneLabel(l10n, selectedScene),
+                                    );
+                                    Navigator.pop(context);
+                                    widget.onConfirmed?.call(draft);
+                                  }
+                                : null,
                             style: FilledButton.styleFrom(
                               backgroundColor: AppColors.brandPrimary,
+                              disabledBackgroundColor:
+                                  AppColors.brandPrimaryDisabled,
                               foregroundColor: AppColors.backgroundPrimary,
+                              disabledForegroundColor:
+                                  AppColors.authPrimaryButtonDisabledForeground,
                               shape: const StadiumBorder(),
-                              textStyle: AppTextTokens.addDoorDialogButton(
-                                textTheme,
-                              ),
+                              textStyle: AppTextTokens.addDoorDialogButton(textTheme),
                             ),
                             child: Text(l10n.addDoorNameConfirmAction),
                           ),
@@ -129,6 +159,18 @@ class _AddDoorNameDialogState extends State<AddDoorNameDialog> {
       ),
     );
   }
+
+  HomeScene? _selectedSceneFor(AsyncValue<List<HomeScene>> scenesState) {
+    final scenes = scenesState.asData?.value;
+    if (scenes == null || scenes.isEmpty) {
+      return null;
+    }
+    final selectedScene = _selectedScene;
+    if (selectedScene != null && scenes.any((scene) => scene.id == selectedScene.id)) {
+      return selectedScene;
+    }
+    return scenes.first;
+  }
 }
 
 class _AddDoorNameTextField extends StatelessWidget {
@@ -142,51 +184,106 @@ class _AddDoorNameTextField extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return _AddDoorDialogFieldFrame(
-      leading: const _AddDoorDialogIcon(
-        assetPath: AddDoorNameDialogAssetPaths.nameInputPlaceholder,
-      ),
+      leading: const _AddDoorDialogIcon(assetPath: AddDoorNameDialogAssetPaths.nameInputPlaceholder),
       child: TextField(
         controller: controller,
         style: AppTextTokens.addDoorDialogField(textTheme),
-        decoration: InputDecoration.collapsed(
-          hintText: l10n.addDoorNameInputPlaceholder,
-          hintStyle: AppTextTokens.addDoorDialogHint(textTheme),
-        ),
+        decoration: InputDecoration.collapsed(hintText: l10n.addDoorNameInputPlaceholder, hintStyle: AppTextTokens.addDoorDialogHint(textTheme)),
       ),
     );
   }
 }
 
 class _AddDoorSceneSelector extends StatelessWidget {
-  const _AddDoorSceneSelector({required this.label});
+  const _AddDoorSceneSelector({
+    required this.scenesState,
+    required this.selectedScene,
+    required this.onSelected,
+    required this.onRetry,
+  });
 
-  final String label;
+  final AsyncValue<List<HomeScene>> scenesState;
+  final HomeScene? selectedScene;
+  final ValueChanged<HomeScene> onSelected;
+  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
-    return _AddDoorDialogFieldFrame(
-      leading: const _AddDoorDialogIcon(
-        assetPath: AddDoorNameDialogAssetPaths.sceneSelectPlaceholder,
+    final l10n = AppLocalizations.of(context);
+    final textTheme = Theme.of(context).textTheme;
+    return switch (scenesState) {
+      AsyncData(:final value) when value.isEmpty => _sceneField(
+        child: Text(l10n.addDoorSceneEmpty, style: AppTextTokens.addDoorDialogHint(textTheme)),
       ),
-      trailing: const Icon(
-        Icons.keyboard_arrow_down_rounded,
-        color: AppColors.textMuted,
-        size: 24,
+      AsyncData(:final value) => PopupMenuButton<HomeScene>(
+        tooltip: l10n.addDoorSceneSelectPlaceholder,
+        position: PopupMenuPosition.under,
+        onSelected: onSelected,
+        itemBuilder: (context) => [
+          for (final scene in value)
+            PopupMenuItem<HomeScene>(
+              value: scene,
+              child: Text(_sceneLabel(l10n, scene)),
+            ),
+        ],
+        child: _sceneField(
+          child: Text(
+            _sceneLabel(l10n, selectedScene ?? value.first),
+            style: AppTextTokens.addDoorDialogField(textTheme),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
       ),
-      child: Text(
-        label,
-        style: AppTextTokens.addDoorDialogField(Theme.of(context).textTheme),
+      AsyncLoading() => _sceneField(
+        child: Row(
+          children: [
+            const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                l10n.addDoorSceneLoading,
+                style: AppTextTokens.addDoorDialogHint(textTheme),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
       ),
-    );
+      AsyncError() => InkWell(
+        onTap: onRetry,
+        borderRadius: BorderRadius.circular(30),
+        child: _sceneField(
+          child: Text(
+            l10n.addDoorSceneLoadFailed,
+            style: AppTextTokens.addDoorDialogHint(textTheme),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ),
+    };
   }
+
+  Widget _sceneField({required Widget child}) => _AddDoorDialogFieldFrame(
+    leading: const _AddDoorDialogIcon(assetPath: AddDoorNameDialogAssetPaths.sceneSelectPlaceholder),
+    trailing: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.textMuted, size: 24),
+    child: child,
+  );
+}
+
+String _sceneLabel(AppLocalizations l10n, HomeScene scene) {
+  final name = scene.name.trim();
+  return name.isEmpty ? l10n.addDoorSceneDefault : name;
 }
 
 class _AddDoorDialogFieldFrame extends StatelessWidget {
-  const _AddDoorDialogFieldFrame({
-    required this.leading,
-    required this.child,
-    this.trailing,
-  });
+  const _AddDoorDialogFieldFrame({required this.leading, required this.child, this.trailing});
 
   final Widget leading;
   final Widget child;
@@ -195,7 +292,7 @@ class _AddDoorDialogFieldFrame extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 58,
+      height: 48,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
         border: Border.all(color: AppColors.sceneDialogInputBorder, width: 1.2),
@@ -226,11 +323,7 @@ class _AddDoorDialogIcon extends StatelessWidget {
       height: 22,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) {
-        return const Icon(
-          Icons.view_in_ar_outlined,
-          color: AppColors.textMuted,
-          size: 22,
-        );
+        return const Icon(Icons.view_in_ar_outlined, color: AppColors.textMuted, size: 22);
       },
     );
   }

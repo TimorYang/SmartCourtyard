@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
@@ -6,51 +7,46 @@ import '../../../../platform_bridge/hardware_models.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/design_system/door_type_visuals.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
+import '../../application/providers.dart';
+import '../widgets/add_door_name_dialog.dart';
 import 'add_device_page.dart';
 
-class AddNewDoorsPage extends StatelessWidget {
+class AddNewDoorsPage extends ConsumerWidget {
   const AddNewDoorsPage({super.key});
 
   static const routeName = 'add-new-doors';
   static const routePath = '/add-new-doors';
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final textTheme = Theme.of(context).textTheme;
     final doorTypes = DoorType.values
-        .map(
-          (type) => _DoorTypeOption(
-            label: _labelForType(l10n, type),
-            visual: DoorTypeVisuals.forType(type),
-          ),
-        )
+        .map((type) => _DoorTypeOption(label: _labelForType(l10n, type), visual: DoorTypeVisuals.forType(type)))
         .toList(growable: false);
 
     return Scaffold(
       backgroundColor: AppColors.backgroundPrimary,
-      appBar: FlinxNavigationBar(
-        title: '',
-        showBottomDivider: false,
-        automaticallyImplyLeading: context.canPop(),
-      ),
+      appBar: FlinxNavigationBar(title: '', showBottomDivider: false, automaticallyImplyLeading: context.canPop()),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 36, 18, 46),
         children: [
-          Text(
-            l10n.addNewDoorsTitle,
-            style: AppTextTokens.addNewDoorsTitle(textTheme),
-          ),
+          Text(l10n.addNewDoorsTitle, style: AppTextTokens.addNewDoorsTitle(textTheme)),
           const SizedBox(height: 2),
-          Text(
-            l10n.addNewDoorsSubtitle,
-            style: AppTextTokens.addNewDoorsSubtitle(textTheme),
-          ),
+          Text(l10n.addNewDoorsSubtitle, style: AppTextTokens.addNewDoorsSubtitle(textTheme)),
           const SizedBox(height: 46),
           for (final option in doorTypes) ...[
             _DoorTypeCard(
               option: option,
-              // onPressed: () => showAddDoorNameDialog(context, onConfirmed: () => context.push(AddDevicePage.routePath)),
+              // onPressed: () => showAddDoorNameDialog(
+              //   context,
+              //   onConfirmed: (draft) {
+              //     ref
+              //         .read(addDeviceControllerProvider.notifier)
+              //         .setPendingDoorDraft(draft);
+              //     context.push(AddDevicePage.routePath);
+              //   },
+              // ),
               onPressed: () => context.push(AddDevicePage.routePath),
             ),
             const SizedBox(height: 14),
@@ -97,19 +93,9 @@ class _DoorTypeCard extends StatelessWidget {
           child: Row(
             children: [
               const SizedBox(width: 30),
-              _DoorTypeIcon(
-                assetPath: option.visual.assetPath,
-                fallbackIcon: option.visual.fallbackIcon,
-              ),
+              _DoorTypeIcon(assetPath: option.visual.assetPath, fallbackIcon: option.visual.fallbackIcon),
               const SizedBox(width: 34),
-              Expanded(
-                child: Text(
-                  option.label,
-                  style: AppTextTokens.addNewDoorsCardTitle(
-                    Theme.of(context).textTheme,
-                  ),
-                ),
-              ),
+              Expanded(child: Text(option.label, style: AppTextTokens.addNewDoorsCardTitle(Theme.of(context).textTheme))),
               const SizedBox(width: 18),
             ],
           ),

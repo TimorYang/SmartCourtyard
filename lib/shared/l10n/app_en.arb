@@ -704,6 +704,22 @@
   "@addDoorSceneDefault": {
     "description": "Default scene value in the add door dialog"
   },
+  "addDoorSceneSelectPlaceholder": "Select scene",
+  "@addDoorSceneSelectPlaceholder": {
+    "description": "Placeholder for the scene selector in the add door dialog"
+  },
+  "addDoorSceneLoading": "Loading scenes…",
+  "@addDoorSceneLoading": {
+    "description": "Loading status for the scene selector in the add door dialog"
+  },
+  "addDoorSceneEmpty": "No scenes available",
+  "@addDoorSceneEmpty": {
+    "description": "Empty status for the scene selector in the add door dialog"
+  },
+  "addDoorSceneLoadFailed": "Unable to load scenes. Tap to retry.",
+  "@addDoorSceneLoadFailed": {
+    "description": "Retry message for a failed scene selector request in the add door dialog"
+  },
   "addDoorNameCancelAction": "Cancel",
   "@addDoorNameCancelAction": {
     "description": "Cancel button label in the add door name dialog"

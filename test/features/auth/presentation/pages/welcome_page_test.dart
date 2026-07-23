@@ -6,9 +6,12 @@ import 'package:flinx/features/account/data/dto/account_profile_dto.dart';
 import 'package:flinx/features/account/domain/entities/account_token_set.dart';
 import 'package:flinx/features/auth/application/providers.dart';
 import 'package:flinx/features/auth/domain/entities/auth_session.dart';
+import 'package:flinx/features/add_device/domain/entities/add_door_draft.dart';
+import 'package:flinx/features/add_device/presentation/widgets/add_door_name_dialog.dart';
 import 'package:flinx/features/home/application/providers.dart';
 import 'package:flinx/features/home/domain/entities/home_scene.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
+import 'package:flinx/shared/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -304,15 +307,61 @@ void main() {
     expect(find.text('Cancel'), findsOneWidget);
     expect(find.text('Confirm'), findsOneWidget);
 
-    await tester.tap(find.text('Confirm'));
+    final confirmButton = find.widgetWithText(FilledButton, 'Confirm');
+    expect(tester.widget<FilledButton>(confirmButton).onPressed, isNull);
+
+    await tester.enterText(find.byType(TextField), 'Garage door');
+    await tester.pump();
+    expect(tester.widget<FilledButton>(confirmButton).onPressed, isNotNull);
+    await tester.tap(confirmButton);
     await tester.pumpAndSettle();
 
-    expect(find.text('Add Device'), findsOneWidget);
+    expect(find.text('Add New Device'), findsOneWidget);
     expect(find.text('Select the device to be added'), findsOneWidget);
     expect(find.text('F-box'), findsWidgets);
     expect(find.text('Smart controller'), findsOneWidget);
     expect(find.text('USB WIFI module'), findsOneWidget);
-    expect(find.text('Smart Opener'), findsOneWidget);
+    expect(find.text('Smart Opener (Built-in Wi-Fi)'), findsOneWidget);
+  });
+
+  testWidgets('add door dialog selects a scene and returns its draft', (
+    tester,
+  ) async {
+    const scenes = [
+      HomeScene(id: 1, name: 'Home', doorCount: 2, isDefault: true),
+      HomeScene(id: 2, name: 'Warehouse', doorCount: 1, isDefault: false),
+    ];
+    AddDoorDraft? confirmedDraft;
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [homeScenesProvider.overrideWith((ref) async => scenes)],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: AddDoorNameDialog(
+            onConfirmed: (draft) => confirmedDraft = draft,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Home'), findsOneWidget);
+    await tester.tap(find.text('Home'));
+    await tester.pumpAndSettle();
+    expect(find.text('Warehouse'), findsOneWidget);
+
+    await tester.tap(find.text('Warehouse'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Garage door');
+    await tester.pump();
+    await tester.tap(find.widgetWithText(FilledButton, 'Confirm'));
+    await tester.pumpAndSettle();
+
+    expect(confirmedDraft?.name, 'Garage door');
+    expect(confirmedDraft?.sceneId, 2);
+    expect(confirmedDraft?.sceneName, 'Warehouse');
   });
 
   testWidgets('redirects authenticated users to the home page', (tester) async {

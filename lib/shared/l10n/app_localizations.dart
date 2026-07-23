@@ -1214,6 +1214,30 @@ abstract class AppLocalizations {
   /// **'Home'**
   String get addDoorSceneDefault;
 
+  /// Placeholder for the scene selector in the add door dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Select scene'**
+  String get addDoorSceneSelectPlaceholder;
+
+  /// Loading status for the scene selector in the add door dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Loading scenes…'**
+  String get addDoorSceneLoading;
+
+  /// Empty status for the scene selector in the add door dialog
+  ///
+  /// In en, this message translates to:
+  /// **'No scenes available'**
+  String get addDoorSceneEmpty;
+
+  /// Retry message for a failed scene selector request in the add door dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load scenes. Tap to retry.'**
+  String get addDoorSceneLoadFailed;
+
   /// Cancel button label in the add door name dialog
   ///
   /// In en, this message translates to:

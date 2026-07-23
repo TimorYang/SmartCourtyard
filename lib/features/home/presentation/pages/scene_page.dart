@@ -173,10 +173,10 @@ class _SceneList extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (final scene in scenes) ...[
+        for (final (index, scene) in scenes.indexed) ...[
           _SceneCard(
             scene: scene,
-            isEditing: isEditing,
+            showDeleteAction: isEditing && index > 0,
             isDeleting: deletingSceneIds.contains(scene.id),
             onDelete: () => onDeleteScene(scene),
             onRename: () => onRenameScene(scene),
@@ -195,14 +195,14 @@ class _SceneList extends StatelessWidget {
 class _SceneCard extends StatelessWidget {
   const _SceneCard({
     required this.scene,
-    required this.isEditing,
+    required this.showDeleteAction,
     required this.isDeleting,
     required this.onDelete,
     required this.onRename,
   });
 
   final HomeScene scene;
-  final bool isEditing;
+  final bool showDeleteAction;
   final bool isDeleting;
   final VoidCallback onDelete;
   final VoidCallback onRename;
@@ -224,7 +224,7 @@ class _SceneCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 28),
         child: Row(
           children: [
-            if (isEditing) ...[
+            if (showDeleteAction) ...[
               _DeleteSceneButton(isDeleting: isDeleting, onPressed: onDelete),
               const SizedBox(width: 15),
             ],

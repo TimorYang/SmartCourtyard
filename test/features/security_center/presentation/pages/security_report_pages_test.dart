@@ -69,7 +69,7 @@ void main() {
     expect(find.text('Security Center'), findsOneWidget);
   });
 
-  testWidgets('security center renders each sensor with its enum image asset', (
+  testWidgets('security center renders sensor and battery state image assets', (
     tester,
   ) async {
     await _pumpPage(
@@ -83,8 +83,26 @@ void main() {
     for (final type in SecuritySensorType.values) {
       expect(_assetImage(type.imageAsset), findsOneWidget);
     }
-    expect(find.byIcon(Icons.battery_1_bar_outlined), findsNWidgets(2));
-    expect(find.byIcon(Icons.battery_5_bar_outlined), findsNWidgets(6));
+    expect(
+      _assetImage(
+        'assets/icons/security_center/security_center_sensor_battery_full.png',
+      ),
+      findsNWidgets(6),
+    );
+    expect(
+      _assetImage(
+        'assets/icons/security_center/security_center_sensor_battery_low.png',
+      ),
+      findsOneWidget,
+    );
+    expect(
+      _assetImage(
+        'assets/icons/security_center/security_center_sensor_battery_offline.png',
+      ),
+      findsOneWidget,
+    );
+    expect(find.byIcon(Icons.battery_1_bar_outlined), findsNothing);
+    expect(find.byIcon(Icons.battery_5_bar_outlined), findsNothing);
   });
 
   testWidgets('general evaluation segments switch displayed data', (
@@ -556,6 +574,19 @@ void main() {
       find.byKey(const ValueKey<String>('sensor-low-battery')),
       findsOneWidget,
     );
+    expect(
+      _assetImage(
+        'assets/icons/security_center/security_center_sensor_battery_full.png',
+      ),
+      findsNWidgets(3),
+    );
+    expect(
+      _assetImage(
+        'assets/icons/security_center/security_center_sensor_battery_low.png',
+      ),
+      findsOneWidget,
+    );
+    expect(find.byIcon(Icons.battery_0_bar), findsNothing);
     expect(
       find.byKey(const ValueKey<String>('sensor-replace-battery-help')),
       findsOneWidget,
