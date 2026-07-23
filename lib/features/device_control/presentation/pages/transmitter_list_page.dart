@@ -79,10 +79,7 @@ class _TransmitterListPageState extends State<TransmitterListPage> {
                   ),
                   const SizedBox(height: 28),
                   Center(
-                    child: _TransmitterAddButton(
-                      semanticLabel: l10n.transmitterManagementAddAction,
-                      onPressed: _startLearning,
-                    ),
+                    child: _TransmitterAddButton(semanticLabel: l10n.transmitterManagementAddAction, onPressed: _startLearning),
                   ),
                 ],
               ),
@@ -94,9 +91,7 @@ class _TransmitterListPageState extends State<TransmitterListPage> {
   }
 
   void _startLearning() {
-    context.push(
-      '${TransmitterLearningPage.routePath}?deviceId=${Uri.encodeComponent(widget.deviceId)}',
-    );
+    context.push('${TransmitterLearningPage.routePath}?deviceId=${Uri.encodeComponent(widget.deviceId)}');
   }
 
   Future<void> _edit(int? index) async {
@@ -104,44 +99,24 @@ class _TransmitterListPageState extends State<TransmitterListPage> {
     final textTheme = Theme.of(context).textTheme;
     await showDialog<void>(
       context: context,
-      barrierColor: AppColors.deviceSettingsSheetScrim,
-      builder: (dialogContext) => MediaQuery.removeViewInsets(
-        context: dialogContext,
-        removeBottom: true,
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 430),
-              child: _TransmitterNameSheet(
-                initialName: index == null ? '' : _transmitters[index].name,
-                title: l10n.transmitterManagementInfoTitle,
-                nameHint: l10n.transmitterManagementNameHint,
-                cancelLabel: l10n.deviceSettingsCancelAction,
-                confirmLabel: l10n.deviceSettingsConfirmAction,
-                textTheme: textTheme,
-                onConfirm: (name) {
-                  setState(() {
-                    if (index == null) {
-                      _transmitters.add(
-                        Transmitter(
-                          id: 'mock-transmitter-${_transmitters.length + 1}',
-                          name: name,
-                        ),
-                      );
-                    } else {
-                      _transmitters[index] = Transmitter(
-                        id: _transmitters[index].id,
-                        name: name,
-                      );
-                    }
-                  });
-                  Navigator.of(dialogContext, rootNavigator: true).pop();
-                },
-              ),
-            ),
-          ),
-        ),
+      barrierColor: AppColors.overlaySoft,
+      builder: (dialogContext) => _TransmitterNameDialog(
+        initialName: index == null ? '' : _transmitters[index].name,
+        title: l10n.transmitterManagementInfoTitle,
+        nameHint: l10n.transmitterManagementNameHint,
+        cancelLabel: l10n.deviceSettingsCancelAction,
+        confirmLabel: l10n.deviceSettingsConfirmAction,
+        textTheme: textTheme,
+        onConfirm: (name) {
+          setState(() {
+            if (index == null) {
+              _transmitters.add(Transmitter(id: 'mock-transmitter-${_transmitters.length + 1}', name: name));
+            } else {
+              _transmitters[index] = Transmitter(id: _transmitters[index].id, name: name);
+            }
+          });
+          Navigator.of(dialogContext, rootNavigator: true).pop();
+        },
       ),
     );
   }
@@ -189,7 +164,12 @@ class _TransmitterListRow extends StatelessWidget {
     child: Row(
       children: [
         Expanded(
-          child: Text(transmitter.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextTokens.transmitterManagementRowTitle(Theme.of(context).textTheme)),
+          child: Text(
+            transmitter.name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTextTokens.transmitterManagementRowTitle(Theme.of(context).textTheme),
+          ),
         ),
         const SizedBox(width: 16),
         _TransmitterActionButton(semanticLabel: editSemanticLabel, assetPath: TransmitterListAssetPaths.editActionPlaceholder, onPressed: onEdit),
@@ -280,8 +260,8 @@ class _TransmitterSheetSurface extends StatelessWidget {
   );
 }
 
-class _TransmitterNameSheet extends StatefulWidget {
-  const _TransmitterNameSheet({
+class _TransmitterNameDialog extends StatefulWidget {
+  const _TransmitterNameDialog({
     required this.initialName,
     required this.title,
     required this.nameHint,
@@ -300,66 +280,133 @@ class _TransmitterNameSheet extends StatefulWidget {
   final ValueChanged<String> onConfirm;
 
   @override
-  State<_TransmitterNameSheet> createState() => _TransmitterNameSheetState();
+  State<_TransmitterNameDialog> createState() => _TransmitterNameDialogState();
 }
 
-class _TransmitterNameSheetState extends State<_TransmitterNameSheet> {
+class _TransmitterNameDialogState extends State<_TransmitterNameDialog> {
   late final TextEditingController _controller;
+  var _hasName = false;
 
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.initialName);
+    _hasName = widget.initialName.trim().isNotEmpty;
+    _controller.addListener(_onNameChanged);
   }
 
   @override
   void dispose() {
+    _controller.removeListener(_onNameChanged);
     _controller.dispose();
     super.dispose();
   }
 
+  void _onNameChanged() {
+    final hasName = _controller.text.trim().isNotEmpty;
+    if (_hasName != hasName) {
+      setState(() => _hasName = hasName);
+    }
+  }
+
   @override
-  Widget build(BuildContext context) => _TransmitterSheetSurface(
-    borderRadius: BorderRadius.circular(16),
-    child: Padding(
-      padding: const EdgeInsets.fromLTRB(28, 30, 28, 28),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(widget.title, style: AppTextTokens.transmitterManagementSheetTitle(widget.textTheme)),
-          const SizedBox(height: 22),
-          SizedBox(
-            height: 40,
-            child: TextField(
-              controller: _controller,
-              autofocus: true,
-              textAlignVertical: TextAlignVertical.center,
-              style: AppTextTokens.transmitterManagementSheetInput(widget.textTheme),
-              decoration: InputDecoration(
-                hintText: widget.nameHint,
-                hintStyle: AppTextTokens.transmitterManagementSheetInput(widget.textTheme).copyWith(color: AppColors.textHint),
-                prefixIconConstraints: const BoxConstraints(minWidth: 52, minHeight: 24),
-                prefixIcon: Padding(
-                  padding: const EdgeInsets.only(left: 18, right: 12),
-                  child: Image.asset(TransmitterListAssetPaths.editActionPlaceholder, width: 18, height: 18),
-                ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 16),
-                enabledBorder: _transmitterInputBorder,
-                focusedBorder: _transmitterInputBorder,
+  Widget build(BuildContext context) {
+    final viewInsets = MediaQuery.viewInsetsOf(context);
+
+    return AnimatedPadding(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOut,
+      padding: viewInsets,
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 390),
+          child: Material(
+            color: AppColors.backgroundPrimary,
+            borderRadius: BorderRadius.circular(18),
+            clipBehavior: Clip.antiAlias,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(28, 30, 28, 30),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(widget.title, style: AppTextTokens.transmitterManagementSheetTitle(widget.textTheme)),
+                  const SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(32),
+                      border: Border.all(color: AppColors.transmitterManagementSheetInputBorder),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    child: Row(
+                      children: [
+                        Image.asset(
+                          TransmitterListAssetPaths.editActionPlaceholder,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextField(
+                            controller: _controller,
+                            style: AppTextTokens.transmitterManagementSheetInput(widget.textTheme),
+                            decoration: InputDecoration.collapsed(
+                              hintText: widget.nameHint,
+                              hintStyle: AppTextTokens.transmitterManagementSheetInput(widget.textTheme).copyWith(color: AppColors.textHint),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 26),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: 52,
+                          child: FilledButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppColors.deviceSettingsCancelAction,
+                              foregroundColor: AppColors.textPrimary,
+                              shape: const StadiumBorder(),
+                            ),
+                            child: Text(
+                              widget.cancelLabel,
+                              style: AppTextTokens.transmitterManagementSheetButton(widget.textTheme).copyWith(color: AppColors.textPrimary),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 40),
+                      Expanded(
+                        child: SizedBox(
+                          height: 52,
+                          child: FilledButton(
+                            onPressed: _hasName ? () => widget.onConfirm(_controller.text.trim()) : null,
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppColors.brandPrimary,
+                              disabledBackgroundColor: AppColors.brandPrimaryDisabled,
+                              foregroundColor: AppColors.backgroundPrimary,
+                              disabledForegroundColor: AppColors.authPrimaryButtonDisabledForeground,
+                              shape: const StadiumBorder(),
+                            ),
+                            child: Text(widget.confirmLabel, style: AppTextTokens.transmitterManagementSheetButton(widget.textTheme)),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
-          const SizedBox(height: 42),
-          _TransmitterSheetActionRow(
-            cancelLabel: widget.cancelLabel,
-            confirmLabel: widget.confirmLabel,
-            textTheme: widget.textTheme,
-            onConfirm: () => widget.onConfirm(_controller.text),
-          ),
-        ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _TransmitterDeleteSheet extends StatelessWidget {
@@ -436,8 +483,3 @@ class _TransmitterSheetActionRow extends StatelessWidget {
     ],
   );
 }
-
-final _transmitterInputBorder = OutlineInputBorder(
-  borderRadius: BorderRadius.circular(30),
-  borderSide: const BorderSide(color: AppColors.transmitterManagementSheetInputBorder),
-);

@@ -32,7 +32,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('shows the transmitter name sheet from the edit action', (
+  testWidgets('shows the transmitter name dialog from the edit action', (
     tester,
   ) async {
     await _pumpPage(tester);
@@ -40,10 +40,21 @@ void main() {
     await tester.tap(find.bySemanticsLabel('Edit transmitter').first);
     await tester.pumpAndSettle();
 
+    expect(find.byType(AnimatedPadding), findsOneWidget);
     expect(find.text('Transmitter info'), findsOneWidget);
     expect(find.byType(TextField), findsOneWidget);
     expect(find.text('Cancel'), findsOneWidget);
     expect(find.text('Confirm'), findsOneWidget);
+    final confirmButton = find.widgetWithText(FilledButton, 'Confirm');
+    expect(tester.widget<FilledButton>(confirmButton).onPressed, isNotNull);
+
+    await tester.enterText(find.byType(TextField), '   ');
+    await tester.pump();
+    expect(tester.widget<FilledButton>(confirmButton).onPressed, isNull);
+
+    await tester.enterText(find.byType(TextField), 'Warehouse-01-Updated');
+    await tester.pump();
+    expect(tester.widget<FilledButton>(confirmButton).onPressed, isNotNull);
 
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
