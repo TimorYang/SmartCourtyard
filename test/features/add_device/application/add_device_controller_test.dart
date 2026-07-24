@@ -1,6 +1,7 @@
 import 'package:flinx/features/add_device/application/providers.dart';
 import 'package:flinx/core/logging/app_logger.dart';
 import 'package:flinx/core/logging/providers.dart';
+import 'package:flinx/features/add_device/domain/entities/add_door_draft.dart';
 import 'package:flinx/features/add_device/domain/entities/onboarded_force_door.dart';
 import 'package:flinx/features/add_device/domain/entities/onboarding_device_key.dart';
 import 'package:flinx/features/add_device/domain/repositories/add_device_onboarding_repository.dart';
@@ -68,6 +69,22 @@ void main() {
       expect(gateway.lastScanFilter?.namePrefix, isNull);
     },
   );
+
+  test('stores the pending door draft for the onboarding flow', () {
+    final container = _createContainer(_DisconnectTrackingGateway());
+    addTearDown(container.dispose);
+    const draft = AddDoorDraft(
+      name: 'Garage door',
+      sceneId: 2,
+      sceneName: 'Warehouse',
+    );
+
+    container.read(addDeviceControllerProvider.notifier).setPendingDoorDraft(
+          draft,
+        );
+
+    expect(container.read(addDeviceControllerProvider).pendingDoorDraft, draft);
+  });
 
   test(
     'uses one flow id across scan, authentication, provisioning and binding',

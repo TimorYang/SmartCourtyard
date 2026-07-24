@@ -375,7 +375,7 @@ class _SensorRowState extends State<_SensorRow> {
     final textTheme = Theme.of(context).textTheme;
     final isLowBatteryAlert =
         widget.isWireless &&
-        widget.sensor.batteryStatus == SafetySensorBatteryStatus.low;
+        _batteryAssetPath(widget.sensor) == _batteryLowAsset;
     final isBatteryNavigation = widget.isWireless && !isLowBatteryAlert;
     final isExpandable = widget.isWireless;
 
@@ -500,22 +500,24 @@ class _SensorRowHeader extends StatelessWidget {
                         ),
                         if (isLowBatteryAlert) ...[
                           const SizedBox(width: 4),
-                          const Icon(
-                            key: ValueKey<String>('sensor-low-battery'),
-                            Icons.battery_0_bar,
-                            size: 12,
-                            color: AppColors.securityCenterError,
+                          Image.asset(
+                            _batteryAssetPath(sensor),
+                            key: const ValueKey<String>('sensor-low-battery'),
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const SizedBox.square(dimension: 12),
                           ),
                         ],
                       ],
                     ),
                     const SizedBox(height: 4),
                     if (isBatteryNavigation)
-                      const Icon(
-                        key: ValueKey<String>('sensor-battery'),
-                        Icons.battery_0_bar,
-                        size: 22,
-                        color: AppColors.securityCenterSuccess,
+                      Image.asset(
+                        _batteryAssetPath(sensor),
+                        key: const ValueKey<String>('sensor-battery'),
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const SizedBox.square(dimension: 22),
                       )
                     else
                       Text(
@@ -587,6 +589,23 @@ String _statusLabel(AppLocalizations l10n, SafetySensorStatus status) =>
       SafetySensorStatus.disconnected => l10n.securityReportDisconnect,
       SafetySensorStatus.triggered => l10n.safetySensorTriggered,
     };
+
+const _batteryFullAsset =
+    'assets/icons/security_center/security_center_sensor_battery_full.png';
+const _batteryLowAsset =
+    'assets/icons/security_center/security_center_sensor_battery_low.png';
+const _batteryOfflineAsset =
+    'assets/icons/security_center/security_center_sensor_battery_offline.png';
+
+String _batteryAssetPath(SafetySensor sensor) {
+  if (sensor.status == SafetySensorStatus.disconnected ||
+      sensor.batteryStatus == SafetySensorBatteryStatus.unknown) {
+    return _batteryOfflineAsset;
+  }
+  return sensor.batteryStatus == SafetySensorBatteryStatus.low
+      ? _batteryLowAsset
+      : _batteryFullAsset;
+}
 
 String _sensorAssetPath(String sensorId) {
   final assetName = switch (sensorId) {

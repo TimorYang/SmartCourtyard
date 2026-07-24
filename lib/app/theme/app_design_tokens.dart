@@ -79,6 +79,7 @@ class AppColors {
   static const securityCenterCard = Color(0xFFFFFFFF);
   static const securityCenterTag = Color(0xFFF7F7F8);
   static const securityCenterSuccess = Color(0xFF19C966);
+  static const securityCenterSuccess2B2D2C = Color(0xFF2B2D2C);
   static const securityCenterError = Color(0xFFE52323);
   static const securityCenterLink = Color(0xFF0878D8);
   static const securityCenterShield = Color(0xFF0878ED);
@@ -94,6 +95,7 @@ class AppColors {
   static const securityReportTableBorder = Color(0xFFB4B8BD);
   static const securityReportChartGrid = Color(0xFFB7BCC2);
   static const securityReportChartBar = Color(0xFFFF9800);
+  static const securityReportChartTooltip = Color(0xFF506A75);
   static const securityReportNormal = Color(0xFF19C966);
   static const securityReportDisconnected = Color(0xFFFF9800);
   static const securityReportAbnormal = Color(0xFFE52323);

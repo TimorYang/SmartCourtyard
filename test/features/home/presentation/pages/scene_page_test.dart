@@ -5,7 +5,9 @@ import 'package:flinx/features/home/application/providers.dart';
 import 'package:flinx/features/home/domain/entities/home_scene.dart';
 import 'package:flinx/features/home/domain/use_cases/create_home_scene_use_case.dart';
 import 'package:flinx/features/home/domain/repositories/home_scene_repository.dart';
+import 'package:flinx/features/home/presentation/widgets/scene_rename_dialog.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
+import 'package:flinx/shared/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -77,6 +79,8 @@ void main() {
     expect(find.text('Input scene name'), findsOneWidget);
     expect(find.text('Cancel'), findsOneWidget);
     expect(find.text('confirm'), findsOneWidget);
+    final confirmButton = find.widgetWithText(FilledButton, 'confirm');
+    expect(tester.widget<FilledButton>(confirmButton).onPressed, isNull);
 
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
@@ -86,13 +90,15 @@ void main() {
     await tester.tap(find.text('New scene'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), 'Demo scene');
-    await tester.tap(find.text('confirm'));
+    await tester.pump();
+    expect(tester.widget<FilledButton>(confirmButton).onPressed, isNotNull);
+    await tester.tap(confirmButton);
     await tester.pumpAndSettle();
 
     expect(find.text('Scene Name'), findsNothing);
   });
 
-  testWidgets('keeps scene name dialog open when name is empty', (
+  testWidgets('keeps scene name confirmation disabled when name is empty', (
     tester,
   ) async {
     await pumpSignedInApp(tester);
@@ -104,11 +110,39 @@ void main() {
 
     await tester.tap(find.text('New scene'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('confirm'));
-    await tester.pump();
 
     expect(find.text('Scene Name'), findsOneWidget);
-    expect(find.text('input scene name'), findsOneWidget);
+    final confirmButton = find.widgetWithText(FilledButton, 'confirm');
+    expect(tester.widget<FilledButton>(confirmButton).onPressed, isNull);
+  });
+
+  testWidgets('scene rename enables confirmation only for a nonempty name', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: SceneRenameDialog(scene: _sceneFixtures.first),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final confirmButton = find.widgetWithText(FilledButton, 'Confirm');
+    expect(tester.widget<FilledButton>(confirmButton).onPressed, isNotNull);
+    expect(find.byIcon(Icons.close_rounded), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.close_rounded));
+    await tester.pump();
+    expect(tester.widget<FilledButton>(confirmButton).onPressed, isNull);
+    expect(find.byIcon(Icons.close_rounded), findsNothing);
+
+    await tester.enterText(find.byType(TextField), 'Renamed scene');
+    await tester.pump();
+    expect(tester.widget<FilledButton>(confirmButton).onPressed, isNotNull);
+    expect(find.byIcon(Icons.close_rounded), findsOneWidget);
   });
 
   testWidgets('toggles scene editing mode from the top-right action', (
@@ -124,7 +158,7 @@ void main() {
 
     expect(find.text('SCENE EDITING'), findsOneWidget);
     expect(find.byTooltip('Done editing'), findsOneWidget);
-    expect(find.byIcon(Icons.remove_rounded), findsNWidgets(5));
+    expect(find.byIcon(Icons.remove_rounded), findsNWidgets(4));
     expect(find.text('New scene'), findsNothing);
 
     await tester.tap(find.byTooltip('Done editing'));

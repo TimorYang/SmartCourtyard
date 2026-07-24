@@ -605,6 +605,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addDoorSceneDefault => 'Home';
 
   @override
+  String get addDoorSceneSelectPlaceholder => 'Select scene';
+
+  @override
+  String get addDoorSceneLoading => 'Loading scenes…';
+
+  @override
+  String get addDoorSceneEmpty => 'No scenes available';
+
+  @override
+  String get addDoorSceneLoadFailed => 'Unable to load scenes. Tap to retry.';
+
+  @override
   String get addDoorNameCancelAction => 'Cancel';
 
   @override
@@ -1553,4 +1565,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityReportOn => 'ON';
+
+  @override
+  String get generalEvaluationLoadFailed => 'Unable to load. Tap to retry.';
 }

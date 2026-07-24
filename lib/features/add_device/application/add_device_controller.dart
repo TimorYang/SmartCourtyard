@@ -8,6 +8,7 @@ import '../../../core/logging/app_logger.dart';
 import '../../../core/logging/providers.dart';
 import '../../../platform_bridge/hardware_gateway.dart';
 import '../../../platform_bridge/hardware_models.dart';
+import '../domain/entities/add_door_draft.dart';
 import '../domain/entities/onboarded_force_door.dart';
 import '../domain/use_cases/add_force_door_use_case.dart';
 import '../domain/use_cases/fetch_onboarding_device_key_use_case.dart';
@@ -28,6 +29,7 @@ class AddDeviceState {
     required this.wifiNetworks,
     this.selectedDevice,
     this.onboardedDoor,
+    this.pendingDoorDraft,
     this.errorMessage,
     this.infoMessage,
     this.onboardingFlowId,
@@ -60,6 +62,7 @@ class AddDeviceState {
   final List<WifiNetwork> wifiNetworks;
   final BleDevice? selectedDevice;
   final OnboardedForceDoor? onboardedDoor;
+  final AddDoorDraft? pendingDoorDraft;
   final String? errorMessage;
   final String? infoMessage;
   final String? onboardingFlowId;
@@ -89,6 +92,8 @@ class AddDeviceState {
     bool clearSelectedDevice = false,
     OnboardedForceDoor? onboardedDoor,
     bool clearOnboardedDoor = false,
+    AddDoorDraft? pendingDoorDraft,
+    bool clearPendingDoorDraft = false,
     String? errorMessage,
     bool clearErrorMessage = false,
     String? infoMessage,
@@ -113,6 +118,9 @@ class AddDeviceState {
       onboardedDoor: clearOnboardedDoor
           ? null
           : onboardedDoor ?? this.onboardedDoor,
+      pendingDoorDraft: clearPendingDoorDraft
+          ? null
+          : pendingDoorDraft ?? this.pendingDoorDraft,
       errorMessage: clearErrorMessage
           ? null
           : errorMessage ?? this.errorMessage,
@@ -135,6 +143,11 @@ class AddDeviceController extends Notifier<AddDeviceState> {
   String? _onboardingFlowId;
   String? _targetBleName;
   var _disposeHookRegistered = false;
+
+  /// 保存用户在添加流程开始前选择的门名称和场景归属。
+  void setPendingDoorDraft(AddDoorDraft draft) {
+    state = state.copyWith(pendingDoorDraft: draft);
+  }
 
   @override
   AddDeviceState build() {

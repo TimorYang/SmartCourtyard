@@ -5,6 +5,8 @@ import 'package:flinx/features/security_center/application/providers.dart';
 import 'package:flinx/features/security_center/domain/entities/full_report.dart';
 import 'package:flinx/features/security_center/domain/entities/safety_sensors_evaluation.dart';
 import 'package:flinx/features/security_center/domain/entities/security_center_overview.dart';
+import 'package:flinx/features/security_center/domain/repositories/security_balance_refresh_repository.dart';
+import 'package:flinx/features/security_center/domain/entities/security_balance_refresh_result.dart';
 import 'package:flinx/features/device_control/presentation/widgets/device_detail_bottom_navigation.dart';
 import 'package:flinx/features/security_center/presentation/pages/full_report_page.dart';
 import 'package:flinx/features/security_center/presentation/pages/general_evaluation_page.dart';
@@ -69,12 +71,13 @@ void main() {
     expect(find.text('Security Center'), findsOneWidget);
   });
 
-  testWidgets('security center renders each sensor with its enum image asset', (
+  testWidgets('security center renders sensor and battery state image assets', (
     tester,
   ) async {
     await _pumpPage(
       tester,
       const SecurityCenterPage(
+        doorId: '12',
         deviceId: 'mock-device',
         onTabSelected: _ignoreTab,
       ),
@@ -83,8 +86,26 @@ void main() {
     for (final type in SecuritySensorType.values) {
       expect(_assetImage(type.imageAsset), findsOneWidget);
     }
-    expect(find.byIcon(Icons.battery_1_bar_outlined), findsNWidgets(2));
-    expect(find.byIcon(Icons.battery_5_bar_outlined), findsNWidgets(6));
+    expect(
+      _assetImage(
+        'assets/icons/security_center/security_center_sensor_battery_full.png',
+      ),
+      findsNWidgets(6),
+    );
+    expect(
+      _assetImage(
+        'assets/icons/security_center/security_center_sensor_battery_low.png',
+      ),
+      findsOneWidget,
+    );
+    expect(
+      _assetImage(
+        'assets/icons/security_center/security_center_sensor_battery_offline.png',
+      ),
+      findsOneWidget,
+    );
+    expect(find.byIcon(Icons.battery_1_bar_outlined), findsNothing);
+    expect(find.byIcon(Icons.battery_5_bar_outlined), findsNothing);
   });
 
   testWidgets('general evaluation segments switch displayed data', (
@@ -100,7 +121,7 @@ void main() {
       findsOneWidget,
     );
     expect(
-      find.byKey(const ValueKey<RecordRange>(RecordRange.last24Hours)),
+      find.byKey(const ValueKey<RecordRange>(RecordRange.last7Days)),
       findsOneWidget,
     );
 
@@ -316,7 +337,7 @@ void main() {
     expect(find.text('34'), findsOneWidget);
   });
 
-  testWidgets('full report segments switch the single visible cards', (
+  testWidgets('full report shows four fixed evaluation and operation cards', (
     tester,
   ) async {
     await _pumpPage(tester, const FullReportPage(deviceId: 'mock-device'));
@@ -326,66 +347,77 @@ void main() {
       findsOneWidget,
     );
     expect(
-      find.byKey(const ValueKey<RecordRange>(RecordRange.last24Hours)),
-      findsOneWidget,
-    );
-
-    final closeSegment = find.byKey(
-      const ValueKey<String>('segment-Close evaluation'),
-    );
-    await tester.ensureVisible(closeSegment);
-    await tester.tap(closeSegment);
-    await tester.pumpAndSettle();
-    expect(
       find.byKey(const ValueKey<BalanceEvaluation>(BalanceEvaluation.close)),
       findsOneWidget,
     );
-
-    final last7DaysSegment = find.byKey(
-      const ValueKey<String>('segment-Last 7 days'),
-    );
-    await tester.ensureVisible(last7DaysSegment);
-    await tester.tap(last7DaysSegment);
-    await tester.pumpAndSettle();
     expect(
       find.byKey(const ValueKey<RecordRange>(RecordRange.last7Days)),
       findsOneWidget,
     );
+    expect(
+      find.byKey(const ValueKey<RecordRange>(RecordRange.last24Hours)),
+      findsOneWidget,
+    );
+    expect(
+      tester
+          .getTopLeft(
+            find.byKey(const ValueKey<RecordRange>(RecordRange.last7Days)),
+          )
+          .dy,
+      lessThan(
+        tester
+            .getTopLeft(
+              find.byKey(const ValueKey<RecordRange>(RecordRange.last24Hours)),
+            )
+            .dy,
+      ),
+    );
     expect(find.text('X: Date Y: Operation cycles'), findsOneWidget);
+    expect(find.text('X: Time Y: Operation cycles'), findsOneWidget);
+
+    for (final label in const [
+      'Open evaluation',
+      'Close evaluation',
+      'Last 7 days',
+      'Last 24 hours',
+    ]) {
+      final segmentButtons = find.byKey(ValueKey<String>('segment-$label'));
+      expect(segmentButtons, findsNWidgets(2));
+      for (final button in tester.widgetList<InkWell>(segmentButtons)) {
+        expect(button.onTap, isNull);
+      }
+    }
   });
 
-  testWidgets('balance table keeps its arrow inside the 3 to 1 table layout', (
+  testWidgets('full report keeps both balance arrows in their own tables', (
     tester,
   ) async {
     await _pumpPage(tester, const FullReportPage(deviceId: 'mock-device'));
 
-    final mainTable = find.byKey(const ValueKey<String>('balance-main-table'));
+    final mainTables = find.byKey(const ValueKey<String>('balance-main-table'));
     final statusTable = find.byKey(
       const ValueKey<String>('balance-status-table'),
     );
     final arrow = find.byKey(const ValueKey<String>('balance-table-arrow'));
 
-    expect(mainTable, findsOneWidget);
-    expect(statusTable, findsOneWidget);
-    expect(arrow, findsOneWidget);
-    expect(find.descendant(of: mainTable, matching: arrow), findsOneWidget);
-    expect(
-      tester.getSize(mainTable).width / tester.getSize(statusTable).width,
-      closeTo(3, 0.1),
-    );
-
-    final closeSegment = find.byKey(
-      const ValueKey<String>('segment-Close evaluation'),
-    );
-    await tester.ensureVisible(closeSegment);
-    await tester.tap(closeSegment);
-    await tester.pumpAndSettle();
-
-    final arrowImage = tester.widget<Image>(
+    expect(mainTables, findsNWidgets(2));
+    expect(statusTable, findsNWidgets(2));
+    expect(arrow, findsNWidgets(2));
+    for (var index = 0; index < 2; index++) {
+      expect(
+        find.descendant(of: mainTables.at(index), matching: arrow.at(index)),
+        findsOneWidget,
+      );
+    }
+    final arrows = tester.widgetList<Image>(
       find.descendant(of: arrow, matching: find.byType(Image)),
     );
     expect(
-      (arrowImage.image as AssetImage).assetName,
+      (arrows.first.image as AssetImage).assetName,
+      'assets/icons/security_center/security_report_motor_blue_up_arrow.png',
+    );
+    expect(
+      (arrows.last.image as AssetImage).assetName,
       'assets/icons/security_center/security_report_motor_blue_down_arrow.png',
     );
   });
@@ -556,6 +588,19 @@ void main() {
       find.byKey(const ValueKey<String>('sensor-low-battery')),
       findsOneWidget,
     );
+    expect(
+      _assetImage(
+        'assets/icons/security_center/security_center_sensor_battery_full.png',
+      ),
+      findsNWidgets(3),
+    );
+    expect(
+      _assetImage(
+        'assets/icons/security_center/security_center_sensor_battery_low.png',
+      ),
+      findsOneWidget,
+    );
+    expect(find.byIcon(Icons.battery_0_bar), findsNothing);
     expect(
       find.byKey(const ValueKey<String>('sensor-replace-battery-help')),
       findsOneWidget,
@@ -817,8 +862,11 @@ GoRouter _buildRouter() {
     routes: [
       GoRoute(
         path: '/security-center',
-        builder: (context, state) =>
-            SecurityCenterPage(deviceId: 'mock-device', onTabSelected: (_) {}),
+        builder: (context, state) => SecurityCenterPage(
+          doorId: '12',
+          deviceId: 'mock-device',
+          onTabSelected: (_) {},
+        ),
       ),
       GoRoute(
         path: FullReportPage.routePath,
@@ -862,6 +910,11 @@ Future<void> _pumpRouter(WidgetTester tester, GoRouter router) async {
 
   await tester.pumpWidget(
     ProviderScope(
+      overrides: [
+        securityBalanceRefreshRepositoryProvider.overrideWithValue(
+          const _FakeSecurityBalanceRefreshRepository(),
+        ),
+      ],
       child: MaterialApp.router(
         routerConfig: router,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -886,6 +939,11 @@ Future<void> _pumpPage(
   }
   await tester.pumpWidget(
     ProviderScope(
+      overrides: [
+        securityBalanceRefreshRepositoryProvider.overrideWithValue(
+          const _FakeSecurityBalanceRefreshRepository(),
+        ),
+      ],
       child: MaterialApp(
         locale: locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -895,4 +953,18 @@ Future<void> _pumpPage(
     ),
   );
   await tester.pumpAndSettle();
+}
+
+class _FakeSecurityBalanceRefreshRepository
+    implements SecurityBalanceRefreshRepository {
+  const _FakeSecurityBalanceRefreshRepository();
+
+  @override
+  Future<SecurityBalanceRefreshResult> refreshBalance({
+    required String doorId,
+    required String requestId,
+  }) async => const SecurityBalanceRefreshResult(
+    requestId: 'test-request',
+    status: '1',
+  );
 }

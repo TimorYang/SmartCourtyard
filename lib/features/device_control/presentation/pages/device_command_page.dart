@@ -111,8 +111,10 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
           textTheme: textTheme,
         ),
         SecurityCenterPage(
+          doorId: widget.doorId,
           deviceId: _hardwareDeviceId(commandState),
           onTabSelected: _selectTab,
+          isActive: _selectedTab == DeviceDetailTab.securityCenter,
         ),
       ],
     );

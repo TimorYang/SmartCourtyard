@@ -580,6 +580,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get addDoorSceneDefault => '首页';
 
   @override
+  String get addDoorSceneSelectPlaceholder => '选择场景';
+
+  @override
+  String get addDoorSceneLoading => '正在加载场景…';
+
+  @override
+  String get addDoorSceneEmpty => '暂无可用场景';
+
+  @override
+  String get addDoorSceneLoadFailed => '场景加载失败，点击重试。';
+
+  @override
   String get addDoorNameCancelAction => '取消';
 
   @override
@@ -1459,4 +1471,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get securityReportOn => '开启';
+
+  @override
+  String get generalEvaluationLoadFailed => '加载失败，点击重试。';
 }

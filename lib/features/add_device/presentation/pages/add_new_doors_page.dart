@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
@@ -6,16 +7,18 @@ import '../../../../platform_bridge/hardware_models.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/design_system/door_type_visuals.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
+import '../../application/providers.dart';
+import '../widgets/add_door_name_dialog.dart';
 import 'add_device_page.dart';
 
-class AddNewDoorsPage extends StatelessWidget {
+class AddNewDoorsPage extends ConsumerWidget {
   const AddNewDoorsPage({super.key});
 
   static const routeName = 'add-new-doors';
   static const routePath = '/add-new-doors';
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final textTheme = Theme.of(context).textTheme;
     final doorTypes = DoorType.values

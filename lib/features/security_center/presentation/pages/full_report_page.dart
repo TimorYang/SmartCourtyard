@@ -39,8 +39,6 @@ class FullReportPage extends ConsumerStatefulWidget {
 class _FullReportPageState extends ConsumerState<FullReportPage> {
   final _reportBoundaryKey = GlobalKey();
   var _isSaving = false;
-  var _balance = BalanceEvaluation.open;
-  var _recordRange = RecordRange.last24Hours;
 
   Future<void> _saveReportImage() async {
     if (_isSaving) return;
@@ -73,12 +71,6 @@ class _FullReportPageState extends ConsumerState<FullReportPage> {
   @override
   Widget build(BuildContext context) {
     final report = ref.watch(fullReportProvider(widget.deviceId));
-    final balanceEvaluation = _balance == BalanceEvaluation.open
-        ? report.openBalanceEvaluation
-        : report.closeBalanceEvaluation;
-    final operationRecord = _recordRange == RecordRange.last24Hours
-        ? report.last24HoursRecord
-        : report.last7DaysRecord;
     return Scaffold(
       backgroundColor: AppColors.securityCenterBackground,
       appBar: FlinxNavigationBar(
@@ -104,6 +96,7 @@ class _FullReportPageState extends ConsumerState<FullReportPage> {
                     SecurityReportHero(
                       motorName: report.motorName,
                       serialNumber: report.serialNumber,
+                      needsMaintenance: report.cycleSummary.needsMaintenance,
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -112,17 +105,23 @@ class _FullReportPageState extends ConsumerState<FullReportPage> {
                           CycleSummaryCard(summary: report.cycleSummary),
                           const SizedBox(height: 16),
                           BalanceEvaluationCard(
-                            selection: _balance,
-                            evaluation: balanceEvaluation,
-                            onChanged: (value) =>
-                                setState(() => _balance = value),
+                            selection: BalanceEvaluation.open,
+                            evaluation: report.openBalanceEvaluation,
+                          ),
+                          const SizedBox(height: 22),
+                          BalanceEvaluationCard(
+                            selection: BalanceEvaluation.close,
+                            evaluation: report.closeBalanceEvaluation,
                           ),
                           const SizedBox(height: 22),
                           OperationChartCard(
-                            range: _recordRange,
-                            record: operationRecord,
-                            onChanged: (value) =>
-                                setState(() => _recordRange = value),
+                            range: RecordRange.last7Days,
+                            record: report.last7DaysRecord,
+                          ),
+                          const SizedBox(height: 22),
+                          OperationChartCard(
+                            range: RecordRange.last24Hours,
+                            record: report.last24HoursRecord,
                           ),
                           const SizedBox(height: 16),
                           MotorFunctionStatusCard(

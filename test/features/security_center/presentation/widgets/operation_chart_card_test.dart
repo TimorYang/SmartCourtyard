@@ -1,0 +1,97 @@
+import 'package:flinx/features/security_center/domain/entities/full_report.dart';
+import 'package:flinx/features/security_center/presentation/widgets/security_report_widgets.dart';
+import 'package:flinx/shared/l10n/app_localizations.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  testWidgets('uses the record abnormal status for both chart ranges', (
+    tester,
+  ) async {
+    Future<void> pumpCard(RecordRange range) => tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: OperationChartCard(
+            range: range,
+            record: FullReportOperationRecord(
+              hasFrequentOperationAlert: true,
+              points: [
+                FullReportOperationCyclePoint(
+                  occurredAt: DateTime(2026, 7, 22),
+                  axisLabel: '08',
+                  cycles: 21,
+                  isFrequentOperation: true,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await pumpCard(RecordRange.last24Hours);
+    expect(find.byIcon(Icons.error), findsOneWidget);
+    expect(find.textContaining('Unusually frequent operation'), findsOneWidget);
+
+    await pumpCard(RecordRange.last7Days);
+    expect(find.byIcon(Icons.error), findsOneWidget);
+    expect(find.textContaining('Unusually frequent operation'), findsOneWidget);
+  });
+
+  testWidgets('shows a selected chart state only while a bar is touched', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SizedBox(
+            width: 320,
+            child: OperationChartCard(
+              range: RecordRange.last7Days,
+              record: FullReportOperationRecord(
+                points: [
+                  FullReportOperationCyclePoint(
+                    occurredAt: DateTime(2026, 7, 22),
+                    axisLabel: 'Wed',
+                    cycles: 6,
+                  ),
+                  FullReportOperationCyclePoint(
+                    occurredAt: DateTime(2026, 7, 23),
+                    axisLabel: 'Thu',
+                    cycles: 2,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final chartFinder = find.byKey(
+      const ValueKey<String>('operation-chart-selected-none'),
+    );
+    final chart = tester.getRect(chartFinder);
+    final gesture = await tester.startGesture(
+      Offset(chart.left + 22, chart.top + 50),
+    );
+    await tester.pump();
+
+    expect(
+      find.byKey(const ValueKey<String>('operation-chart-selected-0')),
+      findsOneWidget,
+    );
+
+    await gesture.moveTo(Offset(chart.left + 120, chart.top + 15));
+    await tester.pump();
+    expect(chartFinder, findsOneWidget);
+
+    await gesture.up();
+    await tester.pump();
+    expect(chartFinder, findsOneWidget);
+  });
+}

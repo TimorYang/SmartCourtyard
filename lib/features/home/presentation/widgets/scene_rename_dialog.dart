@@ -7,6 +7,11 @@ import '../../../../shared/l10n/app_localizations.dart';
 import '../../application/providers.dart';
 import '../../domain/entities/home_scene.dart';
 
+class SceneNameDialogAssetPaths {
+  const SceneNameDialogAssetPaths._();
+  static const nameInputPlaceholder = 'assets/icons/home/device_name_input_placeholder.png';
+}
+
 Future<void> showSceneRenameDialog(
   BuildContext context, {
   required HomeScene scene,
@@ -30,17 +35,30 @@ class SceneRenameDialog extends ConsumerStatefulWidget {
 class _SceneRenameDialogState extends ConsumerState<SceneRenameDialog> {
   late final TextEditingController _controller;
   var _isSubmitting = false;
+  var _hasName = false;
 
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController(text: _sceneName);
+    _hasName = _controller.text.trim().isNotEmpty;
+    _controller.addListener(_onNameChanged);
   }
 
   @override
   void dispose() {
+    _controller.removeListener(_onNameChanged);
     _controller.dispose();
     super.dispose();
+  }
+
+  void _onNameChanged() {
+    final hasName = _controller.text.trim().isNotEmpty;
+    if (_hasName != hasName) {
+      setState(() {
+        _hasName = hasName;
+      });
+    }
   }
 
   String get _sceneName {
@@ -74,9 +92,12 @@ class _SceneRenameDialogState extends ConsumerState<SceneRenameDialog> {
                     'Scene Rename',
                     style: AppTextTokens.sceneDialogTitle(textTheme),
                   ),
-                  const SizedBox(height: 30),
-                  _SceneRenameTextField(controller: _controller),
-                  const SizedBox(height: 80),
+                  const SizedBox(height: 16),
+                  _SceneRenameTextField(
+                    controller: _controller,
+                    hasName: _hasName,
+                  ),
+                  const SizedBox(height: 26),
                   Row(
                     children: [
                       Expanded(
@@ -104,10 +125,16 @@ class _SceneRenameDialogState extends ConsumerState<SceneRenameDialog> {
                         child: SizedBox(
                           height: 52,
                           child: FilledButton(
-                            onPressed: _isSubmitting ? null : _submit,
+                            onPressed: _isSubmitting || !_hasName
+                                ? null
+                                : _submit,
                             style: FilledButton.styleFrom(
                               backgroundColor: AppColors.brandPrimary,
+                              disabledBackgroundColor:
+                                  AppColors.brandPrimaryDisabled,
                               foregroundColor: AppColors.backgroundPrimary,
+                              disabledForegroundColor:
+                                  AppColors.authPrimaryButtonDisabledForeground,
                               shape: const StadiumBorder(),
                               textStyle: AppTextTokens.sceneDialogButton(
                                 textTheme,
@@ -173,9 +200,13 @@ class _SceneRenameDialogState extends ConsumerState<SceneRenameDialog> {
 }
 
 class _SceneRenameTextField extends StatelessWidget {
-  const _SceneRenameTextField({required this.controller});
+  const _SceneRenameTextField({
+    required this.controller,
+    required this.hasName,
+  });
 
   final TextEditingController controller;
+  final bool hasName;
 
   @override
   Widget build(BuildContext context) {
@@ -183,19 +214,15 @@ class _SceneRenameTextField extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      height: 64,
+      height: 48,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(32),
         border: Border.all(color: AppColors.sceneDialogInputBorder),
       ),
-      padding: const EdgeInsets.only(left: 24, right: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14),
       child: Row(
         children: [
-          const Icon(
-            Icons.view_in_ar_outlined,
-            color: AppColors.textSecondary,
-            size: 24,
-          ),
+          Image.asset(SceneNameDialogAssetPaths.nameInputPlaceholder),
           const SizedBox(width: 16),
           Expanded(
             child: TextField(
@@ -204,16 +231,17 @@ class _SceneRenameTextField extends StatelessWidget {
               decoration: const InputDecoration.collapsed(hintText: ''),
             ),
           ),
-          IconButton(
-            tooltip: 'Clear',
-            visualDensity: VisualDensity.compact,
-            onPressed: controller.clear,
-            icon: const Icon(
-              Icons.close_rounded,
-              color: AppColors.textHint,
-              size: 30,
+          if (hasName)
+            IconButton(
+              tooltip: 'Clear',
+              visualDensity: VisualDensity.compact,
+              onPressed: controller.clear,
+              icon: const Icon(
+                Icons.close_rounded,
+                color: AppColors.textHint,
+                size: 30,
+              ),
             ),
-          ),
         ],
       ),
     );
