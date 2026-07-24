@@ -101,6 +101,42 @@ void main() {
     expect(session.isAuthenticated, isFalse);
     expect(session.userId, isNull);
   });
+
+  test(
+    'does not restore a session after it has been explicitly cleared',
+    () async {
+      final container = ProviderContainer(
+        overrides: [
+          accountLocalDataSourceProvider.overrideWithValue(
+            InMemoryAccountLocalDataSource(
+              initialProfile: const AccountProfileDto(
+                schemaVersion: 1,
+                userId: 'user-1',
+                email: 'user@example.com',
+                nickname: 'User',
+                registeredAtIso8601: '2026-01-02T03:04:05Z',
+              ),
+            ),
+          ),
+          accountSecureDataSourceProvider.overrideWithValue(
+            _InitialTokenDataSource(
+              AccountTokenSet(
+                accessToken: 'valid-access',
+                expiresAt: DateTime.now().toUtc().add(const Duration(hours: 1)),
+              ),
+            ),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      container.read(activeAuthSessionProvider.notifier).clear();
+      final session = await container.read(authSessionProvider.future);
+
+      expect(session.isAuthenticated, isFalse);
+      expect(session.canRestoreFromCache, isFalse);
+    },
+  );
 }
 
 class _InitialTokenDataSource extends InMemoryAccountSecureDataSource {

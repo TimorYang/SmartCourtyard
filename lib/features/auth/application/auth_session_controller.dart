@@ -11,6 +11,6 @@ class AuthSessionController extends Notifier<AuthSession> {
   }
 
   void clear() {
-    state = const AuthSession.signedOut();
+    state = const AuthSession.signedOutAfterClear();
   }
 }

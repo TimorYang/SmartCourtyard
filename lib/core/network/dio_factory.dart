@@ -6,6 +6,7 @@ import '../logging/app_logger.dart';
 import 'access_token_cache.dart';
 import 'network_debug_settings.dart';
 import 'network_proxy_adapter.dart';
+import 'session_expired_handler.dart';
 
 abstract final class NetworkRequestExtras {
   static const requestId = 'requestId';
@@ -24,6 +25,7 @@ class DioFactory {
   static Dio create({
     required AppApiConfiguration configuration,
     required AppLogger logger,
+    SessionExpiredHandler onSessionExpired = ignoreSessionExpired,
   }) {
     final dio = Dio(
       BaseOptions(
@@ -48,9 +50,46 @@ class DioFactory {
     dio.interceptors.addAll([
       _RequestIdInterceptor(),
       _BladeAuthInterceptor(),
+      _SessionExpiredInterceptor(onSessionExpired),
       _SafeNetworkLogInterceptor(logger),
     ]);
     return dio;
+  }
+}
+
+class _SessionExpiredInterceptor extends Interceptor {
+  _SessionExpiredInterceptor(this._onSessionExpired);
+
+  final SessionExpiredHandler _onSessionExpired;
+
+  @override
+  Future<void> onResponse(
+    Response<dynamic> response,
+    ResponseInterceptorHandler handler,
+  ) async {
+    if (_isSessionExpiredResponse(response) &&
+        !_isAuthenticationRequest(response.requestOptions)) {
+      await _expireSession();
+    }
+    handler.next(response);
+  }
+
+  bool _isSessionExpiredResponse(Response<dynamic> response) {
+    final data = response.data;
+    if (data is! Map) {
+      return false;
+    }
+    final code = data['code'];
+    return code == 401 || code == '401';
+  }
+
+  bool _isAuthenticationRequest(RequestOptions options) {
+    return options.path.startsWith('app/auth/');
+  }
+
+  Future<void> _expireSession() async {
+    AccessTokenCache.clear();
+    await _onSessionExpired();
   }
 }
 
