@@ -21,6 +21,7 @@ import 'package:flinx/features/home/presentation/pages/home_page.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
 import 'package:flinx/platform_bridge/mock_hardware_gateway.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
+import 'package:flinx/shared/widgets/flinx_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -357,6 +358,11 @@ void main() {
         find.text('Device command door=1 device=mock-ble-device'),
         findsOneWidget,
       );
+      expect(find.byType(BackButtonIcon), findsOneWidget);
+
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('Connection successful'), findsOneWidget);
     },
   );
 
@@ -526,7 +532,8 @@ Widget _scanFlowTestApp(
       ),
       GoRoute(
         path: AddDevicePage.routePath,
-        builder: (context, state) => const AddDevicePage(),
+        builder: (context, state) =>
+            const AddDevicePage(doorType: DoorType.garage),
       ),
       GoRoute(
         path: SmartOpenerScanGuidePage.routePath,
@@ -569,6 +576,7 @@ Widget _scanFlowTestApp(
       GoRoute(
         path: DeviceCommandPage.routePath,
         builder: (context, state) => Scaffold(
+          appBar: const FlinxNavigationBar(title: 'Device command'),
           body: Text(
             'Device command door=${state.uri.queryParameters['doorId']} '
             'device=${state.uri.queryParameters['deviceId']}',

@@ -115,7 +115,7 @@ class _SmartOpenerConnectionSuccessPageState
                             final encodedFlowId = Uri.encodeQueryComponent(
                               addDeviceState.onboardingFlowId ?? '',
                             );
-                            context.go(
+                            context.push(
                               '${DeviceCommandPage.routePath}'
                               '?doorId=$doorId&deviceId=$encodedDeviceId'
                               '&onboardingFlowId=$encodedFlowId',
