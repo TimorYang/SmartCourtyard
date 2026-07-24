@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -9,6 +10,10 @@ void main() {
 
     await tester.pumpAndSettle();
 
+    expect(
+      tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode,
+      ThemeMode.light,
+    );
     expect(find.text('Start your\nsmart life'), findsOneWidget);
     expect(find.text('Make your life comfortable'), findsOneWidget);
     expect(find.text('Login'), findsOneWidget);

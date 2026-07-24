@@ -62,7 +62,7 @@ class _FlinxAppState extends ConsumerState<FlinxApp> {
       child: MaterialApp.router(
         onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
         theme: AppTheme.light(),
-        darkTheme: AppTheme.dark(),
+        themeMode: ThemeMode.light,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         routerConfig: router,
