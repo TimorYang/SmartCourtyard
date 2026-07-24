@@ -163,6 +163,24 @@ void main() {
     expect(dataSource.renameDoorName, 'Garage Door');
     expect(dataSource.renameDoorRequestId, 'home-rename-door-123');
   });
+
+  test('moves a door to a scene', () async {
+    final dataSource = _FakeHomeDoorRemoteDataSource(const []);
+    final repository = HomeDoorRepositoryImpl(
+      remoteDataSource: dataSource,
+      logger: const _NoopLogger(),
+    );
+
+    await repository.moveDoorToScene(
+      doorId: 12,
+      sceneId: 8,
+      requestId: 'home-move-door-12-to-8',
+    );
+
+    expect(dataSource.moveDoorId, 12);
+    expect(dataSource.moveSceneId, 8);
+    expect(dataSource.moveRequestId, 'home-move-door-12-to-8');
+  });
 }
 
 class _FakeHomeDoorRemoteDataSource implements HomeDoorRemoteDataSource {
@@ -178,6 +196,9 @@ class _FakeHomeDoorRemoteDataSource implements HomeDoorRemoteDataSource {
   int? renameDoorId;
   String? renameDoorName;
   String? renameDoorRequestId;
+  int? moveDoorId;
+  int? moveSceneId;
+  String? moveRequestId;
 
   @override
   Future<void> topDoor({required int doorId, required String requestId}) async {
@@ -212,6 +233,17 @@ class _FakeHomeDoorRemoteDataSource implements HomeDoorRemoteDataSource {
     renameDoorId = doorId;
     renameDoorName = name;
     renameDoorRequestId = requestId;
+  }
+
+  @override
+  Future<void> moveDoorToScene({
+    required int doorId,
+    required int sceneId,
+    required String requestId,
+  }) async {
+    moveDoorId = doorId;
+    moveSceneId = sceneId;
+    moveRequestId = requestId;
   }
 
   @override
@@ -250,6 +282,15 @@ class _FailingHomeDoorRemoteDataSource implements HomeDoorRemoteDataSource {
   Future<void> renameDoor({
     required int doorId,
     required String name,
+    required String requestId,
+  }) {
+    throw error;
+  }
+
+  @override
+  Future<void> moveDoorToScene({
+    required int doorId,
+    required int sceneId,
     required String requestId,
   }) {
     throw error;

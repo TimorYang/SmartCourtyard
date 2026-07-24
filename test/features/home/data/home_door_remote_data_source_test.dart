@@ -6,10 +6,18 @@ import 'package:flinx/features/home/data/data_sources/home_door_remote_data_sour
 import 'package:flinx/features/home/data/dto/create_home_scene_request_dto.dart';
 import 'package:flinx/features/home/data/dto/home_door_response_dto.dart';
 import 'package:flinx/features/home/data/dto/home_scene_response_dto.dart';
+import 'package:flinx/features/home/data/dto/move_home_door_scene_request_dto.dart';
 import 'package:flinx/features/home/data/dto/rename_home_door_request_dto.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('serializes move door scene request dto', () {
+    final dto = MoveHomeDoorSceneRequestDto.fromJson(const {'sceneId': '8'});
+
+    expect(dto.sceneId, 8);
+    expect(dto.toJson(), {'sceneId': 8});
+  });
+
   test('parses door dto fields and ignores unknown fields', () {
     final dto = HomeDoorResponseDto.fromJson(const {
       'id': '12',
@@ -186,6 +194,61 @@ void main() {
     );
   });
 
+  test('moves a door to a scene with request body and request id', () async {
+    final api = _FakeHomeApi(
+      doorResponse: const ApiEnvelopeDto(
+        code: 200,
+        success: true,
+        data: <HomeDoorResponseDto>[],
+      ),
+      moveDoorToSceneResponse: const ApiEnvelopeDto(
+        code: 200,
+        success: true,
+        data: true,
+      ),
+    );
+    final dataSource = HomeDoorRemoteDataSourceImpl(api: api);
+
+    await dataSource.moveDoorToScene(
+      doorId: 12,
+      sceneId: 8,
+      requestId: 'home-move-door-12-to-8',
+    );
+
+    expect(api.moveDoorId, 12);
+    expect(api.moveDoorRequest.toJson(), {'sceneId': 8});
+    expect(
+      api.moveDoorOptions.extra?[NetworkRequestExtras.requestId],
+      'home-move-door-12-to-8',
+    );
+  });
+
+  test('rejects an unsuccessful move response', () async {
+    final dataSource = HomeDoorRemoteDataSourceImpl(
+      api: _FakeHomeApi(
+        doorResponse: const ApiEnvelopeDto(
+          code: 200,
+          success: true,
+          data: <HomeDoorResponseDto>[],
+        ),
+        moveDoorToSceneResponse: const ApiEnvelopeDto(
+          code: 200,
+          success: true,
+          data: false,
+        ),
+      ),
+    );
+
+    await expectLater(
+      dataSource.moveDoorToScene(
+        doorId: 12,
+        sceneId: 8,
+        requestId: 'home-move-door-12-to-8',
+      ),
+      throwsA(isA<HomeDoorRemoteException>()),
+    );
+  });
+
   test('rejects unsuccessful reset cover response', () async {
     final dataSource = HomeDoorRemoteDataSourceImpl(
       api: _FakeHomeApi(
@@ -270,6 +333,7 @@ class _FakeHomeApi implements HomeApi {
     this.unbindResponse,
     this.resetCoverResponse,
     this.renameDoorResponse,
+    this.moveDoorToSceneResponse,
   });
 
   final ApiEnvelopeDto<List<HomeDoorResponseDto>> doorResponse;
@@ -277,6 +341,7 @@ class _FakeHomeApi implements HomeApi {
   final ApiEnvelopeDto<bool>? unbindResponse;
   final ApiEnvelopeDto<bool>? resetCoverResponse;
   final ApiEnvelopeDto<bool>? renameDoorResponse;
+  final ApiEnvelopeDto<bool>? moveDoorToSceneResponse;
   late final Options options;
   late final int sceneId;
   late final Options topOptions;
@@ -288,6 +353,9 @@ class _FakeHomeApi implements HomeApi {
   late final Options renameDoorOptions;
   late final int renameDoorId;
   late final RenameHomeDoorRequestDto renameDoorRequest;
+  late final Options moveDoorOptions;
+  late final int moveDoorId;
+  late final MoveHomeDoorSceneRequestDto moveDoorRequest;
 
   @override
   Future<ApiEnvelopeDto<bool>> topDoor(
@@ -332,6 +400,19 @@ class _FakeHomeApi implements HomeApi {
     renameDoorRequest = request;
     renameDoorOptions = requestOptions;
     return renameDoorResponse ??
+        const ApiEnvelopeDto<bool>(code: 200, success: true, data: true);
+  }
+
+  @override
+  Future<ApiEnvelopeDto<bool>> moveDoorToScene(
+    int doorId,
+    MoveHomeDoorSceneRequestDto request,
+    Options requestOptions,
+  ) async {
+    moveDoorId = doorId;
+    moveDoorRequest = request;
+    moveDoorOptions = requestOptions;
+    return moveDoorToSceneResponse ??
         const ApiEnvelopeDto<bool>(code: 200, success: true, data: true);
   }
 
@@ -403,6 +484,15 @@ class _ThrowingHomeApi implements HomeApi {
   Future<ApiEnvelopeDto<bool>> renameDoor(
     int doorId,
     RenameHomeDoorRequestDto request,
+    Options options,
+  ) {
+    throw error;
+  }
+
+  @override
+  Future<ApiEnvelopeDto<bool>> moveDoorToScene(
+    int doorId,
+    MoveHomeDoorSceneRequestDto request,
     Options options,
   ) {
     throw error;

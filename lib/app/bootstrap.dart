@@ -6,8 +6,11 @@ import 'package:flutter/services.dart';
 
 import '../core/logging/app_logger.dart';
 import '../core/network/startup_network_access_probe.dart';
+import '../core/network/providers.dart';
 import '../core/storage/app_storage_paths.dart';
 import '../features/account/application/providers.dart';
+import '../features/auth/application/providers.dart';
+import '../features/home/application/providers.dart';
 import 'flinx_app.dart';
 
 Future<void> bootstrap() async {
@@ -24,6 +27,25 @@ Future<void> bootstrap() async {
     ProviderScope(
       overrides: [
         appStorageLocationsProvider.overrideWithValue(storageLocations),
+        sessionExpiredHandlerProvider.overrideWith((ref) {
+          var isClearingSession = false;
+          return () async {
+            if (isClearingSession) {
+              return;
+            }
+            isClearingSession = true;
+            try {
+              ref.invalidate(homeScenesProvider);
+              ref.invalidate(homeDevicesProvider);
+              ref.invalidate(cachedAccountProfileProvider);
+              await ref.read(accountControllerProvider.notifier).clearAccount();
+            } finally {
+              ref.read(activeAuthSessionProvider.notifier).clear();
+              ref.invalidate(authSessionProvider);
+              isClearingSession = false;
+            }
+          };
+        }),
       ],
       child: const FlinxApp(),
     ),

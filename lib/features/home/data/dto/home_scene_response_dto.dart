@@ -20,6 +20,15 @@ class HomeSceneResponseDto {
     );
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      'defaultScene': defaultScene,
+      'doorCount': doorCount,
+      'id': id,
+      'name': name,
+    };
+  }
+
   static int _parseInt(Object? value) {
     if (value is num) {
       return value.toInt();

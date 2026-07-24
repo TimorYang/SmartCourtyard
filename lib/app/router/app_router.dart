@@ -196,7 +196,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: ChooseScenePage.routePath,
         name: ChooseScenePage.routeName,
-        builder: (context, state) => const ChooseScenePage(),
+        builder: (context, state) => ChooseScenePage(
+          door: state.extra is DeviceSummary
+              ? state.extra! as DeviceSummary
+              : null,
+        ),
       ),
       GoRoute(
         path: DeviceSharePage.routePath,

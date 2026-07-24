@@ -308,6 +308,11 @@
     }
   },
   "chooseSceneNewSceneAction": "新建场景",
+  "chooseSceneEmpty": "暂无可用场景",
+  "chooseSceneLoadFailed": "场景加载失败，点击重试。",
+  "chooseSceneMoveFailed": "门移动失败，请重试。",
+  "chooseSceneMoveNetworkUnavailable": "网络不可用，请重试。",
+  "chooseSceneMoveUnavailable": "当前门无法移动到其他场景。",
   "sceneHomeShortcutTooltip": "场景",
   "sceneTitle": "场景",
   "sceneEditingTitle": "编辑场景",

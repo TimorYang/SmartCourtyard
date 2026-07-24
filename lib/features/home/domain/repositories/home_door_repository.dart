@@ -17,4 +17,10 @@ abstract interface class HomeDoorRepository {
     required String name,
     required String requestId,
   });
+
+  Future<void> moveDoorToScene({
+    required int doorId,
+    required int sceneId,
+    required String requestId,
+  });
 }

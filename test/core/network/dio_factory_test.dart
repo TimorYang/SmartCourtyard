@@ -72,6 +72,57 @@ void main() {
       'access-token',
     );
   });
+
+  test(
+    'notifies the session handler when a response body contains code 401',
+    () async {
+      addTearDown(AccessTokenCache.clear);
+      AccessTokenCache.set('expired-access-token');
+      var sessionExpiredCount = 0;
+      final dio =
+          DioFactory.create(
+              configuration: const AppApiConfiguration(
+                apiOrigin: 'https://api.flinx.example',
+                apiPathPrefix: '/api/force-door',
+              ),
+              logger: _FakeLogger(),
+              onSessionExpired: () async => sessionExpiredCount++,
+            )
+            ..httpClientAdapter = _JsonResponseAdapter(
+              statusCode: 200,
+              body: {'code': 401, 'success': false},
+            );
+
+      await dio.get<void>('app/home/scenes');
+
+      expect(sessionExpiredCount, 1);
+      expect(AccessTokenCache.value, isNull);
+    },
+  );
+
+  test('does not expire a session for an HTTP status 401', () async {
+    var sessionExpiredCount = 0;
+    final dio =
+        DioFactory.create(
+            configuration: const AppApiConfiguration(
+              apiOrigin: 'https://api.flinx.example',
+              apiPathPrefix: '/api/force-door',
+            ),
+            logger: _FakeLogger(),
+            onSessionExpired: () async => sessionExpiredCount++,
+          )
+          ..httpClientAdapter = _JsonResponseAdapter(
+            statusCode: 401,
+            body: {'code': 200, 'success': false},
+          );
+
+    await expectLater(
+      dio.get<void>('app/home/scenes'),
+      throwsA(isA<DioException>()),
+    );
+
+    expect(sessionExpiredCount, 0);
+  });
 }
 
 class _CapturingAdapter implements HttpClientAdapter {
@@ -126,4 +177,29 @@ class _FakeLogger implements AppLogger {
     String? requestId,
     Map<String, Object?> context = const {},
   }) {}
+}
+
+class _JsonResponseAdapter implements HttpClientAdapter {
+  _JsonResponseAdapter({required this.statusCode, required this.body});
+
+  final int statusCode;
+  final Map<String, Object> body;
+
+  @override
+  void close({bool force = false}) {}
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<List<int>>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    return ResponseBody.fromString(
+      jsonEncode(body),
+      statusCode,
+      headers: {
+        Headers.contentTypeHeader: [Headers.jsonContentType],
+      },
+    );
+  }
 }

@@ -896,6 +896,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chooseSceneNewSceneAction => '新建场景';
 
   @override
+  String get chooseSceneEmpty => '暂无可用场景';
+
+  @override
+  String get chooseSceneLoadFailed => '场景加载失败，点击重试。';
+
+  @override
+  String get chooseSceneMoveFailed => '门移动失败，请重试。';
+
+  @override
+  String get chooseSceneMoveNetworkUnavailable => '网络不可用，请重试。';
+
+  @override
+  String get chooseSceneMoveUnavailable => '当前门无法移动到其他场景。';
+
+  @override
   String get sceneHomeShortcutTooltip => '场景';
 
   @override

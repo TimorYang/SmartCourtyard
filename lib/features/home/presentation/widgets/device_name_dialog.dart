@@ -48,7 +48,9 @@ class _DeviceNameDialogState extends ConsumerState<DeviceNameDialog> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController()..addListener(_onNameChanged);
+    _controller = TextEditingController(text: widget.device.name)
+      ..addListener(_onNameChanged);
+    _hasName = _controller.text.trim().isNotEmpty;
   }
 
   @override
@@ -184,7 +186,11 @@ class _DeviceNameDialogState extends ConsumerState<DeviceNameDialog> {
         name: name,
         requestId: requestId,
       );
-      ref.invalidate(homeDevicesProvider);
+      final sceneId = widget.device.sceneId;
+      if (sceneId != null) {
+        ref.invalidate(homeDoorsBySceneProvider(sceneId));
+        ref.invalidate(homeDevicesProvider);
+      }
       if (mounted) {
         Navigator.pop(context);
       }

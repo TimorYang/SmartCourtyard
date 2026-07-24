@@ -11,20 +11,14 @@ import '../../application/providers.dart';
 import '../../domain/entities/operation_record.dart';
 
 class OperationRecordPage extends ConsumerStatefulWidget {
-  const OperationRecordPage({
-    required this.doorId,
-    required this.onTabSelected,
-    this.isActive = true,
-    super.key,
-  });
+  const OperationRecordPage({required this.doorId, required this.onTabSelected, this.isActive = true, super.key});
 
   final String doorId;
   final ValueChanged<DeviceDetailTab> onTabSelected;
   final bool isActive;
 
   @override
-  ConsumerState<OperationRecordPage> createState() =>
-      _OperationRecordPageState();
+  ConsumerState<OperationRecordPage> createState() => _OperationRecordPageState();
 }
 
 class _OperationRecordPageState extends ConsumerState<OperationRecordPage> {
@@ -42,18 +36,13 @@ class _OperationRecordPageState extends ConsumerState<OperationRecordPage> {
   @override
   void didUpdateWidget(covariant OperationRecordPage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if ((oldWidget.doorId != widget.doorId && widget.isActive) ||
-        (!oldWidget.isActive && widget.isActive)) {
+    if ((oldWidget.doorId != widget.doorId && widget.isActive) || (!oldWidget.isActive && widget.isActive)) {
       _loadInitial();
     }
   }
 
   void _loadInitial() {
-    Future<void>.microtask(
-      () => ref
-          .read(operationRecordsControllerProvider.notifier)
-          .loadInitial(doorId: widget.doorId),
-    );
+    Future<void>.microtask(() => ref.read(operationRecordsControllerProvider.notifier).loadInitial(doorId: widget.doorId));
   }
 
   @override
@@ -65,8 +54,7 @@ class _OperationRecordPageState extends ConsumerState<OperationRecordPage> {
   }
 
   void _onScroll() {
-    if (!_scrollController.hasClients ||
-        _scrollController.position.extentAfter > _loadMoreThreshold) {
+    if (!_scrollController.hasClients || _scrollController.position.extentAfter > _loadMoreThreshold) {
       return;
     }
     ref.read(operationRecordsControllerProvider.notifier).loadMore();
@@ -81,10 +69,7 @@ class _OperationRecordPageState extends ConsumerState<OperationRecordPage> {
 
     return Scaffold(
       appBar: const FlinxNavigationBar(title: '', showBottomDivider: false),
-      bottomNavigationBar: DeviceDetailBottomNavigation(
-        selectedTab: DeviceDetailTab.operationRecords,
-        onSelected: widget.onTabSelected,
-      ),
+      bottomNavigationBar: DeviceDetailBottomNavigation(selectedTab: DeviceDetailTab.operationRecords, onSelected: widget.onTabSelected),
       body: SafeArea(
         top: false,
         child: RefreshIndicator(
@@ -98,41 +83,24 @@ class _OperationRecordPageState extends ConsumerState<OperationRecordPage> {
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
                 sliver: SliverList.list(
                   children: [
-                    Text(
-                      l10n.operationRecordTitle,
-                      style: AppTextTokens.operationRecordTitle(textTheme),
-                    ),
+                    Text(l10n.operationRecordTitle, style: AppTextTokens.operationRecordTitle(textTheme)),
                     const SizedBox(height: 4),
-                    Text(
-                      l10n.operationRecordLast14DaysDescription,
-                      style: AppTextTokens.operationRecordSubtitle(textTheme),
-                    ),
+                    Text(l10n.operationRecordLast14DaysDescription, style: AppTextTokens.operationRecordSubtitle(textTheme)),
                     const SizedBox(height: 30),
                   ],
                 ),
               ),
               if (recordsState.isInitialLoading)
-                const SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(child: CircularProgressIndicator()),
-                )
+                const SliverFillRemaining(hasScrollBody: false, child: Center(child: CircularProgressIndicator()))
               else if (recordsState.initialLoadFailed)
                 SliverFillRemaining(
                   hasScrollBody: false,
-                  child: _InitialLoadFailure(
-                    onRetry: () =>
-                        controller.loadInitial(doorId: widget.doorId),
-                  ),
+                  child: _InitialLoadFailure(onRetry: () => controller.loadInitial(doorId: widget.doorId)),
                 )
               else if (recordsState.records.isEmpty)
                 SliverFillRemaining(
                   hasScrollBody: false,
-                  child: Center(
-                    child: Text(
-                      l10n.operationRecordEmpty,
-                      style: AppTextTokens.operationRecordMeta(textTheme),
-                    ),
-                  ),
+                  child: Center(child: Text(l10n.operationRecordEmpty, style: AppTextTokens.operationRecordMeta(textTheme))),
                 )
               else ...[
                 SliverPadding(
@@ -143,19 +111,13 @@ class _OperationRecordPageState extends ConsumerState<OperationRecordPage> {
                       return _OperationTimelineItem(
                         record: recordsState.records[index],
                         isLast:
-                            index == recordsState.records.length - 1 &&
-                            !recordsState.hasMore &&
-                            !recordsState.isLoadingMore &&
-                            !recordsState.loadMoreFailed,
+                            index == recordsState.records.length - 1 && !recordsState.hasMore && !recordsState.isLoadingMore && !recordsState.loadMoreFailed,
                       );
                     },
                   ),
                 ),
                 SliverToBoxAdapter(
-                  child: _LoadMoreFooter(
-                    state: recordsState,
-                    onRetry: controller.loadMore,
-                  ),
+                  child: _LoadMoreFooter(state: recordsState, onRetry: controller.loadMore),
                 ),
               ],
             ],
@@ -175,10 +137,7 @@ class _InitialLoadFailure extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Center(
-      child: TextButton(
-        onPressed: onRetry,
-        child: Text(l10n.operationRecordLoadFailed),
-      ),
+      child: TextButton(onPressed: onRetry, child: Text(l10n.operationRecordLoadFailed)),
     );
   }
 }
@@ -203,24 +162,14 @@ class _LoadMoreFooter extends StatelessWidget {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 12),
         child: Center(
-          child: TextButton(
-            onPressed: onRetry,
-            child: Text(l10n.operationRecordLoadMoreFailed),
-          ),
+          child: TextButton(onPressed: onRetry, child: Text(l10n.operationRecordLoadMoreFailed)),
         ),
       );
     }
     if (!state.hasMore) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 20),
-        child: Center(
-          child: Text(
-            l10n.operationRecordNoMore,
-            style: AppTextTokens.operationRecordMeta(
-              Theme.of(context).textTheme,
-            ),
-          ),
-        ),
+        child: Center(child: Text(l10n.operationRecordNoMore, style: AppTextTokens.operationRecordMeta(Theme.of(context).textTheme))),
       );
     }
     return const SizedBox(height: 20);
@@ -230,8 +179,7 @@ class _LoadMoreFooter extends StatelessWidget {
 class _OperationTimelineItem extends StatelessWidget {
   const _OperationTimelineItem({required this.record, required this.isLast});
 
-  static const _avatarPlaceholderAsset =
-      'assets/images/records/operation_record_avatar_placeholder.png';
+  static const _avatarPlaceholderAsset = 'assets/images/records/operation_record_avatar_placeholder.png';
 
   final OperationRecord record;
   final bool isLast;
@@ -249,19 +197,10 @@ class _OperationTimelineItem extends StatelessWidget {
             children: [
               const SizedBox(height: 5),
               const DecoratedBox(
-                decoration: BoxDecoration(
-                  color: AppColors.operationRecordTimeline,
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: AppColors.operationRecordTimeline, shape: BoxShape.circle),
                 child: SizedBox.square(dimension: 12),
               ),
-              if (!isLast)
-                Expanded(
-                  child: Container(
-                    width: 1,
-                    color: AppColors.operationRecordTimelineLine,
-                  ),
-                ),
+              if (!isLast) Expanded(child: Container(width: 1, color: AppColors.operationRecordTimelineLine)),
             ],
           ),
           Expanded(
@@ -273,28 +212,13 @@ class _OperationTimelineItem extends StatelessWidget {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Text(
-                          record.action.label(l10n),
-                          style: AppTextTokens.operationRecordAction(textTheme),
-                        ),
-                      ),
+                      Expanded(child: Text(record.action.label(l10n), style: AppTextTokens.operationRecordAction(textTheme))),
                       const SizedBox(width: 4),
-                      Text(
-                        _formatOccurredAt(record.occurredAt, l10n),
-                        style: AppTextTokens.operationRecordTime(textTheme),
-                      ),
+                      Text(_formatOccurredAt(record.occurredAt, l10n), style: AppTextTokens.operationRecordTime(textTheme)),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    _displayDoorName(
-                      record.doorName,
-                      record.operationMethodLabel,
-                      l10n,
-                    ),
-                    style: AppTextTokens.operationRecordMeta(textTheme),
-                  ),
+                  Text(_displayDoorName(record.doorName, record.operationMethodLabel, l10n), style: AppTextTokens.operationRecordMeta(textTheme)),
                   const SizedBox(height: 10),
                   Row(
                     children: [
@@ -307,22 +231,13 @@ class _OperationTimelineItem extends StatelessWidget {
                       ),
                       const SizedBox(width: 11.5),
                       Expanded(
-                        child: Text(
-                          record.operatorDisplayName ??
-                              l10n.operationRecordUnknownOperator,
-                          style: AppTextTokens.operationRecordMeta(textTheme),
-                        ),
+                        child: Text(record.operatorDisplayName ?? l10n.operationRecordUnknownOperator, style: AppTextTokens.operationRecordMeta(textTheme)),
                       ),
                     ],
                   ),
                   if (!isLast) ...[
                     const SizedBox(height: 16),
-                    const Divider(
-                      key: ValueKey<String>('operation-record-divider'),
-                      height: 1,
-                      thickness: 1,
-                      color: AppColors.operationRecordDivider,
-                    ),
+                    const Divider(key: ValueKey<String>('operation-record-divider'), height: 1, thickness: 1, color: AppColors.operationRecordDivider),
                   ],
                 ],
               ),
@@ -343,15 +258,10 @@ String _formatOccurredAt(DateTime? occurredAt, AppLocalizations l10n) {
   return DateFormat('yyyy-MM-dd HH:mm:ss').format(occurredAt);
 }
 
-String _displayDoorName(
-  String? doorName,
-  String? operationMethodLabel,
-  AppLocalizations l10n,
-) {
+String _displayDoorName(String? doorName, String? operationMethodLabel, AppLocalizations l10n) {
   final parts = <String>[
     if (doorName?.trim().isNotEmpty ?? false) doorName!.trim(),
-    if (operationMethodLabel?.trim().isNotEmpty ?? false)
-      operationMethodLabel!.trim(),
+    if (operationMethodLabel?.trim().isNotEmpty ?? false) operationMethodLabel!.trim(),
   ];
   return parts.isEmpty ? l10n.operationRecordUnknownDoor : parts.join(' / ');
 }

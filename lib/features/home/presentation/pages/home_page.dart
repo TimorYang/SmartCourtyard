@@ -32,24 +32,39 @@ import 'scene_page.dart';
 class HomeAssetPaths {
   const HomeAssetPaths._();
 
-  static const avatarPlaceholder = 'assets/icons/home/home_avatar_placeholder.png';
-  static const emptyDoorsPlaceholder = 'assets/icons/home/home_empty_doors_placeholder.png';
+  static const avatarPlaceholder =
+      'assets/icons/home/home_avatar_placeholder.png';
+  static const emptyDoorsPlaceholder =
+      'assets/icons/home/home_empty_doors_placeholder.png';
   static const headerMenuIcon = 'assets/icons/home/home_header_menu_icon.png';
-  static const headerGridPlaceholder = 'assets/icons/home/home_header_grid_placeholder.png';
+  static const headerGridPlaceholder =
+      'assets/icons/home/home_header_grid_placeholder.png';
   static const headerSceneIcon = 'assets/icons/home/home_header_scene_icon.png';
-  static const headerMessageIcon = 'assets/icons/home/home_header_message_icon.png';
+  static const headerMessageIcon =
+      'assets/icons/home/home_header_message_icon.png';
   static const headerAddIcon = 'assets/icons/home/home_header_add_icon.png';
-  static const addScenePlaceholder = 'assets/icons/home/home_add_scene_placeholder.png';
-  static const addDoorPlaceholder = 'assets/icons/home/home_add_door_placeholder.png';
-  static const smartDevicePlaceholder = 'assets/icons/home/home_smart_device_placeholder.png';
-  static const garageDoorIcon = 'assets/icons/add_device/add_new_doors_garage_door.png';
-  static const rollerDoorIcon = 'assets/icons/add_device/add_new_doors_roller_door.png';
-  static const deviceEditTopIcon = 'assets/icons/home/home_device_edit_top_icon.png';
-  static const deviceEditShareIcon = 'assets/icons/home/home_device_edit_share_icon.png';
-  static const deviceEditMoveSceneIcon = 'assets/icons/home/home_device_edit_move_scene_icon.png';
-  static const deviceEditNameIcon = 'assets/icons/home/home_device_edit_name_icon.png';
-  static const deviceEditDeleteIcon = 'assets/icons/home/home_device_edit_delete_icon.png';
-  static const deviceEditCustomizeIcon = 'assets/icons/home/home_device_edit_customize_icon.png';
+  static const addScenePlaceholder =
+      'assets/icons/home/home_add_scene_placeholder.png';
+  static const addDoorPlaceholder =
+      'assets/icons/home/home_add_door_placeholder.png';
+  static const smartDevicePlaceholder =
+      'assets/icons/home/home_smart_device_placeholder.png';
+  static const garageDoorIcon =
+      'assets/icons/add_device/add_new_doors_garage_door.png';
+  static const rollerDoorIcon =
+      'assets/icons/add_device/add_new_doors_roller_door.png';
+  static const deviceEditTopIcon =
+      'assets/icons/home/home_device_edit_top_icon.png';
+  static const deviceEditShareIcon =
+      'assets/icons/home/home_device_edit_share_icon.png';
+  static const deviceEditMoveSceneIcon =
+      'assets/icons/home/home_device_edit_move_scene_icon.png';
+  static const deviceEditNameIcon =
+      'assets/icons/home/home_device_edit_name_icon.png';
+  static const deviceEditDeleteIcon =
+      'assets/icons/home/home_device_edit_delete_icon.png';
+  static const deviceEditCustomizeIcon =
+      'assets/icons/home/home_device_edit_customize_icon.png';
 }
 
 class HomePage extends ConsumerStatefulWidget {
@@ -62,7 +77,8 @@ class HomePage extends ConsumerStatefulWidget {
   ConsumerState<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends ConsumerState<HomePage> with WidgetsBindingObserver, RouteAware {
+class _HomePageState extends ConsumerState<HomePage>
+    with WidgetsBindingObserver, RouteAware {
   var _isAddMenuVisible = false;
   var _isSingleColumnDeviceList = false;
   ModalRoute<dynamic>? _route;
@@ -118,21 +134,27 @@ class _HomePageState extends ConsumerState<HomePage> with WidgetsBindingObserver
     }
     _isDisconnectingBle = true;
     try {
-      final allDisconnected = await ref.read(addDeviceControllerProvider.notifier).disconnectConnectedBleDevices();
+      final allDisconnected = await ref
+          .read(addDeviceControllerProvider.notifier)
+          .disconnectConnectedBleDevices();
       if (!mounted || allDisconnected) {
         return;
       }
-      AppToast.error(context, AppLocalizations.of(context).smartOpenerDisconnectFailedMessage);
+      AppToast.error(
+        context,
+        AppLocalizations.of(context).smartOpenerDisconnectFailedMessage,
+      );
     } finally {
       _isDisconnectingBle = false;
     }
   }
 
-  Future<void> _refreshHome() async {
-    ref.invalidate(homeScenesProvider);
-    ref.invalidate(homeDevicesProvider);
+  Future<void> _refreshHome([int? sceneId]) async {
+    if (sceneId == null) return;
     try {
-      await Future.wait([ref.read(homeScenesProvider.future), ref.read(homeDevicesProvider.future)]);
+      ref.invalidate(homeDoorsBySceneProvider(sceneId));
+      ref.invalidate(homeDevicesProvider);
+      await ref.read(homeDevicesProvider.future);
     } catch (_) {
       // Provider error states render the existing home error UI.
     }
@@ -143,11 +165,29 @@ class _HomePageState extends ConsumerState<HomePage> with WidgetsBindingObserver
     final devices = ref.watch(homeDevicesProvider);
     final scenes = ref.watch(homeScenesProvider);
     final accountProfile = ref.watch(accountControllerProvider).asData?.value;
-    final homeDevices = devices.when(data: (items) => items, loading: () => const <DeviceSummary>[], error: (error, stackTrace) => const <DeviceSummary>[]);
+    final homeDevices = devices.when(
+      data: (items) => items,
+      loading: () => const <DeviceSummary>[],
+      error: (error, stackTrace) => const <DeviceSummary>[],
+    );
     final homes = scenes.when(
       data: (items) => _buildHomeGroups(items, homeDevices),
-      loading: () => <_HomeGroup>[_HomeGroup(label: 'Home', doorCount: homeDevices.length, devices: homeDevices)],
-      error: (error, stackTrace) => <_HomeGroup>[_HomeGroup(label: 'Home', doorCount: homeDevices.length, devices: homeDevices)],
+      loading: () => <_HomeGroup>[
+        _HomeGroup(
+          label: 'Home',
+          doorCount: homeDevices.length,
+          devices: homeDevices,
+          sceneId: null,
+        ),
+      ],
+      error: (error, stackTrace) => <_HomeGroup>[
+        _HomeGroup(
+          label: 'Home',
+          doorCount: homeDevices.length,
+          devices: homeDevices,
+          sceneId: null,
+        ),
+      ],
     );
     final hasError = devices.hasError || scenes.hasError;
 
@@ -180,10 +220,18 @@ class _HomePageState extends ConsumerState<HomePage> with WidgetsBindingObserver
                   const Divider(height: 1, color: AppColors.borderHomeDivider),
                   Expanded(
                     child: hasError
-                        ? _HomeRefreshableState(onRefresh: _refreshHome, child: const _HomeErrorState())
+                        ? _HomeRefreshableState(
+                            onRefresh: _refreshHome,
+                            child: const _HomeErrorState(),
+                          )
                         : TabBarView(
                             children: [
-                              for (final home in homes) _HomeDevicePanel(home: home, isSingleColumn: _isSingleColumnDeviceList, onRefresh: _refreshHome),
+                              for (final home in homes)
+                                _HomeDevicePanel(
+                                  home: home,
+                                  isSingleColumn: _isSingleColumnDeviceList,
+                                  onRefresh: () => _refreshHome(home.sceneId),
+                                ),
                             ],
                           ),
                   ),
@@ -204,20 +252,44 @@ class _HomePageState extends ConsumerState<HomePage> with WidgetsBindingObserver
     );
   }
 
-  List<_HomeGroup> _buildHomeGroups(List<HomeScene> scenes, List<DeviceSummary> devices) {
+  List<_HomeGroup> _buildHomeGroups(
+    List<HomeScene> scenes,
+    List<DeviceSummary> devices,
+  ) {
     if (scenes.isEmpty) {
-      return [_HomeGroup(label: 'Home', doorCount: devices.length, devices: devices)];
+      return [
+        _HomeGroup(
+          label: 'Home',
+          doorCount: devices.length,
+          devices: devices,
+          sceneId: null,
+        ),
+      ];
     }
 
     final defaultSceneIndex = scenes.indexWhere((scene) => scene.isDefault);
-    final fallbackSceneId = scenes[defaultSceneIndex == -1 ? 0 : defaultSceneIndex].id;
+    final fallbackSceneId =
+        scenes[defaultSceneIndex == -1 ? 0 : defaultSceneIndex].id;
 
     return [
       for (var index = 0; index < scenes.length; index++)
         _HomeGroup(
-          label: scenes[index].name.trim().isEmpty ? 'Home' : scenes[index].name.trim(),
-          doorCount: devices.where((device) => (device.sceneId ?? fallbackSceneId) == scenes[index].id).length,
-          devices: devices.where((device) => (device.sceneId ?? fallbackSceneId) == scenes[index].id).toList(growable: false),
+          label: scenes[index].name.trim().isEmpty
+              ? 'Home'
+              : scenes[index].name.trim(),
+          doorCount: devices
+              .where(
+                (device) =>
+                    (device.sceneId ?? fallbackSceneId) == scenes[index].id,
+              )
+              .length,
+          devices: devices
+              .where(
+                (device) =>
+                    (device.sceneId ?? fallbackSceneId) == scenes[index].id,
+              )
+              .toList(growable: false),
+          sceneId: scenes[index].id,
         ),
     ];
   }
@@ -314,7 +386,12 @@ class _HomeAddMenu extends StatelessWidget {
 }
 
 class _HomeAddMenuItemData {
-  const _HomeAddMenuItemData({required this.label, required this.assetPath, required this.fallbackIcon, required this.onPressed});
+  const _HomeAddMenuItemData({
+    required this.label,
+    required this.assetPath,
+    required this.fallbackIcon,
+    required this.onPressed,
+  });
 
   final String label;
   final String assetPath;
@@ -336,9 +413,19 @@ class _HomeAddMenuItem extends StatelessWidget {
         child: Row(
           children: [
             const SizedBox(width: 22),
-            _HomeAddMenuIcon(assetPath: item.assetPath, fallbackIcon: item.fallbackIcon),
+            _HomeAddMenuIcon(
+              assetPath: item.assetPath,
+              fallbackIcon: item.fallbackIcon,
+            ),
             const SizedBox(width: 10),
-            Expanded(child: Text(item.label, style: AppTextTokens.homeAddMenuItem(Theme.of(context).textTheme))),
+            Expanded(
+              child: Text(
+                item.label,
+                style: AppTextTokens.homeAddMenuItem(
+                  Theme.of(context).textTheme,
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -367,7 +454,12 @@ class _HomeAddMenuIcon extends StatelessWidget {
 }
 
 class _HomeHeader extends StatelessWidget {
-  const _HomeHeader({required this.profile, required this.isSingleColumnDeviceList, required this.onToggleDeviceLayout, required this.onAddPressed});
+  const _HomeHeader({
+    required this.profile,
+    required this.isSingleColumnDeviceList,
+    required this.onToggleDeviceLayout,
+    required this.onAddPressed,
+  });
 
   final AccountProfile? profile;
   final bool isSingleColumnDeviceList;
@@ -403,8 +495,12 @@ class _HomeHeader extends StatelessWidget {
               ),
               _HeaderIconButton(
                 tooltip: l10n.homeMenuTooltip,
-                assetPath: isSingleColumnDeviceList ? HomeAssetPaths.headerGridPlaceholder : HomeAssetPaths.headerMenuIcon,
-                fallbackIcon: isSingleColumnDeviceList ? Icons.grid_view_rounded : Icons.menu_rounded,
+                assetPath: isSingleColumnDeviceList
+                    ? HomeAssetPaths.headerGridPlaceholder
+                    : HomeAssetPaths.headerMenuIcon,
+                fallbackIcon: isSingleColumnDeviceList
+                    ? Icons.grid_view_rounded
+                    : Icons.menu_rounded,
                 onPressed: onToggleDeviceLayout,
               ),
               _HeaderIconButton(
@@ -423,7 +519,12 @@ class _HomeHeader extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           GestureDetector(
-            child: Text(profile?.nickname.isNotEmpty == true ? 'Hi ${profile!.nickname}' : l10n.homeGreeting, style: AppTextTokens.homeGreeting(textTheme)),
+            child: Text(
+              profile?.nickname.isNotEmpty == true
+                  ? 'Hi ${profile!.nickname}'
+                  : l10n.homeGreeting,
+              style: AppTextTokens.homeGreeting(textTheme),
+            ),
             onTap: () => context.push(BleDebugPage.routePath),
           ),
           const SizedBox(height: 2),
@@ -435,15 +536,26 @@ class _HomeHeader extends StatelessWidget {
 }
 
 class _HomeGroup {
-  const _HomeGroup({required this.label, required this.doorCount, required this.devices});
+  const _HomeGroup({
+    required this.label,
+    required this.doorCount,
+    required this.devices,
+    required this.sceneId,
+  });
 
   final String label;
   final int doorCount;
   final List<DeviceSummary> devices;
+  final int? sceneId;
 }
 
 class _HeaderIconButton extends StatelessWidget {
-  const _HeaderIconButton({required this.tooltip, required this.assetPath, required this.fallbackIcon, required this.onPressed});
+  const _HeaderIconButton({
+    required this.tooltip,
+    required this.assetPath,
+    required this.fallbackIcon,
+    required this.onPressed,
+  });
 
   final String tooltip;
   final String assetPath;
@@ -498,7 +610,11 @@ class _HomeTabs extends StatelessWidget {
 }
 
 class _HomeDevicePanel extends StatelessWidget {
-  const _HomeDevicePanel({required this.home, required this.isSingleColumn, required this.onRefresh});
+  const _HomeDevicePanel({
+    required this.home,
+    required this.isSingleColumn,
+    required this.onRefresh,
+  });
 
   final _HomeGroup home;
   final bool isSingleColumn;
@@ -517,18 +633,22 @@ class _HomeDevicePanel extends StatelessWidget {
                 _DoorCount(count: home.doorCount),
                 const SizedBox(height: 16),
                 if (isSingleColumn)
-                  for (final device in home.devices) ...[SizedBox(height: 160, child: _DeviceCard(device: device)), const SizedBox(height: 18)]
+                  for (final device in home.devices) ...[
+                    SizedBox(height: 160, child: _DeviceCard(device: device)),
+                    const SizedBox(height: 18),
+                  ]
                 else
                   GridView.builder(
                     itemCount: home.devices.length,
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 18,
-                      crossAxisSpacing: 22,
-                      childAspectRatio: 0.96,
-                    ),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 18,
+                          crossAxisSpacing: 22,
+                          childAspectRatio: 0.96,
+                        ),
                     itemBuilder: (context, index) {
                       return _DeviceCard(device: home.devices[index]);
                     },
@@ -546,7 +666,10 @@ class _DoorCount extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(AppLocalizations.of(context).homeDoorCount(count), style: AppTextTokens.homeDoorCount(Theme.of(context).textTheme));
+    return Text(
+      AppLocalizations.of(context).homeDoorCount(count),
+      style: AppTextTokens.homeDoorCount(Theme.of(context).textTheme),
+    );
   }
 }
 
@@ -572,11 +695,24 @@ class _EmptyHomeState extends StatelessWidget {
               children: [
                 _DoorCount(count: doorCount),
                 const Spacer(flex: 2),
-                Center(child: _EmptyDoorsAsset(assetPath: HomeAssetPaths.emptyDoorsPlaceholder, size: 116)),
+                Center(
+                  child: _EmptyDoorsAsset(
+                    assetPath: HomeAssetPaths.emptyDoorsPlaceholder,
+                    size: 116,
+                  ),
+                ),
                 const SizedBox(height: 28),
-                Text(l10n.homeNoDoorsTitle, textAlign: TextAlign.center, style: AppTextTokens.homeEmptyTitle(textTheme)),
+                Text(
+                  l10n.homeNoDoorsTitle,
+                  textAlign: TextAlign.center,
+                  style: AppTextTokens.homeEmptyTitle(textTheme),
+                ),
                 const SizedBox(height: 8),
-                Text(l10n.homeNoDoorsSubtitle, textAlign: TextAlign.center, style: AppTextTokens.homeEmptySubtitle(textTheme)),
+                Text(
+                  l10n.homeNoDoorsSubtitle,
+                  textAlign: TextAlign.center,
+                  style: AppTextTokens.homeEmptySubtitle(textTheme),
+                ),
                 const SizedBox(height: 42),
                 Center(
                   child: SizedBox(
@@ -587,7 +723,9 @@ class _EmptyHomeState extends StatelessWidget {
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.brandPrimary,
                         foregroundColor: AppColors.backgroundPrimary,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
                         textStyle: AppTextTokens.homePrimaryButton(textTheme),
                       ),
                       icon: const Icon(Icons.add_rounded),
@@ -628,12 +766,20 @@ class _HomeErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(child: Text(AppLocalizations.of(context).homeLoadDoorsFailed));
+    return Center(
+      child: Text(AppLocalizations.of(context).homeLoadDoorsFailed),
+    );
   }
 }
 
 class _AvatarPlaceholder extends StatelessWidget {
-  const _AvatarPlaceholder({required this.assetPath, required this.size, this.imageUrl, this.tooltip, this.onPressed});
+  const _AvatarPlaceholder({
+    required this.assetPath,
+    required this.size,
+    this.imageUrl,
+    this.tooltip,
+    this.onPressed,
+  });
 
   final String assetPath;
   final double size;
@@ -649,8 +795,16 @@ class _AvatarPlaceholder extends StatelessWidget {
         width: size,
         height: size,
         child: avatarUrl == null || avatarUrl.isEmpty
-            ? Image.asset(assetPath, fit: BoxFit.cover, errorBuilder: _buildFallback)
-            : Image.network(avatarUrl, fit: BoxFit.cover, errorBuilder: _buildFallback),
+            ? Image.asset(
+                assetPath,
+                fit: BoxFit.cover,
+                errorBuilder: _buildFallback,
+              )
+            : Image.network(
+                avatarUrl,
+                fit: BoxFit.cover,
+                errorBuilder: _buildFallback,
+              ),
       ),
     );
 
@@ -672,11 +826,19 @@ class _AvatarPlaceholder extends StatelessWidget {
     );
   }
 
-  Widget _buildFallback(BuildContext context, Object error, StackTrace? stackTrace) {
+  Widget _buildFallback(
+    BuildContext context,
+    Object error,
+    StackTrace? stackTrace,
+  ) {
     return Container(
       color: AppColors.surfaceHomeAvatar,
       alignment: Alignment.center,
-      child: Icon(Icons.person, color: AppColors.iconHomePlaceholder, size: size * 0.64),
+      child: Icon(
+        Icons.person,
+        color: AppColors.iconHomePlaceholder,
+        size: size * 0.64,
+      ),
     );
   }
 }
@@ -701,10 +863,17 @@ class _EmptyDoorsAsset extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColors.surfaceHomeIcon,
             shape: BoxShape.circle,
-            border: Border.all(color: AppColors.borderHomePlaceholder, width: 1),
+            border: Border.all(
+              color: AppColors.borderHomePlaceholder,
+              width: 1,
+            ),
           ),
           alignment: Alignment.center,
-          child: Icon(Icons.dns_outlined, color: AppColors.iconHomePlaceholder, size: size * 0.48),
+          child: Icon(
+            Icons.dns_outlined,
+            color: AppColors.iconHomePlaceholder,
+            size: size * 0.48,
+          ),
         );
       },
     );
@@ -723,7 +892,9 @@ class _DeviceCard extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         final doorId = Uri.encodeQueryComponent(device.id);
-        context.push('${DeviceCommandPage.routePath}?doorId=$doorId&deviceId=$doorId');
+        context.push(
+          '${DeviceCommandPage.routePath}?doorId=$doorId&deviceId=$doorId',
+        );
       },
       onLongPress: () {
         HapticFeedback.mediumImpact();
@@ -735,7 +906,11 @@ class _DeviceCard extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: Stack(
           children: [
-            Positioned(top: 10, right: 10, child: _DeviceStatusDot(onlineState: device.onlineState)),
+            Positioned(
+              top: 10,
+              right: 10,
+              child: _DeviceStatusDot(onlineState: device.onlineState),
+            ),
             Positioned.fill(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(10, 18, 10, 14),
@@ -751,7 +926,9 @@ class _DeviceCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.center,
-                        style: AppTextTokens.homeDeviceCardTitle(Theme.of(context).textTheme),
+                        style: AppTextTokens.homeDeviceCardTitle(
+                          Theme.of(context).textTheme,
+                        ),
                       ),
                       const SizedBox(height: 6),
                       Text(
@@ -759,7 +936,9 @@ class _DeviceCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.center,
-                        style: AppTextTokens.homeDeviceCardState(Theme.of(context).textTheme),
+                        style: AppTextTokens.homeDeviceCardState(
+                          Theme.of(context).textTheme,
+                        ),
                       ),
                     ],
                   ),
@@ -772,12 +951,16 @@ class _DeviceCard extends StatelessWidget {
     );
   }
 
-  Future<void> _showDeviceEditingSheet(BuildContext context, DeviceSummary device) {
+  Future<void> _showDeviceEditingSheet(
+    BuildContext context,
+    DeviceSummary device,
+  ) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _DeviceEditingSheet(device: device, parentContext: context),
+      builder: (_) =>
+          _DeviceEditingSheet(device: device, parentContext: context),
     );
   }
 
@@ -794,13 +977,17 @@ class _DeviceCard extends StatelessWidget {
 }
 
 class _DeviceEditingSheet extends ConsumerStatefulWidget {
-  const _DeviceEditingSheet({required this.device, required this.parentContext});
+  const _DeviceEditingSheet({
+    required this.device,
+    required this.parentContext,
+  });
 
   final DeviceSummary device;
   final BuildContext parentContext;
 
   @override
-  ConsumerState<_DeviceEditingSheet> createState() => _DeviceEditingSheetState();
+  ConsumerState<_DeviceEditingSheet> createState() =>
+      _DeviceEditingSheetState();
 }
 
 class _DeviceEditingSheetState extends ConsumerState<_DeviceEditingSheet> {
@@ -824,7 +1011,10 @@ class _DeviceEditingSheetState extends ConsumerState<_DeviceEditingSheet> {
         fallbackIcon: Icons.image_outlined,
         onPressed: () {
           Navigator.of(context).pop();
-          showDeviceCustomizeDialog(widget.parentContext, device: widget.device);
+          showDeviceCustomizeDialog(
+            widget.parentContext,
+            device: widget.device,
+          );
         },
       ),
       _DeviceEditingAction(
@@ -844,7 +1034,7 @@ class _DeviceEditingSheetState extends ConsumerState<_DeviceEditingSheet> {
         onPressed: () {
           final router = GoRouter.of(context);
           Navigator.of(context).pop();
-          router.push(ChooseScenePage.routePath);
+          router.push(ChooseScenePage.routePath, extra: widget.device);
         },
       ),
       _DeviceEditingAction(
@@ -886,9 +1076,19 @@ class _DeviceEditingSheetState extends ConsumerState<_DeviceEditingSheet> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(l10n.homeDeviceEditingTitle, style: AppTextTokens.homeDeviceEditingTitle(textTheme)),
+                        Text(
+                          l10n.homeDeviceEditingTitle,
+                          style: AppTextTokens.homeDeviceEditingTitle(
+                            textTheme,
+                          ),
+                        ),
                         const SizedBox(height: 4),
-                        Text(widget.device.name, style: AppTextTokens.homeDeviceEditingSubtitle(textTheme)),
+                        Text(
+                          widget.device.name,
+                          style: AppTextTokens.homeDeviceEditingSubtitle(
+                            textTheme,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -897,7 +1097,8 @@ class _DeviceEditingSheetState extends ConsumerState<_DeviceEditingSheet> {
               const SizedBox(height: 24),
               for (var index = 0; index < items.length; index++) ...[
                 _DeviceEditingActionTile(action: items[index]),
-                if (index != items.length - 1) const Divider(height: 1, color: AppColors.borderHomeDivider),
+                if (index != items.length - 1)
+                  const Divider(height: 1, color: AppColors.borderHomeDivider),
               ],
             ],
           ),
@@ -916,9 +1117,13 @@ class _DeviceEditingSheetState extends ConsumerState<_DeviceEditingSheet> {
     setState(() {
       _isTopping = true;
     });
-    final requestId = 'home-top-door-$doorId-${DateTime.now().toUtc().microsecondsSinceEpoch}';
+    final requestId =
+        'home-top-door-$doorId-${DateTime.now().toUtc().microsecondsSinceEpoch}';
     try {
-      await ref.read(topHomeDoorUseCaseProvider)(doorId: doorId, requestId: requestId);
+      await ref.read(topHomeDoorUseCaseProvider)(
+        doorId: doorId,
+        requestId: requestId,
+      );
       ref.invalidate(homeDevicesProvider);
       if (mounted) {
         Navigator.of(context).pop();
@@ -942,7 +1147,13 @@ class _DeviceEditingSheetState extends ConsumerState<_DeviceEditingSheet> {
 }
 
 class _DeviceEditingAction {
-  const _DeviceEditingAction({required this.label, required this.assetPath, required this.fallbackIcon, this.isPending = false, this.onPressed});
+  const _DeviceEditingAction({
+    required this.label,
+    required this.assetPath,
+    required this.fallbackIcon,
+    this.isPending = false,
+    this.onPressed,
+  });
 
   final String label;
   final String assetPath;
@@ -966,10 +1177,25 @@ class _DeviceEditingActionTile extends StatelessWidget {
           children: [
             _DeviceEditingActionIcon(action: action),
             const SizedBox(width: 12),
-            Expanded(child: Text(action.label, style: AppTextTokens.homeDeviceEditingAction(Theme.of(context).textTheme))),
+            Expanded(
+              child: Text(
+                action.label,
+                style: AppTextTokens.homeDeviceEditingAction(
+                  Theme.of(context).textTheme,
+                ),
+              ),
+            ),
             action.isPending
-                ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Icon(Icons.chevron_right_rounded, color: AppColors.textPrimary, size: 25),
+                ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppColors.textPrimary,
+                    size: 25,
+                  ),
           ],
         ),
       ),
@@ -1008,7 +1234,9 @@ class _DeviceStatusDot extends StatelessWidget {
       height: 10,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: onlineState == DeviceOnlineState.online ? AppColors.homeDeviceOnlineStatus : AppColors.homeDeviceUnavailableStatus,
+        color: onlineState == DeviceOnlineState.online
+            ? AppColors.homeDeviceOnlineStatus
+            : AppColors.homeDeviceUnavailableStatus,
       ),
     );
   }
@@ -1029,7 +1257,11 @@ class _DeviceDoorIcon extends StatelessWidget {
       height: 45,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) {
-        return Icon(visual.fallbackIcon, color: AppColors.iconHomeAction, size: 45);
+        return Icon(
+          visual.fallbackIcon,
+          color: AppColors.iconHomeAction,
+          size: 45,
+        );
       },
     );
   }

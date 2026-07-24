@@ -130,6 +130,7 @@ class AppColors {
   static const textSecondary = Color(0xFF202020);
   static const textMuted = Color(0xFF5B5B60);
   static const textMuted1A232C = Color(0xFF1A232C);
+  static const textMuted656565 = Color(0xFF656565);
   static const textHint = Color(0xFF7A7A7A);
   static const textIcon = Color(0xFF5A5D64);
   static const textAccountHeader = Colors.white;
@@ -981,7 +982,7 @@ class AppTextTokens {
 
   static TextStyle operationRecordAction(TextTheme textTheme) {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
-      color: AppColors.textPrimary,
+      color: AppColors.textMuted1A232C,
       fontSize: 15,
       fontWeight: FontWeight.w400,
       height: 1.2,
@@ -990,8 +991,8 @@ class AppTextTokens {
 
   static TextStyle operationRecordTime(TextTheme textTheme) {
     return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
-      color: AppColors.textMuted,
-      fontSize: 15,
+      color: AppColors.textMuted656565,
+      fontSize: 13,
       fontWeight: FontWeight.w400,
     );
   }
@@ -1887,7 +1888,7 @@ class AppTextTokens {
   static TextStyle sceneTitle(TextTheme textTheme) {
     return (textTheme.displaySmall ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
-      fontSize: 25,
+      fontSize: 26,
       fontWeight: FontWeight.w600,
       letterSpacing: 1.2,
       height: 1.08,
@@ -1897,7 +1898,7 @@ class AppTextTokens {
   static TextStyle sceneBreadcrumb(TextTheme textTheme) {
     return (textTheme.titleLarge ?? const TextStyle()).copyWith(
       color: AppColors.textMuted,
-      fontSize: 14,
+      fontSize: 13,
       fontWeight: FontWeight.w400,
       height: 1.2,
     );
@@ -1906,8 +1907,8 @@ class AppTextTokens {
   static TextStyle sceneCardTitle(TextTheme textTheme) {
     return (textTheme.titleLarge ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
-      fontSize: 16,
-      fontWeight: FontWeight.w600,
+      fontSize: 15,
+      fontWeight: FontWeight.w400,
       height: 1.2,
     );
   }

@@ -46,6 +46,9 @@ final authSessionProvider = FutureProvider<AuthSession>((ref) async {
   if (activeSession.isAuthenticated) {
     return activeSession;
   }
+  if (!activeSession.canRestoreFromCache) {
+    return activeSession;
+  }
   final accountRepository = ref.watch(accountRepositoryProvider);
   final profile = await accountRepository.readCachedProfile();
   final tokenSet = await accountRepository.readTokenSet();
