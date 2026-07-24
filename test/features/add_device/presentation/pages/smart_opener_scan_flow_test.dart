@@ -617,6 +617,12 @@ class _FakeAddDeviceOnboardingRepository
   const _FakeAddDeviceOnboardingRepository();
 
   @override
+  Future<void> validateBindingStatus({
+    required String sn,
+    required String requestId,
+  }) async {}
+
+  @override
   Future<OnboardingDeviceKey> fetchDeviceKey({
     required String sn,
     required String requestId,

@@ -4,11 +4,17 @@ import '../../../../core/logging/app_logger.dart';
 import '../../../../core/network/dio_factory.dart';
 import '../../../../core/network/network_exception.dart';
 import '../dto/add_force_door_request_dto.dart';
+import '../dto/binding_status_response_dto.dart';
 import '../dto/force_door_response_dto.dart';
 import '../dto/onboarding_device_key_response_dto.dart';
 import 'add_device_onboarding_api.dart';
 
 abstract interface class AddDeviceOnboardingRemoteDataSource {
+  Future<void> validateBindingStatus({
+    required String sn,
+    required String requestId,
+  });
+
   Future<OnboardingDeviceKeyResponseDto> fetchDeviceKey({
     required String sn,
     required String requestId,
@@ -27,6 +33,37 @@ class AddDeviceOnboardingRemoteDataSourceImpl
   final AddDeviceOnboardingApi api;
 
   @override
+  Future<void> validateBindingStatus({
+    required String sn,
+    required String requestId,
+  }) async {
+    try {
+      final response = await api.validateBindingStatus(
+        sn,
+        Options(extra: _bindingRequestExtras(requestId)),
+      );
+      final data = response.data;
+      if (!_isSuccessCode(response.code) ||
+          !response.success ||
+          data == null ||
+          !data.isValid ||
+          !data.canBind) {
+        throw AddDeviceOnboardingRemoteException.invalidResponse(
+          serverCode: response.code,
+          serverMessage: response.success ? null : response.msg,
+          serverMessageKey: response.messageKey,
+        );
+      }
+    } on DioException catch (error) {
+      throw AddDeviceOnboardingRemoteException.fromNetwork(
+        NetworkException.fromDio(error),
+      );
+    } on AddDeviceOnboardingRemoteException {
+      rethrow;
+    }
+  }
+
+  @override
   Future<OnboardingDeviceKeyResponseDto> fetchDeviceKey({
     required String sn,
     required String requestId,
@@ -43,6 +80,7 @@ class AddDeviceOnboardingRemoteDataSourceImpl
           !data.isValid) {
         throw AddDeviceOnboardingRemoteException.invalidResponse(
           serverCode: response.code,
+          serverMessage: response.msg,
           serverMessageKey: response.messageKey,
         );
       }
@@ -70,6 +108,7 @@ class AddDeviceOnboardingRemoteDataSourceImpl
       if (response.code != 200 || data == null) {
         throw AddDeviceOnboardingRemoteException.invalidResponse(
           serverCode: response.code,
+          serverMessage: response.msg,
           serverMessageKey: response.messageKey,
         );
       }
@@ -99,6 +138,7 @@ class AddDeviceOnboardingRemoteException implements Exception {
     this.kind, {
     this.statusCode,
     this.serverCode,
+    this.serverMessage,
     this.serverMessageKey,
   });
 
@@ -110,16 +150,19 @@ class AddDeviceOnboardingRemoteException implements Exception {
 
   const AddDeviceOnboardingRemoteException.invalidResponse({
     int? serverCode,
+    String? serverMessage,
     String? serverMessageKey,
   }) : this._(
          AddDeviceOnboardingRemoteErrorKind.invalidResponse,
          serverCode: serverCode,
+         serverMessage: serverMessage,
          serverMessageKey: serverMessageKey,
        );
 
   final AddDeviceOnboardingRemoteErrorKind kind;
   final int? statusCode;
   final int? serverCode;
+  final String? serverMessage;
   final String? serverMessageKey;
 }
 

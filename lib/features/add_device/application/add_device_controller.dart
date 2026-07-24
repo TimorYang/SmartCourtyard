@@ -12,6 +12,7 @@ import '../domain/entities/add_door_draft.dart';
 import '../domain/entities/onboarded_force_door.dart';
 import '../domain/use_cases/add_force_door_use_case.dart';
 import '../domain/use_cases/fetch_onboarding_device_key_use_case.dart';
+import '../domain/use_cases/validate_binding_status_use_case.dart';
 import 'ble_auth_token.dart';
 import 'providers.dart';
 
@@ -135,6 +136,7 @@ class AddDeviceState {
 class AddDeviceController extends Notifier<AddDeviceState> {
   late HardwareGateway _gateway;
   late FetchOnboardingDeviceKeyUseCase _fetchDeviceKeyUseCase;
+  late ValidateBindingStatusUseCase _validateBindingStatusUseCase;
   late AddForceDoorUseCase _addForceDoorUseCase;
   late AppLogger _logger;
   final List<StreamSubscription<Object?>> _subscriptions =
@@ -154,6 +156,9 @@ class AddDeviceController extends Notifier<AddDeviceState> {
     _cancelSubscriptions();
     _gateway = ref.watch(addDeviceHardwareGatewayProvider);
     _fetchDeviceKeyUseCase = ref.watch(fetchOnboardingDeviceKeyUseCaseProvider);
+    _validateBindingStatusUseCase = ref.watch(
+      validateBindingStatusUseCaseProvider,
+    );
     _addForceDoorUseCase = ref.watch(addForceDoorUseCaseProvider);
     _logger = ref.watch(appLoggerProvider);
     _subscriptions.addAll(<StreamSubscription<Object?>>[
@@ -396,21 +401,46 @@ class AddDeviceController extends Notifier<AddDeviceState> {
 
     state = state.copyWith(
       selectedDevice: device,
-      isConnecting: true,
+      isConnecting: false,
       isAuthenticating: false,
       clearErrorMessage: true,
-      infoMessage: '正在连接 ${device.name ?? device.id} ...',
+      infoMessage: '正在验证设备序列号...',
     );
-    final connectRequestId = _nextRequestId('ble-connect');
-    final connectWatch = Stopwatch()..start();
+    final bindingStatusRequestId = _nextRequestId('binding-status');
     _log(
-      'ble_connect_started',
-      requestId: connectRequestId,
+      'binding_status_validation_started',
+      requestId: bindingStatusRequestId,
       deviceId: device.id,
-      stage: 'connect',
+      stage: 'binding_status',
       result: 'started',
+      context: {'sn': sn},
     );
     try {
+      await _validateBindingStatusUseCase(
+        sn: sn,
+        requestId: bindingStatusRequestId,
+      );
+      _log(
+        'binding_status_validation_completed',
+        requestId: bindingStatusRequestId,
+        deviceId: device.id,
+        stage: 'binding_status',
+        result: 'success',
+        context: {'sn': sn},
+      );
+      state = state.copyWith(
+        isConnecting: true,
+        infoMessage: '正在连接 ${device.name ?? device.id} ...',
+      );
+      final connectRequestId = _nextRequestId('ble-connect');
+      final connectWatch = Stopwatch()..start();
+      _log(
+        'ble_connect_started',
+        requestId: connectRequestId,
+        deviceId: device.id,
+        stage: 'connect',
+        result: 'started',
+      );
       final connectResult = await _gateway.connectBleDevice(
         requestId: connectRequestId,
         deviceId: device.id,
@@ -880,8 +910,15 @@ class AddDeviceController extends Notifier<AddDeviceState> {
       'addDevice.deviceKeyFailed' => '获取设备密钥失败，请重试',
       'addDevice.deviceNotExists' => '设备不存在，请确认设备后重试',
       'addDevice.bindDoorFailed' => '设备绑定失败，请重试',
+      'addDevice.bindingStatusFailed' =>
+        error.userMessage?.trim().isNotEmpty == true
+            ? error.userMessage!.trim()
+            : '设备已被其他用户绑定',
       'hardware.authentication_decrypt_failed' => '蓝牙鉴权失败，设备密钥不匹配，请重试',
-      _ => '设备添加失败，请重试',
+      _ =>
+        error.userMessage?.trim().isNotEmpty == true
+            ? error.userMessage!.trim()
+            : '设备添加失败，请重试',
     };
   }
 }

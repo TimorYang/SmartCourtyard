@@ -18,6 +18,40 @@ class _AddDeviceOnboardingApi implements AddDeviceOnboardingApi {
   final ParseErrorLogger? errorLogger;
 
   @override
+  Future<ApiEnvelopeDto<BindingStatusResponseDto>> validateBindingStatus(
+    String sn,
+    Options options,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'sn': sn};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final newOptions = newRequestOptions(options);
+    newOptions.extra.addAll(_extra);
+    newOptions.headers.addAll(_dio.options.headers);
+    newOptions.headers.addAll(_headers);
+    final _options = newOptions.copyWith(
+      method: 'GET',
+      baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl),
+      queryParameters: queryParameters,
+      path: 'app/doors/onboarding/binding-status',
+    )..data = _data;
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late ApiEnvelopeDto<BindingStatusResponseDto> _value;
+    try {
+      _value = ApiEnvelopeDto<BindingStatusResponseDto>.fromJson(
+        _result.data!,
+        (json) =>
+            BindingStatusResponseDto.fromJson(json as Map<String, dynamic>),
+      );
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, response: _result);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
   Future<ApiEnvelopeDto<OnboardingDeviceKeyResponseDto>> fetchDeviceKey(
     String sn,
     Options options,
@@ -98,7 +132,7 @@ class _AddDeviceOnboardingApi implements AddDeviceOnboardingApi {
         extra: options.extra,
         headers: options.headers,
         responseType: options.responseType,
-        contentType: options.contentType.toString(),
+        contentType: options.contentType?.toString(),
         validateStatus: options.validateStatus,
         receiveDataWhenStatusError: options.receiveDataWhenStatusError,
         followRedirects: options.followRedirects,

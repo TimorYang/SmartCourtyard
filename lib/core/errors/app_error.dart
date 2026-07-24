@@ -27,6 +27,7 @@ class AppError implements Exception {
     required this.messageKey,
     this.action = AppErrorAction.none,
     this.nativeCode,
+    this.userMessage,
     this.requestId,
     this.deviceId,
     this.retryable = false,
@@ -36,6 +37,7 @@ class AppError implements Exception {
   final String messageKey;
   final AppErrorAction action;
   final String? nativeCode;
+  final String? userMessage;
   final String? requestId;
   final String? deviceId;
   final bool retryable;

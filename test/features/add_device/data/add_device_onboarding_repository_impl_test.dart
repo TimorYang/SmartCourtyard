@@ -39,6 +39,14 @@ class _ThrowingRemoteDataSource implements AddDeviceOnboardingRemoteDataSource {
   final AddDeviceOnboardingRemoteException exception;
 
   @override
+  Future<void> validateBindingStatus({
+    required String sn,
+    required String requestId,
+  }) async {
+    throw exception;
+  }
+
+  @override
   Future<ForceDoorResponseDto> addForceDoor({
     required String sn,
     required String requestId,
