@@ -1,6 +1,7 @@
 import 'package:flinx/features/device_control/application/already_added_devices_controller.dart';
 import 'package:flinx/features/device_control/application/device_command_controller.dart';
 import 'package:flinx/features/device_control/domain/entities/door_detail.dart';
+import 'package:flinx/features/device_control/domain/entities/door_device.dart';
 import 'package:flinx/features/device_control/domain/repositories/door_detail_repository.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,7 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test(
-    'loads only associated devices and does not paginate door detail',
+    'returns an empty device list when door detail has no device collection',
     () async {
       final repository = _RecordingDoorDetailRepository(_doorDetail());
       final container = _container(repository);
@@ -20,8 +21,7 @@ void main() {
       await controller.loadInitial(doorId: '12');
 
       final state = container.read(alreadyAddedDevicesControllerProvider);
-      expect(state.devices, hasLength(1));
-      expect(state.devices.single.bleName, 'opener-001');
+      expect(state.devices, isEmpty);
       expect(state.hasMore, isFalse);
       expect(repository.requestedDoorIds, ['12']);
 
@@ -30,7 +30,7 @@ void main() {
     },
   );
 
-  test('refreshes the associated device collection', () async {
+  test('keeps the device list empty after refresh', () async {
     final repository = _RecordingDoorDetailRepository(_doorDetail());
     final container = _container(repository);
     addTearDown(container.dispose);
@@ -39,11 +39,10 @@ void main() {
     );
 
     await controller.loadInitial(doorId: '12');
-    repository.detail = _doorDetail(bleName: 'opener-002');
     await controller.refresh(doorId: '12');
 
     final state = container.read(alreadyAddedDevicesControllerProvider);
-    expect(state.devices.single.bleName, 'opener-002');
+    expect(state.devices, isEmpty);
     expect(repository.requestedDoorIds, ['12', '12']);
   });
 
@@ -72,7 +71,7 @@ ProviderContainer _container(_RecordingDoorDetailRepository repository) {
   );
 }
 
-DoorDetail _doorDetail({String bleName = 'opener-001'}) {
+DoorDetail _doorDetail() {
   return DoorDetail(
     id: '12',
     name: 'Garage door',
@@ -80,20 +79,6 @@ DoorDetail _doorDetail({String bleName = 'opener-001'}) {
     doorStateLabel: 'Closed',
     operatedCycles: 0,
     remainingCycles: 0,
-    associatedDevices: [
-      DoorAssociatedDevice(
-        deviceType: 'opener',
-        associated: true,
-        primaryControl: true,
-        bleName: bleName,
-      ),
-      const DoorAssociatedDevice(
-        deviceType: 'dongle',
-        associated: false,
-        primaryControl: false,
-        bleName: 'dongle-001',
-      ),
-    ],
   );
 }
 
@@ -115,4 +100,10 @@ class _RecordingDoorDetailRepository implements DoorDetailRepository {
     }
     return detail;
   }
+
+  @override
+  Future<List<DoorDevice>> fetchDoorDevices({
+    required String doorId,
+    required String requestId,
+  }) async => const [];
 }

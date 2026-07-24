@@ -4,6 +4,7 @@ import 'package:flinx/core/logging/app_logger.dart';
 import 'package:flinx/core/network/network_exception.dart';
 import 'package:flinx/features/device_control/data/data_sources/door_detail_remote_data_source.dart';
 import 'package:flinx/features/device_control/data/dto/door_detail_response_dto.dart';
+import 'package:flinx/features/device_control/data/dto/door_device_response_dto.dart';
 import 'package:flinx/features/device_control/data/repositories/door_detail_repository_impl.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,21 +14,16 @@ void main() {
     final repository = DoorDetailRepositoryImpl(
       remoteDataSource: const _FakeDoorDetailRemoteDataSource(
         DoorDetailResponseDto(
-          id: 12,
+          id: '12',
           name: 'Main Gate',
           doorStateLabel: 'Closing',
           operatedCycles: 123,
           remainingCycles: 4567,
-          associatedDevices: [
-            DoorAssociatedDeviceResponseDto(
-              deviceType: 'opener',
-              deviceTypeLabel: 'Smart Opener',
-              associated: true,
-              primaryControl: true,
-              bleName: 'opener_B8F86211A9DC',
-              capabilities: ['DOOR_CONTROL', 'LED_CONTROL'],
-            ),
-          ],
+          ledStatus: 2,
+          ledStatusLabel: 'On',
+          autoCloseEnabled: true,
+          openReminderEnabled: true,
+          partialOpenValue: 60,
         ),
       ),
       logger: const _NoopLogger(),
@@ -44,12 +40,10 @@ void main() {
     expect(detail.doorStateLabel, 'Closing');
     expect(detail.operatedCycles, 123);
     expect(detail.remainingCycles, 4567);
-    expect(detail.hardwareDeviceId, 'opener_B8F86211A9DC');
-    expect(detail.associatedDevices.single.deviceTypeLabel, 'Smart Opener');
-    expect(detail.associatedDevices.single.capabilities, [
-      'DOOR_CONTROL',
-      'LED_CONTROL',
-    ]);
+    expect(detail.isLedEnabled, isTrue);
+    expect(detail.autoCloseEnabled, isTrue);
+    expect(detail.openReminderEnabled, isTrue);
+    expect(detail.partialOpenValue, 60);
   });
 
   test('maps network failure to retryable app error', () async {
@@ -86,7 +80,7 @@ void main() {
   test('rejects invalid door id before requesting remote data', () async {
     final repository = DoorDetailRepositoryImpl(
       remoteDataSource: const _FakeDoorDetailRemoteDataSource(
-        DoorDetailResponseDto(id: 12, name: 'Main Gate'),
+        DoorDetailResponseDto(id: '12', name: 'Main Gate'),
       ),
       logger: const _NoopLogger(),
     );
@@ -119,6 +113,12 @@ class _FakeDoorDetailRemoteDataSource implements DoorDetailRemoteDataSource {
   }) async {
     return detail;
   }
+
+  @override
+  Future<List<DoorDeviceResponseDto>> fetchDoorDevices({
+    required int doorId,
+    required String requestId,
+  }) async => const [];
 }
 
 class _FailingDoorDetailRemoteDataSource implements DoorDetailRemoteDataSource {
@@ -128,6 +128,14 @@ class _FailingDoorDetailRemoteDataSource implements DoorDetailRemoteDataSource {
 
   @override
   Future<DoorDetailResponseDto> fetchDoorDetail({
+    required int doorId,
+    required String requestId,
+  }) {
+    throw error;
+  }
+
+  @override
+  Future<List<DoorDeviceResponseDto>> fetchDoorDevices({
     required int doorId,
     required String requestId,
   }) {

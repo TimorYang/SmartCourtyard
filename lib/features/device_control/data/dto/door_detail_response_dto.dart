@@ -14,10 +14,14 @@ class DoorDetailResponseDto {
     this.coverFileId,
     this.operatedCycles,
     this.remainingCycles,
-    this.associatedDevices = const [],
+    this.ledStatus,
+    this.ledStatusLabel,
+    this.autoCloseEnabled,
+    this.openReminderEnabled,
+    this.partialOpenValue,
   });
 
-  final int id;
+  final String id;
   final String name;
   final int? doorType;
   final String? doorTypeLabel;
@@ -31,11 +35,15 @@ class DoorDetailResponseDto {
   final int? coverFileId;
   final int? operatedCycles;
   final int? remainingCycles;
-  final List<DoorAssociatedDeviceResponseDto> associatedDevices;
+  final int? ledStatus;
+  final String? ledStatusLabel;
+  final bool? autoCloseEnabled;
+  final bool? openReminderEnabled;
+  final int? partialOpenValue;
 
   factory DoorDetailResponseDto.fromJson(Map<String, dynamic> json) {
     return DoorDetailResponseDto(
-      id: _parseInt(json['id']),
+      id: _parseString(json['id']),
       name: json['name'] as String? ?? '',
       doorType: _parseNullableInt(json['doorType']),
       doorTypeLabel: json['doorTypeLabel'] as String?,
@@ -49,15 +57,16 @@ class DoorDetailResponseDto {
       coverFileId: _parseNullableInt(json['coverFileId']),
       operatedCycles: _parseNullableInt(json['operatedCycles']),
       remainingCycles: _parseNullableInt(json['remainingCycles']),
-      associatedDevices: (json['associatedDevices'] as List<dynamic>? ?? [])
-          .whereType<Map<String, dynamic>>()
-          .map(DoorAssociatedDeviceResponseDto.fromJson)
-          .toList(),
+      ledStatus: _parseNullableInt(json['ledStatus']),
+      ledStatusLabel: json['ledStatusLabel'] as String?,
+      autoCloseEnabled: json['autoCloseEnabled'] as bool?,
+      openReminderEnabled: json['openReminderEnabled'] as bool?,
+      partialOpenValue: _parseNullableInt(json['partialOpenValue']),
     );
   }
 
-  static int _parseInt(Object? value) {
-    return _parseNullableInt(value) ?? 0;
+  static String _parseString(Object? value) {
+    return value?.toString() ?? '';
   }
 
   static int? _parseNullableInt(Object? value) {
@@ -78,68 +87,5 @@ class DoorDetailResponseDto {
       return double.tryParse(value);
     }
     return null;
-  }
-}
-
-class DoorAssociatedDeviceResponseDto {
-  const DoorAssociatedDeviceResponseDto({
-    this.deviceType,
-    this.deviceTypeLabel,
-    this.associated = false,
-    this.primaryControl = false,
-    this.onlineStatus,
-    this.onlineStatusLabel,
-    this.bleName,
-    this.bleUuid,
-    this.bleMac,
-    this.bleConnectionStatus,
-    this.bleConnectionStatusLabel,
-    this.wifiConnectionStatus,
-    this.wifiConnectionStatusLabel,
-    this.ledStatus,
-    this.ledStatusLabel,
-    this.capabilities = const [],
-  });
-
-  final String? deviceType;
-  final String? deviceTypeLabel;
-  final bool associated;
-  final bool primaryControl;
-  final int? onlineStatus;
-  final String? onlineStatusLabel;
-  final String? bleName;
-  final String? bleUuid;
-  final String? bleMac;
-  final String? bleConnectionStatus;
-  final String? bleConnectionStatusLabel;
-  final String? wifiConnectionStatus;
-  final String? wifiConnectionStatusLabel;
-  final String? ledStatus;
-  final String? ledStatusLabel;
-  final List<String> capabilities;
-
-  factory DoorAssociatedDeviceResponseDto.fromJson(Map<String, dynamic> json) {
-    return DoorAssociatedDeviceResponseDto(
-      deviceType: json['deviceType'] as String?,
-      deviceTypeLabel: json['deviceTypeLabel'] as String?,
-      associated: json['associated'] as bool? ?? false,
-      primaryControl: json['primaryControl'] as bool? ?? false,
-      onlineStatus: DoorDetailResponseDto._parseNullableInt(
-        json['onlineStatus'],
-      ),
-      onlineStatusLabel: json['onlineStatusLabel'] as String?,
-      bleName: json['bleName'] as String?,
-      bleUuid: json['bleUuid'] as String?,
-      bleMac: json['bleMac'] as String?,
-      bleConnectionStatus: json['bleConnectionStatus'] as String?,
-      bleConnectionStatusLabel: json['bleConnectionStatusLabel'] as String?,
-      wifiConnectionStatus: json['wifiConnectionStatus'] as String?,
-      wifiConnectionStatusLabel: json['wifiConnectionStatusLabel'] as String?,
-      ledStatus: json['ledStatus'] as String?,
-      ledStatusLabel: json['ledStatusLabel'] as String?,
-      capabilities: (json['capabilities'] as List<dynamic>? ?? [])
-          .whereType<String>()
-          .toList(),
-    );
   }
 }

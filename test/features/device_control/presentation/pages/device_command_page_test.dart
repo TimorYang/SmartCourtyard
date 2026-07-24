@@ -7,6 +7,7 @@ import 'package:flinx/features/add_device/domain/repositories/add_device_onboard
 import 'package:flinx/features/add_device/domain/use_cases/fetch_onboarding_device_key_use_case.dart';
 import 'package:flinx/features/device_control/application/device_command_controller.dart';
 import 'package:flinx/features/device_control/domain/entities/door_detail.dart';
+import 'package:flinx/features/device_control/domain/entities/door_device.dart';
 import 'package:flinx/features/device_control/domain/repositories/door_detail_repository.dart';
 import 'package:flinx/features/device_control/presentation/pages/device_command_page.dart';
 import 'package:flinx/features/device_control/presentation/pages/device_settings_page.dart';
@@ -43,6 +44,21 @@ void main() {
     expect(find.text('10 min'), findsOneWidget);
     expect(find.text('Partial open'), findsOneWidget);
     expect(find.text('More setting'), findsOneWidget);
+    expect(find.text('60cm'), findsOneWidget);
+    expect(
+      tester
+          .widget<FlinxSwitch>(find.byKey(const ValueKey<String>('led-switch')))
+          .value,
+      isFalse,
+    );
+    expect(
+      tester
+          .widget<FlinxSwitch>(
+            find.byKey(const ValueKey<String>('auto-close-switch')),
+          )
+          .value,
+      isTrue,
+    );
 
     await tester.tap(find.byTooltip('Open'));
     await tester.pumpAndSettle();
@@ -118,6 +134,47 @@ void main() {
     expect(tester.widget<FlinxSwitch>(reminderSwitch).value, isFalse);
   });
 
+  testWidgets('uses door-device list to highlight the matching fixed card', (
+    tester,
+  ) async {
+    await _pumpDevicePage(tester, _RecordingHardwareGateway());
+
+    expect(
+      _connectionDeviceAsset(tester, 'opener'),
+      'assets/icons/device_control/device_command_opener_active.png',
+    );
+    expect(
+      _connectionDeviceAsset(tester, 'dongle'),
+      'assets/icons/device_control/device_command_dongle_inactive.png',
+    );
+    expect(
+      _connectionDeviceAsset(tester, 'fbox'),
+      'assets/icons/device_control/device_command_fbox_inactive.png',
+    );
+    expect(
+      _connectionDeviceAsset(tester, 'video'),
+      'assets/icons/device_control/device_command_video_inactive.png',
+    );
+    expect(
+      _connectionDeviceAsset(tester, 'evo'),
+      'assets/icons/device_control/device_command_evo_inactive.png',
+    );
+    expect(_connectionGroupAssets(tester, 'opener'), [
+      'assets/icons/device_control/device_command_opener_active.png',
+      'assets/icons/device_control/device_command_bluetooth_active_placeholder.png',
+      'assets/icons/device_control/device_command_wifi_inactive_placeholder.png',
+    ]);
+    expect(_connectionGroupAssets(tester, 'video'), [
+      'assets/icons/device_control/device_command_video_inactive.png',
+      'assets/icons/device_control/device_command_wifi_inactive_placeholder.png',
+    ]);
+    expect(_hasConnectionBorder(tester, 'opener'), isTrue);
+    expect(_hasConnectionBorder(tester, 'video'), isFalse);
+    expect(_connectionTap(tester, 'opener'), isNotNull);
+    expect(_connectionTap(tester, 'dongle'), isNull);
+    expect(_connectionTap(tester, 'video'), isNull);
+  });
+
   testWidgets('opens the already added devices page from the more action', (
     tester,
   ) async {
@@ -131,22 +188,9 @@ void main() {
       find.text('The following devices have been connected'),
       findsOneWidget,
     );
-    expect(
-      find.byKey(const ValueKey<String>('already-added-device-card-SN-001')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(
-        const ValueKey<String>('already-added-device-image-placeholder-SN-001'),
-      ),
-      findsOneWidget,
-    );
+    expect(find.text('No connected devices'), findsOneWidget);
     expect(
       find.byKey(const ValueKey<String>('already-added-add-action')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey<String>('already-added-delete-action-SN-001')),
       findsOneWidget,
     );
 
@@ -181,108 +225,7 @@ void main() {
 
     expect(find.text('已添加'), findsOneWidget);
     expect(find.text('以下设备已连接'), findsOneWidget);
-    expect(find.text('智能开门器'), findsOneWidget);
-  });
-
-  testWidgets('shows and dismisses added-device disconnect confirmation', (
-    tester,
-  ) async {
-    await _pumpDevicePage(tester, _RecordingHardwareGateway());
-
-    await tester.tap(find.byTooltip('More'));
-    await tester.pumpAndSettle();
-
-    final deleteAction = find.byKey(
-      const ValueKey<String>('already-added-delete-action-SN-001'),
-    );
-    await tester.tap(deleteAction);
-    await tester.pumpAndSettle();
-
-    expect(
-      find.text('Are you sure to disconnect this device?'),
-      findsOneWidget,
-    );
-    expect(find.text('Cancel'), findsOneWidget);
-    expect(find.text('Confirm'), findsOneWidget);
-
-    await tester.tap(
-      find.byKey(
-        const ValueKey<String>('already-added-disconnect-cancel-action'),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.text('Are you sure to disconnect this device?'), findsNothing);
-    expect(deleteAction, findsOneWidget);
-
-    await tester.tap(deleteAction);
-    await tester.pumpAndSettle();
-    await tester.tap(
-      find.byKey(
-        const ValueKey<String>('already-added-disconnect-confirm-action'),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.text('Are you sure to disconnect this device?'), findsNothing);
-    expect(deleteAction, findsOneWidget);
-  });
-
-  testWidgets('renders added-device disconnect confirmation in Chinese', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          doorDetailRepositoryProvider.overrideWithValue(
-            const _FakeDoorDetailRepository(),
-          ),
-        ],
-        child: MaterialApp(
-          locale: const Locale('zh'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: const AlreadyAddedDevicesPage(doorId: '12'),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    await tester.tap(
-      find.byKey(const ValueKey<String>('already-added-delete-action-SN-001')),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.text('确定要断开此设备吗？'), findsOneWidget);
-    expect(find.text('取消'), findsOneWidget);
-    expect(find.text('确认'), findsOneWidget);
-  });
-
-  testWidgets('uses association status for connection device icons', (
-    tester,
-  ) async {
-    await _pumpDevicePage(tester, _RecordingHardwareGateway());
-
-    expect(
-      _connectionDeviceAsset(tester, 'dongle'),
-      'assets/icons/device_control/device_command_dongle_inactive.png',
-    );
-    expect(
-      _connectionDeviceAsset(tester, 'fbox'),
-      'assets/icons/device_control/device_command_fbox_active.png',
-    );
-    expect(
-      _connectionDeviceAsset(tester, 'opener'),
-      'assets/icons/device_control/device_command_opener_active.png',
-    );
-    expect(
-      _connectionDeviceAsset(tester, 'video'),
-      'assets/icons/device_control/device_command_video_inactive.png',
-    );
-    expect(
-      _connectionDeviceAsset(tester, 'evo'),
-      'assets/icons/device_control/device_command_evo_inactive.png',
-    );
+    expect(find.text('暂无已连接设备'), findsOneWidget);
   });
 
   testWidgets('shows pending state while a command is in progress', (
@@ -411,11 +354,34 @@ Future<void> _pumpDevicePage(
 }
 
 String _connectionDeviceAsset(WidgetTester tester, String deviceType) {
+  return _connectionGroupAssets(tester, deviceType).first;
+}
+
+List<String> _connectionGroupAssets(WidgetTester tester, String deviceType) {
   final group = find.byKey(ValueKey<String>('connection-device-$deviceType'));
-  final image = tester.widget<Image>(
-    find.descendant(of: group, matching: find.byType(Image)).first,
+  return tester
+      .widgetList<Image>(
+        find.descendant(of: group, matching: find.byType(Image)),
+      )
+      .map((image) => (image.image as AssetImage).assetName)
+      .toList();
+}
+
+bool _hasConnectionBorder(WidgetTester tester, String deviceType) {
+  final group = find.byKey(ValueKey<String>('connection-device-$deviceType'));
+  final box = tester.widget<DecoratedBox>(
+    find.descendant(of: group, matching: find.byType(DecoratedBox)),
   );
-  return (image.image as AssetImage).assetName;
+  return (box.decoration as BoxDecoration).border != null;
+}
+
+GestureTapCallback? _connectionTap(WidgetTester tester, String deviceType) {
+  final group = find.byKey(ValueKey<String>('connection-device-$deviceType'));
+  return tester
+      .widget<GestureDetector>(
+        find.descendant(of: group, matching: find.byType(GestureDetector)),
+      )
+      .onTap;
 }
 
 class _RecordingHardwareGateway extends MockHardwareGateway {
@@ -489,6 +455,14 @@ class _UnusedDeviceKeyRepository implements AddDeviceOnboardingRepository {
   const _UnusedDeviceKeyRepository();
 
   @override
+  Future<void> validateBindingStatus({
+    required String sn,
+    required String requestId,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
   Future<OnboardedForceDoor> addForceDoor({
     required String sn,
     required String requestId,
@@ -520,28 +494,27 @@ class _FakeDoorDetailRepository implements DoorDetailRepository {
       doorStateLabel: 'Closed',
       operatedCycles: 123,
       remainingCycles: 4567,
-      associatedDevices: [
-        DoorAssociatedDevice(
-          deviceType: 'opener',
-          associated: true,
-          primaryControl: true,
-          bleName: 'SN-001',
-        ),
-        DoorAssociatedDevice(
-          deviceType: 'dongle',
-          associated: false,
-          primaryControl: false,
-          bleName: '',
-        ),
-        DoorAssociatedDevice(
-          deviceType: 'fbox',
-          associated: true,
-          primaryControl: false,
-          bleName: '',
-        ),
-      ],
+      ledStatus: 1,
+      autoCloseEnabled: true,
+      openReminderEnabled: true,
+      partialOpenValue: 60,
     );
   }
+
+  @override
+  Future<List<DoorDevice>> fetchDoorDevices({
+    required String doorId,
+    required String requestId,
+  }) async => const [
+    DoorDevice(
+      deviceId: '3',
+      sn: 'opener_B8F86211A9DC',
+      deviceType: 'opener',
+      bleName: 'Garage door',
+      bleConnectionStatus: 1,
+      wifiConnectionStatus: 1,
+    ),
+  ];
 }
 
 class _EmptyOperationRecordRepository implements OperationRecordRepository {

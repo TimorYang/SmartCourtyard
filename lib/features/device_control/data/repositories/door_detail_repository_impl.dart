@@ -2,9 +2,11 @@ import '../../../../core/errors/app_error.dart';
 import '../../../../core/logging/app_logger.dart';
 import '../../../../platform_bridge/hardware_models.dart';
 import '../../domain/entities/door_detail.dart';
+import '../../domain/entities/door_device.dart';
 import '../../domain/repositories/door_detail_repository.dart';
 import '../data_sources/door_detail_remote_data_source.dart';
 import '../dto/door_detail_response_dto.dart';
+import '../dto/door_device_response_dto.dart';
 
 class DoorDetailRepositoryImpl implements DoorDetailRepository {
   const DoorDetailRepositoryImpl({
@@ -49,6 +51,39 @@ class DoorDetailRepositoryImpl implements DoorDetailRepository {
     }
   }
 
+  @override
+  Future<List<DoorDevice>> fetchDoorDevices({
+    required String doorId,
+    required String requestId,
+  }) async {
+    final parsedDoorId = int.tryParse(doorId.trim());
+    if (parsedDoorId == null) {
+      throw AppError(
+        code: AppErrorCode.unknown,
+        messageKey: 'door_detail_invalid_door_id',
+        requestId: requestId,
+        deviceId: doorId,
+      );
+    }
+    try {
+      final devices = await remoteDataSource.fetchDoorDevices(
+        doorId: parsedDoorId,
+        requestId: requestId,
+      );
+      return devices.map((device) => device.toDomain()).toList();
+    } on DoorDetailRemoteException catch (error, stackTrace) {
+      final appError = _mapError(error, requestId, doorId);
+      logger.error(
+        'Failed to fetch door devices',
+        requestId: requestId,
+        error: error,
+        stackTrace: stackTrace,
+        context: {'doorId': doorId, 'errorKind': error.kind.name},
+      );
+      throw appError;
+    }
+  }
+
   AppError _mapError(
     DoorDetailRemoteException error,
     String requestId,
@@ -75,10 +110,29 @@ class DoorDetailRepositoryImpl implements DoorDetailRepository {
   }
 }
 
+extension DoorDeviceResponseDtoMapper on DoorDeviceResponseDto {
+  DoorDevice toDomain() => DoorDevice(
+    deviceId: deviceId,
+    sn: sn.trim(),
+    deviceType: deviceType.trim(),
+    deviceTypeLabel: deviceTypeLabel?.trim(),
+    onlineStatus: onlineStatus,
+    onlineStatusLabel: onlineStatusLabel?.trim(),
+    bleName: bleName?.trim(),
+    bleUuid: bleUuid?.trim(),
+    bleMac: bleMac?.trim(),
+    bleConnectionStatus: bleConnectionStatus,
+    bleConnectionStatusLabel: bleConnectionStatusLabel?.trim(),
+    wifiConnectionStatus: wifiConnectionStatus,
+    wifiConnectionStatusLabel: wifiConnectionStatusLabel?.trim(),
+    capabilities: capabilities,
+  );
+}
+
 extension DoorDetailResponseDtoMapper on DoorDetailResponseDto {
   DoorDetail toDomain() {
     return DoorDetail(
-      id: id.toString(),
+      id: id,
       name: name.trim().isEmpty ? 'Garage door' : name.trim(),
       doorType: doorType,
       doorTypeLabel: doorTypeLabel,
@@ -92,24 +146,27 @@ extension DoorDetailResponseDtoMapper on DoorDetailResponseDto {
       coverFileId: coverFileId,
       operatedCycles: operatedCycles ?? 0,
       remainingCycles: remainingCycles ?? 0,
-      associatedDevices: associatedDevices
-          .map(
-            (device) => DoorAssociatedDevice(
-              deviceType: device.deviceType?.trim() ?? '',
-              deviceTypeLabel: device.deviceTypeLabel?.trim(),
-              associated: device.associated,
-              primaryControl: device.primaryControl,
-              bleName: device.bleName?.trim() ?? '',
-              bleUuid: device.bleUuid,
-              bleMac: device.bleMac,
-              capabilities: device.capabilities,
-            ),
-          )
-          .toList(),
+      ledStatus: ledStatus,
+      ledStatusLabel: ledStatusLabel,
+      autoCloseEnabled: autoCloseEnabled ?? false,
+      openReminderEnabled: openReminderEnabled ?? false,
+      partialOpenValue: partialOpenValue,
     );
   }
 
   DoorState _doorState() {
+    switch (doorState) {
+      case 1:
+        return DoorState.closed;
+      case 2:
+        return DoorState.opening;
+      case 3:
+        return DoorState.open;
+      case 4:
+        return DoorState.closing;
+      case 5:
+        return DoorState.stopped;
+    }
     final label = doorStateLabel?.trim().toLowerCase() ?? '';
     if (label.contains('opening') || label.contains('正在开')) {
       return DoorState.opening;
@@ -132,14 +189,7 @@ extension DoorDetailResponseDtoMapper on DoorDetailResponseDto {
         label.contains('已开')) {
       return DoorState.open;
     }
-    return switch (doorState) {
-      1 => DoorState.open,
-      2 => DoorState.closed,
-      3 => DoorState.opening,
-      4 => DoorState.closing,
-      5 => DoorState.stopped,
-      _ => DoorState.unknown,
-    };
+    return DoorState.unknown;
   }
 
   String _doorStateLabel() {

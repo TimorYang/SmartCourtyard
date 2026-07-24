@@ -15,8 +15,10 @@ import '../data/data_sources/door_detail_api.dart';
 import '../data/data_sources/door_detail_remote_data_source.dart';
 import '../data/repositories/door_detail_repository_impl.dart';
 import '../domain/entities/door_detail.dart';
+import '../domain/entities/door_device.dart';
 import '../domain/repositories/door_detail_repository.dart';
 import '../domain/use_cases/fetch_door_detail_use_case.dart';
+import '../domain/use_cases/fetch_door_devices_use_case.dart';
 
 final deviceCommandHardwareGatewayProvider = Provider<HardwareGateway>((ref) {
   return ref.watch(nativeHardwareGatewayProvider);
@@ -44,6 +46,14 @@ final doorDetailRepositoryProvider = Provider<DoorDetailRepository>((ref) {
 
 final fetchDoorDetailUseCaseProvider = Provider<FetchDoorDetailUseCase>((ref) {
   return FetchDoorDetailUseCase(
+    repository: ref.watch(doorDetailRepositoryProvider),
+  );
+});
+
+final fetchDoorDevicesUseCaseProvider = Provider<FetchDoorDevicesUseCase>((
+  ref,
+) {
+  return FetchDoorDevicesUseCase(
     repository: ref.watch(doorDetailRepositoryProvider),
   );
 });
@@ -83,6 +93,7 @@ enum DeviceBleConnectionStatus {
 class DeviceCommandState {
   const DeviceCommandState({
     this.doorDetail,
+    this.doorDevices = const <DoorDevice>[],
     this.isLoadingDoorDetail = false,
     this.doorDetailErrorMessage,
     this.pendingAction,
@@ -97,9 +108,11 @@ class DeviceCommandState {
     this.errorMessage,
     this.bleConnectionStatus = DeviceBleConnectionStatus.idle,
     this.bleDeviceId,
+    this.bleTargetName,
   });
 
   final DoorDetail? doorDetail;
+  final List<DoorDevice> doorDevices;
   final bool isLoadingDoorDetail;
   final String? doorDetailErrorMessage;
   final DeviceCommandAction? pendingAction;
@@ -114,10 +127,12 @@ class DeviceCommandState {
   final String? errorMessage;
   final DeviceBleConnectionStatus bleConnectionStatus;
   final String? bleDeviceId;
+  final String? bleTargetName;
 
   DeviceCommandState copyWith({
     DoorDetail? doorDetail,
     bool clearDoorDetail = false,
+    List<DoorDevice>? doorDevices,
     bool? isLoadingDoorDetail,
     String? doorDetailErrorMessage,
     bool clearDoorDetailErrorMessage = false,
@@ -139,9 +154,12 @@ class DeviceCommandState {
     DeviceBleConnectionStatus? bleConnectionStatus,
     String? bleDeviceId,
     bool clearBleDeviceId = false,
+    String? bleTargetName,
+    bool clearBleTargetName = false,
   }) {
     return DeviceCommandState(
       doorDetail: clearDoorDetail ? null : doorDetail ?? this.doorDetail,
+      doorDevices: doorDevices ?? this.doorDevices,
       isLoadingDoorDetail: isLoadingDoorDetail ?? this.isLoadingDoorDetail,
       doorDetailErrorMessage: clearDoorDetailErrorMessage
           ? null
@@ -166,6 +184,9 @@ class DeviceCommandState {
           : errorMessage ?? this.errorMessage,
       bleConnectionStatus: bleConnectionStatus ?? this.bleConnectionStatus,
       bleDeviceId: clearBleDeviceId ? null : bleDeviceId ?? this.bleDeviceId,
+      bleTargetName: clearBleTargetName
+          ? null
+          : bleTargetName ?? this.bleTargetName,
     );
   }
 }
@@ -173,6 +194,7 @@ class DeviceCommandState {
 class DeviceCommandController extends Notifier<DeviceCommandState> {
   late final HardwareGateway _gateway;
   late final FetchDoorDetailUseCase _fetchDoorDetailUseCase;
+  late final FetchDoorDevicesUseCase _fetchDoorDevicesUseCase;
   late final FetchOnboardingDeviceKeyUseCase _fetchDeviceKeyUseCase;
   late final Duration _bleScanDuration;
   final List<StreamSubscription<Object?>> _subscriptions =
@@ -187,6 +209,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
   DeviceCommandState build() {
     _gateway = ref.watch(deviceCommandHardwareGatewayProvider);
     _fetchDoorDetailUseCase = ref.watch(fetchDoorDetailUseCaseProvider);
+    _fetchDoorDevicesUseCase = ref.watch(fetchDoorDevicesUseCaseProvider);
     _fetchDeviceKeyUseCase = ref.watch(fetchOnboardingDeviceKeyUseCaseProvider);
     _bleScanDuration = ref.watch(deviceCommandBleScanDurationProvider);
     _subscriptions.add(_gateway.bleScanResults.listen(_onBleDeviceFound));
@@ -217,16 +240,25 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
     );
 
     try {
-      final detail = await _fetchDoorDetailUseCase(
-        doorId: trimmedDoorId,
-        requestId: _nextDoorDetailRequestId(trimmedDoorId),
-      );
+      final results = await Future.wait<Object>([
+        _fetchDoorDetailUseCase(
+          doorId: trimmedDoorId,
+          requestId: _nextDoorDetailRequestId(trimmedDoorId),
+        ),
+        _fetchDoorDevicesUseCase(
+          doorId: trimmedDoorId,
+          requestId: _nextDoorDevicesRequestId(trimmedDoorId),
+        ),
+      ]);
+      final detail = results[0] as DoorDetail;
+      final doorDevices = results[1] as List<DoorDevice>;
       state = state.copyWith(
         doorDetail: detail,
+        doorDevices: doorDevices,
         isLoadingDoorDetail: false,
         clearDoorDetailErrorMessage: true,
       );
-      final hardwareSn = detail.hardwareDeviceId;
+      final hardwareSn = detail.name.trim();
       if (hardwareSn.isNotEmpty) {
         unawaited(_startBleSession(hardwareSn));
       }
@@ -241,6 +273,12 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
         doorDetailErrorMessage: error.toString(),
       );
     }
+  }
+
+  String _nextDoorDevicesRequestId(String doorId) {
+    _requestCounter += 1;
+    return 'door-devices-$doorId-'
+        '${DateTime.now().toUtc().microsecondsSinceEpoch}-$_requestCounter';
   }
 
   Future<void> disposeBleSession() async {
@@ -269,8 +307,20 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
       state = state.copyWith(
         bleConnectionStatus: DeviceBleConnectionStatus.idle,
         clearBleDeviceId: true,
+        clearBleTargetName: true,
       );
     }
+  }
+
+  Future<void> connectDoorDevice({required String bleName}) async {
+    final normalizedBleName = bleName.trim();
+    if (normalizedBleName.isEmpty ||
+        (state.bleConnectionStatus == DeviceBleConnectionStatus.connected &&
+            state.bleTargetName == normalizedBleName)) {
+      return;
+    }
+    await disposeBleSession();
+    await _startBleSession(normalizedBleName);
   }
 
   Future<void> _startBleSession(String hardwareSn) async {
@@ -279,6 +329,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
     state = state.copyWith(
       bleConnectionStatus: DeviceBleConnectionStatus.scanning,
       clearBleDeviceId: true,
+      bleTargetName: hardwareSn,
     );
     try {
       await _gateway.startBleScan(
@@ -295,6 +346,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
       if (_isCurrentBleSession(sessionId)) {
         state = state.copyWith(
           bleConnectionStatus: DeviceBleConnectionStatus.idle,
+          clearBleTargetName: true,
         );
       }
     }
@@ -330,6 +382,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
     if (_isCurrentBleSession(sessionId)) {
       state = state.copyWith(
         bleConnectionStatus: DeviceBleConnectionStatus.idle,
+        clearBleTargetName: true,
       );
     }
   }
@@ -407,6 +460,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
       state = state.copyWith(
         bleConnectionStatus: DeviceBleConnectionStatus.idle,
         clearBleDeviceId: true,
+        clearBleTargetName: true,
       );
     }
   }

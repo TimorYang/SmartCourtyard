@@ -13,7 +13,7 @@ import '../../../../shared/widgets/flinx_switch.dart';
 import '../../../records/presentation/pages/operation_record_page.dart';
 import '../../../security_center/presentation/pages/security_center_page.dart';
 import '../../application/device_command_controller.dart';
-import '../../domain/entities/door_detail.dart';
+import '../../domain/entities/door_device.dart';
 import '../widgets/device_detail_bottom_navigation.dart';
 import 'already_added_devices_page.dart';
 import 'device_settings_page.dart';
@@ -43,9 +43,9 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
   static const _garageDoorFallbackAsset =
       'assets/icons/add_device/add_new_doors_garage_door.png';
 
-  bool _ledEnabled = false;
-  bool _autoCloseEnabled = false;
-  bool _openReminderEnabled = true;
+  bool? _ledEnabledOverride;
+  bool? _autoCloseEnabledOverride;
+  bool? _openReminderEnabledOverride;
   DeviceDetailTab _selectedTab = DeviceDetailTab.command;
   late final DeviceCommandController _controller;
 
@@ -76,6 +76,9 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
   void didUpdateWidget(covariant DeviceCommandPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.doorId != widget.doorId) {
+      _ledEnabledOverride = null;
+      _autoCloseEnabledOverride = null;
+      _openReminderEnabledOverride = null;
       Future.microtask(_loadDoorDetail);
     }
   }
@@ -137,7 +140,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
         (commandState.bleDeviceId?.trim().isNotEmpty ?? false)) {
       return commandState.bleDeviceId!.trim();
     }
-    final detailDeviceId = commandState.doorDetail?.hardwareDeviceId ?? '';
+    final detailDeviceId = commandState.doorDetail?.name ?? '';
     if (detailDeviceId.trim().isNotEmpty) {
       return detailDeviceId.trim();
     }
@@ -154,6 +157,13 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     required TextTheme textTheme,
   }) {
     final doorDetail = commandState.doorDetail;
+    final ledEnabled = _ledEnabledOverride ?? doorDetail?.isLedEnabled ?? false;
+    final autoCloseEnabled =
+        _autoCloseEnabledOverride ?? doorDetail?.autoCloseEnabled ?? false;
+    final openReminderEnabled =
+        _openReminderEnabledOverride ??
+        doorDetail?.openReminderEnabled ??
+        false;
     final hardwareDeviceId = _hardwareDeviceId(commandState);
     final l10n = AppLocalizations.of(context);
     return Scaffold(
@@ -201,16 +211,15 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
               ),
             ),
             _DeviceConnectionStrip(
-              associatedDevices: doorDetail?.associatedDevices ?? const [],
-              onItemTap: (index) {
-                ref
-                    .read(appLoggerProvider)
-                    .info(
-                      'device_connection_item_tapped',
-                      tag: AppLogTag.binding,
-                      context: {'index': index, 'deviceId': hardwareDeviceId},
-                    );
-              },
+              devices: commandState.doorDevices,
+              connectedBleName:
+                  commandState.bleConnectionStatus ==
+                      DeviceBleConnectionStatus.connected
+                  ? commandState.bleTargetName
+                  : null,
+              onDeviceTap: (device) => unawaited(
+                controller.connectDoorDevice(bleName: device.bleName ?? ''),
+              ),
             ),
             const SizedBox(height: 12),
             Expanded(
@@ -271,12 +280,13 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                     const SizedBox(height: 12),
                   ],
                   _QuickActionGrid(
-                    ledEnabled: _ledEnabled,
-                    autoCloseEnabled: _autoCloseEnabled,
-                    openReminderEnabled: _openReminderEnabled,
+                    ledEnabled: ledEnabled,
+                    autoCloseEnabled: autoCloseEnabled,
+                    openReminderEnabled: openReminderEnabled,
+                    partialOpenValue: doorDetail?.partialOpenValue,
                     busy: isBusy,
                     onLedChanged: (enabled) async {
-                      setState(() => _ledEnabled = enabled);
+                      setState(() => _ledEnabledOverride = enabled);
                       await controller.runAction(
                         deviceId: hardwareDeviceId,
                         action: enabled
@@ -285,10 +295,10 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                       );
                     },
                     onAutoCloseChanged: (enabled) {
-                      setState(() => _autoCloseEnabled = enabled);
+                      setState(() => _autoCloseEnabledOverride = enabled);
                     },
                     onOpenReminderChanged: (enabled) {
-                      setState(() => _openReminderEnabled = enabled);
+                      setState(() => _openReminderEnabledOverride = enabled);
                     },
                     onPartialOpen: () => controller.runAction(
                       deviceId: hardwareDeviceId,
@@ -349,6 +359,156 @@ abstract final class _DeviceCommandAssetPaths {
       'assets/icons/device_control/device_command_more_setting_placeholder.png';
   static const openReminder =
       'assets/icons/device_settings/device_settings_door_open_reminder_icon.png';
+}
+
+class _DeviceConnectionStrip extends StatelessWidget {
+  const _DeviceConnectionStrip({
+    required this.devices,
+    required this.connectedBleName,
+    required this.onDeviceTap,
+  });
+
+  final List<DoorDevice> devices;
+  final String? connectedBleName;
+  final ValueChanged<DoorDevice> onDeviceTap;
+
+  DoorDevice? _deviceFor(String deviceType) {
+    for (final device in devices) {
+      if (device.deviceType.trim().toLowerCase() == deviceType) {
+        return device;
+      }
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 44,
+      child: Row(
+        children: [
+          _group(
+            'dongle',
+            _DeviceCommandAssetPaths.dongleActive,
+            _DeviceCommandAssetPaths.dongleInactive,
+          ),
+          _group(
+            'fbox',
+            _DeviceCommandAssetPaths.fboxActive,
+            _DeviceCommandAssetPaths.fboxInactive,
+          ),
+          _group(
+            'opener',
+            _DeviceCommandAssetPaths.openerActive,
+            _DeviceCommandAssetPaths.openerInactive,
+          ),
+          _group(
+            'video',
+            _DeviceCommandAssetPaths.videoActive,
+            _DeviceCommandAssetPaths.videoInactive,
+          ),
+          _group(
+            'evo',
+            _DeviceCommandAssetPaths.evoActive,
+            _DeviceCommandAssetPaths.evoInactive,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _group(String type, String activeAsset, String inactiveAsset) {
+    final device = _deviceFor(type);
+    final isActive = device != null;
+    return Expanded(
+      child: _ConnectionGroup(
+        key: ValueKey<String>('connection-device-$type'),
+        deviceActive: isActive,
+        activeDeviceIconAsset: activeAsset,
+        inactiveDeviceIconAsset: inactiveAsset,
+        showBluetooth: type != 'video',
+        bluetoothActive: device != null && device.bleName == connectedBleName,
+        wifiActive: device?.isWifiConnected ?? false,
+        hasConnectionBorder:
+            type != 'video' &&
+            device != null &&
+            device.bleName == connectedBleName,
+        onTap:
+            type != 'video' &&
+                isActive &&
+                (device.bleName?.trim().isNotEmpty ?? false)
+            ? () => onDeviceTap(device)
+            : null,
+      ),
+    );
+  }
+}
+
+class _ConnectionGroup extends StatelessWidget {
+  const _ConnectionGroup({
+    required this.deviceActive,
+    required this.activeDeviceIconAsset,
+    required this.inactiveDeviceIconAsset,
+    required this.showBluetooth,
+    required this.bluetoothActive,
+    required this.wifiActive,
+    required this.hasConnectionBorder,
+    required this.onTap,
+    super.key,
+  });
+
+  final bool deviceActive;
+  final String activeDeviceIconAsset;
+  final String inactiveDeviceIconAsset;
+  final bool showBluetooth;
+  final bool bluetoothActive;
+  final bool wifiActive;
+  final bool hasConnectionBorder;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          border: hasConnectionBorder
+              ? Border.all(color: AppColors.deviceControlPrimaryAction)
+              : null,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Center(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              children: [
+                _DeviceControlAssetIcon(
+                  assetPath: deviceActive
+                      ? activeDeviceIconAsset
+                      : inactiveDeviceIconAsset,
+                ),
+                if (showBluetooth) ...[
+                  const SizedBox(width: 7),
+                  _DeviceControlAssetIcon(
+                    assetPath: bluetoothActive
+                        ? _DeviceCommandAssetPaths.bluetoothActive
+                        : _DeviceCommandAssetPaths.bluetoothInactive,
+                  ),
+                ],
+                const SizedBox(width: 7),
+                _DeviceControlAssetIcon(
+                  assetPath: wifiActive
+                      ? _DeviceCommandAssetPaths.wifiActive
+                      : _DeviceCommandAssetPaths.wifiInactive,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _CycleSummary extends StatelessWidget {
@@ -458,152 +618,6 @@ class _CommandVideoButton extends StatelessWidget {
         onPressed: () {},
         icon: const _DeviceControlAssetIcon(
           assetPath: _DeviceCommandAssetPaths.videoActive,
-        ),
-      ),
-    );
-  }
-}
-
-class _DeviceConnectionStrip extends StatelessWidget {
-  const _DeviceConnectionStrip({
-    required this.associatedDevices,
-    required this.onItemTap,
-  });
-
-  final List<DoorAssociatedDevice> associatedDevices;
-  final ValueChanged<int> onItemTap;
-
-  bool _isAssociated(String deviceType) {
-    return associatedDevices.any(
-      (device) =>
-          device.deviceType.trim().toLowerCase() == deviceType &&
-          device.associated,
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: SizedBox(
-        height: 44,
-        child: Row(
-          children: [
-            Expanded(
-              child: _ConnectionGroup(
-                key: const ValueKey<String>('connection-device-dongle'),
-                activeDeviceIconAsset: _DeviceCommandAssetPaths.dongleActive,
-                inactiveDeviceIconAsset:
-                    _DeviceCommandAssetPaths.dongleInactive,
-                deviceActive: _isAssociated('dongle'),
-                bluetoothActive: false,
-                wifiActive: false,
-                onTap: () => onItemTap(0),
-              ),
-            ),
-            Expanded(
-              child: _ConnectionGroup(
-                key: const ValueKey<String>('connection-device-fbox'),
-                activeDeviceIconAsset: _DeviceCommandAssetPaths.fboxActive,
-                inactiveDeviceIconAsset: _DeviceCommandAssetPaths.fboxInactive,
-                deviceActive: _isAssociated('fbox'),
-                bluetoothActive: false,
-                wifiActive: true,
-                onTap: () => onItemTap(1),
-              ),
-            ),
-            Expanded(
-              child: _ConnectionGroup(
-                key: const ValueKey<String>('connection-device-opener'),
-                activeDeviceIconAsset: _DeviceCommandAssetPaths.openerActive,
-                inactiveDeviceIconAsset:
-                    _DeviceCommandAssetPaths.openerInactive,
-                deviceActive: _isAssociated('opener'),
-                bluetoothActive: false,
-                wifiActive: true,
-                onTap: () => onItemTap(2),
-              ),
-            ),
-            Expanded(
-              child: _ConnectionGroup(
-                key: const ValueKey<String>('connection-device-video'),
-                activeDeviceIconAsset: _DeviceCommandAssetPaths.videoActive,
-                inactiveDeviceIconAsset: _DeviceCommandAssetPaths.videoInactive,
-                deviceActive: _isAssociated('video'),
-                bluetoothActive: null,
-                wifiActive: true,
-                onTap: () => onItemTap(3),
-              ),
-            ),
-            Expanded(
-              child: _ConnectionGroup(
-                key: const ValueKey<String>('connection-device-evo'),
-                activeDeviceIconAsset: _DeviceCommandAssetPaths.evoActive,
-                inactiveDeviceIconAsset: _DeviceCommandAssetPaths.evoInactive,
-                deviceActive: _isAssociated('evo'),
-                bluetoothActive: true,
-                wifiActive: true,
-                onTap: () => onItemTap(4),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ConnectionGroup extends StatelessWidget {
-  const _ConnectionGroup({
-    required this.activeDeviceIconAsset,
-    required this.inactiveDeviceIconAsset,
-    required this.bluetoothActive,
-    required this.wifiActive,
-    required this.onTap,
-    this.deviceActive = true,
-    super.key,
-  });
-
-  final String activeDeviceIconAsset;
-  final String inactiveDeviceIconAsset;
-  final bool? bluetoothActive;
-  final bool wifiActive;
-  final VoidCallback onTap;
-  final bool deviceActive;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: SizedBox.expand(
-        child: Center(
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Row(
-              children: [
-                _DeviceControlAssetIcon(
-                  assetPath: deviceActive
-                      ? activeDeviceIconAsset
-                      : inactiveDeviceIconAsset,
-                ),
-                if (bluetoothActive != null) ...[
-                  const SizedBox(width: 7),
-                  _DeviceControlAssetIcon(
-                    assetPath: bluetoothActive!
-                        ? _DeviceCommandAssetPaths.bluetoothActive
-                        : _DeviceCommandAssetPaths.bluetoothInactive,
-                  ),
-                ],
-                const SizedBox(width: 7),
-                _DeviceControlAssetIcon(
-                  assetPath: wifiActive
-                      ? _DeviceCommandAssetPaths.wifiActive
-                      : _DeviceCommandAssetPaths.wifiInactive,
-                ),
-              ],
-            ),
-          ),
         ),
       ),
     );
@@ -793,6 +807,7 @@ class _QuickActionGrid extends StatelessWidget {
     required this.ledEnabled,
     required this.autoCloseEnabled,
     required this.openReminderEnabled,
+    required this.partialOpenValue,
     required this.busy,
     required this.onLedChanged,
     required this.onAutoCloseChanged,
@@ -804,6 +819,7 @@ class _QuickActionGrid extends StatelessWidget {
   final bool ledEnabled;
   final bool autoCloseEnabled;
   final bool openReminderEnabled;
+  final int? partialOpenValue;
   final bool busy;
   final ValueChanged<bool> onLedChanged;
   final ValueChanged<bool> onAutoCloseChanged;
@@ -866,6 +882,7 @@ class _QuickActionGrid extends StatelessWidget {
                 Expanded(
                   flex: 140,
                   child: _PartialOpenCard(
+                    value: partialOpenValue,
                     busy: busy,
                     textTheme: textTheme,
                     onPressed: onPartialOpen,
@@ -1008,12 +1025,14 @@ class _ToggleActionCard extends StatelessWidget {
 
 class _PartialOpenCard extends StatelessWidget {
   const _PartialOpenCard({
+    required this.value,
     required this.busy,
     required this.textTheme,
     required this.onPressed,
   });
 
   final bool busy;
+  final int? value;
   final TextTheme textTheme;
   final VoidCallback onPressed;
 
@@ -1024,22 +1043,28 @@ class _PartialOpenCard extends StatelessWidget {
       onTap: busy ? null : onPressed,
       child: Stack(
         children: [
-          Align(
-            alignment: Alignment.topRight,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: AppColors.deviceControlInactive.withValues(alpha: 0.42),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-                child: Text(
-                  '60cm',
-                  style: AppTextTokens.deviceControlBadge(textTheme),
+          if (value != null)
+            Align(
+              alignment: Alignment.topRight,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: AppColors.deviceControlInactive.withValues(
+                    alpha: 0.42,
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 4,
+                  ),
+                  child: Text(
+                    '${value}cm',
+                    style: AppTextTokens.deviceControlBadge(textTheme),
+                  ),
                 ),
               ),
             ),
-          ),
           Center(
             child: Container(
               width: 82,

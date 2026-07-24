@@ -94,14 +94,13 @@ class AlreadyAddedDevicesController extends Notifier<AlreadyAddedDevicesState> {
       initialLoadFailed: false,
     );
     try {
-      final detail = await _fetchDoorDetailUseCase(
+      await _fetchDoorDetailUseCase(
         doorId: normalizedDoorId,
         requestId: _nextRequestId(normalizedDoorId),
       );
       state = state.copyWith(
-        devices: detail.associatedDevices
-            .where((device) => device.associated)
-            .toList(growable: false),
+        // The door-detail endpoint no longer includes associated devices.
+        devices: const <DoorAssociatedDevice>[],
         isInitialLoading: false,
         isRefreshing: false,
         initialLoadFailed: false,

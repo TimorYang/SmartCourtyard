@@ -50,6 +50,47 @@ class _DoorDetailApi implements DoorDetailApi {
     return _value;
   }
 
+  @override
+  Future<ApiEnvelopeDto<List<DoorDeviceResponseDto>>> fetchDoorDevices(
+    int doorId,
+    Options options,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final newOptions = newRequestOptions(options);
+    newOptions.extra.addAll(_extra);
+    newOptions.headers.addAll(_dio.options.headers);
+    newOptions.headers.addAll(_headers);
+    final _options = newOptions.copyWith(
+      method: 'GET',
+      baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl),
+      queryParameters: queryParameters,
+      path: 'app/doors/${doorId}/devices',
+    )..data = _data;
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late ApiEnvelopeDto<List<DoorDeviceResponseDto>> _value;
+    try {
+      _value = ApiEnvelopeDto<List<DoorDeviceResponseDto>>.fromJson(
+        _result.data!,
+        (json) => json is List<dynamic>
+            ? json
+                  .map<DoorDeviceResponseDto>(
+                    (i) => DoorDeviceResponseDto.fromJson(
+                      i as Map<String, dynamic>,
+                    ),
+                  )
+                  .toList()
+            : List.empty(),
+      );
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, response: _result);
+      rethrow;
+    }
+    return _value;
+  }
+
   RequestOptions newRequestOptions(Object? options) {
     if (options is RequestOptions) {
       return options;
@@ -62,7 +103,7 @@ class _DoorDetailApi implements DoorDetailApi {
         extra: options.extra,
         headers: options.headers,
         responseType: options.responseType,
-        contentType: options.contentType.toString(),
+        contentType: options.contentType?.toString(),
         validateStatus: options.validateStatus,
         receiveDataWhenStatusError: options.receiveDataWhenStatusError,
         followRedirects: options.followRedirects,

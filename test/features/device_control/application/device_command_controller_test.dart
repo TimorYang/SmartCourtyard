@@ -6,6 +6,7 @@ import 'package:flinx/features/add_device/domain/entities/onboarding_device_key.
 import 'package:flinx/features/add_device/domain/repositories/add_device_onboarding_repository.dart';
 import 'package:flinx/features/device_control/application/device_command_controller.dart';
 import 'package:flinx/features/device_control/domain/entities/door_detail.dart';
+import 'package:flinx/features/device_control/domain/entities/door_device.dart';
 import 'package:flinx/features/device_control/domain/repositories/door_detail_repository.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
 import 'package:flinx/platform_bridge/mock_hardware_gateway.dart';
@@ -14,7 +15,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test(
-    'connects and authenticates the primary associated BLE device',
+    'connects and authenticates the BLE device named by the door detail',
     () async {
       final gateway = _BleSessionGateway();
       final container = _createContainer(gateway: gateway);
@@ -25,7 +26,7 @@ void main() {
           .loadDoorDetail(doorId: '12');
       await _settleBleSession();
 
-      expect(gateway.exactScanNames, ['SN-001']);
+      expect(gateway.exactScanNames, ['Test door']);
       expect(gateway.connectedDeviceIds, ['target-device']);
       expect(gateway.authenticatedDeviceIds, ['target-device']);
       final state = container.read(deviceCommandControllerProvider);
@@ -35,12 +36,12 @@ void main() {
   );
 
   test(
-    'does not start BLE discovery when the detail has no primary BLE device',
+    'does not start BLE discovery when the detail has no BLE name',
     () async {
       final gateway = _BleSessionGateway();
       final container = _createContainer(
         gateway: gateway,
-        doorDetail: _doorDetail(associatedDevices: const []),
+        doorDetail: _doorDetail(name: ''),
       );
       addTearDown(container.dispose);
 
@@ -52,6 +53,23 @@ void main() {
       expect(gateway.exactScanNames, isEmpty);
     },
   );
+
+  test('connects a tapped device by its BLE name', () async {
+    final gateway = _BleSessionGateway();
+    final container = _createContainer(gateway: gateway);
+    addTearDown(container.dispose);
+    final controller = container.read(deviceCommandControllerProvider.notifier);
+
+    await controller.loadDoorDetail(doorId: '12');
+    await _settleBleSession();
+    await controller.connectDoorDevice(bleName: 'opener_B8F86211A9DC');
+    await _settleBleSession();
+
+    expect(gateway.exactScanNames, ['Test door', 'opener_B8F86211A9DC']);
+    final state = container.read(deviceCommandControllerProvider);
+    expect(state.bleConnectionStatus, DeviceBleConnectionStatus.connected);
+    expect(state.bleTargetName, 'opener_B8F86211A9DC');
+  });
 
   test('disconnects and returns to idle when authentication fails', () async {
     final gateway = _BleSessionGateway(authenticationSucceeds: false);
@@ -116,24 +134,14 @@ Future<void> _settleBleSession() async {
   await Future<void>.delayed(Duration.zero);
 }
 
-DoorDetail _doorDetail({
-  List<DoorAssociatedDevice> associatedDevices = const [
-    DoorAssociatedDevice(
-      deviceType: 'opener',
-      associated: true,
-      primaryControl: true,
-      bleName: 'SN-001',
-    ),
-  ],
-}) {
+DoorDetail _doorDetail({String name = 'Test door'}) {
   return DoorDetail(
     id: '12',
-    name: 'Test door',
+    name: name,
     doorState: DoorState.closed,
     doorStateLabel: 'Closed',
     operatedCycles: 0,
     remainingCycles: 0,
-    associatedDevices: associatedDevices,
   );
 }
 
@@ -147,10 +155,24 @@ class _DoorDetailRepository implements DoorDetailRepository {
     required String doorId,
     required String requestId,
   }) async => detail;
+
+  @override
+  Future<List<DoorDevice>> fetchDoorDevices({
+    required String doorId,
+    required String requestId,
+  }) async => const [];
 }
 
 class _DeviceKeyRepository implements AddDeviceOnboardingRepository {
   const _DeviceKeyRepository();
+
+  @override
+  Future<void> validateBindingStatus({
+    required String sn,
+    required String requestId,
+  }) {
+    throw UnimplementedError();
+  }
 
   @override
   Future<OnboardedForceDoor> addForceDoor({

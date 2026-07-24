@@ -16,7 +16,11 @@ class DoorDetail {
     this.onlineStatusLabel,
     this.positionPercent,
     this.coverFileId,
-    this.associatedDevices = const [],
+    this.ledStatus,
+    this.ledStatusLabel,
+    this.autoCloseEnabled = false,
+    this.openReminderEnabled = false,
+    this.partialOpenValue,
   });
 
   final String id;
@@ -31,22 +35,14 @@ class DoorDetail {
   final String doorStateLabel;
   final double? positionPercent;
   final int? coverFileId;
+  final int? ledStatus;
+  final String? ledStatusLabel;
+  final bool autoCloseEnabled;
+  final bool openReminderEnabled;
+  final int? partialOpenValue;
   final int operatedCycles;
   final int remainingCycles;
-  final List<DoorAssociatedDevice> associatedDevices;
-
-  String get hardwareDeviceId {
-    final primaryControlDevice = associatedDevices.where(
-      (device) =>
-          device.associated &&
-          device.primaryControl &&
-          device.bleName.trim().isNotEmpty,
-    );
-    if (primaryControlDevice.isNotEmpty) {
-      return primaryControlDevice.first.bleName.trim();
-    }
-    return '';
-  }
+  bool get isLedEnabled => ledStatus == 2;
 }
 
 class DoorAssociatedDevice {
