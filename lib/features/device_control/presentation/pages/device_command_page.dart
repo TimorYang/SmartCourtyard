@@ -150,6 +150,29 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     return widget.doorId.trim();
   }
 
+  Set<String> _capabilitiesForCurrentDevice(DeviceCommandState commandState) {
+    final candidates = <String>{
+      commandState.bleTargetName?.trim() ?? '',
+      commandState.doorDetail?.name.trim() ?? '',
+      widget.deviceId.trim(),
+    }..remove('');
+
+    for (final device in commandState.doorDevices) {
+      if (candidates.contains(device.bleName?.trim()) ||
+          candidates.contains(device.sn.trim()) ||
+          candidates.contains(device.deviceId.trim())) {
+        return device.capabilities
+            .map((capability) => capability.trim().toUpperCase())
+            .where((capability) => capability.isNotEmpty)
+            .toSet();
+      }
+    }
+
+    // Capabilities must be tied to a known device type. Do not enable an
+    // extension when the response cannot be matched to the active device.
+    return const <String>{};
+  }
+
   Widget _buildCommandPage({
     required DeviceCommandState commandState,
     required DeviceCommandController controller,
@@ -165,6 +188,11 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
         doorDetail?.openReminderEnabled ??
         false;
     final hardwareDeviceId = _hardwareDeviceId(commandState);
+    final capabilities = _capabilitiesForCurrentDevice(commandState);
+    final canControlDoor = capabilities.contains('DOOR_CONTROL');
+    final canControlLed = capabilities.contains('LED_OFF_DELAY');
+    final canPartialOpen = capabilities.contains('PARTIAL_OPEN');
+    final canUseOpenReminder = capabilities.contains('DOOR_OPEN_REMINDER');
     final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: AppColors.backgroundPrimary,
@@ -248,6 +276,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                     const SizedBox(height: 12),
                   ],
                   _DoorCommandRow(
+                    enabled: canControlDoor,
                     busy: isBusy,
                     pendingAction: commandState.pendingAction,
                     onClose: () => controller.runAction(
@@ -284,6 +313,9 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                     autoCloseEnabled: autoCloseEnabled,
                     openReminderEnabled: openReminderEnabled,
                     partialOpenValue: doorDetail?.partialOpenValue,
+                    ledAvailable: canControlLed,
+                    partialOpenAvailable: canPartialOpen,
+                    openReminderAvailable: canUseOpenReminder,
                     busy: isBusy,
                     onLedChanged: (enabled) async {
                       setState(() => _ledEnabledOverride = enabled);
@@ -679,6 +711,7 @@ class _DoorHeroImage extends StatelessWidget {
 
 class _DoorCommandRow extends StatelessWidget {
   const _DoorCommandRow({
+    required this.enabled,
     required this.busy,
     required this.pendingAction,
     required this.onClose,
@@ -686,6 +719,7 @@ class _DoorCommandRow extends StatelessWidget {
     required this.onOpen,
   });
 
+  final bool enabled;
   final bool busy;
   final DeviceCommandAction? pendingAction;
   final VoidCallback onClose;
@@ -701,21 +735,21 @@ class _DoorCommandRow extends StatelessWidget {
           tooltip: 'Close',
           icon: Icons.keyboard_arrow_down,
           pending: pendingAction == DeviceCommandAction.closeDoor,
-          onPressed: busy ? null : onClose,
+          onPressed: enabled && !busy ? onClose : null,
         ),
         const SizedBox(width: 34),
         _DoorCommandButton(
           tooltip: 'Stop',
           icon: Icons.pause,
           pending: pendingAction == DeviceCommandAction.stopDoor,
-          onPressed: busy ? null : onStop,
+          onPressed: enabled && !busy ? onStop : null,
         ),
         const SizedBox(width: 34),
         _DoorCommandButton(
           tooltip: 'Open',
           icon: Icons.keyboard_arrow_up,
           pending: pendingAction == DeviceCommandAction.openDoor,
-          onPressed: busy ? null : onOpen,
+          onPressed: enabled && !busy ? onOpen : null,
         ),
       ],
     );
@@ -808,6 +842,9 @@ class _QuickActionGrid extends StatelessWidget {
     required this.autoCloseEnabled,
     required this.openReminderEnabled,
     required this.partialOpenValue,
+    required this.ledAvailable,
+    required this.partialOpenAvailable,
+    required this.openReminderAvailable,
     required this.busy,
     required this.onLedChanged,
     required this.onAutoCloseChanged,
@@ -820,6 +857,9 @@ class _QuickActionGrid extends StatelessWidget {
   final bool autoCloseEnabled;
   final bool openReminderEnabled;
   final int? partialOpenValue;
+  final bool ledAvailable;
+  final bool partialOpenAvailable;
+  final bool openReminderAvailable;
   final bool busy;
   final ValueChanged<bool> onLedChanged;
   final ValueChanged<bool> onAutoCloseChanged;
@@ -841,6 +881,7 @@ class _QuickActionGrid extends StatelessWidget {
                 Expanded(
                   child: _LedActionCard(
                     enabled: ledEnabled,
+                    available: ledAvailable,
                     busy: busy,
                     textTheme: textTheme,
                     onChanged: onLedChanged,
@@ -867,6 +908,7 @@ class _QuickActionGrid extends StatelessWidget {
                     title: 'Open reminder',
                     subtitle: '10 min',
                     enabled: openReminderEnabled,
+                    available: openReminderAvailable,
                     busy: busy,
                     textTheme: textTheme,
                     onChanged: onOpenReminderChanged,
@@ -883,6 +925,7 @@ class _QuickActionGrid extends StatelessWidget {
                   flex: 140,
                   child: _PartialOpenCard(
                     value: partialOpenValue,
+                    available: partialOpenAvailable,
                     busy: busy,
                     textTheme: textTheme,
                     onPressed: onPartialOpen,
@@ -909,12 +952,14 @@ class _QuickActionGrid extends StatelessWidget {
 class _LedActionCard extends StatelessWidget {
   const _LedActionCard({
     required this.enabled,
+    required this.available,
     required this.busy,
     required this.textTheme,
     required this.onChanged,
   });
 
   final bool enabled;
+  final bool available;
   final bool busy;
   final TextTheme textTheme;
   final ValueChanged<bool> onChanged;
@@ -935,7 +980,7 @@ class _LedActionCard extends StatelessWidget {
               FlinxSwitch(
                 key: const ValueKey<String>('led-switch'),
                 value: enabled,
-                enabled: !busy,
+                enabled: available && !busy,
                 onChanged: onChanged,
               ),
             ],
@@ -969,6 +1014,7 @@ class _ToggleActionCard extends StatelessWidget {
     this.subtitle,
     required this.switchKey,
     required this.enabled,
+    this.available = true,
     required this.busy,
     required this.textTheme,
     required this.onChanged,
@@ -979,6 +1025,7 @@ class _ToggleActionCard extends StatelessWidget {
   final String? subtitle;
   final Key switchKey;
   final bool enabled;
+  final bool available;
   final bool busy;
   final TextTheme textTheme;
   final ValueChanged<bool> onChanged;
@@ -997,7 +1044,7 @@ class _ToggleActionCard extends StatelessWidget {
               FlinxSwitch(
                 key: switchKey,
                 value: enabled,
-                enabled: !busy,
+                enabled: available && !busy,
                 onChanged: onChanged,
               ),
             ],
@@ -1026,6 +1073,7 @@ class _ToggleActionCard extends StatelessWidget {
 class _PartialOpenCard extends StatelessWidget {
   const _PartialOpenCard({
     required this.value,
+    required this.available,
     required this.busy,
     required this.textTheme,
     required this.onPressed,
@@ -1033,6 +1081,7 @@ class _PartialOpenCard extends StatelessWidget {
 
   final bool busy;
   final int? value;
+  final bool available;
   final TextTheme textTheme;
   final VoidCallback onPressed;
 
@@ -1040,7 +1089,7 @@ class _PartialOpenCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return _ControlCard(
       key: const ValueKey<String>('partial-open-action'),
-      onTap: busy ? null : onPressed,
+      onTap: available && !busy ? onPressed : null,
       child: Stack(
         children: [
           if (value != null)

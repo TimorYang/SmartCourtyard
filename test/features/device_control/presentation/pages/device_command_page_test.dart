@@ -134,6 +134,51 @@ void main() {
     expect(tester.widget<FlinxSwitch>(reminderSwitch).value, isFalse);
   });
 
+  testWidgets('disables controls whose capabilities are absent', (
+    tester,
+  ) async {
+    final gateway = _RecordingHardwareGateway();
+
+    await _pumpDevicePage(
+      tester,
+      gateway,
+      repository: const _FakeDoorDetailRepository(
+        capabilities: ['DOOR_CONTROL'],
+      ),
+    );
+
+    expect(
+      tester
+          .widget<FlinxSwitch>(find.byKey(const ValueKey<String>('led-switch')))
+          .enabled,
+      isFalse,
+    );
+    expect(
+      tester
+          .widget<FlinxSwitch>(
+            find.byKey(const ValueKey<String>('open-reminder-switch')),
+          )
+          .enabled,
+      isFalse,
+    );
+    expect(
+      tester
+          .widget<InkWell>(
+            find.descendant(
+              of: find.byKey(const ValueKey<String>('partial-open-action')),
+              matching: find.byType(InkWell),
+            ),
+          )
+          .onTap,
+      isNull,
+    );
+
+    await tester.tap(find.byTooltip('Open'));
+    await tester.pumpAndSettle();
+
+    expect(gateway.commands, [DoorCommand.open]);
+  });
+
   testWidgets('uses door-device list to highlight the matching fixed card', (
     tester,
   ) async {
@@ -293,13 +338,14 @@ void main() {
   });
 }
 
-Widget _buildPage(MockHardwareGateway gateway) {
+Widget _buildPage(
+  MockHardwareGateway gateway, {
+  DoorDetailRepository repository = const _FakeDoorDetailRepository(),
+}) {
   return ProviderScope(
     overrides: [
       deviceCommandHardwareGatewayProvider.overrideWithValue(gateway),
-      doorDetailRepositoryProvider.overrideWithValue(
-        const _FakeDoorDetailRepository(),
-      ),
+      doorDetailRepositoryProvider.overrideWithValue(repository),
       fetchOnboardingDeviceKeyUseCaseProvider.overrideWithValue(
         const _FakeFetchOnboardingDeviceKeyUseCase(),
       ),
@@ -342,14 +388,15 @@ Widget _buildPage(MockHardwareGateway gateway) {
 
 Future<void> _pumpDevicePage(
   WidgetTester tester,
-  MockHardwareGateway gateway,
-) async {
+  MockHardwareGateway gateway, {
+  DoorDetailRepository repository = const _FakeDoorDetailRepository(),
+}) async {
   tester.view.physicalSize = const Size(393, 852);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
 
-  await tester.pumpWidget(_buildPage(gateway));
+  await tester.pumpWidget(_buildPage(gateway, repository: repository));
   await tester.pumpAndSettle();
 }
 
@@ -480,7 +527,16 @@ class _UnusedDeviceKeyRepository implements AddDeviceOnboardingRepository {
 }
 
 class _FakeDoorDetailRepository implements DoorDetailRepository {
-  const _FakeDoorDetailRepository();
+  const _FakeDoorDetailRepository({
+    this.capabilities = const [
+      'DOOR_CONTROL',
+      'PARTIAL_OPEN',
+      'LED_OFF_DELAY',
+      'DOOR_OPEN_REMINDER',
+    ],
+  });
+
+  final List<String> capabilities;
 
   @override
   Future<DoorDetail> fetchDoorDetail({
@@ -505,7 +561,7 @@ class _FakeDoorDetailRepository implements DoorDetailRepository {
   Future<List<DoorDevice>> fetchDoorDevices({
     required String doorId,
     required String requestId,
-  }) async => const [
+  }) async => [
     DoorDevice(
       deviceId: '3',
       sn: 'opener_B8F86211A9DC',
@@ -513,6 +569,7 @@ class _FakeDoorDetailRepository implements DoorDetailRepository {
       bleName: 'Garage door',
       bleConnectionStatus: 1,
       wifiConnectionStatus: 1,
+      capabilities: capabilities,
     ),
   ];
 }
