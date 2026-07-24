@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../core/logging/app_logger.dart';
 import '../../../../core/logging/providers.dart';
+import '../../../../platform_bridge/hardware_models.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../../../shared/widgets/flinx_switch.dart';
@@ -38,11 +39,6 @@ class DeviceCommandPage extends ConsumerStatefulWidget {
 }
 
 class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
-  static const _garageDoorClosedAsset =
-      'assets/images/device_control_garage_door_closed.png';
-  static const _garageDoorFallbackAsset =
-      'assets/icons/add_device/add_new_doors_garage_door.png';
-
   bool? _ledEnabledOverride;
   bool? _autoCloseEnabledOverride;
   bool? _openReminderEnabledOverride;
@@ -256,8 +252,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
                 children: [
                   _DoorHeroImage(
-                    assetPath: _garageDoorClosedAsset,
-                    fallbackAssetPath: _garageDoorFallbackAsset,
+                    doorType: DoorType.fromWireValue(doorDetail?.doorType),
                   ),
                   const SizedBox(height: 4),
                   Center(
@@ -672,22 +667,19 @@ class _DeviceControlAssetIcon extends StatelessWidget {
 }
 
 class _DoorHeroImage extends StatelessWidget {
-  const _DoorHeroImage({
-    required this.assetPath,
-    required this.fallbackAssetPath,
-  });
+  const _DoorHeroImage({required this.doorType});
 
-  final String assetPath;
-  final String fallbackAssetPath;
+  final DoorType doorType;
 
   @override
   Widget build(BuildContext context) {
+    final asset = _DoorHeroAssetPaths.forType(doorType);
     return AspectRatio(
       aspectRatio: 1.95,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 26),
         child: Image.asset(
-          assetPath,
+          asset.assetPath,
           fit: BoxFit.contain,
           errorBuilder: (context, error, stackTrace) {
             return DecoratedBox(
@@ -696,7 +688,7 @@ class _DoorHeroImage extends StatelessWidget {
               ),
               child: Center(
                 child: Image.asset(
-                  fallbackAssetPath,
+                  asset.fallbackAssetPath,
                   width: 180,
                   fit: BoxFit.contain,
                 ),
@@ -706,6 +698,49 @@ class _DoorHeroImage extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _DoorHeroAssetPaths {
+  const _DoorHeroAssetPaths._({
+    required this.assetPath,
+    required this.fallbackAssetPath,
+  });
+
+  final String assetPath;
+  final String fallbackAssetPath;
+
+  static _DoorHeroAssetPaths forType(DoorType doorType) {
+    return switch (doorType) {
+      DoorType.garage => const _DoorHeroAssetPaths._(
+        assetPath: 'assets/images/device_control_garage_door_closed.png',
+        fallbackAssetPath:
+            'assets/images/device_control/device_control_garage_door_placeholder.png',
+      ),
+      DoorType.roller => const _DoorHeroAssetPaths._(
+        assetPath:
+            'assets/images/device_control/device_control_roller_door_01.png',
+        fallbackAssetPath:
+            'assets/images/device_control/device_control_roller_door_placeholder.png',
+      ),
+      DoorType.industrial => const _DoorHeroAssetPaths._(
+        assetPath:
+            'assets/images/device_control/device_control_industrial_door_01.png',
+        fallbackAssetPath:
+            'assets/images/device_control/device_control_industrial_door_placeholder.png',
+      ),
+      DoorType.swing => const _DoorHeroAssetPaths._(
+        assetPath: 'assets/icons/add_device/add_new_doors_swing_gate.png',
+        fallbackAssetPath:
+            'assets/icons/add_device/add_new_doors_swing_gate.png',
+      ),
+      DoorType.sliding => const _DoorHeroAssetPaths._(
+        assetPath:
+            'assets/images/device_control/device_control_sliding_door_01.png',
+        fallbackAssetPath:
+            'assets/images/device_control/device_control_sliding_door_placeholder.png',
+      ),
+    };
   }
 }
 

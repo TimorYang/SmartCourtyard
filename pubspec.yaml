@@ -55,6 +55,7 @@ flutter:
     - assets/images/
     - assets/images/account/
     - assets/images/auth/
+    - assets/images/device_control/
     - assets/icons/
     - assets/icons/auth/
     - assets/icons/add_device/
