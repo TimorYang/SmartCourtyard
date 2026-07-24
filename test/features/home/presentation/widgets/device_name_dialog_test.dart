@@ -17,6 +17,7 @@ void main() {
     doorState: DoorState.closed,
     cycleCount: 0,
     remainingLifePercent: 100,
+    sceneId: 1,
   );
 
   testWidgets('enables confirm after name input and renames the device', (
@@ -48,8 +49,9 @@ void main() {
     await tester.tap(find.text('Open name dialog'));
     await tester.pumpAndSettle();
 
+    expect(find.text('Garage door'), findsOneWidget);
     final confirmButton = find.widgetWithText(FilledButton, 'confirm');
-    expect(tester.widget<FilledButton>(confirmButton).onPressed, isNull);
+    expect(tester.widget<FilledButton>(confirmButton).onPressed, isNotNull);
 
     await tester.enterText(find.byType(TextField), 'Garage Door');
     await tester.pump();
@@ -103,6 +105,13 @@ class _RenameDoorRepository implements HomeDoorRepository {
   @override
   Future<void> unbindDoor({
     required int doorId,
+    required String requestId,
+  }) async {}
+
+  @override
+  Future<void> moveDoorToScene({
+    required int doorId,
+    required int sceneId,
     required String requestId,
   }) async {}
 }

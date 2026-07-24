@@ -16,6 +16,7 @@ import '../domain/use_cases/create_home_scene_use_case.dart';
 import '../domain/use_cases/delete_home_scene_use_case.dart';
 import '../domain/use_cases/fetch_home_doors_use_case.dart';
 import '../domain/use_cases/fetch_home_scenes_use_case.dart';
+import '../domain/use_cases/move_home_door_to_scene_use_case.dart';
 import '../domain/use_cases/rename_home_scene_use_case.dart';
 import '../domain/use_cases/rename_home_door_use_case.dart';
 import '../domain/use_cases/reset_home_door_cover_use_case.dart';
@@ -64,6 +65,14 @@ final topHomeDoorUseCaseProvider = Provider<TopHomeDoorUseCase>((ref) {
   return TopHomeDoorUseCase(repository: ref.watch(homeDoorRepositoryProvider));
 });
 
+final moveHomeDoorToSceneUseCaseProvider = Provider<MoveHomeDoorToSceneUseCase>(
+  (ref) {
+    return MoveHomeDoorToSceneUseCase(
+      repository: ref.watch(homeDoorRepositoryProvider),
+    );
+  },
+);
+
 final unbindHomeDoorUseCaseProvider = Provider<UnbindHomeDoorUseCase>((ref) {
   return UnbindHomeDoorUseCase(
     repository: ref.watch(homeDoorRepositoryProvider),
@@ -111,25 +120,28 @@ final homeScenesProvider = FutureProvider<List<HomeScene>>((ref) async {
   );
 });
 
-final homeDevicesProvider = FutureProvider<List<DeviceSummary>>((ref) async {
+final homeDoorsBySceneProvider = FutureProvider.family<List<DeviceSummary>, int>((
+  ref,
+  sceneId,
+) async {
   final session = await ref.watch(authSessionProvider.future);
   if (!session.isAuthenticated || session.userId?.isEmpty != false) {
     return const <DeviceSummary>[];
   }
-  final scenes = await ref.watch(homeScenesProvider.future);
-  if (scenes.isEmpty) {
-    return const <DeviceSummary>[];
-  }
-
   final useCase = ref.watch(fetchHomeDoorsUseCaseProvider);
-  final now = DateTime.now().toUtc().microsecondsSinceEpoch;
+  return useCase(
+    sceneId: sceneId,
+    requestId:
+        'home-fetch-doors-$sceneId-${DateTime.now().toUtc().microsecondsSinceEpoch}',
+  );
+});
+
+final homeDevicesProvider = FutureProvider<List<DeviceSummary>>((ref) async {
+  final scenes = await ref.watch(homeScenesProvider.future);
+  if (scenes.isEmpty) return const <DeviceSummary>[];
   final results = await Future.wait([
     for (final scene in scenes)
-      useCase(
-        sceneId: scene.id,
-        requestId: 'home-fetch-doors-${scene.id}-$now',
-      ),
+      ref.watch(homeDoorsBySceneProvider(scene.id).future),
   ]);
-
   return [for (final doors in results) ...doors];
 });

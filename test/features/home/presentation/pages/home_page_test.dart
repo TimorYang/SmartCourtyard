@@ -96,7 +96,7 @@ void main() {
     expect(tracker.callCount, 2);
   });
 
-  testWidgets('pull to refresh reloads home scenes and devices', (
+  testWidgets('pull to refresh reloads devices without reloading home scenes', (
     tester,
   ) async {
     var sceneRequestCount = 0;
@@ -138,7 +138,7 @@ void main() {
     await tester.drag(find.byType(CustomScrollView), const Offset(0, 320));
     await tester.pumpAndSettle();
 
-    expect(sceneRequestCount, 2);
+    expect(sceneRequestCount, 1);
     expect(deviceRequestCount, 2);
   });
 

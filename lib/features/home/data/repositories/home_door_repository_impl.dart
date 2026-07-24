@@ -143,6 +143,39 @@ class HomeDoorRepositoryImpl implements HomeDoorRepository {
     }
   }
 
+  @override
+  Future<void> moveDoorToScene({
+    required int doorId,
+    required int sceneId,
+    required String requestId,
+  }) async {
+    try {
+      await remoteDataSource.moveDoorToScene(
+        doorId: doorId,
+        sceneId: sceneId,
+        requestId: requestId,
+      );
+      logger.info(
+        'Moved home door to scene.',
+        requestId: requestId,
+        context: {'doorId': doorId, 'sceneId': sceneId},
+      );
+    } on HomeDoorRemoteException catch (error, stackTrace) {
+      logger.error(
+        'Failed to move home door to scene.',
+        requestId: requestId,
+        error: error,
+        stackTrace: stackTrace,
+        context: {
+          'doorId': doorId,
+          'sceneId': sceneId,
+          'statusCode': error.statusCode,
+        },
+      );
+      throw _mapError(error, requestId);
+    }
+  }
+
   AppError _mapError(HomeDoorRemoteException error, String requestId) {
     if (error.kind == HomeDoorRemoteErrorKind.network) {
       return AppError(

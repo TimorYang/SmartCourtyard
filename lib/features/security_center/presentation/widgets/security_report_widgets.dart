@@ -632,9 +632,9 @@ class _MotorFunctionStatusCardState extends State<MotorFunctionStatusCard> {
           reportStatus.ignoreObstructionHeightUnit,
           'cm',
         )
-        ..[l10n.securityReportPhotoBeamFunction] = reportStatus.photoBeamEnabled ? l10n.securityReportOn : 'OFF'
-        ..[l10n.securityReportCommunityMode] = reportStatus.communityModeEnabled ? l10n.securityReportOn : 'OFF'
-        ..[l10n.securityCenterWiredELock] = reportStatus.wiredELockEnabled ? l10n.securityReportOn : 'OFF';
+        ..[l10n.securityReportPhotoBeamFunction] = reportStatus.photoBeamEnabled ? l10n.securityReportOn : 'Off'
+        ..[l10n.securityReportCommunityMode] = reportStatus.communityModeEnabled ? l10n.securityReportOn : 'Off'
+        ..[l10n.securityCenterWiredELock] = reportStatus.wiredELockEnabled ? l10n.securityReportOn : 'Off';
     }
     return SecurityReportCard(
       child: Column(

@@ -1826,6 +1826,36 @@ abstract class AppLocalizations {
   /// **'New scene'**
   String get chooseSceneNewSceneAction;
 
+  /// Empty state message for the choose scene page
+  ///
+  /// In en, this message translates to:
+  /// **'No scenes available'**
+  String get chooseSceneEmpty;
+
+  /// Retry message for a failed choose scene request
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load scenes. Tap to retry.'**
+  String get chooseSceneLoadFailed;
+
+  /// Failure message for moving a door to another scene
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to move the door. Please try again.'**
+  String get chooseSceneMoveFailed;
+
+  /// Network failure message for moving a door to another scene
+  ///
+  /// In en, this message translates to:
+  /// **'Network unavailable. Please try again.'**
+  String get chooseSceneMoveNetworkUnavailable;
+
+  /// Message when the page has no valid door or source scene context
+  ///
+  /// In en, this message translates to:
+  /// **'This door cannot be moved to another scene.'**
+  String get chooseSceneMoveUnavailable;
+
   /// Tooltip for opening the scene page from the home page
   ///
   /// In en, this message translates to:

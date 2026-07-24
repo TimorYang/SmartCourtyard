@@ -5,6 +5,7 @@ import '../../../../core/network/api_envelope_dto.dart';
 import '../dto/create_home_scene_request_dto.dart';
 import '../dto/home_door_response_dto.dart';
 import '../dto/home_scene_response_dto.dart';
+import '../dto/move_home_door_scene_request_dto.dart';
 import '../dto/rename_home_door_request_dto.dart';
 
 part 'home_api.g.dart';
@@ -46,6 +47,13 @@ abstract class HomeApi {
   Future<ApiEnvelopeDto<bool>> renameDoor(
     @Path('doorId') int doorId,
     @Body() RenameHomeDoorRequestDto request,
+    @DioOptions() Options options,
+  );
+
+  @PUT('app/doors/{doorId}/scene')
+  Future<ApiEnvelopeDto<bool>> moveDoorToScene(
+    @Path('doorId') int doorId,
+    @Body() MoveHomeDoorSceneRequestDto request,
     @DioOptions() Options options,
   );
 

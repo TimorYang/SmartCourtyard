@@ -110,4 +110,11 @@ class _ResetCoverRepository implements HomeDoorRepository {
     required int doorId,
     required String requestId,
   }) async {}
+
+  @override
+  Future<void> moveDoorToScene({
+    required int doorId,
+    required int sceneId,
+    required String requestId,
+  }) async {}
 }

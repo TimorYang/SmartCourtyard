@@ -974,6 +974,26 @@
   "@chooseSceneNewSceneAction": {
     "description": "New scene card action label"
   },
+  "chooseSceneEmpty": "No scenes available",
+  "@chooseSceneEmpty": {
+    "description": "Empty state message for the choose scene page"
+  },
+  "chooseSceneLoadFailed": "Unable to load scenes. Tap to retry.",
+  "@chooseSceneLoadFailed": {
+    "description": "Retry message for a failed choose scene request"
+  },
+  "chooseSceneMoveFailed": "Unable to move the door. Please try again.",
+  "@chooseSceneMoveFailed": {
+    "description": "Failure message for moving a door to another scene"
+  },
+  "chooseSceneMoveNetworkUnavailable": "Network unavailable. Please try again.",
+  "@chooseSceneMoveNetworkUnavailable": {
+    "description": "Network failure message for moving a door to another scene"
+  },
+  "chooseSceneMoveUnavailable": "This door cannot be moved to another scene.",
+  "@chooseSceneMoveUnavailable": {
+    "description": "Message when the page has no valid door or source scene context"
+  },
   "sceneHomeShortcutTooltip": "Scene",
   "@sceneHomeShortcutTooltip": {
     "description": "Tooltip for opening the scene page from the home page"

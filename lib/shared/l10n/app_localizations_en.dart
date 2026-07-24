@@ -953,6 +953,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chooseSceneNewSceneAction => 'New scene';
 
   @override
+  String get chooseSceneEmpty => 'No scenes available';
+
+  @override
+  String get chooseSceneLoadFailed => 'Unable to load scenes. Tap to retry.';
+
+  @override
+  String get chooseSceneMoveFailed =>
+      'Unable to move the door. Please try again.';
+
+  @override
+  String get chooseSceneMoveNetworkUnavailable =>
+      'Network unavailable. Please try again.';
+
+  @override
+  String get chooseSceneMoveUnavailable =>
+      'This door cannot be moved to another scene.';
+
+  @override
   String get sceneHomeShortcutTooltip => 'Scene';
 
   @override
