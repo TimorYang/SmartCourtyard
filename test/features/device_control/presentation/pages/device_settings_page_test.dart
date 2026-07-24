@@ -64,6 +64,61 @@ void main() {
     expect(find.byType(ListWheelScrollView), findsOneWidget);
   });
 
+  testWidgets('opening speed snaps to externally supplied discrete values', (tester) async {
+    await _pumpSettingsRouter(
+      tester,
+      openingSpeedConfig: OpeningSpeedConfig(allowedValues: [100, 80, 60], current: 80),
+    );
+
+    await tester.tap(find.text('Opening speed'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Current setting: 80% (motor setting)'), findsOneWidget);
+    expect(find.text('100%'), findsOneWidget);
+    expect(find.text('80%'), findsOneWidget);
+    expect(find.text('60%\n(STD)'), findsOneWidget);
+    expect(find.textContaining('(STD)'), findsOneWidget);
+    expect(find.byKey(const Key('openingSpeedSliderGuide-0')), findsOneWidget);
+    expect(find.byKey(const Key('openingSpeedSliderGuide-1')), findsOneWidget);
+    expect(find.byKey(const Key('openingSpeedSliderGuide-2')), findsOneWidget);
+    expect(tester.getRect(find.text('100%')).right, equals(tester.view.physicalSize.width / tester.view.devicePixelRatio - 35));
+
+    final slider = find.byKey(const Key('openingSpeedDiscreteSlider'));
+    final thumb = find.descendant(of: slider, matching: find.byIcon(Icons.drag_handle));
+    await tester.tapAt(tester.getTopLeft(slider) + const Offset(20, 4));
+    await tester.pump();
+    expect(find.text('Current setting: 100% (motor setting)'), findsOneWidget);
+    expect(tester.getTopLeft(thumb).dy, greaterThanOrEqualTo(tester.getTopLeft(slider).dy));
+
+    await tester.tapAt(tester.getBottomLeft(slider) + const Offset(20, -4));
+    await tester.pump();
+    expect(find.text('Current setting: 60% (motor setting)'), findsOneWidget);
+    expect(find.textContaining('Current setting: 90%'), findsNothing);
+    expect(tester.getBottomLeft(thumb).dy, lessThanOrEqualTo(tester.getBottomLeft(slider).dy));
+  });
+
+  testWidgets('force margin retains its continuous slider', (tester) async {
+    await _pumpSettingsRouter(tester);
+
+    await tester.tap(find.text('Force margin'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('forceMarginSliderGuide-0')), findsOneWidget);
+    expect(find.byKey(const Key('forceMarginSliderGuide-1')), findsOneWidget);
+    expect(tester.getRect(find.text('+15%')).right, equals(tester.view.physicalSize.width / tester.view.devicePixelRatio - 35));
+
+    final slider = find.byKey(const Key('forceMarginContinuousSlider'));
+    final thumb = find.descendant(of: slider, matching: find.byIcon(Icons.drag_handle));
+    final initialThumbTop = tester.getTopLeft(thumb).dy;
+
+    await tester.tapAt(tester.getTopLeft(slider) + const Offset(20, 4));
+    await tester.pump();
+
+    expect(tester.getTopLeft(thumb).dy, lessThan(initialThumbTop));
+    expect(tester.getTopLeft(thumb).dy, greaterThanOrEqualTo(tester.getTopLeft(slider).dy));
+    expect(find.byKey(const Key('openingSpeedDiscreteSlider')), findsNothing);
+  });
+
   testWidgets('updates LED off delay from bottom sheet', (tester) async {
     await _pumpSettingsRouter(tester);
 
@@ -162,7 +217,10 @@ void main() {
   });
 }
 
-Future<void> _pumpSettingsRouter(WidgetTester tester) async {
+Future<void> _pumpSettingsRouter(
+  WidgetTester tester, {
+  OpeningSpeedConfig? openingSpeedConfig,
+}) async {
   tester.view.physicalSize = const Size(393, 852);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
@@ -179,6 +237,7 @@ Future<void> _pumpSettingsRouter(WidgetTester tester) async {
             path: DeviceSettingsPage.routePath,
             builder: (context, state) => DeviceSettingsPage(
               deviceId: state.uri.queryParameters['deviceId'] ?? '',
+              openingSpeedConfig: openingSpeedConfig ?? OpeningSpeedConfig(allowedValues: [100, 80, 60], current: 80),
             ),
           ),
           GoRoute(
