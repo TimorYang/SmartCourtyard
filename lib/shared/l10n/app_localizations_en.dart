@@ -1358,6 +1358,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get securityCenterWiredELock => 'Wired E-lock';
 
   @override
+  String get securityCenterWifiDisconnectedMessage =>
+      'Security center can only be accessed when your motor is properly connected to Wi-Fi. Please check the motor status.';
+
+  @override
+  String get securityCenterWifiDisconnectedBackAction => 'Back';
+
+  @override
   String get securityReportTitle => 'Safety Report';
 
   @override

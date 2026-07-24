@@ -9,8 +9,10 @@ import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
 import '../../application/security_balance_refresh_controller.dart';
+import '../../application/security_center_connection_status_controller.dart';
 import '../../domain/entities/security_center_overview.dart';
 import '../../../device_control/presentation/widgets/device_detail_bottom_navigation.dart';
+import '../widgets/security_center_wifi_disconnected_dialog.dart';
 import 'full_report_page.dart';
 import 'general_evaluation_page.dart';
 import 'safety_sensors_evaluation_page.dart';
@@ -39,11 +41,13 @@ class SecurityCenterPage extends ConsumerStatefulWidget {
 }
 
 class _SecurityCenterPageState extends ConsumerState<SecurityCenterPage> {
+  var _activationCheckInProgress = false;
+
   @override
   void initState() {
     super.initState();
     if (widget.isActive) {
-      _triggerRefresh();
+      _triggerActivation();
     }
   }
 
@@ -52,18 +56,40 @@ class _SecurityCenterPageState extends ConsumerState<SecurityCenterPage> {
     super.didUpdateWidget(oldWidget);
     if (widget.isActive &&
         (!oldWidget.isActive || oldWidget.doorId != widget.doorId)) {
-      _triggerRefresh();
+      _triggerActivation();
     }
   }
 
-  void _triggerRefresh() {
-    unawaited(
-      Future<void>.microtask(
-        () => ref
-            .read(securityBalanceRefreshControllerProvider.notifier)
-            .trigger(doorId: widget.doorId),
-      ),
-    );
+  void _triggerActivation() {
+    unawaited(Future<void>.microtask(_checkConnectionThenRefresh));
+  }
+
+  Future<void> _checkConnectionThenRefresh() async {
+    if (_activationCheckInProgress) return;
+    _activationCheckInProgress = true;
+    try {
+      final isWifiDisconnected = await ref
+          .read(securityCenterConnectionStatusControllerProvider.notifier)
+          .check(doorId: widget.doorId);
+      if (!mounted || !widget.isActive) return;
+      if (isWifiDisconnected) {
+        final shouldLeave = await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          barrierColor: AppColors.securityCenterDialogScrim,
+          builder: (_) => const SecurityCenterWifiDisconnectedDialog(),
+        );
+        if (shouldLeave == true && mounted) {
+          widget.onTabSelected(DeviceDetailTab.command);
+        }
+        return;
+      }
+      await ref
+          .read(securityBalanceRefreshControllerProvider.notifier)
+          .trigger(doorId: widget.doorId);
+    } finally {
+      _activationCheckInProgress = false;
+    }
   }
 
   @override
@@ -116,7 +142,10 @@ class _SecurityCenterPageState extends ConsumerState<SecurityCenterPage> {
                         TextButton.icon(
                           onPressed: () => context.pushNamed(
                             FullReportPage.routeName,
-                            queryParameters: {'deviceId': widget.deviceId},
+                            queryParameters: {
+                              'doorId': widget.doorId,
+                              'deviceId': widget.deviceId,
+                            },
                           ),
                           style: TextButton.styleFrom(
                             padding: EdgeInsets.zero,

@@ -1234,6 +1234,8 @@
   "securityCenterSafetyEdge": "Safety edge",
   "securityCenterWiredPhotoBeam": "Wired photo beam",
   "securityCenterWiredELock": "Wired E-lock",
+  "securityCenterWifiDisconnectedMessage": "Security center can only be accessed when your motor is properly connected to Wi-Fi. Please check the motor status.",
+  "securityCenterWifiDisconnectedBackAction": "Back",
   "securityReportTitle": "Safety Report",
   "securityReportMotorName": "Garage door motor 01",
   "securityReportSerialNumber": "Serial number: SFD123456789",

@@ -10,7 +10,10 @@ import '../../../../core/platform/gallery_image_saver.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
+import '../../application/general_evaluation_controller.dart';
 import '../../application/providers.dart';
+import '../../domain/entities/full_report.dart';
+import '../../domain/entities/general_evaluation_report.dart';
 import '../widgets/security_report_widgets.dart';
 
 typedef ReportImageSaver = Future<void> Function(Uint8List bytes);
@@ -20,6 +23,7 @@ typedef ReportImageCapture =
 class FullReportPage extends ConsumerStatefulWidget {
   const FullReportPage({
     required this.deviceId,
+    required this.doorId,
     this.captureReportImage = captureReportPngBytes,
     this.saveReportImage = GalleryImageSaver.savePngBytes,
     super.key,
@@ -29,6 +33,7 @@ class FullReportPage extends ConsumerStatefulWidget {
   static const routePath = '/full-report';
 
   final String deviceId;
+  final String doorId;
   final ReportImageCapture captureReportImage;
   final ReportImageSaver saveReportImage;
 
@@ -39,6 +44,16 @@ class FullReportPage extends ConsumerStatefulWidget {
 class _FullReportPageState extends ConsumerState<FullReportPage> {
   final _reportBoundaryKey = GlobalKey();
   var _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(
+      () => ref
+          .read(generalEvaluationControllerProvider.notifier)
+          .load(doorId: widget.doorId),
+    );
+  }
 
   Future<void> _saveReportImage() async {
     if (_isSaving) return;
@@ -70,7 +85,32 @@ class _FullReportPageState extends ConsumerState<FullReportPage> {
 
   @override
   Widget build(BuildContext context) {
-    final report = ref.watch(fullReportProvider(widget.deviceId));
+    final reportState = ref.watch(generalEvaluationControllerProvider);
+    final supplementalReport = ref.watch(fullReportProvider(widget.deviceId));
+    return reportState.when(
+      loading: () =>
+          _stateScaffold(const Center(child: CircularProgressIndicator())),
+      error: (_, _) => _stateScaffold(
+        Center(
+          child: TextButton(
+            onPressed: () => ref
+                .read(generalEvaluationControllerProvider.notifier)
+                .load(doorId: widget.doorId),
+            child: Text(
+              AppLocalizations.of(context).generalEvaluationLoadFailed,
+            ),
+          ),
+        ),
+      ),
+      data: (report) => _buildReport(context, report, supplementalReport),
+    );
+  }
+
+  Widget _buildReport(
+    BuildContext context,
+    GeneralEvaluationReport report,
+    FullReport supplementalReport,
+  ) {
     return Scaffold(
       backgroundColor: AppColors.securityCenterBackground,
       appBar: FlinxNavigationBar(
@@ -95,7 +135,6 @@ class _FullReportPageState extends ConsumerState<FullReportPage> {
                   children: [
                     SecurityReportHero(
                       motorName: report.motorName,
-                      serialNumber: report.serialNumber,
                       needsMaintenance: report.cycleSummary.needsMaintenance,
                     ),
                     Padding(
@@ -129,15 +168,16 @@ class _FullReportPageState extends ConsumerState<FullReportPage> {
                           ),
                           const SizedBox(height: 16),
                           SensorDiagnosisSection.wired(
-                            diagnosis: report.wiredSensorDiagnosis,
+                            diagnosis: supplementalReport.wiredSensorDiagnosis,
                           ),
                           const SizedBox(height: 16),
                           SensorDiagnosisSection.wireless(
-                            diagnosis: report.wirelessSensorDiagnosis,
+                            diagnosis:
+                                supplementalReport.wirelessSensorDiagnosis,
                           ),
                           const SizedBox(height: 16),
                           SafetySuggestionCard(
-                            suggestions: report.safetySuggestions,
+                            suggestions: supplementalReport.safetySuggestions,
                           ),
                           const SizedBox(height: 28),
                         ],
@@ -156,6 +196,15 @@ class _FullReportPageState extends ConsumerState<FullReportPage> {
       ),
     );
   }
+
+  Widget _stateScaffold(Widget body) => Scaffold(
+    backgroundColor: AppColors.securityCenterBackground,
+    appBar: FlinxNavigationBar(
+      title: AppLocalizations.of(context).securityReportTitle,
+      showBottomDivider: false,
+    ),
+    body: body,
+  );
 
   String _saveErrorMessage(GalleryImageSaveException error) {
     return switch (error.failure) {

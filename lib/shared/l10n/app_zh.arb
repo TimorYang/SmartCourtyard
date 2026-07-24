@@ -433,6 +433,8 @@
   "securityCenterSafetyEdge": "安全边",
   "securityCenterWiredPhotoBeam": "有线光电",
   "securityCenterWiredELock": "有线电锁",
+  "securityCenterWifiDisconnectedMessage": "安全中心仅在电机已正确连接 Wi-Fi 时可访问。请检查电机状态。",
+  "securityCenterWifiDisconnectedBackAction": "返回",
   "securityReportTitle": "安全报告",
   "securityReportMotorName": "车库门电机 01",
   "securityReportSerialNumber": "序列号：SFD123456789",

@@ -52,10 +52,6 @@ class SecurityReportHero extends StatelessWidget {
                     style: AppTextTokens.securityReportDeviceName(Theme.of(context).textTheme),
                   ),
                 ),
-                Text(
-                  serialNumber == null ? l10n.securityReportSerialNumber : 'Serial number: $serialNumber',
-                  style: AppTextTokens.securityReportHeroMeta(Theme.of(context).textTheme),
-                ),
               ],
             ),
           ),

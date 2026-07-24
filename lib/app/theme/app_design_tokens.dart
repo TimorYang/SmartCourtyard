@@ -86,6 +86,10 @@ class AppColors {
   static const securityCenterSensorSurface = Color(0xFFE9EBEE);
   static const securityCenterSensorIcon = Color(0xFF60646A);
   static const securityCenterSensorUnavailable = Color(0xFFBFC1C5);
+  static const securityCenterDialogScrim = Color(0x80000000);
+  static const securityCenterDialogWarning = Color(0xFFFF7B00);
+  static const securityCenterDialogPrimaryAction = Color(0xFF006DFF);
+  static const securityCenterDialogSurface = Color(0xFFFFFFFF);
   static const securityReportHeroBlue = Color(0xFF2478F5);
   static const securityReportHeroFade = Color(0xFFDCE9FF);
   static const securityReportWarning = Color(0xFFFF7B00);
@@ -1039,6 +1043,23 @@ class AppTextTokens {
     return (textTheme.labelLarge ?? const TextStyle()).copyWith(
       color: AppColors.textMuted,
       fontSize: 12,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle securityCenterDialogMessage(TextTheme textTheme) {
+    return (textTheme.bodyLarge ?? const TextStyle()).copyWith(
+      color: AppColors.securityCenterDialogWarning,
+      fontSize: 15,
+      fontWeight: FontWeight.w400,
+      height: 1.35,
+    );
+  }
+
+  static TextStyle securityCenterDialogAction(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: Colors.white,
+      fontSize: 16,
       fontWeight: FontWeight.w400,
     );
   }

@@ -1,8 +1,12 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flinx/core/platform/gallery_image_saver.dart';
 import 'package:flinx/features/security_center/application/providers.dart';
+import 'package:flinx/features/security_center/domain/entities/general_evaluation_report.dart';
 import 'package:flinx/features/security_center/domain/entities/full_report.dart';
+import 'package:flinx/features/security_center/domain/repositories/general_evaluation_repository.dart';
+import 'package:flinx/features/security_center/domain/use_cases/fetch_general_evaluation_use_case.dart';
 import 'package:flinx/features/security_center/domain/entities/safety_sensors_evaluation.dart';
 import 'package:flinx/features/security_center/domain/entities/security_center_overview.dart';
 import 'package:flinx/features/security_center/domain/repositories/security_balance_refresh_repository.dart';
@@ -160,7 +164,6 @@ void main() {
     );
 
     expect(find.text('Garage door motor 01'), findsOneWidget);
-    expect(find.textContaining('FSD123456789'), findsOneWidget);
     expect(find.text('Garage door 01'), findsOneWidget);
     expect(find.text('860'), findsOneWidget);
     expect(find.text('140'), findsOneWidget);
@@ -206,10 +209,13 @@ void main() {
   testWidgets('full report contains all sections and safety suggestions', (
     tester,
   ) async {
-    await _pumpPage(tester, const FullReportPage(deviceId: 'mock-device'));
+    await _pumpPage(
+      tester,
+      const FullReportPage(deviceId: 'mock-device', doorId: '12'),
+    );
 
-    expect(find.text('Door balance evaluation'), findsOneWidget);
-    expect(find.text('Door operation record'), findsOneWidget);
+    expect(find.text('Door balance evaluation'), findsNWidgets(2));
+    expect(find.text('Door operation record'), findsNWidgets(2));
     expect(find.text('Motor function status'), findsOneWidget);
     expect(find.text('Wired sensors diagnosis'), findsOneWidget);
     expect(find.text('Wireless sensors diagnosis'), findsOneWidget);
@@ -232,6 +238,62 @@ void main() {
     );
     expect(find.text('Safety suggestion:'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('full report shows loading until general evaluation is ready', (
+    tester,
+  ) async {
+    final completer = Completer<GeneralEvaluationReport>();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          fetchGeneralEvaluationUseCaseProvider.overrideWithValue(
+            FetchGeneralEvaluationUseCase(
+              repository: _DelayedGeneralEvaluationRepository(completer),
+            ),
+          ),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const FullReportPage(deviceId: 'mock-device', doorId: '12'),
+        ),
+      ),
+    );
+
+    await tester.pump();
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    completer.complete(_testGeneralReport);
+    await tester.pumpAndSettle();
+    expect(find.text('Garage door motor 01'), findsOneWidget);
+  });
+
+  testWidgets('full report retries a failed general evaluation request', (
+    tester,
+  ) async {
+    final repository = _FailingGeneralEvaluationRepository();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          fetchGeneralEvaluationUseCaseProvider.overrideWithValue(
+            FetchGeneralEvaluationUseCase(repository: repository),
+          ),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const FullReportPage(deviceId: 'mock-device', doorId: '12'),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    expect(find.byType(TextButton), findsOneWidget);
+
+    await tester.tap(find.byType(TextButton));
+    await tester.pumpAndSettle();
+    expect(repository.calls, 2);
   });
 
   testWidgets('full report renders values supplied by its provider', (
@@ -320,18 +382,33 @@ void main() {
       ProviderScope(
         overrides: [
           fullReportProvider('custom-device').overrideWith((ref) => report),
+          fetchGeneralEvaluationUseCaseProvider.overrideWithValue(
+            FetchGeneralEvaluationUseCase(
+              repository: _FakeGeneralEvaluationRepository(
+                report: GeneralEvaluationReport(
+                  motorName: report.motorName,
+                  cycleSummary: report.cycleSummary,
+                  openBalanceEvaluation: report.openBalanceEvaluation,
+                  closeBalanceEvaluation: report.closeBalanceEvaluation,
+                  last24HoursRecord: report.last24HoursRecord,
+                  last7DaysRecord: report.last7DaysRecord,
+                  motorFunctionStatus: report.motorFunctionStatus,
+                  balancePending: false,
+                ),
+              ),
+            ),
+          ),
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: const FullReportPage(deviceId: 'custom-device'),
+          home: const FullReportPage(deviceId: 'custom-device', doorId: '12'),
         ),
       ),
     );
     await tester.pumpAndSettle();
 
     expect(find.text('Custom motor'), findsOneWidget);
-    expect(find.textContaining('CUSTOM-001'), findsOneWidget);
     expect(find.text('Custom door'), findsOneWidget);
     expect(find.text('12'), findsOneWidget);
     expect(find.text('34'), findsOneWidget);
@@ -340,7 +417,10 @@ void main() {
   testWidgets('full report shows four fixed evaluation and operation cards', (
     tester,
   ) async {
-    await _pumpPage(tester, const FullReportPage(deviceId: 'mock-device'));
+    await _pumpPage(
+      tester,
+      const FullReportPage(deviceId: 'mock-device', doorId: '12'),
+    );
 
     expect(
       find.byKey(const ValueKey<BalanceEvaluation>(BalanceEvaluation.open)),
@@ -392,7 +472,10 @@ void main() {
   testWidgets('full report keeps both balance arrows in their own tables', (
     tester,
   ) async {
-    await _pumpPage(tester, const FullReportPage(deviceId: 'mock-device'));
+    await _pumpPage(
+      tester,
+      const FullReportPage(deviceId: 'mock-device', doorId: '12'),
+    );
 
     final mainTables = find.byKey(const ValueKey<String>('balance-main-table'));
     final statusTable = find.byKey(
@@ -432,6 +515,7 @@ void main() {
       tester,
       FullReportPage(
         deviceId: 'mock-device',
+        doorId: '12',
         captureReportImage: (_, _) async => Uint8List.fromList([1, 2, 3]),
         saveReportImage: (bytes) async {
           saveCalls += 1;
@@ -460,6 +544,7 @@ void main() {
       tester,
       FullReportPage(
         deviceId: 'mock-device',
+        doorId: '12',
         captureReportImage: (_, _) async => Uint8List.fromList([1, 2, 3]),
         saveReportImage: (_) async {
           throw const GalleryImageSaveException(GalleryImageSaveFailure.failed);
@@ -485,6 +570,7 @@ void main() {
       tester,
       FullReportPage(
         deviceId: 'mock-device',
+        doorId: '12',
         captureReportImage: (_, _) async {
           throw StateError('capture unavailable');
         },
@@ -872,6 +958,7 @@ GoRouter _buildRouter() {
         path: FullReportPage.routePath,
         name: FullReportPage.routeName,
         builder: (context, state) => FullReportPage(
+          doorId: state.uri.queryParameters['doorId'] ?? '',
           deviceId: state.uri.queryParameters['deviceId'] ?? '',
         ),
       ),
@@ -914,6 +1001,11 @@ Future<void> _pumpRouter(WidgetTester tester, GoRouter router) async {
         securityBalanceRefreshRepositoryProvider.overrideWithValue(
           const _FakeSecurityBalanceRefreshRepository(),
         ),
+        fetchGeneralEvaluationUseCaseProvider.overrideWithValue(
+          const FetchGeneralEvaluationUseCase(
+            repository: _FakeGeneralEvaluationRepository(),
+          ),
+        ),
       ],
       child: MaterialApp.router(
         routerConfig: router,
@@ -943,6 +1035,11 @@ Future<void> _pumpPage(
         securityBalanceRefreshRepositoryProvider.overrideWithValue(
           const _FakeSecurityBalanceRefreshRepository(),
         ),
+        fetchGeneralEvaluationUseCaseProvider.overrideWithValue(
+          const FetchGeneralEvaluationUseCase(
+            repository: _FakeGeneralEvaluationRepository(),
+          ),
+        ),
       ],
       child: MaterialApp(
         locale: locale,
@@ -968,3 +1065,90 @@ class _FakeSecurityBalanceRefreshRepository
     status: '1',
   );
 }
+
+class _FakeGeneralEvaluationRepository implements GeneralEvaluationRepository {
+  const _FakeGeneralEvaluationRepository({this.report = _testGeneralReport});
+
+  final GeneralEvaluationReport report;
+
+  @override
+  Future<GeneralEvaluationReport> fetch({
+    required String doorId,
+    String? assessmentRequestId,
+    required String requestId,
+  }) async => report;
+}
+
+class _DelayedGeneralEvaluationRepository
+    implements GeneralEvaluationRepository {
+  const _DelayedGeneralEvaluationRepository(this.completer);
+
+  final Completer<GeneralEvaluationReport> completer;
+
+  @override
+  Future<GeneralEvaluationReport> fetch({
+    required String doorId,
+    String? assessmentRequestId,
+    required String requestId,
+  }) => completer.future;
+}
+
+class _FailingGeneralEvaluationRepository
+    implements GeneralEvaluationRepository {
+  var calls = 0;
+
+  @override
+  Future<GeneralEvaluationReport> fetch({
+    required String doorId,
+    String? assessmentRequestId,
+    required String requestId,
+  }) async {
+    calls += 1;
+    throw StateError('test failure');
+  }
+}
+
+const _testGeneralReport = GeneralEvaluationReport(
+  motorName: 'Garage door motor 01',
+  cycleSummary: FullReportCycleSummary(
+    doorName: 'Garage door 01',
+    operatedCycles: 860,
+    remainingCycles: 140,
+    needsMaintenance: true,
+  ),
+  openBalanceEvaluation: FullReportBalanceEvaluation(
+    indicatorPercentage: 62,
+    bandStatuses: [
+      FullReportBalanceBandStatus.overload,
+      FullReportBalanceBandStatus.overload,
+      FullReportBalanceBandStatus.normal,
+      FullReportBalanceBandStatus.normal,
+      FullReportBalanceBandStatus.normal,
+    ],
+  ),
+  closeBalanceEvaluation: FullReportBalanceEvaluation(
+    indicatorPercentage: 38,
+    bandStatuses: [
+      FullReportBalanceBandStatus.normal,
+      FullReportBalanceBandStatus.normal,
+      FullReportBalanceBandStatus.normal,
+      FullReportBalanceBandStatus.overload,
+      FullReportBalanceBandStatus.overload,
+    ],
+  ),
+  last24HoursRecord: FullReportOperationRecord(points: []),
+  last7DaysRecord: FullReportOperationRecord(points: []),
+  motorFunctionStatus: FullReportMotorFunctionStatus(
+    openingForceLevel: 1,
+    closingForceLevel: 1,
+    autoCloseSeconds: 25,
+    autoCloseCondition: FullReportAutoCloseCondition.anyPosition,
+    ledOffDelayMinutes: 3,
+    partialOpenCentimeters: 40,
+    ignoreObstructionHeightCentimeters: 3,
+    photoBeamEnabled: true,
+    communityModeEnabled: true,
+    wiredELockEnabled: true,
+  ),
+  balancePending: false,
+);

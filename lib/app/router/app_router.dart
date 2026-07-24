@@ -352,6 +352,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: FullReportPage.routePath,
         name: FullReportPage.routeName,
         builder: (context, state) => FullReportPage(
+          doorId: state.uri.queryParameters['doorId'] ?? '',
           deviceId: state.uri.queryParameters['deviceId'] ?? '',
         ),
       ),

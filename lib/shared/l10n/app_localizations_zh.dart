@@ -1276,6 +1276,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get securityCenterWiredELock => '有线电锁';
 
   @override
+  String get securityCenterWifiDisconnectedMessage =>
+      '安全中心仅在电机已正确连接 Wi-Fi 时可访问。请检查电机状态。';
+
+  @override
+  String get securityCenterWifiDisconnectedBackAction => '返回';
+
+  @override
   String get securityReportTitle => '安全报告';
 
   @override

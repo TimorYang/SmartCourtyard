@@ -5,11 +5,16 @@ import '../../../core/network/providers.dart';
 import '../data/data_sources/security_balance_refresh_api.dart';
 import '../data/data_sources/security_balance_refresh_remote_data_source.dart';
 import '../data/repositories/security_balance_refresh_repository_impl.dart';
+import '../data/data_sources/security_center_connection_status_api.dart';
+import '../data/data_sources/security_center_connection_status_remote_data_source.dart';
+import '../data/repositories/security_center_connection_status_repository_impl.dart';
 import '../domain/entities/security_center_overview.dart';
 import '../domain/entities/full_report.dart';
 import '../domain/entities/safety_sensors_evaluation.dart';
 import '../domain/repositories/security_balance_refresh_repository.dart';
+import '../domain/repositories/security_center_connection_status_repository.dart';
 import '../domain/use_cases/refresh_security_balance_use_case.dart';
+import '../domain/use_cases/fetch_security_center_connection_status_use_case.dart';
 import '../data/data_sources/general_evaluation_api.dart';
 import '../data/data_sources/general_evaluation_remote_data_source.dart';
 import '../data/repositories/general_evaluation_repository_impl.dart';
@@ -43,6 +48,35 @@ final refreshSecurityBalanceUseCaseProvider =
     Provider<RefreshSecurityBalanceUseCase>((ref) {
       return RefreshSecurityBalanceUseCase(
         repository: ref.watch(securityBalanceRefreshRepositoryProvider),
+      );
+    });
+
+final securityCenterConnectionStatusApiProvider =
+    Provider<SecurityCenterConnectionStatusApi>((ref) {
+      return SecurityCenterConnectionStatusApi(ref.watch(dioProvider));
+    });
+
+final securityCenterConnectionStatusRemoteDataSourceProvider =
+    Provider<SecurityCenterConnectionStatusRemoteDataSource>((ref) {
+      return SecurityCenterConnectionStatusRemoteDataSourceImpl(
+        api: ref.watch(securityCenterConnectionStatusApiProvider),
+      );
+    });
+
+final securityCenterConnectionStatusRepositoryProvider =
+    Provider<SecurityCenterConnectionStatusRepository>((ref) {
+      return SecurityCenterConnectionStatusRepositoryImpl(
+        remoteDataSource: ref.watch(
+          securityCenterConnectionStatusRemoteDataSourceProvider,
+        ),
+        logger: ref.watch(appLoggerProvider),
+      );
+    });
+
+final fetchSecurityCenterConnectionStatusUseCaseProvider =
+    Provider<FetchSecurityCenterConnectionStatusUseCase>((ref) {
+      return FetchSecurityCenterConnectionStatusUseCase(
+        repository: ref.watch(securityCenterConnectionStatusRepositoryProvider),
       );
     });
 

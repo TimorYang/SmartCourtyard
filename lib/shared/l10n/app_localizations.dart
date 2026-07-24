@@ -2540,6 +2540,18 @@ abstract class AppLocalizations {
   /// **'Wired E-lock'**
   String get securityCenterWiredELock;
 
+  /// No description provided for @securityCenterWifiDisconnectedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Security center can only be accessed when your motor is properly connected to Wi-Fi. Please check the motor status.'**
+  String get securityCenterWifiDisconnectedMessage;
+
+  /// No description provided for @securityCenterWifiDisconnectedBackAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get securityCenterWifiDisconnectedBackAction;
+
   /// No description provided for @securityReportTitle.
   ///
   /// In en, this message translates to:
