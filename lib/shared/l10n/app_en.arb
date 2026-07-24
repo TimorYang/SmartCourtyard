@@ -416,7 +416,7 @@
   "@deviceShareGuestRole": {
     "description": "Guest role option on the device sharing page"
   },
-  "deviceShareEmailLabel": "Email",
+  "deviceShareEmailLabel": "Address",
   "@deviceShareEmailLabel": {
     "description": "Email field label on the device sharing page"
   },
@@ -424,7 +424,11 @@
   "@deviceShareEmailPlaceholder": {
     "description": "Email input placeholder on the device sharing page"
   },
-  "deviceSharePeriodLabel": "Sharing period",
+  "deviceShareAddressInvalid": "Enter a valid email address",
+  "@deviceShareAddressInvalid": {
+    "description": "Validation message shown when the sharing address is not a valid email"
+  },
+  "deviceSharePeriodLabel": "Access end",
   "@deviceSharePeriodLabel": {
     "description": "Sharing period field label on the device sharing page"
   },
@@ -463,6 +467,22 @@
   "deviceShareCapabilityLedDelay": "LED off delay",
   "@deviceShareCapabilityLedDelay": {
     "description": "LED off delay capability label on the device sharing page"
+  },
+  "deviceShareCapabilityAutoClose": "Auto-close",
+  "@deviceShareCapabilityAutoClose": {
+    "description": "Capability option displayed when sharing a device"
+  },
+  "deviceShareCapabilityDoorOpenReminder": "Door open reminder",
+  "@deviceShareCapabilityDoorOpenReminder": {
+    "description": "Capability option displayed when sharing a device"
+  },
+  "deviceShareCapabilityDoorOpenForce": "Door open force",
+  "@deviceShareCapabilityDoorOpenForce": {
+    "description": "Capability option displayed when sharing a device"
+  },
+  "deviceShareCapabilityDoorOpenSpeed": "Door open speed",
+  "@deviceShareCapabilityDoorOpenSpeed": {
+    "description": "Capability option displayed when sharing a device"
   },
   "deviceShareCancelAction": "Cancel",
   "@deviceShareCancelAction": {

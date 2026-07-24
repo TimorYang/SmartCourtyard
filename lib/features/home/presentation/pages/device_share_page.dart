@@ -5,8 +5,17 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
+import '../../../../core/validation/input_validators.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
+
+class ChooseSceneAssetPaths {
+  const ChooseSceneAssetPaths._();
+
+  static const deviceSharePageTime = 'assets/icons/home/device_share_page_time.png';
+  static const capabilitiesSelected = 'assets/icons/home/garagePlaceholderCapabilitiesSelected.png';
+  static const capabilitiesUnselected = 'assets/icons/home/garagePlaceholderCapabilitiesNoSelected.png';
+}
 
 class DeviceSharePage extends StatefulWidget {
   const DeviceSharePage({super.key});
@@ -22,22 +31,27 @@ enum _SharePermission { administrator, guest }
 
 enum _SharePeriod { neverExpired, twoHours, customize }
 
+enum _ShareCapability { doorControl, partialOpen, ledDelay, autoClose, doorOpenReminder, doorOpenForce, doorOpenSpeed }
+
 class _DeviceSharePageState extends State<DeviceSharePage> {
   final _emailController = TextEditingController();
   var _permission = _SharePermission.administrator;
   var _period = _SharePeriod.neverExpired;
-  var _sendEmail = true;
-  late DateTime _periodEndsAt;
+  var _selectedCapabilities = _ShareCapability.values.toSet();
+  DateTime? _periodEndsAt;
+  var _showAddressFormatError = false;
 
   @override
   void initState() {
     super.initState();
-    _periodEndsAt = _roundedTwoHourExpiry(DateTime.now());
+    _emailController.addListener(_onAddressChanged);
   }
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _emailController
+      ..removeListener(_onAddressChanged)
+      ..dispose();
     super.dispose();
   }
 
@@ -46,11 +60,13 @@ class _DeviceSharePageState extends State<DeviceSharePage> {
     final l10n = AppLocalizations.of(context);
     final textTheme = Theme.of(context).textTheme;
     final capabilities = [
-      l10n.deviceShareCapabilityDoorControl,
-      if (_permission == _SharePermission.administrator) ...[
-        l10n.deviceShareCapabilityPartialOpen,
-        l10n.deviceShareCapabilityLedDelay,
-      ],
+      _CapabilityItem(capability: _ShareCapability.doorControl, label: l10n.deviceShareCapabilityDoorControl),
+      _CapabilityItem(capability: _ShareCapability.partialOpen, label: l10n.deviceShareCapabilityPartialOpen),
+      _CapabilityItem(capability: _ShareCapability.ledDelay, label: l10n.deviceShareCapabilityLedDelay),
+      _CapabilityItem(capability: _ShareCapability.autoClose, label: l10n.deviceShareCapabilityAutoClose),
+      _CapabilityItem(capability: _ShareCapability.doorOpenReminder, label: l10n.deviceShareCapabilityDoorOpenReminder),
+      _CapabilityItem(capability: _ShareCapability.doorOpenForce, label: l10n.deviceShareCapabilityDoorOpenForce),
+      _CapabilityItem(capability: _ShareCapability.doorOpenSpeed, label: l10n.deviceShareCapabilityDoorOpenSpeed),
     ];
 
     return Scaffold(
@@ -66,75 +82,46 @@ class _DeviceSharePageState extends State<DeviceSharePage> {
               children: [
                 Expanded(
                   child: ListView(
-                    padding: const EdgeInsets.fromLTRB(30, 4, 30, 18),
+                    padding: const EdgeInsets.fromLTRB(20, 27, 20, 25),
                     children: [
-                      Text(
-                        l10n.deviceShareTitle,
-                        style: AppTextTokens.deviceShareTitle(textTheme),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        l10n.deviceShareSubtitle,
-                        style: AppTextTokens.deviceShareSubtitle(textTheme),
-                      ),
-                      const SizedBox(height: 58),
+                      Text(l10n.deviceShareTitle, style: AppTextTokens.deviceShareTitle(textTheme)),
+                      const SizedBox(height: 5),
+                      Text(l10n.deviceShareSubtitle, style: AppTextTokens.deviceShareSubtitle(textTheme)),
+                      const SizedBox(height: 38),
                       _ShareFormRow(
                         label: l10n.deviceSharePermissionsLabel,
-                        child: _ShareSelectField(
-                          value: _permissionLabel(l10n),
-                          onTap: _selectPermission,
-                        ),
+                        child: _ShareSelectField(value: _permissionLabel(l10n), onTap: _selectPermission),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
                       _ShareFormRow(
                         label: l10n.deviceShareEmailLabel,
-                        child: _ShareTextField(
-                          controller: _emailController,
-                          hintText: l10n.deviceShareEmailPlaceholder,
-                        ),
+                        child: _ShareTextField(controller: _emailController, hasError: _showAddressFormatError, errorText: l10n.deviceShareAddressInvalid),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
                       _ShareFormRow(
                         label: l10n.deviceSharePeriodLabel,
-                        child: _ShareSelectField(
-                          value: _periodLabel(l10n),
-                          onTap: _selectPeriod,
-                        ),
+                        child: _ShareSelectField(value: _periodLabel(l10n), onTap: _selectPeriod),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
                       _SharePeriodSummary(
-                        title: _period == _SharePeriod.neverExpired
-                            ? l10n.deviceShareNeverExpired
-                            : l10n.deviceShareTimeLabel,
-                        value: _period == _SharePeriod.neverExpired
-                            ? null
-                            : _formatExpiry(_periodEndsAt),
-                        onTap: _period == _SharePeriod.neverExpired
-                            ? null
-                            : _selectCustomTimeFromSummary,
+                        title: l10n.deviceShareTimeLabel,
+                        value: _periodEndsAt == null ? null : _formatExpiry(_periodEndsAt!),
+                        onTap: _period == _SharePeriod.customize ? _selectCustomTimeFromSummary : null,
                       ),
-                      const SizedBox(height: 34),
-                      _SendEmailToggle(
-                        value: _sendEmail,
-                        label: l10n.deviceShareSendEmailLabel,
-                        onChanged: (value) {
-                          setState(() {
-                            _sendEmail = value;
-                          });
-                        },
+                      const SizedBox(height: 27),
+                      Text(l10n.deviceShareCapabilitiesTitle, style: AppTextTokens.deviceShareSectionTitle(textTheme)),
+                      const SizedBox(height: 8),
+                      _CapabilitiesPanel(
+                        items: capabilities,
+                        selectedCapabilities: _selectedCapabilities,
+                        isEnabled: _permission == _SharePermission.administrator,
+                        onChanged: _toggleCapability,
                       ),
-                      const SizedBox(height: 38),
-                      Text(
-                        l10n.deviceShareCapabilitiesTitle,
-                        style: AppTextTokens.deviceShareSectionTitle(textTheme),
-                      ),
-                      const SizedBox(height: 14),
-                      _CapabilitiesPanel(items: capabilities),
                     ],
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(30, 0, 30, 22),
+                  padding: const EdgeInsets.fromLTRB(18, 0, 16, 22),
                   child: Row(
                     children: [
                       Expanded(
@@ -145,13 +132,14 @@ class _DeviceSharePageState extends State<DeviceSharePage> {
                           onPressed: () => context.pop(),
                         ),
                       ),
-                      const SizedBox(width: 18),
+                      const SizedBox(width: 42),
                       Expanded(
                         child: _ShareActionButton(
                           label: l10n.deviceShareConfirmAction,
                           foregroundColor: Colors.white,
-                          backgroundColor: AppColors.brandPrimary,
-                          onPressed: () {},
+                          backgroundColor: _canConfirm ? AppColors.brandPrimary : AppColors.brandPrimaryDisabled,
+                          onPressed: _canConfirm ? _confirm : null,
+                          buttonKey: const Key('device_share_confirm'),
                         ),
                       ),
                     ],
@@ -165,71 +153,49 @@ class _DeviceSharePageState extends State<DeviceSharePage> {
     );
   }
 
-  Future<void> _selectPermission() async {
+  Future<void> _selectPermission(BuildContext anchorContext) async {
     final l10n = AppLocalizations.of(context);
-    final selected = await showDialog<_SharePermission>(
+    final selected = await _showShareOptionPopup<_SharePermission>(
       context: context,
-      barrierColor: AppColors.deviceShareDialogOverlay,
-      builder: (context) {
-        return _ShareOptionDialog<_SharePermission>(
-          options: [
-            _ShareOption(
-              value: _SharePermission.administrator,
-              label: l10n.deviceShareAdministratorRole,
-            ),
-            _ShareOption(
-              value: _SharePermission.guest,
-              label: l10n.deviceShareGuestRole,
-            ),
-          ],
-        );
-      },
+      anchorContext: anchorContext,
+      options: [
+        _ShareOption(value: _SharePermission.administrator, label: l10n.deviceShareAdministratorRole),
+        _ShareOption(value: _SharePermission.guest, label: l10n.deviceShareGuestRole),
+      ],
     );
     if (selected == null) {
       return;
     }
     setState(() {
       _permission = selected;
+      _selectedCapabilities = selected == _SharePermission.administrator ? _ShareCapability.values.toSet() : {_ShareCapability.doorControl};
     });
   }
 
-  Future<void> _selectPeriod() async {
+  Future<void> _selectPeriod(BuildContext anchorContext) async {
     final l10n = AppLocalizations.of(context);
-    final selected = await showDialog<_SharePeriod>(
+    final selected = await _showShareOptionPopup<_SharePeriod>(
       context: context,
-      barrierColor: AppColors.deviceShareDialogOverlay,
-      builder: (context) {
-        return _ShareOptionDialog<_SharePeriod>(
-          options: [
-            _ShareOption(
-              value: _SharePeriod.neverExpired,
-              label: l10n.deviceShareNeverExpired,
-            ),
-            _ShareOption(
-              value: _SharePeriod.twoHours,
-              label: l10n.deviceShareTwoHours,
-            ),
-            _ShareOption(
-              value: _SharePeriod.customize,
-              label: l10n.deviceShareCustomize,
-            ),
-          ],
-        );
-      },
+      anchorContext: anchorContext,
+      options: [
+        _ShareOption(value: _SharePeriod.neverExpired, label: l10n.deviceShareNeverExpired),
+        _ShareOption(value: _SharePeriod.twoHours, label: l10n.deviceShareTwoHours),
+        _ShareOption(value: _SharePeriod.customize, label: l10n.deviceShareCustomize),
+      ],
     );
     if (selected == null) {
       return;
     }
-    if (selected == _SharePeriod.customize) {
-      await _selectCustomTimeFromSummary();
-      return;
-    }
     setState(() {
       _period = selected;
-      if (selected == _SharePeriod.twoHours) {
-        _periodEndsAt = _roundedTwoHourExpiry(DateTime.now());
-      }
+      _periodEndsAt = switch (selected) {
+        _SharePeriod.neverExpired || _SharePeriod.customize => null,
+        _SharePeriod.twoHours => DateTime.now().add(const Duration(hours: 2)),
+      };
     });
+    if (selected == _SharePeriod.customize) {
+      await _selectCustomTimeFromSummary();
+    }
   }
 
   Future<void> _selectCustomTimeFromSummary() async {
@@ -241,7 +207,6 @@ class _DeviceSharePageState extends State<DeviceSharePage> {
       return;
     }
     setState(() {
-      _period = _SharePeriod.customize;
       _periodEndsAt = customTime;
     });
   }
@@ -251,10 +216,10 @@ class _DeviceSharePageState extends State<DeviceSharePage> {
       context: context,
       barrierColor: AppColors.deviceShareDialogOverlay,
       builder: (context) {
+        final now = DateTime.now();
         return _CustomizeTimeDialog(
-          initialDateTime: _periodEndsAt.isAfter(DateTime.now())
-              ? _periodEndsAt
-              : _roundedTwoHourExpiry(DateTime.now()),
+          initialDateTime: _periodEndsAt != null && _periodEndsAt!.isAfter(now) ? _periodEndsAt! : now.add(const Duration(hours: 2)),
+          minimumDateTime: now,
         );
       },
     );
@@ -275,13 +240,39 @@ class _DeviceSharePageState extends State<DeviceSharePage> {
     };
   }
 
-  DateTime _roundedTwoHourExpiry(DateTime now) {
-    return DateTime(
-      now.year,
-      now.month,
-      now.day,
-      now.hour,
-    ).add(const Duration(hours: 2));
+  bool get _canConfirm {
+    return _emailController.text.trim().isNotEmpty && (_period != _SharePeriod.customize || _periodEndsAt != null);
+  }
+
+  void _onAddressChanged() {
+    if (_showAddressFormatError) {
+      setState(() {
+        _showAddressFormatError = false;
+      });
+      return;
+    }
+    setState(() {});
+  }
+
+  void _toggleCapability(_ShareCapability capability) {
+    if (_permission != _SharePermission.administrator) {
+      return;
+    }
+    setState(() {
+      if (_selectedCapabilities.contains(capability)) {
+        _selectedCapabilities.remove(capability);
+      } else {
+        _selectedCapabilities.add(capability);
+      }
+    });
+  }
+
+  void _confirm() {
+    if (!InputValidators.isValidEmail(_emailController.text)) {
+      setState(() {
+        _showAddressFormatError = true;
+      });
+    }
   }
 
   String _formatExpiry(DateTime value) {
@@ -299,13 +290,7 @@ class _ShareFormRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        SizedBox(
-          width: 130,
-          child: Text(
-            label,
-            style: AppTextTokens.deviceShareLabel(Theme.of(context).textTheme),
-          ),
-        ),
+        SizedBox(width: 100, child: Text(label, style: AppTextTokens.deviceShareLabel(Theme.of(context).textTheme))),
         Expanded(child: child),
       ],
     );
@@ -316,29 +301,18 @@ class _ShareSelectField extends StatelessWidget {
   const _ShareSelectField({required this.value, required this.onTap});
 
   final String value;
-  final VoidCallback onTap;
+  final ValueChanged<BuildContext> onTap;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: onTap,
+      onTap: () => onTap(context),
       child: _ShareFieldShell(
         child: Row(
           children: [
-            Expanded(
-              child: Text(
-                value,
-                style: AppTextTokens.deviceShareField(
-                  Theme.of(context).textTheme,
-                ),
-              ),
-            ),
-            const Icon(
-              Icons.keyboard_arrow_down_rounded,
-              color: AppColors.brandPrimary,
-              size: 26,
-            ),
+            Expanded(child: Text(value, style: AppTextTokens.deviceShareInputValue(Theme.of(context).textTheme))),
+            const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.brandPrimary, size: 26),
           ],
         ),
       ),
@@ -347,50 +321,51 @@ class _ShareSelectField extends StatelessWidget {
 }
 
 class _ShareTextField extends StatelessWidget {
-  const _ShareTextField({required this.controller, required this.hintText});
+  const _ShareTextField({required this.controller, required this.hasError, required this.errorText});
 
   final TextEditingController controller;
-  final String hintText;
+  final bool hasError;
+  final String errorText;
 
   @override
   Widget build(BuildContext context) {
-    return _ShareFieldShell(
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      child: TextField(
-        controller: controller,
-        style: AppTextTokens.deviceShareField(Theme.of(context).textTheme),
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          isCollapsed: true,
-          hintText: hintText,
-          hintStyle: AppTextTokens.deviceShareHint(Theme.of(context).textTheme),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _ShareFieldShell(
+          borderColor: hasError ? AppColors.deviceShareFieldError : AppColors.deviceShareFieldBorder,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          child: TextField(
+            controller: controller,
+            style: AppTextTokens.deviceShareInputValue(Theme.of(context).textTheme),
+            decoration: const InputDecoration(border: InputBorder.none, isCollapsed: true),
+            keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.done,
+          ),
         ),
-        keyboardType: TextInputType.emailAddress,
-        textInputAction: TextInputAction.done,
-      ),
+        if (hasError) ...[const SizedBox(height: 4), Text(errorText, style: AppTextTokens.deviceShareFieldError(Theme.of(context).textTheme))],
+      ],
     );
   }
 }
 
 class _ShareFieldShell extends StatelessWidget {
-  const _ShareFieldShell({
-    required this.child,
-    this.padding = const EdgeInsets.symmetric(horizontal: 14),
-  });
+  const _ShareFieldShell({required this.child, this.padding = const EdgeInsets.symmetric(horizontal: 14), this.borderColor = AppColors.deviceShareFieldBorder});
 
   final Widget child;
   final EdgeInsetsGeometry padding;
+  final Color borderColor;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 60,
+      height: 42,
       padding: padding,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: AppColors.backgroundPrimary,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.deviceShareFieldBorder),
+        border: Border.all(color: borderColor),
       ),
       child: child,
     );
@@ -410,51 +385,29 @@ class _SharePeriodSummary extends StatelessWidget {
     final isEnabled = onTap != null;
 
     return GestureDetector(
+      key: const Key('device_share_time'),
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
-        height: 56,
-        padding: const EdgeInsets.symmetric(horizontal: 18),
+        height: 44,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
         decoration: BoxDecoration(
           color: AppColors.deviceShareFieldDisabled,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: AppColors.deviceShareFieldBorder),
-          boxShadow: const [
-            BoxShadow(
-              color: AppColors.deviceShareFieldShadow,
-              blurRadius: 16,
-              offset: Offset(0, 8),
-            ),
-          ],
         ),
         child: Row(
           children: [
-            const Icon(
-              Icons.schedule_rounded,
-              color: AppColors.textIcon,
-              size: 22,
+            Image.asset(
+              ChooseSceneAssetPaths.deviceSharePageTime,
+              errorBuilder: (context, error, stackTrace) {
+                return Icon(Icons.schedule_rounded, color: AppColors.iconHomeAction, size: 22);
+              },
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Text(
-                title,
-                style: AppTextTokens.deviceShareField(textTheme),
-              ),
-            ),
-            if (value != null) ...[
-              Text(
-                value!,
-                style: AppTextTokens.deviceShareSummaryValue(textTheme),
-              ),
-              const SizedBox(width: 8),
-            ],
-            Icon(
-              Icons.keyboard_arrow_down_rounded,
-              color: isEnabled
-                  ? AppColors.brandPrimary
-                  : AppColors.borderHomePlaceholder,
-              size: 26,
-            ),
+            const SizedBox(width: 8),
+            Expanded(child: Text(title, style: AppTextTokens.deviceShareField(textTheme))),
+            if (value != null) ...[Text(value!, style: AppTextTokens.deviceShareInputValue(textTheme)), const SizedBox(width: 8)],
+            Icon(Icons.keyboard_arrow_down_rounded, color: isEnabled ? AppColors.brandPrimary : AppColors.borderHomePlaceholder, size: 26),
           ],
         ),
       ),
@@ -462,69 +415,19 @@ class _SharePeriodSummary extends StatelessWidget {
   }
 }
 
-class _SendEmailToggle extends StatelessWidget {
-  const _SendEmailToggle({
-    required this.value,
-    required this.label,
-    required this.onChanged,
-  });
-
-  final bool value;
-  final String label;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            label,
-            style: AppTextTokens.deviceShareSectionTitle(
-              Theme.of(context).textTheme,
-            ),
-          ),
-        ),
-        GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () => onChanged(!value),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 120),
-            width: 24,
-            height: 24,
-            decoration: BoxDecoration(
-              color: value
-                  ? AppColors.deviceShareCheckbox
-                  : AppColors.backgroundPrimary,
-              borderRadius: BorderRadius.circular(3),
-              border: Border.all(
-                color: value
-                    ? AppColors.deviceShareCheckbox
-                    : AppColors.deviceShareFieldBorder,
-                width: 2,
-              ),
-            ),
-            child: value
-                ? const Icon(Icons.check_rounded, color: Colors.white, size: 22)
-                : null,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class _CapabilitiesPanel extends StatelessWidget {
-  const _CapabilitiesPanel({required this.items});
+  const _CapabilitiesPanel({required this.items, required this.selectedCapabilities, required this.isEnabled, required this.onChanged});
 
-  final List<String> items;
+  final List<_CapabilityItem> items;
+  final Set<_ShareCapability> selectedCapabilities;
+  final bool isEnabled;
+  final ValueChanged<_ShareCapability> onChanged;
 
   @override
   Widget build(BuildContext context) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 160),
-      height: items.length == 1 ? 50 : 140,
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+      padding: const EdgeInsets.fromLTRB(8, 12, 8, 12),
       decoration: BoxDecoration(
         color: AppColors.backgroundPrimary,
         borderRadius: BorderRadius.circular(8),
@@ -534,15 +437,67 @@ class _CapabilitiesPanel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           for (final item in items) ...[
-            Text(
-              item,
-              style: AppTextTokens.deviceShareField(
-                Theme.of(context).textTheme,
+            SizedBox(
+              height: 26,
+              child: Row(
+                children: [
+                  Expanded(child: Text(item.label, style: AppTextTokens.deviceShareField(Theme.of(context).textTheme))),
+                  _CapabilityAvailabilityIcon(
+                    capability: item.capability,
+                    isSelected: selectedCapabilities.contains(item.capability),
+                    isEnabled: isEnabled,
+                    onTap: () => onChanged(item.capability),
+                  ),
+                ],
               ),
             ),
-            if (item != items.last) const SizedBox(height: 18),
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _CapabilityItem {
+  const _CapabilityItem({required this.capability, required this.label});
+
+  final _ShareCapability capability;
+  final String label;
+}
+
+class _CapabilityAvailabilityIcon extends StatelessWidget {
+  const _CapabilityAvailabilityIcon({required this.capability, required this.isSelected, required this.isEnabled, required this.onTap});
+
+  final _ShareCapability capability;
+  final bool isSelected;
+  final bool isEnabled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: isEnabled,
+      enabled: isEnabled,
+      selected: isSelected,
+      child: GestureDetector(
+        key: Key('device_share_capability_${capability.name}'),
+        behavior: HitTestBehavior.opaque,
+        onTap: isEnabled ? onTap : null,
+        child: Opacity(
+          opacity: isEnabled ? 1 : AppOpacityTokens.deviceShareDisabled,
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: Image.asset(
+              isSelected ? ChooseSceneAssetPaths.capabilitiesSelected : ChooseSceneAssetPaths.capabilitiesUnselected,
+              errorBuilder: (context, error, stackTrace) => Icon(
+                isSelected ? Icons.check_rounded : Icons.close_rounded,
+                color: isSelected ? AppColors.deviceShareCheckbox : AppColors.deviceShareUnavailable,
+                size: 16,
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -555,8 +510,33 @@ class _ShareOption<T> {
   final String label;
 }
 
-class _ShareOptionDialog<T> extends StatelessWidget {
-  const _ShareOptionDialog({required this.options});
+Future<T?> _showShareOptionPopup<T>({required BuildContext context, required BuildContext anchorContext, required List<_ShareOption<T>> options}) {
+  final anchorBox = anchorContext.findRenderObject()! as RenderBox;
+  final anchorOffset = anchorBox.localToGlobal(Offset.zero);
+
+  return showGeneralDialog<T>(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+    barrierColor: AppColors.deviceShareDialogOverlay,
+    transitionDuration: const Duration(milliseconds: 120),
+    pageBuilder: (context, animation, secondaryAnimation) {
+      return Stack(
+        children: [
+          Positioned(
+            left: anchorOffset.dx,
+            top: anchorOffset.dy,
+            width: anchorBox.size.width,
+            child: _ShareOptionPopup<T>(options: options),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+class _ShareOptionPopup<T> extends StatelessWidget {
+  const _ShareOptionPopup({required this.options});
 
   final List<_ShareOption<T>> options;
 
@@ -564,60 +544,34 @@ class _ShareOptionDialog<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 58),
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.backgroundPrimary,
-          borderRadius: BorderRadius.circular(8),
-        ),
+    return Material(
+      color: AppColors.backgroundPrimary,
+      elevation: 8,
+      borderRadius: BorderRadius.circular(8),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
         child: Stack(
           children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 28),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  for (var index = 0; index < options.length; index++) ...[
-                    GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () =>
-                          Navigator.of(context).pop(options[index].value),
-                      child: SizedBox(
-                        height: 42,
-                        child: Center(
-                          child: Text(
-                            options[index].label,
-                            style: AppTextTokens.deviceShareDialogOption(
-                              textTheme,
-                            ),
-                          ),
-                        ),
-                      ),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (var index = 0; index < options.length; index++) ...[
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => Navigator.of(context).pop(options[index].value),
+                    child: SizedBox(
+                      height: 50,
+                      child: Center(child: Text(options[index].label, style: AppTextTokens.deviceShareDialogOption(textTheme))),
                     ),
-                    if (index != options.length - 1)
-                      const Divider(
-                        height: 1,
-                        thickness: 1,
-                        indent: 18,
-                        endIndent: 18,
-                        color: AppColors.deviceShareFieldBorder,
-                      ),
-                  ],
-                  const SizedBox(height: 12),
+                  ),
+                  if (index != options.length - 1) const Divider(height: 1, thickness: 1, indent: 12, endIndent: 12, color: AppColors.deviceShareFieldBorder),
                 ],
-              ),
+              ],
             ),
             const Positioned(
-              right: 18,
-              top: 12,
-              child: Icon(
-                Icons.keyboard_arrow_down_rounded,
-                color: AppColors.brandPrimary,
-                size: 22,
-              ),
+              top: 8,
+              right: 8,
+              child: IgnorePointer(child: Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.brandPrimary, size: 20)),
             ),
           ],
         ),
@@ -627,9 +581,10 @@ class _ShareOptionDialog<T> extends StatelessWidget {
 }
 
 class _CustomizeTimeDialog extends StatefulWidget {
-  const _CustomizeTimeDialog({required this.initialDateTime});
+  const _CustomizeTimeDialog({required this.initialDateTime, required this.minimumDateTime});
 
   final DateTime initialDateTime;
+  final DateTime minimumDateTime;
 
   @override
   State<_CustomizeTimeDialog> createState() => _CustomizeTimeDialogState();
@@ -644,12 +599,12 @@ class _CustomizeTimeDialogState extends State<_CustomizeTimeDialog> {
   @override
   void initState() {
     super.initState();
-    final now = DateTime.now();
+    final now = widget.minimumDateTime;
     final initial = widget.initialDateTime;
     _today = DateTime(now.year, now.month, now.day);
-    _selectedDate = _today.add(const Duration(days: 1));
+    _selectedDate = DateTime(initial.year, initial.month, initial.day).isBefore(_today) ? _today : DateTime(initial.year, initial.month, initial.day);
     _visibleMonth = DateTime(_selectedDate.year, _selectedDate.month);
-    _selectedHour = initial.hour;
+    _selectedHour = _selectedDate == _today && initial.hour <= now.hour ? now.hour + 1 : initial.hour;
   }
 
   @override
@@ -664,49 +619,27 @@ class _CustomizeTimeDialogState extends State<_CustomizeTimeDialog> {
       child: Container(
         constraints: const BoxConstraints(maxWidth: 344),
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
-        decoration: BoxDecoration(
-          color: AppColors.backgroundPrimary,
-          borderRadius: BorderRadius.circular(8),
-        ),
+        decoration: BoxDecoration(color: AppColors.backgroundPrimary, borderRadius: BorderRadius.circular(8)),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Row(
               children: [
-                const Icon(
-                  Icons.schedule_rounded,
-                  color: AppColors.textIcon,
-                  size: 22,
-                ),
+                const Icon(Icons.schedule_rounded, color: AppColors.textIcon, size: 22),
                 const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    l10n.deviceShareTimeLabel,
-                    style: AppTextTokens.deviceShareSectionTitle(textTheme),
-                  ),
-                ),
-                const Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  color: AppColors.brandPrimary,
-                  size: 24,
-                ),
+                Expanded(child: Text(l10n.deviceShareTimeLabel, style: AppTextTokens.deviceShareSectionTitle(textTheme))),
+                const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.brandPrimary, size: 24),
               ],
             ),
             const SizedBox(height: 18),
             Row(
               children: [
                 Expanded(
-                  child: _TimeTextBox(
-                    value: _selectedHour.toString().padLeft(2, '0'),
-                    onTap: _selectHour,
-                  ),
+                  child: _TimeTextBox(value: _selectedHour.toString().padLeft(2, '0'), onTap: _selectHour),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Text(
-                    ':',
-                    style: AppTextTokens.deviceShareTimeSeparator(textTheme),
-                  ),
+                  child: Text(':', style: AppTextTokens.deviceShareTimeSeparator(textTheme)),
                 ),
                 SizedBox(width: 64, child: _TimeTextBox(value: '00')),
               ],
@@ -715,22 +648,11 @@ class _CustomizeTimeDialogState extends State<_CustomizeTimeDialog> {
             Row(
               children: [
                 Expanded(
-                  child: Center(
-                    child: Text(
-                      DateFormat('MMMM yyyy').format(_visibleMonth),
-                      style: AppTextTokens.deviceShareCalendarTitle(textTheme),
-                    ),
-                  ),
+                  child: Center(child: Text(DateFormat('MMMM yyyy').format(_visibleMonth), style: AppTextTokens.deviceShareCalendarTitle(textTheme))),
                 ),
-                _CalendarNavButton(
-                  icon: Icons.chevron_left_rounded,
-                  onTap: _previousMonth,
-                ),
+                _CalendarNavButton(icon: Icons.chevron_left_rounded, onTap: _previousMonth),
                 const SizedBox(width: 22),
-                _CalendarNavButton(
-                  icon: Icons.chevron_right_rounded,
-                  onTap: _nextMonth,
-                ),
+                _CalendarNavButton(icon: Icons.chevron_right_rounded, onTap: _nextMonth),
               ],
             ),
             const SizedBox(height: 22),
@@ -740,9 +662,13 @@ class _CustomizeTimeDialogState extends State<_CustomizeTimeDialog> {
               visibleMonth: _visibleMonth,
               today: _today,
               selectedDate: _selectedDate,
+              minimumDate: _today,
               onSelected: (date) {
                 setState(() {
                   _selectedDate = date;
+                  if (_selectedDate == _today && _selectedHour <= DateTime.now().hour) {
+                    _selectedHour = DateTime.now().hour + 1;
+                  }
                 });
               },
             ),
@@ -763,7 +689,7 @@ class _CustomizeTimeDialogState extends State<_CustomizeTimeDialog> {
                     label: l10n.deviceShareConfirmAction,
                     foregroundColor: Colors.white,
                     backgroundColor: AppColors.brandPrimary,
-                    onPressed: _confirm,
+                    onPressed: _selectedDateTime.isAfter(DateTime.now()) ? _confirm : null,
                   ),
                 ),
               ],
@@ -790,7 +716,7 @@ class _CustomizeTimeDialogState extends State<_CustomizeTimeDialog> {
     final selected = await showDialog<int>(
       context: context,
       barrierColor: Colors.transparent,
-      builder: (context) => _HourPickerDialog(selectedHour: _selectedHour),
+      builder: (context) => _HourPickerDialog(selectedHour: _selectedHour, minimumHour: _selectedDate == _today ? DateTime.now().hour + 1 : 0),
     );
     if (selected == null) {
       return;
@@ -801,15 +727,10 @@ class _CustomizeTimeDialogState extends State<_CustomizeTimeDialog> {
   }
 
   void _confirm() {
-    Navigator.of(context).pop(
-      DateTime(
-        _selectedDate.year,
-        _selectedDate.month,
-        _selectedDate.day,
-        _selectedHour,
-      ),
-    );
+    Navigator.of(context).pop(_selectedDateTime);
   }
+
+  DateTime get _selectedDateTime => DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day, _selectedHour);
 }
 
 class _TimeTextBox extends StatelessWidget {
@@ -835,12 +756,7 @@ class _TimeTextBox extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Text(
-                value,
-                style: AppTextTokens.deviceShareField(
-                  Theme.of(context).textTheme,
-                ),
-              ),
+              child: Text(value, style: AppTextTokens.deviceShareField(Theme.of(context).textTheme)),
             ),
           ),
         ),
@@ -850,9 +766,10 @@ class _TimeTextBox extends StatelessWidget {
 }
 
 class _HourPickerDialog extends StatefulWidget {
-  const _HourPickerDialog({required this.selectedHour});
+  const _HourPickerDialog({required this.selectedHour, required this.minimumHour});
 
   final int selectedHour;
+  final int minimumHour;
 
   @override
   State<_HourPickerDialog> createState() => _HourPickerDialogState();
@@ -864,9 +781,7 @@ class _HourPickerDialogState extends State<_HourPickerDialog> {
   @override
   void initState() {
     super.initState();
-    _scrollController = ScrollController(
-      initialScrollOffset: math.max(0, widget.selectedHour * 48.0 - 520),
-    );
+    _scrollController = ScrollController(initialScrollOffset: math.max(0, widget.selectedHour * 48.0 - 520));
   }
 
   @override
@@ -899,19 +814,18 @@ class _HourPickerDialogState extends State<_HourPickerDialog> {
                 itemCount: 24,
                 itemBuilder: (context, index) {
                   final isSelected = index == widget.selectedHour;
+                  final isEnabled = index >= widget.minimumHour;
                   return GestureDetector(
                     behavior: HitTestBehavior.opaque,
-                    onTap: () => Navigator.of(context).pop(index),
+                    onTap: isEnabled ? () => Navigator.of(context).pop(index) : null,
                     child: Container(
                       height: 48,
                       alignment: Alignment.centerLeft,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      color: isSelected
-                          ? AppColors.deviceShareHourSelected
-                          : AppColors.backgroundPrimary,
-                      child: Text(
-                        index.toString().padLeft(2, '0'),
-                        style: AppTextTokens.deviceShareHourOption(textTheme),
+                      color: isSelected ? AppColors.deviceShareHourSelected : AppColors.backgroundPrimary,
+                      child: Opacity(
+                        opacity: isEnabled ? 1 : AppOpacityTokens.deviceShareDisabled,
+                        child: Text(index.toString().padLeft(2, '0'), style: AppTextTokens.deviceShareHourOption(textTheme)),
                       ),
                     ),
                   );
@@ -953,12 +867,7 @@ class _WeekdayHeader extends StatelessWidget {
       children: [
         for (final label in labels)
           Expanded(
-            child: Center(
-              child: Text(
-                label,
-                style: AppTextTokens.deviceShareCalendarWeekday(textTheme),
-              ),
-            ),
+            child: Center(child: Text(label, style: AppTextTokens.deviceShareCalendarWeekday(textTheme))),
           ),
       ],
     );
@@ -966,16 +875,12 @@ class _WeekdayHeader extends StatelessWidget {
 }
 
 class _CalendarGrid extends StatelessWidget {
-  const _CalendarGrid({
-    required this.visibleMonth,
-    required this.today,
-    required this.selectedDate,
-    required this.onSelected,
-  });
+  const _CalendarGrid({required this.visibleMonth, required this.today, required this.selectedDate, required this.minimumDate, required this.onSelected});
 
   final DateTime visibleMonth;
   final DateTime today;
   final DateTime selectedDate;
+  final DateTime minimumDate;
   final ValueChanged<DateTime> onSelected;
 
   @override
@@ -994,6 +899,7 @@ class _CalendarGrid extends StatelessWidget {
                     day: days[row * 7 + column],
                     today: today,
                     selectedDate: selectedDate,
+                    minimumDate: minimumDate,
                     textTheme: textTheme,
                     onSelected: onSelected,
                   ),
@@ -1011,8 +917,7 @@ class _CalendarGrid extends StatelessWidget {
     final dayCount = DateTime(visibleMonth.year, visibleMonth.month + 1, 0).day;
     final days = <DateTime?>[
       for (var index = 0; index < firstDay.weekday % 7; index++) null,
-      for (var day = 1; day <= dayCount; day++)
-        DateTime(visibleMonth.year, visibleMonth.month, day),
+      for (var day = 1; day <= dayCount; day++) DateTime(visibleMonth.year, visibleMonth.month, day),
     ];
     while (days.length < 42) {
       days.add(null);
@@ -1026,6 +931,7 @@ class _CalendarDayCell extends StatelessWidget {
     required this.day,
     required this.today,
     required this.selectedDate,
+    required this.minimumDate,
     required this.textTheme,
     required this.onSelected,
   });
@@ -1033,6 +939,7 @@ class _CalendarDayCell extends StatelessWidget {
   final DateTime? day;
   final DateTime today;
   final DateTime selectedDate;
+  final DateTime minimumDate;
   final TextTheme textTheme;
   final ValueChanged<DateTime> onSelected;
 
@@ -1043,43 +950,30 @@ class _CalendarDayCell extends StatelessWidget {
       return const SizedBox(height: 32);
     }
 
-    final isSelected =
-        value.year == selectedDate.year &&
-        value.month == selectedDate.month &&
-        value.day == selectedDate.day;
-    final isToday =
-        value.year == today.year &&
-        value.month == today.month &&
-        value.day == today.day;
+    final isSelected = value.year == selectedDate.year && value.month == selectedDate.month && value.day == selectedDate.day;
+    final isToday = value.year == today.year && value.month == today.month && value.day == today.day;
+    final isEnabled = !DateTime(value.year, value.month, value.day).isBefore(minimumDate);
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: isToday ? null : () => onSelected(value),
+      onTap: isEnabled ? () => onSelected(value) : null,
       child: SizedBox(
         height: 32,
         child: Center(
-          child: Container(
-            width: 32,
-            height: 32,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: isSelected ? AppColors.brandPrimary : Colors.transparent,
-              shape: BoxShape.circle,
-              border: isSelected
-                  ? null
-                  : Border.all(
-                      color: isToday
-                          ? AppColors.brandPrimary
-                          : Colors.transparent,
-                      width: 1,
-                    ),
-            ),
-            child: Text(
-              '${value.day}',
-              style: AppTextTokens.deviceShareCalendarDay(
-                textTheme,
-                isSelected: isSelected,
-                isToday: isToday,
+          child: Opacity(
+            opacity: isEnabled ? 1 : AppOpacityTokens.deviceShareDisabled,
+            child: Container(
+              width: 32,
+              height: 32,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: isSelected ? AppColors.brandPrimary : Colors.transparent,
+                shape: BoxShape.circle,
+                border: isSelected ? null : Border.all(color: isToday ? AppColors.brandPrimary : Colors.transparent, width: 1),
+              ),
+              child: Text(
+                '${value.day}',
+                style: AppTextTokens.deviceShareCalendarDay(textTheme, isSelected: isSelected, isToday: isToday),
               ),
             ),
           ),
@@ -1090,36 +984,29 @@ class _CalendarDayCell extends StatelessWidget {
 }
 
 class _ShareActionButton extends StatelessWidget {
-  const _ShareActionButton({
-    required this.label,
-    required this.foregroundColor,
-    required this.backgroundColor,
-    required this.onPressed,
-  });
+  const _ShareActionButton({required this.label, required this.foregroundColor, required this.backgroundColor, required this.onPressed, this.buttonKey});
 
   final String label;
   final Color foregroundColor;
   final Color backgroundColor;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
+  final Key? buttonKey;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 64,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onPressed,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: backgroundColor,
-            borderRadius: BorderRadius.circular(32),
-          ),
-          child: Center(
-            child: Text(
-              label,
-              style: AppTextTokens.deviceShareButton(
-                Theme.of(context).textTheme,
-              ).copyWith(color: foregroundColor),
+      height: 46,
+      child: Semantics(
+        button: true,
+        enabled: onPressed != null,
+        child: GestureDetector(
+          key: buttonKey,
+          behavior: HitTestBehavior.opaque,
+          onTap: onPressed,
+          child: DecoratedBox(
+            decoration: BoxDecoration(color: backgroundColor, borderRadius: BorderRadius.circular(24)),
+            child: Center(
+              child: Text(label, style: AppTextTokens.deviceShareButton(Theme.of(context).textTheme).copyWith(color: foregroundColor)),
             ),
           ),
         ),

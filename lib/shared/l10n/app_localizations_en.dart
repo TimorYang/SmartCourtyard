@@ -393,13 +393,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deviceShareGuestRole => 'Guest';
 
   @override
-  String get deviceShareEmailLabel => 'Email';
+  String get deviceShareEmailLabel => 'Address';
 
   @override
   String get deviceShareEmailPlaceholder => 'Email/Account';
 
   @override
-  String get deviceSharePeriodLabel => 'Sharing period';
+  String get deviceShareAddressInvalid => 'Enter a valid email address';
+
+  @override
+  String get deviceSharePeriodLabel => 'Access end';
 
   @override
   String get deviceShareNeverExpired => 'Never expired';
@@ -427,6 +430,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deviceShareCapabilityLedDelay => 'LED off delay';
+
+  @override
+  String get deviceShareCapabilityAutoClose => 'Auto-close';
+
+  @override
+  String get deviceShareCapabilityDoorOpenReminder => 'Door open reminder';
+
+  @override
+  String get deviceShareCapabilityDoorOpenForce => 'Door open force';
+
+  @override
+  String get deviceShareCapabilityDoorOpenSpeed => 'Door open speed';
 
   @override
   String get deviceShareCancelAction => 'Cancel';

@@ -369,13 +369,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get deviceShareGuestRole => '访客';
 
   @override
-  String get deviceShareEmailLabel => '邮箱';
+  String get deviceShareEmailLabel => '地址';
 
   @override
   String get deviceShareEmailPlaceholder => '邮箱/账号';
 
   @override
-  String get deviceSharePeriodLabel => '分享期限';
+  String get deviceShareAddressInvalid => '请输入有效的邮箱地址';
+
+  @override
+  String get deviceSharePeriodLabel => '访问截止';
 
   @override
   String get deviceShareNeverExpired => '永不过期';
@@ -403,6 +406,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get deviceShareCapabilityLedDelay => 'LED 延时关闭';
+
+  @override
+  String get deviceShareCapabilityAutoClose => '自动关闭';
+
+  @override
+  String get deviceShareCapabilityDoorOpenReminder => '开门提醒';
+
+  @override
+  String get deviceShareCapabilityDoorOpenForce => '开门力度';
+
+  @override
+  String get deviceShareCapabilityDoorOpenSpeed => '开门速度';
 
   @override
   String get deviceShareCancelAction => '取消';

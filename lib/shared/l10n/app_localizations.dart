@@ -803,7 +803,7 @@ abstract class AppLocalizations {
   /// Email field label on the device sharing page
   ///
   /// In en, this message translates to:
-  /// **'Email'**
+  /// **'Address'**
   String get deviceShareEmailLabel;
 
   /// Email input placeholder on the device sharing page
@@ -812,10 +812,16 @@ abstract class AppLocalizations {
   /// **'Email/Account'**
   String get deviceShareEmailPlaceholder;
 
+  /// Validation message shown when the sharing address is not a valid email
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid email address'**
+  String get deviceShareAddressInvalid;
+
   /// Sharing period field label on the device sharing page
   ///
   /// In en, this message translates to:
-  /// **'Sharing period'**
+  /// **'Access end'**
   String get deviceSharePeriodLabel;
 
   /// Never expired sharing period option
@@ -871,6 +877,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'LED off delay'**
   String get deviceShareCapabilityLedDelay;
+
+  /// Capability option displayed when sharing a device
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-close'**
+  String get deviceShareCapabilityAutoClose;
+
+  /// Capability option displayed when sharing a device
+  ///
+  /// In en, this message translates to:
+  /// **'Door open reminder'**
+  String get deviceShareCapabilityDoorOpenReminder;
+
+  /// Capability option displayed when sharing a device
+  ///
+  /// In en, this message translates to:
+  /// **'Door open force'**
+  String get deviceShareCapabilityDoorOpenForce;
+
+  /// Capability option displayed when sharing a device
+  ///
+  /// In en, this message translates to:
+  /// **'Door open speed'**
+  String get deviceShareCapabilityDoorOpenSpeed;
 
   /// Cancel button label on the device sharing page
   ///
