@@ -21,6 +21,7 @@ class AddNewDoorsPage extends StatelessWidget {
     final doorTypes = DoorType.values
         .map(
           (type) => _DoorTypeOption(
+            type: type,
             label: _labelForType(l10n, type),
             visual: DoorTypeVisuals.forType(type),
           ),
@@ -50,8 +51,13 @@ class AddNewDoorsPage extends StatelessWidget {
           for (final option in doorTypes) ...[
             _DoorTypeCard(
               option: option,
-              // onPressed: () => showAddDoorNameDialog(context, onConfirmed: () => context.push(AddDevicePage.routePath)),
-              onPressed: () => context.push(AddDevicePage.routePath),
+              onPressed: () => context.pushNamed(
+                AddDevicePage.routeName,
+                queryParameters: {
+                  AddDevicePage.doorTypeQueryParameter: option.type.wireValue
+                      .toString(),
+                },
+              ),
             ),
             const SizedBox(height: 14),
           ],
@@ -72,8 +78,13 @@ class AddNewDoorsPage extends StatelessWidget {
 }
 
 class _DoorTypeOption {
-  const _DoorTypeOption({required this.label, required this.visual});
+  const _DoorTypeOption({
+    required this.type,
+    required this.label,
+    required this.visual,
+  });
 
+  final DoorType type;
   final String label;
   final DoorTypeVisual visual;
 }

@@ -736,9 +736,53 @@
   "@addDeviceFBox": {
     "description": "F-box option on the add device page"
   },
+  "fBoxConnectionGuideTitle": "Connection",
+  "@fBoxConnectionGuideTitle": {
+    "description": "Title of the F-box connection guide"
+  },
+  "fBoxConnectionGuideInstructions": "1. Connect power supply to door operator, confirm the Wi-Fi light is flashing or steady\n2. Confirm other related accessories have been matched to F-box.",
+  "@fBoxConnectionGuideInstructions": {
+    "description": "Connection instructions on the F-box connection guide"
+  },
+  "fBoxConnectionGuideManualHint": "*Connection steps refer to manuals",
+  "@fBoxConnectionGuideManualHint": {
+    "description": "Manual reference note on the F-box connection guide"
+  },
+  "fBoxConnectionGuideNextAction": "NEXT",
+  "@fBoxConnectionGuideNextAction": {
+    "description": "Primary action on the F-box connection guide"
+  },
   "addDeviceUsbWifiModule": "USB WIFI module",
   "@addDeviceUsbWifiModule": {
     "description": "USB WIFI module option on the add device page"
+  },
+  "usbDongleGuideTitle": "USB Dongle Installation",
+  "@usbDongleGuideTitle": {
+    "description": "Title of the USB Dongle installation guide"
+  },
+  "usbDongleGuideDescription": "Follow the installation guide for the selected door type.",
+  "@usbDongleGuideDescription": {
+    "description": "Description of the USB Dongle installation guide"
+  },
+  "usbDongleGuideInsertTitle": "1. Insert the USB WIFI module",
+  "@usbDongleGuideInsertTitle": {
+    "description": "First step title on the USB Dongle installation guide"
+  },
+  "usbDongleGuideInsertDescription": "Find the corresponding USB interface and insert the WIFI module.",
+  "@usbDongleGuideInsertDescription": {
+    "description": "First step description on the USB Dongle installation guide"
+  },
+  "usbDongleGuideIndicatorTitle": "2. Observe the status of the indicator light",
+  "@usbDongleGuideIndicatorTitle": {
+    "description": "Second step title on the USB Dongle installation guide"
+  },
+  "usbDongleGuideIndicatorDescription": "2.1 If the USB light is off or flashing, you may search for the device directly.",
+  "@usbDongleGuideIndicatorDescription": {
+    "description": "Second step description on the USB Dongle installation guide"
+  },
+  "usbDongleGuideSearchDeviceAction": "Search for Device",
+  "@usbDongleGuideSearchDeviceAction": {
+    "description": "Primary action on the USB Dongle installation guide"
   },
   "addDeviceSmartOpener": "Smart Opener (Built-in Wi-Fi)",
   "@addDeviceSmartOpener": {

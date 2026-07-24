@@ -3,10 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
+import '../../../../platform_bridge/hardware_models.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
-import 'smart_opener_scan_guide_page.dart';
+import 'f_box_connection_guide_page.dart';
+import 'smart_opener_qr_scan_page.dart';
+import 'usb_dongle_guide_page.dart';
 
 class AddDeviceAssetPaths {
   const AddDeviceAssetPaths._();
@@ -22,10 +25,13 @@ class AddDeviceAssetPaths {
 }
 
 class AddDevicePage extends ConsumerStatefulWidget {
-  const AddDevicePage({super.key});
+  const AddDevicePage({super.key, required this.doorType});
 
   static const routeName = 'add-device';
   static const routePath = '/add-device';
+  static const doorTypeQueryParameter = 'doorType';
+
+  final DoorType doorType;
 
   @override
   ConsumerState<AddDevicePage> createState() => _AddDevicePageState();
@@ -68,6 +74,7 @@ class _AddDevicePageState extends ConsumerState<AddDevicePage> {
             label: l10n.addDeviceFBox,
             assetPath: AddDeviceAssetPaths.fBox,
             fallbackIcon: Icons.developer_board_outlined,
+            onTap: () => context.push(FBoxConnectionGuidePage.routePath),
           ),
           const SizedBox(height: 29),
           _DeviceSectionTitle(label: l10n.addDeviceSmartControllerSection),
@@ -76,13 +83,20 @@ class _AddDevicePageState extends ConsumerState<AddDevicePage> {
             label: l10n.addDeviceUsbWifiModule,
             assetPath: AddDeviceAssetPaths.usbWifiModule,
             fallbackIcon: Icons.usb_outlined,
+            onTap: () => context.pushNamed(
+              UsbDongleGuidePage.routeName,
+              queryParameters: {
+                AddDevicePage.doorTypeQueryParameter: widget.doorType.wireValue
+                    .toString(),
+              },
+            ),
           ),
           const SizedBox(height: 14),
           _DeviceOptionCard(
             label: l10n.addDeviceSmartOpener,
             assetPath: AddDeviceAssetPaths.smartOpener,
             fallbackIcon: Icons.wifi_tethering_outlined,
-            onTap: () => context.push(SmartOpenerScanGuidePage.routePath),
+            onTap: () => context.push(SmartOpenerQrScanPage.routePath),
           ),
           const SizedBox(height: 14),
           _DeviceOptionCard(

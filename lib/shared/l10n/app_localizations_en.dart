@@ -629,7 +629,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addDeviceFBox => 'F-box';
 
   @override
+  String get fBoxConnectionGuideTitle => 'Connection';
+
+  @override
+  String get fBoxConnectionGuideInstructions =>
+      '1. Connect power supply to door operator, confirm the Wi-Fi light is flashing or steady\n2. Confirm other related accessories have been matched to F-box.';
+
+  @override
+  String get fBoxConnectionGuideManualHint =>
+      '*Connection steps refer to manuals';
+
+  @override
+  String get fBoxConnectionGuideNextAction => 'NEXT';
+
+  @override
   String get addDeviceUsbWifiModule => 'USB WIFI module';
+
+  @override
+  String get usbDongleGuideTitle => 'USB Dongle Installation';
+
+  @override
+  String get usbDongleGuideDescription =>
+      'Follow the installation guide for the selected door type.';
+
+  @override
+  String get usbDongleGuideInsertTitle => '1. Insert the USB WIFI module';
+
+  @override
+  String get usbDongleGuideInsertDescription =>
+      'Find the corresponding USB interface and insert the WIFI module.';
+
+  @override
+  String get usbDongleGuideIndicatorTitle =>
+      '2. Observe the status of the indicator light';
+
+  @override
+  String get usbDongleGuideIndicatorDescription =>
+      '2.1 If the USB light is off or flashing, you may search for the device directly.';
+
+  @override
+  String get usbDongleGuideSearchDeviceAction => 'Search for Device';
 
   @override
   String get addDeviceSmartOpener => 'Smart Opener (Built-in Wi-Fi)';

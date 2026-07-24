@@ -1262,11 +1262,77 @@ abstract class AppLocalizations {
   /// **'F-box'**
   String get addDeviceFBox;
 
+  /// Title of the F-box connection guide
+  ///
+  /// In en, this message translates to:
+  /// **'Connection'**
+  String get fBoxConnectionGuideTitle;
+
+  /// Connection instructions on the F-box connection guide
+  ///
+  /// In en, this message translates to:
+  /// **'1. Connect power supply to door operator, confirm the Wi-Fi light is flashing or steady\n2. Confirm other related accessories have been matched to F-box.'**
+  String get fBoxConnectionGuideInstructions;
+
+  /// Manual reference note on the F-box connection guide
+  ///
+  /// In en, this message translates to:
+  /// **'*Connection steps refer to manuals'**
+  String get fBoxConnectionGuideManualHint;
+
+  /// Primary action on the F-box connection guide
+  ///
+  /// In en, this message translates to:
+  /// **'NEXT'**
+  String get fBoxConnectionGuideNextAction;
+
   /// USB WIFI module option on the add device page
   ///
   /// In en, this message translates to:
   /// **'USB WIFI module'**
   String get addDeviceUsbWifiModule;
+
+  /// Title of the USB Dongle installation guide
+  ///
+  /// In en, this message translates to:
+  /// **'USB Dongle Installation'**
+  String get usbDongleGuideTitle;
+
+  /// Description of the USB Dongle installation guide
+  ///
+  /// In en, this message translates to:
+  /// **'Follow the installation guide for the selected door type.'**
+  String get usbDongleGuideDescription;
+
+  /// First step title on the USB Dongle installation guide
+  ///
+  /// In en, this message translates to:
+  /// **'1. Insert the USB WIFI module'**
+  String get usbDongleGuideInsertTitle;
+
+  /// First step description on the USB Dongle installation guide
+  ///
+  /// In en, this message translates to:
+  /// **'Find the corresponding USB interface and insert the WIFI module.'**
+  String get usbDongleGuideInsertDescription;
+
+  /// Second step title on the USB Dongle installation guide
+  ///
+  /// In en, this message translates to:
+  /// **'2. Observe the status of the indicator light'**
+  String get usbDongleGuideIndicatorTitle;
+
+  /// Second step description on the USB Dongle installation guide
+  ///
+  /// In en, this message translates to:
+  /// **'2.1 If the USB light is off or flashing, you may search for the device directly.'**
+  String get usbDongleGuideIndicatorDescription;
+
+  /// Primary action on the USB Dongle installation guide
+  ///
+  /// In en, this message translates to:
+  /// **'Search for Device'**
+  String get usbDongleGuideSearchDeviceAction;
 
   /// Smart Opener option on the add device page
   ///

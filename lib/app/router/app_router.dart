@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/add_device/presentation/pages/add_device_page.dart';
 import '../../features/add_device/presentation/pages/add_new_doors_page.dart';
+import '../../features/add_device/presentation/pages/f_box_connection_guide_page.dart';
 import '../../features/add_device/presentation/pages/smart_opener_ble_scan_page.dart';
 import '../../features/add_device/presentation/pages/smart_opener_choose_wifi_page.dart';
 import '../../features/add_device/presentation/pages/smart_opener_connecting_page.dart';
@@ -13,6 +14,7 @@ import '../../features/add_device/presentation/pages/smart_opener_device_not_fou
 import '../../features/add_device/presentation/pages/smart_opener_qr_scan_page.dart';
 import '../../features/add_device/presentation/pages/smart_opener_scan_guide_page.dart';
 import '../../features/add_device/presentation/pages/smart_opener_scan_results_page.dart';
+import '../../features/add_device/presentation/pages/usb_dongle_guide_page.dart';
 import '../../features/add_device/presentation/pages/wifi_configuration_page.dart';
 import '../../features/auth/application/providers.dart';
 import '../../features/account/presentation/pages/account_details_page.dart';
@@ -45,6 +47,7 @@ import '../../features/security_center/presentation/pages/full_report_page.dart'
 import '../../features/security_center/presentation/pages/general_evaluation_page.dart';
 import '../../features/security_center/presentation/pages/safety_sensor_battery_solution_page.dart';
 import '../../features/security_center/presentation/pages/safety_sensors_evaluation_page.dart';
+import '../../platform_bridge/hardware_models.dart';
 import '../../shared/webview/app_web_view_page.dart';
 import '../config/app_links.dart';
 import 'app_route_observer.dart';
@@ -208,7 +211,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AddDevicePage.routePath,
         name: AddDevicePage.routeName,
-        builder: (context, state) => const AddDevicePage(),
+        builder: (context, state) => AddDevicePage(
+          doorType: DoorType.fromWireValue(
+            int.tryParse(
+              state.uri.queryParameters[AddDevicePage.doorTypeQueryParameter] ??
+                  '',
+            ),
+          ),
+        ),
       ),
       GoRoute(
         path: AddNewDoorsPage.routePath,
@@ -216,9 +226,26 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const AddNewDoorsPage(),
       ),
       GoRoute(
+        path: FBoxConnectionGuidePage.routePath,
+        name: FBoxConnectionGuidePage.routeName,
+        builder: (context, state) => const FBoxConnectionGuidePage(),
+      ),
+      GoRoute(
         path: SmartOpenerScanGuidePage.routePath,
         name: SmartOpenerScanGuidePage.routeName,
         builder: (context, state) => const SmartOpenerScanGuidePage(),
+      ),
+      GoRoute(
+        path: UsbDongleGuidePage.routePath,
+        name: UsbDongleGuidePage.routeName,
+        builder: (context, state) => UsbDongleGuidePage(
+          doorType: DoorType.fromWireValue(
+            int.tryParse(
+              state.uri.queryParameters[AddDevicePage.doorTypeQueryParameter] ??
+                  '',
+            ),
+          ),
+        ),
       ),
       GoRoute(
         path: SmartOpenerQrScanPage.routePath,

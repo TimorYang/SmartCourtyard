@@ -604,7 +604,42 @@ class AppLocalizationsZh extends AppLocalizations {
   String get addDeviceFBox => 'F-box';
 
   @override
+  String get fBoxConnectionGuideTitle => '连接';
+
+  @override
+  String get fBoxConnectionGuideInstructions =>
+      '1. 将电源连接至开门机，确认 Wi-Fi 指示灯闪烁或常亮。\n2. 确认其他相关配件已与 F-box 配对。';
+
+  @override
+  String get fBoxConnectionGuideManualHint => '*连接步骤请参考说明书';
+
+  @override
+  String get fBoxConnectionGuideNextAction => '下一步';
+
+  @override
   String get addDeviceUsbWifiModule => 'USB WIFI 模块';
+
+  @override
+  String get usbDongleGuideTitle => 'USB Dongle 安装';
+
+  @override
+  String get usbDongleGuideDescription => '请根据所选门型查看对应的安装指引。';
+
+  @override
+  String get usbDongleGuideInsertTitle => '1. 插入 USB WIFI 模块';
+
+  @override
+  String get usbDongleGuideInsertDescription => '找到对应的 USB 接口并插入 WIFI 模块。';
+
+  @override
+  String get usbDongleGuideIndicatorTitle => '2. 观察指示灯状态';
+
+  @override
+  String get usbDongleGuideIndicatorDescription =>
+      '2.1 如果 USB 指示灯熄灭或闪烁，可直接搜索设备。';
+
+  @override
+  String get usbDongleGuideSearchDeviceAction => '搜索设备';
 
   @override
   String get addDeviceSmartOpener => '智能开门器';

@@ -38,6 +38,7 @@ class AppColors {
   static const afterSalesSummarySurface = Color(0xFFF1F3F5);
   static const afterSalesSecondaryBorder = Color(0xFFF1F2F4);
   static const afterSalesHint = Color(0xFFFF8A00);
+  static const fBoxConnectionManualHint = Color(0xFFFFA000);
   static const accountDetailsLogoutSurface = Color(0xFFF3F4F6);
   static const accountDetailsAvatarSurface = Color(0xFFF1F3F6);
   static const accountDetailsAvatarForeground = Color(0xFFFFFFFF);
@@ -1590,6 +1591,24 @@ class AppTextTokens {
       fontSize: 13,
       fontWeight: FontWeight.w400,
       height: 1.18,
+    );
+  }
+
+  static TextStyle fBoxConnectionInstructions(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 18,
+      fontWeight: FontWeight.w400,
+      height: 1.3,
+    );
+  }
+
+  static TextStyle fBoxConnectionManualHint(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.fBoxConnectionManualHint,
+      fontSize: 15,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
     );
   }
 
