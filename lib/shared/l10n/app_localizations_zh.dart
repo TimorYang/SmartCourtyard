@@ -1242,8 +1242,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get hardwareDiagnosticsDetailedLogging => '详细硬件诊断日志';
 
   @override
+  String get hardwareDiagnosticsFlutterLogging => 'Flutter BLE Console 日志';
+
+  @override
+  String get hardwareDiagnosticsNativeLogging => '原生 BLE Console 日志';
+
+  @override
   String get hardwareDiagnosticsWarning =>
-      '开启后会在系统控制台输出蓝牙原始帧和解密后的协议数据，便于现场排查。AES Key、Token、Wi-Fi 密码等敏感信息始终不会记录。';
+      'Flutter 日志会在 Flutter Console 输出格式化蓝牙报文。关闭原生日志可避免重复输出。AES Key、Token、Wi-Fi 密码等敏感信息始终不会记录。';
 
   @override
   String get hardwareDiagnosticsUpdateFailed => '诊断日志设置更新失败，请重试。';

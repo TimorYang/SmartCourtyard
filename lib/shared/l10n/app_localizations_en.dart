@@ -1325,8 +1325,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Detailed hardware diagnostics';
 
   @override
+  String get hardwareDiagnosticsFlutterLogging => 'Flutter BLE console logging';
+
+  @override
+  String get hardwareDiagnosticsNativeLogging => 'Native BLE console logging';
+
+  @override
   String get hardwareDiagnosticsWarning =>
-      'When enabled, raw Bluetooth frames and decrypted protocol data are written to the system console for troubleshooting. AES keys, tokens, Wi-Fi passwords, and other credentials are never logged.';
+      'Flutter logging prints formatted Bluetooth frames in the Flutter console. Keep native logging off to avoid duplicate entries. AES keys, tokens, Wi-Fi passwords, and other credentials are never logged.';
 
   @override
   String get hardwareDiagnosticsUpdateFailed =>

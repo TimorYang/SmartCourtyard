@@ -5,8 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('restores and persists detailed hardware logging', () async {
-    final preferences = _MemoryPreferences(true);
+  test('restores and independently persists both logging switches', () async {
+    final preferences = _MemoryPreferences(
+      const DiagnosticLoggingSettings(
+        flutterConsoleEnabled: true,
+        nativeConsoleEnabled: false,
+      ),
+    );
     final gateway = MockHardwareGateway();
     final container = ProviderContainer(
       overrides: [
@@ -16,32 +21,42 @@ void main() {
     );
     addTearDown(container.dispose);
 
-    expect(
-      await container.read(diagnosticLoggingControllerProvider.future),
-      isTrue,
+    final restored = await container.read(
+      diagnosticLoggingControllerProvider.future,
     );
-    expect(gateway.detailedHardwareLoggingEnabled, isTrue);
+    expect(restored.flutterConsoleEnabled, isTrue);
+    expect(restored.nativeConsoleEnabled, isFalse);
+    expect(gateway.flutterConsoleLoggingEnabled, isTrue);
+    expect(gateway.nativeConsoleLoggingEnabled, isFalse);
 
     await container
         .read(diagnosticLoggingControllerProvider.notifier)
-        .setEnabled(false);
+        .setNativeConsoleEnabled(true);
 
-    expect(preferences.enabled, isFalse);
-    expect(gateway.detailedHardwareLoggingEnabled, isFalse);
-    expect(container.read(diagnosticLoggingControllerProvider).value, isFalse);
+    expect(preferences.settings.flutterConsoleEnabled, isTrue);
+    expect(preferences.settings.nativeConsoleEnabled, isTrue);
+    expect(gateway.flutterConsoleLoggingEnabled, isTrue);
+    expect(gateway.nativeConsoleLoggingEnabled, isTrue);
+
+    await container
+        .read(diagnosticLoggingControllerProvider.notifier)
+        .setFlutterConsoleEnabled(false);
+
+    expect(preferences.settings.flutterConsoleEnabled, isFalse);
+    expect(preferences.settings.nativeConsoleEnabled, isTrue);
   });
 }
 
 class _MemoryPreferences implements DiagnosticLoggingPreferences {
-  _MemoryPreferences(this.enabled);
+  _MemoryPreferences(this.settings);
 
-  bool enabled;
-
-  @override
-  Future<bool> readEnabled() async => enabled;
+  DiagnosticLoggingSettings settings;
 
   @override
-  Future<void> writeEnabled(bool enabled) async {
-    this.enabled = enabled;
+  Future<DiagnosticLoggingSettings> read() async => settings;
+
+  @override
+  Future<void> write(DiagnosticLoggingSettings settings) async {
+    this.settings = settings;
   }
 }

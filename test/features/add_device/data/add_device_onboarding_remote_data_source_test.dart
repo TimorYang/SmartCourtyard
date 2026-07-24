@@ -3,11 +3,85 @@ import 'package:flinx/core/network/api_envelope_dto.dart';
 import 'package:flinx/features/add_device/data/data_sources/add_device_onboarding_api.dart';
 import 'package:flinx/features/add_device/data/data_sources/add_device_onboarding_remote_data_source.dart';
 import 'package:flinx/features/add_device/data/dto/add_force_door_request_dto.dart';
+import 'package:flinx/features/add_device/data/dto/binding_status_response_dto.dart';
 import 'package:flinx/features/add_device/data/dto/force_door_response_dto.dart';
 import 'package:flinx/features/add_device/data/dto/onboarding_device_key_response_dto.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('validateBindingStatus accepts an available serial number', () async {
+    final dataSource = AddDeviceOnboardingRemoteDataSourceImpl(
+      api: _FakeAddDeviceOnboardingApi(
+        bindingStatusResponse: const ApiEnvelopeDto(
+          code: 200,
+          success: true,
+          data: BindingStatusResponseDto(
+            sn: 'SN-001',
+            bound: false,
+            ownedByCurrentUser: false,
+            canBind: true,
+          ),
+        ),
+      ),
+    );
+
+    await dataSource.validateBindingStatus(
+      sn: 'SN-001',
+      requestId: 'request-0',
+    );
+  });
+
+  test('validateBindingStatus preserves the server error message', () async {
+    final dataSource = AddDeviceOnboardingRemoteDataSourceImpl(
+      api: _FakeAddDeviceOnboardingApi(
+        bindingStatusResponse: const ApiEnvelopeDto(
+          code: 100409,
+          success: false,
+          msg: 'This device has already been bound.',
+        ),
+      ),
+    );
+
+    expect(
+      () => dataSource.validateBindingStatus(
+        sn: 'SN-001',
+        requestId: 'request-0',
+      ),
+      throwsA(
+        isA<AddDeviceOnboardingRemoteException>().having(
+          (error) => error.serverMessage,
+          'serverMessage',
+          'This device has already been bound.',
+        ),
+      ),
+    );
+  });
+
+  test('validateBindingStatus rejects an unavailable serial number', () async {
+    final dataSource = AddDeviceOnboardingRemoteDataSourceImpl(
+      api: _FakeAddDeviceOnboardingApi(
+        bindingStatusResponse: const ApiEnvelopeDto(
+          code: 200,
+          success: true,
+          data: BindingStatusResponseDto(
+            sn: 'SN-001',
+            bound: true,
+            ownedByCurrentUser: false,
+            canBind: false,
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      () => dataSource.validateBindingStatus(
+        sn: 'SN-001',
+        requestId: 'request-0',
+      ),
+      throwsA(isA<AddDeviceOnboardingRemoteException>()),
+    );
+  });
+
   test('fetchDeviceKey accepts code 0 and returns device key data', () async {
     final dataSource = AddDeviceOnboardingRemoteDataSourceImpl(
       api: _FakeAddDeviceOnboardingApi(
@@ -173,12 +247,32 @@ void main() {
 
 class _FakeAddDeviceOnboardingApi implements AddDeviceOnboardingApi {
   const _FakeAddDeviceOnboardingApi({
+    this.bindingStatusResponse,
     this.deviceKeyResponse,
     this.addDoorResponse,
   });
 
   final ApiEnvelopeDto<OnboardingDeviceKeyResponseDto>? deviceKeyResponse;
   final ApiEnvelopeDto<ForceDoorResponseDto>? addDoorResponse;
+  final ApiEnvelopeDto<BindingStatusResponseDto>? bindingStatusResponse;
+
+  @override
+  Future<ApiEnvelopeDto<BindingStatusResponseDto>> validateBindingStatus(
+    String sn,
+    Options options,
+  ) async {
+    return bindingStatusResponse ??
+        const ApiEnvelopeDto(
+          code: 200,
+          success: true,
+          data: BindingStatusResponseDto(
+            sn: 'SN-001',
+            bound: false,
+            ownedByCurrentUser: false,
+            canBind: true,
+          ),
+        );
+  }
 
   @override
   Future<ApiEnvelopeDto<OnboardingDeviceKeyResponseDto>> fetchDeviceKey(

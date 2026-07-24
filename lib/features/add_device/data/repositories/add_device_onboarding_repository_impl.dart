@@ -18,6 +18,37 @@ class AddDeviceOnboardingRepositoryImpl
   final AppLogger logger;
 
   @override
+  Future<void> validateBindingStatus({
+    required String sn,
+    required String requestId,
+  }) async {
+    try {
+      await remoteDataSource.validateBindingStatus(
+        sn: sn,
+        requestId: requestId,
+      );
+      logger.info(
+        'Validated onboarding binding status.',
+        tag: AppLogTag.binding,
+        flowId: _flowId(requestId),
+        requestId: requestId,
+        context: {'sn': sn},
+      );
+    } on AddDeviceOnboardingRemoteException catch (error, stackTrace) {
+      logger.error(
+        'Failed to validate onboarding binding status.',
+        tag: AppLogTag.binding,
+        flowId: _flowId(requestId),
+        requestId: requestId,
+        error: error,
+        stackTrace: stackTrace,
+        context: {'sn': sn, 'statusCode': error.statusCode},
+      );
+      throw _mapError(error, requestId, 'addDevice.bindingStatusFailed');
+    }
+  }
+
+  @override
   Future<OnboardingDeviceKey> fetchDeviceKey({
     required String sn,
     required String requestId,
@@ -94,6 +125,7 @@ class AddDeviceOnboardingRepositoryImpl
         messageKey: resolvedMessageKey,
         action: AppErrorAction.retry,
         requestId: requestId,
+        userMessage: error.serverMessage,
         retryable: true,
       );
     }
@@ -102,6 +134,7 @@ class AddDeviceOnboardingRepositoryImpl
       messageKey: resolvedMessageKey,
       action: AppErrorAction.retry,
       requestId: requestId,
+      userMessage: error.serverMessage,
       retryable: true,
     );
   }

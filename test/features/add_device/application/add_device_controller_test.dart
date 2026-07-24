@@ -79,9 +79,9 @@ void main() {
       sceneName: 'Warehouse',
     );
 
-    container.read(addDeviceControllerProvider.notifier).setPendingDoorDraft(
-          draft,
-        );
+    container
+        .read(addDeviceControllerProvider.notifier)
+        .setPendingDoorDraft(draft);
 
     expect(container.read(addDeviceControllerProvider).pendingDoorDraft, draft);
   });
@@ -270,6 +270,12 @@ class _RecordingLogger implements AppLogger {
 class _FakeAddDeviceOnboardingRepository
     implements AddDeviceOnboardingRepository {
   const _FakeAddDeviceOnboardingRepository();
+
+  @override
+  Future<void> validateBindingStatus({
+    required String sn,
+    required String requestId,
+  }) async {}
 
   @override
   Future<OnboardedForceDoor> addForceDoor({

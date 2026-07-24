@@ -10,6 +10,7 @@ import '../data/repositories/add_device_onboarding_repository_impl.dart';
 import '../domain/repositories/add_device_onboarding_repository.dart';
 import '../domain/use_cases/add_force_door_use_case.dart';
 import '../domain/use_cases/fetch_onboarding_device_key_use_case.dart';
+import '../domain/use_cases/validate_binding_status_use_case.dart';
 import 'add_device_controller.dart';
 
 final addDeviceHardwareGatewayProvider = Provider<HardwareGateway>((ref) {
@@ -40,6 +41,13 @@ final addDeviceOnboardingRepositoryProvider =
 final fetchOnboardingDeviceKeyUseCaseProvider =
     Provider<FetchOnboardingDeviceKeyUseCase>((ref) {
       return FetchOnboardingDeviceKeyUseCase(
+        repository: ref.watch(addDeviceOnboardingRepositoryProvider),
+      );
+    });
+
+final validateBindingStatusUseCaseProvider =
+    Provider<ValidateBindingStatusUseCase>((ref) {
+      return ValidateBindingStatusUseCase(
         repository: ref.watch(addDeviceOnboardingRepositoryProvider),
       );
     });

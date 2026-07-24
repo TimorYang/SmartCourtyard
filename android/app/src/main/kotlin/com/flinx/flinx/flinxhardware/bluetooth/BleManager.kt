@@ -19,7 +19,9 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.ParcelUuid
-import android.util.Log
+import android.util.Log as AndroidLog
+import com.flinx.flinx.flinxhardware.bridge.BleDiagnosticDirectionDto
+import com.flinx.flinx.flinxhardware.bridge.BleDiagnosticEventDto
 import com.flinx.flinx.flinxhardware.bridge.BleCharacteristicDto
 import com.flinx.flinx.flinxhardware.bridge.BleAuthenticationResultDto
 import com.flinx.flinx.flinxhardware.bridge.BleConnectionEventDto
@@ -41,6 +43,8 @@ import com.flinx.flinx.flinxhardware.protocol.DeviceBleFrame
 import com.flinx.flinx.flinxhardware.protocol.DeviceBleDecodeStatus
 import com.flinx.flinx.flinxhardware.protocol.DeviceBleProtocolConfig
 import java.nio.charset.StandardCharsets
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -67,6 +71,7 @@ class BleManager(
   }
 
   var onNotification: ((BleNotificationDto) -> Unit)? = null
+  var onDiagnosticEvent: ((BleDiagnosticEventDto) -> Unit)? = null
 
   private val mainHandler = Handler(Looper.getMainLooper())
   private val notificationSequence = AtomicLong(0)
@@ -106,16 +111,22 @@ class BleManager(
   private val requestIdsByDevice = ConcurrentHashMap<String, String>()
   private val aesKeysByDevice = ConcurrentHashMap<String, String>()
   private val aesKeyVersionsByDevice = ConcurrentHashMap<String, String>()
-  @Volatile private var detailedLoggingEnabled = false
+  @Volatile private var flutterConsoleLoggingEnabled = false
   private val reconnectAttempts = ConcurrentHashMap<String, Int>()
   private val reconnectRunnables = ConcurrentHashMap<String, Runnable>()
   private val explicitDisconnects = ConcurrentHashMap.newKeySet<String>()
   private val serviceDiscoveryInProgress = ConcurrentHashMap.newKeySet<String>()
   private val mtuFallbackRunnables = ConcurrentHashMap<String, Runnable>()
 
-  fun setDetailedLogging(enabled: Boolean) {
-    detailedLoggingEnabled = enabled
-    Log.i(TAG, "event=diagnostic_logging_changed result=${if (enabled) "enabled" else "disabled"}")
+  private val pendingDiagnostics = ConcurrentHashMap<String, PendingBleDiagnostic>()
+
+  fun configureLogging(
+    flutterConsoleEnabled: Boolean,
+    nativeConsoleEnabled: Boolean,
+  ) {
+    flutterConsoleLoggingEnabled = flutterConsoleEnabled
+    BleNativeLog.enabled = nativeConsoleEnabled
+    Log.i(TAG, "event=native_console_logging_changed result=enabled")
   }
 
   /** 启动 BLE 扫描并通过回调输出扫描结果。 */
@@ -515,6 +526,21 @@ class BleManager(
       command = DeviceBleProtocolConfig.commandScanWifi,
       aesKeyHex = requireDeviceAesKey(deviceId),
     )
+    emitTxDiagnostic(
+      requestId = requestId,
+      deviceId = deviceId,
+      operation = "Scan Wi-Fi",
+      command = DeviceBleProtocolConfig.commandScanWifi,
+      control = null,
+      sequence = sequence,
+      originPayload = protocolPlainPayload(
+        DeviceBleProtocolConfig.frameTypeRequest,
+        sequence,
+        DeviceBleProtocolConfig.commandScanWifi,
+      ),
+      packet = payload,
+      encrypted = true,
+    )
     val pending = PendingWifiScan(
       requestId = requestId,
       deviceId = deviceId,
@@ -612,6 +638,22 @@ class BleManager(
       command = DeviceBleProtocolConfig.commandConfigureWifi,
       data = wifiPayload,
     )
+    emitTxDiagnostic(
+      requestId = requestId,
+      deviceId = deviceId,
+      operation = "Configure Wi-Fi",
+      command = DeviceBleProtocolConfig.commandConfigureWifi,
+      control = null,
+      sequence = sequence,
+      originPayload = protocolPlainPayload(
+        DeviceBleProtocolConfig.frameTypeRequest,
+        sequence,
+        DeviceBleProtocolConfig.commandConfigureWifi,
+        wifiPayload,
+      ),
+      packet = payload,
+      encrypted = false,
+    )
     val pending = PendingWifiProvision(
       requestId = requestId,
       deviceId = deviceId,
@@ -690,6 +732,22 @@ class BleManager(
       command = DeviceBleProtocolConfig.commandControlDoor,
       aesKeyHex = requireDeviceAesKey(deviceId),
       data = byteArrayOf((control shr 8).toByte(), control.toByte()),
+    )
+    emitTxDiagnostic(
+      requestId = requestId,
+      deviceId = deviceId,
+      operation = doorOperationName(control),
+      command = DeviceBleProtocolConfig.commandControlDoor,
+      control = control,
+      sequence = sequence,
+      originPayload = protocolPlainPayload(
+        DeviceBleProtocolConfig.frameTypeRequest,
+        sequence,
+        DeviceBleProtocolConfig.commandControlDoor,
+        byteArrayOf((control shr 8).toByte(), control.toByte()),
+      ),
+      packet = payload,
+      encrypted = true,
     )
 
     requestIdsByDevice[deviceId] = requestId
@@ -1048,6 +1106,7 @@ class BleManager(
           return
         }
         reassembledPayloads.forEach { framePayload ->
+          emitRxDiagnostic(deviceId, framePayload)
           logBlePayload(
             direction = "NOTIFY",
             requestId = requestId,
@@ -1232,7 +1291,7 @@ class BleManager(
     characteristicUuid: String,
     payload: ByteArray,
   ) {
-    if (!detailedLoggingEnabled) {
+    if (!BleNativeLog.enabled) {
       return
     }
     if (!serviceUuid.equals(DeviceBleProtocolConfig.communicationServiceUuid.toString(), ignoreCase = true)) {
@@ -1360,6 +1419,17 @@ class BleManager(
       )
       return
     }
+    emitTxDiagnostic(
+      requestId = requestId,
+      deviceId = deviceId,
+      operation = "Authenticate Device",
+      command = DeviceBleProtocolConfig.commandAuthenticate,
+      control = null,
+      sequence = sequence,
+      originPayload = ByteArray(0),
+      packet = payload,
+      encrypted = true,
+    )
     val auth = PendingAuthentication(
       requestId = requestId,
       deviceId = deviceId,
@@ -1562,7 +1632,7 @@ class BleManager(
       if (encryptedEnvelope) {
         Log.e(
           TAG,
-          "event=authentication_decrypt_failed onboardingFlowId=${flowId(auth.requestId)} requestId=${auth.requestId} deviceId=$deviceId result=failed aesKeySource=server aesKeyVersion=${aesKeyVersionsByDevice[deviceId] ?: "-"} rawHex=${if (detailedLoggingEnabled) toHexOrEmpty(payload) else "<detailed logging disabled>"}",
+          "event=authentication_decrypt_failed onboardingFlowId=${flowId(auth.requestId)} requestId=${auth.requestId} deviceId=$deviceId result=failed aesKeySource=server aesKeyVersion=${aesKeyVersionsByDevice[deviceId] ?: "-"} rawHex=${if (BleNativeLog.enabled) toHexOrEmpty(payload) else "<native console logging disabled>"}",
         )
         removeAuthSession(deviceId)
         auth.callback(
@@ -1974,8 +2044,139 @@ class BleManager(
   }
 
   private fun diagnosticHex(bytes: ByteArray?): String {
-    if (!detailedLoggingEnabled) return "<detailed logging disabled>"
+    if (!BleNativeLog.enabled) return "<native console logging disabled>"
     return toHexOrEmpty(bytes)
+  }
+
+  private fun emitTxDiagnostic(
+    requestId: String,
+    deviceId: String,
+    operation: String,
+    command: Int,
+    control: Int?,
+    sequence: Int,
+    originPayload: ByteArray,
+    packet: ByteArray,
+    encrypted: Boolean,
+  ) {
+    if (!flutterConsoleLoggingEnabled) return
+    val transactionId = diagnosticTransactionId(deviceId, command, sequence)
+    val now = System.currentTimeMillis()
+    val pending = PendingBleDiagnostic(
+      requestId = requestId,
+      operation = operation,
+      control = control,
+      timestampMillis = now,
+    )
+    pendingDiagnostics[transactionId] = pending
+    mainHandler.postDelayed(
+      { pendingDiagnostics.remove(transactionId, pending) },
+      60_000L,
+    )
+    onDiagnosticEvent?.invoke(
+      BleDiagnosticEventDto(
+        direction = BleDiagnosticDirectionDto.TX,
+        timestampMillis = now,
+        transactionId = transactionId,
+        requestId = requestId,
+        deviceId = deviceId,
+        operation = operation,
+        command = command.toLong(),
+        control = control?.toLong(),
+        sequence = sequence.toLong(),
+        encryption = if (encrypted) "AES-128-ECB-PKCS7" else "None",
+        originPayload = originPayload,
+        encryptedPayload = if (encrypted) extractEncryptedPayload(packet) ?: ByteArray(0) else ByteArray(0),
+        decryptedPayload = ByteArray(0),
+        packet = packet,
+        elapsedMillis = null,
+        result = null,
+      ),
+    )
+  }
+
+  private fun emitRxDiagnostic(deviceId: String, packet: ByteArray) {
+    if (!flutterConsoleLoggingEnabled ||
+      !DeviceBleProtocolConfig.hasValidEnvelope(packet)
+    ) {
+      return
+    }
+    val frame = parseProvisioningFrame(deviceId, packet) ?: return
+    val directId = diagnosticTransactionId(deviceId, frame.command, frame.sequence)
+    var transactionId = directId
+    var pending = pendingDiagnostics.remove(directId)
+    if (pending == null) {
+      val fallback = pendingDiagnostics.entries.firstOrNull {
+        it.key.startsWith("$deviceId:${frame.command}:")
+      }
+      if (fallback != null) {
+        transactionId = fallback.key
+        pending = pendingDiagnostics.remove(fallback.key)
+      }
+    }
+    val now = System.currentTimeMillis()
+    val encrypted = frame.cryptoType == DeviceBleProtocolConfig.cryptoAes128
+    onDiagnosticEvent?.invoke(
+      BleDiagnosticEventDto(
+        direction = BleDiagnosticDirectionDto.RX,
+        timestampMillis = now,
+        transactionId = transactionId,
+        requestId = pending?.requestId,
+        deviceId = deviceId,
+        operation = pending?.let { "${it.operation} Ack" } ?: "Unknown Response",
+        command = frame.command.toLong(),
+        control = pending?.control?.toLong(),
+        sequence = frame.sequence.toLong(),
+        encryption = if (encrypted) "AES-128-ECB-PKCS7" else "None",
+        originPayload = ByteArray(0),
+        encryptedPayload = if (encrypted) extractEncryptedPayload(packet) ?: ByteArray(0) else ByteArray(0),
+        decryptedPayload = protocolPlainPayload(
+          frame.frameType,
+          frame.sequence,
+          frame.command,
+          frame.data,
+        ),
+        packet = packet,
+        elapsedMillis = pending?.let { now - it.timestampMillis },
+        result = frame.data.firstOrNull()
+          ?.takeIf { (it.toInt() and 0xFF) == 0 }
+          ?.let { "success" },
+      ),
+    )
+  }
+
+  private fun protocolPlainPayload(
+    frameType: Int,
+    sequence: Int,
+    command: Int,
+    data: ByteArray = ByteArray(0),
+  ): ByteArray {
+    return ByteBuffer.allocate(5 + data.size)
+      .order(ByteOrder.BIG_ENDIAN)
+      .put(frameType.toByte())
+      .putShort(sequence.toShort())
+      .putShort(command.toShort())
+      .put(data)
+      .array()
+  }
+
+  private fun diagnosticTransactionId(
+    deviceId: String,
+    command: Int,
+    sequence: Int,
+  ): String = "$deviceId:$command:$sequence"
+
+  private fun doorOperationName(control: Int): String {
+    return when (control) {
+      DeviceBleProtocolConfig.controlOpenDoor -> "Open Door"
+      DeviceBleProtocolConfig.controlCloseDoor -> "Close Door"
+      DeviceBleProtocolConfig.controlStopDoor -> "Stop Door"
+      DeviceBleProtocolConfig.controlPartialOpenDoor -> "Partial Open"
+      DeviceBleProtocolConfig.controlLightOn -> "Light On"
+      DeviceBleProtocolConfig.controlLightOff -> "Light Off"
+      DeviceBleProtocolConfig.controlPb -> "Push Button"
+      else -> "Door Control"
+    }
   }
 
   private fun requireDeviceAesKey(deviceId: String): String {
@@ -2328,6 +2529,31 @@ private data class PendingWifiProvision(
   val callback: (Result<WifiProvisionResultDto>) -> Unit,
   var timeoutRunnable: Runnable? = null,
 )
+
+private data class PendingBleDiagnostic(
+  val requestId: String,
+  val operation: String,
+  val control: Int?,
+  val timestampMillis: Long,
+)
+
+private object BleNativeLog {
+  @Volatile var enabled: Boolean = false
+
+  fun d(tag: String, message: String): Int =
+    if (enabled) AndroidLog.d(tag, message) else 0
+
+  fun i(tag: String, message: String): Int =
+    if (enabled) AndroidLog.i(tag, message) else 0
+
+  fun w(tag: String, message: String): Int =
+    if (enabled) AndroidLog.w(tag, message) else 0
+
+  fun e(tag: String, message: String): Int =
+    if (enabled) AndroidLog.e(tag, message) else 0
+}
+
+private val Log = BleNativeLog
 
 private fun Context.bluetoothAdapterOrNull(): BluetoothAdapter? {
   val manager = getSystemService(BluetoothManager::class.java)

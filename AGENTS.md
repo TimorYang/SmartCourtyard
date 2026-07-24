@@ -417,7 +417,9 @@ Sensitive data rules:
 - Store auth tokens in secure storage only.
 - Store device credentials or device keys in secure storage only.
 - Do not persist Wi-Fi passwords after provisioning.
-- Redact tokens, Wi-Fi passwords, and device secrets from logs.
+- Redact tokens and device secrets from logs. During explicitly enabled Flutter
+  BLE diagnostic logging, Wi-Fi provisioning SSID and password may be logged in
+  plaintext to troubleshoot device protocol issues.
 
 Cache recommendations:
 
@@ -557,4 +559,6 @@ Recommended implementation order:
 - Do not show raw native error codes to users.
 - Do not remove the mock hardware path.
 - Do not store Wi-Fi passwords after provisioning.
-- Do not log tokens, Wi-Fi passwords, device keys, or secrets.
+- Do not log tokens, device keys, or secrets. During explicitly enabled Flutter
+  BLE diagnostic logging, Wi-Fi provisioning SSID and password may be logged in
+  plaintext to troubleshoot device protocol issues.

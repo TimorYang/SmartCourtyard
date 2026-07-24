@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
+import '../core/diagnostics/ble_diagnostic_formatter.dart';
 import '../core/errors/app_error.dart';
 import 'hardware_gateway.dart';
 import 'hardware_models.dart';
@@ -31,10 +33,21 @@ class PigeonHardwareGateway implements HardwareGateway {
   Stream<NativeHardwareError> get nativeErrors => _flutterApi.nativeErrors;
 
   @override
-  Future<void> setDetailedHardwareLogging({required bool enabled}) {
+  Stream<BleDiagnosticEvent> get bleDiagnosticEvents =>
+      _flutterApi.bleDiagnosticEvents;
+
+  @override
+  Future<void> configureHardwareLogging({
+    required bool flutterConsoleEnabled,
+    required bool nativeConsoleEnabled,
+  }) {
+    _flutterApi.flutterConsoleEnabled = flutterConsoleEnabled;
     return _mapPigeonCall(
-      () => _hostApi.setDetailedHardwareLogging(enabled),
-      requestId: 'hardware-logging-${enabled ? 'enable' : 'disable'}',
+      () => _hostApi.configureHardwareLogging(
+        flutterConsoleEnabled,
+        nativeConsoleEnabled,
+      ),
+      requestId: 'hardware-logging-configure',
     );
   }
 
@@ -337,12 +350,16 @@ class _HardwareFlutterApiHandler implements pigeon.HardwareFlutterApi {
       _connectionController = StreamController<BleConnectionEvent>.broadcast(),
       _notificationController = StreamController<BleNotification>.broadcast(),
       _nativeErrorController =
-          StreamController<NativeHardwareError>.broadcast();
+          StreamController<NativeHardwareError>.broadcast(),
+      _diagnosticController = StreamController<BleDiagnosticEvent>.broadcast();
 
   final StreamController<BleDevice> _scanController;
   final StreamController<BleConnectionEvent> _connectionController;
   final StreamController<BleNotification> _notificationController;
   final StreamController<NativeHardwareError> _nativeErrorController;
+  final StreamController<BleDiagnosticEvent> _diagnosticController;
+  final BleDiagnosticFormatter _diagnosticFormatter = BleDiagnosticFormatter();
+  bool flutterConsoleEnabled = false;
 
   Stream<BleDevice> get bleScanResults => _scanController.stream;
 
@@ -353,6 +370,9 @@ class _HardwareFlutterApiHandler implements pigeon.HardwareFlutterApi {
       _notificationController.stream;
 
   Stream<NativeHardwareError> get nativeErrors => _nativeErrorController.stream;
+
+  Stream<BleDiagnosticEvent> get bleDiagnosticEvents =>
+      _diagnosticController.stream;
 
   @override
   void onBleScanResult(pigeon.BleDeviceDto device) {
@@ -387,15 +407,6 @@ class _HardwareFlutterApiHandler implements pigeon.HardwareFlutterApi {
   @override
   void onBleNotification(pigeon.BleNotificationDto notification) {
     final model = notification.toModel();
-    _printBleLog(
-      'notification',
-      requestId: model.requestId,
-      deviceId: model.deviceId,
-      payloadBytes: model.payload.length,
-      details:
-          'service=${model.serviceUuid} characteristic=${model.characteristicUuid} '
-          'sequence=${model.sequenceNumber} payload=${_hexString(model.payload)}',
-    );
     _notificationController.add(model);
   }
 
@@ -414,6 +425,15 @@ class _HardwareFlutterApiHandler implements pigeon.HardwareFlutterApi {
     _nativeErrorController.add(model);
   }
 
+  @override
+  void onBleDiagnosticEvent(pigeon.BleDiagnosticEventDto event) {
+    final model = event.toModel();
+    _diagnosticController.add(model);
+    if (flutterConsoleEnabled) {
+      debugPrint(_diagnosticFormatter.format(model));
+    }
+  }
+
   void _printBleLog(
     String operation, {
     String? requestId,
@@ -422,7 +442,17 @@ class _HardwareFlutterApiHandler implements pigeon.HardwareFlutterApi {
     String? nativeCode,
     int? payloadBytes,
     String? details,
-  }) {}
+  }) {
+    if (!flutterConsoleEnabled) {
+      return;
+    }
+    debugPrint(
+      '[BLE] operation=$operation requestId=${requestId ?? '-'} '
+      'deviceId=${deviceId ?? '-'} state=${state ?? '-'} '
+      'nativeCode=${nativeCode ?? '-'} payloadBytes=${payloadBytes ?? '-'} '
+      '${details ?? ''}',
+    );
+  }
 
   String _hexString(List<int> bytes) {
     if (bytes.isEmpty) {
@@ -720,6 +750,32 @@ extension _NativeErrorDtoMapper on pigeon.NativeErrorDto {
       deviceId: deviceId,
       retryable: retryable,
       timestampMillis: timestampMillis,
+    );
+  }
+}
+
+extension _BleDiagnosticEventDtoMapper on pigeon.BleDiagnosticEventDto {
+  BleDiagnosticEvent toModel() {
+    return BleDiagnosticEvent(
+      direction: switch (direction) {
+        pigeon.BleDiagnosticDirectionDto.tx => BleDiagnosticDirection.tx,
+        pigeon.BleDiagnosticDirectionDto.rx => BleDiagnosticDirection.rx,
+      },
+      timestampMillis: timestampMillis,
+      transactionId: transactionId,
+      requestId: requestId,
+      deviceId: deviceId,
+      operation: operation,
+      command: command,
+      control: control,
+      sequence: sequence,
+      encryption: encryption,
+      originPayload: originPayload,
+      encryptedPayload: encryptedPayload,
+      decryptedPayload: decryptedPayload,
+      packet: packet,
+      elapsedMillis: elapsedMillis,
+      result: result,
     );
   }
 }

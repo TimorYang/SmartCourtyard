@@ -26,6 +26,8 @@ enum BleConnectionStateDto { disconnected, connecting, connected }
 
 enum BleWriteTypeDto { withResponse, withoutResponse }
 
+enum BleDiagnosticDirectionDto { tx, rx }
+
 class PermissionSnapshotDto {
   PermissionSnapshotDto({
     required this.bluetoothGranted,
@@ -247,6 +249,44 @@ class NativeErrorDto {
   final int timestampMillis;
 }
 
+class BleDiagnosticEventDto {
+  BleDiagnosticEventDto({
+    required this.direction,
+    required this.timestampMillis,
+    required this.transactionId,
+    this.requestId,
+    required this.deviceId,
+    required this.operation,
+    required this.command,
+    this.control,
+    required this.sequence,
+    required this.encryption,
+    required this.originPayload,
+    required this.encryptedPayload,
+    required this.decryptedPayload,
+    required this.packet,
+    this.elapsedMillis,
+    this.result,
+  });
+
+  final BleDiagnosticDirectionDto direction;
+  final int timestampMillis;
+  final String transactionId;
+  final String? requestId;
+  final String deviceId;
+  final String operation;
+  final int command;
+  final int? control;
+  final int sequence;
+  final String encryption;
+  final Uint8List originPayload;
+  final Uint8List encryptedPayload;
+  final Uint8List decryptedPayload;
+  final Uint8List packet;
+  final int? elapsedMillis;
+  final String? result;
+}
+
 class CommandResultDto {
   CommandResultDto({
     required this.requestId,
@@ -328,7 +368,10 @@ class RemoteOperationResultDto {
 
 @HostApi()
 abstract class HardwareHostApi {
-  void setDetailedHardwareLogging(bool enabled);
+  void configureHardwareLogging(
+    bool flutterConsoleEnabled,
+    bool nativeConsoleEnabled,
+  );
 
   PermissionSnapshotDto getPermissionSnapshot();
 
@@ -436,4 +479,6 @@ abstract class HardwareFlutterApi {
   void onBleNotification(BleNotificationDto notification);
 
   void onNativeError(NativeErrorDto error);
+
+  void onBleDiagnosticEvent(BleDiagnosticEventDto event);
 }
