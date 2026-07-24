@@ -10,6 +10,8 @@ final class HardwareBridge: HardwareHostApi {
     private var provisioningAesKeys: [String: Data] = [:]
     private var pendingProvisioningRequests: [String: PendingProvisioningRequest] = [:]
     private var provisioningSequences: [String: UInt16] = [:]
+    private var flutterConsoleLoggingEnabled = false
+    private var pendingDiagnostics: [String: PendingBleDiagnostic] = [:]
     
     init(binaryMessenger: FlutterBinaryMessenger) {
         self.logger = BleLogger()
@@ -18,8 +20,12 @@ final class HardwareBridge: HardwareHostApi {
         self.bleManager.delegate = self
     }
 
-    func setDetailedHardwareLogging(enabled: Bool) throws {
-        logger.setDetailedLogging(enabled: enabled)
+    func configureHardwareLogging(
+        flutterConsoleEnabled: Bool,
+        nativeConsoleEnabled: Bool
+    ) throws {
+        flutterConsoleLoggingEnabled = flutterConsoleEnabled
+        logger.setNativeConsoleLogging(enabled: nativeConsoleEnabled)
     }
     
     func getPermissionSnapshot() throws -> PermissionSnapshotDto {
@@ -383,6 +389,22 @@ final class HardwareBridge: HardwareHostApi {
             state: "sending",
             payloadBytes: frame.count,
             details: "command=\(DoorControlCommand.hexCode) control=\(DoorControlCommand.hex(control)) sequence=\(DoorControlCommand.hex(sequence)) frame=\(logger.payloadHex(frame))"
+        )
+        emitTxDiagnostic(
+            requestId: requestId,
+            deviceId: deviceId,
+            operation: command.displayName,
+            command: DoorControlCommand.commandControlDoor,
+            control: control,
+            sequence: sequence,
+            originPayload: Self.makeFrameData(
+                sequence: sequence,
+                command: DoorControlCommand.commandControlDoor,
+                payload: Data(Self.bigEndianBytes(control))
+            ),
+            packet: frame,
+            encrypted: true,
+            sensitive: false
         )
         bleManager.writeCharacteristic(
             requestId: requestId,
@@ -899,6 +921,22 @@ private extension HardwareBridge {
             payloadBytes: frame.count,
             details: "command=\(command.hexCode) commandDecimal=\(command.rawValue) sequence=\(sequence) crypto=\(encryptRequest ? 1 : 0) payloadBytes=\(payload.count) frame=\(logger.payloadHex(frame, sensitive: command == .configureWifi))"
         )
+        emitTxDiagnostic(
+            requestId: requestId,
+            deviceId: deviceId,
+            operation: command.displayName,
+            command: command.rawValue,
+            control: nil,
+            sequence: sequence,
+            originPayload: Self.makeFrameData(
+                sequence: sequence,
+                command: command.rawValue,
+                payload: payload
+            ),
+            packet: frame,
+            encrypted: encryptRequest,
+            sensitive: false
+        )
         bleManager.writeCharacteristic(
             requestId: requestId,
             deviceId: deviceId,
@@ -958,7 +996,7 @@ private extension HardwareBridge {
                     details: "remainingBytes=\(nextBuffer.count)"
                 )
                 buffer = nextBuffer
-            case .frame(let frame, let remainingBuffer):
+            case .frame(let frame, let packet, let remainingBuffer):
                 logger.info(
                     "provisioning_frame",
                     requestId: notification.requestId,
@@ -967,9 +1005,15 @@ private extension HardwareBridge {
                     payloadBytes: frame.data.count,
                     details: "crypto=\(frame.crypto) type=\(frame.type) sequence=\(frame.sequence) command=\(frame.command) remainingBytes=\(remainingBuffer.count)"
                 )
+                emitRxDiagnostic(
+                    frame: frame,
+                    deviceId: notification.deviceId,
+                    packet: packet,
+                    encryptedPayload: Data()
+                )
                 parsedFrames.append(frame)
                 buffer = remainingBuffer
-            case .encrypted(let frame, let remainingBuffer):
+            case .encrypted(let frame, let packet, let remainingBuffer):
                 if let decryptedFrame = decryptEncryptedProvisioningFrame(frame, deviceId: notification.deviceId) {
                     logger.info(
                         "provisioning_frame",
@@ -978,6 +1022,12 @@ private extension HardwareBridge {
                         state: "decrypted",
                         payloadBytes: decryptedFrame.data.count,
                         details: "crypto=\(frame.crypto) type=\(decryptedFrame.type) sequence=\(decryptedFrame.sequence) command=\(decryptedFrame.command) remainingBytes=\(remainingBuffer.count)"
+                    )
+                    emitRxDiagnostic(
+                        frame: decryptedFrame,
+                        deviceId: notification.deviceId,
+                        packet: packet,
+                        encryptedPayload: frame.encryptedPayload
                     )
                     parsedFrames.append(decryptedFrame)
                 } else {
@@ -1113,7 +1163,7 @@ private extension HardwareBridge {
                     state: "success_unsolicited",
                     details: "mode=\(mode.name) type=\(decryptedFrame.type) sequence=\(decryptedFrame.sequence) command=\(decryptedFrame.command)"
                 )
-                continue
+                return decryptedFrame
             }
             guard decryptedFrame.type == 0x04,
                   decryptedFrame.command == pending.command.rawValue,
@@ -1144,6 +1194,137 @@ private extension HardwareBridge {
         let next = provisioningSequences[deviceId, default: 0] &+ 1
         provisioningSequences[deviceId] = next
         return next
+    }
+
+    func emitTxDiagnostic(
+        requestId: String,
+        deviceId: String,
+        operation: String,
+        command: UInt16,
+        control: UInt16?,
+        sequence: UInt16,
+        originPayload: Data,
+        packet: Data,
+        encrypted: Bool,
+        sensitive: Bool
+    ) {
+        guard flutterConsoleLoggingEnabled else { return }
+        let transactionId = Self.diagnosticTransactionId(
+            deviceId: deviceId,
+            command: command,
+            sequence: sequence
+        )
+        let now = Date()
+        pendingDiagnostics[transactionId] = PendingBleDiagnostic(
+            requestId: requestId,
+            operation: operation,
+            control: control,
+            startedAt: now
+        )
+        DispatchQueue.main.asyncAfter(deadline: .now() + 60) { [weak self] in
+            guard let current = self?.pendingDiagnostics[transactionId],
+                  current.startedAt == now else {
+                return
+            }
+            self?.pendingDiagnostics.removeValue(forKey: transactionId)
+        }
+        let encryptedPayload = encrypted && packet.count > 8
+            ? packet.subdata(in: 5..<(packet.count - 3))
+            : Data()
+        let safeOrigin = sensitive ? Data() : originPayload
+        let safePacket = sensitive && !encrypted ? Data() : packet
+        emitDiagnostic(
+            BleDiagnosticEventDto(
+                direction: .tx,
+                timestampMillis: Int64(now.timeIntervalSince1970 * 1000),
+                transactionId: transactionId,
+                requestId: requestId,
+                deviceId: deviceId,
+                operation: operation,
+                command: Int64(command),
+                control: control.map(Int64.init),
+                sequence: Int64(sequence),
+                encryption: encrypted ? BleAesMode.ecb.name : "None",
+                originPayload: FlutterStandardTypedData(bytes: safeOrigin),
+                encryptedPayload: FlutterStandardTypedData(bytes: encryptedPayload),
+                decryptedPayload: FlutterStandardTypedData(bytes: Data()),
+                packet: FlutterStandardTypedData(bytes: safePacket),
+                elapsedMillis: nil,
+                result: nil
+            )
+        )
+    }
+
+    func emitRxDiagnostic(
+        frame: BleProtocolFrame,
+        deviceId: String,
+        packet: Data,
+        encryptedPayload: Data
+    ) {
+        guard flutterConsoleLoggingEnabled else { return }
+        let directId = Self.diagnosticTransactionId(
+            deviceId: deviceId,
+            command: frame.command,
+            sequence: frame.sequence
+        )
+        let matchedEntry = pendingDiagnostics.removeValue(forKey: directId)
+            .map { (directId, $0) }
+            ?? pendingDiagnostics.first(where: {
+                $0.key.hasPrefix("\(deviceId):\(frame.command):")
+            }).map { key, value in
+                pendingDiagnostics.removeValue(forKey: key)
+                return (key, value)
+            }
+        let transactionId = matchedEntry?.0 ?? directId
+        let pending = matchedEntry?.1
+        let now = Date()
+        let decryptedPayload = Self.makeFrameData(
+            sequence: frame.sequence,
+            command: frame.command,
+            payload: frame.data,
+            type: frame.type
+        )
+        emitDiagnostic(
+            BleDiagnosticEventDto(
+                direction: .rx,
+                timestampMillis: Int64(now.timeIntervalSince1970 * 1000),
+                transactionId: transactionId,
+                requestId: pending?.requestId,
+                deviceId: deviceId,
+                operation: pending.map { "\($0.operation) Ack" } ?? "Unknown Response",
+                command: Int64(frame.command),
+                control: pending?.control.map(Int64.init),
+                sequence: Int64(frame.sequence),
+                encryption: frame.crypto == 0x01 ? BleAesMode.ecb.name : "None",
+                originPayload: FlutterStandardTypedData(bytes: Data()),
+                encryptedPayload: FlutterStandardTypedData(bytes: encryptedPayload),
+                decryptedPayload: FlutterStandardTypedData(bytes: decryptedPayload),
+                packet: FlutterStandardTypedData(bytes: packet),
+                elapsedMillis: pending.map {
+                    Int64(now.timeIntervalSince($0.startedAt) * 1000)
+                },
+                result: Self.diagnosticResult(frame)
+            )
+        )
+    }
+
+    func emitDiagnostic(_ event: BleDiagnosticEventDto) {
+        DispatchQueue.main.async { [flutterApi] in
+            flutterApi.onBleDiagnosticEvent(event: event) { _ in }
+        }
+    }
+
+    static func diagnosticTransactionId(
+        deviceId: String,
+        command: UInt16,
+        sequence: UInt16
+    ) -> String {
+        "\(deviceId):\(command):\(sequence)"
+    }
+
+    static func diagnosticResult(_ frame: BleProtocolFrame) -> String? {
+        guard let code = frame.data.first else { return nil }
+        return code == 0x00 ? "success" : nil
     }
     
     static func containsProvisioningCharacteristics(in services: BleServices) -> Bool {
@@ -1332,9 +1513,14 @@ private extension HardwareBridge {
         return frame
     }
     
-    static func makeFrameData(sequence: UInt16, command: UInt16, payload: Data) -> Data {
+    static func makeFrameData(
+        sequence: UInt16,
+        command: UInt16,
+        payload: Data,
+        type: UInt8 = 0x03
+    ) -> Data {
         var data = Data()
-        data.append(0x03)
+        data.append(type)
         data.append(contentsOf: bigEndianBytes(sequence))
         data.append(contentsOf: bigEndianBytes(command))
         data.append(payload)
@@ -1500,6 +1686,7 @@ private extension HardwareBridge {
                     crypto: crypto,
                     encryptedPayload: encryptedPayload
                 ),
+                frameBytes,
                 remaining
             )
         }
@@ -1529,6 +1716,7 @@ private extension HardwareBridge {
                 command: command,
                 data: payload
             ),
+            frameBytes,
             remaining
         )
     }
@@ -1748,6 +1936,18 @@ private enum BleProvisioningCommand: UInt16 {
     var hexCode: String {
         String(format: "0x%04X", Int(rawValue))
     }
+
+    var displayName: String {
+        switch self {
+        case .remotePairing: return "Remote Pairing"
+        case .remoteQuery: return "Query Remotes"
+        case .remoteDelete: return "Delete Remote"
+        case .remoteRename: return "Rename Remote"
+        case .scanWifi: return "Scan Wi-Fi"
+        case .configureWifi: return "Configure Wi-Fi"
+        case .authenticate: return "Authenticate Device"
+        }
+    }
     
     var requiresEncryptedRequest: Bool {
         switch self {
@@ -1776,6 +1976,18 @@ private enum DoorControlCommand {
 }
 
 private extension DoorCommandDto {
+    var displayName: String {
+        switch self {
+        case .open: return "Open Door"
+        case .close: return "Close Door"
+        case .stop: return "Stop Door"
+        case .partialOpen: return "Partial Open"
+        case .lightOn: return "Light On"
+        case .lightOff: return "Light Off"
+        case .pb: return "Push Button"
+        }
+    }
+
     var doorControlCode: UInt16 {
         switch self {
         case .open:
@@ -1875,6 +2087,13 @@ private struct PendingProvisioningRequest {
     let failure: (Error) -> Void
 }
 
+private struct PendingBleDiagnostic {
+    let requestId: String
+    let operation: String
+    let control: UInt16?
+    let startedAt: Date
+}
+
 private struct BleProtocolFrame {
     let crypto: UInt8
     let type: UInt8
@@ -1891,8 +2110,8 @@ private struct BleEncryptedProtocolFrame {
 private enum BleProtocolParseResult {
     case notEnoughData
     case invalid(Data)
-    case frame(BleProtocolFrame, Data)
-    case encrypted(BleEncryptedProtocolFrame, Data)
+    case frame(BleProtocolFrame, Data, Data)
+    case encrypted(BleEncryptedProtocolFrame, Data, Data)
 }
 
 private extension Data.SubSequence {

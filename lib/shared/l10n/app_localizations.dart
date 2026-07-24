@@ -2414,10 +2414,22 @@ abstract class AppLocalizations {
   /// **'Detailed hardware diagnostics'**
   String get hardwareDiagnosticsDetailedLogging;
 
+  /// No description provided for @hardwareDiagnosticsFlutterLogging.
+  ///
+  /// In en, this message translates to:
+  /// **'Flutter BLE console logging'**
+  String get hardwareDiagnosticsFlutterLogging;
+
+  /// No description provided for @hardwareDiagnosticsNativeLogging.
+  ///
+  /// In en, this message translates to:
+  /// **'Native BLE console logging'**
+  String get hardwareDiagnosticsNativeLogging;
+
   /// No description provided for @hardwareDiagnosticsWarning.
   ///
   /// In en, this message translates to:
-  /// **'When enabled, raw Bluetooth frames and decrypted protocol data are written to the system console for troubleshooting. AES keys, tokens, Wi-Fi passwords, and other credentials are never logged.'**
+  /// **'Flutter logging prints formatted Bluetooth frames in the Flutter console. Keep native logging off to avoid duplicate entries. AES keys, tokens, Wi-Fi passwords, and other credentials are never logged.'**
   String get hardwareDiagnosticsWarning;
 
   /// No description provided for @hardwareDiagnosticsUpdateFailed.
