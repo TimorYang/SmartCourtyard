@@ -1103,6 +1103,12 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get deviceSettingsRawValueProtocolInvalid => '请输入设备支持的值。';
+
+  @override
+  String get deviceSettingsBluetoothConnectionRequired => '请先连接当前设备的蓝牙，再修改设置。';
+
+  @override
   String get deviceSettingsRawCancel => '取消';
 
   @override

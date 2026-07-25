@@ -17,6 +17,29 @@ void main() {
       throwsRangeError,
     );
   });
+
+  test('rejects values outside the BLE attribute definitions', () async {
+    final useCase = SetDeviceSettingUseCase(_Repository());
+
+    expect(
+      () => useCase(
+        requestId: 'request',
+        deviceId: 'device',
+        key: DeviceSettingKey.openingSpeed,
+        rawValue: 59,
+      ),
+      throwsRangeError,
+    );
+    expect(
+      () => useCase(
+        requestId: 'request',
+        deviceId: 'device',
+        key: DeviceSettingKey.doorOpenReminder,
+        rawValue: 6,
+      ),
+      throwsRangeError,
+    );
+  });
 }
 
 class _Repository implements DeviceSettingsRepository {

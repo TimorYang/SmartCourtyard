@@ -15,7 +15,7 @@ void main() {
     );
 
     expect(values[DeviceSettingKey.partialOpen]?.rawValue, 7);
-    expect(values[DeviceSettingKey.ledOffDelay]?.displayValue, '0x1E (30)');
+    expect(values[DeviceSettingKey.ledOffDelay]?.displayValue, '0x05 (5)');
     expect(values[DeviceSettingKey.autoCloseTime]?.displayValue, '0x0000 (0)');
   });
 
@@ -40,5 +40,37 @@ void main() {
     );
 
     expect(attribute.value, Uint8List.fromList(<int>[0x01, 0x23]));
+  });
+
+  test('maps every settings-dialog value to its protocol attribute', () async {
+    final gateway = MockHardwareGateway();
+    final repository = DeviceSettingsRepositoryImpl(gateway);
+    const values = <DeviceSettingValue>[
+      DeviceSettingValue(key: DeviceSettingKey.ledOffDelay, rawValue: 5),
+      DeviceSettingValue(key: DeviceSettingKey.partialOpen, rawValue: 7),
+      DeviceSettingValue(key: DeviceSettingKey.autoCloseTime, rawValue: 60),
+      DeviceSettingValue(key: DeviceSettingKey.openingSpeed, rawValue: 80),
+      DeviceSettingValue(key: DeviceSettingKey.doorOpenReminder, rawValue: 10),
+      DeviceSettingValue(key: DeviceSettingKey.openingForce, rawValue: 5),
+    ];
+
+    for (final value in values) {
+      await repository.setSetting(
+        requestId: 'set-${value.key.name}',
+        deviceId: 'device-1',
+        value: value,
+      );
+    }
+
+    final snapshot = await gateway.queryDeviceAttributes(
+      requestId: 'query-all',
+      deviceId: 'device-1',
+    );
+    for (final value in values) {
+      final attribute = snapshot.attributes.singleWhere(
+        (attribute) => attribute.id == value.key.attributeId,
+      );
+      expect(attribute.unsignedValue, value.rawValue);
+    }
   });
 }

@@ -196,6 +196,12 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     final selectedDeviceId =
         _selectedDoorDevice(commandState)?.deviceId.trim() ??
         widget.deviceId.trim();
+    final selectedBleName =
+        _selectedDoorDevice(commandState)?.bleName?.trim() ?? '';
+    final connectedBleDeviceId =
+        commandState.bleConnectionStatus == DeviceBleConnectionStatus.connected
+        ? commandState.bleDeviceId?.trim() ?? ''
+        : '';
     final capabilities = _capabilitiesForCurrentDevice(commandState);
     final canControlDoor = capabilities.contains('DOOR_CONTROL');
     final canControlLed = capabilities.contains('LED_OFF_DELAY');
@@ -346,7 +352,9 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                     onMoreSettings: () => context.push(
                       '${DeviceSettingsPage.routePath}'
                       '?doorId=${Uri.encodeComponent(widget.doorId)}'
-                      '&deviceId=${Uri.encodeComponent(selectedDeviceId)}',
+                      '&deviceId=${Uri.encodeComponent(selectedDeviceId)}'
+                      '&bleName=${Uri.encodeComponent(selectedBleName)}'
+                      '&bleDeviceId=${Uri.encodeComponent(connectedBleDeviceId)}',
                     ),
                   ),
                   const SizedBox(height: 22),

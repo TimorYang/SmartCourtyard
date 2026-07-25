@@ -123,6 +123,12 @@ void main() {
     expect(gateway.queryCount, 0);
     expect(find.text('Setting'), findsOneWidget);
     expect(find.text('Transmitter management'), findsOneWidget);
+    expect(
+      tester
+          .widget<DeviceSettingsPage>(find.byType(DeviceSettingsPage))
+          .bleName,
+      'Garage door',
+    );
   });
 
   testWidgets('toggles the open reminder quick action', (tester) async {
@@ -383,6 +389,8 @@ Widget _buildPage(
             builder: (context, state) => DeviceSettingsPage(
               doorId: state.uri.queryParameters['doorId'] ?? '',
               deviceId: state.uri.queryParameters['deviceId'] ?? '',
+              bleName: state.uri.queryParameters['bleName'] ?? '',
+              bleDeviceId: state.uri.queryParameters['bleDeviceId'] ?? '',
             ),
           ),
           GoRoute(

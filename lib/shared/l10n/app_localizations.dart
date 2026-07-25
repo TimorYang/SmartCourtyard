@@ -2216,6 +2216,18 @@ abstract class AppLocalizations {
   /// **'Enter a value from 0 to {maximum}.'**
   String deviceSettingsRawValueInvalid(int maximum);
 
+  /// No description provided for @deviceSettingsRawValueProtocolInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a value supported by the device.'**
+  String get deviceSettingsRawValueProtocolInvalid;
+
+  /// No description provided for @deviceSettingsBluetoothConnectionRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect this device by Bluetooth before changing settings.'**
+  String get deviceSettingsBluetoothConnectionRequired;
+
   /// No description provided for @deviceSettingsRawCancel.
   ///
   /// In en, this message translates to:

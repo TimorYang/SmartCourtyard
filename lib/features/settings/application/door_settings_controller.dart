@@ -73,6 +73,30 @@ class DoorSettingsController extends Notifier<DoorSettingsState> {
     }
   }
 
+  void updateCurrentValue(String code, int value) {
+    if (!ref.mounted) {
+      return;
+    }
+    state = DoorSettingsState(
+      settings: List<DoorSettingSnapshot>.unmodifiable(
+        state.settings.map(
+          (setting) => setting.code.toUpperCase() == code
+              ? DoorSettingSnapshot(
+                  code: setting.code,
+                  label: setting.label,
+                  supported: setting.supported,
+                  configured: setting.configured,
+                  currentValue: value,
+                  unit: setting.unit,
+                )
+              : setting,
+        ),
+      ),
+      loading: state.loading,
+      errorMessage: state.errorMessage,
+    );
+  }
+
   String _nextRequestId() {
     _requestCounter++;
     return 'door-settings-${DateTime.now().microsecondsSinceEpoch}-$_requestCounter';

@@ -363,6 +363,8 @@
   "deviceSettingsRawValueLabel": "原始值",
   "deviceSettingsRawValueInvalid": "请输入 0 到 {maximum} 之间的值。",
   "@deviceSettingsRawValueInvalid": {"placeholders": {"maximum": {"type": "int"}}},
+  "deviceSettingsRawValueProtocolInvalid": "请输入设备支持的值。",
+  "deviceSettingsBluetoothConnectionRequired": "请先连接当前设备的蓝牙，再修改设置。",
   "deviceSettingsRawCancel": "取消",
   "deviceSettingsRawSave": "保存",
   "deviceSettingsOpeningSpeed": "开启速度",

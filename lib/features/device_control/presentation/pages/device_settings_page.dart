@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
+import '../../application/device_command_controller.dart';
 import '../../../settings/application/device_settings_controller.dart';
 import '../../../settings/application/device_capabilities_controller.dart';
 import '../../../settings/application/door_settings_controller.dart';
@@ -83,6 +85,8 @@ class DeviceSettingsPage extends ConsumerStatefulWidget {
   const DeviceSettingsPage({
     required this.doorId,
     required this.deviceId,
+    this.bleName = '',
+    this.bleDeviceId = '',
     this.forceMarginDialogState = 1,
     this.openingSpeedConfig = const OpeningSpeedConfig._(
       allowedValues: [100, 80, 60],
@@ -96,6 +100,8 @@ class DeviceSettingsPage extends ConsumerStatefulWidget {
 
   final String deviceId;
   final String doorId;
+  final String bleName;
+  final String bleDeviceId;
   final int forceMarginDialogState;
   final OpeningSpeedConfig openingSpeedConfig;
 
@@ -109,7 +115,7 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
     final textTheme = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context);
     final settingsState = ref.watch(
-      deviceSettingsControllerProvider(widget.deviceId),
+      deviceSettingsControllerProvider(widget.bleDeviceId),
     );
     final capabilitiesState = ref.watch(
       deviceCapabilitiesControllerProvider(widget.deviceId),
@@ -377,7 +383,7 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
   }) {
     final l10n = AppLocalizations.of(context);
     final settingsState = ref.read(
-      deviceSettingsControllerProvider(widget.deviceId),
+      deviceSettingsControllerProvider(widget.bleDeviceId),
     );
     final title = setting?.label.isNotEmpty == true
         ? setting!.label
@@ -402,7 +408,13 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
     required String title,
     required DeviceCapability? capability,
   }) async {
-    final state = ref.read(deviceSettingsControllerProvider(widget.deviceId));
+    if (!_isCurrentBleDeviceConnected()) {
+      _showBluetoothConnectionRequired();
+      return;
+    }
+    final state = ref.read(
+      deviceSettingsControllerProvider(widget.bleDeviceId),
+    );
     if (state.loading || state.pendingKey != null) {
       return;
     }
@@ -430,14 +442,18 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
     if (value == null || !mounted || value == rawValue) {
       return;
     }
-    await ref
-        .read(deviceSettingsControllerProvider(widget.deviceId).notifier)
-        .setRawValue(key, value);
+    await _saveSetting(key, value);
   }
 
   Future<void> _showRawValueEditor(DeviceSettingKey key, String title) async {
+    if (!_isCurrentBleDeviceConnected()) {
+      _showBluetoothConnectionRequired();
+      return;
+    }
     final l10n = AppLocalizations.of(context);
-    final state = ref.read(deviceSettingsControllerProvider(widget.deviceId));
+    final state = ref.read(
+      deviceSettingsControllerProvider(widget.bleDeviceId),
+    );
     if (state.loading || state.pendingKey != null) {
       return;
     }
@@ -488,6 +504,13 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
                       });
                       return;
                     }
+                    if (!key.supportsValue(parsed)) {
+                      setDialogState(() {
+                        validationMessage =
+                            l10n.deviceSettingsRawValueProtocolInvalid;
+                      });
+                      return;
+                    }
                     Navigator.of(dialogContext).pop(parsed);
                   },
                   child: Text(l10n.deviceSettingsRawSave),
@@ -501,9 +524,38 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
     if (value == null || !mounted) {
       return;
     }
-    await ref
-        .read(deviceSettingsControllerProvider(widget.deviceId).notifier)
+    await _saveSetting(key, value);
+  }
+
+  Future<void> _saveSetting(DeviceSettingKey key, int value) async {
+    final saved = await ref
+        .read(deviceSettingsControllerProvider(widget.bleDeviceId).notifier)
         .setRawValue(key, value);
+    if (!saved || !mounted) {
+      return;
+    }
+    ref
+        .read(doorSettingsControllerProvider(widget.doorId).notifier)
+        .updateCurrentValue(key.capabilityCode, value);
+  }
+
+  bool _isCurrentBleDeviceConnected() {
+    final bleName = widget.bleName.trim();
+    final bleDeviceId = widget.bleDeviceId.trim();
+    if (bleName.isEmpty || bleDeviceId.isEmpty) {
+      return false;
+    }
+    final commandState = ref.read(deviceCommandControllerProvider);
+    return commandState.bleConnectionStatus ==
+            DeviceBleConnectionStatus.connected &&
+        commandState.bleTargetName?.trim() == bleName;
+  }
+
+  void _showBluetoothConnectionRequired() {
+    AppToast.info(
+      context,
+      AppLocalizations.of(context).deviceSettingsBluetoothConnectionRequired,
+    );
   }
 }
 

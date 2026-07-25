@@ -16,6 +16,13 @@ class SetDeviceSettingUseCase {
     if (rawValue < 0 || rawValue > maximum) {
       throw RangeError.range(rawValue, 0, maximum, key.name);
     }
+    if (!key.supportsValue(rawValue)) {
+      throw RangeError.value(
+        rawValue,
+        key.name,
+        'Value is not supported by the device attribute protocol.',
+      );
+    }
     return _repository.setSetting(
       requestId: requestId,
       deviceId: deviceId,

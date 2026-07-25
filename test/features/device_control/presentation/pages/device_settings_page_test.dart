@@ -1,4 +1,5 @@
 import 'package:flinx/features/device_control/presentation/pages/device_settings_page.dart';
+import 'package:flinx/features/device_control/application/device_command_controller.dart';
 import 'package:flinx/features/settings/application/providers.dart';
 import 'package:flinx/features/settings/domain/entities/device_capability.dart';
 import 'package:flinx/features/settings/domain/entities/door_setting_snapshot.dart';
@@ -17,7 +18,7 @@ void main() {
 
     expect(find.text('Setting'), findsOneWidget);
     expect(find.text('LED off delay'), findsOneWidget);
-    expect(find.text('0x1E (30)'), findsOneWidget);
+    expect(find.text('0x05 (5)'), findsNWidgets(2));
     expect(find.text('Partial open'), findsOneWidget);
     expect(find.text('0x07 (7)'), findsOneWidget);
     expect(find.text('Auto close'), findsOneWidget);
@@ -34,11 +35,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Raw value'), findsOneWidget);
 
-    await tester.enterText(find.byType(TextField), '0x20');
+    await tester.enterText(find.byType(TextField), '0x09');
     await tester.tap(find.text('Save'));
     await tester.pumpAndSettle();
 
-    expect(find.text('0x20 (32)'), findsOneWidget);
+    expect(find.text('0x09 (9)'), findsOneWidget);
   });
 
   testWidgets('validates raw values against their byte width', (tester) async {
@@ -53,6 +54,44 @@ void main() {
     expect(find.text('Enter a value from 0 to 255.'), findsOneWidget);
   });
 
+  testWidgets('rejects raw values outside the device protocol range', (
+    tester,
+  ) async {
+    await _pumpSettingsRouter(tester);
+
+    await tester.tap(find.text('LED off delay'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), '10');
+    await tester.tap(find.text('Save'));
+    await tester.pump();
+
+    expect(find.text('Enter a value supported by the device.'), findsOneWidget);
+  });
+
+  testWidgets('requires the selected Bluetooth name to be connected', (
+    tester,
+  ) async {
+    await _pumpSettingsRouter(tester, bleConnected: false);
+
+    await tester.tap(find.text('LED off delay'));
+    await tester.pump();
+
+    expect(find.text('Raw value'), findsNothing);
+    await tester.pump(const Duration(seconds: 3));
+  });
+
+  testWidgets('requires the connected Bluetooth name to match the device', (
+    tester,
+  ) async {
+    await _pumpSettingsRouter(tester, matchingBleName: false);
+
+    await tester.tap(find.text('LED off delay'));
+    await tester.pump();
+
+    expect(find.text('Raw value'), findsNothing);
+    await tester.pump(const Duration(seconds: 3));
+  });
+
   testWidgets('uses option labels and units while saving option values', (
     tester,
   ) async {
@@ -64,24 +103,34 @@ void main() {
           label: 'LED off delay',
           unit: 's',
           options: [
-            DeviceCapabilityOption(value: 30, label: '30'),
-            DeviceCapabilityOption(value: 60, label: '60'),
+            DeviceCapabilityOption(value: 5, label: '5'),
+            DeviceCapabilityOption(value: 9, label: '9'),
           ],
+        ),
+      ],
+      settingSnapshots: const [
+        DoorSettingSnapshot(
+          code: DeviceCapabilityCode.ledOffDelay,
+          label: 'LED off delay',
+          supported: true,
+          configured: true,
+          currentValue: 5,
+          unit: 's',
         ),
       ],
     );
 
-    expect(find.text('30 s'), findsOneWidget);
+    expect(find.text('5 s'), findsOneWidget);
     await tester.tap(find.text('LED off delay'));
     await tester.pumpAndSettle();
-    expect(find.text('60 s'), findsOneWidget);
+    expect(find.text('9 s'), findsOneWidget);
 
     await tester.drag(find.byType(ListWheelScrollView), const Offset(0, -50));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Confirm'));
     await tester.pumpAndSettle();
 
-    expect(find.text('60 s'), findsOneWidget);
+    expect(find.text('9 s'), findsOneWidget);
   });
 
   testWidgets('renders current settings returned for the door', (tester) async {
@@ -176,6 +225,8 @@ void main() {
 Future<void> _pumpSettingsRouter(
   WidgetTester tester, {
   bool setDefaultSize = true,
+  bool bleConnected = true,
+  bool matchingBleName = true,
   List<String> capabilities = const [
     DeviceCapabilityCode.transmitterPairing,
     DeviceCapabilityCode.ledOffDelay,
@@ -199,6 +250,13 @@ Future<void> _pumpSettingsRouter(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
+        deviceCommandControllerProvider.overrideWith(
+          !bleConnected
+              ? _DisconnectedDeviceCommandController.new
+              : matchingBleName
+              ? _ConnectedDeviceCommandController.new
+              : _OtherDeviceCommandController.new,
+        ),
         deviceSettingsHardwareGatewayProvider.overrideWithValue(gateway),
         deviceCapabilityRepositoryProvider.overrideWithValue(
           _FakeDeviceCapabilityRepository(
@@ -221,13 +279,17 @@ Future<void> _pumpSettingsRouter(
         supportedLocales: AppLocalizations.supportedLocales,
         routerConfig: GoRouter(
           initialLocation:
-              '${DeviceSettingsPage.routePath}?doorId=12&deviceId=mock-device',
+              '${DeviceSettingsPage.routePath}'
+              '?doorId=12&deviceId=mock-device&bleName=mock-device',
           routes: [
             GoRoute(
               path: DeviceSettingsPage.routePath,
               builder: (context, state) => DeviceSettingsPage(
                 doorId: state.uri.queryParameters['doorId'] ?? '',
                 deviceId: state.uri.queryParameters['deviceId'] ?? '',
+                bleName: state.uri.queryParameters['bleName'] ?? '',
+                bleDeviceId:
+                    state.uri.queryParameters['bleDeviceId'] ?? 'mock-device',
               ),
             ),
             GoRoute(
@@ -248,6 +310,31 @@ Future<void> _pumpSettingsRouter(
     ),
   );
   await tester.pumpAndSettle();
+}
+
+class _ConnectedDeviceCommandController extends DeviceCommandController {
+  @override
+  DeviceCommandState build() {
+    return const DeviceCommandState(
+      bleConnectionStatus: DeviceBleConnectionStatus.connected,
+      bleTargetName: 'mock-device',
+    );
+  }
+}
+
+class _DisconnectedDeviceCommandController extends DeviceCommandController {
+  @override
+  DeviceCommandState build() => const DeviceCommandState();
+}
+
+class _OtherDeviceCommandController extends DeviceCommandController {
+  @override
+  DeviceCommandState build() {
+    return const DeviceCommandState(
+      bleConnectionStatus: DeviceBleConnectionStatus.connected,
+      bleTargetName: 'other-device',
+    );
+  }
 }
 
 class _FakeDoorSettingsRepository implements DoorSettingsRepository {

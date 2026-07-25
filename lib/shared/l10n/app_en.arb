@@ -1194,6 +1194,8 @@
   "deviceSettingsRawValueLabel": "Raw value",
   "deviceSettingsRawValueInvalid": "Enter a value from 0 to {maximum}.",
   "@deviceSettingsRawValueInvalid": {"placeholders": {"maximum": {"type": "int"}}},
+  "deviceSettingsRawValueProtocolInvalid": "Enter a value supported by the device.",
+  "deviceSettingsBluetoothConnectionRequired": "Connect this device by Bluetooth before changing settings.",
   "deviceSettingsRawCancel": "Cancel",
   "deviceSettingsRawSave": "Save",
   "deviceSettingsOpeningSpeed": "Opening speed",

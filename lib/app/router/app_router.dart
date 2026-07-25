@@ -326,6 +326,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               state.uri.queryParameters['deviceId'] ??
               '',
           deviceId: state.uri.queryParameters['deviceId'] ?? '',
+          bleName: state.uri.queryParameters['bleName'] ?? '',
+          bleDeviceId: state.uri.queryParameters['bleDeviceId'] ?? '',
         ),
       ),
       GoRoute(

@@ -1177,6 +1177,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get deviceSettingsRawValueProtocolInvalid =>
+      'Enter a value supported by the device.';
+
+  @override
+  String get deviceSettingsBluetoothConnectionRequired =>
+      'Connect this device by Bluetooth before changing settings.';
+
+  @override
   String get deviceSettingsRawCancel => 'Cancel';
 
   @override

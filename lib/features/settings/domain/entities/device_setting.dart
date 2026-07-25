@@ -11,6 +11,33 @@ enum DeviceSettingKey {
 
   final int attributeId;
   final int byteWidth;
+
+  String get capabilityCode => switch (this) {
+    DeviceSettingKey.partialOpen => 'PARTIAL_OPEN',
+    DeviceSettingKey.ledOffDelay => 'LED_OFF_DELAY',
+    DeviceSettingKey.autoCloseCondition => 'AUTO_CLOSE_CONDITION',
+    DeviceSettingKey.autoCloseTime => 'AUTO_CLOSE',
+    DeviceSettingKey.openingForce => 'FORCE_MARGIN',
+    DeviceSettingKey.openingSpeed => 'OPENING_SPEED',
+    DeviceSettingKey.doorOpenReminder => 'DOOR_OPEN_REMINDER',
+  };
+
+  /// Range defined by the door BLE protocol's attribute table.
+  ///
+  /// The byte width is still used for serialization; this range prevents
+  /// values that fit on the wire but are invalid for the motor firmware.
+  bool supportsValue(int value) {
+    return switch (this) {
+      DeviceSettingKey.partialOpen => value >= 0 && value <= 0x12,
+      DeviceSettingKey.ledOffDelay => value >= 1 && value <= 9,
+      DeviceSettingKey.autoCloseCondition => value >= 0 && value <= 0xFF,
+      DeviceSettingKey.autoCloseTime => value >= 0 && value <= 990,
+      DeviceSettingKey.openingForce => value >= 1 && value <= 9,
+      DeviceSettingKey.openingSpeed => value >= 60 && value <= 100,
+      DeviceSettingKey.doorOpenReminder =>
+        value == 0 || value == 5 || value == 10 || value == 15,
+    };
+  }
 }
 
 class DeviceSettingValue {

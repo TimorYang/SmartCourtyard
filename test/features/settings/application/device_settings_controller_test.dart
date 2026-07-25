@@ -22,18 +22,18 @@ void main() {
     await _waitUntil(() => !container.read(provider).loading);
     expect(
       container.read(provider).values[DeviceSettingKey.ledOffDelay]?.rawValue,
-      30,
+      5,
     );
 
     final didWrite = await container
         .read(provider.notifier)
-        .setRawValue(DeviceSettingKey.ledOffDelay, 0x20);
+        .setRawValue(DeviceSettingKey.ledOffDelay, 0x09);
 
     expect(didWrite, isTrue);
     expect(container.read(provider).pendingKey, isNull);
     expect(
       container.read(provider).values[DeviceSettingKey.ledOffDelay]?.rawValue,
-      0x20,
+      0x09,
     );
   });
 

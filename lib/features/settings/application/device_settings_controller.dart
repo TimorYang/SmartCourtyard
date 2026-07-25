@@ -72,6 +72,10 @@ class DeviceSettingsController extends Notifier<DeviceSettingsState> {
     if (!ref.mounted) {
       return;
     }
+    if (deviceId.trim().isEmpty) {
+      state = state.copyWith(loading: false, clearError: true);
+      return;
+    }
     state = state.copyWith(loading: true, clearError: true);
     try {
       final values = await _query(
@@ -91,7 +95,7 @@ class DeviceSettingsController extends Notifier<DeviceSettingsState> {
   }
 
   Future<bool> setRawValue(DeviceSettingKey key, int rawValue) async {
-    if (state.pendingKey != null) {
+    if (deviceId.trim().isEmpty || state.pendingKey != null) {
       return false;
     }
     state = state.copyWith(pendingKey: key, clearError: true);
