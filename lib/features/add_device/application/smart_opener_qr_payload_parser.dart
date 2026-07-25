@@ -2,7 +2,7 @@ const String smartOpenerQrPayloadSeparator = '#SPT#';
 const List<String> smartOpenerBleNamePrefixes = <String>[
   'Noru_',
   'opener_',
-  'evo_',
+  'Evo_',
   'Fbox_',
 ];
 

@@ -1331,6 +1331,48 @@ class AppLocalizationsZh extends AppLocalizations {
   String get deviceSettingsAutoClose => '自动关闭';
 
   @override
+  String get deviceSettingsAutoCloseCondition => '自动关闭条件';
+
+  @override
+  String get deviceSettingsLoading => '正在读取设备属性…';
+
+  @override
+  String get deviceSettingsLoadFailed => '无法读取设备属性。';
+
+  @override
+  String get deviceSettingsRetry => '重试';
+
+  @override
+  String get deviceSettingsWriting => '正在写入…';
+
+  @override
+  String get deviceSettingsRawUnavailable => '设备未上报';
+
+  @override
+  String get deviceSettingsRawValueHelp =>
+      '请输入设备原始值，可使用十进制或十六进制（例如 30 或 0x1E）。';
+
+  @override
+  String get deviceSettingsRawValueLabel => '原始值';
+
+  @override
+  String deviceSettingsRawValueInvalid(int maximum) {
+    return '请输入 0 到 $maximum 之间的值。';
+  }
+
+  @override
+  String get deviceSettingsRawValueProtocolInvalid => '请输入设备支持的值。';
+
+  @override
+  String get deviceSettingsBluetoothConnectionRequired => '请先连接当前设备的蓝牙，再修改设置。';
+
+  @override
+  String get deviceSettingsRawCancel => '取消';
+
+  @override
+  String get deviceSettingsRawSave => '保存';
+
+  @override
   String get deviceSettingsOpeningSpeed => '开启速度';
 
   @override

@@ -83,11 +83,13 @@ class AddDeviceOnboardingRepositoryImpl
   @override
   Future<OnboardedForceDoor> addForceDoor({
     required String sn,
+    String? doorId,
     required String requestId,
   }) async {
     try {
       final data = await remoteDataSource.addForceDoor(
         sn: sn,
+        doorId: doorId,
         requestId: requestId,
       );
       logger.info(

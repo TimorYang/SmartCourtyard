@@ -10,7 +10,7 @@ void main() {
       'opener_B8F86211A9DC',
     );
 
-    for (final prefix in <String>['Noru_', 'evo_', 'Fbox_']) {
+    for (final prefix in <String>['Noru_', 'Evo_', 'Fbox_']) {
       final serialNumber = '${prefix}B8F86211A9DC';
       expect(
         parseSmartOpenerSerialNumber('$serialNumber#SPT#$serialNumber'),

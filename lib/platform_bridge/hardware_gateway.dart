@@ -13,6 +13,8 @@ abstract interface class HardwareGateway {
 
   Stream<BleDiagnosticEvent> get bleDiagnosticEvents;
 
+  Stream<DeviceAttributeSnapshot> get deviceAttributeSnapshots;
+
   Future<void> configureHardwareLogging({
     required bool flutterConsoleEnabled,
     required bool nativeConsoleEnabled,
@@ -99,6 +101,17 @@ abstract interface class HardwareGateway {
     required String requestId,
     required String deviceId,
     required DoorCommand command,
+  });
+
+  Future<DeviceAttributeSnapshot> queryDeviceAttributes({
+    required String requestId,
+    required String deviceId,
+  });
+
+  Future<DeviceAttributeWriteResult> setDeviceAttributes({
+    required String requestId,
+    required String deviceId,
+    required List<DeviceAttribute> attributes,
   });
 
   Future<RemotePairingResult> pairRemote({

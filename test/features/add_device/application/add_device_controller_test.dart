@@ -102,6 +102,7 @@ void main() {
       );
       addTearDown(container.dispose);
       final controller = container.read(addDeviceControllerProvider.notifier);
+      controller.beginOnboardingFlow(doorId: '1');
 
       await controller.startScan();
       expect(await controller.connectAndAuthenticate(device), isTrue);
@@ -280,6 +281,7 @@ class _FakeAddDeviceOnboardingRepository
   @override
   Future<OnboardedForceDoor> addForceDoor({
     required String sn,
+    String? doorId,
     required String requestId,
   }) async {
     return OnboardedForceDoor(id: 1, sn: sn);

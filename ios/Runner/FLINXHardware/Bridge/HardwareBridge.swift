@@ -13,6 +13,7 @@ final class HardwareBridge: HardwareHostApi {
     private var provisioningBuffers: [String: Data] = [:]
     private var provisioningAesKeys: [String: Data] = [:]
     private var pendingProvisioningRequests: [String: PendingProvisioningRequest] = [:]
+    private var pendingAttributeQueries: [String: PendingAttributeQuery] = [:]
     private var provisioningSequences: [String: UInt16] = [:]
     private var flutterConsoleLoggingEnabled = false
     private var pendingDiagnostics: [String: PendingBleDiagnostic] = [:]
@@ -496,6 +497,84 @@ final class HardwareBridge: HardwareHostApi {
         }
     }
 
+    func queryDeviceAttributes(
+        requestId: String,
+        deviceId: String,
+        completion: @escaping (Result<DeviceAttributeSnapshotDto, Error>) -> Void
+    ) {
+        ensureProvisioningChannel(requestId: requestId, deviceId: deviceId) { [weak self] result in
+            guard let self else { return }
+            switch result {
+            case .failure(let error):
+                completion(.failure(Self.toPigeonError(error)))
+            case .success:
+                self.sendAttributeQuery(
+                    requestId: requestId,
+                    deviceId: deviceId,
+                    completion: completion
+                )
+            }
+        }
+    }
+
+    func setDeviceAttributes(
+        requestId: String,
+        deviceId: String,
+        attributes: [DeviceAttributeDto],
+        completion: @escaping (Result<DeviceAttributeWriteResultDto, Error>) -> Void
+    ) {
+        let payload: Data
+        do {
+            payload = try Self.makeAttributeWritePayload(attributes)
+        } catch {
+            completion(.failure(Self.toPigeonError(error)))
+            return
+        }
+        ensureProvisioningChannel(requestId: requestId, deviceId: deviceId) { [weak self] result in
+            guard let self else { return }
+            switch result {
+            case .failure(let error):
+                completion(.failure(Self.toPigeonError(error)))
+            case .success:
+                self.sendProvisioningRequest(
+                    requestId: requestId,
+                    deviceId: deviceId,
+                    command: .setAttributes,
+                    payload: payload
+                ) { frame in
+                    guard let resultCode = frame.data.first else {
+                        completion(
+                            .failure(
+                                PigeonError(
+                                    code: "invalid_attribute_write_response",
+                                    message: "Attribute write response is empty.",
+                                    details: nil
+                                )
+                            )
+                        )
+                        return
+                    }
+                    let reasonCode = frame.data.count >= 5
+                        ? Int64(Self.parseUInt32(frame.data.dropFirst().prefix(4).asData))
+                        : nil
+                    completion(
+                        .success(
+                            DeviceAttributeWriteResultDto(
+                                requestId: requestId,
+                                deviceId: deviceId,
+                                success: resultCode == 0x01,
+                                sequence: Int64(frame.sequence),
+                                reasonCode: reasonCode
+                            )
+                        )
+                    )
+                } failure: { error in
+                    completion(.failure(Self.toPigeonError(error)))
+                }
+            }
+        }
+    }
+
     func pairRemote(
         requestId: String,
         deviceId: String,
@@ -808,6 +887,32 @@ extension HardwareBridge {
         }
         return (frame.sequence, frame.command, frame.data)
     }
+
+    static func parseDeviceAttributesForTesting(
+        _ payload: Data
+    ) throws -> [(id: Int64, value: Data)] {
+        try parseDeviceAttributes(payload).map { ($0.id, $0.value.data) }
+    }
+
+    static func makeAttributeWritePayloadForTesting(
+        _ attributes: [(id: Int64, value: Data)]
+    ) throws -> Data {
+        try makeAttributeWritePayload(
+            attributes.map {
+                DeviceAttributeDto(
+                    id: $0.id,
+                    value: FlutterStandardTypedData(bytes: $0.value)
+                )
+            }
+        )
+    }
+
+    static func makeWifiProvisionPayloadForTesting(
+        ssid: String,
+        password: String
+    ) throws -> Data {
+        try makeWifiProvisionPayload(ssid: ssid, password: password)
+    }
 }
 
 extension HardwareBridge: BleManagerDelegate {
@@ -820,7 +925,28 @@ extension HardwareBridge: BleManagerDelegate {
             provisioningReadiness[event.deviceId] = nil
             provisioningBuffers[event.deviceId] = nil
             provisioningAesKeys[event.deviceId] = nil
-            pendingProvisioningRequests.removeValue(forKey: event.deviceId)?.timeout.cancel()
+            if let pending = pendingProvisioningRequests.removeValue(forKey: event.deviceId) {
+                pending.timeout.cancel()
+                pending.failure(
+                    PigeonError(
+                        code: "bluetooth_disconnected",
+                        message: "Bluetooth disconnected while waiting for a command response.",
+                        details: nil
+                    )
+                )
+            }
+            if let pending = pendingAttributeQueries.removeValue(forKey: event.deviceId) {
+                pending.timeout.cancel()
+                pending.completion(
+                    .failure(
+                        PigeonError(
+                            code: "bluetooth_disconnected",
+                            message: "Bluetooth disconnected while waiting for device attributes.",
+                            details: nil
+                        )
+                    )
+                )
+            }
         }
         flutterApi.onBleConnectionChanged(event: event.toDto()) { _ in }
     }
@@ -916,7 +1042,7 @@ private extension HardwareBridge {
         success: @escaping (BleProtocolFrame) -> Void,
         failure: @escaping (Error) -> Void
     ) {
-        if pendingProvisioningRequests[deviceId] != nil {
+        if pendingProvisioningRequests[deviceId] != nil || pendingAttributeQueries[deviceId] != nil {
             failure(BleManagerError.operationInProgress("ble_provisioning"))
             return
         }
@@ -1025,6 +1151,91 @@ private extension HardwareBridge {
             }
         }
     }
+
+    func sendAttributeQuery(
+        requestId: String,
+        deviceId: String,
+        completion: @escaping (Result<DeviceAttributeSnapshotDto, Error>) -> Void
+    ) {
+        guard pendingProvisioningRequests[deviceId] == nil,
+              pendingAttributeQueries[deviceId] == nil else {
+            completion(.failure(Self.toPigeonError(BleManagerError.operationInProgress("device_attributes"))))
+            return
+        }
+        let sequence = nextProvisioningSequence(for: deviceId)
+        let payload = Data([0xFF, 0xFF])
+        guard let aesKey = provisioningAesKeys[deviceId],
+              let frame = Self.makeFrame(
+                sequence: sequence,
+                command: DeviceAttributeProtocol.queryCommand,
+                payload: payload,
+                encrypted: true,
+                aesKey: aesKey
+              ) else {
+            completion(
+                .failure(
+                    PigeonError(
+                        code: "attribute_query_encrypt_failed",
+                        message: "Failed to encrypt BLE attribute query.",
+                        details: nil
+                    )
+                )
+            )
+            return
+        }
+        let timeout = DispatchWorkItem { [weak self] in
+            guard let pending = self?.pendingAttributeQueries.removeValue(forKey: deviceId) else {
+                return
+            }
+            pending.completion(
+                .failure(
+                    PigeonError(
+                        code: "command_timeout",
+                        message: "Timed out waiting for BLE attribute report.",
+                        details: nil
+                    )
+                )
+            )
+        }
+        pendingAttributeQueries[deviceId] = PendingAttributeQuery(
+            requestId: requestId,
+            deviceId: deviceId,
+            timeout: timeout,
+            completion: completion
+        )
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10, execute: timeout)
+        emitTxDiagnostic(
+            requestId: requestId,
+            deviceId: deviceId,
+            operation: "Query Device Attributes",
+            command: DeviceAttributeProtocol.queryCommand,
+            control: 0xFFFF,
+            sequence: sequence,
+            originPayload: Self.makeFrameData(
+                sequence: sequence,
+                command: DeviceAttributeProtocol.queryCommand,
+                payload: payload
+            ),
+            packet: frame,
+            encrypted: true,
+            sensitive: false
+        )
+        bleManager.writeCharacteristic(
+            requestId: requestId,
+            deviceId: deviceId,
+            serviceUuid: BleProvisioningCommand.serviceUuid,
+            characteristicUuid: BleProvisioningCommand.writeCharacteristicUuid,
+            payload: frame,
+            writeType: .withResponse
+        ) { [weak self] result in
+            guard let self else { return }
+            if case .failure(let error) = result,
+               let pending = self.pendingAttributeQueries.removeValue(forKey: deviceId) {
+                pending.timeout.cancel()
+                pending.completion(.failure(Self.toPigeonError(error)))
+            }
+        }
+    }
     
     func handleProvisioningNotification(_ notification: BleNotification) {
         guard notification.serviceUuid.caseInsensitiveCompare(BleProvisioningCommand.serviceUuid) == .orderedSame,
@@ -1117,6 +1328,18 @@ private extension HardwareBridge {
                             ? "BLE authentication response could not be decrypted with the server AES key."
                             : "Received encrypted BLE provisioning frame, but AES128 decrypt did not match the pending command."
                     )
+                    if let pending = pendingAttributeQueries.removeValue(forKey: notification.deviceId) {
+                        pending.timeout.cancel()
+                        pending.completion(
+                            .failure(
+                                PigeonError(
+                                    code: failureCode,
+                                    message: "Received an encrypted attribute frame that could not be decrypted.",
+                                    details: nil
+                                )
+                            )
+                        )
+                    }
                 }
                 buffer = remainingBuffer
             }
@@ -1129,6 +1352,11 @@ private extension HardwareBridge {
     }
     
     func resolveProvisioningFrame(_ frame: BleProtocolFrame, deviceId: String) {
+        if frame.command == DeviceAttributeProtocol.reportCommand,
+           frame.type == 0x03 || frame.type == 0x04 {
+            resolveAttributeReport(frame, deviceId: deviceId)
+            return
+        }
         guard let pending = pendingProvisioningRequests[deviceId] else {
             logger.info(
                 "provisioning_response",
@@ -1164,6 +1392,45 @@ private extension HardwareBridge {
             details: "command=\(frame.command) sequence=\(frame.sequence) pendingCommand=\(pending.command.rawValue) pendingSequence=\(pending.sequence)"
         )
         pending.success(frame)
+    }
+
+    func resolveAttributeReport(_ frame: BleProtocolFrame, deviceId: String) {
+        let pending = pendingAttributeQueries.removeValue(forKey: deviceId)
+        pending?.timeout.cancel()
+        do {
+            let attributes = try Self.parseDeviceAttributes(frame.data)
+            let snapshot = DeviceAttributeSnapshotDto(
+                requestId: pending?.requestId,
+                deviceId: deviceId,
+                sequence: Int64(frame.sequence),
+                timestampMillis: Int64(Date().timeIntervalSince1970 * 1000),
+                origin: pending == nil ? .activeReport : .queryResult,
+                attributes: attributes
+            )
+            flutterApi.onDeviceAttributesChanged(snapshot: snapshot) { _ in }
+            pending?.completion(.success(snapshot))
+        } catch {
+            let pigeonError = Self.toPigeonError(error)
+            logger.error(
+                "device_attribute_report",
+                requestId: pending?.requestId,
+                deviceId: deviceId,
+                nativeCode: pigeonError.code,
+                details: "type=\(frame.type) sequence=\(frame.sequence) payloadBytes=\(frame.data.count)"
+            )
+            flutterApi.onNativeError(
+                error: NativeErrorDto(
+                    code: pigeonError.code,
+                    domainCode: "Unknown",
+                    message: pigeonError.message,
+                    requestId: pending?.requestId,
+                    deviceId: deviceId,
+                    retryable: false,
+                    timestampMillis: Int64(Date().timeIntervalSince1970 * 1000)
+                )
+            ) { _ in }
+            pending?.completion(.failure(pigeonError))
+        }
     }
     
     func failPendingProvisioningRequest(deviceId: String, code: String, message: String) {
@@ -1410,15 +1677,18 @@ private extension HardwareBridge {
 
     
     static func makeWifiProvisionPayload(ssid: String, password: String) throws -> Data {
-        let jsonObject: [String: String] = ["ssid": ssid, "pwd": password]
-        guard JSONSerialization.isValidJSONObject(jsonObject) else {
+        let options: JSONSerialization.WritingOptions = [.fragmentsAllowed]
+        let encodedSsid = try JSONSerialization.data(withJSONObject: ssid, options: options)
+        let encodedPassword = try JSONSerialization.data(withJSONObject: password, options: options)
+        guard let ssidValue = String(data: encodedSsid, encoding: .utf8),
+              let passwordValue = String(data: encodedPassword, encoding: .utf8) else {
             throw PigeonError(
                 code: "invalid_wifi_payload",
                 message: "Wifi credentials cannot be serialized.",
                 details: nil
             )
         }
-        return try JSONSerialization.data(withJSONObject: jsonObject, options: [])
+        return Data("{\"ssid\":\(ssidValue),\"pwd\":\(passwordValue)}".utf8)
     }
     
     static func parseWifiList(from payload: Data) throws -> [String] {
@@ -1485,6 +1755,91 @@ private extension HardwareBridge {
             hasMore: packetFlag == 0x01,
             remotes: remotes
         )
+    }
+
+    static func parseDeviceAttributes(_ payload: Data) throws -> [DeviceAttributeDto] {
+        var attributes: [DeviceAttributeDto] = []
+        var offset = 0
+        while offset < payload.count {
+            guard offset + 2 <= payload.count else {
+                throw PigeonError(
+                    code: "invalid_attribute_payload",
+                    message: "Attribute payload ends inside an attribute identifier.",
+                    details: nil
+                )
+            }
+            let id = UInt16(payload[offset]) << 8 | UInt16(payload[offset + 1])
+            offset += 2
+            let value: Data
+            if id == DeviceAttributeProtocol.nullTerminatedStringAttribute {
+                guard let terminator = payload[offset...].firstIndex(of: 0x00) else {
+                    throw PigeonError(
+                        code: "invalid_attribute_payload",
+                        message: "Null-terminated device name is missing its terminator.",
+                        details: nil
+                    )
+                }
+                value = payload.subdata(in: offset..<terminator)
+                offset = terminator + 1
+            } else {
+                guard let width = DeviceAttributeProtocol.valueWidths[id] else {
+                    throw PigeonError(
+                        code: "unsupported_attribute_schema",
+                        message: "No value width is registered for attribute \(DeviceAttributeProtocol.hex(id)).",
+                        details: nil
+                    )
+                }
+                guard offset + width <= payload.count else {
+                    throw PigeonError(
+                        code: "invalid_attribute_payload",
+                        message: "Attribute \(DeviceAttributeProtocol.hex(id)) is truncated.",
+                        details: nil
+                    )
+                }
+                value = payload.subdata(in: offset..<(offset + width))
+                offset += width
+            }
+            attributes.append(
+                DeviceAttributeDto(
+                    id: Int64(id),
+                    value: FlutterStandardTypedData(bytes: value)
+                )
+            )
+        }
+        return attributes
+    }
+
+    static func makeAttributeWritePayload(_ attributes: [DeviceAttributeDto]) throws -> Data {
+        guard !attributes.isEmpty else {
+            throw PigeonError(
+                code: "invalid_attribute_write",
+                message: "At least one device attribute is required.",
+                details: nil
+            )
+        }
+        var payload = Data()
+        for attribute in attributes {
+            guard let id = UInt16(exactly: attribute.id),
+                  DeviceAttributeProtocol.writableAttributes.contains(id),
+                  let expectedWidth = DeviceAttributeProtocol.valueWidths[id] else {
+                throw PigeonError(
+                    code: "unsupported_attribute_write",
+                    message: "Attribute 0x\(String(attribute.id, radix: 16).uppercased()) is not writable.",
+                    details: nil
+                )
+            }
+            let value = attribute.value.data
+            guard value.count == expectedWidth else {
+                throw PigeonError(
+                    code: "invalid_attribute_write",
+                    message: "Attribute \(DeviceAttributeProtocol.hex(id)) requires \(expectedWidth) value bytes.",
+                    details: nil
+                )
+            }
+            payload.append(contentsOf: bigEndianBytes(id))
+            payload.append(value)
+        }
+        return payload
     }
 
     static func parseRemoteOperationResult(
@@ -1987,6 +2342,7 @@ private extension BleNativeError {
 }
 
 private enum BleProvisioningCommand: UInt16 {
+    case setAttributes = 0x0001
     case remotePairing = 0x0007
     case remoteQuery = 0x0008
     case remoteDelete = 0x0009
@@ -2005,6 +2361,7 @@ private enum BleProvisioningCommand: UInt16 {
 
     var displayName: String {
         switch self {
+        case .setAttributes: return "Set Device Attributes"
         case .remotePairing: return "Remote Pairing"
         case .remoteQuery: return "Query Remotes"
         case .remoteDelete: return "Delete Remote"
@@ -2017,7 +2374,7 @@ private enum BleProvisioningCommand: UInt16 {
     
     var requiresEncryptedRequest: Bool {
         switch self {
-        case .authenticate, .scanWifi, .remotePairing, .remoteQuery, .remoteDelete, .remoteRename:
+        case .setAttributes, .authenticate, .scanWifi, .remotePairing, .remoteQuery, .remoteDelete, .remoteRename:
             return true
         case .configureWifi:
             return false
@@ -2026,6 +2383,30 @@ private enum BleProvisioningCommand: UInt16 {
     
     func matchesResponseSequence(_ responseSequence: UInt16, pendingSequence: UInt16) -> Bool {
         responseSequence == pendingSequence || (self == .scanWifi && responseSequence == 0)
+    }
+}
+
+private enum DeviceAttributeProtocol {
+    static let queryCommand: UInt16 = 0x0002
+    static let reportCommand: UInt16 = 0x0202
+    static let nullTerminatedStringAttribute: UInt16 = 0x2700
+
+    static let valueWidths: [UInt16: Int] = [
+        0x2702: 2, 0x2703: 2,
+        0x2709: 1, 0x2710: 1, 0x2711: 1, 0x2713: 1, 0x2714: 1,
+        0x2715: 1, 0x2716: 2, 0x2717: 1, 0x2718: 1, 0x2719: 1,
+        0x271A: 2, 0x271B: 1, 0x271C: 1, 0x271D: 1, 0x271F: 1,
+        0x2720: 1, 0x2721: 1, 0x2722: 1, 0x2723: 1, 0x2725: 2,
+        0x2726: 1, 0x2727: 1, 0x2728: 1, 0x2729: 1, 0x272B: 1,
+        0x2735: 1, 0x273B: 1, 0x273C: 1, 0x273D: 1,
+    ]
+
+    static let writableAttributes: Set<UInt16> = [
+        0x2711, 0x2713, 0x2714, 0x2725, 0x2726, 0x2727, 0x2728,
+    ]
+
+    static func hex(_ value: UInt16) -> String {
+        String(format: "0x%04X", Int(value))
     }
 }
 
@@ -2151,6 +2532,13 @@ private struct PendingProvisioningRequest {
     let timeout: DispatchWorkItem
     let success: (BleProtocolFrame) -> Void
     let failure: (Error) -> Void
+}
+
+private struct PendingAttributeQuery {
+    let requestId: String
+    let deviceId: String
+    let timeout: DispatchWorkItem
+    let completion: (Result<DeviceAttributeSnapshotDto, Error>) -> Void
 }
 
 private struct PendingBleDiagnostic {

@@ -1,260 +1,374 @@
-import 'dart:ui' show Tristate;
-
 import 'package:flinx/features/device_control/presentation/pages/device_settings_page.dart';
+import 'package:flinx/features/device_control/application/device_command_controller.dart';
+import 'package:flinx/features/settings/application/providers.dart';
+import 'package:flinx/features/settings/domain/entities/device_capability.dart';
+import 'package:flinx/features/settings/domain/entities/door_setting_snapshot.dart';
+import 'package:flinx/features/settings/domain/repositories/device_capability_repository.dart';
+import 'package:flinx/features/settings/domain/repositories/door_settings_repository.dart';
+import 'package:flinx/platform_bridge/mock_hardware_gateway.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
-import 'package:flinx/shared/widgets/flinx_switch.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 void main() {
-  testWidgets('renders settings rows and default values', (tester) async {
+  testWidgets('renders queried raw device setting values', (tester) async {
     await _pumpSettingsRouter(tester);
 
     expect(find.text('Setting'), findsOneWidget);
-    expect(find.text('For users'), findsOneWidget);
-    expect(find.text('Transmitter management'), findsOneWidget);
     expect(find.text('LED off delay'), findsOneWidget);
-    expect(find.text('3 min'), findsOneWidget);
+    expect(find.text('0x05 (5)'), findsNWidgets(2));
     expect(find.text('Partial open'), findsOneWidget);
-    expect(find.text('12 min'), findsOneWidget);
+    expect(find.text('0x07 (7)'), findsOneWidget);
     expect(find.text('Auto close'), findsOneWidget);
-    expect(find.text('15s'), findsOneWidget);
-    expect(find.text('Opening speed'), findsOneWidget);
-    expect(find.text('GMT+8:00'), findsOneWidget);
-    expect(find.text('About the device'), findsOneWidget);
-    expect(find.text('Door open reminder'), findsOneWidget);
-    expect(find.text('For installers'), findsOneWidget);
+    expect(find.text('0x0000 (0)'), findsOneWidget);
     expect(find.text('Force margin'), findsOneWidget);
-    expect(find.byType(FlinxSwitch), findsOneWidget);
   });
 
-  testWidgets('toggles door open reminder with the shared switch', (
+  testWidgets('accepts a hexadecimal raw value and refreshes the page', (
     tester,
   ) async {
     await _pumpSettingsRouter(tester);
 
-    final toggle = find.byType(FlinxSwitch);
-    expect(
-      tester.getSemantics(toggle).flagsCollection.isToggled,
-      Tristate.isTrue,
-    );
+    await tester.tap(find.text('LED off delay'));
+    await tester.pumpAndSettle();
+    expect(find.text('Raw value'), findsOneWidget);
 
-    await tester.tap(toggle);
+    await tester.enterText(find.byType(TextField), '0x09');
+    await tester.tap(find.text('Save'));
     await tester.pumpAndSettle();
 
-    expect(
-      tester.getSemantics(toggle).flagsCollection.isToggled,
-      Tristate.isFalse,
-    );
+    expect(find.text('0x09 (9)'), findsOneWidget);
   });
 
-  testWidgets('opens the door open reminder time sheet from its setting row', (
-    tester,
-  ) async {
-    await _pumpSettingsRouter(tester);
-
-    await tester.tap(find.text('Door open reminder'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Door open reminder time'), findsOneWidget);
-    expect(find.text('5 min'), findsOneWidget);
-    expect(find.text('10 min'), findsOneWidget);
-    expect(find.text('15 min'), findsOneWidget);
-    expect(find.byType(ListWheelScrollView), findsOneWidget);
-  });
-
-  testWidgets('opening speed snaps to externally supplied discrete values', (tester) async {
-    await _pumpSettingsRouter(
-      tester,
-      openingSpeedConfig: OpeningSpeedConfig(allowedValues: [100, 80, 60], current: 80),
-    );
-
-    await tester.tap(find.text('Opening speed'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Current setting: 80% (motor setting)'), findsOneWidget);
-    expect(find.text('100%'), findsOneWidget);
-    expect(find.text('80%'), findsOneWidget);
-    expect(find.text('60%\n(STD)'), findsOneWidget);
-    expect(find.textContaining('(STD)'), findsOneWidget);
-    expect(find.byKey(const Key('openingSpeedSliderGuide-0')), findsOneWidget);
-    expect(find.byKey(const Key('openingSpeedSliderGuide-1')), findsOneWidget);
-    expect(find.byKey(const Key('openingSpeedSliderGuide-2')), findsOneWidget);
-    expect(tester.getRect(find.text('100%')).right, equals(tester.view.physicalSize.width / tester.view.devicePixelRatio - 35));
-
-    final slider = find.byKey(const Key('openingSpeedDiscreteSlider'));
-    final thumb = find.descendant(of: slider, matching: find.byIcon(Icons.drag_handle));
-    await tester.tapAt(tester.getTopLeft(slider) + const Offset(20, 4));
-    await tester.pump();
-    expect(find.text('Current setting: 100% (motor setting)'), findsOneWidget);
-    expect(tester.getTopLeft(thumb).dy, greaterThanOrEqualTo(tester.getTopLeft(slider).dy));
-
-    await tester.tapAt(tester.getBottomLeft(slider) + const Offset(20, -4));
-    await tester.pump();
-    expect(find.text('Current setting: 60% (motor setting)'), findsOneWidget);
-    expect(find.textContaining('Current setting: 90%'), findsNothing);
-    expect(tester.getBottomLeft(thumb).dy, lessThanOrEqualTo(tester.getBottomLeft(slider).dy));
-  });
-
-  testWidgets('force margin retains its continuous slider', (tester) async {
+  testWidgets('validates raw values against their byte width', (tester) async {
     await _pumpSettingsRouter(tester);
 
     await tester.tap(find.text('Force margin'));
     await tester.pumpAndSettle();
-
-    expect(find.byKey(const Key('forceMarginSliderGuide-0')), findsOneWidget);
-    expect(find.byKey(const Key('forceMarginSliderGuide-1')), findsOneWidget);
-    expect(tester.getRect(find.text('+15%')).right, equals(tester.view.physicalSize.width / tester.view.devicePixelRatio - 35));
-
-    final slider = find.byKey(const Key('forceMarginContinuousSlider'));
-    final thumb = find.descendant(of: slider, matching: find.byIcon(Icons.drag_handle));
-    final initialThumbTop = tester.getTopLeft(thumb).dy;
-
-    await tester.tapAt(tester.getTopLeft(slider) + const Offset(20, 4));
+    await tester.enterText(find.byType(TextField), '256');
+    await tester.tap(find.text('Save'));
     await tester.pump();
 
-    expect(tester.getTopLeft(thumb).dy, lessThan(initialThumbTop));
-    expect(tester.getTopLeft(thumb).dy, greaterThanOrEqualTo(tester.getTopLeft(slider).dy));
-    expect(find.byKey(const Key('openingSpeedDiscreteSlider')), findsNothing);
+    expect(find.text('Enter a value from 0 to 255.'), findsOneWidget);
   });
 
-  testWidgets('updates LED off delay from bottom sheet', (tester) async {
-    await _pumpSettingsRouter(tester);
-
-    await tester.tap(find.text('LED off delay'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('1 min'), findsOneWidget);
-    expect(find.byType(ListWheelScrollView), findsOneWidget);
-    await tester.drag(find.byType(ListWheelScrollView), const Offset(0, -92));
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Confirm'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('5 min'), findsOneWidget);
-  });
-
-  testWidgets('updates partial open height from bottom sheet', (tester) async {
-    await _pumpSettingsRouter(tester);
-
-    await tester.tap(find.text('Partial open'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Partial open height'), findsOneWidget);
-    expect(find.text('20'), findsOneWidget);
-    expect(find.byType(ListWheelScrollView), findsOneWidget);
-
-    await tester.tap(find.text('Confirm'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('20'), findsOneWidget);
-  });
-
-  testWidgets('updates auto close setting from bottom sheet', (tester) async {
-    await _pumpSettingsRouter(tester);
-
-    await tester.tap(find.text('Auto close'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Auto closing setting'), findsOneWidget);
-    expect(find.text('Any position'), findsOneWidget);
-    expect(find.byType(ListWheelScrollView), findsOneWidget);
-
-    await tester.tap(find.text('Confirm'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('1 min'), findsOneWidget);
-  });
-
-  testWidgets('cancel dismisses setting sheet without updating value', (
+  testWidgets('rejects raw values outside the device protocol range', (
     tester,
   ) async {
     await _pumpSettingsRouter(tester);
 
     await tester.tap(find.text('LED off delay'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Cancel'));
-    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), '10');
+    await tester.tap(find.text('Save'));
+    await tester.pump();
 
-    expect(find.text('LED off delay'), findsOneWidget);
-    expect(find.text('3 min'), findsOneWidget);
-    expect(find.text('5'), findsNothing);
+    expect(find.text('Enter a value supported by the device.'), findsOneWidget);
   });
 
-  testWidgets('navigates to about device and transmitter pages', (
+  testWidgets('requires the selected Bluetooth name to be connected', (
     tester,
   ) async {
+    await _pumpSettingsRouter(tester, bleConnected: false);
+
+    await tester.tap(find.text('LED off delay'));
+    await tester.pump();
+
+    expect(find.text('Raw value'), findsNothing);
+    await tester.pump(const Duration(seconds: 3));
+  });
+
+  testWidgets('requires the connected Bluetooth name to match the device', (
+    tester,
+  ) async {
+    await _pumpSettingsRouter(tester, matchingBleName: false);
+
+    await tester.tap(find.text('LED off delay'));
+    await tester.pump();
+
+    expect(find.text('Raw value'), findsNothing);
+    await tester.pump(const Duration(seconds: 3));
+  });
+
+  testWidgets('uses option labels and units while saving option values', (
+    tester,
+  ) async {
+    await _pumpSettingsRouter(
+      tester,
+      capabilityDefinitions: const [
+        DeviceCapability(
+          code: DeviceCapabilityCode.ledOffDelay,
+          label: 'LED off delay',
+          unit: 's',
+          options: [
+            DeviceCapabilityOption(value: 5, label: '5'),
+            DeviceCapabilityOption(value: 9, label: '9'),
+          ],
+        ),
+      ],
+      settingSnapshots: const [
+        DoorSettingSnapshot(
+          code: DeviceCapabilityCode.ledOffDelay,
+          label: 'LED off delay',
+          supported: true,
+          configured: true,
+          currentValue: 5,
+          unit: 's',
+        ),
+      ],
+    );
+
+    expect(find.text('5 s'), findsOneWidget);
+    await tester.tap(find.text('LED off delay'));
+    await tester.pumpAndSettle();
+    expect(find.text('9 s'), findsOneWidget);
+
+    await tester.drag(find.byType(ListWheelScrollView), const Offset(0, -50));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Confirm'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('9 s'), findsOneWidget);
+  });
+
+  testWidgets('renders current settings returned for the door', (tester) async {
+    await _pumpSettingsRouter(
+      tester,
+      capabilityDefinitions: const [
+        DeviceCapability(
+          code: DeviceCapabilityCode.ledOffDelay,
+          label: 'LED off delay',
+          options: [DeviceCapabilityOption(value: 30, label: '30')],
+        ),
+      ],
+      settingSnapshots: const [
+        DoorSettingSnapshot(
+          code: DeviceCapabilityCode.ledOffDelay,
+          label: '',
+          supported: true,
+          configured: true,
+          currentValue: 30,
+          unit: 's',
+        ),
+      ],
+    );
+
+    expect(find.text('30 s'), findsOneWidget);
+  });
+
+  testWidgets('navigates to transmitter page', (tester) async {
     await _pumpSettingsRouter(tester);
-
-    await tester.tap(find.text('About the device'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Bluetooth name'), findsOneWidget);
-    expect(find.text('Firmware version'), findsOneWidget);
-
-    await tester.tap(find.byType(BackButtonIcon));
-    await tester.pumpAndSettle();
 
     await tester.tap(find.text('Transmitter management'));
     await tester.pumpAndSettle();
-
-    expect(find.text('Setting'), findsOneWidget);
     expect(find.text('Transmitter learning'), findsOneWidget);
-    expect(find.text('Management'), findsOneWidget);
+  });
+
+  testWidgets('aligns all settings row chevrons to the same trailing inset', (
+    tester,
+  ) async {
+    await _pumpSettingsRouter(tester);
+
+    final chevrons = find.byIcon(Icons.chevron_right).evaluate().map((element) {
+      final renderBox = element.renderObject! as RenderBox;
+      final topLeft = renderBox.localToGlobal(Offset.zero);
+      return Rect.fromLTWH(
+        topLeft.dx,
+        topLeft.dy,
+        renderBox.size.width,
+        renderBox.size.height,
+      );
+    }).toList();
+    expect(chevrons, isNotEmpty);
+    expect(chevrons.map((rect) => rect.right).toSet(), hasLength(1));
+    expect(chevrons.first.right, 373);
+  });
+
+  testWidgets('always shows the device information page', (tester) async {
+    await _pumpSettingsRouter(tester, capabilities: const []);
+
+    expect(find.text('About the device'), findsOneWidget);
   });
 
   testWidgets('renders on a compact screen without overflow', (tester) async {
-    tester.view.physicalSize = const Size(320, 640);
+    tester.view.physicalSize = const Size(320, 568);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await _pumpSettingsRouter(tester);
+    await _pumpSettingsRouter(tester, setDefaultSize: false);
 
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('filters settings using the fetched capability codes', (
+    tester,
+  ) async {
+    await _pumpSettingsRouter(
+      tester,
+      capabilities: const [DeviceCapabilityCode.ledOffDelay],
+    );
+
+    expect(find.text('Transmitter management'), findsNothing);
+    expect(find.text('LED off delay'), findsOneWidget);
+    expect(find.text('Partial open'), findsNothing);
+    expect(find.text('Auto close'), findsNothing);
+    expect(find.text('Opening speed'), findsNothing);
+    expect(find.text('Door open reminder'), findsNothing);
+    expect(find.text('Force margin'), findsNothing);
+    expect(find.text('About the device'), findsOneWidget);
   });
 }
 
 Future<void> _pumpSettingsRouter(
   WidgetTester tester, {
-  OpeningSpeedConfig? openingSpeedConfig,
+  bool setDefaultSize = true,
+  bool bleConnected = true,
+  bool matchingBleName = true,
+  List<String> capabilities = const [
+    DeviceCapabilityCode.transmitterPairing,
+    DeviceCapabilityCode.ledOffDelay,
+    DeviceCapabilityCode.partialOpenLevel,
+    DeviceCapabilityCode.autoClose,
+    DeviceCapabilityCode.openingSpeed,
+    DeviceCapabilityCode.doorOpenReminder,
+    DeviceCapabilityCode.forceMargin,
+  ],
+  List<DeviceCapability>? capabilityDefinitions,
+  List<DoorSettingSnapshot> settingSnapshots = const [],
 }) async {
-  tester.view.physicalSize = const Size(393, 852);
-  tester.view.devicePixelRatio = 1;
-  addTearDown(tester.view.resetPhysicalSize);
-  addTearDown(tester.view.resetDevicePixelRatio);
+  if (setDefaultSize) {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+  }
+  final gateway = MockHardwareGateway();
 
   await tester.pumpWidget(
-    MaterialApp.router(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      routerConfig: GoRouter(
-        initialLocation: '${DeviceSettingsPage.routePath}?deviceId=mock-device',
-        routes: [
-          GoRoute(
-            path: DeviceSettingsPage.routePath,
-            builder: (context, state) => DeviceSettingsPage(
-              deviceId: state.uri.queryParameters['deviceId'] ?? '',
-              openingSpeedConfig: openingSpeedConfig ?? OpeningSpeedConfig(allowedValues: [100, 80, 60], current: 80),
-            ),
+    ProviderScope(
+      overrides: [
+        deviceCommandControllerProvider.overrideWith(
+          !bleConnected
+              ? _DisconnectedDeviceCommandController.new
+              : matchingBleName
+              ? _ConnectedDeviceCommandController.new
+              : _OtherDeviceCommandController.new,
+        ),
+        deviceSettingsHardwareGatewayProvider.overrideWithValue(gateway),
+        deviceCapabilityRepositoryProvider.overrideWithValue(
+          _FakeDeviceCapabilityRepository(
+            capabilityDefinitions ??
+                [
+                  for (final code in capabilities)
+                    DeviceCapability(
+                      code: code,
+                      label: _FakeDeviceCapabilityRepository.labelFor(code),
+                    ),
+                ],
           ),
-          GoRoute(
-            path: AboutDevicePage.routePath,
-            builder: (context, state) => AboutDevicePage(
-              deviceId: state.uri.queryParameters['deviceId'] ?? '',
+        ),
+        doorSettingsRepositoryProvider.overrideWithValue(
+          _FakeDoorSettingsRepository(settingSnapshots),
+        ),
+      ],
+      child: MaterialApp.router(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        routerConfig: GoRouter(
+          initialLocation:
+              '${DeviceSettingsPage.routePath}'
+              '?doorId=12&deviceId=mock-device&bleName=mock-device',
+          routes: [
+            GoRoute(
+              path: DeviceSettingsPage.routePath,
+              builder: (context, state) => DeviceSettingsPage(
+                doorId: state.uri.queryParameters['doorId'] ?? '',
+                deviceId: state.uri.queryParameters['deviceId'] ?? '',
+                bleName: state.uri.queryParameters['bleName'] ?? '',
+                bleDeviceId:
+                    state.uri.queryParameters['bleDeviceId'] ?? 'mock-device',
+              ),
             ),
-          ),
-          GoRoute(
-            path: TransmitterManagementPage.routePath,
-            builder: (context, state) => TransmitterManagementPage(
-              deviceId: state.uri.queryParameters['deviceId'] ?? '',
+            GoRoute(
+              path: AboutDevicePage.routePath,
+              builder: (context, state) => AboutDevicePage(
+                deviceId: state.uri.queryParameters['deviceId'] ?? '',
+              ),
             ),
-          ),
-        ],
+            GoRoute(
+              path: TransmitterManagementPage.routePath,
+              builder: (context, state) => TransmitterManagementPage(
+                deviceId: state.uri.queryParameters['deviceId'] ?? '',
+              ),
+            ),
+          ],
+        ),
       ),
     ),
   );
   await tester.pumpAndSettle();
+}
+
+class _ConnectedDeviceCommandController extends DeviceCommandController {
+  @override
+  DeviceCommandState build() {
+    return const DeviceCommandState(
+      bleConnectionStatus: DeviceBleConnectionStatus.connected,
+      bleTargetName: 'mock-device',
+    );
+  }
+}
+
+class _DisconnectedDeviceCommandController extends DeviceCommandController {
+  @override
+  DeviceCommandState build() => const DeviceCommandState();
+}
+
+class _OtherDeviceCommandController extends DeviceCommandController {
+  @override
+  DeviceCommandState build() {
+    return const DeviceCommandState(
+      bleConnectionStatus: DeviceBleConnectionStatus.connected,
+      bleTargetName: 'other-device',
+    );
+  }
+}
+
+class _FakeDoorSettingsRepository implements DoorSettingsRepository {
+  const _FakeDoorSettingsRepository(this.settings);
+
+  final List<DoorSettingSnapshot> settings;
+
+  @override
+  Future<List<DoorSettingSnapshot>> fetchSettings({
+    required String doorId,
+    required String requestId,
+  }) async => settings;
+}
+
+class _FakeDeviceCapabilityRepository implements DeviceCapabilityRepository {
+  const _FakeDeviceCapabilityRepository(this.capabilities);
+
+  final List<DeviceCapability> capabilities;
+
+  static const _labels = {
+    DeviceCapabilityCode.transmitterPairing: 'Transmitter pairing',
+    DeviceCapabilityCode.ledOffDelay: 'LED off delay',
+    DeviceCapabilityCode.partialOpenLevel: 'Partial open',
+    DeviceCapabilityCode.autoClose: 'Auto close',
+    DeviceCapabilityCode.openingSpeed: 'Opening speed',
+    DeviceCapabilityCode.doorOpenReminder: 'Door open reminder',
+    DeviceCapabilityCode.forceMargin: 'Force margin',
+  };
+
+  static String labelFor(String code) => _labels[code] ?? code;
+
+  @override
+  Future<List<DeviceCapability>> fetchCapabilities({
+    required String deviceId,
+    required String requestId,
+  }) async => capabilities;
 }

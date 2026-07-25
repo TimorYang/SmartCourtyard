@@ -281,6 +281,23 @@ class HardwareHostApiImpl(
     }
   }
 
+  override fun queryDeviceAttributes(
+    requestId: String,
+    deviceId: String,
+    callback: (Result<DeviceAttributeSnapshotDto>) -> Unit,
+  ) {
+    callback(Result.failure(notImplemented("queryDeviceAttributes", requestId, deviceId)))
+  }
+
+  override fun setDeviceAttributes(
+    requestId: String,
+    deviceId: String,
+    attributes: List<DeviceAttributeDto>,
+    callback: (Result<DeviceAttributeWriteResultDto>) -> Unit,
+  ) {
+    callback(Result.failure(notImplemented("setDeviceAttributes", requestId, deviceId)))
+  }
+
   override fun pairRemote(
     requestId: String,
     deviceId: String,

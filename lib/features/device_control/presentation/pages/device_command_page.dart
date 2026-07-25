@@ -146,8 +146,9 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     return widget.doorId.trim();
   }
 
-  Set<String> _capabilitiesForCurrentDevice(DeviceCommandState commandState) {
+  DoorDevice? _selectedDoorDevice(DeviceCommandState commandState) {
     final candidates = <String>{
+      commandState.bleDeviceId?.trim() ?? '',
       commandState.bleTargetName?.trim() ?? '',
       commandState.doorDetail?.name.trim() ?? '',
       widget.deviceId.trim(),
@@ -157,13 +158,21 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
       if (candidates.contains(device.bleName?.trim()) ||
           candidates.contains(device.sn.trim()) ||
           candidates.contains(device.deviceId.trim())) {
-        return device.capabilities
-            .map((capability) => capability.trim().toUpperCase())
-            .where((capability) => capability.isNotEmpty)
-            .toSet();
+        return device;
       }
     }
 
+    return null;
+  }
+
+  Set<String> _capabilitiesForCurrentDevice(DeviceCommandState commandState) {
+    final device = _selectedDoorDevice(commandState);
+    if (device != null) {
+      return device.capabilities
+          .map((capability) => capability.trim().toUpperCase())
+          .where((capability) => capability.isNotEmpty)
+          .toSet();
+    }
     // Capabilities must be tied to a known device type. Do not enable an
     // extension when the response cannot be matched to the active device.
     return const <String>{};
@@ -184,10 +193,20 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
         doorDetail?.openReminderEnabled ??
         false;
     final hardwareDeviceId = _hardwareDeviceId(commandState);
+    final selectedDeviceId =
+        _selectedDoorDevice(commandState)?.deviceId.trim() ??
+        widget.deviceId.trim();
+    final selectedBleName =
+        _selectedDoorDevice(commandState)?.bleName?.trim() ?? '';
+    final connectedBleDeviceId =
+        commandState.bleConnectionStatus == DeviceBleConnectionStatus.connected
+        ? commandState.bleDeviceId?.trim() ?? ''
+        : '';
     final capabilities = _capabilitiesForCurrentDevice(commandState);
     final canControlDoor = capabilities.contains('DOOR_CONTROL');
-    final canControlLed = capabilities.contains('LED_OFF_DELAY');
+    final canControlLed = capabilities.contains('LED_CONTROL');
     final canPartialOpen = capabilities.contains('PARTIAL_OPEN');
+    final canUseAutoClose = capabilities.contains('AUTO_CLOSE');
     final canUseOpenReminder = capabilities.contains('DOOR_OPEN_REMINDER');
     final l10n = AppLocalizations.of(context);
     return Scaffold(
@@ -309,6 +328,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                     openReminderEnabled: openReminderEnabled,
                     partialOpenValue: doorDetail?.partialOpenValue,
                     ledAvailable: canControlLed,
+                    autoCloseAvailable: canUseAutoClose,
                     partialOpenAvailable: canPartialOpen,
                     openReminderAvailable: canUseOpenReminder,
                     busy: isBusy,
@@ -333,7 +353,10 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                     ),
                     onMoreSettings: () => context.push(
                       '${DeviceSettingsPage.routePath}'
-                      '?deviceId=${Uri.encodeComponent(hardwareDeviceId)}',
+                      '?doorId=${Uri.encodeComponent(widget.doorId)}'
+                      '&deviceId=${Uri.encodeComponent(selectedDeviceId)}'
+                      '&bleName=${Uri.encodeComponent(selectedBleName)}'
+                      '&bleDeviceId=${Uri.encodeComponent(connectedBleDeviceId)}',
                     ),
                   ),
                   const SizedBox(height: 22),
@@ -878,6 +901,7 @@ class _QuickActionGrid extends StatelessWidget {
     required this.openReminderEnabled,
     required this.partialOpenValue,
     required this.ledAvailable,
+    required this.autoCloseAvailable,
     required this.partialOpenAvailable,
     required this.openReminderAvailable,
     required this.busy,
@@ -893,6 +917,7 @@ class _QuickActionGrid extends StatelessWidget {
   final bool openReminderEnabled;
   final int? partialOpenValue;
   final bool ledAvailable;
+  final bool autoCloseAvailable;
   final bool partialOpenAvailable;
   final bool openReminderAvailable;
   final bool busy;
@@ -929,6 +954,7 @@ class _QuickActionGrid extends StatelessWidget {
                     iconAssetPath: _DeviceCommandAssetPaths.autoClose,
                     title: 'Auto close',
                     enabled: autoCloseEnabled,
+                    available: autoCloseAvailable,
                     busy: busy,
                     textTheme: textTheme,
                     onChanged: onAutoCloseChanged,

@@ -167,6 +167,11 @@ enum BleDiagnosticDirectionDto {
   rx,
 }
 
+enum DeviceAttributeReportOriginDto {
+  activeReport,
+  queryResult,
+}
+
 class PermissionSnapshotDto {
   PermissionSnapshotDto({
     required this.bluetoothStatus,
@@ -1197,6 +1202,176 @@ class CommandResultDto {
   int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
 }
 
+class DeviceAttributeDto {
+  DeviceAttributeDto({
+    required this.id,
+    required this.value,
+  });
+
+  int id;
+
+  Uint8List value;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      id,
+      value,
+    ];
+  }
+
+  Object encode() {
+    return _toList();  }
+
+  static DeviceAttributeDto decode(Object result) {
+    result as List<Object?>;
+    return DeviceAttributeDto(
+      id: result[0]! as int,
+      value: result[1]! as Uint8List,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! DeviceAttributeDto || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(id, other.id) && _deepEquals(value, other.value);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+}
+
+class DeviceAttributeSnapshotDto {
+  DeviceAttributeSnapshotDto({
+    this.requestId,
+    required this.deviceId,
+    required this.sequence,
+    required this.timestampMillis,
+    required this.origin,
+    required this.attributes,
+  });
+
+  String? requestId;
+
+  String deviceId;
+
+  int sequence;
+
+  int timestampMillis;
+
+  DeviceAttributeReportOriginDto origin;
+
+  List<DeviceAttributeDto> attributes;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      requestId,
+      deviceId,
+      sequence,
+      timestampMillis,
+      origin,
+      attributes,
+    ];
+  }
+
+  Object encode() {
+    return _toList();  }
+
+  static DeviceAttributeSnapshotDto decode(Object result) {
+    result as List<Object?>;
+    return DeviceAttributeSnapshotDto(
+      requestId: result[0] as String?,
+      deviceId: result[1]! as String,
+      sequence: result[2]! as int,
+      timestampMillis: result[3]! as int,
+      origin: result[4]! as DeviceAttributeReportOriginDto,
+      attributes: (result[5]! as List<Object?>).cast<DeviceAttributeDto>(),
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! DeviceAttributeSnapshotDto || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(requestId, other.requestId) && _deepEquals(deviceId, other.deviceId) && _deepEquals(sequence, other.sequence) && _deepEquals(timestampMillis, other.timestampMillis) && _deepEquals(origin, other.origin) && _deepEquals(attributes, other.attributes);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+}
+
+class DeviceAttributeWriteResultDto {
+  DeviceAttributeWriteResultDto({
+    required this.requestId,
+    required this.deviceId,
+    required this.success,
+    required this.sequence,
+    this.reasonCode,
+  });
+
+  String requestId;
+
+  String deviceId;
+
+  bool success;
+
+  int sequence;
+
+  int? reasonCode;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      requestId,
+      deviceId,
+      success,
+      sequence,
+      reasonCode,
+    ];
+  }
+
+  Object encode() {
+    return _toList();  }
+
+  static DeviceAttributeWriteResultDto decode(Object result) {
+    result as List<Object?>;
+    return DeviceAttributeWriteResultDto(
+      requestId: result[0]! as String,
+      deviceId: result[1]! as String,
+      success: result[2]! as bool,
+      sequence: result[3]! as int,
+      reasonCode: result[4] as int?,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! DeviceAttributeWriteResultDto || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(requestId, other.requestId) && _deepEquals(deviceId, other.deviceId) && _deepEquals(success, other.success) && _deepEquals(sequence, other.sequence) && _deepEquals(reasonCode, other.reasonCode);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+}
+
 class RemotePairingResultDto {
   RemotePairingResultDto({
     required this.requestId,
@@ -1477,65 +1652,77 @@ class _PigeonCodec extends StandardMessageCodec {
     }    else if (value is BleDiagnosticDirectionDto) {
       buffer.putUint8(137);
       writeValue(buffer, value.index);
-    }    else if (value is PermissionSnapshotDto) {
+    }    else if (value is DeviceAttributeReportOriginDto) {
       buffer.putUint8(138);
-      writeValue(buffer, value.encode());
-    }    else if (value is BleScanFilterDto) {
+      writeValue(buffer, value.index);
+    }    else if (value is PermissionSnapshotDto) {
       buffer.putUint8(139);
       writeValue(buffer, value.encode());
-    }    else if (value is BleDeviceDto) {
+    }    else if (value is BleScanFilterDto) {
       buffer.putUint8(140);
       writeValue(buffer, value.encode());
-    }    else if (value is BleConnectionEventDto) {
+    }    else if (value is BleDeviceDto) {
       buffer.putUint8(141);
       writeValue(buffer, value.encode());
-    }    else if (value is BleAuthenticationResultDto) {
+    }    else if (value is BleConnectionEventDto) {
       buffer.putUint8(142);
       writeValue(buffer, value.encode());
-    }    else if (value is WifiScanResultDto) {
+    }    else if (value is BleAuthenticationResultDto) {
       buffer.putUint8(143);
       writeValue(buffer, value.encode());
-    }    else if (value is WifiProvisionResultDto) {
+    }    else if (value is WifiScanResultDto) {
       buffer.putUint8(144);
       writeValue(buffer, value.encode());
-    }    else if (value is BleCharacteristicDto) {
+    }    else if (value is WifiProvisionResultDto) {
       buffer.putUint8(145);
       writeValue(buffer, value.encode());
-    }    else if (value is BleServiceDto) {
+    }    else if (value is BleCharacteristicDto) {
       buffer.putUint8(146);
       writeValue(buffer, value.encode());
-    }    else if (value is BleServicesDto) {
+    }    else if (value is BleServiceDto) {
       buffer.putUint8(147);
       writeValue(buffer, value.encode());
-    }    else if (value is BleReadResultDto) {
+    }    else if (value is BleServicesDto) {
       buffer.putUint8(148);
       writeValue(buffer, value.encode());
-    }    else if (value is BleWriteResultDto) {
+    }    else if (value is BleReadResultDto) {
       buffer.putUint8(149);
       writeValue(buffer, value.encode());
-    }    else if (value is BleNotificationDto) {
+    }    else if (value is BleWriteResultDto) {
       buffer.putUint8(150);
       writeValue(buffer, value.encode());
-    }    else if (value is NativeErrorDto) {
+    }    else if (value is BleNotificationDto) {
       buffer.putUint8(151);
       writeValue(buffer, value.encode());
-    }    else if (value is BleDiagnosticEventDto) {
+    }    else if (value is NativeErrorDto) {
       buffer.putUint8(152);
       writeValue(buffer, value.encode());
-    }    else if (value is CommandResultDto) {
+    }    else if (value is BleDiagnosticEventDto) {
       buffer.putUint8(153);
       writeValue(buffer, value.encode());
-    }    else if (value is RemotePairingResultDto) {
+    }    else if (value is CommandResultDto) {
       buffer.putUint8(154);
       writeValue(buffer, value.encode());
-    }    else if (value is RemoteControlDto) {
+    }    else if (value is DeviceAttributeDto) {
       buffer.putUint8(155);
       writeValue(buffer, value.encode());
-    }    else if (value is RemoteControlListResultDto) {
+    }    else if (value is DeviceAttributeSnapshotDto) {
       buffer.putUint8(156);
       writeValue(buffer, value.encode());
-    }    else if (value is RemoteOperationResultDto) {
+    }    else if (value is DeviceAttributeWriteResultDto) {
       buffer.putUint8(157);
+      writeValue(buffer, value.encode());
+    }    else if (value is RemotePairingResultDto) {
+      buffer.putUint8(158);
+      writeValue(buffer, value.encode());
+    }    else if (value is RemoteControlDto) {
+      buffer.putUint8(159);
+      writeValue(buffer, value.encode());
+    }    else if (value is RemoteControlListResultDto) {
+      buffer.putUint8(160);
+      writeValue(buffer, value.encode());
+    }    else if (value is RemoteOperationResultDto) {
+      buffer.putUint8(161);
       writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
@@ -1573,44 +1760,53 @@ class _PigeonCodec extends StandardMessageCodec {
         final value = readValue(buffer) as int?;
         return value == null ? null : BleDiagnosticDirectionDto.values[value];
       case 138:
-        return PermissionSnapshotDto.decode(readValue(buffer)!);
+        final value = readValue(buffer) as int?;
+        return value == null ? null : DeviceAttributeReportOriginDto.values[value];
       case 139:
-        return BleScanFilterDto.decode(readValue(buffer)!);
+        return PermissionSnapshotDto.decode(readValue(buffer)!);
       case 140:
-        return BleDeviceDto.decode(readValue(buffer)!);
+        return BleScanFilterDto.decode(readValue(buffer)!);
       case 141:
-        return BleConnectionEventDto.decode(readValue(buffer)!);
+        return BleDeviceDto.decode(readValue(buffer)!);
       case 142:
-        return BleAuthenticationResultDto.decode(readValue(buffer)!);
+        return BleConnectionEventDto.decode(readValue(buffer)!);
       case 143:
-        return WifiScanResultDto.decode(readValue(buffer)!);
+        return BleAuthenticationResultDto.decode(readValue(buffer)!);
       case 144:
-        return WifiProvisionResultDto.decode(readValue(buffer)!);
+        return WifiScanResultDto.decode(readValue(buffer)!);
       case 145:
-        return BleCharacteristicDto.decode(readValue(buffer)!);
+        return WifiProvisionResultDto.decode(readValue(buffer)!);
       case 146:
-        return BleServiceDto.decode(readValue(buffer)!);
+        return BleCharacteristicDto.decode(readValue(buffer)!);
       case 147:
-        return BleServicesDto.decode(readValue(buffer)!);
+        return BleServiceDto.decode(readValue(buffer)!);
       case 148:
-        return BleReadResultDto.decode(readValue(buffer)!);
+        return BleServicesDto.decode(readValue(buffer)!);
       case 149:
-        return BleWriteResultDto.decode(readValue(buffer)!);
+        return BleReadResultDto.decode(readValue(buffer)!);
       case 150:
-        return BleNotificationDto.decode(readValue(buffer)!);
+        return BleWriteResultDto.decode(readValue(buffer)!);
       case 151:
-        return NativeErrorDto.decode(readValue(buffer)!);
+        return BleNotificationDto.decode(readValue(buffer)!);
       case 152:
-        return BleDiagnosticEventDto.decode(readValue(buffer)!);
+        return NativeErrorDto.decode(readValue(buffer)!);
       case 153:
-        return CommandResultDto.decode(readValue(buffer)!);
+        return BleDiagnosticEventDto.decode(readValue(buffer)!);
       case 154:
-        return RemotePairingResultDto.decode(readValue(buffer)!);
+        return CommandResultDto.decode(readValue(buffer)!);
       case 155:
-        return RemoteControlDto.decode(readValue(buffer)!);
+        return DeviceAttributeDto.decode(readValue(buffer)!);
       case 156:
-        return RemoteControlListResultDto.decode(readValue(buffer)!);
+        return DeviceAttributeSnapshotDto.decode(readValue(buffer)!);
       case 157:
+        return DeviceAttributeWriteResultDto.decode(readValue(buffer)!);
+      case 158:
+        return RemotePairingResultDto.decode(readValue(buffer)!);
+      case 159:
+        return RemoteControlDto.decode(readValue(buffer)!);
+      case 160:
+        return RemoteControlListResultDto.decode(readValue(buffer)!);
+      case 161:
         return RemoteOperationResultDto.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
@@ -1931,6 +2127,44 @@ class HardwareHostApi {
     return pigeonVar_replyValue! as CommandResultDto;
   }
 
+  Future<DeviceAttributeSnapshotDto> queryDeviceAttributes(String requestId, String deviceId) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.queryDeviceAttributes$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[requestId, deviceId]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
+    return pigeonVar_replyValue! as DeviceAttributeSnapshotDto;
+  }
+
+  Future<DeviceAttributeWriteResultDto> setDeviceAttributes(String requestId, String deviceId, List<DeviceAttributeDto> attributes) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.setDeviceAttributes$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[requestId, deviceId, attributes]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
+    return pigeonVar_replyValue! as DeviceAttributeWriteResultDto;
+  }
+
   Future<RemotePairingResultDto> pairRemote(String requestId, String deviceId, RemotePairingActionDto action) async {
     final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.pairRemote$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -2020,6 +2254,8 @@ abstract class HardwareFlutterApi {
   void onNativeError(NativeErrorDto error);
 
   void onBleDiagnosticEvent(BleDiagnosticEventDto event);
+
+  void onDeviceAttributesChanged(DeviceAttributeSnapshotDto snapshot);
 
   static void setUp(HardwareFlutterApi? api, {BinaryMessenger? binaryMessenger, String messageChannelSuffix = '',}) {
     messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
@@ -2119,6 +2355,27 @@ abstract class HardwareFlutterApi {
           final BleDiagnosticEventDto arg_event = args[0]! as BleDiagnosticEventDto;
           try {
             api.onBleDiagnosticEvent(arg_event);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
+          }
+        });
+      }
+    }
+    {
+      final pigeonVar_channel = BasicMessageChannel<Object?>(
+          'dev.flutter.pigeon.flinx.HardwareFlutterApi.onDeviceAttributesChanged$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          final List<Object?> args = message! as List<Object?>;
+          final DeviceAttributeSnapshotDto arg_snapshot = args[0]! as DeviceAttributeSnapshotDto;
+          try {
+            api.onDeviceAttributesChanged(arg_snapshot);
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);

@@ -25,13 +25,15 @@ class AddDeviceAssetPaths {
 }
 
 class AddDevicePage extends ConsumerStatefulWidget {
-  const AddDevicePage({super.key, required this.doorType});
+  const AddDevicePage({super.key, required this.doorType, this.doorId});
 
   static const routeName = 'add-device';
   static const routePath = '/add-device';
   static const doorTypeQueryParameter = 'doorType';
+  static const doorIdQueryParameter = 'doorId';
 
   final DoorType doorType;
+  final String? doorId;
 
   @override
   ConsumerState<AddDevicePage> createState() => _AddDevicePageState();
@@ -43,7 +45,9 @@ class _AddDevicePageState extends ConsumerState<AddDevicePage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      ref.read(addDeviceControllerProvider.notifier).beginOnboardingFlow();
+      ref
+          .read(addDeviceControllerProvider.notifier)
+          .beginOnboardingFlow(doorId: widget.doorId);
     });
   }
 

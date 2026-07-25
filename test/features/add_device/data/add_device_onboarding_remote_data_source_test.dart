@@ -128,23 +128,36 @@ void main() {
   });
 
   test('addForceDoor accepts code 200 and returns door data', () async {
-    final dataSource = AddDeviceOnboardingRemoteDataSourceImpl(
-      api: _FakeAddDeviceOnboardingApi(
-        addDoorResponse: const ApiEnvelopeDto(
-          code: 200,
-          success: true,
-          data: ForceDoorResponseDto(id: 7, name: 'Garage door'),
-        ),
+    final api = _FakeAddDeviceOnboardingApi(
+      addDoorResponse: const ApiEnvelopeDto(
+        code: 200,
+        success: true,
+        data: ForceDoorResponseDto(id: 7, name: 'Garage door'),
       ),
     );
+    final dataSource = AddDeviceOnboardingRemoteDataSourceImpl(api: api);
 
     final result = await dataSource.addForceDoor(
       sn: 'SN-001',
+      doorId: '7',
       requestId: 'request-2',
     );
 
     expect(result.id, 7);
     expect(result.name, 'Garage door');
+    expect(api.lastAddForceDoorRequest?.toJson(), {
+      'sn': 'SN-001',
+      'doorId': '7',
+    });
+  });
+
+  test('addForceDoor omits doorId when it is not provided', () async {
+    final api = _FakeAddDeviceOnboardingApi();
+    final dataSource = AddDeviceOnboardingRemoteDataSourceImpl(api: api);
+
+    await dataSource.addForceDoor(sn: 'SN-001', requestId: 'request-2');
+
+    expect(api.lastAddForceDoorRequest?.toJson(), {'sn': 'SN-001'});
   });
 
   test(
@@ -162,6 +175,7 @@ void main() {
 
       final result = await dataSource.addForceDoor(
         sn: 'SN-001',
+        doorId: '7',
         requestId: 'request-2',
       );
 
@@ -213,7 +227,11 @@ void main() {
     );
 
     expect(
-      () => dataSource.addForceDoor(sn: 'SN-001', requestId: 'request-2'),
+      () => dataSource.addForceDoor(
+        sn: 'SN-001',
+        doorId: '7',
+        requestId: 'request-2',
+      ),
       throwsA(isA<AddDeviceOnboardingRemoteException>()),
     );
   });
@@ -231,7 +249,11 @@ void main() {
     );
 
     expect(
-      () => dataSource.addForceDoor(sn: 'SN-001', requestId: 'request-2'),
+      () => dataSource.addForceDoor(
+        sn: 'SN-001',
+        doorId: '7',
+        requestId: 'request-2',
+      ),
       throwsA(
         isA<AddDeviceOnboardingRemoteException>()
             .having((error) => error.serverCode, 'serverCode', 100408)
@@ -246,7 +268,7 @@ void main() {
 }
 
 class _FakeAddDeviceOnboardingApi implements AddDeviceOnboardingApi {
-  const _FakeAddDeviceOnboardingApi({
+  _FakeAddDeviceOnboardingApi({
     this.bindingStatusResponse,
     this.deviceKeyResponse,
     this.addDoorResponse,
@@ -255,6 +277,7 @@ class _FakeAddDeviceOnboardingApi implements AddDeviceOnboardingApi {
   final ApiEnvelopeDto<OnboardingDeviceKeyResponseDto>? deviceKeyResponse;
   final ApiEnvelopeDto<ForceDoorResponseDto>? addDoorResponse;
   final ApiEnvelopeDto<BindingStatusResponseDto>? bindingStatusResponse;
+  AddForceDoorRequestDto? lastAddForceDoorRequest;
 
   @override
   Future<ApiEnvelopeDto<BindingStatusResponseDto>> validateBindingStatus(
@@ -296,6 +319,7 @@ class _FakeAddDeviceOnboardingApi implements AddDeviceOnboardingApi {
     AddForceDoorRequestDto request,
     Options options,
   ) async {
+    lastAddForceDoorRequest = request;
     return addDoorResponse ??
         const ApiEnvelopeDto(
           code: 200,

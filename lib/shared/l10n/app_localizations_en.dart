@@ -1407,6 +1407,50 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deviceSettingsAutoClose => 'Auto close';
 
   @override
+  String get deviceSettingsAutoCloseCondition => 'Auto close condition';
+
+  @override
+  String get deviceSettingsLoading => 'Reading device attributes…';
+
+  @override
+  String get deviceSettingsLoadFailed => 'Unable to read device attributes.';
+
+  @override
+  String get deviceSettingsRetry => 'Retry';
+
+  @override
+  String get deviceSettingsWriting => 'Writing…';
+
+  @override
+  String get deviceSettingsRawUnavailable => 'Not reported';
+
+  @override
+  String get deviceSettingsRawValueHelp =>
+      'Enter the raw device value in decimal or hexadecimal (for example, 30 or 0x1E).';
+
+  @override
+  String get deviceSettingsRawValueLabel => 'Raw value';
+
+  @override
+  String deviceSettingsRawValueInvalid(int maximum) {
+    return 'Enter a value from 0 to $maximum.';
+  }
+
+  @override
+  String get deviceSettingsRawValueProtocolInvalid =>
+      'Enter a value supported by the device.';
+
+  @override
+  String get deviceSettingsBluetoothConnectionRequired =>
+      'Connect this device by Bluetooth before changing settings.';
+
+  @override
+  String get deviceSettingsRawCancel => 'Cancel';
+
+  @override
+  String get deviceSettingsRawSave => 'Save';
+
+  @override
   String get deviceSettingsOpeningSpeed => 'Opening speed';
 
   @override
