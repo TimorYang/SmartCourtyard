@@ -186,8 +186,9 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     final hardwareDeviceId = _hardwareDeviceId(commandState);
     final capabilities = _capabilitiesForCurrentDevice(commandState);
     final canControlDoor = capabilities.contains('DOOR_CONTROL');
-    final canControlLed = capabilities.contains('LED_OFF_DELAY');
+    final canControlLed = capabilities.contains('LED_CONTROL');
     final canPartialOpen = capabilities.contains('PARTIAL_OPEN');
+    final canUseAutoClose = capabilities.contains('AUTO_CLOSE');
     final canUseOpenReminder = capabilities.contains('DOOR_OPEN_REMINDER');
     final l10n = AppLocalizations.of(context);
     return Scaffold(
@@ -309,6 +310,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                     openReminderEnabled: openReminderEnabled,
                     partialOpenValue: doorDetail?.partialOpenValue,
                     ledAvailable: canControlLed,
+                    autoCloseAvailable: canUseAutoClose,
                     partialOpenAvailable: canPartialOpen,
                     openReminderAvailable: canUseOpenReminder,
                     busy: isBusy,
@@ -878,6 +880,7 @@ class _QuickActionGrid extends StatelessWidget {
     required this.openReminderEnabled,
     required this.partialOpenValue,
     required this.ledAvailable,
+    required this.autoCloseAvailable,
     required this.partialOpenAvailable,
     required this.openReminderAvailable,
     required this.busy,
@@ -893,6 +896,7 @@ class _QuickActionGrid extends StatelessWidget {
   final bool openReminderEnabled;
   final int? partialOpenValue;
   final bool ledAvailable;
+  final bool autoCloseAvailable;
   final bool partialOpenAvailable;
   final bool openReminderAvailable;
   final bool busy;
@@ -929,6 +933,7 @@ class _QuickActionGrid extends StatelessWidget {
                     iconAssetPath: _DeviceCommandAssetPaths.autoClose,
                     title: 'Auto close',
                     enabled: autoCloseEnabled,
+                    available: autoCloseAvailable,
                     busy: busy,
                     textTheme: textTheme,
                     onChanged: onAutoCloseChanged,

@@ -156,6 +156,14 @@ void main() {
     expect(
       tester
           .widget<FlinxSwitch>(
+            find.byKey(const ValueKey<String>('auto-close-switch')),
+          )
+          .enabled,
+      isFalse,
+    );
+    expect(
+      tester
+          .widget<FlinxSwitch>(
             find.byKey(const ValueKey<String>('open-reminder-switch')),
           )
           .enabled,
@@ -532,7 +540,8 @@ class _FakeDoorDetailRepository implements DoorDetailRepository {
     this.capabilities = const [
       'DOOR_CONTROL',
       'PARTIAL_OPEN',
-      'LED_OFF_DELAY',
+      'LED_CONTROL',
+      'AUTO_CLOSE',
       'DOOR_OPEN_REMINDER',
     ],
   });
