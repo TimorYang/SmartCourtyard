@@ -166,9 +166,11 @@ class _AccountProfileContent extends StatelessWidget {
         label: l10n.accountLanguage,
         trailingText: _languageLabel(l10n, localePreference),
         iconAssetPath: AccountProfileAssetPaths.menuLanguage,
-        onTap: () => showDialog<void>(
+        onTap: () => showModalBottomSheet<void>(
           context: context,
+          isScrollControlled: true,
           barrierColor: AppColors.accountLanguageDialogScrim,
+          backgroundColor: Colors.transparent,
           builder: (context) => _LanguageDialog(initialLocale: localePreference, onConfirm: onLocaleConfirmed),
         ),
         key: AccountProfileKeys.languageMenuItem,
@@ -264,16 +266,20 @@ class _LanguageDialogState extends State<_LanguageDialog> {
       _LanguageOptionData(label: l10n.accountLanguageOptionSimplifiedChinese, locale: AppLocalePreference.simplifiedChinese),
     ];
 
-    return Dialog(
-      key: AccountProfileKeys.languageDialog,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 23),
-      backgroundColor: AppColors.accountLanguageDialogSurface,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(AppShapeTokens.accountLanguageDialogRadius))),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 522),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 22, 20, 36),
-          child: Column(
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 0),
+        child: Material(
+          key: AccountProfileKeys.languageDialog,
+          color: AppColors.accountLanguageDialogSurface,
+          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(AppShapeTokens.accountLanguageDialogRadius))),
+          clipBehavior: Clip.antiAlias,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 522),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 22, 20, 36),
+              child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(l10n.accountLanguageDialogTitle, style: AppTextTokens.accountLanguageDialogTitle(textTheme)),
@@ -307,6 +313,8 @@ class _LanguageDialogState extends State<_LanguageDialog> {
                 ],
               ),
             ],
+              ),
+            ),
           ),
         ),
       ),

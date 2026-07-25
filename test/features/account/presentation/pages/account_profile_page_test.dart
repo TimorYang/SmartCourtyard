@@ -196,7 +196,8 @@ void main() {
       await tester.tap(find.byKey(AccountProfileKeys.languageMenuItem));
       await tester.pumpAndSettle();
 
-      expect(find.byKey(AccountProfileKeys.languageDialog), findsOneWidget);
+    expect(find.byKey(AccountProfileKeys.languageDialog), findsOneWidget);
+    expect(find.byType(BottomSheet), findsOneWidget);
       expect(find.byKey(AccountProfileKeys.languagePicker), findsOneWidget);
       expect(find.text('France'), findsNothing);
       expect(find.text('中文(简体)'), findsOneWidget);
@@ -215,7 +216,7 @@ void main() {
         of: dialog,
         matching: find.text('English'),
       );
-      expect(tester.widget<Text>(english).style?.fontSize, 28);
+      final selectedOptionStyle = tester.widget<Text>(english).style;
 
       await tester.drag(
         find.byKey(AccountProfileKeys.languagePicker),
@@ -226,7 +227,18 @@ void main() {
         of: dialog,
         matching: find.text('中文(简体)'),
       );
-      expect(tester.widget<Text>(simplifiedChinese).style?.fontSize, 28);
+      expect(
+        tester.widget<Text>(simplifiedChinese).style?.color,
+        selectedOptionStyle?.color,
+      );
+      expect(
+        tester.widget<Text>(simplifiedChinese).style?.fontSize,
+        selectedOptionStyle?.fontSize,
+      );
+      expect(
+        tester.widget<Text>(simplifiedChinese).style?.fontWeight,
+        selectedOptionStyle?.fontWeight,
+      );
 
       await tester.tap(find.byKey(AccountProfileKeys.languageConfirmButton));
       await tester.pumpAndSettle();
@@ -243,8 +255,16 @@ void main() {
         matching: find.text('中文(简体)'),
       );
       expect(
+        tester.widget<Text>(reopenedSimplifiedChinese).style?.color,
+        selectedOptionStyle?.color,
+      );
+      expect(
         tester.widget<Text>(reopenedSimplifiedChinese).style?.fontSize,
-        28,
+        selectedOptionStyle?.fontSize,
+      );
+      expect(
+        tester.widget<Text>(reopenedSimplifiedChinese).style?.fontWeight,
+        selectedOptionStyle?.fontWeight,
       );
       await tester.drag(
         find.byKey(AccountProfileKeys.languagePicker),

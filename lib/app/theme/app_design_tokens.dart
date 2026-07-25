@@ -642,7 +642,7 @@ class AppTextTokens {
   static TextStyle homeGreeting(TextTheme textTheme) {
     return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
       color: Colors.black,
-      fontSize: 28,
+      fontSize: 26,
       fontWeight: FontWeight.w600,
       height: 1.05,
     );
@@ -651,7 +651,7 @@ class AppTextTokens {
   static TextStyle homeWelcome(TextTheme textTheme) {
     return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
       color: AppColors.textSecondary,
-      fontSize: 15,
+      fontSize: 13,
       fontWeight: FontWeight.w400,
     );
   }

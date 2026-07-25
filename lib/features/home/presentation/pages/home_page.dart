@@ -383,7 +383,7 @@ class _HomeHeader extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
+      padding: const EdgeInsets.fromLTRB(18, 14, 18, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
