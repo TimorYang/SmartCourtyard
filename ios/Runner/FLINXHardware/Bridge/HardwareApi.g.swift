@@ -229,6 +229,11 @@ enum BleDiagnosticDirectionDto: Int {
   case rx = 1
 }
 
+enum DeviceAttributeReportOriginDto: Int {
+  case activeReport = 0
+  case queryResult = 1
+}
+
 /// Generated class from Pigeon that represents data sent in messages.
 struct PermissionSnapshotDto: Hashable {
   var bluetoothGranted: Bool
@@ -1101,6 +1106,149 @@ struct CommandResultDto: Hashable {
 }
 
 /// Generated class from Pigeon that represents data sent in messages.
+struct DeviceAttributeDto: Hashable {
+  var id: Int64
+  var value: FlutterStandardTypedData
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> DeviceAttributeDto? {
+    let id = pigeonVar_list[0] as! Int64
+    let value = pigeonVar_list[1] as! FlutterStandardTypedData
+
+    return DeviceAttributeDto(
+      id: id,
+      value: value
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      id,
+      value,
+    ]
+  }
+  static func == (lhs: DeviceAttributeDto, rhs: DeviceAttributeDto) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return deepEqualsHardwareApi(lhs.id, rhs.id) && deepEqualsHardwareApi(lhs.value, rhs.value)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("DeviceAttributeDto")
+    deepHashHardwareApi(value: id, hasher: &hasher)
+    deepHashHardwareApi(value: value, hasher: &hasher)
+  }
+}
+
+/// Generated class from Pigeon that represents data sent in messages.
+struct DeviceAttributeSnapshotDto: Hashable {
+  var requestId: String? = nil
+  var deviceId: String
+  var sequence: Int64
+  var timestampMillis: Int64
+  var origin: DeviceAttributeReportOriginDto
+  var attributes: [DeviceAttributeDto]
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> DeviceAttributeSnapshotDto? {
+    let requestId: String? = nilOrValue(pigeonVar_list[0])
+    let deviceId = pigeonVar_list[1] as! String
+    let sequence = pigeonVar_list[2] as! Int64
+    let timestampMillis = pigeonVar_list[3] as! Int64
+    let origin = pigeonVar_list[4] as! DeviceAttributeReportOriginDto
+    let attributes = pigeonVar_list[5] as! [DeviceAttributeDto]
+
+    return DeviceAttributeSnapshotDto(
+      requestId: requestId,
+      deviceId: deviceId,
+      sequence: sequence,
+      timestampMillis: timestampMillis,
+      origin: origin,
+      attributes: attributes
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      requestId,
+      deviceId,
+      sequence,
+      timestampMillis,
+      origin,
+      attributes,
+    ]
+  }
+  static func == (lhs: DeviceAttributeSnapshotDto, rhs: DeviceAttributeSnapshotDto) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return deepEqualsHardwareApi(lhs.requestId, rhs.requestId) && deepEqualsHardwareApi(lhs.deviceId, rhs.deviceId) && deepEqualsHardwareApi(lhs.sequence, rhs.sequence) && deepEqualsHardwareApi(lhs.timestampMillis, rhs.timestampMillis) && deepEqualsHardwareApi(lhs.origin, rhs.origin) && deepEqualsHardwareApi(lhs.attributes, rhs.attributes)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("DeviceAttributeSnapshotDto")
+    deepHashHardwareApi(value: requestId, hasher: &hasher)
+    deepHashHardwareApi(value: deviceId, hasher: &hasher)
+    deepHashHardwareApi(value: sequence, hasher: &hasher)
+    deepHashHardwareApi(value: timestampMillis, hasher: &hasher)
+    deepHashHardwareApi(value: origin, hasher: &hasher)
+    deepHashHardwareApi(value: attributes, hasher: &hasher)
+  }
+}
+
+/// Generated class from Pigeon that represents data sent in messages.
+struct DeviceAttributeWriteResultDto: Hashable {
+  var requestId: String
+  var deviceId: String
+  var success: Bool
+  var sequence: Int64
+  var reasonCode: Int64? = nil
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> DeviceAttributeWriteResultDto? {
+    let requestId = pigeonVar_list[0] as! String
+    let deviceId = pigeonVar_list[1] as! String
+    let success = pigeonVar_list[2] as! Bool
+    let sequence = pigeonVar_list[3] as! Int64
+    let reasonCode: Int64? = nilOrValue(pigeonVar_list[4])
+
+    return DeviceAttributeWriteResultDto(
+      requestId: requestId,
+      deviceId: deviceId,
+      success: success,
+      sequence: sequence,
+      reasonCode: reasonCode
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      requestId,
+      deviceId,
+      success,
+      sequence,
+      reasonCode,
+    ]
+  }
+  static func == (lhs: DeviceAttributeWriteResultDto, rhs: DeviceAttributeWriteResultDto) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return deepEqualsHardwareApi(lhs.requestId, rhs.requestId) && deepEqualsHardwareApi(lhs.deviceId, rhs.deviceId) && deepEqualsHardwareApi(lhs.success, rhs.success) && deepEqualsHardwareApi(lhs.sequence, rhs.sequence) && deepEqualsHardwareApi(lhs.reasonCode, rhs.reasonCode)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("DeviceAttributeWriteResultDto")
+    deepHashHardwareApi(value: requestId, hasher: &hasher)
+    deepHashHardwareApi(value: deviceId, hasher: &hasher)
+    deepHashHardwareApi(value: success, hasher: &hasher)
+    deepHashHardwareApi(value: sequence, hasher: &hasher)
+    deepHashHardwareApi(value: reasonCode, hasher: &hasher)
+  }
+}
+
+/// Generated class from Pigeon that represents data sent in messages.
 struct RemotePairingResultDto: Hashable {
   var requestId: String
   var deviceId: String
@@ -1361,44 +1509,56 @@ private class HardwareApiPigeonCodecReader: FlutterStandardReader {
       }
       return nil
     case 137:
-      return PermissionSnapshotDto.fromList(self.readValue() as! [Any?])
+      let enumResultAsInt: Int? = nilOrValue(self.readValue() as! Int?)
+      if let enumResultAsInt = enumResultAsInt {
+        return DeviceAttributeReportOriginDto(rawValue: enumResultAsInt)
+      }
+      return nil
     case 138:
-      return BleScanFilterDto.fromList(self.readValue() as! [Any?])
+      return PermissionSnapshotDto.fromList(self.readValue() as! [Any?])
     case 139:
-      return BleDeviceDto.fromList(self.readValue() as! [Any?])
+      return BleScanFilterDto.fromList(self.readValue() as! [Any?])
     case 140:
-      return BleConnectionEventDto.fromList(self.readValue() as! [Any?])
+      return BleDeviceDto.fromList(self.readValue() as! [Any?])
     case 141:
-      return BleAuthenticationResultDto.fromList(self.readValue() as! [Any?])
+      return BleConnectionEventDto.fromList(self.readValue() as! [Any?])
     case 142:
-      return WifiScanResultDto.fromList(self.readValue() as! [Any?])
+      return BleAuthenticationResultDto.fromList(self.readValue() as! [Any?])
     case 143:
-      return WifiProvisionResultDto.fromList(self.readValue() as! [Any?])
+      return WifiScanResultDto.fromList(self.readValue() as! [Any?])
     case 144:
-      return BleCharacteristicDto.fromList(self.readValue() as! [Any?])
+      return WifiProvisionResultDto.fromList(self.readValue() as! [Any?])
     case 145:
-      return BleServiceDto.fromList(self.readValue() as! [Any?])
+      return BleCharacteristicDto.fromList(self.readValue() as! [Any?])
     case 146:
-      return BleServicesDto.fromList(self.readValue() as! [Any?])
+      return BleServiceDto.fromList(self.readValue() as! [Any?])
     case 147:
-      return BleReadResultDto.fromList(self.readValue() as! [Any?])
+      return BleServicesDto.fromList(self.readValue() as! [Any?])
     case 148:
-      return BleWriteResultDto.fromList(self.readValue() as! [Any?])
+      return BleReadResultDto.fromList(self.readValue() as! [Any?])
     case 149:
-      return BleNotificationDto.fromList(self.readValue() as! [Any?])
+      return BleWriteResultDto.fromList(self.readValue() as! [Any?])
     case 150:
-      return NativeErrorDto.fromList(self.readValue() as! [Any?])
+      return BleNotificationDto.fromList(self.readValue() as! [Any?])
     case 151:
-      return BleDiagnosticEventDto.fromList(self.readValue() as! [Any?])
+      return NativeErrorDto.fromList(self.readValue() as! [Any?])
     case 152:
-      return CommandResultDto.fromList(self.readValue() as! [Any?])
+      return BleDiagnosticEventDto.fromList(self.readValue() as! [Any?])
     case 153:
-      return RemotePairingResultDto.fromList(self.readValue() as! [Any?])
+      return CommandResultDto.fromList(self.readValue() as! [Any?])
     case 154:
-      return RemoteControlDto.fromList(self.readValue() as! [Any?])
+      return DeviceAttributeDto.fromList(self.readValue() as! [Any?])
     case 155:
-      return RemoteControlListResultDto.fromList(self.readValue() as! [Any?])
+      return DeviceAttributeSnapshotDto.fromList(self.readValue() as! [Any?])
     case 156:
+      return DeviceAttributeWriteResultDto.fromList(self.readValue() as! [Any?])
+    case 157:
+      return RemotePairingResultDto.fromList(self.readValue() as! [Any?])
+    case 158:
+      return RemoteControlDto.fromList(self.readValue() as! [Any?])
+    case 159:
+      return RemoteControlListResultDto.fromList(self.readValue() as! [Any?])
+    case 160:
       return RemoteOperationResultDto.fromList(self.readValue() as! [Any?])
     default:
       return super.readValue(ofType: type)
@@ -1432,65 +1592,77 @@ private class HardwareApiPigeonCodecWriter: FlutterStandardWriter {
     } else if let value = value as? BleDiagnosticDirectionDto {
       super.writeByte(136)
       super.writeValue(value.rawValue)
-    } else if let value = value as? PermissionSnapshotDto {
+    } else if let value = value as? DeviceAttributeReportOriginDto {
       super.writeByte(137)
-      super.writeValue(value.toList())
-    } else if let value = value as? BleScanFilterDto {
+      super.writeValue(value.rawValue)
+    } else if let value = value as? PermissionSnapshotDto {
       super.writeByte(138)
       super.writeValue(value.toList())
-    } else if let value = value as? BleDeviceDto {
+    } else if let value = value as? BleScanFilterDto {
       super.writeByte(139)
       super.writeValue(value.toList())
-    } else if let value = value as? BleConnectionEventDto {
+    } else if let value = value as? BleDeviceDto {
       super.writeByte(140)
       super.writeValue(value.toList())
-    } else if let value = value as? BleAuthenticationResultDto {
+    } else if let value = value as? BleConnectionEventDto {
       super.writeByte(141)
       super.writeValue(value.toList())
-    } else if let value = value as? WifiScanResultDto {
+    } else if let value = value as? BleAuthenticationResultDto {
       super.writeByte(142)
       super.writeValue(value.toList())
-    } else if let value = value as? WifiProvisionResultDto {
+    } else if let value = value as? WifiScanResultDto {
       super.writeByte(143)
       super.writeValue(value.toList())
-    } else if let value = value as? BleCharacteristicDto {
+    } else if let value = value as? WifiProvisionResultDto {
       super.writeByte(144)
       super.writeValue(value.toList())
-    } else if let value = value as? BleServiceDto {
+    } else if let value = value as? BleCharacteristicDto {
       super.writeByte(145)
       super.writeValue(value.toList())
-    } else if let value = value as? BleServicesDto {
+    } else if let value = value as? BleServiceDto {
       super.writeByte(146)
       super.writeValue(value.toList())
-    } else if let value = value as? BleReadResultDto {
+    } else if let value = value as? BleServicesDto {
       super.writeByte(147)
       super.writeValue(value.toList())
-    } else if let value = value as? BleWriteResultDto {
+    } else if let value = value as? BleReadResultDto {
       super.writeByte(148)
       super.writeValue(value.toList())
-    } else if let value = value as? BleNotificationDto {
+    } else if let value = value as? BleWriteResultDto {
       super.writeByte(149)
       super.writeValue(value.toList())
-    } else if let value = value as? NativeErrorDto {
+    } else if let value = value as? BleNotificationDto {
       super.writeByte(150)
       super.writeValue(value.toList())
-    } else if let value = value as? BleDiagnosticEventDto {
+    } else if let value = value as? NativeErrorDto {
       super.writeByte(151)
       super.writeValue(value.toList())
-    } else if let value = value as? CommandResultDto {
+    } else if let value = value as? BleDiagnosticEventDto {
       super.writeByte(152)
       super.writeValue(value.toList())
-    } else if let value = value as? RemotePairingResultDto {
+    } else if let value = value as? CommandResultDto {
       super.writeByte(153)
       super.writeValue(value.toList())
-    } else if let value = value as? RemoteControlDto {
+    } else if let value = value as? DeviceAttributeDto {
       super.writeByte(154)
       super.writeValue(value.toList())
-    } else if let value = value as? RemoteControlListResultDto {
+    } else if let value = value as? DeviceAttributeSnapshotDto {
       super.writeByte(155)
       super.writeValue(value.toList())
-    } else if let value = value as? RemoteOperationResultDto {
+    } else if let value = value as? DeviceAttributeWriteResultDto {
       super.writeByte(156)
+      super.writeValue(value.toList())
+    } else if let value = value as? RemotePairingResultDto {
+      super.writeByte(157)
+      super.writeValue(value.toList())
+    } else if let value = value as? RemoteControlDto {
+      super.writeByte(158)
+      super.writeValue(value.toList())
+    } else if let value = value as? RemoteControlListResultDto {
+      super.writeByte(159)
+      super.writeValue(value.toList())
+    } else if let value = value as? RemoteOperationResultDto {
+      super.writeByte(160)
       super.writeValue(value.toList())
     } else {
       super.writeValue(value)
@@ -1530,6 +1702,8 @@ protocol HardwareHostApi {
   func writeCharacteristic(requestId: String, deviceId: String, serviceUuid: String, characteristicUuid: String, payload: FlutterStandardTypedData, writeType: BleWriteTypeDto, completion: @escaping (Result<BleWriteResultDto, Error>) -> Void)
   func setCharacteristicNotify(requestId: String, deviceId: String, serviceUuid: String, characteristicUuid: String, enabled: Bool, completion: @escaping (Result<BleWriteResultDto, Error>) -> Void)
   func sendDoorCommand(requestId: String, deviceId: String, command: DoorCommandDto, completion: @escaping (Result<CommandResultDto, Error>) -> Void)
+  func queryDeviceAttributes(requestId: String, deviceId: String, completion: @escaping (Result<DeviceAttributeSnapshotDto, Error>) -> Void)
+  func setDeviceAttributes(requestId: String, deviceId: String, attributes: [DeviceAttributeDto], completion: @escaping (Result<DeviceAttributeWriteResultDto, Error>) -> Void)
   func pairRemote(requestId: String, deviceId: String, action: RemotePairingActionDto, completion: @escaping (Result<RemotePairingResultDto, Error>) -> Void)
   func queryRemotes(requestId: String, deviceId: String, completion: @escaping (Result<RemoteControlListResultDto, Error>) -> Void)
   func deleteRemote(requestId: String, deviceId: String, serialNumber: Int64?, completion: @escaping (Result<RemoteOperationResultDto, Error>) -> Void)
@@ -1812,6 +1986,43 @@ class HardwareHostApiSetup {
     } else {
       sendDoorCommandChannel.setMessageHandler(nil)
     }
+    let queryDeviceAttributesChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flinx.HardwareHostApi.queryDeviceAttributes\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      queryDeviceAttributesChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let requestIdArg = args[0] as! String
+        let deviceIdArg = args[1] as! String
+        api.queryDeviceAttributes(requestId: requestIdArg, deviceId: deviceIdArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      queryDeviceAttributesChannel.setMessageHandler(nil)
+    }
+    let setDeviceAttributesChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flinx.HardwareHostApi.setDeviceAttributes\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      setDeviceAttributesChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let requestIdArg = args[0] as! String
+        let deviceIdArg = args[1] as! String
+        let attributesArg = args[2] as! [DeviceAttributeDto]
+        api.setDeviceAttributes(requestId: requestIdArg, deviceId: deviceIdArg, attributes: attributesArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      setDeviceAttributesChannel.setMessageHandler(nil)
+    }
     let pairRemoteChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flinx.HardwareHostApi.pairRemote\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       pairRemoteChannel.setMessageHandler { message, reply in
@@ -1897,6 +2108,7 @@ protocol HardwareFlutterApiProtocol {
   func onBleNotification(notification notificationArg: BleNotificationDto, completion: @escaping (Result<Void, PigeonError>) -> Void)
   func onNativeError(error errorArg: NativeErrorDto, completion: @escaping (Result<Void, PigeonError>) -> Void)
   func onBleDiagnosticEvent(event eventArg: BleDiagnosticEventDto, completion: @escaping (Result<Void, PigeonError>) -> Void)
+  func onDeviceAttributesChanged(snapshot snapshotArg: DeviceAttributeSnapshotDto, completion: @escaping (Result<Void, PigeonError>) -> Void)
 }
 class HardwareFlutterApi: HardwareFlutterApiProtocol {
   private let binaryMessenger: FlutterBinaryMessenger
@@ -1984,6 +2196,24 @@ class HardwareFlutterApi: HardwareFlutterApiProtocol {
     let channelName: String = "dev.flutter.pigeon.flinx.HardwareFlutterApi.onBleDiagnosticEvent\(messageChannelSuffix)"
     let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
     channel.sendMessage([eventArg] as [Any?]) { response in
+      guard let listResponse = response as? [Any?] else {
+        completion(.failure(createConnectionError(withChannelName: channelName)))
+        return
+      }
+      if listResponse.count > 1 {
+        let code: String = listResponse[0] as! String
+        let message: String? = nilOrValue(listResponse[1])
+        let details: String? = nilOrValue(listResponse[2])
+        completion(.failure(PigeonError(code: code, message: message, details: details)))
+      } else {
+        completion(.success(()))
+      }
+    }
+  }
+  func onDeviceAttributesChanged(snapshot snapshotArg: DeviceAttributeSnapshotDto, completion: @escaping (Result<Void, PigeonError>) -> Void) {
+    let channelName: String = "dev.flutter.pigeon.flinx.HardwareFlutterApi.onDeviceAttributesChanged\(messageChannelSuffix)"
+    let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
+    channel.sendMessage([snapshotArg] as [Any?]) { response in
       guard let listResponse = response as? [Any?] else {
         completion(.failure(createConnectionError(withChannelName: channelName)))
         return

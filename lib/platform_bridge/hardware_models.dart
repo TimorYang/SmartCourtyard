@@ -401,6 +401,58 @@ class NativeHardwareError {
 
 enum BleDiagnosticDirection { tx, rx }
 
+enum DeviceAttributeReportOrigin { activeReport, queryResult }
+
+class DeviceAttribute {
+  DeviceAttribute({required this.id, required Uint8List value})
+    : value = Uint8List.fromList(value);
+
+  final int id;
+  final Uint8List value;
+
+  int get unsignedValue {
+    var result = 0;
+    for (final byte in value) {
+      result = (result << 8) | byte;
+    }
+    return result;
+  }
+}
+
+class DeviceAttributeSnapshot {
+  DeviceAttributeSnapshot({
+    this.requestId,
+    required this.deviceId,
+    required this.sequence,
+    required this.timestampMillis,
+    required this.origin,
+    required List<DeviceAttribute> attributes,
+  }) : attributes = List<DeviceAttribute>.unmodifiable(attributes);
+
+  final String? requestId;
+  final String deviceId;
+  final int sequence;
+  final int timestampMillis;
+  final DeviceAttributeReportOrigin origin;
+  final List<DeviceAttribute> attributes;
+}
+
+class DeviceAttributeWriteResult {
+  const DeviceAttributeWriteResult({
+    required this.requestId,
+    required this.deviceId,
+    required this.success,
+    required this.sequence,
+    this.reasonCode,
+  });
+
+  final String requestId;
+  final String deviceId;
+  final bool success;
+  final int sequence;
+  final int? reasonCode;
+}
+
 class BleDiagnosticEvent {
   const BleDiagnosticEvent({
     required this.direction,

@@ -8,6 +8,8 @@ Read `docs/flutter_architecture.md` before making architecture-level changes.
 Read `docs/network_requests.md` before adding or changing REST APIs, network
 configuration, JSON DTOs, remote data sources, repository mappings, or network
 error handling.
+Read `docs/Door设备蓝牙协议.docx` before investigating, implementing, or changing
+Bluetooth/BLE behavior, device protocol handling, or Bluetooth diagnostics.
 
 ## Git Flow
 

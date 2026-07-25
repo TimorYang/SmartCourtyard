@@ -28,6 +28,8 @@ enum BleWriteTypeDto { withResponse, withoutResponse }
 
 enum BleDiagnosticDirectionDto { tx, rx }
 
+enum DeviceAttributeReportOriginDto { activeReport, queryResult }
+
 class PermissionSnapshotDto {
   PermissionSnapshotDto({
     required this.bluetoothGranted,
@@ -303,6 +305,47 @@ class CommandResultDto {
   final String? domainCode;
 }
 
+class DeviceAttributeDto {
+  DeviceAttributeDto({required this.id, required this.value});
+
+  final int id;
+  final Uint8List value;
+}
+
+class DeviceAttributeSnapshotDto {
+  DeviceAttributeSnapshotDto({
+    this.requestId,
+    required this.deviceId,
+    required this.sequence,
+    required this.timestampMillis,
+    required this.origin,
+    required this.attributes,
+  });
+
+  final String? requestId;
+  final String deviceId;
+  final int sequence;
+  final int timestampMillis;
+  final DeviceAttributeReportOriginDto origin;
+  final List<DeviceAttributeDto> attributes;
+}
+
+class DeviceAttributeWriteResultDto {
+  DeviceAttributeWriteResultDto({
+    required this.requestId,
+    required this.deviceId,
+    required this.success,
+    required this.sequence,
+    this.reasonCode,
+  });
+
+  final String requestId;
+  final String deviceId;
+  final bool success;
+  final int sequence;
+  final int? reasonCode;
+}
+
 class RemotePairingResultDto {
   RemotePairingResultDto({
     required this.requestId,
@@ -445,6 +488,19 @@ abstract class HardwareHostApi {
   );
 
   @async
+  DeviceAttributeSnapshotDto queryDeviceAttributes(
+    String requestId,
+    String deviceId,
+  );
+
+  @async
+  DeviceAttributeWriteResultDto setDeviceAttributes(
+    String requestId,
+    String deviceId,
+    List<DeviceAttributeDto> attributes,
+  );
+
+  @async
   RemotePairingResultDto pairRemote(
     String requestId,
     String deviceId,
@@ -481,4 +537,6 @@ abstract class HardwareFlutterApi {
   void onNativeError(NativeErrorDto error);
 
   void onBleDiagnosticEvent(BleDiagnosticEventDto event);
+
+  void onDeviceAttributesChanged(DeviceAttributeSnapshotDto snapshot);
 }

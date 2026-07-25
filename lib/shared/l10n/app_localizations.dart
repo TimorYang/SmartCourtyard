@@ -2162,6 +2162,72 @@ abstract class AppLocalizations {
   /// **'Auto close'**
   String get deviceSettingsAutoClose;
 
+  /// No description provided for @deviceSettingsAutoCloseCondition.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto close condition'**
+  String get deviceSettingsAutoCloseCondition;
+
+  /// No description provided for @deviceSettingsLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading device attributes…'**
+  String get deviceSettingsLoading;
+
+  /// No description provided for @deviceSettingsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to read device attributes.'**
+  String get deviceSettingsLoadFailed;
+
+  /// No description provided for @deviceSettingsRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get deviceSettingsRetry;
+
+  /// No description provided for @deviceSettingsWriting.
+  ///
+  /// In en, this message translates to:
+  /// **'Writing…'**
+  String get deviceSettingsWriting;
+
+  /// No description provided for @deviceSettingsRawUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Not reported'**
+  String get deviceSettingsRawUnavailable;
+
+  /// No description provided for @deviceSettingsRawValueHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the raw device value in decimal or hexadecimal (for example, 30 or 0x1E).'**
+  String get deviceSettingsRawValueHelp;
+
+  /// No description provided for @deviceSettingsRawValueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Raw value'**
+  String get deviceSettingsRawValueLabel;
+
+  /// No description provided for @deviceSettingsRawValueInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a value from 0 to {maximum}.'**
+  String deviceSettingsRawValueInvalid(int maximum);
+
+  /// No description provided for @deviceSettingsRawCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get deviceSettingsRawCancel;
+
+  /// No description provided for @deviceSettingsRawSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get deviceSettingsRawSave;
+
   /// No description provided for @deviceSettingsOpeningSpeed.
   ///
   /// In en, this message translates to:

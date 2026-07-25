@@ -37,6 +37,10 @@ class PigeonHardwareGateway implements HardwareGateway {
       _flutterApi.bleDiagnosticEvents;
 
   @override
+  Stream<DeviceAttributeSnapshot> get deviceAttributeSnapshots =>
+      _flutterApi.deviceAttributeSnapshots;
+
+  @override
   Future<void> configureHardwareLogging({
     required bool flutterConsoleEnabled,
     required bool nativeConsoleEnabled,
@@ -272,6 +276,37 @@ class PigeonHardwareGateway implements HardwareGateway {
   }
 
   @override
+  Future<DeviceAttributeSnapshot> queryDeviceAttributes({
+    required String requestId,
+    required String deviceId,
+  }) async {
+    final dto = await _mapPigeonCall(
+      () => _hostApi.queryDeviceAttributes(requestId, deviceId),
+      requestId: requestId,
+      deviceId: deviceId,
+    );
+    return dto.toModel();
+  }
+
+  @override
+  Future<DeviceAttributeWriteResult> setDeviceAttributes({
+    required String requestId,
+    required String deviceId,
+    required List<DeviceAttribute> attributes,
+  }) async {
+    final dto = await _mapPigeonCall(
+      () => _hostApi.setDeviceAttributes(
+        requestId,
+        deviceId,
+        attributes.map((attribute) => attribute.toDto()).toList(),
+      ),
+      requestId: requestId,
+      deviceId: deviceId,
+    );
+    return dto.toModel();
+  }
+
+  @override
   Future<RemotePairingResult> pairRemote({
     required String requestId,
     required String deviceId,
@@ -351,13 +386,16 @@ class _HardwareFlutterApiHandler implements pigeon.HardwareFlutterApi {
       _notificationController = StreamController<BleNotification>.broadcast(),
       _nativeErrorController =
           StreamController<NativeHardwareError>.broadcast(),
-      _diagnosticController = StreamController<BleDiagnosticEvent>.broadcast();
+      _diagnosticController = StreamController<BleDiagnosticEvent>.broadcast(),
+      _attributeController =
+          StreamController<DeviceAttributeSnapshot>.broadcast();
 
   final StreamController<BleDevice> _scanController;
   final StreamController<BleConnectionEvent> _connectionController;
   final StreamController<BleNotification> _notificationController;
   final StreamController<NativeHardwareError> _nativeErrorController;
   final StreamController<BleDiagnosticEvent> _diagnosticController;
+  final StreamController<DeviceAttributeSnapshot> _attributeController;
   final BleDiagnosticFormatter _diagnosticFormatter = BleDiagnosticFormatter();
   bool flutterConsoleEnabled = false;
 
@@ -373,6 +411,9 @@ class _HardwareFlutterApiHandler implements pigeon.HardwareFlutterApi {
 
   Stream<BleDiagnosticEvent> get bleDiagnosticEvents =>
       _diagnosticController.stream;
+
+  Stream<DeviceAttributeSnapshot> get deviceAttributeSnapshots =>
+      _attributeController.stream;
 
   @override
   void onBleScanResult(pigeon.BleDeviceDto device) {
@@ -461,6 +502,55 @@ class _HardwareFlutterApiHandler implements pigeon.HardwareFlutterApi {
     return bytes
         .map((byte) => byte.toRadixString(16).padLeft(2, '0').toUpperCase())
         .join(' ');
+  }
+
+  @override
+  void onDeviceAttributesChanged(pigeon.DeviceAttributeSnapshotDto snapshot) {
+    _attributeController.add(snapshot.toModel());
+  }
+}
+
+extension _DeviceAttributeMapper on DeviceAttribute {
+  pigeon.DeviceAttributeDto toDto() {
+    return pigeon.DeviceAttributeDto(id: id, value: value);
+  }
+}
+
+extension _DeviceAttributeDtoMapper on pigeon.DeviceAttributeDto {
+  DeviceAttribute toModel() {
+    return DeviceAttribute(id: id, value: value);
+  }
+}
+
+extension _DeviceAttributeSnapshotDtoMapper
+    on pigeon.DeviceAttributeSnapshotDto {
+  DeviceAttributeSnapshot toModel() {
+    return DeviceAttributeSnapshot(
+      requestId: requestId,
+      deviceId: deviceId,
+      sequence: sequence,
+      timestampMillis: timestampMillis,
+      origin: switch (origin) {
+        pigeon.DeviceAttributeReportOriginDto.activeReport =>
+          DeviceAttributeReportOrigin.activeReport,
+        pigeon.DeviceAttributeReportOriginDto.queryResult =>
+          DeviceAttributeReportOrigin.queryResult,
+      },
+      attributes: attributes.map((attribute) => attribute.toModel()).toList(),
+    );
+  }
+}
+
+extension _DeviceAttributeWriteResultDtoMapper
+    on pigeon.DeviceAttributeWriteResultDto {
+  DeviceAttributeWriteResult toModel() {
+    return DeviceAttributeWriteResult(
+      requestId: requestId,
+      deviceId: deviceId,
+      success: success,
+      sequence: sequence,
+      reasonCode: reasonCode,
+    );
   }
 }
 
@@ -796,6 +886,7 @@ AppError _platformExceptionToAppError(
     'peripheral_unavailable' => AppErrorCode.bluetoothDisconnected,
     'operation_in_progress' => AppErrorCode.deviceBusy,
     'operation_timeout' => AppErrorCode.commandTimeout,
+    'command_timeout' => AppErrorCode.commandTimeout,
     'provisioning_response_timeout' => AppErrorCode.commandTimeout,
     'remote_pairing_response_timeout' => AppErrorCode.commandTimeout,
     'invalid_remote_pairing_response' => AppErrorCode.pairingFailed,

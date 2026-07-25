@@ -1,56 +1,88 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
-import '../../../../shared/widgets/flinx_switch.dart';
+import '../../../settings/application/device_settings_controller.dart';
+import '../../../settings/domain/entities/device_setting.dart';
 import 'transmitter_learning_page.dart';
 import 'transmitter_list_page.dart';
 
 class DeviceSettingsAssetPaths {
   const DeviceSettingsAssetPaths._();
 
-  static const transmitterManagement = 'assets/icons/device_settings/device_settings_transmitter_management_icon.png';
-  static const ledOffDelay = 'assets/icons/device_settings/device_settings_led_off_delay_icon.png';
-  static const partialOpen = 'assets/icons/device_settings/device_settings_partial_open_icon.png';
-  static const autoClose = 'assets/icons/device_settings/device_settings_auto_close_icon.png';
-  static const openingSpeed = 'assets/icons/device_settings/device_settings_opening_speed_icon.png';
-  static const aboutDevice = 'assets/icons/device_settings/device_settings_about_device_icon.png';
-  static const doorOpenReminder = 'assets/icons/device_settings/device_settings_door_open_reminder_icon.png';
-  static const forceMargin = 'assets/icons/device_settings/device_settings_force_margin_icon.png';
-  static const management = 'assets/icons/device_settings/device_settings_management_icon.png';
-  static const openingSpeedIndicatorPlaceholder = 'assets/icons/device_settings/opening_speed_indicator_placeholder.png';
-  static const forceMarginWarningPlaceholder = 'assets/icons/device_settings/force_margin_warning_placeholder.png';
-  static const forceMarginIndicatorPlaceholder = 'assets/icons/device_settings/force_margin_indicator_placeholder.png';
-  static const transmitterRenamePlaceholder = 'assets/icons/device_settings/transmitter_rename_placeholder.png';
-  static const transmitterAddPlaceholder = 'assets/icons/device_settings/transmitter_add_placeholder.png';
-  static const aboutDeviceBluetoothName = 'assets/icons/device_settings/about_device_bluetooth_name.png';
-  static const aboutDeviceFirmwareVersion = 'assets/icons/device_settings/about_device_firmware_version.png';
-  static const aboutDeviceHardwareVersion = 'assets/icons/device_settings/about_device_hardware_version.png';
-  static const aboutDeviceCheckVersion = 'assets/icons/device_settings/about_device_check_version.png';
+  static const transmitterManagement =
+      'assets/icons/device_settings/device_settings_transmitter_management_icon.png';
+  static const ledOffDelay =
+      'assets/icons/device_settings/device_settings_led_off_delay_icon.png';
+  static const partialOpen =
+      'assets/icons/device_settings/device_settings_partial_open_icon.png';
+  static const autoClose =
+      'assets/icons/device_settings/device_settings_auto_close_icon.png';
+  static const openingSpeed =
+      'assets/icons/device_settings/device_settings_opening_speed_icon.png';
+  static const aboutDevice =
+      'assets/icons/device_settings/device_settings_about_device_icon.png';
+  static const doorOpenReminder =
+      'assets/icons/device_settings/device_settings_door_open_reminder_icon.png';
+  static const forceMargin =
+      'assets/icons/device_settings/device_settings_force_margin_icon.png';
+  static const management =
+      'assets/icons/device_settings/device_settings_management_icon.png';
+  static const openingSpeedIndicatorPlaceholder =
+      'assets/icons/device_settings/opening_speed_indicator_placeholder.png';
+  static const forceMarginWarningPlaceholder =
+      'assets/icons/device_settings/force_margin_warning_placeholder.png';
+  static const forceMarginIndicatorPlaceholder =
+      'assets/icons/device_settings/force_margin_indicator_placeholder.png';
+  static const transmitterRenamePlaceholder =
+      'assets/icons/device_settings/transmitter_rename_placeholder.png';
+  static const transmitterAddPlaceholder =
+      'assets/icons/device_settings/transmitter_add_placeholder.png';
+  static const aboutDeviceBluetoothName =
+      'assets/icons/device_settings/about_device_bluetooth_name.png';
+  static const aboutDeviceFirmwareVersion =
+      'assets/icons/device_settings/about_device_firmware_version.png';
+  static const aboutDeviceHardwareVersion =
+      'assets/icons/device_settings/about_device_hardware_version.png';
+  static const aboutDeviceCheckVersion =
+      'assets/icons/device_settings/about_device_check_version.png';
 }
 
 class OpeningSpeedConfig {
-  factory OpeningSpeedConfig({required List<int> allowedValues, required int current}) {
+  factory OpeningSpeedConfig({
+    required List<int> allowedValues,
+    required int current,
+  }) {
     assert(allowedValues.isNotEmpty);
     assert(allowedValues.toSet().length == allowedValues.length);
     assert(allowedValues.every((value) => value >= 0 && value <= 100));
     assert(allowedValues.contains(current));
-    return OpeningSpeedConfig._(allowedValues: List.unmodifiable(allowedValues), current: current);
+    return OpeningSpeedConfig._(
+      allowedValues: List.unmodifiable(allowedValues),
+      current: current,
+    );
   }
 
-  const OpeningSpeedConfig._({required this.allowedValues, required this.current});
+  const OpeningSpeedConfig._({
+    required this.allowedValues,
+    required this.current,
+  });
 
   final List<int> allowedValues;
   final int current;
 }
 
-class DeviceSettingsPage extends StatefulWidget {
+class DeviceSettingsPage extends ConsumerStatefulWidget {
   const DeviceSettingsPage({
     required this.deviceId,
     this.forceMarginDialogState = 1,
-    this.openingSpeedConfig = const OpeningSpeedConfig._(allowedValues: [100, 80, 60], current: 80),
+    this.openingSpeedConfig = const OpeningSpeedConfig._(
+      allowedValues: [100, 80, 60],
+      current: 80,
+    ),
     super.key,
   }) : assert(forceMarginDialogState >= 0 && forceMarginDialogState <= 2);
 
@@ -62,21 +94,17 @@ class DeviceSettingsPage extends StatefulWidget {
   final OpeningSpeedConfig openingSpeedConfig;
 
   @override
-  State<DeviceSettingsPage> createState() => _DeviceSettingsPageState();
+  ConsumerState<DeviceSettingsPage> createState() => _DeviceSettingsPageState();
 }
 
-class _DeviceSettingsPageState extends State<DeviceSettingsPage> {
-  String _ledOffDelay = '3min';
-  String _partialOpen = '12min';
-  String _autoClose = '15s';
-  var _autoClosePosition = _AutoClosePosition.anyPosition;
-  var _doorOpenReminderEnabled = true;
-  String _doorOpenReminderTime = '10min';
-
+class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context);
+    final settingsState = ref.watch(
+      deviceSettingsControllerProvider(widget.deviceId),
+    );
 
     return Scaffold(
       appBar: const FlinxNavigationBar(title: '', showBottomDivider: false),
@@ -89,9 +117,43 @@ class _DeviceSettingsPageState extends State<DeviceSettingsPage> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 25, 20, 24),
               children: [
-                Text(l10n.deviceSettingsTitle, style: AppTextTokens.deviceSettingsTitle(textTheme)),
+                Text(
+                  l10n.deviceSettingsTitle,
+                  style: AppTextTokens.deviceSettingsTitle(textTheme),
+                ),
+                if (settingsState.loading)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(l10n.deviceSettingsLoading),
+                  ),
+                if (settingsState.errorMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Row(
+                      children: [
+                        Expanded(child: Text(l10n.deviceSettingsLoadFailed)),
+                        TextButton(
+                          onPressed: settingsState.loading
+                              ? null
+                              : () => ref
+                                    .read(
+                                      deviceSettingsControllerProvider(
+                                        widget.deviceId,
+                                      ).notifier,
+                                    )
+                                    .load(),
+                          child: Text(l10n.deviceSettingsRetry),
+                        ),
+                      ],
+                    ),
+                  ),
                 const SizedBox(height: 4),
-                Text(l10n.deviceSettingsForUsers, style: AppTextTokens.deviceSettingsMainSectionLabel(textTheme)),
+                Text(
+                  l10n.deviceSettingsForUsers,
+                  style: AppTextTokens.deviceSettingsMainSectionLabel(
+                    textTheme,
+                  ),
+                ),
                 const SizedBox(height: 10),
                 _SettingsRows(
                   rows: [
@@ -108,29 +170,71 @@ class _DeviceSettingsPageState extends State<DeviceSettingsPage> {
                       assetPath: DeviceSettingsAssetPaths.ledOffDelay,
                       fallbackIcon: Icons.light_mode_outlined,
                       title: l10n.deviceSettingsLedOffDelay,
-                      value: _formatDuration(l10n, _ledOffDelay),
-                      onTap: _showLedOffDelaySheet,
+                      value: _settingValue(
+                        settingsState,
+                        DeviceSettingKey.ledOffDelay,
+                        l10n,
+                      ),
+                      onTap: () => _showRawValueEditor(
+                        DeviceSettingKey.ledOffDelay,
+                        l10n.deviceSettingsLedOffDelay,
+                      ),
                     ),
                     _SettingsRowData(
                       assetPath: DeviceSettingsAssetPaths.partialOpen,
                       fallbackIcon: Icons.sensor_door_outlined,
                       title: l10n.deviceSettingsPartialOpen,
-                      value: _formatDuration(l10n, _partialOpen),
-                      onTap: _showPartialOpenSheet,
+                      value: _settingValue(
+                        settingsState,
+                        DeviceSettingKey.partialOpen,
+                        l10n,
+                      ),
+                      onTap: () => _showRawValueEditor(
+                        DeviceSettingKey.partialOpen,
+                        l10n.deviceSettingsPartialOpen,
+                      ),
                     ),
                     _SettingsRowData(
                       assetPath: DeviceSettingsAssetPaths.autoClose,
                       fallbackIcon: Icons.door_back_door_outlined,
                       title: l10n.deviceSettingsAutoClose,
-                      value: _formatDuration(l10n, _autoClose),
-                      onTap: _showAutoCloseSheet,
+                      value: _settingValue(
+                        settingsState,
+                        DeviceSettingKey.autoCloseTime,
+                        l10n,
+                      ),
+                      onTap: () => _showRawValueEditor(
+                        DeviceSettingKey.autoCloseTime,
+                        l10n.deviceSettingsAutoClose,
+                      ),
+                    ),
+                    _SettingsRowData(
+                      assetPath: DeviceSettingsAssetPaths.autoClose,
+                      fallbackIcon: Icons.rule_outlined,
+                      title: l10n.deviceSettingsAutoCloseCondition,
+                      value: _settingValue(
+                        settingsState,
+                        DeviceSettingKey.autoCloseCondition,
+                        l10n,
+                      ),
+                      onTap: () => _showRawValueEditor(
+                        DeviceSettingKey.autoCloseCondition,
+                        l10n.deviceSettingsAutoCloseCondition,
+                      ),
                     ),
                     _SettingsRowData(
                       assetPath: DeviceSettingsAssetPaths.openingSpeed,
                       fallbackIcon: Icons.speed_outlined,
                       title: l10n.deviceSettingsOpeningSpeed,
-                      value: l10n.deviceSettingsOpeningSpeedValue,
-                      onTap: _showOpeningSpeedSheet,
+                      value: _settingValue(
+                        settingsState,
+                        DeviceSettingKey.openingSpeed,
+                        l10n,
+                      ),
+                      onTap: () => _showRawValueEditor(
+                        DeviceSettingKey.openingSpeed,
+                        l10n.deviceSettingsOpeningSpeed,
+                      ),
                     ),
                     _SettingsRowData(
                       assetPath: DeviceSettingsAssetPaths.aboutDevice,
@@ -145,18 +249,25 @@ class _DeviceSettingsPageState extends State<DeviceSettingsPage> {
                       assetPath: DeviceSettingsAssetPaths.doorOpenReminder,
                       fallbackIcon: Icons.notifications_active_outlined,
                       title: l10n.deviceSettingsDoorOpenReminder,
-                      trailing: FlinxSwitch(
-                        value: _doorOpenReminderEnabled,
-                        onChanged: (value) {
-                          setState(() => _doorOpenReminderEnabled = value);
-                        },
+                      value: _settingValue(
+                        settingsState,
+                        DeviceSettingKey.doorOpenReminder,
+                        l10n,
                       ),
-                      onTap: _showDoorOpenReminderSheet,
+                      onTap: () => _showRawValueEditor(
+                        DeviceSettingKey.doorOpenReminder,
+                        l10n.deviceSettingsDoorOpenReminder,
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 22),
-                Text(l10n.deviceSettingsForInstallers, style: AppTextTokens.deviceSettingsMainSectionLabel(textTheme)),
+                Text(
+                  l10n.deviceSettingsForInstallers,
+                  style: AppTextTokens.deviceSettingsMainSectionLabel(
+                    textTheme,
+                  ),
+                ),
                 const SizedBox(height: 10),
                 _SettingsRows(
                   rows: [
@@ -164,7 +275,15 @@ class _DeviceSettingsPageState extends State<DeviceSettingsPage> {
                       assetPath: DeviceSettingsAssetPaths.forceMargin,
                       fallbackIcon: Icons.tune_rounded,
                       title: l10n.deviceSettingsForceMargin,
-                      onTap: _showForceMargin,
+                      value: _settingValue(
+                        settingsState,
+                        DeviceSettingKey.openingForce,
+                        l10n,
+                      ),
+                      onTap: () => _showRawValueEditor(
+                        DeviceSettingKey.openingForce,
+                        l10n.deviceSettingsForceMargin,
+                      ),
                     ),
                   ],
                 ),
@@ -176,140 +295,107 @@ class _DeviceSettingsPageState extends State<DeviceSettingsPage> {
     );
   }
 
-  Future<void> _showLedOffDelaySheet() async {
-    final value = await _showOptionSheet(
-      context: context,
-      title: AppLocalizations.of(context).deviceSettingsLedOffDelay,
-      options: _ledOffDelayOptions,
-      initialValue: _ledOffDelay,
-      heightFactor: 0.50,
-    );
-    if (value == null || !mounted) {
-      return;
+  String _settingValue(
+    DeviceSettingsState state,
+    DeviceSettingKey key,
+    AppLocalizations l10n,
+  ) {
+    if (state.pendingKey == key) {
+      return l10n.deviceSettingsWriting;
     }
-    setState(() => _ledOffDelay = value);
+    return state.values[key]?.displayValue ?? l10n.deviceSettingsRawUnavailable;
   }
 
-  Future<void> _showPartialOpenSheet() async {
-    final value = await _showOptionSheet(
-      context: context,
-      title: AppLocalizations.of(context).deviceSettingsPartialOpenHeight,
-      options: _zeroToOneHundredOptions,
-      initialValue: '20',
-      heightFactor: 0.50,
-    );
-    if (value == null || !mounted) {
+  Future<void> _showRawValueEditor(DeviceSettingKey key, String title) async {
+    final l10n = AppLocalizations.of(context);
+    final state = ref.read(deviceSettingsControllerProvider(widget.deviceId));
+    if (state.loading || state.pendingKey != null) {
       return;
     }
-    setState(() => _partialOpen = value);
-  }
-
-  Future<void> _showAutoCloseSheet() async {
-    final result = await showModalBottomSheet<_AutoCloseSelection>(
+    final controller = TextEditingController(
+      text: state.values[key]?.rawValue.toString() ?? '',
+    );
+    final value = await showDialog<int>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: AppColors.deviceSettingsSheetScrim,
-      builder: (context) {
-        return _AutoCloseSheet(initialPosition: _autoClosePosition, initialTime: '1min', heightFactor: 0.65);
+      builder: (dialogContext) {
+        String? validationMessage;
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: Text(title),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(l10n.deviceSettingsRawValueHelp),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: controller,
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      labelText: l10n.deviceSettingsRawValueLabel,
+                      errorText: validationMessage,
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: Text(l10n.deviceSettingsRawCancel),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    final text = controller.text.trim();
+                    final parsed = text.toLowerCase().startsWith('0x')
+                        ? int.tryParse(text.substring(2), radix: 16)
+                        : int.tryParse(text);
+                    final maximum = (1 << (key.byteWidth * 8)) - 1;
+                    if (parsed == null || parsed < 0 || parsed > maximum) {
+                      setDialogState(() {
+                        validationMessage = l10n.deviceSettingsRawValueInvalid(
+                          maximum,
+                        );
+                      });
+                      return;
+                    }
+                    Navigator.of(dialogContext).pop(parsed);
+                  },
+                  child: Text(l10n.deviceSettingsRawSave),
+                ),
+              ],
+            );
+          },
+        );
       },
     );
-    if (result == null || !mounted) {
-      return;
-    }
-    setState(() {
-      _autoClose = result.time;
-      _autoClosePosition = result.position;
-    });
-  }
-
-  Future<void> _showDoorOpenReminderSheet() async {
-    final value = await showModalBottomSheet<String>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: AppColors.deviceSettingsSheetScrim,
-      builder: (context) => _DoorOpenReminderSheet(initialValue: _doorOpenReminderTime),
-    );
     if (value == null || !mounted) {
       return;
     }
-    setState(() => _doorOpenReminderTime = value);
-  }
-
-  Future<void> _showOpeningSpeedSheet() async {
-    await _showSpeedSheet(
-      title: AppLocalizations.of(context).deviceSettingsOpeningSpeed,
-      speedConfig: widget.openingSpeedConfig,
-      placeholderAssetPath: DeviceSettingsAssetPaths.openingSpeedIndicatorPlaceholder,
-    );
-  }
-
-  Future<void> _showForceMargin() async {
-    final l10n = AppLocalizations.of(context);
-    switch (widget.forceMarginDialogState) {
-      case 0:
-        await showDialog<void>(
-          context: context,
-          builder: (context) => _ForceMarginWarningDialog(description: l10n.deviceSettingsForceMarginWarning15Days),
-        );
-      case 1:
-        await showModalBottomSheet<void>(
-          context: context,
-          isScrollControlled: true,
-          backgroundColor: Colors.transparent,
-          barrierColor: AppColors.deviceSettingsSheetScrim,
-          builder: (context) => _ForceMarginAdjustmentSheet(
-            description: l10n.deviceSettingsForceMarginWarning3DaysFull,
-            placeholderAssetPath: DeviceSettingsAssetPaths.forceMarginIndicatorPlaceholder,
-          ),
-        );
-      case 2:
-        await showModalBottomSheet<void>(
-          context: context,
-          isScrollControlled: true,
-          backgroundColor: Colors.transparent,
-          barrierColor: AppColors.deviceSettingsSheetScrim,
-          builder: (context) => _ForceMarginLevelSheet(),
-        );
-    }
-  }
-
-  Future<void> _showSpeedSheet({
-    required String title,
-    OpeningSpeedConfig speedConfig = const OpeningSpeedConfig._(allowedValues: [100, 80, 60], current: 80),
-    String? notice,
-    required String placeholderAssetPath,
-  }) {
-    return showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: AppColors.deviceSettingsSheetScrim,
-      builder: (context) => _SpeedAdjustmentSheet(
-        title: title,
-        speedConfig: speedConfig,
-        notice: notice,
-        placeholderAssetPath: placeholderAssetPath,
-      ),
-    );
+    await ref
+        .read(deviceSettingsControllerProvider(widget.deviceId).notifier)
+        .setRawValue(key, value);
   }
 }
 
-final _zeroToOneHundredOptions = List<String>.generate(101, (index) => index.toString());
-
-final _ledOffDelayOptions = [for (var minute = 1; minute <= 9; minute++) '${minute}min'];
-
-final _autoCloseTimeOptions = ['0s', '30s', for (var minute = 1; minute <= 60; minute++) '${minute}min'];
+final _autoCloseTimeOptions = [
+  '0s',
+  '30s',
+  for (var minute = 1; minute <= 60; minute++) '${minute}min',
+];
 
 const _doorOpenReminderTimeOptions = ['5min', '10min', '15min'];
 
 String _formatDuration(AppLocalizations l10n, String value) {
   if (value.endsWith('min')) {
-    return l10n.deviceSettingsMinutes(int.parse(value.substring(0, value.length - 3)));
+    return l10n.deviceSettingsMinutes(
+      int.parse(value.substring(0, value.length - 3)),
+    );
   }
   if (value.endsWith('s')) {
-    return l10n.deviceSettingsSeconds(int.parse(value.substring(0, value.length - 1)));
+    return l10n.deviceSettingsSeconds(
+      int.parse(value.substring(0, value.length - 1)),
+    );
   }
   return value;
 }
@@ -340,28 +426,35 @@ class AboutDevicePage extends StatelessWidget {
               children: [
                 Padding(
                   padding: EdgeInsetsGeometry.only(left: 20),
-                  child: Text(l10n.deviceSettingsAboutDevice, style: AppTextTokens.deviceSettingsTitle(textTheme)),
+                  child: Text(
+                    l10n.deviceSettingsAboutDevice,
+                    style: AppTextTokens.deviceSettingsTitle(textTheme),
+                  ),
                 ),
                 const SizedBox(height: 28),
                 _SettingsRows(
                   rows: [
                     _SettingsRowData(
-                      assetPath: DeviceSettingsAssetPaths.aboutDeviceBluetoothName,
+                      assetPath:
+                          DeviceSettingsAssetPaths.aboutDeviceBluetoothName,
                       fallbackIcon: Icons.bluetooth,
                       title: l10n.deviceSettingsBluetoothName,
                     ),
                     _SettingsRowData(
-                      assetPath: DeviceSettingsAssetPaths.aboutDeviceFirmwareVersion,
+                      assetPath:
+                          DeviceSettingsAssetPaths.aboutDeviceFirmwareVersion,
                       fallbackIcon: Icons.developer_board_outlined,
                       title: l10n.deviceSettingsFirmwareVersion,
                     ),
                     _SettingsRowData(
-                      assetPath: DeviceSettingsAssetPaths.aboutDeviceHardwareVersion,
+                      assetPath:
+                          DeviceSettingsAssetPaths.aboutDeviceHardwareVersion,
                       fallbackIcon: Icons.memory_outlined,
                       title: l10n.deviceSettingsHardwareVersion,
                     ),
                     _SettingsRowData(
-                      assetPath: DeviceSettingsAssetPaths.aboutDeviceCheckVersion,
+                      assetPath:
+                          DeviceSettingsAssetPaths.aboutDeviceCheckVersion,
                       fallbackIcon: Icons.manage_search_outlined,
                       title: l10n.deviceSettingsCheckVersion,
                     ),
@@ -400,9 +493,15 @@ class TransmitterManagementPage extends StatelessWidget {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
               children: [
-                Text(l10n.deviceSettingsTitle, style: AppTextTokens.deviceSettingsTitle(textTheme)),
+                Text(
+                  l10n.deviceSettingsTitle,
+                  style: AppTextTokens.deviceSettingsTitle(textTheme),
+                ),
                 const SizedBox(height: 8),
-                Text(l10n.deviceSettingsForUsers, style: AppTextTokens.deviceSettingsSectionLabel(textTheme)),
+                Text(
+                  l10n.deviceSettingsForUsers,
+                  style: AppTextTokens.deviceSettingsSectionLabel(textTheme),
+                ),
                 const SizedBox(height: 8),
                 _SettingsRows(
                   rows: [
@@ -410,13 +509,17 @@ class TransmitterManagementPage extends StatelessWidget {
                       assetPath: DeviceSettingsAssetPaths.transmitterManagement,
                       fallbackIcon: Icons.settings_remote_outlined,
                       title: l10n.deviceSettingsTransmitterLearning,
-                      onTap: () => context.push('${TransmitterLearningPage.routePath}?deviceId=${Uri.encodeComponent(deviceId)}'),
+                      onTap: () => context.push(
+                        '${TransmitterLearningPage.routePath}?deviceId=${Uri.encodeComponent(deviceId)}',
+                      ),
                     ),
                     _SettingsRowData(
                       assetPath: DeviceSettingsAssetPaths.management,
                       fallbackIcon: Icons.settings_outlined,
                       title: l10n.deviceSettingsManagement,
-                      onTap: () => context.push('${TransmitterListPage.routePath}?deviceId=${Uri.encodeComponent(deviceId)}'),
+                      onTap: () => context.push(
+                        '${TransmitterListPage.routePath}?deviceId=${Uri.encodeComponent(deviceId)}',
+                      ),
                     ),
                   ],
                 ),
@@ -437,19 +540,27 @@ class _SettingsRows extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: [for (var index = 0; index < rows.length; index++) _SettingsRow(data: rows[index], showTopDivider: index == 0)],
+      children: [
+        for (var index = 0; index < rows.length; index++)
+          _SettingsRow(data: rows[index], showTopDivider: index == 0),
+      ],
     );
   }
 }
 
 class _SettingsRowData {
-  const _SettingsRowData({required this.assetPath, required this.fallbackIcon, required this.title, this.value, this.trailing, this.onTap});
+  const _SettingsRowData({
+    required this.assetPath,
+    required this.fallbackIcon,
+    required this.title,
+    this.value,
+    this.onTap,
+  });
 
   final String assetPath;
   final IconData fallbackIcon;
   final String title;
   final String? value;
-  final Widget? trailing;
   final VoidCallback? onTap;
 }
 
@@ -470,7 +581,9 @@ class _SettingsRow extends StatelessWidget {
         child: DecoratedBox(
           decoration: BoxDecoration(
             border: Border(
-              top: showTopDivider ? const BorderSide(color: AppColors.deviceSettingsDivider) : BorderSide.none,
+              top: showTopDivider
+                  ? const BorderSide(color: AppColors.deviceSettingsDivider)
+                  : BorderSide.none,
               bottom: const BorderSide(color: AppColors.deviceSettingsDivider),
             ),
           ),
@@ -478,19 +591,36 @@ class _SettingsRow extends StatelessWidget {
             height: 77,
             child: Row(
               children: [
-                _DeviceSettingsAssetIcon(assetPath: data.assetPath, fallbackIcon: data.fallbackIcon),
+                _DeviceSettingsAssetIcon(
+                  assetPath: data.assetPath,
+                  fallbackIcon: data.fallbackIcon,
+                ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: Text(data.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextTokens.deviceSettingsRowTitle(textTheme)),
+                  child: Text(
+                    data.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextTokens.deviceSettingsRowTitle(textTheme),
+                  ),
                 ),
-                if (data.value != null) ...[const SizedBox(width: 12), Text(data.value!, style: AppTextTokens.deviceSettingsRowValue(textTheme))],
-                if (data.trailing != null) ...[
+                if (data.value != null) ...[
                   const SizedBox(width: 12),
-                  data.trailing!,
-                ] else ...[
-                  const SizedBox(width: 12),
-                  const Icon(Icons.chevron_right, size: 28, color: AppColors.textPrimary),
+                  Flexible(
+                    child: Text(
+                      data.value!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextTokens.deviceSettingsRowValue(textTheme),
+                    ),
+                  ),
                 ],
+                const SizedBox(width: 12),
+                const Icon(
+                  Icons.chevron_right,
+                  size: 28,
+                  color: AppColors.textPrimary,
+                ),
               ],
             ),
           ),
@@ -501,7 +631,10 @@ class _SettingsRow extends StatelessWidget {
 }
 
 class _DeviceSettingsAssetIcon extends StatelessWidget {
-  const _DeviceSettingsAssetIcon({required this.assetPath, required this.fallbackIcon});
+  const _DeviceSettingsAssetIcon({
+    required this.assetPath,
+    required this.fallbackIcon,
+  });
 
   final String assetPath;
   final IconData fallbackIcon;
@@ -513,66 +646,10 @@ class _DeviceSettingsAssetIcon extends StatelessWidget {
       width: 34,
       height: 34,
       fit: BoxFit.contain,
-      errorBuilder: (context, error, stackTrace) => SizedBox(width: 34, height: 34, child: Icon(fallbackIcon, size: 24, color: AppColors.textIcon)),
-    );
-  }
-}
-
-Future<String?> _showOptionSheet({
-  required BuildContext context,
-  required String title,
-  required List<String> options,
-  required String initialValue,
-  required double heightFactor,
-}) {
-  return showModalBottomSheet<String>(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    barrierColor: AppColors.deviceSettingsSheetScrim,
-    builder: (context) {
-      return _OptionSheet(title: title, options: options, initialValue: initialValue, heightFactor: heightFactor);
-    },
-  );
-}
-
-class _OptionSheet extends StatefulWidget {
-  const _OptionSheet({required this.title, required this.options, required this.initialValue, required this.heightFactor});
-
-  final String title;
-  final List<String> options;
-  final String initialValue;
-  final double heightFactor;
-
-  @override
-  State<_OptionSheet> createState() => _OptionSheetState();
-}
-
-class _OptionSheetState extends State<_OptionSheet> {
-  late String _selectedValue = widget.initialValue;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final l10n = AppLocalizations.of(context);
-
-    return _SettingsSheetFrame(
-      heightFactor: widget.heightFactor,
-      child: Column(
-        children: [
-          Text(widget.title, textAlign: TextAlign.center, style: AppTextTokens.deviceSettingsSheetTitle(textTheme)),
-          const SizedBox(height: 12),
-          Expanded(
-            child: _FixedSelectionList<String>(
-              values: widget.options,
-              initialValue: _selectedValue,
-              labelBuilder: (option) => _formatDuration(l10n, option),
-              onSelected: (option) => setState(() => _selectedValue = option),
-            ),
-          ),
-          const SizedBox(height: 20),
-          _SheetActionRow(onConfirm: () => Navigator.pop(context, _selectedValue)),
-        ],
+      errorBuilder: (context, error, stackTrace) => SizedBox(
+        width: 34,
+        height: 34,
+        child: Icon(fallbackIcon, size: 24, color: AppColors.textIcon),
       ),
     );
   }
@@ -600,9 +677,16 @@ class _DoorOpenReminderSheetState extends State<_DoorOpenReminderSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(l10n.deviceSettingsDoorOpenReminder, textAlign: TextAlign.center, style: AppTextTokens.deviceSettingsSheetTitle(textTheme)),
+          Text(
+            l10n.deviceSettingsDoorOpenReminder,
+            textAlign: TextAlign.center,
+            style: AppTextTokens.deviceSettingsSheetTitle(textTheme),
+          ),
           const SizedBox(height: 16),
-          Text(l10n.deviceSettingsDoorOpenReminderTime, style: AppTextTokens.deviceSettingsSheetCaption(textTheme)),
+          Text(
+            l10n.deviceSettingsDoorOpenReminderTime,
+            style: AppTextTokens.deviceSettingsSheetCaption(textTheme),
+          ),
           const SizedBox(height: 12),
           Expanded(
             child: _FixedSelectionList<String>(
@@ -613,7 +697,9 @@ class _DoorOpenReminderSheetState extends State<_DoorOpenReminderSheet> {
             ),
           ),
           const SizedBox(height: 20),
-          _SheetActionRow(onConfirm: () => Navigator.pop(context, _selectedValue)),
+          _SheetActionRow(
+            onConfirm: () => Navigator.pop(context, _selectedValue),
+          ),
         ],
       ),
     );
@@ -621,7 +707,11 @@ class _DoorOpenReminderSheetState extends State<_DoorOpenReminderSheet> {
 }
 
 class _AutoCloseSheet extends StatefulWidget {
-  const _AutoCloseSheet({required this.initialPosition, required this.initialTime, required this.heightFactor});
+  const _AutoCloseSheet({
+    required this.initialPosition,
+    required this.initialTime,
+    required this.heightFactor,
+  });
 
   final _AutoClosePosition initialPosition;
   final String initialTime;
@@ -632,7 +722,10 @@ class _AutoCloseSheet extends StatefulWidget {
 }
 
 class _AutoCloseSheetState extends State<_AutoCloseSheet> {
-  static const _positions = [_AutoClosePosition.upLimit, _AutoClosePosition.anyPosition];
+  static const _positions = [
+    _AutoClosePosition.upLimit,
+    _AutoClosePosition.anyPosition,
+  ];
 
   late _AutoClosePosition _position = widget.initialPosition;
   late String _time = widget.initialTime;
@@ -647,11 +740,18 @@ class _AutoCloseSheetState extends State<_AutoCloseSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(l10n.deviceSettingsAutoClosingSetting, textAlign: TextAlign.center, style: AppTextTokens.deviceSettingsSheetTitle(textTheme)),
+          Text(
+            l10n.deviceSettingsAutoClosingSetting,
+            textAlign: TextAlign.center,
+            style: AppTextTokens.deviceSettingsSheetTitle(textTheme),
+          ),
           const SizedBox(height: 16),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14),
-            child: Text(l10n.deviceSettingsAutoCloseCaption, style: AppTextTokens.deviceSettingsSheetCaption(textTheme)),
+            child: Text(
+              l10n.deviceSettingsAutoCloseCaption,
+              style: AppTextTokens.deviceSettingsSheetCaption(textTheme),
+            ),
           ),
           const SizedBox(height: 18),
           Row(
@@ -671,7 +771,10 @@ class _AutoCloseSheetState extends State<_AutoCloseSheet> {
           const SizedBox(height: 28),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14),
-            child: Text(l10n.deviceSettingsAutoCloseTime, style: AppTextTokens.deviceSettingsSheetCaption(textTheme)),
+            child: Text(
+              l10n.deviceSettingsAutoCloseTime,
+              style: AppTextTokens.deviceSettingsSheetCaption(textTheme),
+            ),
           ),
           const SizedBox(height: 18),
           Expanded(
@@ -684,7 +787,10 @@ class _AutoCloseSheetState extends State<_AutoCloseSheet> {
           ),
           const SizedBox(height: 20),
           _SheetActionRow(
-            onConfirm: () => Navigator.pop(context, _AutoCloseSelection(position: _position, time: _time)),
+            onConfirm: () => Navigator.pop(
+              context,
+              _AutoCloseSelection(position: _position, time: _time),
+            ),
           ),
         ],
       ),
@@ -692,10 +798,11 @@ class _AutoCloseSheetState extends State<_AutoCloseSheet> {
   }
 }
 
-String _positionLabel(AppLocalizations l10n, _AutoClosePosition position) => switch (position) {
-  _AutoClosePosition.upLimit => l10n.deviceSettingsUpLimit,
-  _AutoClosePosition.anyPosition => l10n.deviceSettingsAnyPosition,
-};
+String _positionLabel(AppLocalizations l10n, _AutoClosePosition position) =>
+    switch (position) {
+      _AutoClosePosition.upLimit => l10n.deviceSettingsUpLimit,
+      _AutoClosePosition.anyPosition => l10n.deviceSettingsAnyPosition,
+    };
 
 enum _AutoClosePosition { upLimit, anyPosition }
 
@@ -707,11 +814,14 @@ class _AutoCloseSelection {
 }
 
 class _SpeedAdjustmentSheet extends StatefulWidget {
-  const _SpeedAdjustmentSheet({required this.title, required this.speedConfig, this.notice, required this.placeholderAssetPath});
+  const _SpeedAdjustmentSheet({
+    required this.title,
+    required this.speedConfig,
+    required this.placeholderAssetPath,
+  });
 
   final String title;
   final OpeningSpeedConfig speedConfig;
-  final String? notice;
   final String placeholderAssetPath;
 
   @override
@@ -729,19 +839,18 @@ class _SpeedAdjustmentSheetState extends State<_SpeedAdjustmentSheet> {
       heightFactor: 0.61,
       child: Column(
         children: [
-          Text(widget.title, style: AppTextTokens.deviceSettingsSheetTitle(textTheme)),
+          Text(
+            widget.title,
+            style: AppTextTokens.deviceSettingsSheetTitle(textTheme),
+          ),
           const SizedBox(height: 24),
           Align(
             alignment: Alignment.centerLeft,
-            child: Text(l10n.deviceSettingsOpeningSpeedCurrent(_value), style: AppTextTokens.deviceSettingsSheetCaption(textTheme)),
-          ),
-          if (widget.notice != null) ...[
-            const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(widget.notice!, style: AppTextTokens.deviceSettingsSheetCaption(textTheme)),
+            child: Text(
+              l10n.deviceSettingsOpeningSpeedCurrent(_value),
+              style: AppTextTokens.deviceSettingsSheetCaption(textTheme),
             ),
-          ],
+          ),
           const SizedBox(height: 35),
           Expanded(
             child: Row(
@@ -757,7 +866,11 @@ class _SpeedAdjustmentSheetState extends State<_SpeedAdjustmentSheet> {
                 Expanded(
                   child: _SliderScaleGuides(
                     labels: [
-                      for (var index = 0; index < widget.speedConfig.allowedValues.length; index++)
+                      for (
+                        var index = 0;
+                        index < widget.speedConfig.allowedValues.length;
+                        index++
+                      )
                         '${widget.speedConfig.allowedValues[index]}%${index == widget.speedConfig.allowedValues.length - 1 ? '\n(STD)' : ''}',
                     ],
                     guideKeyPrefix: 'openingSpeedSliderGuide',
@@ -781,7 +894,14 @@ class _SpeedIndicatorCluster extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const placements = [Offset(22, 0), Offset(62, 0), Offset(102, 0), Offset(22, 122), Offset(62, 122), Offset(22, 244)];
+    const placements = [
+      Offset(22, 0),
+      Offset(62, 0),
+      Offset(102, 0),
+      Offset(22, 122),
+      Offset(62, 122),
+      Offset(22, 244),
+    ];
 
     return SizedBox(
       width: 152,
@@ -801,7 +921,10 @@ class _SpeedIndicatorCluster extends StatelessWidget {
 }
 
 class _SliderScaleGuides extends StatelessWidget {
-  const _SliderScaleGuides({required this.labels, required this.guideKeyPrefix});
+  const _SliderScaleGuides({
+    required this.labels,
+    required this.guideKeyPrefix,
+  });
 
   static const _rightScreenInset = 19.0;
   static const _labelWidth = 40.0;
@@ -812,7 +935,9 @@ class _SliderScaleGuides extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textStyle = AppTextTokens.deviceSettingsSheetCaption(Theme.of(context).textTheme);
+    final textStyle = AppTextTokens.deviceSettingsSheetCaption(
+      Theme.of(context).textTheme,
+    );
     return Padding(
       padding: const EdgeInsets.only(right: _rightScreenInset),
       child: SizedBox(
@@ -835,7 +960,11 @@ class _SliderScaleGuides extends StatelessWidget {
                   const SizedBox(width: _guideToLabelGap),
                   SizedBox(
                     width: _labelWidth,
-                    child: Text(labels[index], textAlign: TextAlign.right, style: textStyle),
+                    child: Text(
+                      labels[index],
+                      textAlign: TextAlign.right,
+                      style: textStyle,
+                    ),
                   ),
                 ],
               ),
@@ -858,16 +987,26 @@ class _DashedHorizontalLinePainter extends CustomPainter {
       ..color = AppColors.deviceSettingsSliderGuide
       ..strokeWidth = 1;
     for (var start = 0.0; start < size.width; start += _dashWidth + _dashGap) {
-      canvas.drawLine(Offset(start, size.height / 2), Offset((start + _dashWidth).clamp(0.0, size.width), size.height / 2), paint);
+      canvas.drawLine(
+        Offset(start, size.height / 2),
+        Offset((start + _dashWidth).clamp(0.0, size.width), size.height / 2),
+        paint,
+      );
     }
   }
 
   @override
-  bool shouldRepaint(covariant _DashedHorizontalLinePainter oldDelegate) => false;
+  bool shouldRepaint(covariant _DashedHorizontalLinePainter oldDelegate) =>
+      false;
 }
 
 class _VerticalSpeedSlider extends StatelessWidget {
-  const _VerticalSpeedSlider({required this.value, required this.minimum, required this.maximum, required this.onChanged});
+  const _VerticalSpeedSlider({
+    required this.value,
+    required this.minimum,
+    required this.maximum,
+    required this.onChanged,
+  });
 
   final double value;
   final int minimum;
@@ -879,15 +1018,20 @@ class _VerticalSpeedSlider extends StatelessWidget {
   static const _thumbInset = 10.0;
 
   void _updateValue(Offset localPosition) {
-    final progress = (1 - localPosition.dy / (_height - _thumbHeight)).clamp(0.0, 1.0);
-    final steppedValue = (minimum + (progress * (maximum - minimum)).round()).toDouble();
+    final progress = (1 - localPosition.dy / (_height - _thumbHeight)).clamp(
+      0.0,
+      1.0,
+    );
+    final steppedValue = (minimum + (progress * (maximum - minimum)).round())
+        .toDouble();
     onChanged(steppedValue);
   }
 
   @override
   Widget build(BuildContext context) {
     final progress = (value - minimum) / (maximum - minimum);
-    final thumbBottom = _thumbInset + progress * (_height - _thumbHeight - 2 * _thumbInset);
+    final thumbBottom =
+        _thumbInset + progress * (_height - _thumbHeight - 2 * _thumbInset);
     return GestureDetector(
       key: const Key('forceMarginContinuousSlider'),
       behavior: HitTestBehavior.opaque,
@@ -904,16 +1048,25 @@ class _VerticalSpeedSlider extends StatelessWidget {
               Container(
                 width: 56,
                 height: _height,
-                decoration: BoxDecoration(color: AppColors.deviceSettingsSheetCancel, borderRadius: BorderRadius.circular(28)),
-            ),
-            Positioned(
+                decoration: BoxDecoration(
+                  color: AppColors.deviceSettingsSheetCancel,
+                  borderRadius: BorderRadius.circular(28),
+                ),
+              ),
+              Positioned(
                 bottom: thumbBottom,
                 child: Container(
                   width: 28,
                   height: _thumbHeight,
                   alignment: Alignment.center,
-                  decoration: BoxDecoration(color: AppColors.brandPrimary, borderRadius: BorderRadius.circular(23)),
-                  child: const Icon(Icons.drag_handle, color: AppColors.backgroundPrimary),
+                  decoration: BoxDecoration(
+                    color: AppColors.brandPrimary,
+                    borderRadius: BorderRadius.circular(23),
+                  ),
+                  child: const Icon(
+                    Icons.drag_handle,
+                    color: AppColors.backgroundPrimary,
+                  ),
                 ),
               ),
             ],
@@ -925,7 +1078,11 @@ class _VerticalSpeedSlider extends StatelessWidget {
 }
 
 class _DiscreteVerticalSpeedSlider extends StatelessWidget {
-  const _DiscreteVerticalSpeedSlider({required this.value, required this.allowedValues, required this.onChanged});
+  const _DiscreteVerticalSpeedSlider({
+    required this.value,
+    required this.allowedValues,
+    required this.onChanged,
+  });
 
   final int value;
   final List<int> allowedValues;
@@ -936,7 +1093,10 @@ class _DiscreteVerticalSpeedSlider extends StatelessWidget {
   static const _thumbInset = 10.0;
 
   void _updateValue(Offset localPosition) {
-    final progress = (localPosition.dy / (_height - _thumbHeight)).clamp(0.0, 1.0);
+    final progress = (localPosition.dy / (_height - _thumbHeight)).clamp(
+      0.0,
+      1.0,
+    );
     final index = (progress * (allowedValues.length - 1)).round();
     onChanged(allowedValues[index]);
   }
@@ -944,8 +1104,11 @@ class _DiscreteVerticalSpeedSlider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final selectedIndex = allowedValues.indexOf(value);
-    final progress = allowedValues.length == 1 ? 0.0 : selectedIndex / (allowedValues.length - 1);
-    final thumbTop = _thumbInset + progress * (_height - _thumbHeight - 2 * _thumbInset);
+    final progress = allowedValues.length == 1
+        ? 0.0
+        : selectedIndex / (allowedValues.length - 1);
+    final thumbTop =
+        _thumbInset + progress * (_height - _thumbHeight - 2 * _thumbInset);
     return GestureDetector(
       key: const Key('openingSpeedDiscreteSlider'),
       behavior: HitTestBehavior.opaque,
@@ -961,7 +1124,10 @@ class _DiscreteVerticalSpeedSlider extends StatelessWidget {
             Container(
               width: 56,
               height: _height,
-              decoration: BoxDecoration(color: AppColors.deviceSettingsSheetCancel, borderRadius: BorderRadius.circular(28)),
+              decoration: BoxDecoration(
+                color: AppColors.deviceSettingsSheetCancel,
+                borderRadius: BorderRadius.circular(28),
+              ),
             ),
             Positioned(
               top: thumbTop,
@@ -969,8 +1135,14 @@ class _DiscreteVerticalSpeedSlider extends StatelessWidget {
                 width: 28,
                 height: _thumbHeight,
                 alignment: Alignment.center,
-                decoration: BoxDecoration(color: AppColors.brandPrimary, borderRadius: BorderRadius.circular(23)),
-                child: const Icon(Icons.drag_handle, color: AppColors.backgroundPrimary),
+                decoration: BoxDecoration(
+                  color: AppColors.brandPrimary,
+                  borderRadius: BorderRadius.circular(23),
+                ),
+                child: const Icon(
+                  Icons.drag_handle,
+                  color: AppColors.backgroundPrimary,
+                ),
               ),
             ),
           ],
@@ -981,16 +1153,21 @@ class _DiscreteVerticalSpeedSlider extends StatelessWidget {
 }
 
 class _ForceMarginAdjustmentSheet extends StatefulWidget {
-  const _ForceMarginAdjustmentSheet({required this.description, required this.placeholderAssetPath});
+  const _ForceMarginAdjustmentSheet({
+    required this.description,
+    required this.placeholderAssetPath,
+  });
 
   final String description;
   final String placeholderAssetPath;
 
   @override
-  State<_ForceMarginAdjustmentSheet> createState() => _ForceMarginAdjustmentSheetState();
+  State<_ForceMarginAdjustmentSheet> createState() =>
+      _ForceMarginAdjustmentSheetState();
 }
 
-class _ForceMarginAdjustmentSheetState extends State<_ForceMarginAdjustmentSheet> {
+class _ForceMarginAdjustmentSheetState
+    extends State<_ForceMarginAdjustmentSheet> {
   var _value = 0.0;
 
   @override
@@ -1000,16 +1177,31 @@ class _ForceMarginAdjustmentSheetState extends State<_ForceMarginAdjustmentSheet
       heightFactor: 0.72,
       child: Column(
         children: [
-          Text(AppLocalizations.of(context).deviceSettingsForceMargin, style: AppTextTokens.deviceSettingsSheetTitle(textTheme)),
+          Text(
+            AppLocalizations.of(context).deviceSettingsForceMargin,
+            style: AppTextTokens.deviceSettingsSheetTitle(textTheme),
+          ),
           const SizedBox(height: 24),
-          Text(widget.description, style: AppTextTokens.deviceSettingsSheetCaption(textTheme).copyWith(color: AppColors.deviceSettingsForceMarginWarningText)),
+          Text(
+            widget.description,
+            style: AppTextTokens.deviceSettingsSheetCaption(
+              textTheme,
+            ).copyWith(color: AppColors.deviceSettingsForceMarginWarningText),
+          ),
           const SizedBox(height: 24),
           Expanded(
             child: Row(
               children: [
-                _ForceMarginIndicatorCluster(assetPath: widget.placeholderAssetPath),
+                _ForceMarginIndicatorCluster(
+                  assetPath: widget.placeholderAssetPath,
+                ),
                 const SizedBox(width: 50),
-                _VerticalSpeedSlider(value: _value, minimum: 0, maximum: 15, onChanged: (value) => setState(() => _value = value)),
+                _VerticalSpeedSlider(
+                  value: _value,
+                  minimum: 0,
+                  maximum: 15,
+                  onChanged: (value) => setState(() => _value = value),
+                ),
                 const SizedBox(width: 10),
                 const Expanded(
                   child: _SliderScaleGuides(
@@ -1038,44 +1230,24 @@ class _ForceMarginIndicatorCluster extends StatelessWidget {
     height: _VerticalSpeedSlider._height,
     child: Stack(
       children: [
-        Positioned(left: 8, top: 0, child: _CutAssetPlaceholder(assetPath: assetPath, height: 28)),
-        Positioned(left: 58, top: 0, child: _CutAssetPlaceholder(assetPath: assetPath, height: 28)),
-        Positioned(left: 8, bottom: 0, child: _CutAssetPlaceholder(assetPath: assetPath, height: 28)),
+        Positioned(
+          left: 8,
+          top: 0,
+          child: _CutAssetPlaceholder(assetPath: assetPath, height: 28),
+        ),
+        Positioned(
+          left: 58,
+          top: 0,
+          child: _CutAssetPlaceholder(assetPath: assetPath, height: 28),
+        ),
+        Positioned(
+          left: 8,
+          bottom: 0,
+          child: _CutAssetPlaceholder(assetPath: assetPath, height: 28),
+        ),
       ],
     ),
   );
-}
-
-class _ForceMarginWarningDialog extends StatelessWidget {
-  const _ForceMarginWarningDialog({required this.description});
-
-  final String description;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return AlertDialog(
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(height: 32),
-          const _CutAssetPlaceholder(assetPath: DeviceSettingsAssetPaths.forceMarginWarningPlaceholder, height: 72),
-          const SizedBox(height: 24),
-          Text(description, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 13, color: AppColors.deviceSettingsForceMarginWarningText)),
-          const SizedBox(height: 28),
-          SizedBox(
-            width: 182,
-            height: 50,
-            child: FilledButton(
-              onPressed: () => Navigator.pop(context),
-              style: FilledButton.styleFrom(backgroundColor: AppColors.deviceSettingsForceMarginConfirm),
-              child: Text(l10n.deviceSettingsConfirmAction),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _ForceMarginLevelSheet extends StatefulWidget {
@@ -1089,21 +1261,35 @@ class _ForceMarginLevelSheetState extends State<_ForceMarginLevelSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final options = [for (var level = 3; level <= 7; level++) l10n.deviceSettingsForceMarginLevel(level)];
+    final options = [
+      for (var level = 3; level <= 7; level++)
+        l10n.deviceSettingsForceMarginLevel(level),
+    ];
     return _SettingsSheetFrame(
       heightFactor: 0.5,
       child: Column(
         children: [
-          Text(l10n.deviceSettingsForceMargin, style: AppTextTokens.deviceSettingsSheetTitle(Theme.of(context).textTheme)),
+          Text(
+            l10n.deviceSettingsForceMargin,
+            style: AppTextTokens.deviceSettingsSheetTitle(
+              Theme.of(context).textTheme,
+            ),
+          ),
           const SizedBox(height: 10),
-          Text(l10n.deviceSettingsForceMarginLevelCurrent(_level), style: AppTextTokens.deviceSettingsSheetCaption(Theme.of(context).textTheme)),
+          Text(
+            l10n.deviceSettingsForceMarginLevelCurrent(_level),
+            style: AppTextTokens.deviceSettingsSheetCaption(
+              Theme.of(context).textTheme,
+            ),
+          ),
           const SizedBox(height: 14),
           Expanded(
             child: _FixedSelectionList<String>(
               values: options,
               initialValue: l10n.deviceSettingsForceMarginLevel(_level),
               labelBuilder: (value) => value,
-              onSelected: (value) => setState(() => _level = options.indexOf(value) + 3),
+              onSelected: (value) =>
+                  setState(() => _level = options.indexOf(value) + 3),
             ),
           ),
           _SheetActionRow(onConfirm: () => Navigator.pop(context)),
@@ -1147,7 +1333,10 @@ class _SettingsSheetFrame extends StatelessWidget {
         ),
         child: SafeArea(
           top: false,
-          child: Padding(padding: const EdgeInsets.fromLTRB(16, 20, 16, 20), child: child),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
+            child: child,
+          ),
         ),
       ),
     );
@@ -1155,7 +1344,12 @@ class _SettingsSheetFrame extends StatelessWidget {
 }
 
 class _FixedSelectionList<T> extends StatefulWidget {
-  const _FixedSelectionList({required this.values, required this.initialValue, required this.labelBuilder, required this.onSelected});
+  const _FixedSelectionList({
+    required this.values,
+    required this.initialValue,
+    required this.labelBuilder,
+    required this.onSelected,
+  });
 
   static const itemExtent = 46.0;
 
@@ -1170,7 +1364,8 @@ class _FixedSelectionList<T> extends StatefulWidget {
 
 class _FixedSelectionListState<T> extends State<_FixedSelectionList<T>> {
   late int _selectedIndex = _initialIndex;
-  late final FixedExtentScrollController _controller = FixedExtentScrollController(initialItem: _selectedIndex);
+  late final FixedExtentScrollController _controller =
+      FixedExtentScrollController(initialItem: _selectedIndex);
 
   int get _initialIndex {
     final index = widget.values.indexOf(widget.initialValue);
@@ -1189,7 +1384,8 @@ class _FixedSelectionListState<T> extends State<_FixedSelectionList<T>> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final selectionTop = (constraints.maxHeight - _FixedSelectionList.itemExtent) / 2;
+        final selectionTop =
+            (constraints.maxHeight - _FixedSelectionList.itemExtent) / 2;
 
         return Stack(
           children: [
@@ -1204,14 +1400,15 @@ class _FixedSelectionListState<T> extends State<_FixedSelectionList<T>> {
               childDelegate: ListWheelChildBuilderDelegate(
                 childCount: widget.values.length,
                 builder: (context, index) {
-                  if (index == null) {
-                    return null;
-                  }
                   final selected = index == _selectedIndex;
                   return Center(
                     child: Text(
                       widget.labelBuilder(widget.values[index]),
-                      style: selected ? AppTextTokens.deviceSettingsSheetSelectedOption(textTheme) : AppTextTokens.deviceSettingsSheetOption(textTheme),
+                      style: selected
+                          ? AppTextTokens.deviceSettingsSheetSelectedOption(
+                              textTheme,
+                            )
+                          : AppTextTokens.deviceSettingsSheetOption(textTheme),
                     ),
                   );
                 },
@@ -1225,7 +1422,11 @@ class _FixedSelectionListState<T> extends State<_FixedSelectionList<T>> {
               child: IgnorePointer(
                 child: const DecoratedBox(
                   decoration: BoxDecoration(
-                    border: Border.symmetric(horizontal: BorderSide(color: AppColors.deviceSettingsDivider)),
+                    border: Border.symmetric(
+                      horizontal: BorderSide(
+                        color: AppColors.deviceSettingsDivider,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -1238,7 +1439,11 @@ class _FixedSelectionListState<T> extends State<_FixedSelectionList<T>> {
 }
 
 class _SegmentButton extends StatelessWidget {
-  const _SegmentButton({required this.label, required this.selected, required this.onTap});
+  const _SegmentButton({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
 
   final String label;
   final bool selected;
@@ -1253,13 +1458,19 @@ class _SegmentButton extends StatelessWidget {
       child: TextButton(
         onPressed: onTap,
         style: TextButton.styleFrom(
-          backgroundColor: selected ? AppColors.brandPrimary : AppColors.deviceSettingsSheetCancel,
-          foregroundColor: selected ? AppColors.backgroundPrimary : AppColors.textMuted,
+          backgroundColor: selected
+              ? AppColors.brandPrimary
+              : AppColors.deviceSettingsSheetCancel,
+          foregroundColor: selected
+              ? AppColors.backgroundPrimary
+              : AppColors.textMuted,
           shape: const StadiumBorder(),
         ),
         child: Text(
           label,
-          style: AppTextTokens.deviceSettingsSheetButton(textTheme).copyWith(color: selected ? AppColors.backgroundPrimary : AppColors.textMuted),
+          style: AppTextTokens.deviceSettingsSheetButton(textTheme).copyWith(
+            color: selected ? AppColors.backgroundPrimary : AppColors.textMuted,
+          ),
         ),
       ),
     );
@@ -1288,7 +1499,12 @@ class _SheetActionRow extends StatelessWidget {
                 foregroundColor: AppColors.textMuted,
                 shape: const StadiumBorder(),
               ),
-              child: Text(l10n.deviceSettingsCancelAction, style: AppTextTokens.deviceSettingsSheetButton(textTheme).copyWith(color: AppColors.textMuted)),
+              child: Text(
+                l10n.deviceSettingsCancelAction,
+                style: AppTextTokens.deviceSettingsSheetButton(
+                  textTheme,
+                ).copyWith(color: AppColors.textMuted),
+              ),
             ),
           ),
         ),
@@ -1305,7 +1521,9 @@ class _SheetActionRow extends StatelessWidget {
               ),
               child: Text(
                 l10n.deviceSettingsConfirmAction,
-                style: AppTextTokens.deviceSettingsSheetButton(textTheme).copyWith(color: AppColors.backgroundPrimary),
+                style: AppTextTokens.deviceSettingsSheetButton(
+                  textTheme,
+                ).copyWith(color: AppColors.backgroundPrimary),
               ),
             ),
           ),

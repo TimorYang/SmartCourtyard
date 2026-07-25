@@ -11,13 +11,28 @@ class MockHardwareGateway implements HardwareGateway {
       _notificationController = StreamController<BleNotification>.broadcast(),
       _nativeErrorController =
           StreamController<NativeHardwareError>.broadcast(),
-      _diagnosticController = StreamController<BleDiagnosticEvent>.broadcast();
+      _diagnosticController = StreamController<BleDiagnosticEvent>.broadcast(),
+      _attributeController =
+          StreamController<DeviceAttributeSnapshot>.broadcast();
 
   final StreamController<BleDevice> _scanController;
   final StreamController<BleConnectionEvent> _connectionController;
   final StreamController<BleNotification> _notificationController;
   final StreamController<NativeHardwareError> _nativeErrorController;
   final StreamController<BleDiagnosticEvent> _diagnosticController;
+  final StreamController<DeviceAttributeSnapshot> _attributeController;
+  final Map<int, DeviceAttribute> _attributes = <int, DeviceAttribute>{
+    0x2711: DeviceAttribute(id: 0x2711, value: Uint8List.fromList([0x07])),
+    0x2713: DeviceAttribute(id: 0x2713, value: Uint8List.fromList([0x1E])),
+    0x2714: DeviceAttribute(id: 0x2714, value: Uint8List.fromList([0x01])),
+    0x2725: DeviceAttribute(
+      id: 0x2725,
+      value: Uint8List.fromList([0x00, 0x00]),
+    ),
+    0x2726: DeviceAttribute(id: 0x2726, value: Uint8List.fromList([0x05])),
+    0x2727: DeviceAttribute(id: 0x2727, value: Uint8List.fromList([0x00])),
+    0x2728: DeviceAttribute(id: 0x2728, value: Uint8List.fromList([0x00])),
+  };
   bool flutterConsoleLoggingEnabled = false;
   bool nativeConsoleLoggingEnabled = false;
 
@@ -38,6 +53,10 @@ class MockHardwareGateway implements HardwareGateway {
   @override
   Stream<BleDiagnosticEvent> get bleDiagnosticEvents =>
       _diagnosticController.stream;
+
+  @override
+  Stream<DeviceAttributeSnapshot> get deviceAttributeSnapshots =>
+      _attributeController.stream;
 
   @override
   Future<void> configureHardwareLogging({
@@ -280,6 +299,40 @@ class MockHardwareGateway implements HardwareGateway {
       deviceId: deviceId,
       command: command,
       accepted: true,
+    );
+  }
+
+  @override
+  Future<DeviceAttributeSnapshot> queryDeviceAttributes({
+    required String requestId,
+    required String deviceId,
+  }) async {
+    final snapshot = DeviceAttributeSnapshot(
+      requestId: requestId,
+      deviceId: deviceId,
+      sequence: 1,
+      timestampMillis: DateTime.now().millisecondsSinceEpoch,
+      origin: DeviceAttributeReportOrigin.queryResult,
+      attributes: _attributes.values.toList(),
+    );
+    _attributeController.add(snapshot);
+    return snapshot;
+  }
+
+  @override
+  Future<DeviceAttributeWriteResult> setDeviceAttributes({
+    required String requestId,
+    required String deviceId,
+    required List<DeviceAttribute> attributes,
+  }) async {
+    for (final attribute in attributes) {
+      _attributes[attribute.id] = attribute;
+    }
+    return DeviceAttributeWriteResult(
+      requestId: requestId,
+      deviceId: deviceId,
+      success: true,
+      sequence: 2,
     );
   }
 
