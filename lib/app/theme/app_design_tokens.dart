@@ -58,6 +58,10 @@ class AppColors {
   static const accountLanguageDialogCancelSurface = Color(0xFFF1F2F4);
   static const accountLanguageDialogDivider = Color(0xFFF0F1F3);
   static const accountLanguageDialogScrim = Color(0x52000000);
+  static const manageDevicesRemoveDialogSurface = Color(0xFFFFFFFF);
+  static const manageDevicesRemoveDialogCancelSurface = Color(0xFFF1F2F4);
+  static const manageDevicesRemoveDialogConfirmSurface = Color(0xFF0066FF);
+  static const manageDevicesRemoveDialogScrim = Color(0x66000000);
   static const accountProfileLogoutSurface = Color(0xFFF3F4F6);
   static const deviceControlPanel = Color(0xFFF3F4F6);
   static const deviceControlPanelPressed = Color(0xFFE8EAEE);
@@ -261,6 +265,7 @@ class AppShapeTokens {
 
   static const accountDetailsDialogRadius = 8.0;
   static const accountLanguageDialogRadius = 12.0;
+  static const manageDevicesRemoveDialogRadius = 10.0;
   static const accountProfileLogoutRadius = 28.0;
   static const sharedDevicesCardRadius = 16.0;
   static const sharedDeviceMemberCardRadius = 16.0;
@@ -340,62 +345,29 @@ class AppSpacingTokens {
   static const receivingDevicesIconSize = 48.0;
   static const receivingDevicesIconToText = 20.0;
   static const receivingDevicesCardTitleToSubtitle = 12.0;
-  static const accountLanguageDialogHorizontalInset = 23.0;
-  static const accountLanguageDialogContentHorizontal = 20.0;
-  static const accountLanguageDialogTopPadding = 24.0;
-  static const accountLanguageDialogActionTop = 30.0;
-  static const accountLanguageDialogActionBottom = 36.0;
-  static const accountLanguageDialogActionHeight = 68.0;
-  static const accountLanguageDialogTitleToOptions = 14.0;
-  static const accountLanguageDialogOptionHeight = 68.0;
-  static const accountLanguageDialogActionGap = 56.0;
-  static const accountLanguageDialogMaxWidth = 522.0;
-  static const accountProfileHeaderAvatarSize = 66.0;
-  static const accountProfileHeaderHorizontal = 24.0;
-  static const accountProfileHeaderBottom = 18.0;
-  static const accountProfileHeaderAvatarToText = 16.0;
-  static const accountProfileHeaderMetaGap = 6.0;
-  static const accountProfileMenuRowHeight = 60.0;
-  static const accountProfileMenuHorizontal = 28.0;
-  static const accountProfileMenuIconSize = 20.0;
-  static const accountProfileMenuIconToLabel = 12.0;
-  static const accountProfileMenuValueToChevron = 8.0;
-  static const accountProfileMenuChevronSize = 24.0;
-  static const accountProfileLogoutTop = 20.0;
-  static const accountProfileLogoutHorizontal = 28.0;
-  static const accountProfileLogoutHeight = 56.0;
-  static const accountProfileLogoutBottom = 36.0;
-  static const regionPageHorizontal = 32.0;
-  static const regionPageTitleTop = 47.0;
-  static const regionPageTitleToList = 16.0;
-  static const regionRowHeight = 97.0;
   static const manageDevicesPageHorizontal = 31.0;
-  static const manageDevicesTitleTop = 35.0;
-  static const manageDevicesTitleToSubtitle = 12.0;
-  static const manageDevicesSubtitleToList = 46.0;
-  static const manageDevicesCardHeight = 142.0;
-  static const manageDevicesCardGap = 20.0;
+  static const manageDevicesTitleTop = 27.0;
+  static const manageDevicesTitleToSubtitle = 5.0;
+  static const manageDevicesSubtitleToList = 27.0;
+  static const manageDevicesCardHeight = 88.0;
+  static const manageDevicesCardGap = 12.0;
   static const manageDevicesCardHorizontal = 48.0;
-  static const manageDevicesIconSize = 52.0;
+  static const manageDevicesIconSize = 46.0;
   static const manageDevicesIconToText = 38.0;
   static const manageDevicesCardTitleToTimestamp = 20.0;
   static const manageDevicesActionIconSize = 26.0;
   static const manageDevicesActionEndPadding = 15.0;
-  static const systemPermissionsPageHorizontal = 28.0;
-  static const systemPermissionsTitleTop = 47.0;
-  static const systemPermissionsTitleToList = 64.0;
-  static const systemPermissionsCardHeight = 128.0;
-  static const systemPermissionsCardGap = 18.0;
-  static const systemPermissionsCardHorizontal = 35.0;
-  static const systemPermissionsStatusIconSize = 34.0;
-  static const upgradeCheckPageHorizontal = 24.0;
-  static const upgradeCheckSectionTop = 24.0;
-  static const upgradeCheckCardPadding = 16.0;
-  static const upgradeCheckCardGap = 18.0;
-  static const upgradeCheckActionHeight = 58.0;
-  static const upgradeCheckDialogInset = 32.0;
-  static const upgradeCheckDialogPadding = 20.0;
-  static const upgradeCheckDialogActionHeight = 56.0;
+  static const manageDevicesRemoveDialogHorizontalInset = 28.0;
+  static const manageDevicesRemoveDialogMaxWidth = 360.0;
+  static const manageDevicesRemoveDialogContentHorizontal = 12.0;
+  static const manageDevicesRemoveDialogContentTop = 25.0;
+  static const manageDevicesRemoveDialogActionsTop = 34.0;
+  static const manageDevicesRemoveDialogContentBottom = 26.0;
+  static const manageDevicesRemoveDialogActionHeight = 42.0;
+  static const manageDevicesRemoveDialogActionGap = 14.0;
+  static const accountLanguageDialogWheelItemExtent = 68.0;
+  static const accountLanguageDialogWheelHeight = 204.0;
+  static const accountLanguageDialogSelectionLineThickness = 1.0;
 }
 
 class AppOpacityTokens {
@@ -1546,7 +1518,7 @@ class AppTextTokens {
   static TextStyle sharedDevicesCardTitle(TextTheme textTheme) {
     return (textTheme.titleLarge ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
-      fontSize: 16,
+      fontSize: 15,
       fontWeight: FontWeight.w400,
       height: 1.2,
     );
@@ -1636,7 +1608,7 @@ class AppTextTokens {
   static TextStyle regionPageTitle(TextTheme textTheme) {
     return (textTheme.headlineMedium ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
-      fontSize: 32,
+      fontSize: 26,
       fontWeight: FontWeight.w600,
       height: 1.15,
     );
@@ -1645,7 +1617,7 @@ class AppTextTokens {
   static TextStyle regionRowLabel(TextTheme textTheme) {
     return (textTheme.titleLarge ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
-      fontSize: 20,
+      fontSize: 15,
       fontWeight: FontWeight.w400,
       height: 1.2,
     );
@@ -1654,7 +1626,7 @@ class AppTextTokens {
   static TextStyle systemPermissionsTitle(TextTheme textTheme) {
     return (textTheme.headlineMedium ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
-      fontSize: 32,
+      fontSize: 26,
       fontWeight: FontWeight.w600,
       height: 1.15,
     );
@@ -1663,7 +1635,7 @@ class AppTextTokens {
   static TextStyle systemPermissionsCardTitle(TextTheme textTheme) {
     return (textTheme.titleLarge ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
-      fontSize: 20,
+      fontSize: 15,
       fontWeight: FontWeight.w400,
       height: 1.2,
     );
@@ -1672,7 +1644,7 @@ class AppTextTokens {
   static TextStyle systemPermissionsCardStatus(TextTheme textTheme) {
     return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
       color: AppColors.textMuted,
-      fontSize: 14,
+      fontSize: 12,
       fontWeight: FontWeight.w400,
       height: 1.2,
     );
@@ -1689,7 +1661,7 @@ class AppTextTokens {
   static TextStyle upgradeCheckSectionTitle(TextTheme textTheme) {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
-      fontSize: 17,
+      fontSize: 14,
       fontWeight: FontWeight.w500,
     );
   }
@@ -1697,7 +1669,7 @@ class AppTextTokens {
   static TextStyle upgradeCheckCardTitle(TextTheme textTheme) {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
-      fontSize: 17,
+      fontSize: 15,
       fontWeight: FontWeight.w600,
     );
   }
@@ -1705,7 +1677,7 @@ class AppTextTokens {
   static TextStyle upgradeCheckBody(TextTheme textTheme) {
     return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
       color: AppColors.textMuted,
-      fontSize: 15,
+      fontSize: 13,
       fontWeight: FontWeight.w400,
     );
   }
@@ -1713,7 +1685,7 @@ class AppTextTokens {
   static TextStyle upgradeCheckMeta(TextTheme textTheme) {
     return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
       color: AppColors.textAccountDetailsValue,
-      fontSize: 14,
+      fontSize: 13,
       fontWeight: FontWeight.w400,
     );
   }
@@ -1742,7 +1714,7 @@ class AppTextTokens {
   static TextStyle manageDevicesSubtitle(TextTheme textTheme) {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
       color: AppColors.textHint,
-      fontSize: 20,
+      fontSize: 13,
       fontWeight: FontWeight.w400,
       height: 1.2,
     );
@@ -1751,9 +1723,29 @@ class AppTextTokens {
   static TextStyle manageDevicesCardTimestamp(TextTheme textTheme) {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
       color: AppColors.textHint,
-      fontSize: 20,
+      fontSize: 13,
       fontWeight: FontWeight.w400,
       height: 1.2,
+    );
+  }
+
+  static TextStyle manageDevicesRemoveDialogMessage(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 13,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle manageDevicesRemoveDialogAction(
+    TextTheme textTheme, {
+    required bool isPrimary,
+  }) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: isPrimary ? Colors.white : AppColors.textPrimary,
+      fontSize: 16,
+      fontWeight: FontWeight.w400,
     );
   }
 
@@ -1905,7 +1897,7 @@ class AppTextTokens {
   static TextStyle accountLanguageDialogTitle(TextTheme textTheme) {
     return (textTheme.headlineMedium ?? const TextStyle()).copyWith(
       color: AppColors.textAccountLanguageSelected,
-      fontSize: 34,
+      fontSize: 26,
       fontWeight: FontWeight.w600,
       height: 1.18,
     );
@@ -1919,7 +1911,7 @@ class AppTextTokens {
       color: isSelected
           ? AppColors.textAccountLanguageSelected
           : AppColors.textAccountLanguageOption,
-      fontSize: isSelected ? 28 : 20,
+      fontSize: isSelected ? 22 : 15,
       fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
       height: 1.2,
     );
@@ -1931,7 +1923,7 @@ class AppTextTokens {
   }) {
     return (textTheme.titleLarge ?? const TextStyle()).copyWith(
       color: isPrimary ? Colors.white : AppColors.textPrimary,
-      fontSize: 24,
+      fontSize: 18,
       fontWeight: FontWeight.w400,
       height: 1.2,
     );

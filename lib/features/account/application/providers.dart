@@ -23,6 +23,7 @@ import '../domain/use_cases/read_app_locale_preference_use_case.dart';
 import '../domain/use_cases/save_app_locale_preference_use_case.dart';
 import 'account_controller.dart';
 import 'app_locale_controller.dart';
+export 'managed_devices_controller.dart';
 
 final appStorageLocationsProvider = Provider<AppStorageLocations?>(
   (ref) => null,

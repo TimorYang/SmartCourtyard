@@ -590,6 +590,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get manageDevicesLogoutLabel => '退出设备登录';
 
   @override
+  String get manageDevicesRemoveConfirmationMessage => '确定要移除此设备吗？';
+
+  @override
+  String get manageDevicesRemoveCancelAction => '取消';
+
+  @override
+  String get manageDevicesRemoveConfirmAction => '确认';
+
+  @override
   String get accountMessage => '消息';
 
   @override

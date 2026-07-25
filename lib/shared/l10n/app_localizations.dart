@@ -1220,6 +1220,24 @@ abstract class AppLocalizations {
   /// **'Sign out device'**
   String get manageDevicesLogoutLabel;
 
+  /// Confirmation shown before removing a signed-in device from the Manage devices list
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to remove\nthis device?'**
+  String get manageDevicesRemoveConfirmationMessage;
+
+  /// Action that dismisses the signed-in device removal confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get manageDevicesRemoveCancelAction;
+
+  /// Action that confirms removal of a signed-in device
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get manageDevicesRemoveConfirmAction;
+
   /// Account menu item for messages; lowercase matches the provided design
   ///
   /// In en, this message translates to:

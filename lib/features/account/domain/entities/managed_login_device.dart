@@ -2,7 +2,6 @@
 class ManagedLoginDevice {
   const ManagedLoginDevice({
     required this.id,
-    required this.name,
     required this.type,
     required this.loggedInAt,
     required this.isCurrentDevice,
@@ -10,9 +9,6 @@ class ManagedLoginDevice {
 
   /// Stable identifier used to target this row for future edit or sign-out actions.
   final String id;
-
-  /// Device name displayed as the primary text on the signed-in device card.
-  final String name;
 
   /// Device category used to choose the card's device illustration.
   final ManagedLoginDeviceType type;

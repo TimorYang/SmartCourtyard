@@ -178,53 +178,86 @@ void main() {
     );
   });
 
-  testWidgets('opens and dismisses the language dialog from account profile', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          appLocaleLocalDataSourceProvider.overrideWithValue(
-            InMemoryAppLocaleLocalDataSource(initialLanguageCode: 'en'),
-          ),
-        ],
-        child: const _LocaleTestHarness(),
-      ),
-    );
+  testWidgets(
+    'selects the language centered in the picker when scrolling stops',
+    (tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            appLocaleLocalDataSourceProvider.overrideWithValue(
+              InMemoryAppLocaleLocalDataSource(initialLanguageCode: 'en'),
+            ),
+          ],
+          child: const _LocaleTestHarness(),
+        ),
+      );
 
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(AccountProfileKeys.languageMenuItem));
-    await tester.pumpAndSettle();
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(AccountProfileKeys.languageMenuItem));
+      await tester.pumpAndSettle();
 
-    expect(find.byKey(AccountProfileKeys.languageDialog), findsOneWidget);
-    expect(find.text('France'), findsOneWidget);
-    expect(find.text('中文(简体)'), findsOneWidget);
-    expect(find.text('Das ist Deutsch'), findsOneWidget);
-    expect(find.byKey(AccountProfileKeys.languageCancelButton), findsOneWidget);
-    expect(
-      find.byKey(AccountProfileKeys.languageConfirmButton),
-      findsOneWidget,
-    );
+      expect(find.byKey(AccountProfileKeys.languageDialog), findsOneWidget);
+      expect(find.byKey(AccountProfileKeys.languagePicker), findsOneWidget);
+      expect(find.text('France'), findsNothing);
+      expect(find.text('中文(简体)'), findsOneWidget);
+      expect(find.text('Das ist Deutsch'), findsNothing);
+      expect(
+        find.byKey(AccountProfileKeys.languageCancelButton),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(AccountProfileKeys.languageConfirmButton),
+        findsOneWidget,
+      );
 
-    await tester.tap(find.text('France'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(AccountProfileKeys.languageConfirmButton));
-    await tester.pumpAndSettle();
+      final dialog = find.byKey(AccountProfileKeys.languageDialog);
+      final english = find.descendant(
+        of: dialog,
+        matching: find.text('English'),
+      );
+      expect(tester.widget<Text>(english).style?.fontSize, 28);
 
-    expect(find.byKey(AccountProfileKeys.languageDialog), findsNothing);
-    expect(find.text('Language'), findsOneWidget);
-    expect(find.text('English'), findsOneWidget);
+      await tester.drag(
+        find.byKey(AccountProfileKeys.languagePicker),
+        const Offset(0, -100),
+      );
+      await tester.pumpAndSettle();
+      final simplifiedChinese = find.descendant(
+        of: dialog,
+        matching: find.text('中文(简体)'),
+      );
+      expect(tester.widget<Text>(simplifiedChinese).style?.fontSize, 28);
 
-    await tester.tap(find.byKey(AccountProfileKeys.languageMenuItem));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('中文(简体)'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(AccountProfileKeys.languageConfirmButton));
-    await tester.pumpAndSettle();
+      await tester.tap(find.byKey(AccountProfileKeys.languageConfirmButton));
+      await tester.pumpAndSettle();
 
-    expect(find.text('语言'), findsOneWidget);
-    expect(find.text('中文(简体)'), findsOneWidget);
-  });
+      expect(find.byKey(AccountProfileKeys.languageDialog), findsNothing);
+      expect(find.text('语言'), findsOneWidget);
+      expect(find.text('中文(简体)'), findsOneWidget);
+
+      await tester.tap(find.byKey(AccountProfileKeys.languageMenuItem));
+      await tester.pumpAndSettle();
+      final reopenedDialog = find.byKey(AccountProfileKeys.languageDialog);
+      final reopenedSimplifiedChinese = find.descendant(
+        of: reopenedDialog,
+        matching: find.text('中文(简体)'),
+      );
+      expect(
+        tester.widget<Text>(reopenedSimplifiedChinese).style?.fontSize,
+        28,
+      );
+      await tester.drag(
+        find.byKey(AccountProfileKeys.languagePicker),
+        const Offset(0, 100),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(AccountProfileKeys.languageCancelButton));
+      await tester.pumpAndSettle();
+
+      expect(find.text('语言'), findsOneWidget);
+      expect(find.text('中文(简体)'), findsOneWidget);
+    },
+  );
 
   testWidgets('opens account details page when tapping the avatar', (
     tester,

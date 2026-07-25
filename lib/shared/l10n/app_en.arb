@@ -717,6 +717,18 @@
   "@manageDevicesLogoutLabel": {
     "description": "Accessibility label for a signed-in device sign-out icon"
   },
+  "manageDevicesRemoveConfirmationMessage": "Are you sure you want to remove\nthis device?",
+  "@manageDevicesRemoveConfirmationMessage": {
+    "description": "Confirmation shown before removing a signed-in device from the Manage devices list"
+  },
+  "manageDevicesRemoveCancelAction": "Cancel",
+  "@manageDevicesRemoveCancelAction": {
+    "description": "Action that dismisses the signed-in device removal confirmation"
+  },
+  "manageDevicesRemoveConfirmAction": "Confirm",
+  "@manageDevicesRemoveConfirmAction": {
+    "description": "Action that confirms removal of a signed-in device"
+  },
   "accountMessage": "message",
   "@accountMessage": {
     "description": "Account menu item for messages; lowercase matches the provided design"

@@ -14,19 +14,16 @@ class SystemPermissionsPage extends ConsumerStatefulWidget {
   static const routePath = '/account/system-permissions';
 
   @override
-  ConsumerState<SystemPermissionsPage> createState() =>
-      _SystemPermissionsPageState();
+  ConsumerState<SystemPermissionsPage> createState() => _SystemPermissionsPageState();
 }
 
 class SystemPermissionsPageKeys {
   const SystemPermissionsPageKeys._();
 
-  static ValueKey<String> card(SystemPermission permission) =>
-      ValueKey('system-permissions-${permission.name}-card');
+  static ValueKey<String> card(SystemPermission permission) => ValueKey('system-permissions-${permission.name}-card');
 }
 
-class _SystemPermissionsPageState extends ConsumerState<SystemPermissionsPage>
-    with WidgetsBindingObserver {
+class _SystemPermissionsPageState extends ConsumerState<SystemPermissionsPage> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
@@ -61,65 +58,32 @@ class _SystemPermissionsPageState extends ConsumerState<SystemPermissionsPage>
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 430),
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacingTokens.systemPermissionsPageHorizontal,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 28),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(
-                    height: AppSpacingTokens.systemPermissionsTitleTop,
-                  ),
-                  Text(
-                    l10n.systemPermissionsPageTitle,
-                    style: AppTextTokens.systemPermissionsTitle(
-                      Theme.of(context).textTheme,
-                    ),
-                  ),
-                  const SizedBox(
-                    height: AppSpacingTokens.systemPermissionsTitleToList,
-                  ),
+                  const SizedBox(height: 27),
+                  Text(l10n.systemPermissionsPageTitle, style: AppTextTokens.systemPermissionsTitle(Theme.of(context).textTheme)),
+                  const SizedBox(height: 41),
                   if (viewState.isLoading)
-                    const Expanded(
-                      child: Center(child: CircularProgressIndicator()),
-                    )
+                    const Expanded(child: Center(child: CircularProgressIndicator()))
                   else
                     Expanded(
                       child: ListView.separated(
                         padding: EdgeInsets.zero,
                         itemCount: SystemPermission.values.length,
-                        separatorBuilder: (_, index) => const SizedBox(
-                          height: AppSpacingTokens.systemPermissionsCardGap,
-                        ),
+                        separatorBuilder: (_, index) => const SizedBox(height: 18),
                         itemBuilder: (context, index) {
                           final permission = SystemPermission.values[index];
                           final state =
-                              viewState.permissionFor(permission) ??
-                              SystemPermissionState(
-                                permission: permission,
-                                status: SystemPermissionStatus.denied,
-                              );
+                              viewState.permissionFor(permission) ?? SystemPermissionState(permission: permission, status: SystemPermissionStatus.denied);
                           return _PermissionCard(
                             permission: permission,
                             state: state,
-                            isPending:
-                                viewState.pendingPermission == permission,
+                            isPending: viewState.pendingPermission == permission,
                             onTap: () => controller.activate(permission),
                           );
                         },
-                      ),
-                    ),
-                  if (viewState.error != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 12, bottom: 16),
-                      child: Text(
-                        viewState.error!.messageKey ==
-                                'systemPermissionsLoadError'
-                            ? l10n.systemPermissionsLoadError
-                            : l10n.systemPermissionsRequestError,
-                        style: AppTextTokens.systemPermissionsCardStatus(
-                          Theme.of(context).textTheme,
-                        ),
                       ),
                     ),
                 ],
@@ -133,12 +97,7 @@ class _SystemPermissionsPageState extends ConsumerState<SystemPermissionsPage>
 }
 
 class _PermissionCard extends StatelessWidget {
-  const _PermissionCard({
-    required this.permission,
-    required this.state,
-    required this.isPending,
-    required this.onTap,
-  });
+  const _PermissionCard({required this.permission, required this.state, required this.isPending, required this.onTap});
 
   final SystemPermission permission;
   final SystemPermissionState state;
@@ -162,21 +121,12 @@ class _PermissionCard extends StatelessWidget {
       label: title,
       child: InkWell(
         key: SystemPermissionsPageKeys.card(permission),
-        borderRadius: BorderRadius.circular(
-          AppShapeTokens.systemPermissionsCardRadius,
-        ),
+        borderRadius: BorderRadius.circular(AppShapeTokens.systemPermissionsCardRadius),
         onTap: granted || isPending ? null : onTap,
         child: Container(
-          height: AppSpacingTokens.systemPermissionsCardHeight,
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacingTokens.systemPermissionsCardHorizontal,
-          ),
-          decoration: BoxDecoration(
-            color: AppColors.systemPermissionsCard,
-            borderRadius: BorderRadius.circular(
-              AppShapeTokens.systemPermissionsCardRadius,
-            ),
-          ),
+          height: 88,
+          padding: const EdgeInsets.only(left: 23,right: 18),
+          decoration: BoxDecoration(color: AppColors.systemPermissionsCard, borderRadius: BorderRadius.circular(AppShapeTokens.systemPermissionsCardRadius)),
           child: Row(
             children: [
               Expanded(
@@ -184,37 +134,22 @@ class _PermissionCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Text(title, style: AppTextTokens.systemPermissionsCardTitle(Theme.of(context).textTheme)),
+                    const SizedBox(height: 13),
                     Text(
-                      title,
-                      style: AppTextTokens.systemPermissionsCardTitle(
-                        Theme.of(context).textTheme,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      granted
-                          ? l10n.systemPermissionsGranted
-                          : l10n.systemPermissionsDenied,
-                      style: AppTextTokens.systemPermissionsCardStatus(
-                        Theme.of(context).textTheme,
-                      ),
+                      granted ? l10n.systemPermissionsGranted : l10n.systemPermissionsDenied,
+                      style: AppTextTokens.systemPermissionsCardStatus(Theme.of(context).textTheme),
                     ),
                   ],
                 ),
               ),
               if (isPending)
-                const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
+                const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
               else
                 Icon(
                   granted ? Icons.check_rounded : Icons.close_rounded,
-                  color: granted
-                      ? AppColors.systemPermissionsGranted
-                      : AppColors.systemPermissionsDenied,
-                  size: AppSpacingTokens.systemPermissionsStatusIconSize,
+                  color: granted ? AppColors.systemPermissionsGranted : AppColors.systemPermissionsDenied,
+                  size: 24,
                 ),
             ],
           ),

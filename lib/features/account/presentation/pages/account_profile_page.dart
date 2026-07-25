@@ -46,6 +46,7 @@ class AccountProfileKeys {
   static const receivingDevicesMenuItem = ValueKey('account-profile-receiving-devices-menu-item');
   static const languageMenuItem = ValueKey('account-profile-language-menu-item');
   static const languageDialog = ValueKey('account-language-dialog');
+  static const languagePicker = ValueKey('account-language-picker');
   static const languageCancelButton = ValueKey('account-language-cancel-button');
   static const languageConfirmButton = ValueKey('account-language-confirm-button');
   static const regionMenuItem = ValueKey('account-profile-region-menu-item');
@@ -237,12 +238,21 @@ class _LanguageDialog extends StatefulWidget {
 
 class _LanguageDialogState extends State<_LanguageDialog> {
   late AppLocalePreference _selectedLocale;
+  late final FixedExtentScrollController _languagePickerController;
   var _isConfirming = false;
 
   @override
   void initState() {
     super.initState();
     _selectedLocale = widget.initialLocale;
+    final selectedLocaleIndex = AppLocalePreference.values.indexOf(_selectedLocale);
+    _languagePickerController = FixedExtentScrollController(initialItem: selectedLocaleIndex);
+  }
+
+  @override
+  void dispose() {
+    _languagePickerController.dispose();
+    super.dispose();
   }
 
   @override
@@ -250,41 +260,31 @@ class _LanguageDialogState extends State<_LanguageDialog> {
     final l10n = AppLocalizations.of(context);
     final textTheme = Theme.of(context).textTheme;
     final languages = [
-      _LanguageOptionData(label: l10n.accountLanguageOptionFrench),
       _LanguageOptionData(label: l10n.accountLanguageOptionEnglish, locale: AppLocalePreference.english),
       _LanguageOptionData(label: l10n.accountLanguageOptionSimplifiedChinese, locale: AppLocalePreference.simplifiedChinese),
-      _LanguageOptionData(label: l10n.accountLanguageOptionTraditionalChinese),
-      _LanguageOptionData(label: l10n.accountLanguageOptionGerman),
     ];
 
     return Dialog(
       key: AccountProfileKeys.languageDialog,
-      insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacingTokens.accountLanguageDialogHorizontalInset),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 23),
       backgroundColor: AppColors.accountLanguageDialogSurface,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(AppShapeTokens.accountLanguageDialogRadius))),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: AppSpacingTokens.accountLanguageDialogMaxWidth),
+        constraints: const BoxConstraints(maxWidth: 522),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacingTokens.accountLanguageDialogContentHorizontal,
-            AppSpacingTokens.accountLanguageDialogTopPadding,
-            AppSpacingTokens.accountLanguageDialogContentHorizontal,
-            AppSpacingTokens.accountLanguageDialogActionBottom,
-          ),
+          padding: const EdgeInsets.fromLTRB(20, 22, 20, 36),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(l10n.accountLanguageDialogTitle, style: AppTextTokens.accountLanguageDialogTitle(textTheme)),
-              const SizedBox(height: AppSpacingTokens.accountLanguageDialogTitleToOptions),
-              for (var index = 0; index < languages.length; index++) ...[
-                if (index == 2 || index == 3) const Divider(height: 1, thickness: 1, color: AppColors.accountLanguageDialogDivider),
-                _LanguageOption(
-                  label: languages[index].label,
-                  isSelected: languages[index].locale == _selectedLocale,
-                  onTap: languages[index].locale == null ? null : () => setState(() => _selectedLocale = languages[index].locale!),
-                ),
-              ],
-              const SizedBox(height: AppSpacingTokens.accountLanguageDialogActionTop),
+              const SizedBox(height: 18),
+              _LanguagePicker(
+                controller: _languagePickerController,
+                languages: languages,
+                selectedLocale: _selectedLocale,
+                onScrollEnd: () => _selectCenteredLocale(languages),
+              ),
+              const SizedBox(height: 30),
               Row(
                 children: [
                   Expanded(
@@ -295,7 +295,7 @@ class _LanguageDialogState extends State<_LanguageDialog> {
                       onPressed: _isConfirming ? null : () => Navigator.of(context).pop(),
                     ),
                   ),
-                  const SizedBox(width: AppSpacingTokens.accountLanguageDialogActionGap),
+                  const SizedBox(width: 40),
                   Expanded(
                     child: _LanguageDialogButton(
                       key: AccountProfileKeys.languageConfirmButton,
@@ -320,36 +320,81 @@ class _LanguageDialogState extends State<_LanguageDialog> {
       Navigator.of(context).pop();
     }
   }
+
+  void _selectCenteredLocale(List<_LanguageOptionData> languages) {
+    final selectedIndex = _languagePickerController.selectedItem;
+    final locale = languages[selectedIndex].locale;
+    if (locale != _selectedLocale) {
+      setState(() => _selectedLocale = locale);
+    }
+  }
 }
 
 class _LanguageOptionData {
-  const _LanguageOptionData({required this.label, this.locale});
+  const _LanguageOptionData({required this.label, required this.locale});
 
   final String label;
-  final AppLocalePreference? locale;
+  final AppLocalePreference locale;
 }
 
-class _LanguageOption extends StatelessWidget {
-  const _LanguageOption({required this.label, required this.isSelected, required this.onTap});
+class _LanguagePicker extends StatelessWidget {
+  const _LanguagePicker({required this.controller, required this.languages, required this.selectedLocale, required this.onScrollEnd});
 
-  final String label;
-  final bool isSelected;
-  final VoidCallback? onTap;
+  final FixedExtentScrollController controller;
+  final List<_LanguageOptionData> languages;
+  final AppLocalePreference selectedLocale;
+  final VoidCallback onScrollEnd;
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      button: onTap != null,
-      selected: isSelected,
-      label: label,
-      child: InkWell(
-        onTap: onTap,
-        child: SizedBox(
-          height: AppSpacingTokens.accountLanguageDialogOptionHeight,
-          child: Center(
-            child: Text(label, style: AppTextTokens.accountLanguageDialogOption(Theme.of(context).textTheme, isSelected: isSelected)),
+    return SizedBox(
+      height: AppSpacingTokens.accountLanguageDialogWheelHeight,
+      child: Stack(
+        children: [
+          NotificationListener<ScrollEndNotification>(
+            onNotification: (notification) {
+              if (notification.depth == 0) {
+                onScrollEnd();
+              }
+              return false;
+            },
+            child: ListWheelScrollView.useDelegate(
+              key: AccountProfileKeys.languagePicker,
+              controller: controller,
+              itemExtent: AppSpacingTokens.accountLanguageDialogWheelItemExtent,
+              physics: const FixedExtentScrollPhysics(),
+              childDelegate: ListWheelChildBuilderDelegate(
+                childCount: languages.length,
+                builder: (context, index) {
+                  final language = languages[index];
+                  return Semantics(
+                    selected: language.locale == selectedLocale,
+                    label: language.label,
+                    child: Center(
+                      child: Text(
+                        language.label,
+                        style: AppTextTokens.accountLanguageDialogOption(Theme.of(context).textTheme, isSelected: language.locale == selectedLocale),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
           ),
-        ),
+          IgnorePointer(
+            child: Center(
+              child: Container(
+                height: AppSpacingTokens.accountLanguageDialogWheelItemExtent,
+                decoration: const BoxDecoration(
+                  border: Border(
+                    top: BorderSide(color: AppColors.accountLanguageDialogDivider, width: AppSpacingTokens.accountLanguageDialogSelectionLineThickness),
+                    bottom: BorderSide(color: AppColors.accountLanguageDialogDivider, width: AppSpacingTokens.accountLanguageDialogSelectionLineThickness),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -365,7 +410,7 @@ class _LanguageDialogButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: AppSpacingTokens.accountLanguageDialogActionHeight,
+      height: 50,
       child: FilledButton(
         onPressed: onPressed,
         style: FilledButton.styleFrom(
@@ -409,21 +454,21 @@ class _AccountHeader extends StatelessWidget {
                 },
               ),
               Positioned(
-                left: AppSpacingTokens.accountProfileHeaderHorizontal,
-                right: AppSpacingTokens.accountProfileHeaderHorizontal,
-                bottom: AppSpacingTokens.accountProfileHeaderBottom,
+                left: 24,
+                right: 24,
+                bottom: 18,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    _AccountAvatar(size: AppSpacingTokens.accountProfileHeaderAvatarSize, onTap: () => context.pushNamed(AccountDetailsPage.routeName)),
-                    const SizedBox(width: AppSpacingTokens.accountProfileHeaderAvatarToText),
+                    _AccountAvatar(size: 66, onTap: () => context.pushNamed(AccountDetailsPage.routeName)),
+                    const SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(email, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextTokens.accountProfileEmail(textTheme)),
-                          const SizedBox(height: AppSpacingTokens.accountProfileHeaderMetaGap),
+                          const SizedBox(height: 6),
                           Text(registeredAt, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextTokens.accountProfileRegisteredAt(textTheme)),
                         ],
                       ),
@@ -514,14 +559,7 @@ class _AccountMenu extends StatelessWidget {
         children: [
           for (var index = 0; index < items.length; index++) ...[
             _AccountMenuRow(item: items[index]),
-            if (index < items.length - 1)
-              const Divider(
-                height: 1,
-                thickness: 1,
-                indent: AppSpacingTokens.accountProfileMenuHorizontal,
-                endIndent: AppSpacingTokens.accountProfileMenuHorizontal,
-                color: AppColors.borderAccountDivider,
-              ),
+            if (index < items.length - 1) const Divider(height: 1, thickness: 1, indent: 28, endIndent: 28, color: AppColors.borderAccountDivider),
           ],
         ],
       ),
@@ -560,25 +598,25 @@ class _AccountMenuRow extends StatelessWidget {
               AppToast.info(context, l10n.accountMenuComingSoon(item.label));
             },
         child: SizedBox(
-          height: AppSpacingTokens.accountProfileMenuRowHeight,
+          height: 60,
           child: Row(
             children: [
-              const SizedBox(width: AppSpacingTokens.accountProfileMenuHorizontal),
+              const SizedBox(width: 28),
               SizedBox(
-                width: AppSpacingTokens.accountProfileMenuIconSize,
-                height: AppSpacingTokens.accountProfileMenuIconSize,
+                width: 20,
+                height: 20,
                 child: Image.asset(item.iconAssetPath, fit: BoxFit.contain, errorBuilder: (context, error, stackTrace) => const SizedBox.expand()),
               ),
-              const SizedBox(width: AppSpacingTokens.accountProfileMenuIconToLabel),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(item.label, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextTokens.accountMenuLabel(textTheme)),
               ),
               if (item.trailingText case final trailingText?) ...[
                 Text(trailingText, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextTokens.accountMenuValue(textTheme)),
-                const SizedBox(width: AppSpacingTokens.accountProfileMenuValueToChevron),
+                const SizedBox(width: 8),
               ],
-              const Icon(Icons.chevron_right_rounded, color: AppColors.iconAccountChevron, size: AppSpacingTokens.accountProfileMenuChevronSize),
-              const SizedBox(width: AppSpacingTokens.accountProfileMenuHorizontal),
+              const Icon(Icons.chevron_right_rounded, color: AppColors.iconAccountChevron, size: 24),
+              const SizedBox(width: 28),
             ],
           ),
         ),
@@ -595,14 +633,9 @@ class _AccountProfileLogoutButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacingTokens.accountProfileLogoutHorizontal,
-        AppSpacingTokens.accountProfileLogoutTop,
-        AppSpacingTokens.accountProfileLogoutHorizontal,
-        AppSpacingTokens.accountProfileLogoutBottom,
-      ),
+      padding: const EdgeInsets.fromLTRB(28, 20, 28, 36),
       child: SizedBox(
-        height: AppSpacingTokens.accountProfileLogoutHeight,
+        height: 56,
         width: double.infinity,
         child: FilledButton(
           key: AccountProfileKeys.logoutButton,

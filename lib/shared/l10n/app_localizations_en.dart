@@ -615,6 +615,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get manageDevicesLogoutLabel => 'Sign out device';
 
   @override
+  String get manageDevicesRemoveConfirmationMessage =>
+      'Are you sure you want to remove\nthis device?';
+
+  @override
+  String get manageDevicesRemoveCancelAction => 'Cancel';
+
+  @override
+  String get manageDevicesRemoveConfirmAction => 'Confirm';
+
+  @override
   String get accountMessage => 'message';
 
   @override
