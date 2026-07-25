@@ -8,8 +8,13 @@ class AddForceDoorUseCase {
 
   Future<OnboardedForceDoor> call({
     required String sn,
+    String? doorId,
     required String requestId,
   }) {
-    return repository.addForceDoor(sn: sn, requestId: requestId);
+    return repository.addForceDoor(
+      sn: sn,
+      doorId: doorId,
+      requestId: requestId,
+    );
   }
 }

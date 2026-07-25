@@ -4,7 +4,6 @@ import '../../../../core/logging/app_logger.dart';
 import '../../../../core/network/dio_factory.dart';
 import '../../../../core/network/network_exception.dart';
 import '../dto/add_force_door_request_dto.dart';
-import '../dto/binding_status_response_dto.dart';
 import '../dto/force_door_response_dto.dart';
 import '../dto/onboarding_device_key_response_dto.dart';
 import 'add_device_onboarding_api.dart';
@@ -22,6 +21,7 @@ abstract interface class AddDeviceOnboardingRemoteDataSource {
 
   Future<ForceDoorResponseDto> addForceDoor({
     required String sn,
+    String? doorId,
     required String requestId,
   });
 }
@@ -97,11 +97,12 @@ class AddDeviceOnboardingRemoteDataSourceImpl
   @override
   Future<ForceDoorResponseDto> addForceDoor({
     required String sn,
+    String? doorId,
     required String requestId,
   }) async {
     try {
       final response = await api.addForceDoor(
-        AddForceDoorRequestDto(sn: sn),
+        AddForceDoorRequestDto(sn: sn, doorId: doorId),
         Options(extra: _bindingRequestExtras(requestId)),
       );
       final data = response.data;

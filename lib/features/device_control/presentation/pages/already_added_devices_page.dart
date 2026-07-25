@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
+import '../../../add_device/presentation/pages/add_device_page.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/already_added_devices_controller.dart';
@@ -90,7 +92,12 @@ class _AlreadyAddedDevicesPageState
           IconButton(
             key: const ValueKey<String>('already-added-add-action'),
             tooltip: l10n.smartOpenerAddedAddTooltip,
-            onPressed: () {},
+            onPressed: () => context.pushNamed(
+              AddDevicePage.routeName,
+              queryParameters: {
+                AddDevicePage.doorIdQueryParameter: widget.doorId,
+              },
+            ),
             icon: const Icon(Icons.add, size: 26),
           ),
           const SizedBox(width: 8),
