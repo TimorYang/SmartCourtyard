@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/add_device/presentation/pages/add_device_page.dart';
 import '../../features/add_device/presentation/pages/add_new_doors_page.dart';
 import '../../features/add_device/presentation/pages/f_box_connection_guide_page.dart';
+import '../../features/add_device/presentation/pages/f_box_wiring_test_page.dart';
 import '../../features/add_device/presentation/pages/smart_opener_ble_scan_page.dart';
 import '../../features/add_device/presentation/pages/smart_opener_choose_wifi_page.dart';
 import '../../features/add_device/presentation/pages/smart_opener_connecting_page.dart';
@@ -233,6 +234,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: FBoxConnectionGuidePage.routePath,
         name: FBoxConnectionGuidePage.routeName,
         builder: (context, state) => const FBoxConnectionGuidePage(),
+      ),
+      GoRoute(
+        path: FBoxWiringTestPage.routePath,
+        name: FBoxWiringTestPage.routeName,
+        builder: (context, state) => const FBoxWiringTestPage(),
       ),
       GoRoute(
         path: SmartOpenerScanGuidePage.routePath,

@@ -1340,6 +1340,60 @@ abstract class AppLocalizations {
   /// **'NEXT'**
   String get fBoxConnectionGuideNextAction;
 
+  /// Title of the F-box wiring test page
+  ///
+  /// In en, this message translates to:
+  /// **'Test'**
+  String get fBoxWiringTestTitle;
+
+  /// Instructions on the F-box wiring test page
+  ///
+  /// In en, this message translates to:
+  /// **'Click the button below, if the door operates normally, press \'NEXT\'.\nIf not, change \'O/S/C wiring\' to test again.'**
+  String get fBoxWiringTestDescription;
+
+  /// PB wiring mode label
+  ///
+  /// In en, this message translates to:
+  /// **'PB wiring'**
+  String get fBoxWiringTestPbWiring;
+
+  /// O/S/C wiring mode label
+  ///
+  /// In en, this message translates to:
+  /// **'O/S/C wiring'**
+  String get fBoxWiringTestOscWiring;
+
+  /// F-box wiring test status label
+  ///
+  /// In en, this message translates to:
+  /// **'door operates normally'**
+  String get fBoxWiringTestDoorOperatesNormally;
+
+  /// Accessibility label for the PB wiring test control
+  ///
+  /// In en, this message translates to:
+  /// **'Test PB wiring'**
+  String get fBoxWiringTestPbAction;
+
+  /// Accessibility label for the O/S/C open control
+  ///
+  /// In en, this message translates to:
+  /// **'Open door'**
+  String get fBoxWiringTestOpenAction;
+
+  /// Accessibility label for the O/S/C stop control
+  ///
+  /// In en, this message translates to:
+  /// **'Stop door'**
+  String get fBoxWiringTestStopAction;
+
+  /// Accessibility label for the O/S/C close control
+  ///
+  /// In en, this message translates to:
+  /// **'Close door'**
+  String get fBoxWiringTestCloseAction;
+
   /// USB WIFI module option on the add device page
   ///
   /// In en, this message translates to:

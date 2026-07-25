@@ -788,6 +788,42 @@
   "@fBoxConnectionGuideNextAction": {
     "description": "Primary action on the F-box connection guide"
   },
+  "fBoxWiringTestTitle": "Test",
+  "@fBoxWiringTestTitle": {
+    "description": "Title of the F-box wiring test page"
+  },
+  "fBoxWiringTestDescription": "Click the button below, if the door operates normally, press 'NEXT'.\nIf not, change 'O/S/C wiring' to test again.",
+  "@fBoxWiringTestDescription": {
+    "description": "Instructions on the F-box wiring test page"
+  },
+  "fBoxWiringTestPbWiring": "PB wiring",
+  "@fBoxWiringTestPbWiring": {
+    "description": "PB wiring mode label"
+  },
+  "fBoxWiringTestOscWiring": "O/S/C wiring",
+  "@fBoxWiringTestOscWiring": {
+    "description": "O/S/C wiring mode label"
+  },
+  "fBoxWiringTestDoorOperatesNormally": "door operates normally",
+  "@fBoxWiringTestDoorOperatesNormally": {
+    "description": "F-box wiring test status label"
+  },
+  "fBoxWiringTestPbAction": "Test PB wiring",
+  "@fBoxWiringTestPbAction": {
+    "description": "Accessibility label for the PB wiring test control"
+  },
+  "fBoxWiringTestOpenAction": "Open door",
+  "@fBoxWiringTestOpenAction": {
+    "description": "Accessibility label for the O/S/C open control"
+  },
+  "fBoxWiringTestStopAction": "Stop door",
+  "@fBoxWiringTestStopAction": {
+    "description": "Accessibility label for the O/S/C stop control"
+  },
+  "fBoxWiringTestCloseAction": "Close door",
+  "@fBoxWiringTestCloseAction": {
+    "description": "Accessibility label for the O/S/C close control"
+  },
   "addDeviceUsbWifiModule": "USB WIFI module",
   "@addDeviceUsbWifiModule": {
     "description": "USB WIFI module option on the add device page"

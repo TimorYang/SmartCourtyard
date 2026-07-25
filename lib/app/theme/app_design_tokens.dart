@@ -39,6 +39,12 @@ class AppColors {
   static const afterSalesSecondaryBorder = Color(0xFFF1F2F4);
   static const afterSalesHint = Color(0xFFFF8A00);
   static const fBoxConnectionManualHint = Color(0xFFFFA000);
+  static const fBoxWiringTestSegmentSurface = Color(0xFFF1F3F5);
+  static const fBoxWiringTestSegmentSelectedSurface = Color(0xFFFFFFFF);
+  static const fBoxWiringTestSegmentBorder = Color(0xFFE2E5E9);
+  static const fBoxWiringTestControlSurface = Color(0xFF151D27);
+  static const fBoxWiringTestControlForeground = Color(0xFFFFFFFF);
+  static const fBoxWiringTestStatusPending = Color(0xFFD9DCE0);
   static const accountDetailsLogoutSurface = Color(0xFFF3F4F6);
   static const accountDetailsAvatarSurface = Color(0xFFF1F3F6);
   static const accountDetailsAvatarForeground = Color(0xFFFFFFFF);
@@ -221,6 +227,7 @@ class AppShapeTokens {
   static const safetyBatterySolutionCardRadius = 14.0;
   static const safetyBatterySolutionImageRadius = 10.0;
   static const smartOpenerAddedDeviceCardRadius = 16.0;
+  static const fBoxWiringTestControlRadius = 12.0;
 }
 
 class AppSpacingTokens {
@@ -230,6 +237,17 @@ class AppSpacingTokens {
   static const smartOpenerAddedPageTop = 10.0;
   static const smartOpenerAddedCardPadding = 22.0;
   static const smartOpenerAddedCardGap = 18.0;
+  static const fBoxWiringTestPageHorizontal = 28.0;
+  static const fBoxWiringTestPageTop = 27.0;
+  static const fBoxWiringTestTitleToDescription = 12.0;
+  static const fBoxWiringTestDescriptionToSegment = 37.0;
+  static const fBoxWiringTestSegmentHeight = 32.0;
+  static const fBoxWiringTestPbControlSize = 250.0;
+  static const fBoxWiringTestControlSize = 52.0;
+  static const fBoxWiringTestControlGap = 52.0;
+  static const fBoxWiringTestBottomPadding = 28.0;
+  static const fBoxWiringTestStatusToAction = 32.0;
+  static const fBoxWiringTestActionHeight = 52.0;
 }
 
 class AppOpacityTokens {
@@ -1658,6 +1676,42 @@ class AppTextTokens {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
       color: AppColors.fBoxConnectionManualHint,
       fontSize: 15,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle fBoxWiringTestTitle(TextTheme textTheme) {
+    return (textTheme.displaySmall ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 26,
+      fontWeight: FontWeight.w600,
+      height: 1.08,
+    );
+  }
+
+  static TextStyle fBoxWiringTestDescription(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 13,
+      fontWeight: FontWeight.w400,
+      height: 1.25,
+    );
+  }
+
+  static TextStyle fBoxWiringTestSegment(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 15,
+      fontWeight: FontWeight.w500,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle fBoxWiringTestStatus(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 16,
       fontWeight: FontWeight.w400,
       height: 1.2,
     );
