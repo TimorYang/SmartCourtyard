@@ -246,23 +246,11 @@ final fullReportProvider = Provider.family<FullReport, String>((ref, deviceId) {
     ),
     openBalanceEvaluation: const FullReportBalanceEvaluation(
       indicatorPercentage: 62,
-      bandStatuses: [
-        FullReportBalanceBandStatus.overload,
-        FullReportBalanceBandStatus.overload,
-        FullReportBalanceBandStatus.normal,
-        FullReportBalanceBandStatus.normal,
-        FullReportBalanceBandStatus.normal,
-      ],
+      segments: [],
     ),
     closeBalanceEvaluation: const FullReportBalanceEvaluation(
       indicatorPercentage: 38,
-      bandStatuses: [
-        FullReportBalanceBandStatus.normal,
-        FullReportBalanceBandStatus.normal,
-        FullReportBalanceBandStatus.normal,
-        FullReportBalanceBandStatus.overload,
-        FullReportBalanceBandStatus.overload,
-      ],
+      segments: [],
     ),
     last24HoursRecord: FullReportOperationRecord(
       points: [

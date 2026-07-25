@@ -78,23 +78,45 @@ class FullReportCycleSummary {
 class FullReportBalanceEvaluation {
   const FullReportBalanceEvaluation({
     required this.indicatorPercentage,
-    required this.bandStatuses,
+    required this.segments,
+    this.hasOverloadOrOvercurrent = false,
   });
 
   /// 门体在本次行程中用于定位箭头的百分比，取值范围为 0 至 100。
   final int indicatorPercentage;
 
-  /// 五个固定平衡区间的评估结果，按从 80%~100% 到 0%~20% 的顺序返回。
-  final List<FullReportBalanceBandStatus> bandStatuses;
+  /// 平衡评估结果，按从 80%~100% 到 0%~20% 的顺序返回。
+  final List<FullReportBalanceSegment> segments;
+
+  /// Whether the response reports an overload or overcurrent condition.
+  final bool hasOverloadOrOvercurrent;
 }
 
-/// 平衡区间的评估状态。
-enum FullReportBalanceBandStatus {
-  /// 区间负载正常。
-  normal,
+/// 单个平衡区间的服务端评估结果。
+class FullReportBalanceSegment {
+  const FullReportBalanceSegment({
+    this.startPercent,
+    this.endPercent,
+    this.status,
+    this.statusLabel,
+  });
 
-  /// 区间检测到负载过高。
-  overload,
+  /// The inclusive range start reported by the server.
+  final int? startPercent;
+
+  /// The inclusive range end reported by the server.
+  final int? endPercent;
+
+  /// 服务端状态码。仅值 1 表示正常。
+  final int? status;
+
+  /// 服务端提供的展示文案。
+  final String? statusLabel;
+
+  bool get isNormal => status == 1;
+
+  bool matchesRange(int startPercent, int endPercent) =>
+      this.startPercent == startPercent && this.endPercent == endPercent;
 }
 
 /// 运行次数图表与频繁操作预警数据。

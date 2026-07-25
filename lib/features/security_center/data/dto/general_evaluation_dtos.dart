@@ -68,20 +68,76 @@ class MotorFunctionItemDto {
 }
 
 class BalanceResponseDto {
-  const BalanceResponseDto({this.status, this.segments = const []});
+  const BalanceResponseDto({
+    this.status,
+    this.hasOverloadOrOvercurrent,
+    this.segments = const [],
+    this.openingSegments = const [],
+    this.closingSegments = const [],
+  });
   final String? status;
+  final bool? hasOverloadOrOvercurrent;
+
+  /// Legacy mixed-direction response data retained for wire compatibility.
   final List<BalanceSegmentDto> segments;
+
+  /// Ordered evaluation rows for the opening journey.
+  final List<BalanceEvaluationSegmentDto> openingSegments;
+
+  /// Ordered evaluation rows for the closing journey.
+  final List<BalanceEvaluationSegmentDto> closingSegments;
   factory BalanceResponseDto.fromJson(Map<String, dynamic> j) =>
       BalanceResponseDto(
         status: j['status']?.toString(),
+        hasOverloadOrOvercurrent: j['hasOverloadOrOvercurrent'] as bool?,
         segments: (j['segments'] as List? ?? const [])
             .whereType<Map<String, dynamic>>()
             .map(BalanceSegmentDto.fromJson)
             .toList(),
+        openingSegments: (j['openingSegments'] as List? ?? const [])
+            .whereType<Map<String, dynamic>>()
+            .map(BalanceEvaluationSegmentDto.fromJson)
+            .toList(),
+        closingSegments: (j['closingSegments'] as List? ?? const [])
+            .whereType<Map<String, dynamic>>()
+            .map(BalanceEvaluationSegmentDto.fromJson)
+            .toList(),
       );
   Map<String, dynamic> toJson() => {
     'status': status,
+    'hasOverloadOrOvercurrent': hasOverloadOrOvercurrent,
     'segments': segments.map((e) => e.toJson()).toList(),
+    'openingSegments': openingSegments.map((e) => e.toJson()).toList(),
+    'closingSegments': closingSegments.map((e) => e.toJson()).toList(),
+  };
+}
+
+class BalanceEvaluationSegmentDto {
+  const BalanceEvaluationSegmentDto({
+    this.startPercent,
+    this.endPercent,
+    this.status,
+    this.statusLabel,
+  });
+
+  final int? startPercent;
+  final int? endPercent;
+  final int? status;
+  final String? statusLabel;
+
+  factory BalanceEvaluationSegmentDto.fromJson(Map<String, dynamic> json) =>
+      BalanceEvaluationSegmentDto(
+        startPercent: _int(json['startPercent']),
+        endPercent: _int(json['endPercent']),
+        status: _int(json['status']),
+        statusLabel: json['statusLabel'] as String?,
+      );
+
+  Map<String, dynamic> toJson() => {
+    'startPercent': startPercent,
+    'endPercent': endPercent,
+    'status': status,
+    'statusLabel': statusLabel,
   };
 }
 

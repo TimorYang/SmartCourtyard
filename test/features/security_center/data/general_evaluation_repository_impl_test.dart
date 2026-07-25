@@ -189,6 +189,57 @@ void main() {
     expect(status.partialOpenUnit, 'mm');
     expect(status.ignoreObstructionHeightUnit, 'cm');
   });
+
+  test(
+    'maps opening and closing balance segments with server labels',
+    () async {
+      final repository = GeneralEvaluationRepositoryImpl(
+        remote: _FakeRemoteDataSource(
+          balance: const BalanceResponseDto(
+            hasOverloadOrOvercurrent: true,
+            openingSegments: [
+              BalanceEvaluationSegmentDto(
+                startPercent: 0,
+                endPercent: 20,
+                status: 1,
+                statusLabel: 'Normal',
+              ),
+              BalanceEvaluationSegmentDto(
+                startPercent: 80,
+                endPercent: 100,
+                status: 2,
+                statusLabel: 'Blocked',
+              ),
+            ],
+            closingSegments: [
+              BalanceEvaluationSegmentDto(status: 3, statusLabel: 'Overload'),
+            ],
+          ),
+        ),
+        logger: const _NoopLogger(),
+      );
+
+      final report = await repository.fetch(
+        doorId: '10',
+        assessmentRequestId: 'assessment-id',
+        requestId: 'page-request-id',
+      );
+
+      expect(report.openBalanceEvaluation.segments, hasLength(2));
+      expect(report.openBalanceEvaluation.hasOverloadOrOvercurrent, isTrue);
+      expect(report.openBalanceEvaluation.segments[0].isNormal, isTrue);
+      expect(report.openBalanceEvaluation.segments[0].startPercent, 0);
+      expect(report.openBalanceEvaluation.segments[0].endPercent, 20);
+      expect(report.openBalanceEvaluation.segments[0].statusLabel, 'Normal');
+      expect(report.openBalanceEvaluation.segments[1].isNormal, isFalse);
+      expect(report.openBalanceEvaluation.segments[1].statusLabel, 'Blocked');
+      expect(report.closeBalanceEvaluation.segments.single.isNormal, isFalse);
+      expect(
+        report.closeBalanceEvaluation.segments.single.statusLabel,
+        'Overload',
+      );
+    },
+  );
 }
 
 class _FakeRemoteDataSource implements GeneralEvaluationRemoteDataSource {
@@ -196,6 +247,7 @@ class _FakeRemoteDataSource implements GeneralEvaluationRemoteDataSource {
     OperationStatisticsDto? today,
     OperationStatisticsDto? week,
     GeneralEvaluationResponseDto? general,
+    BalanceResponseDto? balance,
   }) : _today =
            today ??
            const OperationStatisticsDto(
@@ -208,11 +260,13 @@ class _FakeRemoteDataSource implements GeneralEvaluationRemoteDataSource {
                OperationBucketDto(date: '2026-07-22', operationCycles: '4'),
              ],
            ),
-       _general = general ?? const GeneralEvaluationResponseDto();
+       _general = general ?? const GeneralEvaluationResponseDto(),
+       _balance = balance ?? const BalanceResponseDto();
 
   final OperationStatisticsDto _today;
   final OperationStatisticsDto _week;
   final GeneralEvaluationResponseDto _general;
+  final BalanceResponseDto _balance;
   var balanceCalls = 0;
 
   @override
@@ -222,7 +276,7 @@ class _FakeRemoteDataSource implements GeneralEvaluationRemoteDataSource {
     required String requestId,
   }) async {
     balanceCalls += 1;
-    return const BalanceResponseDto();
+    return _balance;
   }
 
   @override

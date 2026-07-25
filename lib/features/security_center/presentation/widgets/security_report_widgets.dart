@@ -86,7 +86,6 @@ class SecurityReportCard extends StatelessWidget {
     child: Padding(padding: padding, child: child),
   );
 }
-
 class CycleSummaryCard extends StatelessWidget {
   const CycleSummaryCard({this.summary, this.showWarning = true, super.key});
 
@@ -181,7 +180,12 @@ class BalanceEvaluationCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _CardHeading(title: l10n.securityReportBalanceEvaluation, status: _ReportStatus.warning),
+          _CardHeading(
+            title: l10n.securityReportBalanceEvaluation,
+            status: evaluation?.hasOverloadOrOvercurrent ?? false
+                ? _ReportStatus.warning
+                : _ReportStatus.normal,
+          ),
           const SizedBox(height: 5),
           Text(l10n.securityReportBalanceNote, style: AppTextTokens.securityReportValue(textTheme)),
           const SizedBox(height: 10),
@@ -207,6 +211,7 @@ class _BalanceTable extends StatelessWidget {
 
   static const _rowHeight = 26.0;
   static const _rowCount = 5;
+  static const _ranges = [(80, 100), (60, 80), (40, 60), (20, 40), (0, 20)];
 
   @override
   Widget build(BuildContext context) {
@@ -266,26 +271,45 @@ class _BalanceTable extends StatelessWidget {
                 for (var index = 0; index < _rowCount; index++)
                   Expanded(
                     child: CustomPaint(
+                      key: ValueKey<String>('balance-status-row-$index'),
                       foregroundPainter: const _DashedStatusRowPainter(),
                       child: Center(
                         child: evaluation == null
                             ? const SizedBox.shrink()
-                            : _isOverload(index)
+                            : _segment(index) == null
+                            ? Text(
+                                l10n.securityReportBalanceStatusUnavailable,
+                                style: AppTextTokens.securityReportBody(Theme.of(context).textTheme),
+                              )
+                            : _segment(index)!.isNormal
                             ? Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(Icons.error, size: 15, color: AppColors.securityReportWarning),
+                                  const Icon(Icons.check_circle, size: 13, color: AppColors.securityCenterSuccess),
+                                  const SizedBox(width: 5),
+                                  // Flexible(
+                                  //   child: Text(
+                                  //     _statusLabel(context, index),
+                                  //     overflow: TextOverflow.ellipsis,
+                                  //     style: AppTextTokens.securityReportBody(Theme.of(context).textTheme),
+                                  //   ),
+                                  // ),
+                                ],
+                              )
+                            : Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.error, size: 9, color: AppColors.securityReportWarning),
                                   const SizedBox(width: 5),
                                   Flexible(
                                     child: Text(
-                                      l10n.securityReportOverload,
+                                      _statusLabel(context, index),
                                       overflow: TextOverflow.ellipsis,
                                       style: AppTextTokens.securityReportWarning(Theme.of(context).textTheme),
                                     ),
                                   ),
                                 ],
                               )
-                            : const Icon(Icons.check_circle, size: 19, color: AppColors.securityCenterSuccess),
                       ),
                     ),
                   ),
@@ -297,9 +321,19 @@ class _BalanceTable extends StatelessWidget {
     );
   }
 
-  bool _isOverload(int index) {
-    final statuses = evaluation?.bandStatuses;
-    return statuses != null && index < statuses.length && statuses[index] == FullReportBalanceBandStatus.overload;
+  FullReportBalanceSegment? _segment(int index) {
+    final range = _ranges[index];
+    for (final segment in evaluation?.segments ?? const []) {
+      if (segment.matchesRange(range.$1, range.$2)) return segment;
+    }
+    return null;
+  }
+
+  String _statusLabel(BuildContext context, int index) {
+    final label = _segment(index)?.statusLabel?.trim();
+    return label == null || label.isEmpty
+        ? AppLocalizations.of(context).securityReportBalanceStatusUnavailable
+        : label;
   }
 }
 

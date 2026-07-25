@@ -1325,6 +1325,7 @@
   "securityReportBalanceNote": "Mark: Evaluation is limited to the door's latest open/close operation.",
   "securityReportOpenEvaluation": "Open evaluation",
   "securityReportCloseEvaluation": "Close evaluation",
+  "securityReportBalanceStatusUnavailable": "--",
   "securityReportOverload": "Over load",
   "securityReportOperationRecord": "Door operation record",
   "securityReportLast24Hours": "Last 24 hours",

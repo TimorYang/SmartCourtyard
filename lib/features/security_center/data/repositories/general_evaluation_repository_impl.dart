@@ -75,27 +75,22 @@ class GeneralEvaluationRepositoryImpl implements GeneralEvaluationRepository {
         return unit == null || unit.isEmpty ? null : unit;
       }
 
-      FullReportBalanceEvaluation map(String direction) {
-        final segments =
-            b.segments
-                .where((segment) => segment.direction == direction)
-                .toList()
-              ..sort(
-                (a, z) => (z.startPercent ?? 0).compareTo(a.startPercent ?? 0),
-              );
+      FullReportBalanceEvaluation map(
+        List<BalanceEvaluationSegmentDto> segments,
+      ) {
         return FullReportBalanceEvaluation(
           indicatorPercentage: 50,
-          // `Published` can legitimately have no segment data. The UI has five
-          // fixed rows, so represent an empty report as five normal rows.
-          bandStatuses: List<FullReportBalanceBandStatus>.generate(
-            5,
-            (index) =>
-                index < segments.length &&
-                    (segments[index].status == '2' ||
-                        segments[index].status == '3')
-                ? FullReportBalanceBandStatus.overload
-                : FullReportBalanceBandStatus.normal,
-          ),
+          hasOverloadOrOvercurrent: b.hasOverloadOrOvercurrent ?? false,
+          segments: segments
+              .map(
+                (segment) => FullReportBalanceSegment(
+                  startPercent: segment.startPercent,
+                  endPercent: segment.endPercent,
+                  status: segment.status,
+                  statusLabel: segment.statusLabel,
+                ),
+              )
+              .toList(),
         );
       }
 
@@ -134,8 +129,8 @@ class GeneralEvaluationRepositoryImpl implements GeneralEvaluationRepository {
           remainingCycles: g.device?.remainingCycles ?? 0,
           needsMaintenance: g.device?.maintenanceRecommended ?? false,
         ),
-        openBalanceEvaluation: map('0'),
-        closeBalanceEvaluation: map('1'),
+        openBalanceEvaluation: map(b.openingSegments),
+        closeBalanceEvaluation: map(b.closingSegments),
         last24HoursRecord: operationRecord(today, isHourly: true),
         last7DaysRecord: operationRecord(week, isHourly: false),
         motorFunctionStatus: FullReportMotorFunctionStatus(

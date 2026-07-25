@@ -2744,6 +2744,12 @@ abstract class AppLocalizations {
   /// **'Close evaluation'**
   String get securityReportCloseEvaluation;
 
+  /// No description provided for @securityReportBalanceStatusUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'--'**
+  String get securityReportBalanceStatusUnavailable;
+
   /// No description provided for @securityReportOverload.
   ///
   /// In en, this message translates to:

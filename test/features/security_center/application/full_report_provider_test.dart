@@ -14,8 +14,8 @@ void main() {
     expect(report.motorName, isNotEmpty);
     expect(report.serialNumber, isNotEmpty);
     expect(report.cycleSummary.doorName, isNotEmpty);
-    expect(report.openBalanceEvaluation.bandStatuses, hasLength(5));
-    expect(report.closeBalanceEvaluation.bandStatuses, hasLength(5));
+    expect(report.openBalanceEvaluation.segments, isEmpty);
+    expect(report.closeBalanceEvaluation.segments, isEmpty);
     expect(report.last24HoursRecord.points, isNotEmpty);
     expect(report.last7DaysRecord.points, isNotEmpty);
     expect(report.motorFunctionStatus.autoCloseSeconds, greaterThan(0));

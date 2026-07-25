@@ -1467,6 +1467,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get securityReportCloseEvaluation => 'Close evaluation';
 
   @override
+  String get securityReportBalanceStatusUnavailable => '--';
+
+  @override
   String get securityReportOverload => 'Over load';
 
   @override

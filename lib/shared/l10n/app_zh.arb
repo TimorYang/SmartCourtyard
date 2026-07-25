@@ -467,6 +467,7 @@
   "securityReportBalanceNote": "提示：评估仅基于车库门最近一次开/关门操作。",
   "securityReportOpenEvaluation": "开门评估",
   "securityReportCloseEvaluation": "关门评估",
+  "securityReportBalanceStatusUnavailable": "--",
   "securityReportOverload": "过载",
   "securityReportOperationRecord": "车库门运行记录",
   "securityReportLast24Hours": "最近 24 小时",

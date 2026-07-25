@@ -155,6 +155,123 @@ void main() {
     expect(find.text('X: Time Y: Operation cycles'), findsOneWidget);
   });
 
+  testWidgets(
+    'balance evaluation uses segment labels and empty-row placeholders',
+    (tester) async {
+      await _pumpPage(
+        tester,
+        const Scaffold(
+          body: BalanceEvaluationCard(
+            selection: BalanceEvaluation.open,
+            evaluation: FullReportBalanceEvaluation(
+              indicatorPercentage: 50,
+              hasOverloadOrOvercurrent: true,
+              segments: [
+                FullReportBalanceSegment(
+                  startPercent: 80,
+                  endPercent: 100,
+                  status: 1,
+                  statusLabel: 'Normal',
+                ),
+                FullReportBalanceSegment(
+                  startPercent: 60,
+                  endPercent: 80,
+                  status: 2,
+                  statusLabel: 'Blocked',
+                ),
+                FullReportBalanceSegment(
+                  startPercent: 0,
+                  endPercent: 20,
+                  status: 3,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('Normal'), findsOneWidget);
+      expect(find.text('Blocked'), findsOneWidget);
+      expect(find.text('--'), findsNWidgets(3));
+      expect(find.byIcon(Icons.check_circle), findsOneWidget);
+      expect(find.byIcon(Icons.error), findsAtLeastNWidgets(3));
+    },
+  );
+
+  testWidgets('balance evaluation heading follows overload flag', (
+    tester,
+  ) async {
+    await _pumpPage(
+      tester,
+      const Scaffold(
+        body: Column(
+          children: [
+            BalanceEvaluationCard(
+              selection: BalanceEvaluation.open,
+              evaluation: FullReportBalanceEvaluation(
+                indicatorPercentage: 50,
+                segments: [],
+                hasOverloadOrOvercurrent: false,
+              ),
+            ),
+            BalanceEvaluationCard(
+              selection: BalanceEvaluation.close,
+              evaluation: FullReportBalanceEvaluation(
+                indicatorPercentage: 50,
+                segments: [],
+                hasOverloadOrOvercurrent: true,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    expect(find.byIcon(Icons.check_circle), findsOneWidget);
+    expect(find.byIcon(Icons.error), findsOneWidget);
+  });
+
+  testWidgets('balance evaluation places segments by percentage range', (
+    tester,
+  ) async {
+    await _pumpPage(
+      tester,
+      const Scaffold(
+        body: BalanceEvaluationCard(
+          selection: BalanceEvaluation.open,
+          evaluation: FullReportBalanceEvaluation(
+            indicatorPercentage: 50,
+            segments: [
+              FullReportBalanceSegment(
+                startPercent: 0,
+                endPercent: 20,
+                status: 1,
+                statusLabel: 'Bottom range',
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    for (var index = 0; index < 4; index++) {
+      expect(
+        find.descendant(
+          of: find.byKey(ValueKey<String>('balance-status-row-$index')),
+          matching: find.text('--'),
+        ),
+        findsOneWidget,
+      );
+    }
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey<String>('balance-status-row-4')),
+        matching: find.text('Bottom range'),
+      ),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('general evaluation renders report data without report actions', (
     tester,
   ) async {
@@ -311,23 +428,11 @@ void main() {
       ),
       openBalanceEvaluation: FullReportBalanceEvaluation(
         indicatorPercentage: 50,
-        bandStatuses: [
-          FullReportBalanceBandStatus.normal,
-          FullReportBalanceBandStatus.normal,
-          FullReportBalanceBandStatus.normal,
-          FullReportBalanceBandStatus.normal,
-          FullReportBalanceBandStatus.normal,
-        ],
+        segments: [],
       ),
       closeBalanceEvaluation: FullReportBalanceEvaluation(
         indicatorPercentage: 50,
-        bandStatuses: [
-          FullReportBalanceBandStatus.normal,
-          FullReportBalanceBandStatus.normal,
-          FullReportBalanceBandStatus.normal,
-          FullReportBalanceBandStatus.normal,
-          FullReportBalanceBandStatus.normal,
-        ],
+        segments: [],
       ),
       last24HoursRecord: FullReportOperationRecord(points: []),
       last7DaysRecord: FullReportOperationRecord(points: []),
@@ -1118,23 +1223,11 @@ const _testGeneralReport = GeneralEvaluationReport(
   ),
   openBalanceEvaluation: FullReportBalanceEvaluation(
     indicatorPercentage: 62,
-    bandStatuses: [
-      FullReportBalanceBandStatus.overload,
-      FullReportBalanceBandStatus.overload,
-      FullReportBalanceBandStatus.normal,
-      FullReportBalanceBandStatus.normal,
-      FullReportBalanceBandStatus.normal,
-    ],
+    segments: [],
   ),
   closeBalanceEvaluation: FullReportBalanceEvaluation(
     indicatorPercentage: 38,
-    bandStatuses: [
-      FullReportBalanceBandStatus.normal,
-      FullReportBalanceBandStatus.normal,
-      FullReportBalanceBandStatus.normal,
-      FullReportBalanceBandStatus.overload,
-      FullReportBalanceBandStatus.overload,
-    ],
+    segments: [],
   ),
   last24HoursRecord: FullReportOperationRecord(points: []),
   last7DaysRecord: FullReportOperationRecord(points: []),

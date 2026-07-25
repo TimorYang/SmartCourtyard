@@ -31,10 +31,28 @@ void main() {
       'requestedAt': 1784819049000,
       'reportedAt': null,
       'segments': [],
+      'openingSegments': [
+        {
+          'startPercent': 0,
+          'endPercent': 20,
+          'status': 1,
+          'statusLabel': 'Normal',
+        },
+      ],
+      'closingSegments': [
+        {'status': 2, 'statusLabel': 'Overload'},
+      ],
     });
 
     expect(dto.status, '1');
+    expect(dto.hasOverloadOrOvercurrent, isFalse);
     expect(dto.segments, isEmpty);
+    expect(dto.openingSegments.single.status, 1);
+    expect(dto.openingSegments.single.startPercent, 0);
+    expect(dto.openingSegments.single.endPercent, 20);
+    expect(dto.openingSegments.single.statusLabel, 'Normal');
+    expect(dto.closingSegments.single.status, 2);
+    expect(dto.closingSegments.single.statusLabel, 'Overload');
   });
 
   test('passes door and request IDs to the refresh API', () async {

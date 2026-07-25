@@ -1380,6 +1380,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get securityReportCloseEvaluation => '关门评估';
 
   @override
+  String get securityReportBalanceStatusUnavailable => '--';
+
+  @override
   String get securityReportOverload => '过载';
 
   @override
