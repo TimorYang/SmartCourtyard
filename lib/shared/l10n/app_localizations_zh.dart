@@ -644,6 +644,34 @@ class AppLocalizationsZh extends AppLocalizations {
   String get fBoxConnectionGuideNextAction => '下一步';
 
   @override
+  String get fBoxWiringTestTitle => '测试';
+
+  @override
+  String get fBoxWiringTestDescription =>
+      '点击下方按钮；若门体正常运行，请点击“下一步”。\n如未正常运行，请切换“O/S/C 接线”后再次测试。';
+
+  @override
+  String get fBoxWiringTestPbWiring => 'PB 接线';
+
+  @override
+  String get fBoxWiringTestOscWiring => 'O/S/C 接线';
+
+  @override
+  String get fBoxWiringTestDoorOperatesNormally => '门体正常运行';
+
+  @override
+  String get fBoxWiringTestPbAction => '测试 PB 接线';
+
+  @override
+  String get fBoxWiringTestOpenAction => '开门';
+
+  @override
+  String get fBoxWiringTestStopAction => '停止';
+
+  @override
+  String get fBoxWiringTestCloseAction => '关门';
+
+  @override
   String get addDeviceUsbWifiModule => 'USB WIFI 模块';
 
   @override

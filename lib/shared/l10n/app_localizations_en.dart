@@ -670,6 +670,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fBoxConnectionGuideNextAction => 'NEXT';
 
   @override
+  String get fBoxWiringTestTitle => 'Test';
+
+  @override
+  String get fBoxWiringTestDescription =>
+      'Click the button below, if the door operates normally, press \'NEXT\'.\nIf not, change \'O/S/C wiring\' to test again.';
+
+  @override
+  String get fBoxWiringTestPbWiring => 'PB wiring';
+
+  @override
+  String get fBoxWiringTestOscWiring => 'O/S/C wiring';
+
+  @override
+  String get fBoxWiringTestDoorOperatesNormally => 'door operates normally';
+
+  @override
+  String get fBoxWiringTestPbAction => 'Test PB wiring';
+
+  @override
+  String get fBoxWiringTestOpenAction => 'Open door';
+
+  @override
+  String get fBoxWiringTestStopAction => 'Stop door';
+
+  @override
+  String get fBoxWiringTestCloseAction => 'Close door';
+
+  @override
   String get addDeviceUsbWifiModule => 'USB WIFI module';
 
   @override
