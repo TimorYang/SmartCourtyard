@@ -84,6 +84,18 @@ class RunnerTests: XCTestCase {
     XCTAssertEqual(payload, Data([0x27, 0x13, 0x1E, 0x27, 0x25, 0x00, 0x3C]))
   }
 
+  func testWifiProvisionPayloadUsesProtocolFieldOrder() throws {
+    let payload = try HardwareBridge.makeWifiProvisionPayloadForTesting(
+      ssid: "FLINX \"Guest\"",
+      password: "p@ss\\word"
+    )
+
+    XCTAssertEqual(
+      String(data: payload, encoding: .utf8),
+      "{\"ssid\":\"FLINX \\\"Guest\\\"\",\"pwd\":\"p@ss\\\\word\"}"
+    )
+  }
+
   func testRejectsUnknownAndTruncatedAttributes() {
     XCTAssertThrowsError(
       try HardwareBridge.parseDeviceAttributesForTesting(

@@ -840,6 +840,13 @@ extension HardwareBridge {
             }
         )
     }
+
+    static func makeWifiProvisionPayloadForTesting(
+        ssid: String,
+        password: String
+    ) throws -> Data {
+        try makeWifiProvisionPayload(ssid: ssid, password: password)
+    }
 }
 
 extension HardwareBridge: BleManagerDelegate {
@@ -1604,15 +1611,18 @@ private extension HardwareBridge {
 
     
     static func makeWifiProvisionPayload(ssid: String, password: String) throws -> Data {
-        let jsonObject: [String: String] = ["ssid": ssid, "pwd": password]
-        guard JSONSerialization.isValidJSONObject(jsonObject) else {
+        let options: JSONSerialization.WritingOptions = [.fragmentsAllowed]
+        let encodedSsid = try JSONSerialization.data(withJSONObject: ssid, options: options)
+        let encodedPassword = try JSONSerialization.data(withJSONObject: password, options: options)
+        guard let ssidValue = String(data: encodedSsid, encoding: .utf8),
+              let passwordValue = String(data: encodedPassword, encoding: .utf8) else {
             throw PigeonError(
                 code: "invalid_wifi_payload",
                 message: "Wifi credentials cannot be serialized.",
                 details: nil
             )
         }
-        return try JSONSerialization.data(withJSONObject: jsonObject, options: [])
+        return Data("{\"ssid\":\(ssidValue),\"pwd\":\(passwordValue)}".utf8)
     }
     
     static func parseWifiList(from payload: Data) throws -> [String] {
