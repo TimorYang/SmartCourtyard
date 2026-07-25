@@ -18,11 +18,14 @@ abstract interface class HardwareGateway {
     required bool nativeConsoleEnabled,
   });
 
-  Future<PermissionSnapshot> getPermissionSnapshot();
+  Future<PermissionSnapshot> getPermissionSnapshot({required String requestId});
 
   Future<PermissionSnapshot> requestPermissions({
+    required String requestId,
     required List<PermissionKind> permissions,
   });
+
+  Future<void> openAppSettings({required String requestId});
 
   Future<List<DeviceSummary>> readDevices();
 

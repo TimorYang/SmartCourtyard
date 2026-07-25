@@ -49,10 +49,15 @@ class MockHardwareGateway implements HardwareGateway {
   }
 
   @override
-  Future<PermissionSnapshot> getPermissionSnapshot() async {
+  Future<PermissionSnapshot> getPermissionSnapshot({
+    required String requestId,
+  }) async {
     return const PermissionSnapshot(
-      bluetoothGranted: true,
-      cameraGranted: true,
+      bluetoothStatus: PermissionStatus.granted,
+      cameraStatus: PermissionStatus.granted,
+      locationStatus: PermissionStatus.granted,
+      microphoneStatus: PermissionStatus.denied,
+      storageStatus: PermissionStatus.granted,
       localNetworkGranted: true,
       notificationGranted: true,
     );
@@ -60,10 +65,14 @@ class MockHardwareGateway implements HardwareGateway {
 
   @override
   Future<PermissionSnapshot> requestPermissions({
+    required String requestId,
     required List<PermissionKind> permissions,
   }) async {
-    return getPermissionSnapshot();
+    return getPermissionSnapshot(requestId: requestId);
   }
+
+  @override
+  Future<void> openAppSettings({required String requestId}) async {}
 
   @override
   Future<List<DeviceSummary>> readDevices() async {

@@ -7,24 +7,54 @@ import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
+import '../../domain/entities/app_locale_preference.dart';
 import '../../domain/entities/account_profile.dart';
+import '../../../auth/application/providers.dart';
+import '../../../auth/presentation/pages/welcome_page.dart';
+import '../../../home/application/providers.dart';
 import 'account_details_page.dart';
+import 'check_upgraded_version_page.dart';
 import 'hardware_diagnostics_page.dart';
-import '../../../notification/presentation/pages/notification_list_page.dart';
+import 'manage_devices_page.dart';
+import 'receiving_devices_page.dart';
+import 'region_page.dart';
+import 'shared_devices_page.dart';
+import 'system_permissions_page.dart';
 
 class AccountProfileAssetPaths {
   const AccountProfileAssetPaths._();
 
-  static const headerBackground =
-      'assets/images/account/account_profile_header_bg.png';
-  static const avatarPlaceholder =
-      'assets/icons/home/home_avatar_placeholder.png';
+  static const headerBackground = 'assets/images/account/account_profile_header_bg.png';
+  static const avatarPlaceholder = 'assets/icons/home/home_avatar_placeholder.png';
+  static const menuSharedDevices = 'assets/icons/account/account_profile_menu_shared_devices.png';
+  static const menuReceivingDevices = 'assets/icons/account/account_profile_menu_receiving_devices.png';
+  static const menuManageDevices = 'assets/icons/account/account_profile_menu_manage_devices.png';
+  static const menuAfterSalesService = 'assets/icons/account/account_profile_menu_after_sales_service.png';
+  static const menuRegion = 'assets/icons/account/account_profile_menu_region.png';
+  static const menuLanguage = 'assets/icons/account/account_profile_menu_language.png';
+  static const menuSystemPermissions = 'assets/icons/account/account_profile_menu_system_permissions.png';
+  static const menuManualGuide = 'assets/icons/account/account_profile_menu_manual_guide.png';
+  static const menuCheckForUpdates = 'assets/icons/account/account_profile_menu_check_for_updates.png';
+  static const menuAbout = 'assets/icons/account/account_profile_menu_about.png';
 }
 
 class AccountProfileKeys {
   const AccountProfileKeys._();
 
   static const avatarButton = ValueKey('account-profile-avatar-button');
+  static const sharedDevicesMenuItem = ValueKey('account-profile-shared-devices-menu-item');
+  static const receivingDevicesMenuItem = ValueKey('account-profile-receiving-devices-menu-item');
+  static const languageMenuItem = ValueKey('account-profile-language-menu-item');
+  static const languageDialog = ValueKey('account-language-dialog');
+  static const languageCancelButton = ValueKey('account-language-cancel-button');
+  static const languageConfirmButton = ValueKey('account-language-confirm-button');
+  static const regionMenuItem = ValueKey('account-profile-region-menu-item');
+  static const manageDevicesMenuItem = ValueKey('account-profile-manage-devices-menu-item');
+  static const systemPermissionsMenuItem = ValueKey('account-profile-system-permissions-menu-item');
+  static const checkForUpdatesMenuItem = ValueKey('account-profile-check-for-updates-menu-item');
+  static const afterSalesMenuItem = ValueKey('account-profile-after-sales-menu-item');
+  static const manualGuideMenuItem = ValueKey('account-profile-manual-guide-menu-item');
+  static const logoutButton = ValueKey('account-profile-logout-button');
 }
 
 class AccountProfilePage extends ConsumerWidget {
@@ -37,18 +67,12 @@ class AccountProfilePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final profile = ref
-        .watch(accountControllerProvider)
-        .maybeWhen(data: (value) => value, orElse: () => null);
+    final profile = ref.watch(accountControllerProvider).maybeWhen(data: (value) => value, orElse: () => null);
+    final localePreference = ref.watch(appLocaleControllerProvider).maybeWhen(data: (value) => value, orElse: () => AppLocalePreference.english);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: const FlinxNavigationBar(
-        title: '',
-        showBottomDivider: false,
-        isTransparent: true,
-        foregroundColor: Colors.white,
-      ),
+      appBar: const FlinxNavigationBar(title: '', showBottomDivider: false, isTransparent: true, foregroundColor: Colors.white),
       backgroundColor: AppColors.accountProfileBackground,
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -57,7 +81,24 @@ class AccountProfilePage extends ConsumerWidget {
               constraints: const BoxConstraints(maxWidth: 430),
               child: _AccountProfileContent(
                 profile: profile,
+                localePreference: localePreference,
                 maxHeight: constraints.maxHeight,
+                onLocaleConfirmed: (locale) => ref.read(appLocaleControllerProvider.notifier).selectLocale(locale),
+                onLogout: () async {
+                  final authSessionController = ref.read(activeAuthSessionProvider.notifier);
+                  final accountController = ref.read(accountControllerProvider.notifier);
+
+                  ref.invalidate(homeScenesProvider);
+                  ref.invalidate(homeDevicesProvider);
+                  ref.invalidate(cachedAccountProfileProvider);
+                  ref.invalidate(authSessionProvider);
+
+                  await accountController.clearAccount();
+                  authSessionController.clear();
+                  if (context.mounted) {
+                    context.go(WelcomePage.routePath);
+                  }
+                },
               ),
             ),
           );
@@ -70,60 +111,84 @@ class AccountProfilePage extends ConsumerWidget {
 class _AccountProfileContent extends StatelessWidget {
   const _AccountProfileContent({
     required this.profile,
+    required this.localePreference,
     required this.maxHeight,
+    required this.onLocaleConfirmed,
+    required this.onLogout,
   });
 
   final AccountProfile? profile;
+  final AppLocalePreference localePreference;
   final double maxHeight;
+  final Future<void> Function(AppLocalePreference locale) onLocaleConfirmed;
+  final Future<void> Function() onLogout;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final registeredAt =
-        profile?.registeredAt ?? AccountProfilePage._fallbackRegisteredAt;
+    final registeredAt = profile?.registeredAt ?? AccountProfilePage._fallbackRegisteredAt;
     final menuItems = [
       _AccountMenuItem(
         label: l10n.accountSharedDevices,
-        trailingText: '12',
-        icon: Icons.grid_view_rounded,
+        trailingText: '0',
+        iconAssetPath: AccountProfileAssetPaths.menuSharedDevices,
+        onTap: () => context.pushNamed(SharedDevicesPage.routeName),
+        key: AccountProfileKeys.sharedDevicesMenuItem,
       ),
       _AccountMenuItem(
         label: l10n.accountReceivingDevices,
-        trailingText: '2',
-        icon: Icons.dashboard_customize_outlined,
+        trailingText: '0',
+        iconAssetPath: AccountProfileAssetPaths.menuReceivingDevices,
+        onTap: () => context.pushNamed(ReceivingDevicesPage.routeName),
+        key: AccountProfileKeys.receivingDevicesMenuItem,
       ),
       _AccountMenuItem(
         label: l10n.accountManageDevices,
-        trailingText: '2',
-        icon: Icons.subject_rounded,
+        trailingText: '0',
+        iconAssetPath: AccountProfileAssetPaths.menuManageDevices,
+        onTap: () => context.pushNamed(ManageDevicesPage.routeName),
+        key: AccountProfileKeys.manageDevicesMenuItem,
       ),
       _AccountMenuItem(
-        label: l10n.accountMessage,
-        icon: Icons.inbox_rounded,
-        onTap: () => context.pushNamed(NotificationListPage.routeName),
+        label: l10n.accountAfterSalesService,
+        iconAssetPath: AccountProfileAssetPaths.menuAfterSalesService,
+        key: AccountProfileKeys.afterSalesMenuItem,
       ),
       _AccountMenuItem(
         label: l10n.accountRegion,
         trailingText: profile?.country ?? l10n.accountDefaultRegion,
-        icon: Icons.location_on_outlined,
+        iconAssetPath: AccountProfileAssetPaths.menuRegion,
+        onTap: () => context.pushNamed(RegionPage.routeName),
+        key: AccountProfileKeys.regionMenuItem,
       ),
       _AccountMenuItem(
         label: l10n.accountLanguage,
-        trailingText: l10n.accountDefaultLanguage,
-        icon: Icons.language_rounded,
+        trailingText: _languageLabel(l10n, localePreference),
+        iconAssetPath: AccountProfileAssetPaths.menuLanguage,
+        onTap: () => showDialog<void>(
+          context: context,
+          barrierColor: AppColors.accountLanguageDialogScrim,
+          builder: (context) => _LanguageDialog(initialLocale: localePreference, onConfirm: onLocaleConfirmed),
+        ),
+        key: AccountProfileKeys.languageMenuItem,
       ),
       _AccountMenuItem(
         label: l10n.accountSystemPermissions,
-        icon: Icons.playlist_add_check_rounded,
+        iconAssetPath: AccountProfileAssetPaths.menuSystemPermissions,
+        key: AccountProfileKeys.systemPermissionsMenuItem,
+        onTap: () => context.pushNamed(SystemPermissionsPage.routeName),
       ),
+      _AccountMenuItem(label: l10n.accountManualGuide, iconAssetPath: AccountProfileAssetPaths.menuManualGuide, key: AccountProfileKeys.manualGuideMenuItem),
       _AccountMenuItem(
         label: l10n.accountCheckForUpdates,
         trailingText: '2',
-        icon: Icons.published_with_changes_rounded,
+        iconAssetPath: AccountProfileAssetPaths.menuCheckForUpdates,
+        key: AccountProfileKeys.checkForUpdatesMenuItem,
+        onTap: () => context.pushNamed(CheckUpgradedVersionPage.routeName),
       ),
       _AccountMenuItem(
         label: l10n.accountAbout,
-        icon: Icons.info_outline_rounded,
+        iconAssetPath: AccountProfileAssetPaths.menuAbout,
         onTap: () => context.pushNamed(HardwareDiagnosticsPage.routeName),
       ),
     ];
@@ -135,12 +200,9 @@ class _AccountProfileContent extends StatelessWidget {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            _AccountHeader(
-              email: profile?.email ?? l10n.accountFallbackEmail,
-              registeredAt: _formatTimestamp(registeredAt),
-            ),
+            _AccountHeader(email: profile?.email ?? l10n.accountFallbackEmail, registeredAt: _formatTimestamp(registeredAt)),
             _AccountMenu(items: menuItems),
-            const SizedBox(height: 40),
+            _AccountProfileLogoutButton(onPressed: onLogout),
           ],
         ),
       ),
@@ -153,6 +215,167 @@ class _AccountProfileContent extends StatelessWidget {
     return '${value.year}-${twoDigits(value.month)}-${twoDigits(value.day)} '
         '${twoDigits(value.hour)}:${twoDigits(value.minute)}:'
         '${twoDigits(value.second)}';
+  }
+
+  String _languageLabel(AppLocalizations l10n, AppLocalePreference locale) {
+    return switch (locale) {
+      AppLocalePreference.english => l10n.accountLanguageOptionEnglish,
+      AppLocalePreference.simplifiedChinese => l10n.accountLanguageOptionSimplifiedChinese,
+    };
+  }
+}
+
+class _LanguageDialog extends StatefulWidget {
+  const _LanguageDialog({required this.initialLocale, required this.onConfirm});
+
+  final AppLocalePreference initialLocale;
+  final Future<void> Function(AppLocalePreference locale) onConfirm;
+
+  @override
+  State<_LanguageDialog> createState() => _LanguageDialogState();
+}
+
+class _LanguageDialogState extends State<_LanguageDialog> {
+  late AppLocalePreference _selectedLocale;
+  var _isConfirming = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedLocale = widget.initialLocale;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final textTheme = Theme.of(context).textTheme;
+    final languages = [
+      _LanguageOptionData(label: l10n.accountLanguageOptionFrench),
+      _LanguageOptionData(label: l10n.accountLanguageOptionEnglish, locale: AppLocalePreference.english),
+      _LanguageOptionData(label: l10n.accountLanguageOptionSimplifiedChinese, locale: AppLocalePreference.simplifiedChinese),
+      _LanguageOptionData(label: l10n.accountLanguageOptionTraditionalChinese),
+      _LanguageOptionData(label: l10n.accountLanguageOptionGerman),
+    ];
+
+    return Dialog(
+      key: AccountProfileKeys.languageDialog,
+      insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacingTokens.accountLanguageDialogHorizontalInset),
+      backgroundColor: AppColors.accountLanguageDialogSurface,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(AppShapeTokens.accountLanguageDialogRadius))),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: AppSpacingTokens.accountLanguageDialogMaxWidth),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacingTokens.accountLanguageDialogContentHorizontal,
+            AppSpacingTokens.accountLanguageDialogTopPadding,
+            AppSpacingTokens.accountLanguageDialogContentHorizontal,
+            AppSpacingTokens.accountLanguageDialogActionBottom,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(l10n.accountLanguageDialogTitle, style: AppTextTokens.accountLanguageDialogTitle(textTheme)),
+              const SizedBox(height: AppSpacingTokens.accountLanguageDialogTitleToOptions),
+              for (var index = 0; index < languages.length; index++) ...[
+                if (index == 2 || index == 3) const Divider(height: 1, thickness: 1, color: AppColors.accountLanguageDialogDivider),
+                _LanguageOption(
+                  label: languages[index].label,
+                  isSelected: languages[index].locale == _selectedLocale,
+                  onTap: languages[index].locale == null ? null : () => setState(() => _selectedLocale = languages[index].locale!),
+                ),
+              ],
+              const SizedBox(height: AppSpacingTokens.accountLanguageDialogActionTop),
+              Row(
+                children: [
+                  Expanded(
+                    child: _LanguageDialogButton(
+                      key: AccountProfileKeys.languageCancelButton,
+                      label: l10n.accountLanguageCancelAction,
+                      isPrimary: false,
+                      onPressed: _isConfirming ? null : () => Navigator.of(context).pop(),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacingTokens.accountLanguageDialogActionGap),
+                  Expanded(
+                    child: _LanguageDialogButton(
+                      key: AccountProfileKeys.languageConfirmButton,
+                      label: l10n.accountLanguageConfirmAction,
+                      isPrimary: true,
+                      onPressed: _isConfirming ? null : () => _confirm(),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _confirm() async {
+    setState(() => _isConfirming = true);
+    await widget.onConfirm(_selectedLocale);
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
+  }
+}
+
+class _LanguageOptionData {
+  const _LanguageOptionData({required this.label, this.locale});
+
+  final String label;
+  final AppLocalePreference? locale;
+}
+
+class _LanguageOption extends StatelessWidget {
+  const _LanguageOption({required this.label, required this.isSelected, required this.onTap});
+
+  final String label;
+  final bool isSelected;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: onTap != null,
+      selected: isSelected,
+      label: label,
+      child: InkWell(
+        onTap: onTap,
+        child: SizedBox(
+          height: AppSpacingTokens.accountLanguageDialogOptionHeight,
+          child: Center(
+            child: Text(label, style: AppTextTokens.accountLanguageDialogOption(Theme.of(context).textTheme, isSelected: isSelected)),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LanguageDialogButton extends StatelessWidget {
+  const _LanguageDialogButton({required this.label, required this.isPrimary, required this.onPressed, super.key});
+
+  final String label;
+  final bool isPrimary;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: AppSpacingTokens.accountLanguageDialogActionHeight,
+      child: FilledButton(
+        onPressed: onPressed,
+        style: FilledButton.styleFrom(
+          backgroundColor: isPrimary ? AppColors.brandPrimaryLight : AppColors.accountLanguageDialogCancelSurface,
+          foregroundColor: isPrimary ? Colors.white : AppColors.textPrimary,
+          shape: const StadiumBorder(),
+        ),
+        child: Text(label, style: AppTextTokens.accountLanguageDialogAction(Theme.of(context).textTheme, isPrimary: isPrimary)),
+      ),
+    );
   }
 }
 
@@ -171,8 +394,7 @@ class _AccountHeader extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final headerHeight =
-            constraints.maxWidth * _headerImageHeight / _headerImageWidth;
+        final headerHeight = constraints.maxWidth * _headerImageHeight / _headerImageWidth;
 
         return SizedBox(
           height: headerHeight,
@@ -187,38 +409,22 @@ class _AccountHeader extends StatelessWidget {
                 },
               ),
               Positioned(
-                left: 24,
-                right: 20,
-                bottom: 18,
+                left: AppSpacingTokens.accountProfileHeaderHorizontal,
+                right: AppSpacingTokens.accountProfileHeaderHorizontal,
+                bottom: AppSpacingTokens.accountProfileHeaderBottom,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    _AccountAvatar(
-                      size: 66,
-                      onTap: () =>
-                          context.pushNamed(AccountDetailsPage.routeName),
-                    ),
-                    const SizedBox(width: 16),
+                    _AccountAvatar(size: AppSpacingTokens.accountProfileHeaderAvatarSize, onTap: () => context.pushNamed(AccountDetailsPage.routeName)),
+                    const SizedBox(width: AppSpacingTokens.accountProfileHeaderAvatarToText),
                     Expanded(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            email,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTextTokens.accountProfileEmail(textTheme),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            registeredAt,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTextTokens.accountProfileRegisteredAt(
-                              textTheme,
-                            ),
-                          ),
+                          Text(email, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextTokens.accountProfileEmail(textTheme)),
+                          const SizedBox(height: AppSpacingTokens.accountProfileHeaderMetaGap),
+                          Text(registeredAt, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextTokens.accountProfileRegisteredAt(textTheme)),
                         ],
                       ),
                     ),
@@ -243,19 +449,12 @@ class _HeaderFallbackArt extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            AppColors.surfaceAccountHeaderFallback,
-            AppColors.surfaceAccountHeaderFallbackLight,
-          ],
+          colors: [AppColors.surfaceAccountHeaderFallback, AppColors.surfaceAccountHeaderFallbackLight],
         ),
       ),
       child: Align(
         alignment: Alignment.bottomRight,
-        child: Icon(
-          Icons.garage_outlined,
-          color: AppColors.backgroundPrimary.withValues(alpha: 0.18),
-          size: 160,
-        ),
+        child: Icon(Icons.garage_outlined, color: AppColors.backgroundPrimary.withValues(alpha: 0.18), size: 160),
       ),
     );
   }
@@ -281,10 +480,7 @@ class _AccountAvatar extends StatelessWidget {
           height: size,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(
-              color: AppColors.backgroundPrimary.withValues(alpha: 0.46),
-              width: 1,
-            ),
+            border: Border.all(color: AppColors.backgroundPrimary.withValues(alpha: 0.46), width: 1),
           ),
           child: ClipOval(
             child: Image.asset(
@@ -294,11 +490,7 @@ class _AccountAvatar extends StatelessWidget {
                 return Container(
                   color: AppColors.surfaceHomeAvatar,
                   alignment: Alignment.center,
-                  child: Icon(
-                    Icons.person,
-                    color: AppColors.iconHomePlaceholder,
-                    size: size * 0.62,
-                  ),
+                  child: Icon(Icons.person, color: AppColors.iconHomePlaceholder, size: size * 0.62),
                 );
               },
             ),
@@ -321,9 +513,15 @@ class _AccountMenu extends StatelessWidget {
       child: Column(
         children: [
           for (var index = 0; index < items.length; index++) ...[
-            if (index == 4 || index == 7)
-              const Divider(height: 36, thickness: 36, color: Colors.white),
             _AccountMenuRow(item: items[index]),
+            if (index < items.length - 1)
+              const Divider(
+                height: 1,
+                thickness: 1,
+                indent: AppSpacingTokens.accountProfileMenuHorizontal,
+                endIndent: AppSpacingTokens.accountProfileMenuHorizontal,
+                color: AppColors.borderAccountDivider,
+              ),
           ],
         ],
       ),
@@ -332,17 +530,13 @@ class _AccountMenu extends StatelessWidget {
 }
 
 class _AccountMenuItem {
-  const _AccountMenuItem({
-    required this.label,
-    required this.icon,
-    this.trailingText,
-    this.onTap,
-  });
+  const _AccountMenuItem({required this.label, required this.iconAssetPath, this.trailingText, this.onTap, this.key});
 
   final String label;
-  final IconData icon;
+  final String iconAssetPath;
   final String? trailingText;
   final VoidCallback? onTap;
+  final Key? key;
 }
 
 class _AccountMenuRow extends StatelessWidget {
@@ -359,50 +553,67 @@ class _AccountMenuRow extends StatelessWidget {
       button: true,
       label: item.label,
       child: InkWell(
+        key: item.key,
         onTap:
             item.onTap ??
             () {
               AppToast.info(context, l10n.accountMenuComingSoon(item.label));
             },
         child: SizedBox(
-          height: 48,
+          height: AppSpacingTokens.accountProfileMenuRowHeight,
           child: Row(
             children: [
-              const SizedBox(width: 38),
+              const SizedBox(width: AppSpacingTokens.accountProfileMenuHorizontal),
               SizedBox(
-                width: 20,
-                child: Icon(
-                  item.icon,
-                  color: AppColors.iconAccountMenu,
-                  size: 20,
-                ),
+                width: AppSpacingTokens.accountProfileMenuIconSize,
+                height: AppSpacingTokens.accountProfileMenuIconSize,
+                child: Image.asset(item.iconAssetPath, fit: BoxFit.contain, errorBuilder: (context, error, stackTrace) => const SizedBox.expand()),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacingTokens.accountProfileMenuIconToLabel),
               Expanded(
-                child: Text(
-                  item.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextTokens.accountMenuLabel(textTheme),
-                ),
+                child: Text(item.label, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextTokens.accountMenuLabel(textTheme)),
               ),
               if (item.trailingText case final trailingText?) ...[
-                Text(
-                  trailingText,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextTokens.accountMenuValue(textTheme),
-                ),
-                const SizedBox(width: 8),
+                Text(trailingText, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextTokens.accountMenuValue(textTheme)),
+                const SizedBox(width: AppSpacingTokens.accountProfileMenuValueToChevron),
               ],
-              const Icon(
-                Icons.chevron_right_rounded,
-                color: AppColors.iconAccountChevron,
-                size: 24,
-              ),
-              const SizedBox(width: 12),
+              const Icon(Icons.chevron_right_rounded, color: AppColors.iconAccountChevron, size: AppSpacingTokens.accountProfileMenuChevronSize),
+              const SizedBox(width: AppSpacingTokens.accountProfileMenuHorizontal),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AccountProfileLogoutButton extends StatelessWidget {
+  const _AccountProfileLogoutButton({required this.onPressed});
+
+  final Future<void> Function() onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacingTokens.accountProfileLogoutHorizontal,
+        AppSpacingTokens.accountProfileLogoutTop,
+        AppSpacingTokens.accountProfileLogoutHorizontal,
+        AppSpacingTokens.accountProfileLogoutBottom,
+      ),
+      child: SizedBox(
+        height: AppSpacingTokens.accountProfileLogoutHeight,
+        width: double.infinity,
+        child: FilledButton(
+          key: AccountProfileKeys.logoutButton,
+          onPressed: onPressed,
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.accountProfileLogoutSurface,
+            foregroundColor: AppColors.textPrimary,
+            elevation: 0,
+            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(AppShapeTokens.accountProfileLogoutRadius))),
+          ),
+          child: Text(AppLocalizations.of(context).accountDetailsLogout, style: AppTextTokens.accountProfileLogout(Theme.of(context).textTheme)),
         ),
       ),
     );

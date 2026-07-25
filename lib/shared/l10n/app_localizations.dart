@@ -1064,17 +1064,161 @@ abstract class AppLocalizations {
   /// **'Shared devices'**
   String get accountSharedDevices;
 
+  /// Title for the shared devices page
+  ///
+  /// In en, this message translates to:
+  /// **'Shared devices'**
+  String get sharedDevicesTitle;
+
+  /// Number of people a device is shared with
+  ///
+  /// In en, this message translates to:
+  /// **'Share to {count} people'**
+  String sharedDevicesShareToPeople(int count);
+
+  /// Accessibility label for the shared devices add button
+  ///
+  /// In en, this message translates to:
+  /// **'Add shared device'**
+  String get sharedDevicesAddLabel;
+
+  /// Heading for device administrators in shared member management
+  ///
+  /// In en, this message translates to:
+  /// **'Administrator'**
+  String get sharedDeviceMemberAdministrator;
+
+  /// Heading for device guests in shared member management
+  ///
+  /// In en, this message translates to:
+  /// **'Guest'**
+  String get sharedDeviceMemberGuest;
+
+  /// Accepted state for a shared device member
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted'**
+  String get sharedDeviceMemberAccepted;
+
+  /// Accessibility label for the shared device member edit action
+  ///
+  /// In en, this message translates to:
+  /// **'Edit shared device member'**
+  String get sharedDeviceMemberEditLabel;
+
+  /// Accessibility label for the shared device member delete action
+  ///
+  /// In en, this message translates to:
+  /// **'Delete shared device member'**
+  String get sharedDeviceMemberDeleteLabel;
+
+  /// Accessibility label for the shared device member avatar placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'Shared device member avatar'**
+  String get sharedDeviceMemberAvatarPlaceholderLabel;
+
   /// Account menu item for devices received from others
   ///
   /// In en, this message translates to:
   /// **'Receiving devices'**
   String get accountReceivingDevices;
 
+  /// Title for the receiving devices page
+  ///
+  /// In en, this message translates to:
+  /// **'RECEIVING DEVICES'**
+  String get receivingDevicesTitle;
+
+  /// Demo receiving device name shown in the first card
+  ///
+  /// In en, this message translates to:
+  /// **'Smart door A'**
+  String get receivingDevicesSmartDoorA;
+
+  /// Demo receiving device name shown in the second and third cards
+  ///
+  /// In en, this message translates to:
+  /// **'Smart door B'**
+  String get receivingDevicesSmartDoorB;
+
+  /// Sharing status for a receiving device
+  ///
+  /// In en, this message translates to:
+  /// **'Share to {count} people'**
+  String receivingDevicesSharedWithPeople(int count);
+
+  /// Sharing status for a receiving device that is not shared
+  ///
+  /// In en, this message translates to:
+  /// **'Not shared'**
+  String get receivingDevicesNotShared;
+
+  /// Accessibility label for the decorative edit action on the receiving devices page
+  ///
+  /// In en, this message translates to:
+  /// **'Edit receiving devices'**
+  String get receivingDevicesEditLabel;
+
   /// Account menu item for managing devices; lowercase matches the provided design
   ///
   /// In en, this message translates to:
   /// **'manage devices'**
   String get accountManageDevices;
+
+  /// Title of the signed-in device management page
+  ///
+  /// In en, this message translates to:
+  /// **'Manage devices'**
+  String get manageDevicesTitle;
+
+  /// Subtitle of the signed-in device management page
+  ///
+  /// In en, this message translates to:
+  /// **'Devices logged in'**
+  String get manageDevicesSubtitle;
+
+  /// Sample phone name displayed in the device management page
+  ///
+  /// In en, this message translates to:
+  /// **'Iphone 16 pro max'**
+  String get manageDevicesPhoneName;
+
+  /// Sample tablet name displayed in the device management page
+  ///
+  /// In en, this message translates to:
+  /// **'Ipad air'**
+  String get manageDevicesTabletName;
+
+  /// Sample last active time displayed in the device management page
+  ///
+  /// In en, this message translates to:
+  /// **'2025-08-02 11:02'**
+  String get manageDevicesLastActiveAt;
+
+  /// Timestamp displayed under a signed-in device name
+  ///
+  /// In en, this message translates to:
+  /// **'{year}-{month}-{day} {hour}:{minute}'**
+  String manageDevicesLoginTimestamp(
+    int year,
+    String month,
+    String day,
+    String hour,
+    String minute,
+  );
+
+  /// Accessibility label for the Manage devices edit icon
+  ///
+  /// In en, this message translates to:
+  /// **'Edit signed-in devices'**
+  String get manageDevicesEditLabel;
+
+  /// Accessibility label for a signed-in device sign-out icon
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out device'**
+  String get manageDevicesLogoutLabel;
 
   /// Account menu item for messages; lowercase matches the provided design
   ///
@@ -1100,6 +1244,78 @@ abstract class AppLocalizations {
   /// **'System permissions'**
   String get accountSystemPermissions;
 
+  /// No description provided for @systemPermissionsPageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'SYSTEM PERMISSIONS'**
+  String get systemPermissionsPageTitle;
+
+  /// No description provided for @systemPermissionsLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Access Geographic Location'**
+  String get systemPermissionsLocation;
+
+  /// No description provided for @systemPermissionsCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Access Camera Permissions'**
+  String get systemPermissionsCamera;
+
+  /// No description provided for @systemPermissionsMicrophone.
+  ///
+  /// In en, this message translates to:
+  /// **'Access recording permission'**
+  String get systemPermissionsMicrophone;
+
+  /// No description provided for @systemPermissionsStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Access phone storage'**
+  String get systemPermissionsStorage;
+
+  /// No description provided for @systemPermissionsBluetooth.
+  ///
+  /// In en, this message translates to:
+  /// **'Access mobile Bluetooth'**
+  String get systemPermissionsBluetooth;
+
+  /// No description provided for @systemPermissionsGranted.
+  ///
+  /// In en, this message translates to:
+  /// **'Granted'**
+  String get systemPermissionsGranted;
+
+  /// No description provided for @systemPermissionsDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Not granted'**
+  String get systemPermissionsDenied;
+
+  /// No description provided for @systemPermissionsLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load system permissions.'**
+  String get systemPermissionsLoadError;
+
+  /// No description provided for @systemPermissionsRequestError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to request this permission.'**
+  String get systemPermissionsRequestError;
+
+  /// Account menu item for after-sales support
+  ///
+  /// In en, this message translates to:
+  /// **'after-sales service'**
+  String get accountAfterSalesService;
+
+  /// Account menu item for manuals and guides
+  ///
+  /// In en, this message translates to:
+  /// **'Manual & guide'**
+  String get accountManualGuide;
+
   /// Account menu item for checking app updates
   ///
   /// In en, this message translates to:
@@ -1112,6 +1328,132 @@ abstract class AppLocalizations {
   /// **'About'**
   String get accountAbout;
 
+  /// No description provided for @upgradeCheckTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the upgraded version'**
+  String get upgradeCheckTitle;
+
+  /// No description provided for @upgradeCheckAppSection.
+  ///
+  /// In en, this message translates to:
+  /// **'APP'**
+  String get upgradeCheckAppSection;
+
+  /// No description provided for @upgradeCheckFirmwareSection.
+  ///
+  /// In en, this message translates to:
+  /// **'firmware'**
+  String get upgradeCheckFirmwareSection;
+
+  /// No description provided for @upgradeCheckStartAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Start upgrading'**
+  String get upgradeCheckStartAction;
+
+  /// No description provided for @upgradeCheckUpgrading.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrading'**
+  String get upgradeCheckUpgrading;
+
+  /// No description provided for @upgradeCheckCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get upgradeCheckCompleted;
+
+  /// No description provided for @upgradeCheckDoorDeviceName.
+  ///
+  /// In en, this message translates to:
+  /// **'Door Device Name : {name}'**
+  String upgradeCheckDoorDeviceName(String name);
+
+  /// No description provided for @upgradeCheckSerialNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'serial number : {number}'**
+  String upgradeCheckSerialNumber(String number);
+
+  /// No description provided for @upgradeCheckCurrentVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Version : {version}'**
+  String upgradeCheckCurrentVersion(String version);
+
+  /// No description provided for @upgradeCheckSelectTimeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select upgrade time'**
+  String get upgradeCheckSelectTimeTitle;
+
+  /// No description provided for @upgradeCheckStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get upgradeCheckStatus;
+
+  /// No description provided for @upgradeCheckUpgradeTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade time'**
+  String get upgradeCheckUpgradeTime;
+
+  /// No description provided for @upgradeCheckImmediate.
+  ///
+  /// In en, this message translates to:
+  /// **'immediate'**
+  String get upgradeCheckImmediate;
+
+  /// No description provided for @upgradeCheckPostpone.
+  ///
+  /// In en, this message translates to:
+  /// **'postpone'**
+  String get upgradeCheckPostpone;
+
+  /// No description provided for @upgradeCheckDateAndTime.
+  ///
+  /// In en, this message translates to:
+  /// **'date and time'**
+  String get upgradeCheckDateAndTime;
+
+  /// No description provided for @upgradeCheckSchedulePastError.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a time in the future.'**
+  String get upgradeCheckSchedulePastError;
+
+  /// No description provided for @upgradeCheckCancelAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get upgradeCheckCancelAction;
+
+  /// No description provided for @upgradeCheckConfirmAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get upgradeCheckConfirmAction;
+
+  /// No description provided for @upgradeCheckOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'online'**
+  String get upgradeCheckOnline;
+
+  /// No description provided for @upgradeCheckOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'offline'**
+  String get upgradeCheckOffline;
+
+  /// No description provided for @upgradeCheckProgressPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}%'**
+  String upgradeCheckProgressPercent(int percent);
+
   /// Default region value shown on the account profile page
   ///
   /// In en, this message translates to:
@@ -1123,6 +1465,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'English'**
   String get accountDefaultLanguage;
+
+  /// Title of the account language selection dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get accountLanguageDialogTitle;
+
+  /// No description provided for @accountLanguageOptionFrench.
+  ///
+  /// In en, this message translates to:
+  /// **'France'**
+  String get accountLanguageOptionFrench;
+
+  /// No description provided for @accountLanguageOptionEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get accountLanguageOptionEnglish;
+
+  /// No description provided for @accountLanguageOptionSimplifiedChinese.
+  ///
+  /// In en, this message translates to:
+  /// **'中文(简体)'**
+  String get accountLanguageOptionSimplifiedChinese;
+
+  /// No description provided for @accountLanguageOptionTraditionalChinese.
+  ///
+  /// In en, this message translates to:
+  /// **'中文(繁体)'**
+  String get accountLanguageOptionTraditionalChinese;
+
+  /// No description provided for @accountLanguageOptionGerman.
+  ///
+  /// In en, this message translates to:
+  /// **'Das ist Deutsch'**
+  String get accountLanguageOptionGerman;
+
+  /// No description provided for @accountLanguageCancelAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get accountLanguageCancelAction;
+
+  /// No description provided for @accountLanguageConfirmAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get accountLanguageConfirmAction;
+
+  /// Title for the region selection page
+  ///
+  /// In en, this message translates to:
+  /// **'REGION'**
+  String get regionPageTitle;
+
+  /// China option on the region selection page
+  ///
+  /// In en, this message translates to:
+  /// **'China'**
+  String get regionChina;
+
+  /// America option on the region selection page
+  ///
+  /// In en, this message translates to:
+  /// **'America'**
+  String get regionAmerica;
+
+  /// England option on the region selection page
+  ///
+  /// In en, this message translates to:
+  /// **'England'**
+  String get regionEngland;
+
+  /// France option on the region selection page
+  ///
+  /// In en, this message translates to:
+  /// **'La Republique francaise'**
+  String get regionFrance;
+
+  /// Canada option on the region selection page
+  ///
+  /// In en, this message translates to:
+  /// **'Canada'**
+  String get regionCanada;
 
   /// Temporary snackbar shown when tapping account menu rows without a destination page
   ///

@@ -281,6 +281,7 @@ class _BleDebugPageState extends ConsumerState<BleDebugPage> {
       final requestId = _nextRequestId('permission');
       _appendLog('request bluetooth permission: $requestId');
       final snapshot = await _gateway.requestPermissions(
+        requestId: requestId,
         permissions: const [PermissionKind.bluetooth],
       );
       setState(() {
@@ -320,12 +321,15 @@ class _BleDebugPageState extends ConsumerState<BleDebugPage> {
   }
 
   Future<void> _ensureBluetoothPermission() async {
-    final current = await _gateway.getPermissionSnapshot();
+    final current = await _gateway.getPermissionSnapshot(
+      requestId: _nextRequestId('permission-snapshot'),
+    );
     if (current.bluetoothGranted) {
       return;
     }
     _appendLog('bluetooth permission missing, requesting...');
     final requested = await _gateway.requestPermissions(
+      requestId: _nextRequestId('permission-request'),
       permissions: const [PermissionKind.bluetooth],
     );
     if (!requested.bluetoothGranted) {

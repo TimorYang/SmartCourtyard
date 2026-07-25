@@ -54,6 +54,11 @@ class AppColors {
   static const accountDetailsSheetInputFocusedBorder = Color(0xFF176CFF);
   static const accountDetailsSheetInputIcon = Color(0xFFB4B6BA);
   static const accountDetailsAvatarOptionBorder = Color(0xFFE9ECF2);
+  static const accountLanguageDialogSurface = Color(0xFFFFFFFF);
+  static const accountLanguageDialogCancelSurface = Color(0xFFF1F2F4);
+  static const accountLanguageDialogDivider = Color(0xFFF0F1F3);
+  static const accountLanguageDialogScrim = Color(0x52000000);
+  static const accountProfileLogoutSurface = Color(0xFFF3F4F6);
   static const deviceControlPanel = Color(0xFFF3F4F6);
   static const deviceControlPanelPressed = Color(0xFFE8EAEE);
   static const deviceControlPrimaryAction = Color(0xFF151D27);
@@ -144,6 +149,8 @@ class AppColors {
   static const textAccountHeaderMeta = Color(0xFFECEFF4);
   static const textAccountMenuValue = Color(0xFF4F535A);
   static const textAccountDetailsValue = Color(0xFFA7ADB7);
+  static const textAccountLanguageOption = Color(0xFF707070);
+  static const textAccountLanguageSelected = Color(0xFF1A232C);
   static const textAgreement = Color(0xFFC0C0C3);
   static const textAgreementLink = Color(0xFF006DFF);
   static const textAuthBody = Color(0xFF555A62);
@@ -165,6 +172,33 @@ class AppColors {
   static const surfaceAccountHeaderFallback = Color(0xFF384148);
   static const surfaceAccountHeaderFallbackLight = Color(0xFF6D7B6D);
   static const surfaceAccountMenu = Colors.white;
+  static const sharedDevicesCard = Color(0xFFF5F6F7);
+  static const sharedDevicesAddButton = Color(0xFF151D27);
+  static const sharedDeviceMemberCard = Color(0xFFF3F4F6);
+  static const sharedDeviceMemberAvatarPlaceholder = Color(0xFFE2E5E9);
+  static const sharedDeviceMemberAvatarPlaceholderIcon = Color(0xFF737880);
+  static const sharedDeviceMemberActionIcon = Color(0xFF4B5057);
+  static const receivingDevicesCard = Color(0xFFF5F6F7);
+  static const regionSelection = Color(0xFF176CFF);
+  static const manageDevicesCard = Color(0xFFF3F4F6);
+  static const manageDevicesIcon = Color(0xFF444950);
+  static const systemPermissionsCard = Color(0xFFF3F4F6);
+  static const systemPermissionsGranted = Color(0xFF176CFF);
+  static const systemPermissionsDenied = Color(0xFFE52323);
+  static const upgradeCheckBackground = Color(0xFFF5F7FB);
+  static const upgradeCheckCard = Color(0xFFFFFFFF);
+  static const upgradeCheckDivider = Color(0xFFE9EBEF);
+  static const upgradeCheckCheckboxBorder = Color(0xFFC8CDD4);
+  static const upgradeCheckCheckboxSelected = Color(0xFF176CFF);
+  static const upgradeCheckProgressTrack = Color(0xFFE7E9EC);
+  static const upgradeCheckProgress = Color(0xFF176CFF);
+  static const upgradeCheckDisabledAction = Color(0xFFA4A7AD);
+  static const upgradeCheckDialogSurface = Color(0xFFFFFFFF);
+  static const upgradeCheckDialogScrim = Color(0x66000000);
+  static const upgradeCheckOnlineSurface = Color(0xFFEDF7E8);
+  static const upgradeCheckOnlineText = Color(0xFF4EA51B);
+  static const upgradeCheckOfflineSurface = Color(0xFFFFE8E9);
+  static const upgradeCheckOfflineText = Color(0xFFFF3D3D);
   static const surfaceSceneCard = Color(0xFFF4F5F7);
   static const surfaceItemSceneCard = Color(0xFFF1F3F5);
   static const borderSelectedSceneCard = Color(0xFF176CFF);
@@ -199,6 +233,7 @@ class AppColors {
   static const deviceShareCancelButton = Color(0xFFF1F2F4);
   static const deviceShareDialogOverlay = Color(0x99000000);
   static const deviceShareHourSelected = Color(0xFFE0E0E0);
+  static const deviceShareEditSummaryBackground = Color(0xFFF3F4F6);
 
   static const borderSubtle = Color(0xFFDBDBDB);
   static const borderMuted = Color(0xFFC8C8C8);
@@ -213,6 +248,7 @@ class AppColors {
   static const borderHomeDivider = Color(0xFFE7E8EB);
   static const borderHomePlaceholder = Color(0xFFDDE1E7);
   static const borderAccountDivider = Color(0xFFF0F1F3);
+  static const borderRegionDivider = Color(0xFFD9DADD);
 
   static const shadowStrong = Color(0x99000000);
   static const overlayStrong = Color(0x7A000000);
@@ -223,10 +259,21 @@ class AppColors {
 class AppShapeTokens {
   const AppShapeTokens._();
 
+  static const accountDetailsDialogRadius = 8.0;
+  static const accountLanguageDialogRadius = 12.0;
+  static const accountProfileLogoutRadius = 28.0;
+  static const sharedDevicesCardRadius = 16.0;
+  static const sharedDeviceMemberCardRadius = 16.0;
+  static const deviceShareEditSummaryRadius = 12.0;
+  static const receivingDevicesCardRadius = 16.0;
   static const safetySensorMetricIconRadius = 8.0;
   static const safetyBatterySolutionCardRadius = 14.0;
   static const safetyBatterySolutionImageRadius = 10.0;
   static const smartOpenerAddedDeviceCardRadius = 16.0;
+  static const systemPermissionsCardRadius = 16.0;
+  static const upgradeCheckCardRadius = 16.0;
+  static const upgradeCheckDialogRadius = 16.0;
+  static const upgradeCheckActionRadius = 28.0;
   static const fBoxWiringTestControlRadius = 12.0;
 }
 
@@ -248,6 +295,107 @@ class AppSpacingTokens {
   static const fBoxWiringTestBottomPadding = 28.0;
   static const fBoxWiringTestStatusToAction = 32.0;
   static const fBoxWiringTestActionHeight = 52.0;
+  static const sharedDevicesPageHorizontal = 28.0;
+  static const sharedDevicesTitleTop = 28.0;
+  static const sharedDevicesTitleToList = 27.0;
+  static const sharedDevicesCardHeight = 88.0;
+  static const sharedDevicesCardGap = 18.0;
+  static const sharedDevicesCardHorizontal = 28.0;
+  static const sharedDevicesIconSize = 48.0;
+  static const sharedDevicesIconToText = 20.0;
+  static const sharedDevicesCardTitleToSubtitle = 12.0;
+  static const sharedDevicesAddButtonSize = 53.0;
+  static const sharedDevicesAddIconSize = 40.0;
+  static const sharedDevicesAddButtonBottom = 50.0;
+  static const sharedDeviceMemberPageHorizontal = 19.0;
+  static const sharedDeviceMemberPageTop = 28.0;
+  static const sharedDeviceMemberPageBottom = 32.0;
+  static const sharedDeviceMemberPageSubtitleGap = 5.0;
+  static const sharedDeviceMemberSectionToCards = 26.0;
+  static const sharedDeviceMemberSectionsGap = 32.0;
+  static const sharedDeviceMemberCardHeight = 100.0;
+  static const sharedDeviceMemberCardGap = 18.0;
+  static const sharedDeviceMemberCardHorizontal = 20.0;
+  static const sharedDeviceMemberAvatarSize = 48.0;
+  static const sharedDeviceMemberAvatarGap = 18.0;
+  static const sharedDeviceMemberEmailToTime = 7.0;
+  static const sharedDeviceMemberTimeToStatus = 7.0;
+  static const sharedDeviceMemberActionsGap = 12.0;
+  static const sharedDeviceMemberActionGap = 8.0;
+  static const sharedDeviceMemberActionSize = 28.0;
+  static const sharedDeviceMemberAvatarPlaceholderIconSize = 28.0;
+  static const deviceShareEditSummaryHeight = 84.0;
+  static const deviceShareEditSummaryHorizontal = 18.0;
+  static const deviceShareEditSummaryAvatarSize = 48.0;
+  static const deviceShareEditSummaryAvatarGap = 18.0;
+  static const deviceShareEditSummaryTextGap = 5.0;
+  static const deviceShareEditSummaryToForm = 20.0;
+  static const deviceShareEditActionSize = 24.0;
+  static const receivingDevicesPageHorizontal = 20.0;
+  static const receivingDevicesTitleTop = 28.0;
+  static const receivingDevicesTitleToList = 28.0;
+  static const receivingDevicesCardHeight = 88.0;
+  static const receivingDevicesCardGap = 18.0;
+  static const receivingDevicesCardHorizontal = 30.0;
+  static const receivingDevicesIconSize = 48.0;
+  static const receivingDevicesIconToText = 20.0;
+  static const receivingDevicesCardTitleToSubtitle = 12.0;
+  static const accountLanguageDialogHorizontalInset = 23.0;
+  static const accountLanguageDialogContentHorizontal = 20.0;
+  static const accountLanguageDialogTopPadding = 24.0;
+  static const accountLanguageDialogActionTop = 30.0;
+  static const accountLanguageDialogActionBottom = 36.0;
+  static const accountLanguageDialogActionHeight = 68.0;
+  static const accountLanguageDialogTitleToOptions = 14.0;
+  static const accountLanguageDialogOptionHeight = 68.0;
+  static const accountLanguageDialogActionGap = 56.0;
+  static const accountLanguageDialogMaxWidth = 522.0;
+  static const accountProfileHeaderAvatarSize = 66.0;
+  static const accountProfileHeaderHorizontal = 24.0;
+  static const accountProfileHeaderBottom = 18.0;
+  static const accountProfileHeaderAvatarToText = 16.0;
+  static const accountProfileHeaderMetaGap = 6.0;
+  static const accountProfileMenuRowHeight = 60.0;
+  static const accountProfileMenuHorizontal = 28.0;
+  static const accountProfileMenuIconSize = 20.0;
+  static const accountProfileMenuIconToLabel = 12.0;
+  static const accountProfileMenuValueToChevron = 8.0;
+  static const accountProfileMenuChevronSize = 24.0;
+  static const accountProfileLogoutTop = 20.0;
+  static const accountProfileLogoutHorizontal = 28.0;
+  static const accountProfileLogoutHeight = 56.0;
+  static const accountProfileLogoutBottom = 36.0;
+  static const regionPageHorizontal = 32.0;
+  static const regionPageTitleTop = 47.0;
+  static const regionPageTitleToList = 16.0;
+  static const regionRowHeight = 97.0;
+  static const manageDevicesPageHorizontal = 31.0;
+  static const manageDevicesTitleTop = 35.0;
+  static const manageDevicesTitleToSubtitle = 12.0;
+  static const manageDevicesSubtitleToList = 46.0;
+  static const manageDevicesCardHeight = 142.0;
+  static const manageDevicesCardGap = 20.0;
+  static const manageDevicesCardHorizontal = 48.0;
+  static const manageDevicesIconSize = 52.0;
+  static const manageDevicesIconToText = 38.0;
+  static const manageDevicesCardTitleToTimestamp = 20.0;
+  static const manageDevicesActionIconSize = 26.0;
+  static const manageDevicesActionEndPadding = 15.0;
+  static const systemPermissionsPageHorizontal = 28.0;
+  static const systemPermissionsTitleTop = 47.0;
+  static const systemPermissionsTitleToList = 64.0;
+  static const systemPermissionsCardHeight = 128.0;
+  static const systemPermissionsCardGap = 18.0;
+  static const systemPermissionsCardHorizontal = 35.0;
+  static const systemPermissionsStatusIconSize = 34.0;
+  static const upgradeCheckPageHorizontal = 24.0;
+  static const upgradeCheckSectionTop = 24.0;
+  static const upgradeCheckCardPadding = 16.0;
+  static const upgradeCheckCardGap = 18.0;
+  static const upgradeCheckActionHeight = 58.0;
+  static const upgradeCheckDialogInset = 32.0;
+  static const upgradeCheckDialogPadding = 20.0;
+  static const upgradeCheckDialogActionHeight = 56.0;
 }
 
 class AppOpacityTokens {
@@ -639,6 +787,33 @@ class AppTextTokens {
       fontSize: 13,
       fontWeight: FontWeight.w400,
       height: 1.25,
+    );
+  }
+
+  static TextStyle deviceShareEditSummaryEmail(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 15,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle deviceShareEditSummaryMetadata(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted656565,
+      fontSize: 12,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle deviceShareEditSummaryStatus(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 11,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
     );
   }
 
@@ -1350,6 +1525,238 @@ class AppTextTokens {
     );
   }
 
+  static TextStyle accountProfileLogout(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 17,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle sharedDevicesTitle(TextTheme textTheme) {
+    return (textTheme.headlineMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 26,
+      fontWeight: FontWeight.w600,
+      height: 1.15,
+    );
+  }
+
+  static TextStyle sharedDevicesCardTitle(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 16,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle sharedDevicesCardSubtitle(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 12,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle sharedDeviceMemberPageTitle(TextTheme textTheme) {
+    return (textTheme.headlineMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 26,
+      fontWeight: FontWeight.w600,
+      height: 1.15,
+    );
+  }
+
+  static TextStyle sharedDeviceMemberSectionTitle(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted656565,
+      fontSize: 13,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle sharedDeviceMemberEmail(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 15,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle sharedDeviceMemberMetadata(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted656565,
+      fontSize: 12,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle sharedDeviceMemberStatus(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 11,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle receivingDevicesTitle(TextTheme textTheme) {
+    return (textTheme.headlineMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 26,
+      fontWeight: FontWeight.w600,
+      height: 1.15,
+    );
+  }
+
+  static TextStyle receivingDevicesCardTitle(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 15,
+      fontWeight: FontWeight.w500,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle receivingDevicesCardSubtitle(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 13,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle regionPageTitle(TextTheme textTheme) {
+    return (textTheme.headlineMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 32,
+      fontWeight: FontWeight.w600,
+      height: 1.15,
+    );
+  }
+
+  static TextStyle regionRowLabel(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 20,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle systemPermissionsTitle(TextTheme textTheme) {
+    return (textTheme.headlineMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 32,
+      fontWeight: FontWeight.w600,
+      height: 1.15,
+    );
+  }
+
+  static TextStyle systemPermissionsCardTitle(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 20,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle systemPermissionsCardStatus(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 14,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle upgradeCheckTitle(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 23,
+      fontWeight: FontWeight.w600,
+    );
+  }
+
+  static TextStyle upgradeCheckSectionTitle(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 17,
+      fontWeight: FontWeight.w500,
+    );
+  }
+
+  static TextStyle upgradeCheckCardTitle(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 17,
+      fontWeight: FontWeight.w600,
+    );
+  }
+
+  static TextStyle upgradeCheckBody(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 15,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle upgradeCheckMeta(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textAccountDetailsValue,
+      fontSize: 14,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle upgradeCheckDialogTitle(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 22,
+      fontWeight: FontWeight.w600,
+    );
+  }
+
+  static TextStyle upgradeCheckStatus(
+    TextTheme textTheme, {
+    required bool online,
+  }) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: online
+          ? AppColors.upgradeCheckOnlineText
+          : AppColors.upgradeCheckOfflineText,
+      fontSize: 13,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle manageDevicesSubtitle(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textHint,
+      fontSize: 20,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle manageDevicesCardTimestamp(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textHint,
+      fontSize: 20,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
   static TextStyle notificationHeaderAction(TextTheme textTheme) {
     return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
       color: AppColors.brandPrimary,
@@ -1453,8 +1860,8 @@ class AppTextTokens {
   static TextStyle accountDetailsTitle(TextTheme textTheme) {
     return (textTheme.displaySmall ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
-      fontSize: 28,
-      fontWeight: FontWeight.w800,
+      fontSize: 26,
+      fontWeight: FontWeight.w600,
       height: 1.05,
     );
   }
@@ -1462,8 +1869,8 @@ class AppTextTokens {
   static TextStyle accountDetailsLabel(TextTheme textTheme) {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
       color: AppColors.textMuted,
-      fontSize: 16,
-      fontWeight: FontWeight.w600,
+      fontSize: 15,
+      fontWeight: FontWeight.w400,
       height: 1.2,
     );
   }
@@ -1471,7 +1878,7 @@ class AppTextTokens {
   static TextStyle accountDetailsValue(TextTheme textTheme) {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
       color: AppColors.textAccountDetailsValue,
-      fontSize: 16,
+      fontSize: 15,
       fontWeight: FontWeight.w400,
       height: 1.2,
     );
@@ -1488,9 +1895,44 @@ class AppTextTokens {
 
   static TextStyle accountDetailsSheetTitle(TextTheme textTheme) {
     return (textTheme.titleLarge ?? const TextStyle()).copyWith(
-      color: AppColors.textMuted,
-      fontSize: 20,
+      color: AppColors.textMuted1A232C,
+      fontSize: 26,
+      fontWeight: FontWeight.w500,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle accountLanguageDialogTitle(TextTheme textTheme) {
+    return (textTheme.headlineMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textAccountLanguageSelected,
+      fontSize: 34,
       fontWeight: FontWeight.w600,
+      height: 1.18,
+    );
+  }
+
+  static TextStyle accountLanguageDialogOption(
+    TextTheme textTheme, {
+    required bool isSelected,
+  }) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: isSelected
+          ? AppColors.textAccountLanguageSelected
+          : AppColors.textAccountLanguageOption,
+      fontSize: isSelected ? 28 : 20,
+      fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle accountLanguageDialogAction(
+    TextTheme textTheme, {
+    required bool isPrimary,
+  }) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: isPrimary ? Colors.white : AppColors.textPrimary,
+      fontSize: 24,
+      fontWeight: FontWeight.w400,
       height: 1.2,
     );
   }
@@ -1498,7 +1940,7 @@ class AppTextTokens {
   static TextStyle accountDetailsSheetInput(TextTheme textTheme) {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
       color: AppColors.textMuted,
-      fontSize: 17,
+      fontSize: 15,
       fontWeight: FontWeight.w400,
       height: 1.2,
     );

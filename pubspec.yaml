@@ -57,6 +57,7 @@ flutter:
     - assets/images/auth/
     - assets/images/device_control/
     - assets/icons/
+    - assets/icons/account/
     - assets/icons/auth/
     - assets/icons/add_device/
     - assets/icons/add_device/lottie_js_scan_device/

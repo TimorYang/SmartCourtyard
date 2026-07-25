@@ -90,20 +90,39 @@ class WifiProvisionResult {
   final String? nativeCode;
 }
 
-enum PermissionKind { bluetooth, camera, localNetwork, notification }
+enum PermissionKind {
+  bluetooth,
+  camera,
+  location,
+  microphone,
+  storage,
+  localNetwork,
+  notification,
+}
+
+enum PermissionStatus { granted, denied, blocked }
 
 class PermissionSnapshot {
   const PermissionSnapshot({
-    required this.bluetoothGranted,
-    required this.cameraGranted,
+    required this.bluetoothStatus,
+    required this.cameraStatus,
+    required this.locationStatus,
+    required this.microphoneStatus,
+    required this.storageStatus,
     required this.localNetworkGranted,
     required this.notificationGranted,
   });
 
-  final bool bluetoothGranted;
-  final bool cameraGranted;
+  final PermissionStatus bluetoothStatus;
+  final PermissionStatus cameraStatus;
+  final PermissionStatus locationStatus;
+  final PermissionStatus microphoneStatus;
+  final PermissionStatus storageStatus;
   final bool localNetworkGranted;
   final bool notificationGranted;
+
+  bool get bluetoothGranted => bluetoothStatus == PermissionStatus.granted;
+  bool get cameraGranted => cameraStatus == PermissionStatus.granted;
 }
 
 class DeviceSummary {

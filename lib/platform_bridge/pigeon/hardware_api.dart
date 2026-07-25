@@ -12,7 +12,17 @@ import 'package:pigeon/pigeon.dart';
     ),
   ),
 )
-enum PermissionKindDto { bluetooth, camera, localNetwork, notification }
+enum PermissionKindDto {
+  bluetooth,
+  camera,
+  location,
+  microphone,
+  storage,
+  localNetwork,
+  notification,
+}
+
+enum PermissionStatusDto { granted, denied, blocked }
 
 enum DoorCommandDto { open, stop, close, partialOpen, lightOn, lightOff, pb }
 
@@ -30,14 +40,20 @@ enum BleDiagnosticDirectionDto { tx, rx }
 
 class PermissionSnapshotDto {
   PermissionSnapshotDto({
-    required this.bluetoothGranted,
-    required this.cameraGranted,
+    required this.bluetoothStatus,
+    required this.cameraStatus,
+    required this.locationStatus,
+    required this.microphoneStatus,
+    required this.storageStatus,
     required this.localNetworkGranted,
     required this.notificationGranted,
   });
 
-  final bool bluetoothGranted;
-  final bool cameraGranted;
+  final PermissionStatusDto bluetoothStatus;
+  final PermissionStatusDto cameraStatus;
+  final PermissionStatusDto locationStatus;
+  final PermissionStatusDto microphoneStatus;
+  final PermissionStatusDto storageStatus;
   final bool localNetworkGranted;
   final bool notificationGranted;
 }
@@ -373,9 +389,14 @@ abstract class HardwareHostApi {
     bool nativeConsoleEnabled,
   );
 
-  PermissionSnapshotDto getPermissionSnapshot();
+  PermissionSnapshotDto getPermissionSnapshot(String requestId);
 
-  PermissionSnapshotDto requestPermissions(List<PermissionKindDto> permissions);
+  PermissionSnapshotDto requestPermissions(
+    String requestId,
+    List<PermissionKindDto> permissions,
+  );
+
+  void openAppSettings(String requestId);
 
   void startBleScan(String requestId, BleScanFilterDto filter);
 

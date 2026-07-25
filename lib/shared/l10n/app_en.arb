@@ -598,13 +598,124 @@
   "@accountSharedDevices": {
     "description": "Account menu item for devices shared by the user"
   },
+  "sharedDevicesTitle": "Shared devices",
+  "@sharedDevicesTitle": {
+    "description": "Title for the shared devices page"
+  },
+  "sharedDevicesShareToPeople": "Share to {count} people",
+  "@sharedDevicesShareToPeople": {
+    "description": "Number of people a device is shared with",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "sharedDevicesAddLabel": "Add shared device",
+  "@sharedDevicesAddLabel": {
+    "description": "Accessibility label for the shared devices add button"
+  },
+  "sharedDeviceMemberAdministrator": "Administrator",
+  "@sharedDeviceMemberAdministrator": {
+    "description": "Heading for device administrators in shared member management"
+  },
+  "sharedDeviceMemberGuest": "Guest",
+  "@sharedDeviceMemberGuest": {
+    "description": "Heading for device guests in shared member management"
+  },
+  "sharedDeviceMemberAccepted": "Accepted",
+  "@sharedDeviceMemberAccepted": {
+    "description": "Accepted state for a shared device member"
+  },
+  "sharedDeviceMemberEditLabel": "Edit shared device member",
+  "@sharedDeviceMemberEditLabel": {
+    "description": "Accessibility label for the shared device member edit action"
+  },
+  "sharedDeviceMemberDeleteLabel": "Delete shared device member",
+  "@sharedDeviceMemberDeleteLabel": {
+    "description": "Accessibility label for the shared device member delete action"
+  },
+  "sharedDeviceMemberAvatarPlaceholderLabel": "Shared device member avatar",
+  "@sharedDeviceMemberAvatarPlaceholderLabel": {
+    "description": "Accessibility label for the shared device member avatar placeholder"
+  },
   "accountReceivingDevices": "Receiving devices",
   "@accountReceivingDevices": {
     "description": "Account menu item for devices received from others"
   },
+  "receivingDevicesTitle": "RECEIVING DEVICES",
+  "@receivingDevicesTitle": {
+    "description": "Title for the receiving devices page"
+  },
+  "receivingDevicesSmartDoorA": "Smart door A",
+  "@receivingDevicesSmartDoorA": {
+    "description": "Demo receiving device name shown in the first card"
+  },
+  "receivingDevicesSmartDoorB": "Smart door B",
+  "@receivingDevicesSmartDoorB": {
+    "description": "Demo receiving device name shown in the second and third cards"
+  },
+  "receivingDevicesSharedWithPeople": "Share to {count} people",
+  "@receivingDevicesSharedWithPeople": {
+    "description": "Sharing status for a receiving device",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "receivingDevicesNotShared": "Not shared",
+  "@receivingDevicesNotShared": {
+    "description": "Sharing status for a receiving device that is not shared"
+  },
+  "receivingDevicesEditLabel": "Edit receiving devices",
+  "@receivingDevicesEditLabel": {
+    "description": "Accessibility label for the decorative edit action on the receiving devices page"
+  },
   "accountManageDevices": "manage devices",
   "@accountManageDevices": {
     "description": "Account menu item for managing devices; lowercase matches the provided design"
+  },
+  "manageDevicesTitle": "Manage devices",
+  "@manageDevicesTitle": {
+    "description": "Title of the signed-in device management page"
+  },
+  "manageDevicesSubtitle": "Devices logged in",
+  "@manageDevicesSubtitle": {
+    "description": "Subtitle of the signed-in device management page"
+  },
+  "manageDevicesPhoneName": "Iphone 16 pro max",
+  "@manageDevicesPhoneName": {
+    "description": "Sample phone name displayed in the device management page"
+  },
+  "manageDevicesTabletName": "Ipad air",
+  "@manageDevicesTabletName": {
+    "description": "Sample tablet name displayed in the device management page"
+  },
+  "manageDevicesLastActiveAt": "2025-08-02 11:02",
+  "@manageDevicesLastActiveAt": {
+    "description": "Sample last active time displayed in the device management page"
+  },
+  "manageDevicesLoginTimestamp": "{year}-{month}-{day} {hour}:{minute}",
+  "@manageDevicesLoginTimestamp": {
+    "description": "Timestamp displayed under a signed-in device name",
+    "placeholders": {
+      "year": {"type": "int"},
+      "month": {"type": "String"},
+      "day": {"type": "String"},
+      "hour": {"type": "String"},
+      "minute": {"type": "String"}
+    }
+  },
+  "manageDevicesEditLabel": "Edit signed-in devices",
+  "@manageDevicesEditLabel": {
+    "description": "Accessibility label for the Manage devices edit icon"
+  },
+  "manageDevicesLogoutLabel": "Sign out device",
+  "@manageDevicesLogoutLabel": {
+    "description": "Accessibility label for a signed-in device sign-out icon"
   },
   "accountMessage": "message",
   "@accountMessage": {
@@ -622,11 +733,62 @@
   "@accountSystemPermissions": {
     "description": "Account menu item for system permission settings"
   },
+  "systemPermissionsPageTitle": "SYSTEM PERMISSIONS",
+  "systemPermissionsLocation": "Access Geographic Location",
+  "systemPermissionsCamera": "Access Camera Permissions",
+  "systemPermissionsMicrophone": "Access recording permission",
+  "systemPermissionsStorage": "Access phone storage",
+  "systemPermissionsBluetooth": "Access mobile Bluetooth",
+  "systemPermissionsGranted": "Granted",
+  "systemPermissionsDenied": "Not granted",
+  "systemPermissionsLoadError": "Unable to load system permissions.",
+  "systemPermissionsRequestError": "Unable to request this permission.",
+  "accountAfterSalesService": "after-sales service",
+  "@accountAfterSalesService": {
+    "description": "Account menu item for after-sales support"
+  },
+  "accountManualGuide": "Manual & guide",
+  "@accountManualGuide": {
+    "description": "Account menu item for manuals and guides"
+  },
   "accountCheckForUpdates": "Check for updates",
   "@accountCheckForUpdates": {
     "description": "Account menu item for checking app updates"
   },
   "accountAbout": "About",
+  "upgradeCheckTitle": "Check the upgraded version",
+  "upgradeCheckAppSection": "APP",
+  "upgradeCheckFirmwareSection": "firmware",
+  "upgradeCheckStartAction": "Start upgrading",
+  "upgradeCheckUpgrading": "Upgrading",
+  "upgradeCheckCompleted": "Completed",
+  "upgradeCheckDoorDeviceName": "Door Device Name : {name}",
+  "@upgradeCheckDoorDeviceName": {
+    "placeholders": {"name": {"type": "String"}}
+  },
+  "upgradeCheckSerialNumber": "serial number : {number}",
+  "@upgradeCheckSerialNumber": {
+    "placeholders": {"number": {"type": "String"}}
+  },
+  "upgradeCheckCurrentVersion": "Current Version : {version}",
+  "@upgradeCheckCurrentVersion": {
+    "placeholders": {"version": {"type": "String"}}
+  },
+  "upgradeCheckSelectTimeTitle": "Select upgrade time",
+  "upgradeCheckStatus": "Status",
+  "upgradeCheckUpgradeTime": "Upgrade time",
+  "upgradeCheckImmediate": "immediate",
+  "upgradeCheckPostpone": "postpone",
+  "upgradeCheckDateAndTime": "date and time",
+  "upgradeCheckSchedulePastError": "Choose a time in the future.",
+  "upgradeCheckCancelAction": "Cancel",
+  "upgradeCheckConfirmAction": "Confirm",
+  "upgradeCheckOnline": "online",
+  "upgradeCheckOffline": "offline",
+  "upgradeCheckProgressPercent": "{percent}%",
+  "@upgradeCheckProgressPercent": {
+    "placeholders": {"percent": {"type": "int"}}
+  },
   "@accountAbout": {
     "description": "Account menu item for about page"
   },
@@ -637,6 +799,41 @@
   "accountDefaultLanguage": "English",
   "@accountDefaultLanguage": {
     "description": "Default language value shown on the account profile page"
+  },
+  "accountLanguageDialogTitle": "Language",
+  "@accountLanguageDialogTitle": {
+    "description": "Title of the account language selection dialog"
+  },
+  "accountLanguageOptionFrench": "France",
+  "accountLanguageOptionEnglish": "English",
+  "accountLanguageOptionSimplifiedChinese": "中文(简体)",
+  "accountLanguageOptionTraditionalChinese": "中文(繁体)",
+  "accountLanguageOptionGerman": "Das ist Deutsch",
+  "accountLanguageCancelAction": "Cancel",
+  "accountLanguageConfirmAction": "Confirm",
+  "regionPageTitle": "REGION",
+  "@regionPageTitle": {
+    "description": "Title for the region selection page"
+  },
+  "regionChina": "China",
+  "@regionChina": {
+    "description": "China option on the region selection page"
+  },
+  "regionAmerica": "America",
+  "@regionAmerica": {
+    "description": "America option on the region selection page"
+  },
+  "regionEngland": "England",
+  "@regionEngland": {
+    "description": "England option on the region selection page"
+  },
+  "regionFrance": "La Republique francaise",
+  "@regionFrance": {
+    "description": "France option on the region selection page"
+  },
+  "regionCanada": "Canada",
+  "@regionCanada": {
+    "description": "Canada option on the region selection page"
   },
   "accountMenuComingSoon": "{item} is coming soon",
   "@accountMenuComingSoon": {

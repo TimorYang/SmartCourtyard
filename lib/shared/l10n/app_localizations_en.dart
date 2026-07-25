@@ -527,10 +527,92 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountSharedDevices => 'Shared devices';
 
   @override
+  String get sharedDevicesTitle => 'Shared devices';
+
+  @override
+  String sharedDevicesShareToPeople(int count) {
+    return 'Share to $count people';
+  }
+
+  @override
+  String get sharedDevicesAddLabel => 'Add shared device';
+
+  @override
+  String get sharedDeviceMemberAdministrator => 'Administrator';
+
+  @override
+  String get sharedDeviceMemberGuest => 'Guest';
+
+  @override
+  String get sharedDeviceMemberAccepted => 'Accepted';
+
+  @override
+  String get sharedDeviceMemberEditLabel => 'Edit shared device member';
+
+  @override
+  String get sharedDeviceMemberDeleteLabel => 'Delete shared device member';
+
+  @override
+  String get sharedDeviceMemberAvatarPlaceholderLabel =>
+      'Shared device member avatar';
+
+  @override
   String get accountReceivingDevices => 'Receiving devices';
 
   @override
+  String get receivingDevicesTitle => 'RECEIVING DEVICES';
+
+  @override
+  String get receivingDevicesSmartDoorA => 'Smart door A';
+
+  @override
+  String get receivingDevicesSmartDoorB => 'Smart door B';
+
+  @override
+  String receivingDevicesSharedWithPeople(int count) {
+    return 'Share to $count people';
+  }
+
+  @override
+  String get receivingDevicesNotShared => 'Not shared';
+
+  @override
+  String get receivingDevicesEditLabel => 'Edit receiving devices';
+
+  @override
   String get accountManageDevices => 'manage devices';
+
+  @override
+  String get manageDevicesTitle => 'Manage devices';
+
+  @override
+  String get manageDevicesSubtitle => 'Devices logged in';
+
+  @override
+  String get manageDevicesPhoneName => 'Iphone 16 pro max';
+
+  @override
+  String get manageDevicesTabletName => 'Ipad air';
+
+  @override
+  String get manageDevicesLastActiveAt => '2025-08-02 11:02';
+
+  @override
+  String manageDevicesLoginTimestamp(
+    int year,
+    String month,
+    String day,
+    String hour,
+    String minute,
+  ) {
+    return '$year-$month-$day $hour:$minute';
+  }
+
+  @override
+  String get manageDevicesEditLabel => 'Edit signed-in devices';
+
+  @override
+  String get manageDevicesLogoutLabel => 'Sign out device';
 
   @override
   String get accountMessage => 'message';
@@ -545,16 +627,166 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountSystemPermissions => 'System permissions';
 
   @override
+  String get systemPermissionsPageTitle => 'SYSTEM PERMISSIONS';
+
+  @override
+  String get systemPermissionsLocation => 'Access Geographic Location';
+
+  @override
+  String get systemPermissionsCamera => 'Access Camera Permissions';
+
+  @override
+  String get systemPermissionsMicrophone => 'Access recording permission';
+
+  @override
+  String get systemPermissionsStorage => 'Access phone storage';
+
+  @override
+  String get systemPermissionsBluetooth => 'Access mobile Bluetooth';
+
+  @override
+  String get systemPermissionsGranted => 'Granted';
+
+  @override
+  String get systemPermissionsDenied => 'Not granted';
+
+  @override
+  String get systemPermissionsLoadError => 'Unable to load system permissions.';
+
+  @override
+  String get systemPermissionsRequestError =>
+      'Unable to request this permission.';
+
+  @override
+  String get accountAfterSalesService => 'after-sales service';
+
+  @override
+  String get accountManualGuide => 'Manual & guide';
+
+  @override
   String get accountCheckForUpdates => 'Check for updates';
 
   @override
   String get accountAbout => 'About';
 
   @override
+  String get upgradeCheckTitle => 'Check the upgraded version';
+
+  @override
+  String get upgradeCheckAppSection => 'APP';
+
+  @override
+  String get upgradeCheckFirmwareSection => 'firmware';
+
+  @override
+  String get upgradeCheckStartAction => 'Start upgrading';
+
+  @override
+  String get upgradeCheckUpgrading => 'Upgrading';
+
+  @override
+  String get upgradeCheckCompleted => 'Completed';
+
+  @override
+  String upgradeCheckDoorDeviceName(String name) {
+    return 'Door Device Name : $name';
+  }
+
+  @override
+  String upgradeCheckSerialNumber(String number) {
+    return 'serial number : $number';
+  }
+
+  @override
+  String upgradeCheckCurrentVersion(String version) {
+    return 'Current Version : $version';
+  }
+
+  @override
+  String get upgradeCheckSelectTimeTitle => 'Select upgrade time';
+
+  @override
+  String get upgradeCheckStatus => 'Status';
+
+  @override
+  String get upgradeCheckUpgradeTime => 'Upgrade time';
+
+  @override
+  String get upgradeCheckImmediate => 'immediate';
+
+  @override
+  String get upgradeCheckPostpone => 'postpone';
+
+  @override
+  String get upgradeCheckDateAndTime => 'date and time';
+
+  @override
+  String get upgradeCheckSchedulePastError => 'Choose a time in the future.';
+
+  @override
+  String get upgradeCheckCancelAction => 'Cancel';
+
+  @override
+  String get upgradeCheckConfirmAction => 'Confirm';
+
+  @override
+  String get upgradeCheckOnline => 'online';
+
+  @override
+  String get upgradeCheckOffline => 'offline';
+
+  @override
+  String upgradeCheckProgressPercent(int percent) {
+    return '$percent%';
+  }
+
+  @override
   String get accountDefaultRegion => 'England';
 
   @override
   String get accountDefaultLanguage => 'English';
+
+  @override
+  String get accountLanguageDialogTitle => 'Language';
+
+  @override
+  String get accountLanguageOptionFrench => 'France';
+
+  @override
+  String get accountLanguageOptionEnglish => 'English';
+
+  @override
+  String get accountLanguageOptionSimplifiedChinese => '中文(简体)';
+
+  @override
+  String get accountLanguageOptionTraditionalChinese => '中文(繁体)';
+
+  @override
+  String get accountLanguageOptionGerman => 'Das ist Deutsch';
+
+  @override
+  String get accountLanguageCancelAction => 'Cancel';
+
+  @override
+  String get accountLanguageConfirmAction => 'Confirm';
+
+  @override
+  String get regionPageTitle => 'REGION';
+
+  @override
+  String get regionChina => 'China';
+
+  @override
+  String get regionAmerica => 'America';
+
+  @override
+  String get regionEngland => 'England';
+
+  @override
+  String get regionFrance => 'La Republique francaise';
+
+  @override
+  String get regionCanada => 'Canada';
 
   @override
   String accountMenuComingSoon(String item) {

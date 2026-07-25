@@ -30,6 +30,10 @@
 	<string>FLINX uses Bluetooth to discover, connect, provision, and diagnose nearby door-control devices.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>FLINX uses the camera to scan device QR codes during setup.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>FLINX uses your location to find and connect nearby door-control devices.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>FLINX uses the microphone when you choose features that record audio.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>FLINX uses your photo library when you choose a QR code image during device setup.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>

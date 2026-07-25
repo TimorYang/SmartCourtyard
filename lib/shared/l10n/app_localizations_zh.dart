@@ -503,10 +503,91 @@ class AppLocalizationsZh extends AppLocalizations {
   String get accountSharedDevices => '共享设备';
 
   @override
+  String get sharedDevicesTitle => '共享设备';
+
+  @override
+  String sharedDevicesShareToPeople(int count) {
+    return '分享给 $count 人';
+  }
+
+  @override
+  String get sharedDevicesAddLabel => '添加共享设备';
+
+  @override
+  String get sharedDeviceMemberAdministrator => '管理员';
+
+  @override
+  String get sharedDeviceMemberGuest => '访客';
+
+  @override
+  String get sharedDeviceMemberAccepted => '已接受';
+
+  @override
+  String get sharedDeviceMemberEditLabel => '编辑共享设备成员';
+
+  @override
+  String get sharedDeviceMemberDeleteLabel => '删除共享设备成员';
+
+  @override
+  String get sharedDeviceMemberAvatarPlaceholderLabel => '共享设备成员头像';
+
+  @override
   String get accountReceivingDevices => '接收设备';
 
   @override
+  String get receivingDevicesTitle => '接收设备';
+
+  @override
+  String get receivingDevicesSmartDoorA => '智能门 A';
+
+  @override
+  String get receivingDevicesSmartDoorB => '智能门 B';
+
+  @override
+  String receivingDevicesSharedWithPeople(int count) {
+    return '分享给 $count 人';
+  }
+
+  @override
+  String get receivingDevicesNotShared => '未分享';
+
+  @override
+  String get receivingDevicesEditLabel => '编辑接收设备';
+
+  @override
   String get accountManageDevices => '管理设备';
+
+  @override
+  String get manageDevicesTitle => '管理设备';
+
+  @override
+  String get manageDevicesSubtitle => '已登录的设备';
+
+  @override
+  String get manageDevicesPhoneName => 'Iphone 16 pro max';
+
+  @override
+  String get manageDevicesTabletName => 'Ipad air';
+
+  @override
+  String get manageDevicesLastActiveAt => '2025-08-02 11:02';
+
+  @override
+  String manageDevicesLoginTimestamp(
+    int year,
+    String month,
+    String day,
+    String hour,
+    String minute,
+  ) {
+    return '$year-$month-$day $hour:$minute';
+  }
+
+  @override
+  String get manageDevicesEditLabel => '编辑已登录设备';
+
+  @override
+  String get manageDevicesLogoutLabel => '退出设备登录';
 
   @override
   String get accountMessage => '消息';
@@ -521,16 +602,165 @@ class AppLocalizationsZh extends AppLocalizations {
   String get accountSystemPermissions => '系统权限';
 
   @override
+  String get systemPermissionsPageTitle => '系统权限';
+
+  @override
+  String get systemPermissionsLocation => '访问地理位置';
+
+  @override
+  String get systemPermissionsCamera => '访问相机权限';
+
+  @override
+  String get systemPermissionsMicrophone => '访问录音权限';
+
+  @override
+  String get systemPermissionsStorage => '访问手机存储';
+
+  @override
+  String get systemPermissionsBluetooth => '访问手机蓝牙';
+
+  @override
+  String get systemPermissionsGranted => '已授权';
+
+  @override
+  String get systemPermissionsDenied => '未授权';
+
+  @override
+  String get systemPermissionsLoadError => '无法读取系统权限。';
+
+  @override
+  String get systemPermissionsRequestError => '无法申请此权限。';
+
+  @override
+  String get accountAfterSalesService => '售后服务';
+
+  @override
+  String get accountManualGuide => '使用手册与指南';
+
+  @override
   String get accountCheckForUpdates => '检查更新';
 
   @override
   String get accountAbout => '关于';
 
   @override
+  String get upgradeCheckTitle => '检查升级版本';
+
+  @override
+  String get upgradeCheckAppSection => '应用';
+
+  @override
+  String get upgradeCheckFirmwareSection => '固件';
+
+  @override
+  String get upgradeCheckStartAction => '开始升级';
+
+  @override
+  String get upgradeCheckUpgrading => '正在升级';
+
+  @override
+  String get upgradeCheckCompleted => '已完成';
+
+  @override
+  String upgradeCheckDoorDeviceName(String name) {
+    return '门设备名称：$name';
+  }
+
+  @override
+  String upgradeCheckSerialNumber(String number) {
+    return '序列号：$number';
+  }
+
+  @override
+  String upgradeCheckCurrentVersion(String version) {
+    return '当前版本：$version';
+  }
+
+  @override
+  String get upgradeCheckSelectTimeTitle => '选择升级时间';
+
+  @override
+  String get upgradeCheckStatus => '状态';
+
+  @override
+  String get upgradeCheckUpgradeTime => '升级时间';
+
+  @override
+  String get upgradeCheckImmediate => '立即升级';
+
+  @override
+  String get upgradeCheckPostpone => '延后';
+
+  @override
+  String get upgradeCheckDateAndTime => '日期和时间';
+
+  @override
+  String get upgradeCheckSchedulePastError => '请选择未来的时间。';
+
+  @override
+  String get upgradeCheckCancelAction => '取消';
+
+  @override
+  String get upgradeCheckConfirmAction => '确认';
+
+  @override
+  String get upgradeCheckOnline => '在线';
+
+  @override
+  String get upgradeCheckOffline => '离线';
+
+  @override
+  String upgradeCheckProgressPercent(int percent) {
+    return '$percent%';
+  }
+
+  @override
   String get accountDefaultRegion => 'England';
 
   @override
   String get accountDefaultLanguage => 'English';
+
+  @override
+  String get accountLanguageDialogTitle => '语言';
+
+  @override
+  String get accountLanguageOptionFrench => '法国';
+
+  @override
+  String get accountLanguageOptionEnglish => '英语';
+
+  @override
+  String get accountLanguageOptionSimplifiedChinese => '中文(简体)';
+
+  @override
+  String get accountLanguageOptionTraditionalChinese => '中文(繁体)';
+
+  @override
+  String get accountLanguageOptionGerman => '德语';
+
+  @override
+  String get accountLanguageCancelAction => '取消';
+
+  @override
+  String get accountLanguageConfirmAction => '确认';
+
+  @override
+  String get regionPageTitle => '地区';
+
+  @override
+  String get regionChina => '中国';
+
+  @override
+  String get regionAmerica => '美国';
+
+  @override
+  String get regionEngland => '英国';
+
+  @override
+  String get regionFrance => '法兰西共和国';
+
+  @override
+  String get regionCanada => '加拿大';
 
   @override
   String accountMenuComingSoon(String item) {

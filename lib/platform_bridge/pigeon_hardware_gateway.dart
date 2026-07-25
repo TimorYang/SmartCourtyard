@@ -52,25 +52,37 @@ class PigeonHardwareGateway implements HardwareGateway {
   }
 
   @override
-  Future<PermissionSnapshot> getPermissionSnapshot() async {
+  Future<PermissionSnapshot> getPermissionSnapshot({
+    required String requestId,
+  }) async {
     final dto = await _mapPigeonCall(
-      () => _hostApi.getPermissionSnapshot(),
-      requestId: 'permission-snapshot',
+      () => _hostApi.getPermissionSnapshot(requestId),
+      requestId: requestId,
     );
     return dto.toModel();
   }
 
   @override
   Future<PermissionSnapshot> requestPermissions({
+    required String requestId,
     required List<PermissionKind> permissions,
   }) async {
     final dto = await _mapPigeonCall(
       () => _hostApi.requestPermissions(
+        requestId,
         permissions.map((e) => e.toDto()).toList(),
       ),
-      requestId: 'permission-request',
+      requestId: requestId,
     );
     return dto.toModel();
+  }
+
+  @override
+  Future<void> openAppSettings({required String requestId}) {
+    return _mapPigeonCall(
+      () => _hostApi.openAppSettings(requestId),
+      requestId: requestId,
+    );
   }
 
   @override
@@ -603,6 +615,9 @@ extension _PermissionKindMapper on PermissionKind {
     return switch (this) {
       PermissionKind.bluetooth => pigeon.PermissionKindDto.bluetooth,
       PermissionKind.camera => pigeon.PermissionKindDto.camera,
+      PermissionKind.location => pigeon.PermissionKindDto.location,
+      PermissionKind.microphone => pigeon.PermissionKindDto.microphone,
+      PermissionKind.storage => pigeon.PermissionKindDto.storage,
       PermissionKind.localNetwork => pigeon.PermissionKindDto.localNetwork,
       PermissionKind.notification => pigeon.PermissionKindDto.notification,
     };
@@ -621,11 +636,24 @@ extension _BleWriteTypeMapper on BleWriteType {
 extension _PermissionSnapshotDtoMapper on pigeon.PermissionSnapshotDto {
   PermissionSnapshot toModel() {
     return PermissionSnapshot(
-      bluetoothGranted: bluetoothGranted,
-      cameraGranted: cameraGranted,
+      bluetoothStatus: bluetoothStatus.toModel(),
+      cameraStatus: cameraStatus.toModel(),
+      locationStatus: locationStatus.toModel(),
+      microphoneStatus: microphoneStatus.toModel(),
+      storageStatus: storageStatus.toModel(),
       localNetworkGranted: localNetworkGranted,
       notificationGranted: notificationGranted,
     );
+  }
+}
+
+extension _PermissionStatusDtoMapper on pigeon.PermissionStatusDto {
+  PermissionStatus toModel() {
+    return switch (this) {
+      pigeon.PermissionStatusDto.granted => PermissionStatus.granted,
+      pigeon.PermissionStatusDto.denied => PermissionStatus.denied,
+      pigeon.PermissionStatusDto.blocked => PermissionStatus.blocked,
+    };
   }
 }
 

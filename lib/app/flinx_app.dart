@@ -9,6 +9,8 @@ import 'package:toastification/toastification.dart';
 
 import '../shared/l10n/app_localizations.dart';
 import '../core/diagnostics/diagnostic_logging.dart';
+import '../features/account/application/providers.dart';
+import '../features/account/domain/entities/app_locale_preference.dart';
 import 'router/app_router.dart';
 import 'theme/app_theme.dart';
 
@@ -33,9 +35,19 @@ class _FlinxAppState extends ConsumerState<FlinxApp> {
   Widget build(BuildContext context) {
     ref.watch(diagnosticLoggingControllerProvider);
     final router = ref.watch(appRouterProvider);
+    final locale = ref
+        .watch(appLocaleControllerProvider)
+        .maybeWhen(
+          data: (value) => value,
+          orElse: () => AppLocalePreference.english,
+        );
 
     if (!kDebugMode) {
-      return _buildApp(router: router, showPerformanceOverlay: false);
+      return _buildApp(
+        router: router,
+        locale: locale,
+        showPerformanceOverlay: false,
+      );
     }
 
     return FlutterLens(
@@ -48,6 +60,7 @@ class _FlinxAppState extends ConsumerState<FlinxApp> {
         }
         return _buildApp(
           router: router,
+          locale: locale,
           showPerformanceOverlay: showPerformanceOverlay,
         );
       },
@@ -56,6 +69,7 @@ class _FlinxAppState extends ConsumerState<FlinxApp> {
 
   Widget _buildApp({
     required GoRouter router,
+    required AppLocalePreference locale,
     required bool showPerformanceOverlay,
   }) {
     return ToastificationWrapper(
@@ -63,6 +77,7 @@ class _FlinxAppState extends ConsumerState<FlinxApp> {
         onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
         theme: AppTheme.light(),
         themeMode: ThemeMode.light,
+        locale: Locale(locale.languageCode),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         routerConfig: router,

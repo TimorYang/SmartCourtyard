@@ -5,11 +5,14 @@ import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.LocationManager
+import android.provider.Settings
+import android.net.Uri
 import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.flinx.flinx.flinxhardware.bridge.PermissionKindDto
 import com.flinx.flinx.flinxhardware.bridge.PermissionSnapshotDto
+import com.flinx.flinx.flinxhardware.bridge.PermissionStatusDto
 
 /** 权限管理器：负责权限快照读取与运行时权限请求。 */
 class PermissionManager(
@@ -18,8 +21,11 @@ class PermissionManager(
 ) {
   /** 读取当前权限快照，供 Flutter 侧展示和前置校验使用。 */
   fun getPermissionSnapshot(): PermissionSnapshotDto {
-    val bluetoothGranted = hasBluetoothPermission()
-    val cameraGranted = isGranted(Manifest.permission.CAMERA)
+    val bluetoothStatus = statusFor(PermissionKindDto.BLUETOOTH)
+    val cameraStatus = statusFor(PermissionKindDto.CAMERA)
+    val locationStatus = statusFor(PermissionKindDto.LOCATION)
+    val microphoneStatus = statusFor(PermissionKindDto.MICROPHONE)
+    val storageStatus = statusFor(PermissionKindDto.STORAGE)
     val localNetworkGranted = true
     val notificationGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
       isGranted(Manifest.permission.POST_NOTIFICATIONS)
@@ -27,8 +33,11 @@ class PermissionManager(
       true
     }
     return PermissionSnapshotDto(
-      bluetoothGranted = bluetoothGranted,
-      cameraGranted = cameraGranted,
+      bluetoothStatus = bluetoothStatus,
+      cameraStatus = cameraStatus,
+      locationStatus = locationStatus,
+      microphoneStatus = microphoneStatus,
+      storageStatus = storageStatus,
       localNetworkGranted = localNetworkGranted,
       notificationGranted = notificationGranted,
     )
@@ -42,6 +51,7 @@ class PermissionManager(
         .flatMap { mapPermissionKind(it) }
         .distinct()
         .filterNot(::isGranted)
+      permissions.forEach(::markRequested)
       if (missingPermissions.isNotEmpty()) {
         ActivityCompat.requestPermissions(
           activity,
@@ -51,6 +61,14 @@ class PermissionManager(
       }
     }
     return getPermissionSnapshot()
+  }
+
+  fun openAppSettings() {
+    val intent = android.content.Intent(
+      Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+      Uri.fromParts("package", context.packageName, null),
+    ).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+    context.startActivity(intent)
   }
 
   /** 判断当前系统是否满足 BLE 扫描所需前置条件。 */
@@ -96,6 +114,31 @@ class PermissionManager(
     }
   }
 
+  private fun statusFor(kind: PermissionKindDto): PermissionStatusDto {
+    val permissions = mapPermissionKind(kind)
+    if (permissions.isEmpty()) return PermissionStatusDto.GRANTED
+    if (permissions.all(::isGranted)) return PermissionStatusDto.GRANTED
+    val activity = activityProvider()
+    val wasRequested = context
+      .getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)
+      .getBoolean("requested_${kind.name}", false)
+    val canRequestAgain = activity != null && permissions.any {
+      ActivityCompat.shouldShowRequestPermissionRationale(activity, it)
+    }
+    return if (wasRequested && !canRequestAgain) {
+      PermissionStatusDto.BLOCKED
+    } else {
+      PermissionStatusDto.DENIED
+    }
+  }
+
+  private fun markRequested(kind: PermissionKindDto) {
+    context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)
+      .edit()
+      .putBoolean("requested_${kind.name}", true)
+      .apply()
+  }
+
   /** 检查单个权限是否已授予。 */
   private fun isGranted(permission: String): Boolean {
     return ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
@@ -123,6 +166,18 @@ class PermissionManager(
         }
       }
       PermissionKindDto.CAMERA -> listOf(Manifest.permission.CAMERA)
+      PermissionKindDto.LOCATION -> listOf(Manifest.permission.ACCESS_FINE_LOCATION)
+      PermissionKindDto.MICROPHONE -> listOf(Manifest.permission.RECORD_AUDIO)
+      PermissionKindDto.STORAGE -> when {
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ->
+          listOf(Manifest.permission.READ_MEDIA_IMAGES)
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.R ->
+          listOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+        else -> listOf(
+          Manifest.permission.READ_EXTERNAL_STORAGE,
+          Manifest.permission.WRITE_EXTERNAL_STORAGE,
+        )
+      }
       PermissionKindDto.LOCAL_NETWORK -> emptyList()
       PermissionKindDto.NOTIFICATION -> {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -136,5 +191,6 @@ class PermissionManager(
 
   private companion object {
     const val REQUEST_CODE = 9001
+    const val PREFERENCES = "flinx_permission_requests"
   }
 }

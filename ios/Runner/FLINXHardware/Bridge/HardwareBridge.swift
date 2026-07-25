@@ -1,5 +1,9 @@
 import Flutter
 import Foundation
+import AVFoundation
+import CoreLocation
+import Photos
+import UIKit
 
 final class HardwareBridge: HardwareHostApi {
     private let bleManager: BleManager
@@ -12,6 +16,7 @@ final class HardwareBridge: HardwareHostApi {
     private var provisioningSequences: [String: UInt16] = [:]
     private var flutterConsoleLoggingEnabled = false
     private var pendingDiagnostics: [String: PendingBleDiagnostic] = [:]
+    private var permissionLocationManager: CLLocationManager?
     
     init(binaryMessenger: FlutterBinaryMessenger) {
         self.logger = BleLogger()
@@ -28,20 +33,81 @@ final class HardwareBridge: HardwareHostApi {
         logger.setNativeConsoleLogging(enabled: nativeConsoleEnabled)
     }
     
-    func getPermissionSnapshot() throws -> PermissionSnapshotDto {
+    func getPermissionSnapshot(requestId: String) throws -> PermissionSnapshotDto {
         PermissionSnapshotDto(
-            bluetoothGranted: bleManager.bluetoothGranted(),
-            cameraGranted: false,
+            bluetoothStatus: bleManager.bluetoothGranted() ? .granted : .blocked,
+            cameraStatus: cameraPermissionStatus(),
+            locationStatus: locationPermissionStatus(),
+            microphoneStatus: microphonePermissionStatus(),
+            storageStatus: storagePermissionStatus(),
             localNetworkGranted: false,
             notificationGranted: false
         )
     }
     
-    func requestPermissions(permissions: [PermissionKindDto]) throws -> PermissionSnapshotDto {
+    func requestPermissions(
+        requestId: String,
+        permissions: [PermissionKindDto]
+    ) throws -> PermissionSnapshotDto {
         if permissions.contains(.bluetooth) {
             bleManager.prepareForPermissionRequest()
         }
-        return try getPermissionSnapshot()
+        if permissions.contains(.camera) {
+            AVCaptureDevice.requestAccess(for: .video) { _ in }
+        }
+        if permissions.contains(.microphone) {
+            AVAudioSession.sharedInstance().requestRecordPermission { _ in }
+        }
+        if permissions.contains(.storage) {
+            PHPhotoLibrary.requestAuthorization(for: .readWrite) { _ in }
+        }
+        if permissions.contains(.location) {
+            let manager = CLLocationManager()
+            permissionLocationManager = manager
+            manager.requestWhenInUseAuthorization()
+        }
+        return try getPermissionSnapshot(requestId: requestId)
+    }
+
+    func openAppSettings(requestId: String) throws {
+        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+        UIApplication.shared.open(url)
+    }
+
+    private func cameraPermissionStatus() -> PermissionStatusDto {
+        switch AVCaptureDevice.authorizationStatus(for: .video) {
+        case .authorized: return .granted
+        case .notDetermined: return .denied
+        case .denied, .restricted: return .blocked
+        @unknown default: return .blocked
+        }
+    }
+
+    private func locationPermissionStatus() -> PermissionStatusDto {
+        switch CLLocationManager.authorizationStatus() {
+        case .authorizedAlways, .authorizedWhenInUse: return .granted
+        case .notDetermined: return .denied
+        case .denied, .restricted: return .blocked
+        @unknown default: return .blocked
+        }
+    }
+
+    private func microphonePermissionStatus() -> PermissionStatusDto {
+        switch AVAudioSession.sharedInstance().recordPermission {
+        case .granted: return .granted
+        case .undetermined: return .denied
+        case .denied: return .blocked
+        @unknown default: return .blocked
+        }
+    }
+
+    private func storagePermissionStatus() -> PermissionStatusDto {
+        switch PHPhotoLibrary.authorizationStatus(for: .readWrite) {
+        case .authorized, .limited: return .granted
+        case .notDetermined: return .denied
+        case .denied, .restricted: return .blocked
+        @unknown default: return .blocked
+        }
     }
     
     func startBleScan(requestId: String, filter: BleScanFilterDto) throws {

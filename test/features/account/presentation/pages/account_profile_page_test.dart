@@ -1,17 +1,24 @@
 import 'package:flinx/app/theme/app_theme.dart';
 import 'package:flinx/features/account/application/providers.dart';
 import 'package:flinx/features/account/data/data_sources/account_local_data_source.dart';
+import 'package:flinx/features/account/data/data_sources/app_locale_local_data_source.dart';
 import 'package:flinx/features/account/data/dto/account_profile_dto.dart';
+import 'package:flinx/features/account/domain/entities/system_permission.dart';
 import 'package:flinx/features/account/presentation/pages/account_details_page.dart';
 import 'package:flinx/features/account/presentation/pages/account_profile_page.dart';
+import 'package:flinx/features/account/presentation/pages/manage_devices_page.dart';
+import 'package:flinx/features/account/presentation/pages/receiving_devices_page.dart';
+import 'package:flinx/features/account/presentation/pages/region_page.dart';
+import 'package:flinx/features/account/presentation/pages/shared_devices_page.dart';
+import 'package:flinx/features/account/presentation/pages/shared_device_member_management_page.dart';
+import 'package:flinx/features/account/presentation/pages/system_permissions_page.dart';
 import 'package:flinx/features/auth/application/providers.dart';
-import 'package:flinx/features/notification/presentation/pages/notification_list_page.dart';
+import 'package:flinx/features/home/presentation/pages/device_share_page.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:toastification/toastification.dart';
 
 void main() {
   testWidgets('shows fallback profile header and account menu rows', (
@@ -19,12 +26,12 @@ void main() {
   ) async {
     await tester.pumpWidget(
       ProviderScope(
-        child: MaterialApp(
-          theme: AppTheme.light(),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: const AccountProfilePage(),
-        ),
+        overrides: [
+          appLocaleLocalDataSourceProvider.overrideWithValue(
+            InMemoryAppLocaleLocalDataSource(initialLanguageCode: 'en'),
+          ),
+        ],
+        child: const _LocaleTestHarness(),
       ),
     );
 
@@ -35,49 +42,188 @@ void main() {
     expect(find.text('Shared devices'), findsOneWidget);
     expect(find.text('Receiving devices'), findsOneWidget);
     expect(find.text('manage devices'), findsOneWidget);
-    expect(find.text('message'), findsOneWidget);
+    expect(find.text('after-sales service'), findsOneWidget);
     expect(find.text('Region'), findsOneWidget);
     expect(find.text('Language'), findsOneWidget);
     expect(find.text('System permissions'), findsOneWidget);
+    expect(find.text('Manual & guide'), findsOneWidget);
     expect(find.text('Check for updates'), findsOneWidget);
     expect(find.text('About'), findsOneWidget);
+    expect(find.text('message'), findsNothing);
     expect(find.text('12'), findsOneWidget);
     expect(find.text('2'), findsNWidgets(3));
     expect(find.text('England'), findsOneWidget);
     expect(find.text('English'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.byKey(AccountProfileKeys.logoutButton),
+      250,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Log out'), findsOneWidget);
   });
 
-  testWidgets('shows a placeholder toast from account menu rows', (
-    tester,
-  ) async {
+  testWidgets('opens the region page from the account profile', (tester) async {
+    final semantics = tester.ensureSemantics();
+    final router = GoRouter(
+      initialLocation: AccountProfilePage.routePath,
+      routes: [
+        GoRoute(
+          path: AccountProfilePage.routePath,
+          name: AccountProfilePage.routeName,
+          builder: (context, state) => const AccountProfilePage(),
+        ),
+        GoRoute(
+          path: RegionPage.routePath,
+          name: RegionPage.routeName,
+          builder: (context, state) => const RegionPage(),
+        ),
+      ],
+    );
+
     await tester.pumpWidget(
       ProviderScope(
-        child: ToastificationWrapper(
-          child: MaterialApp(
-            theme: AppTheme.light(),
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            builder: (context, child) => ToastificationConfigProvider(
-              config: const ToastificationConfig(),
-              child: child!,
-            ),
-            home: const AccountProfilePage(),
-          ),
+        child: MaterialApp.router(
+          theme: AppTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          routerConfig: router,
         ),
       ),
     );
 
     await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Region'));
-    await tester.pump();
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-
-    expect(find.text('Region is coming soon'), findsOneWidget);
-
-    await tester.pump(const Duration(seconds: 2));
+    await tester.tap(find.byKey(AccountProfileKeys.regionMenuItem));
     await tester.pumpAndSettle();
+
+    expect(find.text('REGION'), findsOneWidget);
+    expect(find.text('China'), findsOneWidget);
+    expect(find.text('America'), findsOneWidget);
+    expect(find.text('England'), findsOneWidget);
+    expect(find.text('La Republique francaise'), findsOneWidget);
+    expect(find.text('Canada'), findsOneWidget);
+    expect(find.byIcon(Icons.check_rounded), findsOneWidget);
+
+    await tester.tap(find.byKey(RegionPageKeys.option('ca')));
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.check_rounded), findsOneWidget);
+
+    await tester.tap(find.byType(BackButtonIcon));
+    await tester.pumpAndSettle();
+    expect(find.text('739059568@qq.com'), findsOneWidget);
+    semantics.dispose();
+  });
+
+  testWidgets('opens system permissions from the account profile', (
+    tester,
+  ) async {
+    final router = GoRouter(
+      initialLocation: AccountProfilePage.routePath,
+      routes: [
+        GoRoute(
+          path: AccountProfilePage.routePath,
+          name: AccountProfilePage.routeName,
+          builder: (context, state) => const AccountProfilePage(),
+        ),
+        GoRoute(
+          path: SystemPermissionsPage.routePath,
+          name: SystemPermissionsPage.routeName,
+          builder: (context, state) => const SystemPermissionsPage(),
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp.router(
+          theme: AppTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          routerConfig: router,
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(AccountProfileKeys.systemPermissionsMenuItem));
+    await tester.pumpAndSettle();
+
+    expect(find.text('SYSTEM PERMISSIONS'), findsOneWidget);
+    expect(find.text('Access Geographic Location'), findsOneWidget);
+    expect(find.text('Access Camera Permissions'), findsOneWidget);
+    expect(find.text('Access recording permission'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Access phone storage'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Access phone storage'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Access mobile Bluetooth'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Access mobile Bluetooth'), findsOneWidget);
+    expect(
+      find.byKey(SystemPermissionsPageKeys.card(SystemPermission.microphone)),
+      findsOneWidget,
+    );
+    expect(
+      find.byIcon(Icons.close_rounded, skipOffstage: false),
+      findsOneWidget,
+    );
+    expect(
+      find.byIcon(Icons.check_rounded, skipOffstage: false),
+      findsNWidgets(4),
+    );
+  });
+
+  testWidgets('opens and dismisses the language dialog from account profile', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appLocaleLocalDataSourceProvider.overrideWithValue(
+            InMemoryAppLocaleLocalDataSource(initialLanguageCode: 'en'),
+          ),
+        ],
+        child: const _LocaleTestHarness(),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(AccountProfileKeys.languageMenuItem));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(AccountProfileKeys.languageDialog), findsOneWidget);
+    expect(find.text('France'), findsOneWidget);
+    expect(find.text('中文(简体)'), findsOneWidget);
+    expect(find.text('Das ist Deutsch'), findsOneWidget);
+    expect(find.byKey(AccountProfileKeys.languageCancelButton), findsOneWidget);
+    expect(
+      find.byKey(AccountProfileKeys.languageConfirmButton),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('France'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(AccountProfileKeys.languageConfirmButton));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(AccountProfileKeys.languageDialog), findsNothing);
+    expect(find.text('Language'), findsOneWidget);
+    expect(find.text('English'), findsOneWidget);
+
+    await tester.tap(find.byKey(AccountProfileKeys.languageMenuItem));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('中文(简体)'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(AccountProfileKeys.languageConfirmButton));
+    await tester.pumpAndSettle();
+
+    expect(find.text('语言'), findsOneWidget);
+    expect(find.text('中文(简体)'), findsOneWidget);
   });
 
   testWidgets('opens account details page when tapping the avatar', (
@@ -126,7 +272,44 @@ void main() {
     expect(find.text('Log out'), findsOneWidget);
   });
 
-  testWidgets('opens notifications when tapping message', (tester) async {
+  testWidgets('opens device share page when tapping a shared device', (
+    tester,
+  ) async {
+    final router = GoRouter(
+      initialLocation: SharedDevicesPage.routePath,
+      routes: [
+        GoRoute(
+          path: SharedDevicesPage.routePath,
+          name: SharedDevicesPage.routeName,
+          builder: (context, state) => const SharedDevicesPage(),
+        ),
+        GoRoute(
+          path: DeviceSharePage.routePath,
+          name: DeviceSharePage.routeName,
+          builder: (context, state) => const DeviceSharePage(),
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp.router(
+        theme: AppTheme.light(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        routerConfig: router,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(SharedDevicesKeys.deviceCard(0)));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(DeviceSharePage), findsOneWidget);
+  });
+
+  testWidgets('opens shared devices and returns to the account profile', (
+    tester,
+  ) async {
     final router = GoRouter(
       initialLocation: AccountProfilePage.routePath,
       routes: [
@@ -136,9 +319,14 @@ void main() {
           builder: (context, state) => const AccountProfilePage(),
         ),
         GoRoute(
-          path: NotificationListPage.routePath,
-          name: NotificationListPage.routeName,
-          builder: (context, state) => const NotificationListPage(),
+          path: SharedDevicesPage.routePath,
+          name: SharedDevicesPage.routeName,
+          builder: (context, state) => const SharedDevicesPage(),
+        ),
+        GoRoute(
+          path: SharedDeviceMemberManagementPage.routePath,
+          name: SharedDeviceMemberManagementPage.routeName,
+          builder: (context, state) => const SharedDeviceMemberManagementPage(),
         ),
       ],
     );
@@ -155,16 +343,149 @@ void main() {
     );
 
     await tester.pumpAndSettle();
-    await tester.tap(find.text('message'));
+    await tester.tap(find.byKey(AccountProfileKeys.sharedDevicesMenuItem));
     await tester.pumpAndSettle();
 
-    expect(find.text('Notification'), findsOneWidget);
-    await tester.scrollUntilVisible(
-      find.text('The device battery is low'),
-      250,
-      scrollable: find.byType(Scrollable).first,
+    expect(find.text('Shared devices'), findsOneWidget);
+    expect(find.text('Garage door'), findsOneWidget);
+    expect(find.text('Industrial door'), findsOneWidget);
+    expect(find.text('Share to 3 people'), findsNWidgets(2));
+    expect(find.byKey(SharedDevicesKeys.addButton), findsOneWidget);
+
+    await tester.tap(find.byKey(SharedDevicesKeys.addButton));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Garage door'), findsOneWidget);
+    expect(find.text('Administrator'), findsOneWidget);
+    expect(find.text('Guest'), findsOneWidget);
+    expect(find.text('Andy@forcedoor.cn'), findsNWidgets(3));
+    expect(find.text('2025-10-16 17:54:28'), findsNWidgets(3));
+    expect(find.text('Accepted'), findsNWidgets(3));
+    expect(
+      find.byKey(
+        SharedDeviceMemberManagementKeys.editButton('member-admin-001'),
+      ),
+      findsOneWidget,
     );
-    expect(find.text('The device battery is low'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.byKey(
+        SharedDeviceMemberManagementKeys.memberCard('member-guest-002'),
+      ),
+      200,
+    );
+
+    expect(find.text('Andy@forcedoor.cn'), findsNWidgets(4));
+    expect(find.text('2025-10-16 17:54:28'), findsNWidgets(4));
+    expect(find.text('Accepted'), findsNWidgets(4));
+    expect(
+      find.byKey(
+        SharedDeviceMemberManagementKeys.deleteButton('member-guest-002'),
+      ),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byType(BackButtonIcon));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Shared devices'), findsOneWidget);
+
+    await tester.tap(find.byType(BackButtonIcon));
+    await tester.pumpAndSettle();
+
+    expect(find.text('739059568@qq.com'), findsOneWidget);
+  });
+
+  testWidgets('opens receiving devices and returns to the account profile', (
+    tester,
+  ) async {
+    final router = GoRouter(
+      initialLocation: AccountProfilePage.routePath,
+      routes: [
+        GoRoute(
+          path: AccountProfilePage.routePath,
+          name: AccountProfilePage.routeName,
+          builder: (context, state) => const AccountProfilePage(),
+        ),
+        GoRoute(
+          path: ReceivingDevicesPage.routePath,
+          name: ReceivingDevicesPage.routeName,
+          builder: (context, state) => const ReceivingDevicesPage(),
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp.router(
+          theme: AppTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          routerConfig: router,
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(AccountProfileKeys.receivingDevicesMenuItem));
+    await tester.pumpAndSettle();
+
+    expect(find.text('RECEIVING DEVICES'), findsOneWidget);
+    expect(find.text('Smart door A'), findsOneWidget);
+    expect(find.text('Smart door B'), findsNWidgets(2));
+    expect(find.text('Share to 2 people'), findsOneWidget);
+    expect(find.text('Not shared'), findsNWidgets(2));
+    expect(find.byKey(ReceivingDevicesKeys.editButton), findsOneWidget);
+    expect(find.byKey(ReceivingDevicesKeys.deviceCard(0)), findsOneWidget);
+    expect(find.byKey(ReceivingDevicesKeys.deviceCard(1)), findsOneWidget);
+    expect(find.byKey(ReceivingDevicesKeys.deviceCard(2)), findsOneWidget);
+    expect(find.byType(Image), findsNWidgets(3));
+
+    await tester.tap(find.byType(BackButtonIcon));
+    await tester.pumpAndSettle();
+
+    expect(find.text('739059568@qq.com'), findsOneWidget);
+  });
+
+  testWidgets('opens manage devices from the account profile', (tester) async {
+    final router = GoRouter(
+      initialLocation: AccountProfilePage.routePath,
+      routes: [
+        GoRoute(
+          path: AccountProfilePage.routePath,
+          name: AccountProfilePage.routeName,
+          builder: (context, state) => const AccountProfilePage(),
+        ),
+        GoRoute(
+          path: ManageDevicesPage.routePath,
+          name: ManageDevicesPage.routeName,
+          builder: (context, state) => const ManageDevicesPage(),
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp.router(
+          theme: AppTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          routerConfig: router,
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(AccountProfileKeys.manageDevicesMenuItem));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Manage devices'), findsOneWidget);
+    expect(find.text('Devices logged in'), findsOneWidget);
+    expect(find.text('Iphone 16 pro max'), findsOneWidget);
+    expect(find.text('Ipad air'), findsOneWidget);
+    expect(find.text('2025-08-02 11:02'), findsNWidgets(2));
+    expect(find.byKey(ManageDevicesKeys.phoneCard), findsOneWidget);
+    expect(find.byKey(ManageDevicesKeys.tabletCard), findsOneWidget);
   });
 
   testWidgets('opens and dismisses account details avatar sheet', (
@@ -311,4 +632,72 @@ void main() {
     expect(find.text('ACCOUNT'), findsNothing);
     expect(container.read(activeAuthSessionProvider).isAuthenticated, isFalse);
   });
+
+  testWidgets('clears account data from the profile logout button', (
+    tester,
+  ) async {
+    final router = GoRouter(
+      initialLocation: AccountProfilePage.routePath,
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (context, state) => const Scaffold(body: Text('Welcome')),
+        ),
+        GoRoute(
+          path: AccountProfilePage.routePath,
+          name: AccountProfilePage.routeName,
+          builder: (context, state) => const AccountProfilePage(),
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp.router(
+          theme: AppTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          routerConfig: router,
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(AccountProfilePage)),
+    );
+    container
+        .read(activeAuthSessionProvider.notifier)
+        .markAuthenticated(userId: 'test-user');
+
+    await tester.scrollUntilVisible(
+      find.byKey(AccountProfileKeys.logoutButton),
+      250,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.byKey(AccountProfileKeys.logoutButton));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Welcome'), findsOneWidget);
+    expect(container.read(activeAuthSessionProvider).isAuthenticated, isFalse);
+  });
+}
+
+class _LocaleTestHarness extends ConsumerWidget {
+  const _LocaleTestHarness();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final languageCode = ref
+        .watch(appLocaleControllerProvider)
+        .maybeWhen(data: (value) => value.languageCode, orElse: () => null);
+
+    return MaterialApp(
+      locale: Locale(languageCode ?? 'en'),
+      theme: AppTheme.light(),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: const AccountProfilePage(),
+    );
+  }
 }

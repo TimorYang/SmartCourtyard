@@ -20,7 +20,15 @@ import '../../features/add_device/presentation/pages/wifi_configuration_page.dar
 import '../../features/auth/application/providers.dart';
 import '../../features/account/presentation/pages/account_details_page.dart';
 import '../../features/account/presentation/pages/account_profile_page.dart';
+import '../../features/account/presentation/pages/check_upgraded_version_page.dart';
 import '../../features/account/presentation/pages/hardware_diagnostics_page.dart';
+import '../../features/account/presentation/pages/manage_devices_page.dart';
+import '../../features/account/presentation/pages/receiving_devices_page.dart';
+import '../../features/account/presentation/pages/region_page.dart';
+import '../../features/account/presentation/pages/shared_devices_page.dart';
+import '../../features/account/presentation/pages/shared_device_member_management_page.dart';
+import '../../features/account/domain/entities/shared_device_share.dart';
+import '../../features/account/presentation/pages/system_permissions_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_code_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_reset_page.dart';
@@ -168,6 +176,41 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const AccountProfilePage(),
       ),
       GoRoute(
+        path: CheckUpgradedVersionPage.routePath,
+        name: CheckUpgradedVersionPage.routeName,
+        builder: (context, state) => const CheckUpgradedVersionPage(),
+      ),
+      GoRoute(
+        path: SystemPermissionsPage.routePath,
+        name: SystemPermissionsPage.routeName,
+        builder: (context, state) => const SystemPermissionsPage(),
+      ),
+      GoRoute(
+        path: SharedDevicesPage.routePath,
+        name: SharedDevicesPage.routeName,
+        builder: (context, state) => const SharedDevicesPage(),
+      ),
+      GoRoute(
+        path: SharedDeviceMemberManagementPage.routePath,
+        name: SharedDeviceMemberManagementPage.routeName,
+        builder: (context, state) => const SharedDeviceMemberManagementPage(),
+      ),
+      GoRoute(
+        path: ReceivingDevicesPage.routePath,
+        name: ReceivingDevicesPage.routeName,
+        builder: (context, state) => const ReceivingDevicesPage(),
+      ),
+      GoRoute(
+        path: RegionPage.routePath,
+        name: RegionPage.routeName,
+        builder: (context, state) => const RegionPage(),
+      ),
+      GoRoute(
+        path: ManageDevicesPage.routePath,
+        name: ManageDevicesPage.routeName,
+        builder: (context, state) => const ManageDevicesPage(),
+      ),
+      GoRoute(
         path: HardwareDiagnosticsPage.routePath,
         name: HardwareDiagnosticsPage.routeName,
         builder: (context, state) => const HardwareDiagnosticsPage(),
@@ -206,7 +249,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: DeviceSharePage.routePath,
         name: DeviceSharePage.routeName,
-        builder: (context, state) => const DeviceSharePage(),
+        builder: (context, state) => DeviceSharePage(
+          editingMember: state.extra is SharedDeviceMember
+              ? state.extra! as SharedDeviceMember
+              : null,
+        ),
       ),
       GoRoute(
         path: ScenePage.routePath,

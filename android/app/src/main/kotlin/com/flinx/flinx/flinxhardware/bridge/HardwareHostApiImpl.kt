@@ -36,13 +36,20 @@ class HardwareHostApiImpl(
   }
 
   /** 获取当前权限状态快照。 */
-  override fun getPermissionSnapshot(): PermissionSnapshotDto {
+  override fun getPermissionSnapshot(requestId: String): PermissionSnapshotDto {
     return permissionManager.getPermissionSnapshot()
   }
 
   /** 请求权限（当前为骨架实现：直接返回现有快照）。 */
-  override fun requestPermissions(permissions: List<PermissionKindDto>): PermissionSnapshotDto {
+  override fun requestPermissions(
+    requestId: String,
+    permissions: List<PermissionKindDto>,
+  ): PermissionSnapshotDto {
     return permissionManager.requestPermissions(permissions)
+  }
+
+  override fun openAppSettings(requestId: String) {
+    permissionManager.openAppSettings()
   }
 
   /** 启动 BLE 扫描并通过 FlutterApi 回推扫描结果。 */

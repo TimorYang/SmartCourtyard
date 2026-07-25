@@ -110,8 +110,17 @@ int _deepHash(Object? value) {
 enum PermissionKindDto {
   bluetooth,
   camera,
+  location,
+  microphone,
+  storage,
   localNetwork,
   notification,
+}
+
+enum PermissionStatusDto {
+  granted,
+  denied,
+  blocked,
 }
 
 enum DoorCommandDto {
@@ -160,15 +169,24 @@ enum BleDiagnosticDirectionDto {
 
 class PermissionSnapshotDto {
   PermissionSnapshotDto({
-    required this.bluetoothGranted,
-    required this.cameraGranted,
+    required this.bluetoothStatus,
+    required this.cameraStatus,
+    required this.locationStatus,
+    required this.microphoneStatus,
+    required this.storageStatus,
     required this.localNetworkGranted,
     required this.notificationGranted,
   });
 
-  bool bluetoothGranted;
+  PermissionStatusDto bluetoothStatus;
 
-  bool cameraGranted;
+  PermissionStatusDto cameraStatus;
+
+  PermissionStatusDto locationStatus;
+
+  PermissionStatusDto microphoneStatus;
+
+  PermissionStatusDto storageStatus;
 
   bool localNetworkGranted;
 
@@ -176,8 +194,11 @@ class PermissionSnapshotDto {
 
   List<Object?> _toList() {
     return <Object?>[
-      bluetoothGranted,
-      cameraGranted,
+      bluetoothStatus,
+      cameraStatus,
+      locationStatus,
+      microphoneStatus,
+      storageStatus,
       localNetworkGranted,
       notificationGranted,
     ];
@@ -189,10 +210,13 @@ class PermissionSnapshotDto {
   static PermissionSnapshotDto decode(Object result) {
     result as List<Object?>;
     return PermissionSnapshotDto(
-      bluetoothGranted: result[0]! as bool,
-      cameraGranted: result[1]! as bool,
-      localNetworkGranted: result[2]! as bool,
-      notificationGranted: result[3]! as bool,
+      bluetoothStatus: result[0]! as PermissionStatusDto,
+      cameraStatus: result[1]! as PermissionStatusDto,
+      locationStatus: result[2]! as PermissionStatusDto,
+      microphoneStatus: result[3]! as PermissionStatusDto,
+      storageStatus: result[4]! as PermissionStatusDto,
+      localNetworkGranted: result[5]! as bool,
+      notificationGranted: result[6]! as bool,
     );
   }
 
@@ -205,7 +229,7 @@ class PermissionSnapshotDto {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(bluetoothGranted, other.bluetoothGranted) && _deepEquals(cameraGranted, other.cameraGranted) && _deepEquals(localNetworkGranted, other.localNetworkGranted) && _deepEquals(notificationGranted, other.notificationGranted);
+    return _deepEquals(bluetoothStatus, other.bluetoothStatus) && _deepEquals(cameraStatus, other.cameraStatus) && _deepEquals(locationStatus, other.locationStatus) && _deepEquals(microphoneStatus, other.microphoneStatus) && _deepEquals(storageStatus, other.storageStatus) && _deepEquals(localNetworkGranted, other.localNetworkGranted) && _deepEquals(notificationGranted, other.notificationGranted);
   }
 
   @override
@@ -1429,86 +1453,89 @@ class _PigeonCodec extends StandardMessageCodec {
     }    else if (value is PermissionKindDto) {
       buffer.putUint8(129);
       writeValue(buffer, value.index);
-    }    else if (value is DoorCommandDto) {
+    }    else if (value is PermissionStatusDto) {
       buffer.putUint8(130);
       writeValue(buffer, value.index);
-    }    else if (value is RemotePairingActionDto) {
+    }    else if (value is DoorCommandDto) {
       buffer.putUint8(131);
       writeValue(buffer, value.index);
-    }    else if (value is RemotePairingStatusDto) {
+    }    else if (value is RemotePairingActionDto) {
       buffer.putUint8(132);
       writeValue(buffer, value.index);
-    }    else if (value is RemoteOperationStatusDto) {
+    }    else if (value is RemotePairingStatusDto) {
       buffer.putUint8(133);
       writeValue(buffer, value.index);
-    }    else if (value is BleConnectionStateDto) {
+    }    else if (value is RemoteOperationStatusDto) {
       buffer.putUint8(134);
       writeValue(buffer, value.index);
-    }    else if (value is BleWriteTypeDto) {
+    }    else if (value is BleConnectionStateDto) {
       buffer.putUint8(135);
       writeValue(buffer, value.index);
-    }    else if (value is BleDiagnosticDirectionDto) {
+    }    else if (value is BleWriteTypeDto) {
       buffer.putUint8(136);
       writeValue(buffer, value.index);
-    }    else if (value is PermissionSnapshotDto) {
+    }    else if (value is BleDiagnosticDirectionDto) {
       buffer.putUint8(137);
-      writeValue(buffer, value.encode());
-    }    else if (value is BleScanFilterDto) {
+      writeValue(buffer, value.index);
+    }    else if (value is PermissionSnapshotDto) {
       buffer.putUint8(138);
       writeValue(buffer, value.encode());
-    }    else if (value is BleDeviceDto) {
+    }    else if (value is BleScanFilterDto) {
       buffer.putUint8(139);
       writeValue(buffer, value.encode());
-    }    else if (value is BleConnectionEventDto) {
+    }    else if (value is BleDeviceDto) {
       buffer.putUint8(140);
       writeValue(buffer, value.encode());
-    }    else if (value is BleAuthenticationResultDto) {
+    }    else if (value is BleConnectionEventDto) {
       buffer.putUint8(141);
       writeValue(buffer, value.encode());
-    }    else if (value is WifiScanResultDto) {
+    }    else if (value is BleAuthenticationResultDto) {
       buffer.putUint8(142);
       writeValue(buffer, value.encode());
-    }    else if (value is WifiProvisionResultDto) {
+    }    else if (value is WifiScanResultDto) {
       buffer.putUint8(143);
       writeValue(buffer, value.encode());
-    }    else if (value is BleCharacteristicDto) {
+    }    else if (value is WifiProvisionResultDto) {
       buffer.putUint8(144);
       writeValue(buffer, value.encode());
-    }    else if (value is BleServiceDto) {
+    }    else if (value is BleCharacteristicDto) {
       buffer.putUint8(145);
       writeValue(buffer, value.encode());
-    }    else if (value is BleServicesDto) {
+    }    else if (value is BleServiceDto) {
       buffer.putUint8(146);
       writeValue(buffer, value.encode());
-    }    else if (value is BleReadResultDto) {
+    }    else if (value is BleServicesDto) {
       buffer.putUint8(147);
       writeValue(buffer, value.encode());
-    }    else if (value is BleWriteResultDto) {
+    }    else if (value is BleReadResultDto) {
       buffer.putUint8(148);
       writeValue(buffer, value.encode());
-    }    else if (value is BleNotificationDto) {
+    }    else if (value is BleWriteResultDto) {
       buffer.putUint8(149);
       writeValue(buffer, value.encode());
-    }    else if (value is NativeErrorDto) {
+    }    else if (value is BleNotificationDto) {
       buffer.putUint8(150);
       writeValue(buffer, value.encode());
-    }    else if (value is BleDiagnosticEventDto) {
+    }    else if (value is NativeErrorDto) {
       buffer.putUint8(151);
       writeValue(buffer, value.encode());
-    }    else if (value is CommandResultDto) {
+    }    else if (value is BleDiagnosticEventDto) {
       buffer.putUint8(152);
       writeValue(buffer, value.encode());
-    }    else if (value is RemotePairingResultDto) {
+    }    else if (value is CommandResultDto) {
       buffer.putUint8(153);
       writeValue(buffer, value.encode());
-    }    else if (value is RemoteControlDto) {
+    }    else if (value is RemotePairingResultDto) {
       buffer.putUint8(154);
       writeValue(buffer, value.encode());
-    }    else if (value is RemoteControlListResultDto) {
+    }    else if (value is RemoteControlDto) {
       buffer.putUint8(155);
       writeValue(buffer, value.encode());
-    }    else if (value is RemoteOperationResultDto) {
+    }    else if (value is RemoteControlListResultDto) {
       buffer.putUint8(156);
+      writeValue(buffer, value.encode());
+    }    else if (value is RemoteOperationResultDto) {
+      buffer.putUint8(157);
       writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
@@ -1523,64 +1550,67 @@ class _PigeonCodec extends StandardMessageCodec {
         return value == null ? null : PermissionKindDto.values[value];
       case 130:
         final value = readValue(buffer) as int?;
-        return value == null ? null : DoorCommandDto.values[value];
+        return value == null ? null : PermissionStatusDto.values[value];
       case 131:
         final value = readValue(buffer) as int?;
-        return value == null ? null : RemotePairingActionDto.values[value];
+        return value == null ? null : DoorCommandDto.values[value];
       case 132:
         final value = readValue(buffer) as int?;
-        return value == null ? null : RemotePairingStatusDto.values[value];
+        return value == null ? null : RemotePairingActionDto.values[value];
       case 133:
         final value = readValue(buffer) as int?;
-        return value == null ? null : RemoteOperationStatusDto.values[value];
+        return value == null ? null : RemotePairingStatusDto.values[value];
       case 134:
         final value = readValue(buffer) as int?;
-        return value == null ? null : BleConnectionStateDto.values[value];
+        return value == null ? null : RemoteOperationStatusDto.values[value];
       case 135:
         final value = readValue(buffer) as int?;
-        return value == null ? null : BleWriteTypeDto.values[value];
+        return value == null ? null : BleConnectionStateDto.values[value];
       case 136:
         final value = readValue(buffer) as int?;
-        return value == null ? null : BleDiagnosticDirectionDto.values[value];
+        return value == null ? null : BleWriteTypeDto.values[value];
       case 137:
-        return PermissionSnapshotDto.decode(readValue(buffer)!);
+        final value = readValue(buffer) as int?;
+        return value == null ? null : BleDiagnosticDirectionDto.values[value];
       case 138:
-        return BleScanFilterDto.decode(readValue(buffer)!);
+        return PermissionSnapshotDto.decode(readValue(buffer)!);
       case 139:
-        return BleDeviceDto.decode(readValue(buffer)!);
+        return BleScanFilterDto.decode(readValue(buffer)!);
       case 140:
-        return BleConnectionEventDto.decode(readValue(buffer)!);
+        return BleDeviceDto.decode(readValue(buffer)!);
       case 141:
-        return BleAuthenticationResultDto.decode(readValue(buffer)!);
+        return BleConnectionEventDto.decode(readValue(buffer)!);
       case 142:
-        return WifiScanResultDto.decode(readValue(buffer)!);
+        return BleAuthenticationResultDto.decode(readValue(buffer)!);
       case 143:
-        return WifiProvisionResultDto.decode(readValue(buffer)!);
+        return WifiScanResultDto.decode(readValue(buffer)!);
       case 144:
-        return BleCharacteristicDto.decode(readValue(buffer)!);
+        return WifiProvisionResultDto.decode(readValue(buffer)!);
       case 145:
-        return BleServiceDto.decode(readValue(buffer)!);
+        return BleCharacteristicDto.decode(readValue(buffer)!);
       case 146:
-        return BleServicesDto.decode(readValue(buffer)!);
+        return BleServiceDto.decode(readValue(buffer)!);
       case 147:
-        return BleReadResultDto.decode(readValue(buffer)!);
+        return BleServicesDto.decode(readValue(buffer)!);
       case 148:
-        return BleWriteResultDto.decode(readValue(buffer)!);
+        return BleReadResultDto.decode(readValue(buffer)!);
       case 149:
-        return BleNotificationDto.decode(readValue(buffer)!);
+        return BleWriteResultDto.decode(readValue(buffer)!);
       case 150:
-        return NativeErrorDto.decode(readValue(buffer)!);
+        return BleNotificationDto.decode(readValue(buffer)!);
       case 151:
-        return BleDiagnosticEventDto.decode(readValue(buffer)!);
+        return NativeErrorDto.decode(readValue(buffer)!);
       case 152:
-        return CommandResultDto.decode(readValue(buffer)!);
+        return BleDiagnosticEventDto.decode(readValue(buffer)!);
       case 153:
-        return RemotePairingResultDto.decode(readValue(buffer)!);
+        return CommandResultDto.decode(readValue(buffer)!);
       case 154:
-        return RemoteControlDto.decode(readValue(buffer)!);
+        return RemotePairingResultDto.decode(readValue(buffer)!);
       case 155:
-        return RemoteControlListResultDto.decode(readValue(buffer)!);
+        return RemoteControlDto.decode(readValue(buffer)!);
       case 156:
+        return RemoteControlListResultDto.decode(readValue(buffer)!);
+      case 157:
         return RemoteOperationResultDto.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
@@ -1619,14 +1649,14 @@ class HardwareHostApi {
     ;
   }
 
-  Future<PermissionSnapshotDto> getPermissionSnapshot() async {
+  Future<PermissionSnapshotDto> getPermissionSnapshot(String requestId) async {
     final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.getPermissionSnapshot$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[requestId]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
@@ -1638,14 +1668,14 @@ class HardwareHostApi {
     return pigeonVar_replyValue! as PermissionSnapshotDto;
   }
 
-  Future<PermissionSnapshotDto> requestPermissions(List<PermissionKindDto> permissions) async {
+  Future<PermissionSnapshotDto> requestPermissions(String requestId, List<PermissionKindDto> permissions) async {
     final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.requestPermissions$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[permissions]);
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[requestId, permissions]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
@@ -1655,6 +1685,24 @@ class HardwareHostApi {
     )
     ;
     return pigeonVar_replyValue! as PermissionSnapshotDto;
+  }
+
+  Future<void> openAppSettings(String requestId) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.openAppSettings$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[requestId]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
   }
 
   Future<void> startBleScan(String requestId, BleScanFilterDto filter) async {
