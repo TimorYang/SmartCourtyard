@@ -15,6 +15,11 @@ import 'package:flinx/features/device_control/presentation/pages/already_added_d
 import 'package:flinx/features/records/application/providers.dart';
 import 'package:flinx/features/records/domain/entities/operation_record_page_result.dart';
 import 'package:flinx/features/records/domain/repositories/operation_record_repository.dart';
+import 'package:flinx/features/settings/application/providers.dart';
+import 'package:flinx/features/settings/domain/entities/device_capability.dart';
+import 'package:flinx/features/settings/domain/entities/door_setting_snapshot.dart';
+import 'package:flinx/features/settings/domain/repositories/device_capability_repository.dart';
+import 'package:flinx/features/settings/domain/repositories/door_settings_repository.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
 import 'package:flinx/platform_bridge/mock_hardware_gateway.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
@@ -352,6 +357,12 @@ Widget _buildPage(
       operationRecordRepositoryProvider.overrideWithValue(
         const _EmptyOperationRecordRepository(),
       ),
+      deviceCapabilityRepositoryProvider.overrideWithValue(
+        const _SettingsDeviceCapabilityRepository(),
+      ),
+      doorSettingsRepositoryProvider.overrideWithValue(
+        const _EmptyDoorSettingsRepository(),
+      ),
     ],
     child: MaterialApp.router(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -370,6 +381,7 @@ Widget _buildPage(
           GoRoute(
             path: DeviceSettingsPage.routePath,
             builder: (context, state) => DeviceSettingsPage(
+              doorId: state.uri.queryParameters['doorId'] ?? '',
               deviceId: state.uri.queryParameters['deviceId'] ?? '',
             ),
           ),
@@ -384,6 +396,32 @@ Widget _buildPage(
       ),
     ),
   );
+}
+
+class _SettingsDeviceCapabilityRepository
+    implements DeviceCapabilityRepository {
+  const _SettingsDeviceCapabilityRepository();
+
+  @override
+  Future<List<DeviceCapability>> fetchCapabilities({
+    required String deviceId,
+    required String requestId,
+  }) async => const [
+    DeviceCapability(
+      code: DeviceCapabilityCode.transmitterPairing,
+      label: 'Transmitter management',
+    ),
+  ];
+}
+
+class _EmptyDoorSettingsRepository implements DoorSettingsRepository {
+  const _EmptyDoorSettingsRepository();
+
+  @override
+  Future<List<DoorSettingSnapshot>> fetchSettings({
+    required String doorId,
+    required String requestId,
+  }) async => const [];
 }
 
 Future<void> _pumpDevicePage(

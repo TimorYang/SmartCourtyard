@@ -6,7 +6,11 @@ import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../../settings/application/device_settings_controller.dart';
+import '../../../settings/application/device_capabilities_controller.dart';
+import '../../../settings/application/door_settings_controller.dart';
+import '../../../settings/domain/entities/device_capability.dart';
 import '../../../settings/domain/entities/device_setting.dart';
+import '../../../settings/domain/entities/door_setting_snapshot.dart';
 import 'transmitter_learning_page.dart';
 import 'transmitter_list_page.dart';
 
@@ -77,6 +81,7 @@ class OpeningSpeedConfig {
 
 class DeviceSettingsPage extends ConsumerStatefulWidget {
   const DeviceSettingsPage({
+    required this.doorId,
     required this.deviceId,
     this.forceMarginDialogState = 1,
     this.openingSpeedConfig = const OpeningSpeedConfig._(
@@ -90,6 +95,7 @@ class DeviceSettingsPage extends ConsumerStatefulWidget {
   static const routePath = '/device-settings';
 
   final String deviceId;
+  final String doorId;
   final int forceMarginDialogState;
   final OpeningSpeedConfig openingSpeedConfig;
 
@@ -104,6 +110,15 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
     final l10n = AppLocalizations.of(context);
     final settingsState = ref.watch(
       deviceSettingsControllerProvider(widget.deviceId),
+    );
+    final capabilitiesState = ref.watch(
+      deviceCapabilitiesControllerProvider(widget.deviceId),
+    );
+    final doorSettingsState = ref.watch(
+      doorSettingsControllerProvider(widget.doorId),
+    );
+    final showsForceMargin = capabilitiesState.supports(
+      DeviceCapabilityCode.forceMargin,
     );
 
     return Scaffold(
@@ -121,27 +136,50 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
                   l10n.deviceSettingsTitle,
                   style: AppTextTokens.deviceSettingsTitle(textTheme),
                 ),
-                if (settingsState.loading)
+                if (settingsState.loading ||
+                    capabilitiesState.loading ||
+                    doorSettingsState.loading)
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(l10n.deviceSettingsLoading),
                   ),
-                if (settingsState.errorMessage != null)
+                if (settingsState.errorMessage != null ||
+                    capabilitiesState.errorMessage != null ||
+                    doorSettingsState.errorMessage != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Row(
                       children: [
                         Expanded(child: Text(l10n.deviceSettingsLoadFailed)),
                         TextButton(
-                          onPressed: settingsState.loading
+                          onPressed:
+                              settingsState.loading ||
+                                  capabilitiesState.loading ||
+                                  doorSettingsState.loading
                               ? null
-                              : () => ref
-                                    .read(
-                                      deviceSettingsControllerProvider(
-                                        widget.deviceId,
-                                      ).notifier,
-                                    )
-                                    .load(),
+                              : () {
+                                  ref
+                                      .read(
+                                        deviceSettingsControllerProvider(
+                                          widget.deviceId,
+                                        ).notifier,
+                                      )
+                                      .load();
+                                  ref
+                                      .read(
+                                        doorSettingsControllerProvider(
+                                          widget.doorId,
+                                        ).notifier,
+                                      )
+                                      .load();
+                                  ref
+                                      .read(
+                                        deviceCapabilitiesControllerProvider(
+                                          widget.deviceId,
+                                        ).notifier,
+                                      )
+                                      .load();
+                                },
                           child: Text(l10n.deviceSettingsRetry),
                         ),
                       ],
@@ -157,85 +195,79 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
                 const SizedBox(height: 10),
                 _SettingsRows(
                   rows: [
-                    _SettingsRowData(
-                      assetPath: DeviceSettingsAssetPaths.transmitterManagement,
-                      fallbackIcon: Icons.settings_remote_outlined,
-                      title: l10n.deviceSettingsTransmitterManagement,
-                      onTap: () => context.push(
-                        '${TransmitterManagementPage.routePath}'
-                        '?deviceId=${Uri.encodeComponent(widget.deviceId)}',
+                    if (capabilitiesState.supports(
+                      DeviceCapabilityCode.transmitterPairing,
+                    ))
+                      _SettingsRowData(
+                        assetPath:
+                            DeviceSettingsAssetPaths.transmitterManagement,
+                        fallbackIcon: Icons.settings_remote_outlined,
+                        title: l10n.deviceSettingsTransmitterManagement,
+                        onTap: () => context.push(
+                          '${TransmitterManagementPage.routePath}'
+                          '?deviceId=${Uri.encodeComponent(widget.deviceId)}',
+                        ),
                       ),
-                    ),
-                    _SettingsRowData(
-                      assetPath: DeviceSettingsAssetPaths.ledOffDelay,
-                      fallbackIcon: Icons.light_mode_outlined,
-                      title: l10n.deviceSettingsLedOffDelay,
-                      value: _settingValue(
-                        settingsState,
-                        DeviceSettingKey.ledOffDelay,
-                        l10n,
+                    if (capabilitiesState.supports(
+                      DeviceCapabilityCode.ledOffDelay,
+                    ))
+                      _capabilitySettingsRow(
+                        assetPath: DeviceSettingsAssetPaths.ledOffDelay,
+                        fallbackIcon: Icons.light_mode_outlined,
+                        fallbackTitle: l10n.deviceSettingsLedOffDelay,
+                        key: DeviceSettingKey.ledOffDelay,
+                        capability: capabilitiesState.capabilityFor(
+                          DeviceCapabilityCode.ledOffDelay,
+                        ),
+                        setting: doorSettingsState.settingFor(
+                          DeviceCapabilityCode.ledOffDelay,
+                        ),
                       ),
-                      onTap: () => _showRawValueEditor(
-                        DeviceSettingKey.ledOffDelay,
-                        l10n.deviceSettingsLedOffDelay,
+                    if (capabilitiesState.supports(
+                      DeviceCapabilityCode.partialOpenLevel,
+                    ))
+                      _capabilitySettingsRow(
+                        assetPath: DeviceSettingsAssetPaths.partialOpen,
+                        fallbackIcon: Icons.sensor_door_outlined,
+                        fallbackTitle: l10n.deviceSettingsPartialOpen,
+                        key: DeviceSettingKey.partialOpen,
+                        capability: capabilitiesState.capabilityFor(
+                          DeviceCapabilityCode.partialOpenLevel,
+                        ),
+                        setting: doorSettingsState.settingFor(
+                          DeviceCapabilityCode.partialOpen,
+                        ),
                       ),
-                    ),
-                    _SettingsRowData(
-                      assetPath: DeviceSettingsAssetPaths.partialOpen,
-                      fallbackIcon: Icons.sensor_door_outlined,
-                      title: l10n.deviceSettingsPartialOpen,
-                      value: _settingValue(
-                        settingsState,
-                        DeviceSettingKey.partialOpen,
-                        l10n,
+                    if (capabilitiesState.supports(
+                      DeviceCapabilityCode.autoClose,
+                    ))
+                      _capabilitySettingsRow(
+                        assetPath: DeviceSettingsAssetPaths.autoClose,
+                        fallbackIcon: Icons.door_back_door_outlined,
+                        fallbackTitle: l10n.deviceSettingsAutoClose,
+                        key: DeviceSettingKey.autoCloseTime,
+                        capability: capabilitiesState.capabilityFor(
+                          DeviceCapabilityCode.autoClose,
+                        ),
+                        setting: doorSettingsState.settingFor(
+                          DeviceCapabilityCode.autoClose,
+                        ),
                       ),
-                      onTap: () => _showRawValueEditor(
-                        DeviceSettingKey.partialOpen,
-                        l10n.deviceSettingsPartialOpen,
+                    if (capabilitiesState.supports(
+                      DeviceCapabilityCode.openingSpeed,
+                    ))
+                      _capabilitySettingsRow(
+                        assetPath: DeviceSettingsAssetPaths.openingSpeed,
+                        fallbackIcon: Icons.speed_outlined,
+                        fallbackTitle: l10n.deviceSettingsOpeningSpeed,
+                        key: DeviceSettingKey.openingSpeed,
+                        capability: capabilitiesState.capabilityFor(
+                          DeviceCapabilityCode.openingSpeed,
+                        ),
+                        setting: doorSettingsState.settingFor(
+                          DeviceCapabilityCode.openingSpeed,
+                        ),
                       ),
-                    ),
-                    _SettingsRowData(
-                      assetPath: DeviceSettingsAssetPaths.autoClose,
-                      fallbackIcon: Icons.door_back_door_outlined,
-                      title: l10n.deviceSettingsAutoClose,
-                      value: _settingValue(
-                        settingsState,
-                        DeviceSettingKey.autoCloseTime,
-                        l10n,
-                      ),
-                      onTap: () => _showRawValueEditor(
-                        DeviceSettingKey.autoCloseTime,
-                        l10n.deviceSettingsAutoClose,
-                      ),
-                    ),
-                    _SettingsRowData(
-                      assetPath: DeviceSettingsAssetPaths.autoClose,
-                      fallbackIcon: Icons.rule_outlined,
-                      title: l10n.deviceSettingsAutoCloseCondition,
-                      value: _settingValue(
-                        settingsState,
-                        DeviceSettingKey.autoCloseCondition,
-                        l10n,
-                      ),
-                      onTap: () => _showRawValueEditor(
-                        DeviceSettingKey.autoCloseCondition,
-                        l10n.deviceSettingsAutoCloseCondition,
-                      ),
-                    ),
-                    _SettingsRowData(
-                      assetPath: DeviceSettingsAssetPaths.openingSpeed,
-                      fallbackIcon: Icons.speed_outlined,
-                      title: l10n.deviceSettingsOpeningSpeed,
-                      value: _settingValue(
-                        settingsState,
-                        DeviceSettingKey.openingSpeed,
-                        l10n,
-                      ),
-                      onTap: () => _showRawValueEditor(
-                        DeviceSettingKey.openingSpeed,
-                        l10n.deviceSettingsOpeningSpeed,
-                      ),
-                    ),
                     _SettingsRowData(
                       assetPath: DeviceSettingsAssetPaths.aboutDevice,
                       fallbackIcon: Icons.info_outline,
@@ -245,48 +277,55 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
                         '?deviceId=${Uri.encodeComponent(widget.deviceId)}',
                       ),
                     ),
-                    _SettingsRowData(
-                      assetPath: DeviceSettingsAssetPaths.doorOpenReminder,
-                      fallbackIcon: Icons.notifications_active_outlined,
-                      title: l10n.deviceSettingsDoorOpenReminder,
-                      value: _settingValue(
-                        settingsState,
-                        DeviceSettingKey.doorOpenReminder,
-                        l10n,
+                    if (capabilitiesState.supports(
+                      DeviceCapabilityCode.doorOpenReminder,
+                    ))
+                      _capabilitySettingsRow(
+                        assetPath: DeviceSettingsAssetPaths.doorOpenReminder,
+                        fallbackIcon: Icons.notifications_active_outlined,
+                        fallbackTitle: l10n.deviceSettingsDoorOpenReminder,
+                        key: DeviceSettingKey.doorOpenReminder,
+                        capability: capabilitiesState.capabilityFor(
+                          DeviceCapabilityCode.doorOpenReminder,
+                        ),
+                        setting: doorSettingsState.settingFor(
+                          DeviceCapabilityCode.doorOpenReminder,
+                        ),
                       ),
-                      onTap: () => _showRawValueEditor(
-                        DeviceSettingKey.doorOpenReminder,
-                        l10n.deviceSettingsDoorOpenReminder,
-                      ),
-                    ),
                   ],
                 ),
-                const SizedBox(height: 22),
-                Text(
-                  l10n.deviceSettingsForInstallers,
-                  style: AppTextTokens.deviceSettingsMainSectionLabel(
-                    textTheme,
+                if (showsForceMargin) ...[
+                  const SizedBox(height: 22),
+                  Text(
+                    l10n.deviceSettingsForInstallers,
+                    style: AppTextTokens.deviceSettingsMainSectionLabel(
+                      textTheme,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 10),
-                _SettingsRows(
-                  rows: [
-                    _SettingsRowData(
-                      assetPath: DeviceSettingsAssetPaths.forceMargin,
-                      fallbackIcon: Icons.tune_rounded,
-                      title: l10n.deviceSettingsForceMargin,
-                      value: _settingValue(
-                        settingsState,
-                        DeviceSettingKey.openingForce,
-                        l10n,
+                  const SizedBox(height: 10),
+                  _SettingsRows(
+                    rows: [
+                      _SettingsRowData(
+                        assetPath: DeviceSettingsAssetPaths.forceMargin,
+                        fallbackIcon: Icons.tune_rounded,
+                        title: l10n.deviceSettingsForceMargin,
+                        value: _settingValue(
+                          settingsState,
+                          DeviceSettingKey.openingForce,
+                          l10n,
+                          null,
+                          doorSettingsState.settingFor(
+                            DeviceCapabilityCode.forceMargin,
+                          ),
+                        ),
+                        onTap: () => _showRawValueEditor(
+                          DeviceSettingKey.openingForce,
+                          l10n.deviceSettingsForceMargin,
+                        ),
                       ),
-                      onTap: () => _showRawValueEditor(
-                        DeviceSettingKey.openingForce,
-                        l10n.deviceSettingsForceMargin,
-                      ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
@@ -299,11 +338,101 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
     DeviceSettingsState state,
     DeviceSettingKey key,
     AppLocalizations l10n,
+    DeviceCapability? capability,
+    DoorSettingSnapshot? setting,
   ) {
     if (state.pendingKey == key) {
       return l10n.deviceSettingsWriting;
     }
+    if (setting != null) {
+      final currentValue = setting.currentValue;
+      if (currentValue == null) {
+        return l10n.deviceSettingsRawUnavailable;
+      }
+      final option = capability?.options.where(
+        (option) => option.value == currentValue,
+      );
+      if (option != null && option.isNotEmpty) {
+        return _optionLabel(option.first, setting.unit ?? capability?.unit);
+      }
+      return _valueWithUnit(currentValue, setting.unit);
+    }
+    final rawValue = state.values[key]?.rawValue;
+    final option = capability?.options.where(
+      (option) => option.value == rawValue,
+    );
+    if (option != null && option.isNotEmpty) {
+      return _optionLabel(option.first, capability?.unit);
+    }
     return state.values[key]?.displayValue ?? l10n.deviceSettingsRawUnavailable;
+  }
+
+  _SettingsRowData _capabilitySettingsRow({
+    required String assetPath,
+    required IconData fallbackIcon,
+    required String fallbackTitle,
+    required DeviceSettingKey key,
+    required DeviceCapability? capability,
+    required DoorSettingSnapshot? setting,
+  }) {
+    final l10n = AppLocalizations.of(context);
+    final settingsState = ref.read(
+      deviceSettingsControllerProvider(widget.deviceId),
+    );
+    final title = setting?.label.isNotEmpty == true
+        ? setting!.label
+        : capability?.label.isNotEmpty == true
+        ? capability!.label
+        : fallbackTitle;
+    return _SettingsRowData(
+      assetPath: assetPath,
+      fallbackIcon: fallbackIcon,
+      title: title,
+      value: _settingValue(settingsState, key, l10n, capability, setting),
+      onTap: () => _showCapabilityValueEditor(
+        key: key,
+        title: title,
+        capability: capability,
+      ),
+    );
+  }
+
+  Future<void> _showCapabilityValueEditor({
+    required DeviceSettingKey key,
+    required String title,
+    required DeviceCapability? capability,
+  }) async {
+    final state = ref.read(deviceSettingsControllerProvider(widget.deviceId));
+    if (state.loading || state.pendingKey != null) {
+      return;
+    }
+    if (capability == null || capability.options.isEmpty) {
+      await _showRawValueEditor(key, title);
+      return;
+    }
+
+    final rawValue = state.values[key]?.rawValue;
+    final initialValue =
+        capability.options.any((option) => option.value == rawValue)
+        ? rawValue!
+        : capability.options.first.value;
+    final value = await showModalBottomSheet<int>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _CapabilityOptionsSheet(
+        title: title,
+        options: capability.options,
+        unit: capability.unit,
+        initialValue: initialValue,
+      ),
+    );
+    if (value == null || !mounted || value == rawValue) {
+      return;
+    }
+    await ref
+        .read(deviceSettingsControllerProvider(widget.deviceId).notifier)
+        .setRawValue(key, value);
   }
 
   Future<void> _showRawValueEditor(DeviceSettingKey key, String title) async {
@@ -591,35 +720,52 @@ class _SettingsRow extends StatelessWidget {
             height: 77,
             child: Row(
               children: [
-                _DeviceSettingsAssetIcon(
-                  assetPath: data.assetPath,
-                  fallbackIcon: data.fallbackIcon,
-                ),
-                const SizedBox(width: 10),
                 Expanded(
-                  child: Text(
-                    data.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTextTokens.deviceSettingsRowTitle(textTheme),
+                  child: Row(
+                    children: [
+                      _DeviceSettingsAssetIcon(
+                        assetPath: data.assetPath,
+                        fallbackIcon: data.fallbackIcon,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          data.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextTokens.deviceSettingsRowTitle(
+                            textTheme,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                if (data.value != null) ...[
-                  const SizedBox(width: 12),
-                  Flexible(
-                    child: Text(
-                      data.value!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextTokens.deviceSettingsRowValue(textTheme),
-                    ),
-                  ),
-                ],
                 const SizedBox(width: 12),
-                const Icon(
-                  Icons.chevron_right,
-                  size: 28,
-                  color: AppColors.textPrimary,
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (data.value != null) ...[
+                      Text(
+                        data.value!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextTokens.deviceSettingsRowValue(textTheme),
+                      ),
+                      const SizedBox(width: 12),
+                    ],
+                    const SizedBox(
+                      width: 28,
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: Icon(
+                          Icons.chevron_right,
+                          size: 28,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -650,6 +796,77 @@ class _DeviceSettingsAssetIcon extends StatelessWidget {
         width: 34,
         height: 34,
         child: Icon(fallbackIcon, size: 24, color: AppColors.textIcon),
+      ),
+    );
+  }
+}
+
+String _optionLabel(DeviceCapabilityOption option, String? unit) {
+  final normalizedUnit = unit?.trim();
+  return normalizedUnit == null || normalizedUnit.isEmpty
+      ? option.label
+      : '${option.label} $normalizedUnit';
+}
+
+String _valueWithUnit(int value, String? unit) {
+  final normalizedUnit = unit?.trim();
+  return normalizedUnit == null || normalizedUnit.isEmpty
+      ? '$value'
+      : '$value $normalizedUnit';
+}
+
+class _CapabilityOptionsSheet extends StatefulWidget {
+  const _CapabilityOptionsSheet({
+    required this.title,
+    required this.options,
+    required this.unit,
+    required this.initialValue,
+  });
+
+  final String title;
+  final List<DeviceCapabilityOption> options;
+  final String? unit;
+  final int initialValue;
+
+  @override
+  State<_CapabilityOptionsSheet> createState() =>
+      _CapabilityOptionsSheetState();
+}
+
+class _CapabilityOptionsSheetState extends State<_CapabilityOptionsSheet> {
+  late int _selectedValue = widget.initialValue;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return _SettingsSheetFrame(
+      heightFactor: 0.50,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            widget.title,
+            textAlign: TextAlign.center,
+            style: AppTextTokens.deviceSettingsSheetTitle(textTheme),
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: _FixedSelectionList<DeviceCapabilityOption>(
+              values: widget.options,
+              initialValue: widget.options.firstWhere(
+                (option) => option.value == _selectedValue,
+                orElse: () => widget.options.first,
+              ),
+              labelBuilder: (option) => _optionLabel(option, widget.unit),
+              onSelected: (option) =>
+                  setState(() => _selectedValue = option.value),
+            ),
+          ),
+          const SizedBox(height: 20),
+          _SheetActionRow(
+            onConfirm: () => Navigator.pop(context, _selectedValue),
+          ),
+        ],
       ),
     );
   }

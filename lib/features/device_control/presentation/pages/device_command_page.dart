@@ -146,8 +146,9 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     return widget.doorId.trim();
   }
 
-  Set<String> _capabilitiesForCurrentDevice(DeviceCommandState commandState) {
+  DoorDevice? _selectedDoorDevice(DeviceCommandState commandState) {
     final candidates = <String>{
+      commandState.bleDeviceId?.trim() ?? '',
       commandState.bleTargetName?.trim() ?? '',
       commandState.doorDetail?.name.trim() ?? '',
       widget.deviceId.trim(),
@@ -157,13 +158,21 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
       if (candidates.contains(device.bleName?.trim()) ||
           candidates.contains(device.sn.trim()) ||
           candidates.contains(device.deviceId.trim())) {
-        return device.capabilities
-            .map((capability) => capability.trim().toUpperCase())
-            .where((capability) => capability.isNotEmpty)
-            .toSet();
+        return device;
       }
     }
 
+    return null;
+  }
+
+  Set<String> _capabilitiesForCurrentDevice(DeviceCommandState commandState) {
+    final device = _selectedDoorDevice(commandState);
+    if (device != null) {
+      return device.capabilities
+          .map((capability) => capability.trim().toUpperCase())
+          .where((capability) => capability.isNotEmpty)
+          .toSet();
+    }
     // Capabilities must be tied to a known device type. Do not enable an
     // extension when the response cannot be matched to the active device.
     return const <String>{};
@@ -184,6 +193,9 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
         doorDetail?.openReminderEnabled ??
         false;
     final hardwareDeviceId = _hardwareDeviceId(commandState);
+    final selectedDeviceId =
+        _selectedDoorDevice(commandState)?.deviceId.trim() ??
+        widget.deviceId.trim();
     final capabilities = _capabilitiesForCurrentDevice(commandState);
     final canControlDoor = capabilities.contains('DOOR_CONTROL');
     final canControlLed = capabilities.contains('LED_OFF_DELAY');
@@ -333,7 +345,8 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                     ),
                     onMoreSettings: () => context.push(
                       '${DeviceSettingsPage.routePath}'
-                      '?deviceId=${Uri.encodeComponent(hardwareDeviceId)}',
+                      '?doorId=${Uri.encodeComponent(widget.doorId)}'
+                      '&deviceId=${Uri.encodeComponent(selectedDeviceId)}',
                     ),
                   ),
                   const SizedBox(height: 22),

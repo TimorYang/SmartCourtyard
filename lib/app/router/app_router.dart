@@ -321,6 +321,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: DeviceSettingsPage.routePath,
         name: DeviceSettingsPage.routeName,
         builder: (context, state) => DeviceSettingsPage(
+          doorId:
+              state.uri.queryParameters['doorId'] ??
+              state.uri.queryParameters['deviceId'] ??
+              '',
           deviceId: state.uri.queryParameters['deviceId'] ?? '',
         ),
       ),
