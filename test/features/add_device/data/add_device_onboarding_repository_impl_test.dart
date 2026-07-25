@@ -19,7 +19,11 @@ void main() {
     );
 
     expect(
-      () => repository.addForceDoor(sn: 'SN-001', requestId: 'request-1'),
+      () => repository.addForceDoor(
+        sn: 'SN-001',
+        doorId: '7',
+        requestId: 'request-1',
+      ),
       throwsA(
         isA<AppError>()
             .having(
@@ -49,6 +53,7 @@ class _ThrowingRemoteDataSource implements AddDeviceOnboardingRemoteDataSource {
   @override
   Future<ForceDoorResponseDto> addForceDoor({
     required String sn,
+    String? doorId,
     required String requestId,
   }) async {
     throw exception;

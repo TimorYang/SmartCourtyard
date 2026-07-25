@@ -533,7 +533,7 @@ Widget _scanFlowTestApp(
       GoRoute(
         path: AddDevicePage.routePath,
         builder: (context, state) =>
-            const AddDevicePage(doorType: DoorType.garage),
+            const AddDevicePage(doorType: DoorType.garage, doorId: '1'),
       ),
       GoRoute(
         path: SmartOpenerScanGuidePage.routePath,
@@ -637,6 +637,7 @@ class _FakeAddDeviceOnboardingRepository
   @override
   Future<OnboardedForceDoor> addForceDoor({
     required String sn,
+    String? doorId,
     required String requestId,
   }) async {
     return OnboardedForceDoor(id: 1, sn: sn, name: 'Test Door');

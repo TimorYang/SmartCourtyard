@@ -216,6 +216,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AddDevicePage.routePath,
         name: AddDevicePage.routeName,
         builder: (context, state) => AddDevicePage(
+          doorId: state.uri.queryParameters[AddDevicePage.doorIdQueryParameter],
           doorType: DoorType.fromWireValue(
             int.tryParse(
               state.uri.queryParameters[AddDevicePage.doorTypeQueryParameter] ??

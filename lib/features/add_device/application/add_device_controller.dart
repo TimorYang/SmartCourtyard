@@ -143,6 +143,7 @@ class AddDeviceController extends Notifier<AddDeviceState> {
       <StreamSubscription<Object?>>[];
   int _requestCounter = 0;
   String? _onboardingFlowId;
+  String? _doorId;
   String? _targetBleName;
   var _disposeHookRegistered = false;
 
@@ -729,6 +730,9 @@ class AddDeviceController extends Notifier<AddDeviceState> {
         return false;
       }
 
+      final candidateDoorId = _doorId?.trim();
+      final doorId = candidateDoorId?.isEmpty ?? true ? null : candidateDoorId;
+
       state = state.copyWith(infoMessage: '设备配网成功，正在绑定账号...');
       final bindRequestId = _nextRequestId('bind-door');
       final bindWatch = Stopwatch()..start();
@@ -738,10 +742,11 @@ class AddDeviceController extends Notifier<AddDeviceState> {
         deviceId: device.id,
         stage: 'cloud_binding',
         result: 'started',
-        context: {'sn': sn},
+        context: {'sn': sn, 'doorId': doorId},
       );
       final onboardedDoor = await _addForceDoorUseCase(
         sn: sn,
+        doorId: doorId,
         requestId: bindRequestId,
       );
       _log(
@@ -820,11 +825,12 @@ class AddDeviceController extends Notifier<AddDeviceState> {
     return flowId;
   }
 
-  void beginOnboardingFlow() {
+  void beginOnboardingFlow({String? doorId}) {
     if (_onboardingFlowId != null) {
       _log('onboarding_flow_superseded', stage: 'add_device', result: 'ended');
     }
     _onboardingFlowId = null;
+    _doorId = doorId;
     _requestCounter = 0;
     final flowId = _ensureFlow();
     _log(
