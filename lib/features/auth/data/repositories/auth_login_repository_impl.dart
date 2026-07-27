@@ -21,6 +21,10 @@ class AuthLoginRepositoryImpl implements AuthLoginRepository {
     required String passwordCiphertext,
     required String keyId,
     required String nonce,
+    required String deviceId,
+    required String deviceModel,
+    required String platform,
+    required String appVersion,
     required String requestId,
   }) async {
     try {
@@ -31,6 +35,10 @@ class AuthLoginRepositoryImpl implements AuthLoginRepository {
           'keyId': keyId,
           'nonce': nonce,
           'passwordCiphertext': passwordCiphertext,
+          'deviceId': deviceId,
+          'deviceModel': deviceModel,
+          'platform': platform,
+          'appVersion': appVersion,
         },
       );
       logger.info('Completed login.', requestId: requestId);

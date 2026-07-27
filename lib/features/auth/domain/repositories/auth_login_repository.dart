@@ -6,6 +6,10 @@ abstract interface class AuthLoginRepository {
     required String passwordCiphertext,
     required String keyId,
     required String nonce,
+    required String deviceId,
+    required String deviceModel,
+    required String platform,
+    required String appVersion,
     required String requestId,
   });
 }

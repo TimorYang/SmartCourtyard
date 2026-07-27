@@ -10,6 +10,7 @@ import '../core/network/providers.dart';
 import '../core/storage/app_storage_paths.dart';
 import '../features/account/application/providers.dart';
 import '../features/auth/application/providers.dart';
+import '../features/auth/data/services/platform_login_device_context_provider.dart';
 import '../features/home/application/providers.dart';
 import 'flinx_app.dart';
 
@@ -21,6 +22,12 @@ Future<void> bootstrap() async {
     storageLocations = await AppStoragePaths.resolve();
   } on Object {
     // Storage failures must leave the app signed out instead of blocking launch.
+  }
+  try {
+    await PlatformLoginDeviceContextProvider().read();
+  } on Object {
+    // Login retries device-context creation if platform services are unavailable
+    // during startup.
   }
 
   runApp(

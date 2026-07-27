@@ -3,6 +3,7 @@ import '../entities/auth_login_result.dart';
 import '../repositories/auth_crypto_repository.dart';
 import '../repositories/auth_login_repository.dart';
 import '../services/password_ciphertext_encryptor.dart';
+import '../services/login_device_context_provider.dart';
 
 class LoginUseCase {
   LoginUseCase({
@@ -10,6 +11,7 @@ class LoginUseCase {
     required this.cryptoRepository,
     required this.encryptor,
     required this.accountRepository,
+    required this.deviceContextProvider,
     String Function()? requestIdGenerator,
   }) : _requestIdGenerator = requestIdGenerator ?? _defaultRequestId;
 
@@ -17,6 +19,7 @@ class LoginUseCase {
   final AuthCryptoRepository cryptoRepository;
   final PasswordCiphertextEncryptor encryptor;
   final AccountRepository accountRepository;
+  final LoginDeviceContextProvider deviceContextProvider;
   final String Function() _requestIdGenerator;
 
   Future<AuthLoginResult> call({
@@ -30,6 +33,7 @@ class LoginUseCase {
     if (material.isExpiredAt(DateTime.now())) {
       throw StateError('Password encryption material expired.');
     }
+    final deviceContext = await deviceContextProvider.read();
     final result = await loginRepository.login(
       email: email,
       passwordCiphertext: encryptor.encrypt(
@@ -38,6 +42,10 @@ class LoginUseCase {
       ),
       keyId: material.keyId,
       nonce: material.nonce,
+      deviceId: deviceContext.deviceId,
+      deviceModel: deviceContext.deviceModel,
+      platform: deviceContext.platform,
+      appVersion: deviceContext.appVersion,
       requestId: requestId,
     );
     await accountRepository.saveProfile(result.profile);

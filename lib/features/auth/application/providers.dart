@@ -24,6 +24,7 @@ import '../data/repositories/auth_crypto_repository_impl.dart';
 import '../data/repositories/auth_login_repository_impl.dart';
 import '../data/repositories/auth_password_reset_repository_impl.dart';
 import '../data/services/rsa_oaep_password_ciphertext_encryptor.dart';
+import '../data/services/platform_login_device_context_provider.dart';
 import '../domain/entities/auth_session.dart';
 import '../domain/entities/registration_device_context.dart';
 import '../domain/repositories/auth_crypto_repository.dart';
@@ -31,6 +32,7 @@ import '../domain/repositories/auth_login_repository.dart';
 import '../domain/repositories/auth_password_reset_repository.dart';
 import '../domain/repositories/auth_registration_repository.dart';
 import '../domain/services/password_ciphertext_encryptor.dart';
+import '../domain/services/login_device_context_provider.dart';
 import '../domain/use_cases/complete_registration_use_case.dart';
 import '../domain/use_cases/complete_password_reset_use_case.dart';
 import '../domain/use_cases/login_use_case.dart';
@@ -147,6 +149,10 @@ final passwordCiphertextEncryptorProvider =
       return RsaOaepPasswordCiphertextEncryptor();
     });
 
+final loginDeviceContextProvider = Provider<LoginDeviceContextProvider>((ref) {
+  return PlatformLoginDeviceContextProvider();
+});
+
 final registrationFlowStoreProvider = Provider<RegistrationFlowStore>((ref) {
   return RegistrationFlowStore();
 });
@@ -221,6 +227,7 @@ final loginUseCaseProvider = Provider<LoginUseCase>((ref) {
     cryptoRepository: ref.watch(authCryptoRepositoryProvider),
     encryptor: ref.watch(passwordCiphertextEncryptorProvider),
     accountRepository: ref.watch(accountRepositoryProvider),
+    deviceContextProvider: ref.watch(loginDeviceContextProvider),
   );
 });
 

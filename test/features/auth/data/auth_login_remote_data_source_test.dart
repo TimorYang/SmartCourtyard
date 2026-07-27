@@ -37,11 +37,19 @@ void main() {
           'keyId': 'app-password-key-v1',
           'nonce': 'one-time-nonce',
           'passwordCiphertext': 'ciphertext',
+          'deviceId': 'installation-id',
+          'deviceModel': 'iPhone17,2',
+          'platform': 'IOS',
+          'appVersion': '1.0.0',
         },
       );
 
       expect(api.body, containsPair('email', 'alice@example.com'));
       expect(api.body, containsPair('passwordCiphertext', 'ciphertext'));
+      expect(api.body, containsPair('deviceId', 'installation-id'));
+      expect(api.body, containsPair('deviceModel', 'iPhone17,2'));
+      expect(api.body, containsPair('platform', 'IOS'));
+      expect(api.body, containsPair('appVersion', '1.0.0'));
       expect(
         api.loginOptions.headers?['authorization'],
         'Basic encoded-client-credentials',

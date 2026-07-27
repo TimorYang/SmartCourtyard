@@ -6,6 +6,8 @@ import 'package:flinx/features/account/domain/repositories/account_repository.da
 import 'package:flinx/features/auth/domain/repositories/auth_crypto_repository.dart';
 import 'package:flinx/features/auth/domain/repositories/auth_login_repository.dart';
 import 'package:flinx/features/auth/domain/services/password_ciphertext_encryptor.dart';
+import 'package:flinx/features/auth/domain/services/login_device_context_provider.dart';
+import 'package:flinx/features/auth/domain/entities/login_device_context.dart';
 import 'package:flinx/features/auth/domain/use_cases/login_use_case.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -21,6 +23,7 @@ void main() {
         cryptoRepository: cryptoRepository,
         encryptor: const _FakeEncryptor(),
         accountRepository: accountRepository,
+        deviceContextProvider: const _FakeLoginDeviceContextProvider(),
         requestIdGenerator: () => 'login-123',
       );
 
@@ -32,6 +35,10 @@ void main() {
       expect(loginRepository.keyId, 'app-password-key-v1');
       expect(loginRepository.nonce, 'one-time-nonce');
       expect(loginRepository.passwordCiphertext, 'encrypted:secret');
+      expect(loginRepository.deviceId, 'installation-id');
+      expect(loginRepository.deviceModel, 'iPhone17,2');
+      expect(loginRepository.platform, 'IOS');
+      expect(loginRepository.appVersion, '1.0.0');
       expect(accountRepository.savedTokenSet?.accessToken, 'access-token');
       expect(accountRepository.savedTokenSet?.refreshToken, 'refresh-token');
     },
@@ -63,6 +70,10 @@ class _FakeLoginRepository implements AuthLoginRepository {
   String? passwordCiphertext;
   String? keyId;
   String? nonce;
+  String? deviceId;
+  String? deviceModel;
+  String? platform;
+  String? appVersion;
   String? requestId;
 
   @override
@@ -71,6 +82,10 @@ class _FakeLoginRepository implements AuthLoginRepository {
     required String passwordCiphertext,
     required String keyId,
     required String nonce,
+    required String deviceId,
+    required String deviceModel,
+    required String platform,
+    required String appVersion,
     required String requestId,
   }) async {
     this.email = email;
@@ -78,6 +93,10 @@ class _FakeLoginRepository implements AuthLoginRepository {
     this.keyId = keyId;
     this.nonce = nonce;
     this.requestId = requestId;
+    this.deviceId = deviceId;
+    this.deviceModel = deviceModel;
+    this.platform = platform;
+    this.appVersion = appVersion;
     return AuthLoginResult(
       tokenSet: const AccountTokenSet(
         accessToken: 'access-token',
@@ -91,6 +110,18 @@ class _FakeLoginRepository implements AuthLoginRepository {
       ),
     );
   }
+}
+
+class _FakeLoginDeviceContextProvider implements LoginDeviceContextProvider {
+  const _FakeLoginDeviceContextProvider();
+
+  @override
+  Future<LoginDeviceContext> read() async => const LoginDeviceContext(
+    deviceId: 'installation-id',
+    deviceModel: 'iPhone17,2',
+    platform: 'IOS',
+    appVersion: '1.0.0',
+  );
 }
 
 class _FakeAccountRepository implements AccountRepository {
