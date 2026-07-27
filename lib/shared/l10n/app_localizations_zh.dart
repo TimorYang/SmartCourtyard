@@ -1034,6 +1034,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get smartOpenerAddedDisconnectConfirmMessage => '确定要断开此设备吗？';
 
   @override
+  String get smartOpenerAddedUnbindFailedMessage => '移除设备失败，请重试。';
+
+  @override
   String get smartOpenerAddedLoading => '正在加载设备…';
 
   @override

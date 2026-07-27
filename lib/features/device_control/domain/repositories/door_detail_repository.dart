@@ -11,4 +11,10 @@ abstract interface class DoorDetailRepository {
     required String doorId,
     required String requestId,
   });
+
+  Future<void> unbindDoorDevice({
+    required String doorId,
+    required String deviceId,
+    required String requestId,
+  });
 }

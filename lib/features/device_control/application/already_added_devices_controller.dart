@@ -1,8 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/errors/app_error.dart';
-import '../domain/entities/door_detail.dart';
-import '../domain/use_cases/fetch_door_detail_use_case.dart';
+import '../domain/entities/door_device.dart';
+import '../domain/use_cases/fetch_door_devices_use_case.dart';
+import '../domain/use_cases/unbind_door_device_use_case.dart';
 import 'device_command_controller.dart';
 
 final alreadyAddedDevicesControllerProvider =
@@ -12,25 +13,33 @@ final alreadyAddedDevicesControllerProvider =
 
 class AlreadyAddedDevicesState {
   const AlreadyAddedDevicesState({
-    this.devices = const <DoorAssociatedDevice>[],
+    this.devices = const <DoorDevice>[],
     this.isInitialLoading = false,
     this.isRefreshing = false,
     this.initialLoadFailed = false,
     this.hasMore = true,
+    this.pendingUnbindDeviceId,
+    this.unbindFailedDeviceId,
   });
 
-  final List<DoorAssociatedDevice> devices;
+  final List<DoorDevice> devices;
   final bool isInitialLoading;
   final bool isRefreshing;
   final bool initialLoadFailed;
   final bool hasMore;
+  final String? pendingUnbindDeviceId;
+  final String? unbindFailedDeviceId;
 
   AlreadyAddedDevicesState copyWith({
-    List<DoorAssociatedDevice>? devices,
+    List<DoorDevice>? devices,
     bool? isInitialLoading,
     bool? isRefreshing,
     bool? initialLoadFailed,
     bool? hasMore,
+    String? pendingUnbindDeviceId,
+    bool clearPendingUnbindDeviceId = false,
+    String? unbindFailedDeviceId,
+    bool clearUnbindFailedDeviceId = false,
   }) {
     return AlreadyAddedDevicesState(
       devices: devices ?? this.devices,
@@ -38,17 +47,25 @@ class AlreadyAddedDevicesState {
       isRefreshing: isRefreshing ?? this.isRefreshing,
       initialLoadFailed: initialLoadFailed ?? this.initialLoadFailed,
       hasMore: hasMore ?? this.hasMore,
+      pendingUnbindDeviceId: clearPendingUnbindDeviceId
+          ? null
+          : pendingUnbindDeviceId ?? this.pendingUnbindDeviceId,
+      unbindFailedDeviceId: clearUnbindFailedDeviceId
+          ? null
+          : unbindFailedDeviceId ?? this.unbindFailedDeviceId,
     );
   }
 }
 
 class AlreadyAddedDevicesController extends Notifier<AlreadyAddedDevicesState> {
-  late final FetchDoorDetailUseCase _fetchDoorDetailUseCase;
+  late final FetchDoorDevicesUseCase _fetchDoorDevicesUseCase;
+  late final UnbindDoorDeviceUseCase _unbindDoorDeviceUseCase;
   var _requestCounter = 0;
 
   @override
   AlreadyAddedDevicesState build() {
-    _fetchDoorDetailUseCase = ref.watch(fetchDoorDetailUseCaseProvider);
+    _fetchDoorDevicesUseCase = ref.watch(fetchDoorDevicesUseCaseProvider);
+    _unbindDoorDeviceUseCase = ref.watch(unbindDoorDeviceUseCaseProvider);
     return const AlreadyAddedDevicesState();
   }
 
@@ -67,11 +84,41 @@ class AlreadyAddedDevicesController extends Notifier<AlreadyAddedDevicesState> {
   }
 
   Future<void> loadMore() async {
-    // Door detail returns the complete associated-device collection.
     if (!state.hasMore || state.isInitialLoading || state.isRefreshing) {
       return;
     }
     state = state.copyWith(hasMore: false);
+  }
+
+  Future<void> unbindDevice({
+    required String doorId,
+    required String deviceId,
+  }) async {
+    if (state.pendingUnbindDeviceId != null) {
+      return;
+    }
+
+    final normalizedDoorId = doorId.trim();
+    final normalizedDeviceId = deviceId.trim();
+    state = state.copyWith(
+      pendingUnbindDeviceId: normalizedDeviceId,
+      clearUnbindFailedDeviceId: true,
+    );
+    try {
+      await _unbindDoorDeviceUseCase(
+        doorId: normalizedDoorId,
+        deviceId: normalizedDeviceId,
+        requestId: _nextUnbindRequestId(normalizedDoorId, normalizedDeviceId),
+      );
+      await refresh(doorId: normalizedDoorId);
+      _notifyDeviceCommandDeviceListRefresh(normalizedDoorId);
+    } on AppError {
+      state = state.copyWith(unbindFailedDeviceId: normalizedDeviceId);
+    } catch (_) {
+      state = state.copyWith(unbindFailedDeviceId: normalizedDeviceId);
+    } finally {
+      state = state.copyWith(clearPendingUnbindDeviceId: true);
+    }
   }
 
   Future<void> _fetchDevices({
@@ -94,13 +141,12 @@ class AlreadyAddedDevicesController extends Notifier<AlreadyAddedDevicesState> {
       initialLoadFailed: false,
     );
     try {
-      await _fetchDoorDetailUseCase(
+      final devices = await _fetchDoorDevicesUseCase(
         doorId: normalizedDoorId,
         requestId: _nextRequestId(normalizedDoorId),
       );
       state = state.copyWith(
-        // The door-detail endpoint no longer includes associated devices.
-        devices: const <DoorAssociatedDevice>[],
+        devices: devices,
         isInitialLoading: false,
         isRefreshing: false,
         initialLoadFailed: false,
@@ -125,5 +171,19 @@ class AlreadyAddedDevicesController extends Notifier<AlreadyAddedDevicesState> {
     _requestCounter += 1;
     return 'already-added-devices-$doorId-'
         '${DateTime.now().toUtc().microsecondsSinceEpoch}-$_requestCounter';
+  }
+
+  String _nextUnbindRequestId(String doorId, String deviceId) {
+    _requestCounter += 1;
+    return 'unbind-door-device-$doorId-$deviceId-'
+        '${DateTime.now().toUtc().microsecondsSinceEpoch}-$_requestCounter';
+  }
+
+  void _notifyDeviceCommandDeviceListRefresh(String doorId) {
+    ref
+        .read(doorDevicesRefreshRequestProvider.notifier)
+        .notify(
+          DoorDevicesRefreshRequest(doorId: doorId, sequence: _requestCounter),
+        );
   }
 }

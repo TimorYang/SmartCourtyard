@@ -288,7 +288,7 @@ class AppSpacingTokens {
   static const smartOpenerAddedPageHorizontal = 20.0;
   static const smartOpenerAddedPageTop = 10.0;
   static const smartOpenerAddedCardPadding = 22.0;
-  static const smartOpenerAddedCardGap = 18.0;
+  static const smartOpenerAddedCardGap = 10.0;
   static const fBoxWiringTestPageHorizontal = 28.0;
   static const fBoxWiringTestPageTop = 27.0;
   static const fBoxWiringTestTitleToDescription = 12.0;

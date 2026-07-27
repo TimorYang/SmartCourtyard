@@ -19,6 +19,7 @@ import '../domain/entities/door_device.dart';
 import '../domain/repositories/door_detail_repository.dart';
 import '../domain/use_cases/fetch_door_detail_use_case.dart';
 import '../domain/use_cases/fetch_door_devices_use_case.dart';
+import '../domain/use_cases/unbind_door_device_use_case.dart';
 
 final deviceCommandHardwareGatewayProvider = Provider<HardwareGateway>((ref) {
   return ref.watch(nativeHardwareGatewayProvider);
@@ -57,6 +58,40 @@ final fetchDoorDevicesUseCaseProvider = Provider<FetchDoorDevicesUseCase>((
     repository: ref.watch(doorDetailRepositoryProvider),
   );
 });
+
+final unbindDoorDeviceUseCaseProvider = Provider<UnbindDoorDeviceUseCase>((
+  ref,
+) {
+  return UnbindDoorDeviceUseCase(
+    repository: ref.watch(doorDetailRepositoryProvider),
+  );
+});
+
+final doorDevicesRefreshRequestProvider =
+    NotifierProvider<
+      DoorDevicesRefreshRequestNotifier,
+      DoorDevicesRefreshRequest?
+    >(DoorDevicesRefreshRequestNotifier.new);
+
+class DoorDevicesRefreshRequest {
+  const DoorDevicesRefreshRequest({
+    required this.doorId,
+    required this.sequence,
+  });
+
+  final String doorId;
+  final int sequence;
+}
+
+class DoorDevicesRefreshRequestNotifier
+    extends Notifier<DoorDevicesRefreshRequest?> {
+  @override
+  DoorDevicesRefreshRequest? build() => null;
+
+  void notify(DoorDevicesRefreshRequest request) {
+    state = request;
+  }
+}
 
 final deviceCommandControllerProvider =
     NotifierProvider<DeviceCommandController, DeviceCommandState>(
@@ -212,6 +247,15 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
     _fetchDoorDevicesUseCase = ref.watch(fetchDoorDevicesUseCaseProvider);
     _fetchDeviceKeyUseCase = ref.watch(fetchOnboardingDeviceKeyUseCaseProvider);
     _bleScanDuration = ref.watch(deviceCommandBleScanDurationProvider);
+    ref.listen<DoorDevicesRefreshRequest?>(doorDevicesRefreshRequestProvider, (
+      _,
+      request,
+    ) {
+      if (request == null || state.doorDetail?.id != request.doorId) {
+        return;
+      }
+      unawaited(refreshDoorDevices(doorId: request.doorId));
+    });
     _subscriptions.add(_gateway.bleScanResults.listen(_onBleDeviceFound));
     ref.onDispose(() {
       unawaited(disposeBleSession());
@@ -272,6 +316,27 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
         isLoadingDoorDetail: false,
         doorDetailErrorMessage: error.toString(),
       );
+    }
+  }
+
+  Future<void> refreshDoorDevices({required String doorId}) async {
+    final trimmedDoorId = doorId.trim();
+    if (trimmedDoorId.isEmpty || state.isLoadingDoorDetail) {
+      return;
+    }
+
+    try {
+      final doorDevices = await _fetchDoorDevicesUseCase(
+        doorId: trimmedDoorId,
+        requestId: _nextDoorDevicesRequestId(trimmedDoorId),
+      );
+      state = state.copyWith(doorDevices: doorDevices);
+    } on AppError {
+      // Preserve the currently rendered device cards when a background refresh
+      // fails; the originating page already presents the unbind failure state.
+    } catch (_) {
+      // Preserve the currently rendered device cards when a background refresh
+      // fails; the originating page already presents the unbind failure state.
     }
   }
 

@@ -69,7 +69,7 @@ class _OperationRecordApi implements OperationRecordApi {
         extra: options.extra,
         headers: options.headers,
         responseType: options.responseType,
-        contentType: options.contentType.toString(),
+        contentType: options.contentType?.toString(),
         validateStatus: options.validateStatus,
         receiveDataWhenStatusError: options.receiveDataWhenStatusError,
         followRedirects: options.followRedirects,

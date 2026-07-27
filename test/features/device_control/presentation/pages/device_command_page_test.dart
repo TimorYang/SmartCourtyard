@@ -252,7 +252,13 @@ void main() {
       find.text('The following devices have been connected'),
       findsOneWidget,
     );
-    expect(find.text('No connected devices'), findsOneWidget);
+    expect(
+      find.byKey(
+        const ValueKey<String>('already-added-device-card-Garage door'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Garage door'), findsOneWidget);
     expect(
       find.byKey(const ValueKey<String>('already-added-add-action')),
       findsOneWidget,
@@ -289,7 +295,82 @@ void main() {
 
     expect(find.text('已添加'), findsOneWidget);
     expect(find.text('以下设备已连接'), findsOneWidget);
-    expect(find.text('暂无已连接设备'), findsOneWidget);
+    expect(find.text('智能开门器'), findsOneWidget);
+    expect(find.text('Garage door'), findsOneWidget);
+  });
+
+  testWidgets('unbinds an already added device and refreshes the list', (
+    tester,
+  ) async {
+    final repository = _UnbindDoorDetailRepository();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [doorDetailRepositoryProvider.overrideWithValue(repository)],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const AlreadyAddedDevicesPage(doorId: '12'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.byKey(
+        const ValueKey<String>('already-added-delete-action-Garage door'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(
+        const ValueKey<String>('already-added-disconnect-confirm-action'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(repository.unboundDeviceIds, ['3']);
+    expect(find.text('No connected devices'), findsOneWidget);
+  });
+
+  testWidgets('shows an error message when device unbinding fails', (
+    tester,
+  ) async {
+    final repository = _UnbindDoorDetailRepository(shouldFail: true);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [doorDetailRepositoryProvider.overrideWithValue(repository)],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const AlreadyAddedDevicesPage(doorId: '12'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.byKey(
+        const ValueKey<String>('already-added-delete-action-Garage door'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(
+        const ValueKey<String>('already-added-disconnect-confirm-action'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Unable to remove device. Please try again.'),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(
+        const ValueKey<String>('already-added-device-card-Garage door'),
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('shows pending state while a command is in progress', (
@@ -628,6 +709,47 @@ class _FakeDoorDetailRepository implements DoorDetailRepository {
       capabilities: capabilities,
     ),
   ];
+
+  @override
+  Future<void> unbindDoorDevice({
+    required String doorId,
+    required String deviceId,
+    required String requestId,
+  }) => throw UnimplementedError();
+}
+
+class _UnbindDoorDetailRepository extends _FakeDoorDetailRepository {
+  _UnbindDoorDetailRepository({this.shouldFail = false});
+
+  final bool shouldFail;
+  List<DoorDevice> devices = <DoorDevice>[
+    const DoorDevice(
+      deviceId: '3',
+      sn: 'opener_B8F86211A9DC',
+      deviceType: 'opener',
+      bleName: 'Garage door',
+    ),
+  ];
+  final List<String> unboundDeviceIds = <String>[];
+
+  @override
+  Future<List<DoorDevice>> fetchDoorDevices({
+    required String doorId,
+    required String requestId,
+  }) async => devices;
+
+  @override
+  Future<void> unbindDoorDevice({
+    required String doorId,
+    required String deviceId,
+    required String requestId,
+  }) async {
+    unboundDeviceIds.add(deviceId);
+    if (shouldFail) {
+      throw StateError('unbind failure');
+    }
+    devices = const <DoorDevice>[];
+  }
 }
 
 class _EmptyOperationRecordRepository implements OperationRecordRepository {

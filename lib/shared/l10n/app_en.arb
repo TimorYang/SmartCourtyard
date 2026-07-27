@@ -1173,6 +1173,10 @@
   "@smartOpenerAddedDisconnectConfirmMessage": {
     "description": "Confirmation message before disconnecting an already added device"
   },
+  "smartOpenerAddedUnbindFailedMessage": "Unable to remove device. Please try again.",
+  "@smartOpenerAddedUnbindFailedMessage": {
+    "description": "Error message shown when removing an already added device fails"
+  },
   "smartOpenerAddedLoading": "Loading devices…",
   "smartOpenerAddedEmptyTitle": "No connected devices",
   "smartOpenerAddedEmptyDescription": "Connected devices will appear here.",

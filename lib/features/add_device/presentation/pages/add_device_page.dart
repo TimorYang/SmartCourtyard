@@ -15,12 +15,9 @@ class AddDeviceAssetPaths {
   const AddDeviceAssetPaths._();
 
   static const fBox = 'assets/icons/add_device/add_device_f_box.png';
-  static const usbWifiModule =
-      'assets/icons/add_device/add_device_usb_wifi_module.png';
-  static const smartOpener =
-      'assets/icons/add_device/add_device_smart_opener.png';
-  static const solarEnergySystem =
-      'assets/icons/add_device/add_device_solar_energy_system.png';
+  static const usbWifiModule = 'assets/icons/add_device/add_device_usb_wifi_module.png';
+  static const smartOpener = 'assets/icons/add_device/add_device_smart_opener.png';
+  static const solarEnergySystem = 'assets/icons/add_device/add_device_solar_energy_system.png';
   static const camera = 'assets/icons/add_device/add_device_camera.png';
 }
 
@@ -45,9 +42,7 @@ class _AddDevicePageState extends ConsumerState<AddDevicePage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      ref
-          .read(addDeviceControllerProvider.notifier)
-          .beginOnboardingFlow(doorId: widget.doorId);
+      ref.read(addDeviceControllerProvider.notifier).beginOnboardingFlow(doorId: widget.doorId);
     });
   }
 
@@ -60,17 +55,11 @@ class _AddDevicePageState extends ConsumerState<AddDevicePage> {
       backgroundColor: AppColors.backgroundPrimary,
       appBar: const FlinxNavigationBar(title: '', showBottomDivider: false),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 36, 18, 46),
+        padding: const EdgeInsets.fromLTRB(20, 10, 18, 46),
         children: [
-          Text(
-            l10n.addDeviceTitle,
-            style: AppTextTokens.addDeviceTitle(textTheme),
-          ),
+          Text(l10n.addDeviceTitle, style: AppTextTokens.addDeviceTitle(textTheme)),
           const SizedBox(height: 2),
-          Text(
-            l10n.addDeviceSubtitle,
-            style: AppTextTokens.addDeviceSubtitle(textTheme),
-          ),
+          Text(l10n.addDeviceSubtitle, style: AppTextTokens.addDeviceSubtitle(textTheme)),
           const SizedBox(height: 42),
           _DeviceSectionTitle(label: l10n.addDeviceFBoxSection),
           const SizedBox(height: 10),
@@ -87,13 +76,8 @@ class _AddDevicePageState extends ConsumerState<AddDevicePage> {
             label: l10n.addDeviceUsbWifiModule,
             assetPath: AddDeviceAssetPaths.usbWifiModule,
             fallbackIcon: Icons.usb_outlined,
-            onTap: () => context.pushNamed(
-              UsbDongleGuidePage.routeName,
-              queryParameters: {
-                AddDevicePage.doorTypeQueryParameter: widget.doorType.wireValue
-                    .toString(),
-              },
-            ),
+            onTap: () =>
+                context.pushNamed(UsbDongleGuidePage.routeName, queryParameters: {AddDevicePage.doorTypeQueryParameter: widget.doorType.wireValue.toString()}),
           ),
           const SizedBox(height: 14),
           _DeviceOptionCard(
@@ -103,19 +87,11 @@ class _AddDevicePageState extends ConsumerState<AddDevicePage> {
             onTap: () => context.push(SmartOpenerQrScanPage.routePath),
           ),
           const SizedBox(height: 14),
-          _DeviceOptionCard(
-            label: l10n.addDeviceSolarEnergySystem,
-            assetPath: AddDeviceAssetPaths.solarEnergySystem,
-            fallbackIcon: Icons.solar_power_outlined,
-          ),
+          _DeviceOptionCard(label: l10n.addDeviceSolarEnergySystem, assetPath: AddDeviceAssetPaths.solarEnergySystem, fallbackIcon: Icons.solar_power_outlined),
           const SizedBox(height: 26),
           _DeviceSectionTitle(label: l10n.addDeviceSmartAccessorySection),
           const SizedBox(height: 14),
-          _DeviceOptionCard(
-            label: l10n.addDeviceCamera,
-            assetPath: AddDeviceAssetPaths.camera,
-            fallbackIcon: Icons.videocam_outlined,
-          ),
+          _DeviceOptionCard(label: l10n.addDeviceCamera, assetPath: AddDeviceAssetPaths.camera, fallbackIcon: Icons.videocam_outlined),
         ],
       ),
     );
@@ -129,20 +105,12 @@ class _DeviceSectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      label,
-      style: AppTextTokens.addDeviceSectionTitle(Theme.of(context).textTheme),
-    );
+    return Text(label, style: AppTextTokens.addDeviceSectionTitle(Theme.of(context).textTheme));
   }
 }
 
 class _DeviceOptionCard extends StatelessWidget {
-  const _DeviceOptionCard({
-    required this.label,
-    required this.assetPath,
-    required this.fallbackIcon,
-    this.onTap,
-  });
+  const _DeviceOptionCard({required this.label, required this.assetPath, required this.fallbackIcon, this.onTap});
 
   final String label;
   final String assetPath;
@@ -162,19 +130,9 @@ class _DeviceOptionCard extends StatelessWidget {
           child: Row(
             children: [
               const SizedBox(width: 18),
-              _DeviceOptionIcon(
-                assetPath: assetPath,
-                fallbackIcon: fallbackIcon,
-              ),
+              _DeviceOptionIcon(assetPath: assetPath, fallbackIcon: fallbackIcon),
               const SizedBox(width: 25),
-              Expanded(
-                child: Text(
-                  label,
-                  style: AppTextTokens.addDeviceCardTitle(
-                    Theme.of(context).textTheme,
-                  ),
-                ),
-              ),
+              Expanded(child: Text(label, style: AppTextTokens.addDeviceCardTitle(Theme.of(context).textTheme))),
             ],
           ),
         ),
@@ -184,10 +142,7 @@ class _DeviceOptionCard extends StatelessWidget {
 }
 
 class _DeviceOptionIcon extends StatelessWidget {
-  const _DeviceOptionIcon({
-    required this.assetPath,
-    required this.fallbackIcon,
-  });
+  const _DeviceOptionIcon({required this.assetPath, required this.fallbackIcon});
 
   final String assetPath;
   final IconData fallbackIcon;

@@ -99,6 +99,45 @@ void main() {
       ),
     );
   });
+
+  test('unbinds a device with parsed IDs', () async {
+    final dataSource = _RecordingDoorDetailRemoteDataSource();
+    final repository = DoorDetailRepositoryImpl(
+      remoteDataSource: dataSource,
+      logger: const _NoopLogger(),
+    );
+
+    await repository.unbindDoorDevice(
+      doorId: '12',
+      deviceId: '3',
+      requestId: 'unbind-door-device-123',
+    );
+
+    expect(dataSource.doorId, 12);
+    expect(dataSource.deviceId, 3);
+    expect(dataSource.requestId, 'unbind-door-device-123');
+  });
+}
+
+class _RecordingDoorDetailRemoteDataSource
+    extends _FakeDoorDetailRemoteDataSource {
+  _RecordingDoorDetailRemoteDataSource()
+    : super(const DoorDetailResponseDto(id: '12', name: 'Main Gate'));
+
+  int? doorId;
+  int? deviceId;
+  String? requestId;
+
+  @override
+  Future<void> unbindDoorDevice({
+    required int doorId,
+    required int deviceId,
+    required String requestId,
+  }) async {
+    this.doorId = doorId;
+    this.deviceId = deviceId;
+    this.requestId = requestId;
+  }
 }
 
 class _FakeDoorDetailRemoteDataSource implements DoorDetailRemoteDataSource {
@@ -119,6 +158,13 @@ class _FakeDoorDetailRemoteDataSource implements DoorDetailRemoteDataSource {
     required int doorId,
     required String requestId,
   }) async => const [];
+
+  @override
+  Future<void> unbindDoorDevice({
+    required int doorId,
+    required int deviceId,
+    required String requestId,
+  }) async {}
 }
 
 class _FailingDoorDetailRemoteDataSource implements DoorDetailRemoteDataSource {
@@ -137,6 +183,15 @@ class _FailingDoorDetailRemoteDataSource implements DoorDetailRemoteDataSource {
   @override
   Future<List<DoorDeviceResponseDto>> fetchDoorDevices({
     required int doorId,
+    required String requestId,
+  }) {
+    throw error;
+  }
+
+  @override
+  Future<void> unbindDoorDevice({
+    required int doorId,
+    required int deviceId,
     required String requestId,
   }) {
     throw error;

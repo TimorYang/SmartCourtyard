@@ -169,6 +169,57 @@ void main() {
     );
   });
 
+  test('unbinds a door device with request correlation', () async {
+    final api = _FakeDoorDetailApi(
+      response: const ApiEnvelopeDto(
+        code: 200,
+        success: true,
+        data: DoorDetailResponseDto(id: '12', name: 'Main Gate'),
+      ),
+      unbindResponse: const ApiEnvelopeDto(code: 0, success: true, data: true),
+    );
+    final dataSource = DoorDetailRemoteDataSourceImpl(api: api);
+
+    await dataSource.unbindDoorDevice(
+      doorId: 12,
+      deviceId: 3,
+      requestId: 'unbind-door-device-123',
+    );
+
+    expect(api.unbindDoorId, 12);
+    expect(api.unbindDeviceId, 3);
+    expect(
+      api.unbindOptions.extra?[NetworkRequestExtras.requestId],
+      'unbind-door-device-123',
+    );
+  });
+
+  test('rejects a false unbind response', () async {
+    final dataSource = DoorDetailRemoteDataSourceImpl(
+      api: _FakeDoorDetailApi(
+        response: const ApiEnvelopeDto(
+          code: 200,
+          success: true,
+          data: DoorDetailResponseDto(id: '12', name: 'Main Gate'),
+        ),
+        unbindResponse: const ApiEnvelopeDto(
+          code: 200,
+          success: true,
+          data: false,
+        ),
+      ),
+    );
+
+    await expectLater(
+      dataSource.unbindDoorDevice(
+        doorId: 12,
+        deviceId: 3,
+        requestId: 'unbind-door-device-123',
+      ),
+      throwsA(isA<DoorDetailRemoteException>()),
+    );
+  });
+
   test('rejects null data response', () async {
     final dataSource = DoorDetailRemoteDataSourceImpl(
       api: _FakeDoorDetailApi(
@@ -212,14 +263,22 @@ void main() {
 }
 
 class _FakeDoorDetailApi implements DoorDetailApi {
-  _FakeDoorDetailApi({required this.response, this.devicesResponse});
+  _FakeDoorDetailApi({
+    required this.response,
+    this.devicesResponse,
+    this.unbindResponse,
+  });
 
   final ApiEnvelopeDto<DoorDetailResponseDto> response;
   final ApiEnvelopeDto<List<DoorDeviceResponseDto>>? devicesResponse;
+  final ApiEnvelopeDto<bool>? unbindResponse;
   late int doorId;
   late Options options;
   late int devicesDoorId;
   late Options devicesOptions;
+  late int unbindDoorId;
+  late int unbindDeviceId;
+  late Options unbindOptions;
 
   @override
   Future<ApiEnvelopeDto<DoorDetailResponseDto>> fetchDoorDetail(
@@ -240,6 +299,18 @@ class _FakeDoorDetailApi implements DoorDetailApi {
     devicesOptions = options;
     return devicesResponse!;
   }
+
+  @override
+  Future<ApiEnvelopeDto<bool>> unbindDoorDevice(
+    int doorId,
+    int deviceId,
+    Options options,
+  ) async {
+    unbindDoorId = doorId;
+    unbindDeviceId = deviceId;
+    unbindOptions = options;
+    return unbindResponse!;
+  }
 }
 
 class _ThrowingDoorDetailApi implements DoorDetailApi {
@@ -258,6 +329,15 @@ class _ThrowingDoorDetailApi implements DoorDetailApi {
   @override
   Future<ApiEnvelopeDto<List<DoorDeviceResponseDto>>> fetchDoorDevices(
     int doorId,
+    Options options,
+  ) {
+    throw error;
+  }
+
+  @override
+  Future<ApiEnvelopeDto<bool>> unbindDoorDevice(
+    int doorId,
+    int deviceId,
     Options options,
   ) {
     throw error;

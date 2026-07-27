@@ -22,4 +22,11 @@ abstract class DoorDetailApi {
     @Path('doorId') int doorId,
     @DioOptions() Options options,
   );
+
+  @DELETE('app/doors/{doorId}/devices/{deviceId}')
+  Future<ApiEnvelopeDto<bool>> unbindDoorDevice(
+    @Path('doorId') int doorId,
+    @Path('deviceId') int deviceId,
+    @DioOptions() Options options,
+  );
 }

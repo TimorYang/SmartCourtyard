@@ -107,18 +107,57 @@ void main() {
       DeviceBleConnectionStatus.idle,
     );
   });
+
+  test(
+    'refreshes door devices when an already-added device is removed',
+    () async {
+      final gateway = _BleSessionGateway();
+      final repository = _DoorDetailRepository(
+        _doorDetail(),
+        devices: const [
+          DoorDevice(deviceId: '3', sn: 'old', deviceType: 'opener'),
+        ],
+      );
+      final container = _createContainer(
+        gateway: gateway,
+        repository: repository,
+      );
+      addTearDown(container.dispose);
+
+      await container
+          .read(deviceCommandControllerProvider.notifier)
+          .loadDoorDetail(doorId: '12');
+      repository.devices = const [
+        DoorDevice(deviceId: '4', sn: 'new', deviceType: 'opener'),
+      ];
+      container
+          .read(doorDevicesRefreshRequestProvider.notifier)
+          .notify(const DoorDevicesRefreshRequest(doorId: '12', sequence: 1));
+      await _settleBleSession();
+
+      expect(
+        container
+            .read(deviceCommandControllerProvider)
+            .doorDevices
+            .single
+            .deviceId,
+        '4',
+      );
+    },
+  );
 }
 
 ProviderContainer _createContainer({
   required _BleSessionGateway gateway,
   DoorDetail? doorDetail,
+  _DoorDetailRepository? repository,
   Duration scanDuration = const Duration(seconds: 10),
 }) {
   return ProviderContainer(
     overrides: [
       deviceCommandHardwareGatewayProvider.overrideWithValue(gateway),
       doorDetailRepositoryProvider.overrideWithValue(
-        _DoorDetailRepository(doorDetail ?? _doorDetail()),
+        repository ?? _DoorDetailRepository(doorDetail ?? _doorDetail()),
       ),
       addDeviceOnboardingRepositoryProvider.overrideWithValue(
         const _DeviceKeyRepository(),
@@ -146,9 +185,10 @@ DoorDetail _doorDetail({String name = 'Test door'}) {
 }
 
 class _DoorDetailRepository implements DoorDetailRepository {
-  const _DoorDetailRepository(this.detail);
+  _DoorDetailRepository(this.detail, {this.devices = const []});
 
   final DoorDetail detail;
+  List<DoorDevice> devices;
 
   @override
   Future<DoorDetail> fetchDoorDetail({
@@ -160,7 +200,14 @@ class _DoorDetailRepository implements DoorDetailRepository {
   Future<List<DoorDevice>> fetchDoorDevices({
     required String doorId,
     required String requestId,
-  }) async => const [];
+  }) async => devices;
+
+  @override
+  Future<void> unbindDoorDevice({
+    required String doorId,
+    required String deviceId,
+    required String requestId,
+  }) => throw UnimplementedError();
 }
 
 class _DeviceKeyRepository implements AddDeviceOnboardingRepository {

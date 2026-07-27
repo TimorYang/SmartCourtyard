@@ -2078,6 +2078,12 @@ abstract class AppLocalizations {
   /// **'Are you sure to disconnect this device?'**
   String get smartOpenerAddedDisconnectConfirmMessage;
 
+  /// Error message shown when removing an already added device fails
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to remove device. Please try again.'**
+  String get smartOpenerAddedUnbindFailedMessage;
+
   /// No description provided for @smartOpenerAddedLoading.
   ///
   /// In en, this message translates to:

@@ -1078,6 +1078,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Are you sure to disconnect this device?';
 
   @override
+  String get smartOpenerAddedUnbindFailedMessage =>
+      'Unable to remove device. Please try again.';
+
+  @override
   String get smartOpenerAddedLoading => 'Loading devices…';
 
   @override

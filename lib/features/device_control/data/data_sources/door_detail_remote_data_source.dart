@@ -16,6 +16,12 @@ abstract interface class DoorDetailRemoteDataSource {
     required int doorId,
     required String requestId,
   });
+
+  Future<void> unbindDoorDevice({
+    required int doorId,
+    required int deviceId,
+    required String requestId,
+  });
 }
 
 class DoorDetailRemoteDataSourceImpl implements DoorDetailRemoteDataSource {
@@ -62,6 +68,32 @@ class DoorDetailRemoteDataSourceImpl implements DoorDetailRemoteDataSource {
         throw const DoorDetailRemoteException.invalidResponse();
       }
       return data;
+    } on DioException catch (error) {
+      throw DoorDetailRemoteException.fromNetwork(
+        NetworkException.fromDio(error),
+      );
+    } on DoorDetailRemoteException {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> unbindDoorDevice({
+    required int doorId,
+    required int deviceId,
+    required String requestId,
+  }) async {
+    try {
+      final response = await api.unbindDoorDevice(
+        doorId,
+        deviceId,
+        Options(extra: {NetworkRequestExtras.requestId: requestId}),
+      );
+      if (!_isSuccessCode(response.code) ||
+          !response.success ||
+          response.data != true) {
+        throw const DoorDetailRemoteException.invalidResponse();
+      }
     } on DioException catch (error) {
       throw DoorDetailRemoteException.fromNetwork(
         NetworkException.fromDio(error),

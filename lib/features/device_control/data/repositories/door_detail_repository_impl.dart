@@ -84,6 +84,51 @@ class DoorDetailRepositoryImpl implements DoorDetailRepository {
     }
   }
 
+  @override
+  Future<void> unbindDoorDevice({
+    required String doorId,
+    required String deviceId,
+    required String requestId,
+  }) async {
+    final parsedDoorId = int.tryParse(doorId.trim());
+    final parsedDeviceId = int.tryParse(deviceId.trim());
+    if (parsedDoorId == null || parsedDeviceId == null) {
+      throw AppError(
+        code: AppErrorCode.unknown,
+        messageKey: 'door_device_invalid_id',
+        requestId: requestId,
+        deviceId: deviceId,
+      );
+    }
+
+    try {
+      await remoteDataSource.unbindDoorDevice(
+        doorId: parsedDoorId,
+        deviceId: parsedDeviceId,
+        requestId: requestId,
+      );
+      logger.info(
+        'Unbound door device',
+        requestId: requestId,
+        context: {'doorId': doorId, 'deviceId': deviceId},
+      );
+    } on DoorDetailRemoteException catch (error, stackTrace) {
+      final appError = _mapError(error, requestId, deviceId);
+      logger.error(
+        'Failed to unbind door device',
+        requestId: requestId,
+        error: error,
+        stackTrace: stackTrace,
+        context: {
+          'doorId': doorId,
+          'deviceId': deviceId,
+          'errorKind': error.kind.name,
+        },
+      );
+      throw appError;
+    }
+  }
+
   AppError _mapError(
     DoorDetailRemoteException error,
     String requestId,
