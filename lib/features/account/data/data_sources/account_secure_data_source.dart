@@ -41,6 +41,7 @@ class PlatformAccountSecureDataSource implements AccountSecureDataSource {
   static const _accessTokenKey = 'account.access_token';
   static const _refreshTokenKey = 'account.refresh_token';
   static const _expiresAtKey = 'account.expires_at';
+  static const _refreshExpiresAtKey = 'account.refresh_expires_at';
   static const _tokenTypeKey = 'account.token_type';
 
   final FlutterSecureStorage storage;
@@ -61,6 +62,7 @@ class PlatformAccountSecureDataSource implements AccountSecureDataSource {
         accessToken: accessToken,
         refreshToken: values[_refreshTokenKey],
         expiresAt: _parseDateTime(values[_expiresAtKey]),
+        refreshExpiresAt: _parseDateTime(values[_refreshExpiresAtKey]),
         tokenType: values[_tokenTypeKey] ?? 'Bearer',
       );
     }
@@ -81,6 +83,10 @@ class PlatformAccountSecureDataSource implements AccountSecureDataSource {
       key: _expiresAtKey,
       value: tokenSet.expiresAt?.toUtc().toIso8601String(),
     );
+    await storage.write(
+      key: _refreshExpiresAtKey,
+      value: tokenSet.refreshExpiresAt?.toUtc().toIso8601String(),
+    );
     await storage.write(key: _tokenTypeKey, value: tokenSet.tokenType);
   }
 
@@ -90,6 +96,7 @@ class PlatformAccountSecureDataSource implements AccountSecureDataSource {
       _accessTokenKey,
       _refreshTokenKey,
       _expiresAtKey,
+      _refreshExpiresAtKey,
       _tokenTypeKey,
     ]) {
       await storage.delete(key: key);
@@ -127,6 +134,7 @@ class PlatformAccountSecureDataSource implements AccountSecureDataSource {
           accessToken: accessToken,
           refreshToken: json['refreshToken'] as String?,
           expiresAt: _parseDateTime(json['expiresAt'] as String?),
+          refreshExpiresAt: _parseDateTime(json['refreshExpiresAt'] as String?),
           tokenType: json['tokenType'] as String? ?? 'Bearer',
         );
       } on Object {

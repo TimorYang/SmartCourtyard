@@ -22,6 +22,7 @@ void main() {
             refreshToken: 'refresh-token',
             tokenType: 'bearer',
             expiresInSeconds: 86400,
+            refreshExpiresInSeconds: 2592000,
           ),
         ),
       );
@@ -97,6 +98,7 @@ void main() {
             refreshToken: 'refresh-token',
             tokenType: 'bearer',
             expiresInSeconds: 86400,
+            refreshExpiresInSeconds: 2592000,
           ),
         ),
       ),
@@ -127,6 +129,7 @@ void main() {
             refreshToken: 'refresh-token',
             tokenType: 'bearer',
             expiresInSeconds: 86400,
+            refreshExpiresInSeconds: 2592000,
           ),
         ),
         profileResponse: const ApiEnvelopeDto(
@@ -186,6 +189,12 @@ class _FakeAuthApi implements AuthApi {
     loginOptions = requestOptions;
     return response;
   }
+
+  @override
+  Future<ApiEnvelopeDto<AuthLoginResponseDto>> refreshToken(
+    Map<String, dynamic> body,
+    Options options,
+  ) => throw UnimplementedError();
 
   @override
   Future<ApiEnvelopeDto<AuthProfileResponseDto>> fetchAccountProfile(

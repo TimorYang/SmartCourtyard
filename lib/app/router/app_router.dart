@@ -87,7 +87,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           location == SmartOpenerConnectionSuccessPage.routePath;
 
       if (!isSignedIn && !isPublicRoute) {
-        return WelcomePage.routePath;
+        return LoginPage.routePath;
       }
 
       if (isSignedIn && isAuthRoute) {

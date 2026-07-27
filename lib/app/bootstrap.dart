@@ -53,6 +53,11 @@ Future<void> bootstrap() async {
             }
           };
         }),
+        tokenRefreshHandlerProvider.overrideWith((ref) {
+          return () => ref
+              .read(authTokenRefreshServiceProvider)
+              .refreshExpiredAccessToken();
+        }),
       ],
       child: const FlinxApp(),
     ),

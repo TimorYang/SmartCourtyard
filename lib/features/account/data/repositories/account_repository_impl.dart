@@ -41,16 +41,16 @@ class AccountRepositoryImpl implements AccountRepository {
   @override
   Future<void> saveTokenSet(AccountTokenSet tokenSet) async {
     await secureDataSource.saveTokenSet(tokenSet);
-    AccessTokenCache.set(tokenSet.accessToken);
+    AccessTokenCache.set(tokenSet.accessToken, expiresAt: tokenSet.expiresAt);
   }
 
   @override
   Future<AccountTokenSet?> readTokenSet() async {
     final tokenSet = await secureDataSource.readTokenSet();
-    if (tokenSet == null || !tokenSet.isUsableAt(DateTime.now())) {
+    if (tokenSet == null || !tokenSet.hasAccessToken) {
       AccessTokenCache.clear();
     } else {
-      AccessTokenCache.set(tokenSet.accessToken);
+      AccessTokenCache.set(tokenSet.accessToken, expiresAt: tokenSet.expiresAt);
     }
     return tokenSet;
   }

@@ -26,6 +26,7 @@ class DioFactory {
     required AppApiConfiguration configuration,
     required AppLogger logger,
     SessionExpiredHandler onSessionExpired = ignoreSessionExpired,
+    TokenRefreshHandler onTokenRefresh = noTokenRefreshAvailable,
   }) {
     final dio = Dio(
       BaseOptions(
@@ -49,8 +50,11 @@ class DioFactory {
     }
     dio.interceptors.addAll([
       _RequestIdInterceptor(),
+      _SessionExpiredInterceptor(
+        onSessionExpired: onSessionExpired,
+        onTokenRefresh: onTokenRefresh,
+      ),
       _BladeAuthInterceptor(),
-      _SessionExpiredInterceptor(onSessionExpired),
       _SafeNetworkLogInterceptor(logger),
     ]);
     return dio;
@@ -58,9 +62,36 @@ class DioFactory {
 }
 
 class _SessionExpiredInterceptor extends Interceptor {
-  _SessionExpiredInterceptor(this._onSessionExpired);
+  _SessionExpiredInterceptor({
+    required this._onSessionExpired,
+    required this._onTokenRefresh,
+  });
 
   final SessionExpiredHandler _onSessionExpired;
+  final TokenRefreshHandler _onTokenRefresh;
+
+  @override
+  Future<void> onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
+    if (!_isAuthenticationRequest(options) &&
+        AccessTokenCache.requiresRefresh) {
+      final refreshResult = await _onTokenRefresh();
+      if (refreshResult == TokenRefreshResult.sessionExpired) {
+        await _expireSession();
+        handler.reject(
+          DioException(
+            requestOptions: options,
+            type: DioExceptionType.cancel,
+            message: 'The authentication session has expired.',
+          ),
+        );
+        return;
+      }
+    }
+    handler.next(options);
+  }
 
   @override
   Future<void> onResponse(
@@ -74,6 +105,18 @@ class _SessionExpiredInterceptor extends Interceptor {
     handler.next(response);
   }
 
+  @override
+  Future<void> onError(
+    DioException error,
+    ErrorInterceptorHandler handler,
+  ) async {
+    if (_isUnauthorizedHttpResponse(error) &&
+        !_isAuthenticationRequest(error.requestOptions)) {
+      await _expireSession();
+    }
+    handler.next(error);
+  }
+
   bool _isSessionExpiredResponse(Response<dynamic> response) {
     final data = response.data;
     if (data is! Map) {
@@ -81,6 +124,10 @@ class _SessionExpiredInterceptor extends Interceptor {
     }
     final code = data['code'];
     return code == 401 || code == '401';
+  }
+
+  bool _isUnauthorizedHttpResponse(DioException error) {
+    return error.response?.statusCode == 401;
   }
 
   bool _isAuthenticationRequest(RequestOptions options) {

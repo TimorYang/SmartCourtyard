@@ -9,10 +9,15 @@ final sessionExpiredHandlerProvider = Provider<SessionExpiredHandler>(
   (ref) => ignoreSessionExpired,
 );
 
+final tokenRefreshHandlerProvider = Provider<TokenRefreshHandler>(
+  (ref) => noTokenRefreshAvailable,
+);
+
 final dioProvider = Provider((ref) {
   return DioFactory.create(
     configuration: ref.watch(appApiConfigurationProvider),
     logger: ref.watch(appLoggerProvider),
     onSessionExpired: ref.watch(sessionExpiredHandlerProvider),
+    onTokenRefresh: ref.watch(tokenRefreshHandlerProvider),
   );
 });

@@ -190,20 +190,24 @@ void main() {
     expect(await repository.readTokenSet(), isNull);
   });
 
-  test('does not cache an expired access token for network requests', () async {
-    final secureDataSource = InMemoryAccountSecureDataSource();
-    final repository = AccountRepositoryImpl(
-      localDataSource: InMemoryAccountLocalDataSource(),
-      secureDataSource: secureDataSource,
-    );
-    await secureDataSource.saveTokenSet(
-      AccountTokenSet(
-        accessToken: 'expired-access',
-        expiresAt: DateTime.utc(2020),
-      ),
-    );
+  test(
+    'caches an expired access token so the network layer can refresh it',
+    () async {
+      final secureDataSource = InMemoryAccountSecureDataSource();
+      final repository = AccountRepositoryImpl(
+        localDataSource: InMemoryAccountLocalDataSource(),
+        secureDataSource: secureDataSource,
+      );
+      await secureDataSource.saveTokenSet(
+        AccountTokenSet(
+          accessToken: 'expired-access',
+          expiresAt: DateTime.utc(2020),
+        ),
+      );
 
-    expect(await repository.readTokenSet(), isNotNull);
-    expect(AccessTokenCache.value, isNull);
-  });
+      expect(await repository.readTokenSet(), isNotNull);
+      expect(AccessTokenCache.value, 'expired-access');
+      expect(AccessTokenCache.requiresRefresh, isTrue);
+    },
+  );
 }

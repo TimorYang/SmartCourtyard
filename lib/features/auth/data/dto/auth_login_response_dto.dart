@@ -5,6 +5,7 @@ class AuthLoginResponseDto {
     required this.refreshToken,
     required this.tokenType,
     required this.expiresInSeconds,
+    required this.refreshExpiresInSeconds,
   });
 
   final String accountId;
@@ -12,6 +13,7 @@ class AuthLoginResponseDto {
   final String refreshToken;
   final String tokenType;
   final int expiresInSeconds;
+  final int refreshExpiresInSeconds;
 
   factory AuthLoginResponseDto.fromJson(Map<String, dynamic> json) {
     return AuthLoginResponseDto(
@@ -20,6 +22,8 @@ class AuthLoginResponseDto {
       refreshToken: json['refresh_token'] as String? ?? '',
       tokenType: json['token_type'] as String? ?? '',
       expiresInSeconds: (json['expires_in'] as num?)?.toInt() ?? 0,
+      refreshExpiresInSeconds:
+          (json['refresh_expires_in'] as num?)?.toInt() ?? 0,
     );
   }
 }

@@ -73,7 +73,8 @@ class AuthLoginRemoteDataSourceImpl implements AuthLoginRemoteDataSource {
       data.accessToken.trim().isNotEmpty &&
       data.refreshToken.trim().isNotEmpty &&
       data.tokenType.trim().isNotEmpty &&
-      data.expiresInSeconds > 0;
+      data.expiresInSeconds > 0 &&
+      data.refreshExpiresInSeconds > 0;
 
   bool _hasProfile(AuthProfileResponseDto profile) =>
       profile.userId.trim().isNotEmpty &&

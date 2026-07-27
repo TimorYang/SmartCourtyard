@@ -5,6 +5,7 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 
 import '../../../core/logging/providers.dart';
 import '../../../core/network/providers.dart';
+import '../../../core/network/session_expired_handler.dart';
 import 'forgot_password_code_controller.dart';
 import 'forgot_password_controller.dart';
 import 'forgot_password_reset_controller.dart';
@@ -25,6 +26,7 @@ import '../data/repositories/auth_login_repository_impl.dart';
 import '../data/repositories/auth_password_reset_repository_impl.dart';
 import '../data/services/rsa_oaep_password_ciphertext_encryptor.dart';
 import '../data/services/platform_login_device_context_provider.dart';
+import '../data/services/auth_token_refresh_service.dart';
 import '../domain/entities/auth_session.dart';
 import '../domain/entities/registration_device_context.dart';
 import '../domain/repositories/auth_crypto_repository.dart';
@@ -54,11 +56,27 @@ final authSessionProvider = FutureProvider<AuthSession>((ref) async {
   final accountRepository = ref.watch(accountRepositoryProvider);
   final profile = await accountRepository.readCachedProfile();
   final tokenSet = await accountRepository.readTokenSet();
-  if (profile == null || tokenSet == null) {
+  if (profile == null || tokenSet == null || profile.userId.isEmpty) {
     return const AuthSession.signedOut();
   }
 
-  if (profile.userId.isEmpty || !tokenSet.isUsableAt(DateTime.now())) {
+  if (!tokenSet.isUsableAt(DateTime.now())) {
+    try {
+      final refreshResult = await ref
+          .read(authTokenRefreshServiceProvider)
+          .refreshExpiredAccessToken();
+      if (refreshResult == TokenRefreshResult.sessionExpired) {
+        await ref.read(sessionExpiredHandlerProvider)();
+        return const AuthSession.signedOutAfterClear();
+      }
+      final refreshedTokenSet = await accountRepository.readTokenSet();
+      if (refreshedTokenSet != null &&
+          refreshedTokenSet.isUsableAt(DateTime.now())) {
+        return AuthSession(isAuthenticated: true, userId: profile.userId);
+      }
+    } on Object {
+      // A transient refresh failure must not erase a still-valid refresh token.
+    }
     return const AuthSession.signedOut();
   }
 
@@ -79,6 +97,16 @@ final authClientAuthorizationProvider = Provider<String>((ref) {
 
 final authApiProvider = Provider<AuthApi>((ref) {
   return AuthApi(ref.watch(dioProvider));
+});
+
+final authTokenRefreshServiceProvider = Provider<AuthTokenRefreshService>((
+  ref,
+) {
+  return AuthTokenRefreshService(
+    api: ref.watch(authApiProvider),
+    accountRepository: ref.watch(accountRepositoryProvider),
+    deviceContextProvider: ref.watch(loginDeviceContextProvider),
+  );
 });
 
 final authCryptoRemoteDataSourceProvider = Provider<AuthCryptoRemoteDataSource>(

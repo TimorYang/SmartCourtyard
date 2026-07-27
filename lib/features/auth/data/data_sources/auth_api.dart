@@ -23,6 +23,12 @@ abstract class AuthApi {
     @DioOptions() Options options,
   );
 
+  @POST('app/auth/refresh')
+  Future<ApiEnvelopeDto<AuthLoginResponseDto>> refreshToken(
+    @Body() Map<String, dynamic> body,
+    @DioOptions() Options options,
+  );
+
   @GET('app/account/profile')
   Future<ApiEnvelopeDto<AuthProfileResponseDto>> fetchAccountProfile(
     @DioOptions() Options options,

@@ -50,6 +50,9 @@ class AuthLoginRepositoryImpl implements AuthLoginRepository {
           expiresAt: DateTime.now().toUtc().add(
             Duration(seconds: result.login.expiresInSeconds),
           ),
+          refreshExpiresAt: DateTime.now().toUtc().add(
+            Duration(seconds: result.login.refreshExpiresInSeconds),
+          ),
         ),
         profile: AccountProfile(
           userId: result.profile.userId,
