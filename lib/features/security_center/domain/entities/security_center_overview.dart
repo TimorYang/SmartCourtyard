@@ -1,3 +1,5 @@
+import 'safety_sensors_evaluation.dart';
+
 /// 安全中心页面一次加载所需的完整展示数据。
 class SecurityCenterOverview {
   const SecurityCenterOverview({
@@ -71,6 +73,8 @@ class SecuritySensorSnapshot {
     required this.type,
     required this.status,
     required this.batteryPercentage,
+    this.batteryStatus = SafetySensorBatteryStatus.unknown,
+    this.hasBattery = true,
   });
 
   /// 传感器业务唯一标识，用于进入详情、管理或故障排查。
@@ -83,7 +87,15 @@ class SecuritySensorSnapshot {
   final SecurityEvaluationStatus status;
 
   /// 电池剩余百分比，取值范围为 0 至 100；有线传感器可由接口返回 100。
+  ///
+  /// 仅供既有 Mock 数据和旧页面使用；连接状态接口不会提供该值。
   final int batteryPercentage;
+
+  /// 接口提供的电池状态；无线传感器以它决定低电量图标。
+  final SafetySensorBatteryStatus batteryStatus;
+
+  /// 有线传感器没有电池，不展示电池图标。
+  final bool hasBattery;
 }
 
 /// 安全中心统一使用的评估结果枚举。

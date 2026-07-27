@@ -1712,6 +1712,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get safetySensorLowBatterySolution => '低电量解决方案';
 
   @override
+  String get batteryReplacementIllustration => '电池更换示意图';
+
+  @override
   String get safetySensorLowBatteryWarning => '低电量';
 
   @override
@@ -1832,4 +1835,55 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get generalEvaluationLoadFailed => '加载失败，点击重试。';
+
+  @override
+  String get safetySensorsLoadFailed => '安全传感器加载失败，点击重试。';
+
+  @override
+  String get safetySensorsEmpty => '暂无安全传感器数据。';
+
+  @override
+  String get safetySensorsWiredStatus => '有线传感器状态';
+
+  @override
+  String get safetySensorsWirelessStatus => '无线传感器状态';
+
+  @override
+  String get safetySensorsMetricSensors => '传感器';
+
+  @override
+  String get safetySensorsMetricFine => '正常';
+
+  @override
+  String get safetySensorsMetricAbnormal => '异常';
+
+  @override
+  String get safetySensorsMetricLowPower => '低电量';
+
+  @override
+  String get safetySensorsMatch => '配对';
+
+  @override
+  String get safetySensorsManage => '管理';
+
+  @override
+  String get safetySensorsWirelessWicketDoor => '无线小门传感器';
+
+  @override
+  String get safetySensorsWirelessSafetyEdge => '无线安全边';
+
+  @override
+  String get safetySensorsWirelessSlackRope => '无线松绳传感器';
+
+  @override
+  String get safetySensorUnlocked => '已解锁';
+
+  @override
+  String get safetySensorLocked => '已锁定';
+
+  @override
+  String get safetySensorNotTriggered => '未触发';
+
+  @override
+  String get safetySensorOffline => '离线';
 }

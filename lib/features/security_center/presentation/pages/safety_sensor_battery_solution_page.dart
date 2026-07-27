@@ -4,11 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
-import '../../application/providers.dart';
+import '../../application/safety_sensors_evaluation_controller.dart';
 import '../../domain/entities/safety_sensors_evaluation.dart';
 
-class SafetySensorBatterySolutionPage extends ConsumerWidget {
+class SafetySensorBatterySolutionPage extends ConsumerStatefulWidget {
   const SafetySensorBatterySolutionPage({
+    required this.doorId,
     required this.deviceId,
     required this.sensorId,
     super.key,
@@ -29,19 +30,49 @@ class SafetySensorBatterySolutionPage extends ConsumerWidget {
   static const _replacementImagePlaceholder =
       'assets/icons/security_center/safety_sensor_battery_replacement_placeholder_infrared_amplification_battery.png';
 
+  final String doorId;
   final String deviceId;
   final String sensorId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SafetySensorBatterySolutionPage> createState() =>
+      _SafetySensorBatterySolutionPageState();
+}
+
+class _SafetySensorBatterySolutionPageState
+    extends ConsumerState<SafetySensorBatterySolutionPage> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(
+      () => ref
+          .read(
+            safetySensorsEvaluationControllerProvider(widget.doorId).notifier,
+          )
+          .load(doorId: widget.doorId),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final evaluation = ref.watch(safetySensorsEvaluationProvider(deviceId));
-    final sensor = _findSensor(evaluation, sensorId);
+    final evaluationState = ref.watch(
+      safetySensorsEvaluationControllerProvider(widget.doorId),
+    );
+    final evaluation = switch (evaluationState) {
+      AsyncData(:final value) => value,
+      _ => null,
+    };
+    final sensor = evaluation == null
+        ? null
+        : _findSensor(evaluation, widget.sensorId);
 
     return Scaffold(
       backgroundColor: AppColors.securityCenterBackground,
       appBar: FlinxNavigationBar(
-        title: sensor?.sensorName ?? l10n.safetySensorDefaultName,
+        title: sensor == null
+            ? l10n.safetySensorDefaultName
+            : _sensorName(l10n, sensor.sensorCode),
         showBottomDivider: false,
       ),
       body: ListView(
@@ -59,14 +90,16 @@ class SafetySensorBatterySolutionPage extends ConsumerWidget {
           ),
           const SizedBox(height: 18),
           _BatterySolutionSummaryCard(
-            overviewImageAsset: _overviewImagePlaceholder,
-            batteryImageAsset: _batteryImagePlaceholder,
+            overviewImageAsset:
+                SafetySensorBatterySolutionPage._overviewImagePlaceholder,
+            batteryImageAsset:
+                SafetySensorBatterySolutionPage._batteryImagePlaceholder,
           ),
           const SizedBox(height: 13),
           Padding(
             padding: EdgeInsetsGeometry.only(left: 20),
             child: Text(
-              l10n.safetySensorLowBatterySolution,
+              l10n.batteryReplacementIllustration,
               style: AppTextTokens.safetyBatterySolutionSectionTitle(
                 Theme.of(context).textTheme,
               ),
@@ -83,7 +116,8 @@ class SafetySensorBatterySolutionPage extends ConsumerWidget {
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: _AssetPlaceholder(
-                assetPath: _replacementImagePlaceholder,
+                assetPath: SafetySensorBatterySolutionPage
+                    ._replacementImagePlaceholder,
                 height: 340,
               ),
             ),
@@ -261,3 +295,15 @@ SafetySensor? _findSensor(SafetySensorsEvaluation evaluation, String sensorId) {
   }
   return null;
 }
+
+String _sensorName(AppLocalizations l10n, String sensorCode) =>
+    switch (sensorCode) {
+      'WIRED_PHOTO_BEAM' => l10n.securityCenterWiredPhotoBeam,
+      'WIRED_ELECTRONIC_LOCK' => l10n.securityCenterWiredELock,
+      'WIRELESS_PHOTO_BEAM' => l10n.securityCenterWirelessPhotoBeam,
+      'WIRELESS_WICKET_DOOR' => l10n.safetySensorsWirelessWicketDoor,
+      'WIRELESS_ELECTRONIC_LOCK' => l10n.securityCenterWirelessELock,
+      'WIRELESS_SAFETY_EDGE' => l10n.safetySensorsWirelessSafetyEdge,
+      'WIRELESS_SLACK_ROPE' => l10n.safetySensorsWirelessSlackRope,
+      _ => l10n.safetySensorDefaultName,
+    };

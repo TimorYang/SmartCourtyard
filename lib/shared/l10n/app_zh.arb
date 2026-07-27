@@ -583,6 +583,7 @@
   "safetySensorTriggered": "已触发",
   "safetySensorReplaceBattery": "如何更换电池",
   "safetySensorLowBatterySolution": "低电量解决方案",
+  "batteryReplacementIllustration": "电池更换示意图",
   "safetySensorLowBatteryWarning": "低电量",
   "safetySensorBatteryModel": "电池型号：{model}",
   "@safetySensorBatteryModel": {
@@ -631,5 +632,22 @@
   "securityReportLevel1": "等级 1",
   "securityReportAnyPosition": "任意位置",
   "securityReportOn": "开启",
-  "generalEvaluationLoadFailed": "加载失败，点击重试。"
+  "generalEvaluationLoadFailed": "加载失败，点击重试。",
+  "safetySensorsLoadFailed": "安全传感器加载失败，点击重试。",
+  "safetySensorsEmpty": "暂无安全传感器数据。",
+  "safetySensorsWiredStatus": "有线传感器状态",
+  "safetySensorsWirelessStatus": "无线传感器状态",
+  "safetySensorsMetricSensors": "传感器",
+  "safetySensorsMetricFine": "正常",
+  "safetySensorsMetricAbnormal": "异常",
+  "safetySensorsMetricLowPower": "低电量",
+  "safetySensorsMatch": "配对",
+  "safetySensorsManage": "管理",
+  "safetySensorsWirelessWicketDoor": "无线小门传感器",
+  "safetySensorsWirelessSafetyEdge": "无线安全边",
+  "safetySensorsWirelessSlackRope": "无线松绳传感器",
+  "safetySensorUnlocked": "已解锁",
+  "safetySensorLocked": "已锁定",
+  "safetySensorNotTriggered": "未触发",
+  "safetySensorOffline": "离线"
 }

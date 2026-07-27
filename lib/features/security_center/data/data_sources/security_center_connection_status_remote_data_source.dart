@@ -35,7 +35,12 @@ class SecurityCenterConnectionStatusRemoteDataSourceImpl
           !const {'0', '1', '2'}.contains(status)) {
         throw const SecurityCenterConnectionStatusRemoteException.invalidResponse();
       }
-      return SecurityCenterConnectionStatusDto(wifiConnectionStatus: status);
+      return SecurityCenterConnectionStatusDto(
+        wifiConnectionStatus: status,
+        sensorStatus: response.data?.sensorStatus?.trim(),
+        wiredSensors: response.data?.wiredSensors ?? const [],
+        wirelessSensors: response.data?.wirelessSensors ?? const [],
+      );
     } on DioException catch (error) {
       throw SecurityCenterConnectionStatusRemoteException.fromNetwork(
         NetworkException.fromDio(error),

@@ -1392,6 +1392,14 @@ class AppTextTokens {
     );
   }
 
+  static TextStyle safetySensorMetricValueError(TextTheme textTheme) {
+    return (textTheme.headlineMedium ?? const TextStyle()).copyWith(
+      color: AppColors.securityReportAbnormal,
+      fontSize: 25,
+      fontWeight: FontWeight.w600,
+    );
+  }
+
   static TextStyle safetySensorItemTitle(TextTheme textTheme) {
     return (textTheme.bodyLarge ?? const TextStyle()).copyWith(
       color: AppColors.textPrimary,
@@ -1411,6 +1419,22 @@ class AppTextTokens {
   static TextStyle safetySensorItemAlert(TextTheme textTheme) {
     return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
       color: AppColors.securityCenterError,
+      fontSize: 12,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle safetySensorItemSuccess(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.securityCenterSuccess,
+      fontSize: 12,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle safetySensorItemOffline(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
       fontSize: 12,
       fontWeight: FontWeight.w400,
     );

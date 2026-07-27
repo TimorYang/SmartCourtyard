@@ -6,7 +6,9 @@ import 'package:flinx/features/security_center/application/providers.dart';
 import 'package:flinx/features/security_center/domain/entities/general_evaluation_report.dart';
 import 'package:flinx/features/security_center/domain/entities/full_report.dart';
 import 'package:flinx/features/security_center/domain/repositories/general_evaluation_repository.dart';
+import 'package:flinx/features/security_center/domain/repositories/safety_sensors_evaluation_repository.dart';
 import 'package:flinx/features/security_center/domain/use_cases/fetch_general_evaluation_use_case.dart';
+import 'package:flinx/features/security_center/domain/use_cases/fetch_safety_sensors_evaluation_use_case.dart';
 import 'package:flinx/features/security_center/domain/entities/safety_sensors_evaluation.dart';
 import 'package:flinx/features/security_center/domain/entities/security_center_overview.dart';
 import 'package:flinx/features/security_center/domain/repositories/security_balance_refresh_repository.dart';
@@ -720,7 +722,10 @@ void main() {
   ) async {
     await _pumpPage(
       tester,
-      const SafetySensorsEvaluationPage(deviceId: 'sensor-device'),
+      const SafetySensorsEvaluationPage(
+        doorId: '12',
+        deviceId: 'sensor-device',
+      ),
     );
 
     expect(find.text('Sensors'), findsOneWidget);
@@ -864,8 +869,9 @@ void main() {
     await _pumpPage(
       tester,
       const SafetySensorBatterySolutionPage(
+        doorId: '12',
         deviceId: 'sensor-device',
-        sensorId: 'wireless-photo-beam',
+        sensorId: 'WIRELESS_PHOTO_BEAM',
       ),
     );
 
@@ -880,7 +886,10 @@ void main() {
   ) async {
     await _pumpPage(
       tester,
-      const SafetySensorsEvaluationPage(deviceId: 'sensor-device'),
+      const SafetySensorsEvaluationPage(
+        doorId: '12',
+        deviceId: 'sensor-device',
+      ),
     );
 
     await tester.tap(
@@ -948,11 +957,10 @@ void main() {
         status: SafetySensorGroupStatus.normal,
         sensors: [
           SafetySensor(
-            id: 'wireless-photo-beam',
-            sensorName: 'Empty history sensor',
-            status: SafetySensorStatus.normal,
+            id: 'WIRELESS_PHOTO_BEAM',
+            sensorCode: 'WIRELESS_PHOTO_BEAM',
+            status: SafetySensorStatus.notTriggered,
             batteryStatus: SafetySensorBatteryStatus.normal,
-            batteryPercentage: 80,
             operationPoints: [],
           ),
         ],
@@ -962,14 +970,17 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          safetySensorsEvaluationProvider(
-            'empty-history-device',
-          ).overrideWithValue(evaluation),
+          fetchSafetySensorsEvaluationUseCaseProvider.overrideWithValue(
+            FetchSafetySensorsEvaluationUseCase(
+              repository: _FakeSafetySensorsEvaluationRepository(evaluation),
+            ),
+          ),
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: const SafetySensorsEvaluationPage(
+            doorId: '12',
             deviceId: 'empty-history-device',
           ),
         ),
@@ -1004,7 +1015,10 @@ void main() {
 
     await _pumpPage(
       tester,
-      const SafetySensorsEvaluationPage(deviceId: 'compact-device'),
+      const SafetySensorsEvaluationPage(
+        doorId: '12',
+        deviceId: 'compact-device',
+      ),
       setViewport: false,
     );
     await tester.scrollUntilVisible(
@@ -1078,6 +1092,7 @@ GoRouter _buildRouter() {
         path: SafetySensorsEvaluationPage.routePath,
         name: SafetySensorsEvaluationPage.routeName,
         builder: (context, state) => SafetySensorsEvaluationPage(
+          doorId: state.uri.queryParameters['doorId'] ?? '',
           deviceId: state.uri.queryParameters['deviceId'] ?? '',
         ),
       ),
@@ -1085,6 +1100,7 @@ GoRouter _buildRouter() {
         path: SafetySensorBatterySolutionPage.routePath,
         name: SafetySensorBatterySolutionPage.routeName,
         builder: (context, state) => SafetySensorBatterySolutionPage(
+          doorId: state.uri.queryParameters['doorId'] ?? '',
           deviceId: state.uri.queryParameters['deviceId'] ?? '',
           sensorId: state.uri.queryParameters['sensorId'] ?? '',
         ),
@@ -1109,6 +1125,13 @@ Future<void> _pumpRouter(WidgetTester tester, GoRouter router) async {
         fetchGeneralEvaluationUseCaseProvider.overrideWithValue(
           const FetchGeneralEvaluationUseCase(
             repository: _FakeGeneralEvaluationRepository(),
+          ),
+        ),
+        fetchSafetySensorsEvaluationUseCaseProvider.overrideWithValue(
+          FetchSafetySensorsEvaluationUseCase(
+            repository: _FakeSafetySensorsEvaluationRepository(
+              _testSafetyEvaluation,
+            ),
           ),
         ),
       ],
@@ -1143,6 +1166,13 @@ Future<void> _pumpPage(
         fetchGeneralEvaluationUseCaseProvider.overrideWithValue(
           const FetchGeneralEvaluationUseCase(
             repository: _FakeGeneralEvaluationRepository(),
+          ),
+        ),
+        fetchSafetySensorsEvaluationUseCaseProvider.overrideWithValue(
+          FetchSafetySensorsEvaluationUseCase(
+            repository: _FakeSafetySensorsEvaluationRepository(
+              _testSafetyEvaluation,
+            ),
           ),
         ),
       ],
@@ -1183,6 +1213,84 @@ class _FakeGeneralEvaluationRepository implements GeneralEvaluationRepository {
     required String requestId,
   }) async => report;
 }
+
+class _FakeSafetySensorsEvaluationRepository
+    implements SafetySensorsEvaluationRepository {
+  const _FakeSafetySensorsEvaluationRepository(this.evaluation);
+
+  final SafetySensorsEvaluation evaluation;
+
+  @override
+  Future<SafetySensorsEvaluation> fetchEvaluation({
+    required String doorId,
+    required String requestId,
+  }) async => evaluation;
+}
+
+final _testSafetyEvaluation = SafetySensorsEvaluation(
+  deviceId: 'mock-device',
+  totalSensorCount: 6,
+  fineSensorCount: 3,
+  abnormalSensorCount: 3,
+  lowPowerSensorCount: 1,
+  wiredSensorGroup: const SafetySensorGroup(
+    status: SafetySensorGroupStatus.normal,
+    sensors: [
+      SafetySensor(
+        id: 'WIRED_PHOTO_BEAM',
+        sensorCode: 'WIRED_PHOTO_BEAM',
+        status: SafetySensorStatus.disconnected,
+        batteryStatus: SafetySensorBatteryStatus.unknown,
+        operationPoints: [],
+      ),
+      SafetySensor(
+        id: 'WIRED_ELECTRONIC_LOCK',
+        sensorCode: 'WIRED_ELECTRONIC_LOCK',
+        status: SafetySensorStatus.locked,
+        batteryStatus: SafetySensorBatteryStatus.unknown,
+        operationPoints: [],
+      ),
+    ],
+  ),
+  wirelessSensorGroup: SafetySensorGroup(
+    status: SafetySensorGroupStatus.abnormal,
+    sensors: [
+      SafetySensor(
+        id: 'WIRELESS_PHOTO_BEAM',
+        sensorCode: 'WIRELESS_PHOTO_BEAM',
+        status: SafetySensorStatus.triggered,
+        batteryStatus: SafetySensorBatteryStatus.low,
+        operationPoints: [
+          SafetySensorOperationPoint(
+            occurredAt: DateTime(1970, 1, 1, 9),
+            cycles: 19,
+          ),
+        ],
+      ),
+      const SafetySensor(
+        id: 'WIRELESS_WICKET_DOOR',
+        sensorCode: 'WIRELESS_WICKET_DOOR',
+        status: SafetySensorStatus.notTriggered,
+        batteryStatus: SafetySensorBatteryStatus.normal,
+        operationPoints: [],
+      ),
+      const SafetySensor(
+        id: 'WIRELESS_ELECTRONIC_LOCK',
+        sensorCode: 'WIRELESS_ELECTRONIC_LOCK',
+        status: SafetySensorStatus.locked,
+        batteryStatus: SafetySensorBatteryStatus.normal,
+        operationPoints: [],
+      ),
+      const SafetySensor(
+        id: 'WIRELESS_SAFETY_EDGE',
+        sensorCode: 'WIRELESS_SAFETY_EDGE',
+        status: SafetySensorStatus.notTriggered,
+        batteryStatus: SafetySensorBatteryStatus.normal,
+        operationPoints: [],
+      ),
+    ],
+  ),
+);
 
 class _DelayedGeneralEvaluationRepository
     implements GeneralEvaluationRepository {

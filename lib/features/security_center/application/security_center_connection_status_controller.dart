@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/errors/app_error.dart';
 import '../../../core/logging/app_logger.dart';
 import '../../../core/logging/providers.dart';
+import '../domain/entities/security_center_connection_status.dart';
 import '../domain/use_cases/fetch_security_center_connection_status_use_case.dart';
 import 'providers.dart';
 
@@ -39,7 +40,10 @@ class SecurityCenterConnectionStatusController
         requestId: requestId,
       );
       final isBlocked = connectionStatus.isWifiDisconnected;
-      state = SecurityCenterConnectionStatusState(isBlocked: isBlocked);
+      state = SecurityCenterConnectionStatusState(
+        isBlocked: isBlocked,
+        connectionStatus: connectionStatus,
+      );
       return isBlocked;
     } on AppError catch (error, stackTrace) {
       state = SecurityCenterConnectionStatusState(error: error);
@@ -80,12 +84,14 @@ class SecurityCenterConnectionStatusState {
   const SecurityCenterConnectionStatusState({
     this.isLoading = false,
     this.isBlocked = false,
+    this.connectionStatus,
     this.error,
     this.hasUnexpectedError = false,
   });
 
   final bool isLoading;
   final bool isBlocked;
+  final SecurityCenterConnectionStatus? connectionStatus;
   final AppError? error;
   final bool hasUnexpectedError;
 }

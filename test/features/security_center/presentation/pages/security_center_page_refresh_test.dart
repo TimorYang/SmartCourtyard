@@ -1,6 +1,8 @@
 import 'package:flinx/core/errors/app_error.dart';
 import 'package:flinx/features/security_center/application/providers.dart';
+import 'package:flinx/features/security_center/application/security_center_connection_status_controller.dart';
 import 'package:flinx/features/security_center/domain/entities/security_center_connection_status.dart';
+import 'package:flinx/features/security_center/domain/entities/security_center_overview.dart';
 import 'package:flinx/features/security_center/domain/repositories/security_center_connection_status_repository.dart';
 import 'package:flinx/features/security_center/domain/repositories/security_balance_refresh_repository.dart';
 import 'package:flinx/features/security_center/domain/entities/security_balance_refresh_result.dart';
@@ -123,6 +125,49 @@ void main() {
     expect(balanceRepository.doorIds, ['12']);
   });
 
+  testWidgets('keeps the fetched sensor evaluation in controller state', (
+    tester,
+  ) async {
+    const connectionStatus = SecurityCenterConnectionStatus(
+      wifiConnectionStatus: '2',
+      sensorEvaluation: SecuritySensorEvaluation(
+        status: SecurityEvaluationStatus.normal,
+        highlightedSensorTypes: [],
+        wirelessSensors: [],
+        wiredSensors: [],
+      ),
+    );
+    final container = ProviderContainer(
+      overrides: [
+        securityBalanceRefreshRepositoryProvider.overrideWithValue(
+          _RecordingSecurityBalanceRefreshRepository(),
+        ),
+        securityCenterConnectionStatusRepositoryProvider.overrideWithValue(
+          _FakeSecurityCenterConnectionStatusRepository(
+            status: '2',
+            connectionStatus: connectionStatus,
+          ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: _app(isActive: true),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      container
+          .read(securityCenterConnectionStatusControllerProvider)
+          .connectionStatus,
+      same(connectionStatus),
+    );
+  });
+
   testWidgets('preserves balance refresh when the connection check fails', (
     tester,
   ) async {
@@ -188,15 +233,21 @@ class _RecordingSecurityBalanceRefreshRepository
 
 class _FakeSecurityCenterConnectionStatusRepository
     implements SecurityCenterConnectionStatusRepository {
-  _FakeSecurityCenterConnectionStatusRepository({required this.status});
+  _FakeSecurityCenterConnectionStatusRepository({
+    required this.status,
+    this.connectionStatus,
+  });
 
   final String status;
+  final SecurityCenterConnectionStatus? connectionStatus;
 
   @override
   Future<SecurityCenterConnectionStatus> fetchConnectionStatus({
     required String doorId,
     required String requestId,
-  }) async => SecurityCenterConnectionStatus(wifiConnectionStatus: status);
+  }) async =>
+      connectionStatus ??
+      SecurityCenterConnectionStatus(wifiConnectionStatus: status);
 }
 
 class _FailingSecurityCenterConnectionStatusRepository

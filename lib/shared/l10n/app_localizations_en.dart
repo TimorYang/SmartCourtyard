@@ -1807,6 +1807,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get safetySensorLowBatterySolution => 'Solution for low battery power';
 
   @override
+  String get batteryReplacementIllustration =>
+      'Battery replacement illustration';
+
+  @override
   String get safetySensorLowBatteryWarning => 'Low battery power';
 
   @override
@@ -1935,4 +1939,56 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get generalEvaluationLoadFailed => 'Unable to load. Tap to retry.';
+
+  @override
+  String get safetySensorsLoadFailed =>
+      'Unable to load safety sensors. Tap to retry.';
+
+  @override
+  String get safetySensorsEmpty => 'No safety sensor data is available.';
+
+  @override
+  String get safetySensorsWiredStatus => 'Wired sensor status';
+
+  @override
+  String get safetySensorsWirelessStatus => 'Wireless Sensors Status';
+
+  @override
+  String get safetySensorsMetricSensors => 'Sensors';
+
+  @override
+  String get safetySensorsMetricFine => 'Fine';
+
+  @override
+  String get safetySensorsMetricAbnormal => 'Abnormal';
+
+  @override
+  String get safetySensorsMetricLowPower => 'Low power';
+
+  @override
+  String get safetySensorsMatch => 'Match';
+
+  @override
+  String get safetySensorsManage => 'Manage';
+
+  @override
+  String get safetySensorsWirelessWicketDoor => 'Wireless wicket door';
+
+  @override
+  String get safetySensorsWirelessSafetyEdge => 'Wireless safety edge';
+
+  @override
+  String get safetySensorsWirelessSlackRope => 'Wireless slack rope';
+
+  @override
+  String get safetySensorUnlocked => 'Unlocked';
+
+  @override
+  String get safetySensorLocked => 'Locked';
+
+  @override
+  String get safetySensorNotTriggered => 'Not triggered';
+
+  @override
+  String get safetySensorOffline => 'Offline';
 }

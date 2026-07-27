@@ -3368,6 +3368,12 @@ abstract class AppLocalizations {
   /// **'Solution for low battery power'**
   String get safetySensorLowBatterySolution;
 
+  /// No description provided for @batteryReplacementIllustration.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery replacement illustration'**
+  String get batteryReplacementIllustration;
+
   /// No description provided for @safetySensorLowBatteryWarning.
   ///
   /// In en, this message translates to:
@@ -3601,6 +3607,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unable to load. Tap to retry.'**
   String get generalEvaluationLoadFailed;
+
+  /// No description provided for @safetySensorsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load safety sensors. Tap to retry.'**
+  String get safetySensorsLoadFailed;
+
+  /// No description provided for @safetySensorsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No safety sensor data is available.'**
+  String get safetySensorsEmpty;
+
+  /// No description provided for @safetySensorsWiredStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Wired sensor status'**
+  String get safetySensorsWiredStatus;
+
+  /// No description provided for @safetySensorsWirelessStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Wireless Sensors Status'**
+  String get safetySensorsWirelessStatus;
+
+  /// No description provided for @safetySensorsMetricSensors.
+  ///
+  /// In en, this message translates to:
+  /// **'Sensors'**
+  String get safetySensorsMetricSensors;
+
+  /// No description provided for @safetySensorsMetricFine.
+  ///
+  /// In en, this message translates to:
+  /// **'Fine'**
+  String get safetySensorsMetricFine;
+
+  /// No description provided for @safetySensorsMetricAbnormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Abnormal'**
+  String get safetySensorsMetricAbnormal;
+
+  /// No description provided for @safetySensorsMetricLowPower.
+  ///
+  /// In en, this message translates to:
+  /// **'Low power'**
+  String get safetySensorsMetricLowPower;
+
+  /// No description provided for @safetySensorsMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Match'**
+  String get safetySensorsMatch;
+
+  /// No description provided for @safetySensorsManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage'**
+  String get safetySensorsManage;
+
+  /// No description provided for @safetySensorsWirelessWicketDoor.
+  ///
+  /// In en, this message translates to:
+  /// **'Wireless wicket door'**
+  String get safetySensorsWirelessWicketDoor;
+
+  /// No description provided for @safetySensorsWirelessSafetyEdge.
+  ///
+  /// In en, this message translates to:
+  /// **'Wireless safety edge'**
+  String get safetySensorsWirelessSafetyEdge;
+
+  /// No description provided for @safetySensorsWirelessSlackRope.
+  ///
+  /// In en, this message translates to:
+  /// **'Wireless slack rope'**
+  String get safetySensorsWirelessSlackRope;
+
+  /// No description provided for @safetySensorUnlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlocked'**
+  String get safetySensorUnlocked;
+
+  /// No description provided for @safetySensorLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked'**
+  String get safetySensorLocked;
+
+  /// No description provided for @safetySensorNotTriggered.
+  ///
+  /// In en, this message translates to:
+  /// **'Not triggered'**
+  String get safetySensorNotTriggered;
+
+  /// No description provided for @safetySensorOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get safetySensorOffline;
 }
 
 class _AppLocalizationsDelegate

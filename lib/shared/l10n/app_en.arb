@@ -1568,6 +1568,7 @@
   "safetySensorTriggered": "Triggered",
   "safetySensorReplaceBattery": "How to replace the battery",
   "safetySensorLowBatterySolution": "Solution for low battery power",
+  "batteryReplacementIllustration": "Battery replacement illustration",
   "safetySensorLowBatteryWarning": "Low battery power",
   "safetySensorBatteryModel": "Battery model: {model}",
   "@safetySensorBatteryModel": {
@@ -1616,5 +1617,22 @@
   "securityReportLevel1": "Level1",
   "securityReportAnyPosition": "Any position",
   "securityReportOn": "ON",
-  "generalEvaluationLoadFailed": "Unable to load. Tap to retry."
+  "generalEvaluationLoadFailed": "Unable to load. Tap to retry.",
+  "safetySensorsLoadFailed": "Unable to load safety sensors. Tap to retry.",
+  "safetySensorsEmpty": "No safety sensor data is available.",
+  "safetySensorsWiredStatus": "Wired sensor status",
+  "safetySensorsWirelessStatus": "Wireless Sensors Status",
+  "safetySensorsMetricSensors": "Sensors",
+  "safetySensorsMetricFine": "Fine",
+  "safetySensorsMetricAbnormal": "Abnormal",
+  "safetySensorsMetricLowPower": "Low power",
+  "safetySensorsMatch": "Match",
+  "safetySensorsManage": "Manage",
+  "safetySensorsWirelessWicketDoor": "Wireless wicket door",
+  "safetySensorsWirelessSafetyEdge": "Wireless safety edge",
+  "safetySensorsWirelessSlackRope": "Wireless slack rope",
+  "safetySensorUnlocked": "Unlocked",
+  "safetySensorLocked": "Locked",
+  "safetySensorNotTriggered": "Not triggered",
+  "safetySensorOffline": "Offline"
 }

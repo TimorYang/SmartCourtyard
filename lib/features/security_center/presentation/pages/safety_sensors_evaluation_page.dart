@@ -5,12 +5,16 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
-import '../../application/providers.dart';
+import '../../application/safety_sensors_evaluation_controller.dart';
 import '../../domain/entities/safety_sensors_evaluation.dart';
 import 'safety_sensor_battery_solution_page.dart';
 
-class SafetySensorsEvaluationPage extends ConsumerWidget {
-  const SafetySensorsEvaluationPage({required this.deviceId, super.key});
+class SafetySensorsEvaluationPage extends ConsumerStatefulWidget {
+  const SafetySensorsEvaluationPage({
+    required this.doorId,
+    required this.deviceId,
+    super.key,
+  });
 
   static const routeName = 'safety-sensors-evaluation';
   static const routePath = '/safety-sensors-evaluation';
@@ -18,37 +22,104 @@ class SafetySensorsEvaluationPage extends ConsumerWidget {
   static const _wiredDoorAsset =
       'assets/icons/security_center/safety_wired_door_layout.png';
   static const _wirelessDoorAsset =
-      'assets/icons/security_center/safety_wired_door_layout.png';
+      'assets/icons/security_center/safety_wired_door_asset.png';
+  final String doorId;
   final String deviceId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final evaluation = ref.watch(safetySensorsEvaluationProvider(deviceId));
+  ConsumerState<SafetySensorsEvaluationPage> createState() =>
+      _SafetySensorsEvaluationPageState();
+}
+
+class _SafetySensorsEvaluationPageState
+    extends ConsumerState<SafetySensorsEvaluationPage> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(
+      () => ref
+          .read(
+            safetySensorsEvaluationControllerProvider(widget.doorId).notifier,
+          )
+          .load(doorId: widget.doorId),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(
+      safetySensorsEvaluationControllerProvider(widget.doorId),
+    );
+    return state.when(
+      loading: () =>
+          _stateScaffold(const Center(child: CircularProgressIndicator())),
+      error: (_, _) => _stateScaffold(
+        Center(
+          child: TextButton(
+            onPressed: () => ref
+                .read(
+                  safetySensorsEvaluationControllerProvider(
+                    widget.doorId,
+                  ).notifier,
+                )
+                .load(doorId: widget.doorId),
+            child: Text(AppLocalizations.of(context).safetySensorsLoadFailed),
+          ),
+        ),
+      ),
+      data: (evaluation) =>
+          evaluation.wiredSensorGroup.sensors.isEmpty &&
+              evaluation.wirelessSensorGroup.sensors.isEmpty
+          ? _stateScaffold(
+              Center(
+                child: Text(AppLocalizations.of(context).safetySensorsEmpty),
+              ),
+            )
+          : _contentScaffold(context, evaluation),
+    );
+  }
+
+  Widget _stateScaffold(Widget body) => Scaffold(
+    backgroundColor: AppColors.securityCenterBackground,
+    appBar: FlinxNavigationBar(
+      title: AppLocalizations.of(context).securityCenterSafetySensorsEvaluation,
+      showBottomDivider: false,
+    ),
+    body: body,
+  );
+
+  Widget _contentScaffold(
+    BuildContext context,
+    SafetySensorsEvaluation evaluation,
+  ) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: AppColors.securityCenterBackground,
-      appBar: const FlinxNavigationBar(
-        title: 'Safety Sensors Evaluation',
+      appBar: FlinxNavigationBar(
+        title: l10n.securityCenterSafetySensorsEvaluation,
         showBottomDivider: false,
       ),
       body: ListView(
-        key: ValueKey<String>('safety-sensors-scroll-$deviceId'),
+        key: ValueKey<String>('safety-sensors-scroll-${widget.deviceId}'),
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
         children: [
           _SensorMetrics(evaluation: evaluation),
           const SizedBox(height: 16),
           _SensorGroupCard(
-            title: 'Wired sensor status',
-            doorAsset: _wiredDoorAsset,
+            title: l10n.safetySensorsWiredStatus,
+            doorAsset: SafetySensorsEvaluationPage._wiredDoorAsset,
             group: evaluation.wiredSensorGroup,
-            deviceId: deviceId,
+            deviceId: widget.deviceId,
+            doorId: widget.doorId,
           ),
           const SizedBox(height: 15),
           _SensorGroupCard(
-            title: 'Wireless Sensors Status',
-            doorAsset: _wirelessDoorAsset,
+            title: l10n.safetySensorsWirelessStatus,
+            doorAsset: SafetySensorsEvaluationPage._wirelessDoorAsset,
             showActions: true,
             group: evaluation.wirelessSensorGroup,
-            deviceId: deviceId,
+            deviceId: widget.deviceId,
+            doorId: widget.doorId,
           ),
         ],
       ),
@@ -63,14 +134,16 @@ class _SensorMetrics extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Row(
       children: [
         Expanded(
           child: _MetricCard(
             iconAsset: 'safety_metric_sensors',
             fallbackIcon: Icons.sensors,
-            label: 'Sensors',
+            label: l10n.safetySensorsMetricSensors,
             value: evaluation.totalSensorCount,
+            error: false,
           ),
         ),
         SizedBox(width: 8),
@@ -78,8 +151,9 @@ class _SensorMetrics extends StatelessWidget {
           child: _MetricCard(
             iconAsset: 'safety_metric_fine',
             fallbackIcon: Icons.check_circle,
-            label: 'Fine',
+            label: l10n.safetySensorsMetricFine,
             value: evaluation.fineSensorCount,
+            error: false,
           ),
         ),
         SizedBox(width: 8),
@@ -87,8 +161,9 @@ class _SensorMetrics extends StatelessWidget {
           child: _MetricCard(
             iconAsset: 'safety_metric_triggered',
             fallbackIcon: Icons.error,
-            label: 'Abnormal',
+            label: l10n.safetySensorsMetricAbnormal,
             value: evaluation.abnormalSensorCount,
+            error: true,
           ),
         ),
         SizedBox(width: 8),
@@ -96,8 +171,9 @@ class _SensorMetrics extends StatelessWidget {
           child: _MetricCard(
             iconAsset: 'safety_metric_low_power',
             fallbackIcon: Icons.battery_alert_outlined,
-            label: 'Low power',
+            label: l10n.safetySensorsMetricLowPower,
             value: evaluation.lowPowerSensorCount,
+            error: true,
           ),
         ),
       ],
@@ -111,12 +187,14 @@ class _MetricCard extends StatelessWidget {
     required this.fallbackIcon,
     required this.label,
     required this.value,
+    required this.error,
   });
 
   final String iconAsset;
   final IconData fallbackIcon;
   final String label;
   final int value;
+  final bool error;
 
   @override
   Widget build(BuildContext context) {
@@ -162,7 +240,9 @@ class _MetricCard extends StatelessWidget {
           Text(
             '$value',
             key: ValueKey<String>('sensor-metric-$label-value'),
-            style: AppTextTokens.safetySensorMetricValue(textTheme),
+            style: error
+                ? AppTextTokens.safetySensorMetricValueError(textTheme)
+                : AppTextTokens.safetySensorMetricValue(textTheme),
           ),
         ],
       ),
@@ -176,6 +256,7 @@ class _SensorGroupCard extends StatelessWidget {
     required this.doorAsset,
     required this.group,
     required this.deviceId,
+    required this.doorId,
     this.showActions = false,
   });
 
@@ -183,6 +264,7 @@ class _SensorGroupCard extends StatelessWidget {
   final String doorAsset;
   final SafetySensorGroup group;
   final String deviceId;
+  final String doorId;
   final bool showActions;
 
   @override
@@ -214,19 +296,19 @@ class _SensorGroupCard extends StatelessWidget {
             _DoorLayoutPlaceholder(assetPath: doorAsset),
             if (showActions) ...[
               const SizedBox(height: 8),
-              const Row(
+              Row(
                 children: [
                   Expanded(
                     child: _SensorActionButton(
                       icon: Icons.link,
-                      label: 'Match',
+                      label: AppLocalizations.of(context).safetySensorsMatch,
                     ),
                   ),
                   SizedBox(width: 16),
                   Expanded(
                     child: _SensorActionButton(
                       icon: Icons.tune,
-                      label: 'Manage',
+                      label: AppLocalizations.of(context).safetySensorsManage,
                     ),
                   ),
                 ],
@@ -244,6 +326,7 @@ class _SensorGroupCard extends StatelessWidget {
                     sensor: group.sensors[index],
                     isWireless: showActions,
                     deviceId: deviceId,
+                    doorId: doorId,
                   ),
                 ),
               ),
@@ -304,8 +387,8 @@ class _GroupStatusIcon extends StatelessWidget {
       size: 13,
     ),
     SafetySensorGroupStatus.offline => const Icon(
-      Icons.cloud_off,
-      color: AppColors.textMuted,
+      Icons.error,
+      color: AppColors.securityCenterError,
       size: 13,
     ),
   };
@@ -356,11 +439,13 @@ class _SensorRow extends StatefulWidget {
     required this.sensor,
     required this.isWireless,
     required this.deviceId,
+    required this.doorId,
   });
 
   final SafetySensor sensor;
   final bool isWireless;
   final String deviceId;
+  final String doorId;
 
   @override
   State<_SensorRow> createState() => _SensorRowState();
@@ -375,21 +460,28 @@ class _SensorRowState extends State<_SensorRow> {
     final textTheme = Theme.of(context).textTheme;
     final isLowBatteryAlert =
         widget.isWireless &&
-        _batteryAssetPath(widget.sensor) == _batteryLowAsset;
-    final isBatteryNavigation = widget.isWireless && !isLowBatteryAlert;
+        widget.sensor.batteryStatus == SafetySensorBatteryStatus.low;
+    final showBatteryOnStatusLine =
+        widget.isWireless &&
+        _isNormalSensorStatus(widget.sensor.status) &&
+        widget.sensor.batteryStatus == SafetySensorBatteryStatus.normal;
     final isExpandable = widget.isWireless;
 
     return Semantics(
       button: isExpandable,
       expanded: isExpandable ? _isExpanded : null,
       child: GestureDetector(
-        key: ValueKey<String>('sensor-toggle-${widget.sensor.sensorName}'),
+        key: ValueKey<String>(
+          'sensor-toggle-${_sensorName(l10n, widget.sensor.sensorCode)}',
+        ),
         behavior: HitTestBehavior.opaque,
         onTap: isExpandable
             ? () => setState(() => _isExpanded = !_isExpanded)
             : null,
         child: Container(
-          key: ValueKey<String>('sensor-${widget.sensor.sensorName}'),
+          key: ValueKey<String>(
+            'sensor-${_sensorName(l10n, widget.sensor.sensorCode)}',
+          ),
           decoration: BoxDecoration(
             color: AppColors.safetySensorItemSurface,
             borderRadius: BorderRadius.circular(10),
@@ -401,10 +493,12 @@ class _SensorRowState extends State<_SensorRow> {
                 sensor: widget.sensor,
                 l10n: l10n,
                 textTheme: textTheme,
-                isBatteryNavigation: isBatteryNavigation,
                 isLowBatteryAlert: isLowBatteryAlert,
+                showBatteryOnStatusLine: showBatteryOnStatusLine,
                 isExpanded: _isExpanded,
+                isWireless: widget.isWireless,
                 deviceId: widget.deviceId,
+                doorId: widget.doorId,
               ),
               AnimatedSize(
                 duration: const Duration(milliseconds: 180),
@@ -414,7 +508,7 @@ class _SensorRowState extends State<_SensorRow> {
                         padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
                         child: _SensorOperationChart(
                           key: ValueKey<String>(
-                            'sensor-operation-chart-${widget.sensor.sensorName}',
+                            'sensor-operation-chart-${_sensorName(l10n, widget.sensor.sensorCode)}',
                           ),
                           points: widget.sensor.operationPoints,
                         ),
@@ -434,22 +528,27 @@ class _SensorRowHeader extends StatelessWidget {
     required this.sensor,
     required this.l10n,
     required this.textTheme,
-    required this.isBatteryNavigation,
     required this.isLowBatteryAlert,
+    required this.showBatteryOnStatusLine,
     required this.isExpanded,
+    required this.isWireless,
     required this.deviceId,
+    required this.doorId,
   });
 
   final SafetySensor sensor;
   final AppLocalizations l10n;
   final TextTheme textTheme;
-  final bool isBatteryNavigation;
   final bool isLowBatteryAlert;
+  final bool showBatteryOnStatusLine;
   final bool isExpanded;
+  final bool isWireless;
   final String deviceId;
+  final String doorId;
 
   @override
   Widget build(BuildContext context) {
+    final sensorName = _sensorName(l10n, sensor.sensorCode);
     return Stack(
       children: [
         Padding(
@@ -468,10 +567,10 @@ class _SensorRowHeader extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.all(2),
                     child: Image.asset(
-                      _sensorAssetPath(sensor.id),
+                      _sensorAssetPath(sensor.sensorCode),
                       fit: BoxFit.contain,
                       errorBuilder: (context, error, stackTrace) => Icon(
-                        _sensorFallbackIcon(sensor.id),
+                        _sensorFallbackIcon(sensor.sensorCode),
                         size: 34,
                         color: AppColors.securityCenterSensorIcon,
                       ),
@@ -490,7 +589,7 @@ class _SensorRowHeader extends StatelessWidget {
                         Flexible(
                           fit: FlexFit.loose,
                           child: Text(
-                            sensor.sensorName,
+                            sensorName,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: AppTextTokens.safetySensorItemTitle(
@@ -511,10 +610,10 @@ class _SensorRowHeader extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 4),
-                    if (isBatteryNavigation)
+                    if (showBatteryOnStatusLine)
                       Image.asset(
                         _batteryAssetPath(sensor),
-                        key: const ValueKey<String>('sensor-battery'),
+                        key: ValueKey<String>('sensor-battery'),
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) =>
                             const SizedBox.square(dimension: 22),
@@ -522,24 +621,20 @@ class _SensorRowHeader extends StatelessWidget {
                     else
                       Text(
                         _statusLabel(l10n, sensor.status),
-                        key: ValueKey<String>(
-                          'sensor-status-${sensor.sensorName}',
-                        ),
-                        style: isLowBatteryAlert
-                            ? AppTextTokens.safetySensorItemAlert(textTheme)
-                            : AppTextTokens.safetySensorItemStatus(textTheme),
+                        key: ValueKey<String>('sensor-status-$sensorName'),
+                        style: _statusStyle(textTheme, sensor.status),
                       ),
                   ],
                 ),
               ),
-              if (isBatteryNavigation || isLowBatteryAlert)
+              if (isWireless || isLowBatteryAlert)
                 AnimatedRotation(
                   turns: isExpanded ? 0.25 : 0,
                   duration: const Duration(milliseconds: 180),
                   curve: Curves.easeInOut,
                   child: Icon(
                     key: ValueKey<String>(
-                      'sensor-navigation-chevron-${sensor.sensorName}',
+                      'sensor-navigation-chevron-$sensorName',
                     ),
                     Icons.chevron_right,
                     size: 25,
@@ -558,7 +653,11 @@ class _SensorRowHeader extends StatelessWidget {
               behavior: HitTestBehavior.opaque,
               onTap: () => context.pushNamed(
                 SafetySensorBatterySolutionPage.routeName,
-                queryParameters: {'deviceId': deviceId, 'sensorId': sensor.id},
+                queryParameters: {
+                  'doorId': doorId,
+                  'deviceId': deviceId,
+                  'sensorId': sensor.id,
+                },
               ),
               child: Container(
                 key: const ValueKey<String>('sensor-replace-battery-help'),
@@ -585,9 +684,25 @@ class _SensorRowHeader extends StatelessWidget {
 
 String _statusLabel(AppLocalizations l10n, SafetySensorStatus status) =>
     switch (status) {
-      SafetySensorStatus.normal => '',
-      SafetySensorStatus.disconnected => l10n.securityReportDisconnect,
+      SafetySensorStatus.notTriggered => l10n.safetySensorNotTriggered,
+      SafetySensorStatus.disconnected => l10n.safetySensorOffline,
       SafetySensorStatus.triggered => l10n.safetySensorTriggered,
+      SafetySensorStatus.unlocked => l10n.safetySensorUnlocked,
+      SafetySensorStatus.locked => l10n.safetySensorLocked,
+    };
+
+bool _isNormalSensorStatus(SafetySensorStatus status) =>
+    status == SafetySensorStatus.notTriggered ||
+    status == SafetySensorStatus.unlocked;
+
+TextStyle _statusStyle(TextTheme textTheme, SafetySensorStatus status) =>
+    switch (status) {
+      SafetySensorStatus.disconnected => AppTextTokens.safetySensorItemOffline(
+        textTheme,
+      ),
+      SafetySensorStatus.triggered || SafetySensorStatus.locked =>
+        AppTextTokens.safetySensorItemAlert(textTheme),
+      _ => AppTextTokens.safetySensorItemSuccess(textTheme),
     };
 
 const _batteryFullAsset =
@@ -598,38 +713,68 @@ const _batteryOfflineAsset =
     'assets/icons/security_center/security_center_sensor_battery_offline.png';
 
 String _batteryAssetPath(SafetySensor sensor) {
+  if (sensor.batteryStatus == SafetySensorBatteryStatus.low) {
+    return _batteryLowAsset;
+  }
   if (sensor.status == SafetySensorStatus.disconnected ||
       sensor.batteryStatus == SafetySensorBatteryStatus.unknown) {
     return _batteryOfflineAsset;
   }
-  return sensor.batteryStatus == SafetySensorBatteryStatus.low
-      ? _batteryLowAsset
-      : _batteryFullAsset;
+  return _batteryFullAsset;
 }
 
 String _sensorAssetPath(String sensorId) {
   final assetName = switch (sensorId) {
-    'wired-photo-beam' ||
-    'wireless-photo-beam' => 'security_report_motor_wired_photo_beam_icon',
-    'wired-e-lock' || 'wireless-e-lock' => 'security_report_motor_wired_e_lock',
-    'wireless-wicket-door' => 'security_report_wireless_wicket_door',
-    'wireless-safety-edge' => 'security_report_wireless_safety_edge',
+    'WIRED_PHOTO_BEAM' ||
+    'WIRELESS_PHOTO_BEAM' => 'security_report_motor_wired_photo_beam_icon',
+    'WIRED_ELECTRONIC_LOCK' ||
+    'WIRELESS_ELECTRONIC_LOCK' => 'security_report_motor_wired_e_lock',
+    'WIRELESS_WICKET_DOOR' => 'security_report_wireless_wicket_door',
+    'WIRELESS_SAFETY_EDGE' => 'security_report_wireless_safety_edge',
     _ => 'security_report_motor_wired_photo_beam_icon',
   };
   return 'assets/icons/security_center/$assetName.png';
 }
 
 IconData _sensorFallbackIcon(String sensorId) => switch (sensorId) {
-  'wired-e-lock' || 'wireless-e-lock' => Icons.lock_outline,
-  'wireless-wicket-door' => Icons.door_sliding_outlined,
-  'wireless-safety-edge' => Icons.radar,
+  'WIRED_ELECTRONIC_LOCK' || 'WIRELESS_ELECTRONIC_LOCK' => Icons.lock_outline,
+  'WIRELESS_WICKET_DOOR' => Icons.door_sliding_outlined,
+  'WIRELESS_SAFETY_EDGE' || 'WIRELESS_SLACK_ROPE' => Icons.radar,
   _ => Icons.sensors,
 };
 
-class _SensorOperationChart extends StatelessWidget {
+String _sensorName(AppLocalizations l10n, String sensorCode) =>
+    switch (sensorCode) {
+      'WIRED_PHOTO_BEAM' => l10n.securityCenterWiredPhotoBeam,
+      'WIRED_ELECTRONIC_LOCK' => l10n.securityCenterWiredELock,
+      'WIRELESS_PHOTO_BEAM' => l10n.securityCenterWirelessPhotoBeam,
+      'WIRELESS_WICKET_DOOR' => l10n.safetySensorsWirelessWicketDoor,
+      'WIRELESS_ELECTRONIC_LOCK' => l10n.securityCenterWirelessELock,
+      'WIRELESS_SAFETY_EDGE' => l10n.safetySensorsWirelessSafetyEdge,
+      'WIRELESS_SLACK_ROPE' => l10n.safetySensorsWirelessSlackRope,
+      _ => l10n.safetySensorDefaultName,
+    };
+
+class _SensorOperationChart extends StatefulWidget {
   const _SensorOperationChart({required this.points, super.key});
 
   final List<SafetySensorOperationPoint> points;
+
+  @override
+  State<_SensorOperationChart> createState() => _SensorOperationChartState();
+}
+
+class _SensorOperationChartState extends State<_SensorOperationChart> {
+  int? _selectedIndex;
+
+  void _updateSelection(Offset position, Size size) {
+    final index = _SensorOperationChartLayout.hitTest(
+      position: position,
+      size: size,
+      points: widget.points,
+    );
+    if (index != _selectedIndex) setState(() => _selectedIndex = index);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -654,7 +799,34 @@ class _SensorOperationChart extends StatelessWidget {
             SizedBox(
               height: 180,
               width: double.infinity,
-              child: CustomPaint(painter: _SensorOperationChartPainter(points)),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final size = Size(
+                    constraints.maxWidth,
+                    constraints.maxHeight,
+                  );
+                  return GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {},
+                    child: Listener(
+                      behavior: HitTestBehavior.opaque,
+                      onPointerDown: (event) =>
+                          _updateSelection(event.localPosition, size),
+                      onPointerMove: (event) =>
+                          _updateSelection(event.localPosition, size),
+                      child: CustomPaint(
+                        key: ValueKey<String>(
+                          'sensor-operation-chart-selected-${_selectedIndex ?? 'none'}',
+                        ),
+                        painter: _SensorOperationChartPainter(
+                          points: widget.points,
+                          selectedIndex: _selectedIndex,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
           ],
         ),
@@ -663,10 +835,62 @@ class _SensorOperationChart extends StatelessWidget {
   }
 }
 
+abstract final class _SensorOperationChartLayout {
+  static Rect chart(Size size) =>
+      Rect.fromLTWH(30, 8, size.width - 36, size.height - 32);
+
+  static double yAxisMaximum(List<SafetySensorOperationPoint> points) {
+    final maximum = points.fold<int>(
+      0,
+      (value, point) => point.cycles > value ? point.cycles : value,
+    );
+    return maximum == 0 ? 1 : (maximum * 1.2).ceilToDouble();
+  }
+
+  static List<Rect> bars(Size size, List<SafetySensorOperationPoint> points) {
+    if (points.isEmpty) return const [];
+    final chartArea = chart(size);
+    final maximum = yAxisMaximum(points);
+    final barWidth = (chartArea.width / points.length * .55)
+        .clamp(3.0, 12.0)
+        .toDouble();
+    return List<Rect>.generate(points.length, (index) {
+      final x = points.length == 1
+          ? chartArea.left + chartArea.width / 2
+          : chartArea.left + chartArea.width * index / (points.length - 1);
+      final height = chartArea.height * points[index].cycles / maximum;
+      return Rect.fromLTWH(
+        x - barWidth / 2,
+        chartArea.bottom - height,
+        barWidth,
+        height,
+      );
+    });
+  }
+
+  static int? hitTest({
+    required Offset position,
+    required Size size,
+    required List<SafetySensorOperationPoint> points,
+  }) {
+    final bars = _SensorOperationChartLayout.bars(size, points);
+    for (var index = 0; index < bars.length; index++) {
+      if (bars[index].height > 0 && bars[index].contains(position)) {
+        return index;
+      }
+    }
+    return null;
+  }
+}
+
 class _SensorOperationChartPainter extends CustomPainter {
-  const _SensorOperationChartPainter(this.points);
+  const _SensorOperationChartPainter({
+    required this.points,
+    this.selectedIndex,
+  });
 
   final List<SafetySensorOperationPoint> points;
+  final int? selectedIndex;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -676,20 +900,11 @@ class _SensorOperationChartPainter extends CustomPainter {
     final axis = Paint()
       ..color = AppColors.textPrimary
       ..strokeWidth = 1.2;
-    final bar = Paint()..color = AppColors.securityReportChartBar;
-    final chart = Rect.fromLTWH(30, 8, size.width - 36, size.height - 32);
-    const maximumCycles = 25;
+    final chart = _SensorOperationChartLayout.chart(size);
 
     for (var index = 0; index <= 5; index++) {
       final y = chart.bottom - chart.height * index / 5;
       canvas.drawLine(Offset(chart.left, y), Offset(chart.right, y), grid);
-      _paintText(
-        canvas,
-        '${index * 5}',
-        Offset(chart.left - 24, y - 8),
-        fontSize: 11,
-        color: AppColors.textPrimary,
-      );
     }
     canvas.drawLine(
       Offset(chart.left, chart.bottom),
@@ -697,16 +912,25 @@ class _SensorOperationChartPainter extends CustomPainter {
       axis,
     );
 
-    for (final point in points) {
-      final x = chart.left + chart.width * point.occurredAt.hour / 23;
-      final height =
-          chart.height * point.cycles.clamp(0, maximumCycles) / maximumCycles;
-      canvas.drawRect(
-        Rect.fromLTWH(x - 4, chart.bottom - height, 8, height),
-        bar,
+    final normalBar = Paint()..color = AppColors.securityReportSegmentSelected;
+    final warningBar = Paint()..color = AppColors.securityReportChartBar;
+    final maximum = _SensorOperationChartLayout.yAxisMaximum(points);
+    final bars = _SensorOperationChartLayout.bars(size, points);
+    for (var index = 0; index < bars.length; index++) {
+      final point = points[index];
+      canvas.drawRect(bars[index], point.isAbnormal ? warningBar : normalBar);
+    }
+    for (var index = 0; index <= 5; index++) {
+      _paintText(
+        canvas,
+        (maximum * index / 5).round().toString(),
+        Offset(chart.left - 24, chart.bottom - chart.height * index / 5 - 8),
+        fontSize: 11,
+        color: AppColors.textPrimary,
       );
     }
-    for (var hour = 0; hour < 24; hour++) {
+    for (var index = 0; index < points.length; index++) {
+      final hour = points[index].occurredAt.hour;
       final painter = TextPainter(
         text: TextSpan(
           text: hour.toString(),
@@ -714,9 +938,63 @@ class _SensorOperationChartPainter extends CustomPainter {
         ),
         textDirection: TextDirection.ltr,
       )..layout();
-      final x = chart.left + chart.width * hour / 23 - painter.width / 2;
+      final x = points.length == 1
+          ? chart.left + chart.width / 2 - painter.width / 2
+          : chart.left +
+                chart.width * index / (points.length - 1) -
+                painter.width / 2;
       painter.paint(canvas, Offset(x, chart.bottom + 8));
     }
+    if (selectedIndex case final index? when index < points.length) {
+      _paintTooltip(
+        canvas,
+        chart,
+        bars[index],
+        points[index].cycles,
+        points[index].isAbnormal ? warningBar.color : normalBar.color,
+      );
+    }
+  }
+
+  void _paintTooltip(
+    Canvas canvas,
+    Rect chart,
+    Rect bar,
+    int value,
+    Color valueColor,
+  ) {
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: value.toString(),
+        style: TextStyle(
+          color: valueColor,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    const horizontalPadding = 15.0;
+    const verticalPadding = 9.0;
+    final width = textPainter.width + horizontalPadding * 2;
+    const height = 32.0;
+    final left = (bar.center.dx - width / 2)
+        .clamp(chart.left, chart.right - width)
+        .toDouble();
+    final top = (bar.top - height - 12)
+        .clamp(chart.top, chart.bottom - height)
+        .toDouble();
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(left, top, width, height),
+        const Radius.circular(3),
+      ),
+      Paint()..color = AppColors.securityReportChartTooltip,
+    );
+    textPainter.paint(
+      canvas,
+      Offset(left + horizontalPadding, top + verticalPadding),
+    );
   }
 
   void _paintText(
@@ -738,5 +1016,6 @@ class _SensorOperationChartPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _SensorOperationChartPainter oldDelegate) =>
-      oldDelegate.points != points;
+      oldDelegate.points != points ||
+      oldDelegate.selectedIndex != selectedIndex;
 }

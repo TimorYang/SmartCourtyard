@@ -432,6 +432,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: SafetySensorsEvaluationPage.routePath,
         name: SafetySensorsEvaluationPage.routeName,
         builder: (context, state) => SafetySensorsEvaluationPage(
+          doorId: state.uri.queryParameters['doorId'] ?? '',
           deviceId: state.uri.queryParameters['deviceId'] ?? '',
         ),
       ),
@@ -439,6 +440,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: SafetySensorBatterySolutionPage.routePath,
         name: SafetySensorBatterySolutionPage.routeName,
         builder: (context, state) => SafetySensorBatterySolutionPage(
+          doorId: state.uri.queryParameters['doorId'] ?? '',
           deviceId: state.uri.queryParameters['deviceId'] ?? '',
           sensorId: state.uri.queryParameters['sensorId'] ?? '',
         ),

@@ -10,7 +10,9 @@ import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
 import '../../application/security_balance_refresh_controller.dart';
 import '../../application/security_center_connection_status_controller.dart';
+import '../../domain/entities/security_center_connection_status.dart';
 import '../../domain/entities/security_center_overview.dart';
+import '../../domain/entities/safety_sensors_evaluation.dart';
 import '../../../device_control/presentation/widgets/device_detail_bottom_navigation.dart';
 import '../widgets/security_center_wifi_disconnected_dialog.dart';
 import 'full_report_page.dart';
@@ -97,6 +99,12 @@ class _SecurityCenterPageState extends ConsumerState<SecurityCenterPage> {
     final textTheme = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context);
     final overview = ref.watch(securityCenterOverviewProvider(widget.deviceId));
+    final connectionStatusState = ref.watch(
+      securityCenterConnectionStatusControllerProvider,
+    );
+    final sensorEvaluation =
+        connectionStatusState.connectionStatus?.sensorEvaluation ??
+        SecurityCenterConnectionStatus.offlineSensorEvaluation;
 
     return Scaffold(
       backgroundColor: AppColors.securityCenterBackground,
@@ -200,10 +208,13 @@ class _SecurityCenterPageState extends ConsumerState<SecurityCenterPage> {
             child: _SensorEvaluationCard(
               textTheme: textTheme,
               l10n: l10n,
-              evaluation: overview.safetySensorEvaluation,
+              evaluation: sensorEvaluation,
               onTap: () => context.pushNamed(
                 SafetySensorsEvaluationPage.routeName,
-                queryParameters: {'deviceId': widget.deviceId},
+                queryParameters: {
+                  'doorId': widget.doorId,
+                  'deviceId': widget.deviceId,
+                },
               ),
             ),
           ),
@@ -524,32 +535,43 @@ class _SensorTile extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 8),
-            Image.asset(
-              _batteryAsset,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) =>
-                  const SizedBox.square(dimension: 14),
-            ),
+            if (sensor.snapshot.hasBattery) ...[
+              const SizedBox(height: 8),
+              Image.asset(
+                _batteryAsset,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) =>
+                    const SizedBox.square(dimension: 14),
+              ),
+            ],
           ],
         ),
       ),
     );
   }
 
-  Color get _statusColor => switch (sensor.snapshot.status) {
-    SecurityEvaluationStatus.normal => AppColors.securityCenterSuccess,
-    SecurityEvaluationStatus.warning => AppColors.securityReportWarning,
-    SecurityEvaluationStatus.critical => AppColors.securityCenterError,
-    SecurityEvaluationStatus.offline =>
-      AppColors.securityCenterSensorUnavailable,
-  };
+  Color get _statusColor {
+    if (sensor.snapshot.hasBattery &&
+        sensor.snapshot.batteryStatus == SafetySensorBatteryStatus.low) {
+      return AppColors.securityCenterError;
+    }
+    return switch (sensor.snapshot.status) {
+      SecurityEvaluationStatus.normal => AppColors.securityCenterSuccess,
+      SecurityEvaluationStatus.warning => AppColors.securityReportWarning,
+      SecurityEvaluationStatus.critical => AppColors.securityCenterError,
+      SecurityEvaluationStatus.offline =>
+        AppColors.securityCenterSensorUnavailable,
+    };
+  }
 
   String get _batteryAsset {
     if (sensor.snapshot.status == SecurityEvaluationStatus.offline) {
       return _batteryOfflineAsset;
     }
-    return sensor.snapshot.batteryPercentage <= 20
+    return sensor.snapshot.batteryStatus == SafetySensorBatteryStatus.low ||
+            (sensor.snapshot.batteryStatus ==
+                    SafetySensorBatteryStatus.unknown &&
+                sensor.snapshot.batteryPercentage <= 20)
         ? _batteryLowAsset
         : _batteryFullAsset;
   }
