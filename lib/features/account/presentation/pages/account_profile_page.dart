@@ -25,37 +25,69 @@ import 'system_permissions_page.dart';
 class AccountProfileAssetPaths {
   const AccountProfileAssetPaths._();
 
-  static const headerBackground = 'assets/images/account/account_profile_header_bg.png';
-  static const avatarPlaceholder = 'assets/icons/home/home_avatar_placeholder.png';
-  static const menuSharedDevices = 'assets/icons/account/account_profile_menu_shared_devices.png';
-  static const menuReceivingDevices = 'assets/icons/account/account_profile_menu_receiving_devices.png';
-  static const menuManageDevices = 'assets/icons/account/account_profile_menu_manage_devices.png';
-  static const menuAfterSalesService = 'assets/icons/account/account_profile_menu_after_sales_service.png';
-  static const menuRegion = 'assets/icons/account/account_profile_menu_region.png';
-  static const menuLanguage = 'assets/icons/account/account_profile_menu_language.png';
-  static const menuSystemPermissions = 'assets/icons/account/account_profile_menu_system_permissions.png';
-  static const menuManualGuide = 'assets/icons/account/account_profile_menu_manual_guide.png';
-  static const menuCheckForUpdates = 'assets/icons/account/account_profile_menu_check_for_updates.png';
-  static const menuAbout = 'assets/icons/account/account_profile_menu_about.png';
+  static const headerBackground =
+      'assets/images/account/account_profile_header_bg.png';
+  static const avatarPlaceholder =
+      'assets/icons/home/home_avatar_placeholder.png';
+  static const menuSharedDevices =
+      'assets/icons/account/account_profile_menu_shared_devices.png';
+  static const menuReceivingDevices =
+      'assets/icons/account/account_profile_menu_receiving_devices.png';
+  static const menuManageDevices =
+      'assets/icons/account/account_profile_menu_manage_devices.png';
+  static const menuAfterSalesService =
+      'assets/icons/account/account_profile_menu_after_sales_service.png';
+  static const menuRegion =
+      'assets/icons/account/account_profile_menu_region.png';
+  static const menuLanguage =
+      'assets/icons/account/account_profile_menu_language.png';
+  static const menuSystemPermissions =
+      'assets/icons/account/account_profile_menu_system_permissions.png';
+  static const menuManualGuide =
+      'assets/icons/account/account_profile_menu_manual_guide.png';
+  static const menuCheckForUpdates =
+      'assets/icons/account/account_profile_menu_check_for_updates.png';
+  static const menuAbout =
+      'assets/icons/account/account_profile_menu_about.png';
 }
 
 class AccountProfileKeys {
   const AccountProfileKeys._();
 
   static const avatarButton = ValueKey('account-profile-avatar-button');
-  static const sharedDevicesMenuItem = ValueKey('account-profile-shared-devices-menu-item');
-  static const receivingDevicesMenuItem = ValueKey('account-profile-receiving-devices-menu-item');
-  static const languageMenuItem = ValueKey('account-profile-language-menu-item');
+  static const sharedDevicesMenuItem = ValueKey(
+    'account-profile-shared-devices-menu-item',
+  );
+  static const receivingDevicesMenuItem = ValueKey(
+    'account-profile-receiving-devices-menu-item',
+  );
+  static const languageMenuItem = ValueKey(
+    'account-profile-language-menu-item',
+  );
   static const languageDialog = ValueKey('account-language-dialog');
   static const languagePicker = ValueKey('account-language-picker');
-  static const languageCancelButton = ValueKey('account-language-cancel-button');
-  static const languageConfirmButton = ValueKey('account-language-confirm-button');
+  static const languageCancelButton = ValueKey(
+    'account-language-cancel-button',
+  );
+  static const languageConfirmButton = ValueKey(
+    'account-language-confirm-button',
+  );
   static const regionMenuItem = ValueKey('account-profile-region-menu-item');
-  static const manageDevicesMenuItem = ValueKey('account-profile-manage-devices-menu-item');
-  static const systemPermissionsMenuItem = ValueKey('account-profile-system-permissions-menu-item');
-  static const checkForUpdatesMenuItem = ValueKey('account-profile-check-for-updates-menu-item');
-  static const afterSalesMenuItem = ValueKey('account-profile-after-sales-menu-item');
-  static const manualGuideMenuItem = ValueKey('account-profile-manual-guide-menu-item');
+  static const manageDevicesMenuItem = ValueKey(
+    'account-profile-manage-devices-menu-item',
+  );
+  static const systemPermissionsMenuItem = ValueKey(
+    'account-profile-system-permissions-menu-item',
+  );
+  static const checkForUpdatesMenuItem = ValueKey(
+    'account-profile-check-for-updates-menu-item',
+  );
+  static const afterSalesMenuItem = ValueKey(
+    'account-profile-after-sales-menu-item',
+  );
+  static const manualGuideMenuItem = ValueKey(
+    'account-profile-manual-guide-menu-item',
+  );
   static const logoutButton = ValueKey('account-profile-logout-button');
 }
 
@@ -85,20 +117,37 @@ class _AccountProfilePageState extends ConsumerState<AccountProfilePage> {
       await ref.read(accountOverviewControllerProvider.notifier).refresh();
     } on Object {
       if (mounted) {
-        AppToast.error(context, AppLocalizations.of(context).accountOverviewRefreshFailed);
+        AppToast.error(
+          context,
+          AppLocalizations.of(context).accountOverviewRefreshFailed,
+        );
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final profile = ref.watch(accountControllerProvider).maybeWhen(data: (value) => value, orElse: () => null);
-    final overview = ref.watch(accountOverviewControllerProvider).maybeWhen(data: (value) => value, orElse: () => null);
-    final localePreference = ref.watch(appLocaleControllerProvider).maybeWhen(data: (value) => value, orElse: () => AppLocalePreference.english);
+    final profile = ref
+        .watch(accountControllerProvider)
+        .maybeWhen(data: (value) => value, orElse: () => null);
+    final overview = ref
+        .watch(accountOverviewControllerProvider)
+        .maybeWhen(data: (value) => value, orElse: () => null);
+    final localePreference = ref
+        .watch(appLocaleControllerProvider)
+        .maybeWhen(
+          data: (value) => value,
+          orElse: () => AppLocalePreference.english,
+        );
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: const FlinxNavigationBar(title: '', showBottomDivider: false, isTransparent: true, foregroundColor: Colors.white),
+      appBar: const FlinxNavigationBar(
+        title: '',
+        showBottomDivider: false,
+        isTransparent: true,
+        foregroundColor: Colors.white,
+      ),
       backgroundColor: AppColors.accountProfileBackground,
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -111,10 +160,16 @@ class _AccountProfilePageState extends ConsumerState<AccountProfilePage> {
                 localePreference: localePreference,
                 maxHeight: constraints.maxHeight,
                 onRefresh: _refreshOverview,
-                onLocaleConfirmed: (locale) => ref.read(appLocaleControllerProvider.notifier).selectLocale(locale),
+                onLocaleConfirmed: (locale) => ref
+                    .read(appLocaleControllerProvider.notifier)
+                    .selectLocale(locale),
                 onLogout: () async {
-                  final authSessionController = ref.read(activeAuthSessionProvider.notifier);
-                  final accountController = ref.read(accountControllerProvider.notifier);
+                  final authSessionController = ref.read(
+                    activeAuthSessionProvider.notifier,
+                  );
+                  final accountController = ref.read(
+                    accountControllerProvider.notifier,
+                  );
 
                   ref.invalidate(homeScenesProvider);
                   ref.invalidate(homeDevicesProvider);
@@ -158,7 +213,9 @@ class _AccountProfileContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final nickname = overview?.nickname.isNotEmpty == true ? overview!.nickname : profile?.nickname ?? l10n.accountFallbackEmail;
+    final nickname = overview?.nickname.isNotEmpty == true
+        ? overview!.nickname
+        : profile?.nickname ?? l10n.accountFallbackEmail;
     final refreshedAt = overview?.refreshedAt;
     final menuItems = [
       _AccountMenuItem(
@@ -203,7 +260,10 @@ class _AccountProfileContent extends StatelessWidget {
           isScrollControlled: true,
           barrierColor: AppColors.accountLanguageDialogScrim,
           backgroundColor: Colors.transparent,
-          builder: (context) => _LanguageDialog(initialLocale: localePreference, onConfirm: onLocaleConfirmed),
+          builder: (context) => _LanguageDialog(
+            initialLocale: localePreference,
+            onConfirm: onLocaleConfirmed,
+          ),
         ),
         key: AccountProfileKeys.languageMenuItem,
       ),
@@ -213,7 +273,11 @@ class _AccountProfileContent extends StatelessWidget {
         key: AccountProfileKeys.systemPermissionsMenuItem,
         onTap: () => context.pushNamed(SystemPermissionsPage.routeName),
       ),
-      _AccountMenuItem(label: l10n.accountManualGuide, iconAssetPath: AccountProfileAssetPaths.menuManualGuide, key: AccountProfileKeys.manualGuideMenuItem),
+      _AccountMenuItem(
+        label: l10n.accountManualGuide,
+        iconAssetPath: AccountProfileAssetPaths.menuManualGuide,
+        key: AccountProfileKeys.manualGuideMenuItem,
+      ),
       _AccountMenuItem(
         label: l10n.accountCheckForUpdates,
         iconAssetPath: AccountProfileAssetPaths.menuCheckForUpdates,
@@ -237,7 +301,12 @@ class _AccountProfileContent extends StatelessWidget {
             physics: const AlwaysScrollableScrollPhysics(),
             padding: EdgeInsets.zero,
             children: [
-              _AccountHeader(nickname: nickname, refreshedAt: refreshedAt == null ? l10n.accountOverviewRefreshTimeUnavailable : _formatTimestamp(refreshedAt)),
+              _AccountHeader(
+                nickname: nickname,
+                refreshedAt: refreshedAt == null
+                    ? l10n.accountOverviewRefreshTimeUnavailable
+                    : _formatTimestamp(refreshedAt),
+              ),
               _AccountMenu(items: menuItems),
               _AccountProfileLogoutButton(onPressed: onLogout),
             ],
@@ -258,7 +327,8 @@ class _AccountProfileContent extends StatelessWidget {
   String _languageLabel(AppLocalizations l10n, AppLocalePreference locale) {
     return switch (locale) {
       AppLocalePreference.english => l10n.accountLanguageOptionEnglish,
-      AppLocalePreference.simplifiedChinese => l10n.accountLanguageOptionSimplifiedChinese,
+      AppLocalePreference.simplifiedChinese =>
+        l10n.accountLanguageOptionSimplifiedChinese,
     };
   }
 }
@@ -282,8 +352,12 @@ class _LanguageDialogState extends State<_LanguageDialog> {
   void initState() {
     super.initState();
     _selectedLocale = widget.initialLocale;
-    final selectedLocaleIndex = AppLocalePreference.values.indexOf(_selectedLocale);
-    _languagePickerController = FixedExtentScrollController(initialItem: selectedLocaleIndex);
+    final selectedLocaleIndex = AppLocalePreference.values.indexOf(
+      _selectedLocale,
+    );
+    _languagePickerController = FixedExtentScrollController(
+      initialItem: selectedLocaleIndex,
+    );
   }
 
   @override
@@ -297,8 +371,14 @@ class _LanguageDialogState extends State<_LanguageDialog> {
     final l10n = AppLocalizations.of(context);
     final textTheme = Theme.of(context).textTheme;
     final languages = [
-      _LanguageOptionData(label: l10n.accountLanguageOptionEnglish, locale: AppLocalePreference.english),
-      _LanguageOptionData(label: l10n.accountLanguageOptionSimplifiedChinese, locale: AppLocalePreference.simplifiedChinese),
+      _LanguageOptionData(
+        label: l10n.accountLanguageOptionEnglish,
+        locale: AppLocalePreference.english,
+      ),
+      _LanguageOptionData(
+        label: l10n.accountLanguageOptionSimplifiedChinese,
+        locale: AppLocalePreference.simplifiedChinese,
+      ),
     ];
 
     return SafeArea(
@@ -308,7 +388,11 @@ class _LanguageDialogState extends State<_LanguageDialog> {
         child: Material(
           key: AccountProfileKeys.languageDialog,
           color: AppColors.accountLanguageDialogSurface,
-          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(AppShapeTokens.accountLanguageDialogRadius))),
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(
+              Radius.circular(AppShapeTokens.accountLanguageDialogRadius),
+            ),
+          ),
           clipBehavior: Clip.antiAlias,
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 522),
@@ -317,7 +401,10 @@ class _LanguageDialogState extends State<_LanguageDialog> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(l10n.accountLanguageDialogTitle, style: AppTextTokens.accountLanguageDialogTitle(textTheme)),
+                  Text(
+                    l10n.accountLanguageDialogTitle,
+                    style: AppTextTokens.accountLanguageDialogTitle(textTheme),
+                  ),
                   const SizedBox(height: 18),
                   _LanguagePicker(
                     controller: _languagePickerController,
@@ -333,7 +420,9 @@ class _LanguageDialogState extends State<_LanguageDialog> {
                           key: AccountProfileKeys.languageCancelButton,
                           label: l10n.accountLanguageCancelAction,
                           isPrimary: false,
-                          onPressed: _isConfirming ? null : () => Navigator.of(context).pop(),
+                          onPressed: _isConfirming
+                              ? null
+                              : () => Navigator.of(context).pop(),
                         ),
                       ),
                       const SizedBox(width: 40),
@@ -381,7 +470,12 @@ class _LanguageOptionData {
 }
 
 class _LanguagePicker extends StatelessWidget {
-  const _LanguagePicker({required this.controller, required this.languages, required this.selectedLocale, required this.onScrollEnd});
+  const _LanguagePicker({
+    required this.controller,
+    required this.languages,
+    required this.selectedLocale,
+    required this.onScrollEnd,
+  });
 
   final FixedExtentScrollController controller;
   final List<_LanguageOptionData> languages;
@@ -416,7 +510,10 @@ class _LanguagePicker extends StatelessWidget {
                     child: Center(
                       child: Text(
                         language.label,
-                        style: AppTextTokens.accountLanguageDialogOption(Theme.of(context).textTheme, isSelected: language.locale == selectedLocale),
+                        style: AppTextTokens.accountLanguageDialogOption(
+                          Theme.of(context).textTheme,
+                          isSelected: language.locale == selectedLocale,
+                        ),
                       ),
                     ),
                   );
@@ -430,8 +527,16 @@ class _LanguagePicker extends StatelessWidget {
                 height: AppSpacingTokens.accountLanguageDialogWheelItemExtent,
                 decoration: const BoxDecoration(
                   border: Border(
-                    top: BorderSide(color: AppColors.accountLanguageDialogDivider, width: AppSpacingTokens.accountLanguageDialogSelectionLineThickness),
-                    bottom: BorderSide(color: AppColors.accountLanguageDialogDivider, width: AppSpacingTokens.accountLanguageDialogSelectionLineThickness),
+                    top: BorderSide(
+                      color: AppColors.accountLanguageDialogDivider,
+                      width: AppSpacingTokens
+                          .accountLanguageDialogSelectionLineThickness,
+                    ),
+                    bottom: BorderSide(
+                      color: AppColors.accountLanguageDialogDivider,
+                      width: AppSpacingTokens
+                          .accountLanguageDialogSelectionLineThickness,
+                    ),
                   ),
                 ),
               ),
@@ -444,7 +549,12 @@ class _LanguagePicker extends StatelessWidget {
 }
 
 class _LanguageDialogButton extends StatelessWidget {
-  const _LanguageDialogButton({required this.label, required this.isPrimary, required this.onPressed, super.key});
+  const _LanguageDialogButton({
+    required this.label,
+    required this.isPrimary,
+    required this.onPressed,
+    super.key,
+  });
 
   final String label;
   final bool isPrimary;
@@ -457,11 +567,19 @@ class _LanguageDialogButton extends StatelessWidget {
       child: FilledButton(
         onPressed: onPressed,
         style: FilledButton.styleFrom(
-          backgroundColor: isPrimary ? AppColors.brandPrimaryLight : AppColors.accountLanguageDialogCancelSurface,
+          backgroundColor: isPrimary
+              ? AppColors.brandPrimaryLight
+              : AppColors.accountLanguageDialogCancelSurface,
           foregroundColor: isPrimary ? Colors.white : AppColors.textPrimary,
           shape: const StadiumBorder(),
         ),
-        child: Text(label, style: AppTextTokens.accountLanguageDialogAction(Theme.of(context).textTheme, isPrimary: isPrimary)),
+        child: Text(
+          label,
+          style: AppTextTokens.accountLanguageDialogAction(
+            Theme.of(context).textTheme,
+            isPrimary: isPrimary,
+          ),
+        ),
       ),
     );
   }
@@ -482,7 +600,8 @@ class _AccountHeader extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final headerHeight = constraints.maxWidth * _headerImageHeight / _headerImageWidth;
+        final headerHeight =
+            constraints.maxWidth * _headerImageHeight / _headerImageWidth;
 
         return SizedBox(
           height: headerHeight,
@@ -503,16 +622,32 @@ class _AccountHeader extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    _AccountAvatar(size: 66, onTap: () => context.pushNamed(AccountDetailsPage.routeName)),
+                    _AccountAvatar(
+                      size: 66,
+                      onTap: () =>
+                          context.pushNamed(AccountDetailsPage.routeName),
+                    ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(nickname, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextTokens.accountProfileEmail(textTheme)),
+                          Text(
+                            nickname,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextTokens.accountProfileEmail(textTheme),
+                          ),
                           const SizedBox(height: 6),
-                          Text(refreshedAt, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextTokens.accountProfileRegisteredAt(textTheme)),
+                          Text(
+                            refreshedAt,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextTokens.accountProfileRegisteredAt(
+                              textTheme,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -537,12 +672,19 @@ class _HeaderFallbackArt extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppColors.surfaceAccountHeaderFallback, AppColors.surfaceAccountHeaderFallbackLight],
+          colors: [
+            AppColors.surfaceAccountHeaderFallback,
+            AppColors.surfaceAccountHeaderFallbackLight,
+          ],
         ),
       ),
       child: Align(
         alignment: Alignment.bottomRight,
-        child: Icon(Icons.garage_outlined, color: AppColors.backgroundPrimary.withValues(alpha: 0.18), size: 160),
+        child: Icon(
+          Icons.garage_outlined,
+          color: AppColors.backgroundPrimary.withValues(alpha: 0.18),
+          size: 160,
+        ),
       ),
     );
   }
@@ -568,7 +710,10 @@ class _AccountAvatar extends StatelessWidget {
           height: size,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: AppColors.backgroundPrimary.withValues(alpha: 0.46), width: 1),
+            border: Border.all(
+              color: AppColors.backgroundPrimary.withValues(alpha: 0.46),
+              width: 1,
+            ),
           ),
           child: ClipOval(
             child: Image.asset(
@@ -578,7 +723,11 @@ class _AccountAvatar extends StatelessWidget {
                 return Container(
                   color: AppColors.surfaceHomeAvatar,
                   alignment: Alignment.center,
-                  child: Icon(Icons.person, color: AppColors.iconHomePlaceholder, size: size * 0.62),
+                  child: Icon(
+                    Icons.person,
+                    color: AppColors.iconHomePlaceholder,
+                    size: size * 0.62,
+                  ),
                 );
               },
             ),
@@ -602,7 +751,14 @@ class _AccountMenu extends StatelessWidget {
         children: [
           for (var index = 0; index < items.length; index++) ...[
             _AccountMenuRow(item: items[index]),
-            if (index < items.length - 1) const Divider(height: 1, thickness: 1, indent: 28, endIndent: 28, color: AppColors.borderAccountDivider),
+            if (index < items.length - 1)
+              const Divider(
+                height: 1,
+                thickness: 1,
+                indent: 28,
+                endIndent: 28,
+                color: AppColors.borderAccountDivider,
+              ),
           ],
         ],
       ),
@@ -611,7 +767,13 @@ class _AccountMenu extends StatelessWidget {
 }
 
 class _AccountMenuItem {
-  const _AccountMenuItem({required this.label, required this.iconAssetPath, this.trailingText, this.onTap, this.key});
+  const _AccountMenuItem({
+    required this.label,
+    required this.iconAssetPath,
+    this.trailingText,
+    this.onTap,
+    this.key,
+  });
 
   final String label;
   final String iconAssetPath;
@@ -648,17 +810,36 @@ class _AccountMenuRow extends StatelessWidget {
               SizedBox(
                 width: 20,
                 height: 20,
-                child: Image.asset(item.iconAssetPath, fit: BoxFit.contain, errorBuilder: (context, error, stackTrace) => const SizedBox.expand()),
+                child: Image.asset(
+                  item.iconAssetPath,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) =>
+                      const SizedBox.expand(),
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(item.label, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextTokens.accountMenuLabel(textTheme)),
+                child: Text(
+                  item.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextTokens.accountMenuLabel(textTheme),
+                ),
               ),
               if (item.trailingText case final trailingText?) ...[
-                Text(trailingText, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextTokens.accountMenuValue(textTheme)),
+                Text(
+                  trailingText,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextTokens.accountMenuValue(textTheme),
+                ),
                 const SizedBox(width: 8),
               ],
-              const Icon(Icons.chevron_right_rounded, color: AppColors.iconAccountChevron, size: 24),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.iconAccountChevron,
+                size: 24,
+              ),
               const SizedBox(width: 28),
             ],
           ),
@@ -687,9 +868,18 @@ class _AccountProfileLogoutButton extends StatelessWidget {
             backgroundColor: AppColors.accountProfileLogoutSurface,
             foregroundColor: AppColors.textPrimary,
             elevation: 0,
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(AppShapeTokens.accountProfileLogoutRadius))),
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(
+                Radius.circular(AppShapeTokens.accountProfileLogoutRadius),
+              ),
+            ),
           ),
-          child: Text(AppLocalizations.of(context).accountDetailsLogout, style: AppTextTokens.accountProfileLogout(Theme.of(context).textTheme)),
+          child: Text(
+            AppLocalizations.of(context).accountDetailsLogout,
+            style: AppTextTokens.accountProfileLogout(
+              Theme.of(context).textTheme,
+            ),
+          ),
         ),
       ),
     );

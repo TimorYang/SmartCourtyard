@@ -1,29 +1,54 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
-import '../../domain/entities/shared_device_share.dart';
+import '../../application/providers.dart';
+import '../../application/shared_door_member_actions_controller.dart';
+import '../../domain/entities/shared_door.dart';
+import '../../domain/entities/shared_door_members.dart';
+import '../../domain/entities/shared_device_share.dart'
+    show SharedDeviceMemberAssetPaths;
 import '../../../home/presentation/pages/device_share_page.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 
-class SharedDeviceMemberManagementPage extends StatelessWidget {
-  const SharedDeviceMemberManagementPage({super.key});
+class SharedDeviceMemberManagementPage extends ConsumerStatefulWidget {
+  const SharedDeviceMemberManagementPage({super.key, this.device});
 
   static const routeName = 'shared-device-member-management';
   static const routePath = '/account/shared-devices/members';
 
+  final SharedDoor? device;
+
+  @override
+  ConsumerState<SharedDeviceMemberManagementPage> createState() =>
+      _SharedDeviceMemberManagementPageState();
+}
+
+class _SharedDeviceMemberManagementPageState
+    extends ConsumerState<SharedDeviceMemberManagementPage> {
+  @override
+  void initState() {
+    super.initState();
+    final doorId = widget.device?.doorId;
+    if (doorId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ref.invalidate(sharedDoorMembersProvider(doorId));
+        }
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final share = SharedDeviceShare.mock();
-    final administrators = share.members
-        .where((member) => member.role == SharedDeviceMemberRole.administrator)
-        .toList(growable: false);
-    final guests = share.members
-        .where((member) => member.role == SharedDeviceMemberRole.guest)
-        .toList(growable: false);
     final textTheme = Theme.of(context).textTheme;
+    final doorId = widget.device?.doorId;
+    final members = doorId == null
+        ? const AsyncValue<SharedDoorMembers>.loading()
+        : ref.watch(sharedDoorMembersProvider(doorId));
 
     return Scaffold(
       backgroundColor: AppColors.backgroundPrimary,
@@ -33,45 +58,50 @@ class SharedDeviceMemberManagementPage extends StatelessWidget {
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 430),
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacingTokens.sharedDeviceMemberPageHorizontal,
-                AppSpacingTokens.sharedDeviceMemberPageTop,
-                AppSpacingTokens.sharedDeviceMemberPageHorizontal,
-                AppSpacingTokens.sharedDeviceMemberPageBottom,
+            child: members.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (_, _) =>
+                  Center(child: Text(l10n.sharedDevicesLoadFailed)),
+              data: (share) => ListView(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacingTokens.sharedDeviceMemberPageHorizontal,
+                  AppSpacingTokens.sharedDeviceMemberPageTop,
+                  AppSpacingTokens.sharedDeviceMemberPageHorizontal,
+                  AppSpacingTokens.sharedDeviceMemberPageBottom,
+                ),
+                children: [
+                  Text(
+                    share.doorName,
+                    style: AppTextTokens.sharedDeviceMemberPageTitle(textTheme),
+                  ),
+                  const SizedBox(
+                    height: AppSpacingTokens.sharedDeviceMemberPageSubtitleGap,
+                  ),
+                  Text(
+                    l10n.sharedDeviceMemberAdministrator,
+                    style: AppTextTokens.sharedDeviceMemberSectionTitle(
+                      textTheme,
+                    ),
+                  ),
+                  const SizedBox(
+                    height: AppSpacingTokens.sharedDeviceMemberSectionToCards,
+                  ),
+                  ..._memberCards(share.administrators),
+                  const SizedBox(
+                    height: AppSpacingTokens.sharedDeviceMemberSectionsGap,
+                  ),
+                  Text(
+                    l10n.sharedDeviceMemberGuest,
+                    style: AppTextTokens.sharedDeviceMemberSectionTitle(
+                      textTheme,
+                    ),
+                  ),
+                  const SizedBox(
+                    height: AppSpacingTokens.sharedDeviceMemberSectionToCards,
+                  ),
+                  ..._memberCards(share.guests),
+                ],
               ),
-              children: [
-                Text(
-                  share.deviceName,
-                  style: AppTextTokens.sharedDeviceMemberPageTitle(textTheme),
-                ),
-                const SizedBox(
-                  height: AppSpacingTokens.sharedDeviceMemberPageSubtitleGap,
-                ),
-                Text(
-                  l10n.sharedDeviceMemberAdministrator,
-                  style: AppTextTokens.sharedDeviceMemberSectionTitle(
-                    textTheme,
-                  ),
-                ),
-                const SizedBox(
-                  height: AppSpacingTokens.sharedDeviceMemberSectionToCards,
-                ),
-                ..._memberCards(administrators),
-                const SizedBox(
-                  height: AppSpacingTokens.sharedDeviceMemberSectionsGap,
-                ),
-                Text(
-                  l10n.sharedDeviceMemberGuest,
-                  style: AppTextTokens.sharedDeviceMemberSectionTitle(
-                    textTheme,
-                  ),
-                ),
-                const SizedBox(
-                  height: AppSpacingTokens.sharedDeviceMemberSectionToCards,
-                ),
-                ..._memberCards(guests),
-              ],
             ),
           ),
         ),
@@ -79,7 +109,7 @@ class SharedDeviceMemberManagementPage extends StatelessWidget {
     );
   }
 
-  List<Widget> _memberCards(List<SharedDeviceMember> members) {
+  List<Widget> _memberCards(List<SharedDoorMember> members) {
     return [
       for (var index = 0; index < members.length; index++) ...[
         _SharedDeviceMemberCard(member: members[index]),
@@ -103,13 +133,13 @@ class SharedDeviceMemberManagementKeys {
       ValueKey('shared-device-member-delete-$memberId');
 }
 
-class _SharedDeviceMemberCard extends StatelessWidget {
+class _SharedDeviceMemberCard extends ConsumerWidget {
   const _SharedDeviceMemberCard({required this.member});
 
-  final SharedDeviceMember member;
+  final SharedDoorMember member;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final textTheme = Theme.of(context).textTheme;
 
@@ -142,7 +172,7 @@ class _SharedDeviceMemberCard extends StatelessWidget {
                   height: AppSpacingTokens.sharedDeviceMemberEmailToTime,
                 ),
                 Text(
-                  _formatAuthorizedAt(member.authorizedAt),
+                  _expiryLabel(l10n, member),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTextTokens.sharedDeviceMemberMetadata(textTheme),
@@ -151,7 +181,7 @@ class _SharedDeviceMemberCard extends StatelessWidget {
                   height: AppSpacingTokens.sharedDeviceMemberTimeToStatus,
                 ),
                 Text(
-                  _statusLabel(l10n, member.status),
+                  l10n.sharedDeviceMemberAccepted,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTextTokens.sharedDeviceMemberStatus(textTheme),
@@ -165,8 +195,13 @@ class _SharedDeviceMemberCard extends StatelessWidget {
             assetPath: SharedDeviceMemberAssetPaths.editAction,
             fallbackIcon: Icons.edit_outlined,
             label: l10n.sharedDeviceMemberEditLabel,
-            onTap: () =>
-                context.pushNamed(DeviceSharePage.routeName, extra: member),
+            onTap: () => context.pushNamed(
+              DeviceSharePage.routeName,
+              extra: DeviceShareEditRouteData(
+                doorId: member.doorId,
+                member: member,
+              ),
+            ),
           ),
           const SizedBox(width: AppSpacingTokens.sharedDeviceMemberActionGap),
           _MemberActionButton(
@@ -174,19 +209,24 @@ class _SharedDeviceMemberCard extends StatelessWidget {
             assetPath: SharedDeviceMemberAssetPaths.deleteAction,
             fallbackIcon: Icons.delete_outline,
             label: l10n.sharedDeviceMemberDeleteLabel,
+            onTap: () async {
+              final error = await ref
+                  .read(sharedDoorMemberActionsControllerProvider.notifier)
+                  .delete(shareId: member.shareId);
+              if (error == null) ref.invalidate(sharedDoorMembersProvider);
+            },
           ),
         ],
       ),
     );
   }
 
-  String _statusLabel(AppLocalizations l10n, SharedDeviceMemberStatus status) {
-    return switch (status) {
-      SharedDeviceMemberStatus.accepted => l10n.sharedDeviceMemberAccepted,
-    };
-  }
-
-  String _formatAuthorizedAt(DateTime dateTime) {
+  String _expiryLabel(AppLocalizations l10n, SharedDoorMember member) {
+    if (member.expiryType == SharedDoorMemberExpiryType.neverExpired) {
+      return l10n.deviceShareNeverExpired;
+    }
+    final dateTime = member.expiresAt;
+    if (dateTime == null) return '';
     String padded(int value) => value.toString().padLeft(2, '0');
     return '${dateTime.year}-${padded(dateTime.month)}-${padded(dateTime.day)} '
         '${padded(dateTime.hour)}:${padded(dateTime.minute)}:${padded(dateTime.second)}';
@@ -196,7 +236,7 @@ class _SharedDeviceMemberCard extends StatelessWidget {
 class _SharedDeviceMemberAvatar extends StatelessWidget {
   const _SharedDeviceMemberAvatar({required this.member});
 
-  final SharedDeviceMember member;
+  final SharedDoorMember member;
 
   @override
   Widget build(BuildContext context) {
@@ -207,18 +247,14 @@ class _SharedDeviceMemberAvatar extends StatelessWidget {
       child: SizedBox.square(
         dimension: AppSpacingTokens.sharedDeviceMemberAvatarSize,
         child: ClipOval(
-          child: Image.asset(
-            member.avatarAssetPath,
-            fit: BoxFit.cover,
-            errorBuilder: (_, _, _) => const ColoredBox(
-              color: AppColors.sharedDeviceMemberAvatarPlaceholder,
-              child: Center(
-                child: Icon(
-                  Icons.person_outline,
-                  color: AppColors.sharedDeviceMemberAvatarPlaceholderIcon,
-                  size: AppSpacingTokens
-                      .sharedDeviceMemberAvatarPlaceholderIconSize,
-                ),
+          child: const ColoredBox(
+            color: AppColors.sharedDeviceMemberAvatarPlaceholder,
+            child: Center(
+              child: Icon(
+                Icons.person_outline,
+                color: AppColors.sharedDeviceMemberAvatarPlaceholderIcon,
+                size: AppSpacingTokens
+                    .sharedDeviceMemberAvatarPlaceholderIconSize,
               ),
             ),
           ),

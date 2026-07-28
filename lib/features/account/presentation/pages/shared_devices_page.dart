@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
@@ -6,29 +7,36 @@ import '../../../../platform_bridge/hardware_models.dart';
 import '../../../../shared/design_system/door_type_visuals.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
-import '../../../home/presentation/pages/device_share_page.dart';
+import '../../application/providers.dart';
+import '../../domain/entities/shared_door.dart';
 import 'shared_device_member_management_page.dart';
 
-class SharedDevicesPage extends StatelessWidget {
+class SharedDevicesPage extends ConsumerStatefulWidget {
   const SharedDevicesPage({super.key});
 
   static const routeName = 'shared-devices';
   static const routePath = '/account/shared-devices';
 
   @override
+  ConsumerState<SharedDevicesPage> createState() => _SharedDevicesPageState();
+}
+
+class _SharedDevicesPageState extends ConsumerState<SharedDevicesPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.invalidate(sharedDevicesControllerProvider);
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final textTheme = Theme.of(context).textTheme;
-    final devices = [
-      _SharedDevice(
-        name: l10n.addNewDoorsGarageDoor,
-        doorType: DoorType.garage,
-      ),
-      _SharedDevice(
-        name: l10n.addNewDoorsIndustrialDoor,
-        doorType: DoorType.industrial,
-      ),
-    ];
+    final sharedDevices = ref.watch(sharedDevicesControllerProvider);
 
     return Scaffold(
       backgroundColor: AppColors.backgroundPrimary,
@@ -57,37 +65,42 @@ class SharedDevicesPage extends StatelessWidget {
                   height: AppSpacingTokens.sharedDevicesTitleToList,
                 ),
                 Expanded(
-                  child: ListView.separated(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacingTokens.sharedDevicesPageHorizontal,
+                  child: sharedDevices.when(
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
+                    error: (_, _) => _SharedDevicesErrorState(
+                      message: l10n.sharedDevicesLoadFailed,
+                      retryLabel: l10n.sharedDevicesRetry,
+                      onRetry: () => ref
+                          .read(sharedDevicesControllerProvider.notifier)
+                          .refresh(),
                     ),
-                    itemCount: devices.length,
-                    separatorBuilder: (_, _) => const SizedBox(
-                      height: AppSpacingTokens.sharedDevicesCardGap,
-                    ),
-                    itemBuilder: (context, index) => _SharedDeviceCard(
-                      key: SharedDevicesKeys.deviceCard(index),
-                      device: devices[index],
-                      shareDescription: l10n.sharedDevicesShareToPeople(3),
-                      onTap: () => context.pushNamed(SharedDeviceMemberManagementPage.routeName),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(
-                    bottom: AppSpacingTokens.sharedDevicesAddButtonBottom,
-                  ),
-                  child: Center(
-                    child: Semantics(
-                      button: true,
-                      label: l10n.sharedDevicesAddLabel,
-                      child: GestureDetector(
-                        onTap: () => context.pushNamed(
-                            DeviceSharePage.routeName,
+                    data: (devices) {
+                      if (devices.isEmpty) {
+                        return Center(child: Text(l10n.sharedDevicesEmpty));
+                      }
+                      return ListView.separated(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal:
+                              AppSpacingTokens.sharedDevicesPageHorizontal,
                         ),
-                        child: const _AddSharedDeviceButton(),
-                      ),
-                    ),
+                        itemCount: devices.length,
+                        separatorBuilder: (_, _) => const SizedBox(
+                          height: AppSpacingTokens.sharedDevicesCardGap,
+                        ),
+                        itemBuilder: (context, index) => _SharedDeviceCard(
+                          key: SharedDevicesKeys.deviceCard(index),
+                          device: devices[index],
+                          shareDescription: l10n.sharedDevicesShareToPeople(
+                            devices[index].sharedUserCount,
+                          ),
+                          onTap: () => context.pushNamed(
+                            SharedDeviceMemberManagementPage.routeName,
+                            extra: devices[index],
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
@@ -103,16 +116,10 @@ class SharedDevicesKeys {
   const SharedDevicesKeys._();
 
   static const addButton = ValueKey('shared-devices-add-button');
+  static const retryButton = ValueKey('shared-devices-retry-button');
 
   static ValueKey<String> deviceCard(int index) =>
       ValueKey('shared-devices-device-card-$index');
-}
-
-class _SharedDevice {
-  const _SharedDevice({required this.name, required this.doorType});
-
-  final String name;
-  final DoorType doorType;
 }
 
 class _SharedDeviceCard extends StatelessWidget {
@@ -123,14 +130,14 @@ class _SharedDeviceCard extends StatelessWidget {
     required this.onTap,
   });
 
-  final _SharedDevice device;
+  final SharedDoor device;
   final String shareDescription;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final visual = DoorTypeVisuals.forType(device.doorType);
+    final visual = DoorTypeVisuals.forType(DoorType.garage);
 
     return Semantics(
       button: true,
@@ -191,24 +198,30 @@ class _SharedDeviceCard extends StatelessWidget {
   }
 }
 
-class _AddSharedDeviceButton extends StatelessWidget {
-  const _AddSharedDeviceButton();
+class _SharedDevicesErrorState extends StatelessWidget {
+  const _SharedDevicesErrorState({
+    required this.message,
+    required this.retryLabel,
+    required this.onRetry,
+  });
+
+  final String message;
+  final String retryLabel;
+  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      key: SharedDevicesKeys.addButton,
-      width: AppSpacingTokens.sharedDevicesAddButtonSize,
-      height: AppSpacingTokens.sharedDevicesAddButtonSize,
-      decoration: const BoxDecoration(
-        color: AppColors.sharedDevicesAddButton,
-        shape: BoxShape.circle,
-      ),
-      alignment: Alignment.center,
-      child: const Icon(
-        Icons.add,
-        color: Colors.white,
-        size: AppSpacingTokens.sharedDevicesAddIconSize,
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(message),
+          TextButton(
+            key: SharedDevicesKeys.retryButton,
+            onPressed: onRetry,
+            child: Text(retryLabel),
+          ),
+        ],
       ),
     );
   }

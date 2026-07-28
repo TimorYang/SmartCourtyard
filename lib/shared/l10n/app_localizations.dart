@@ -746,6 +746,12 @@ abstract class AppLocalizations {
   /// **'Share'**
   String get homeDeviceEditShareAction;
 
+  /// Message shown when sharing a door that has no device
+  ///
+  /// In en, this message translates to:
+  /// **'No Device'**
+  String get homeNoDeviceMessage;
+
   /// Move scene action in the home device editing sheet
   ///
   /// In en, this message translates to:
@@ -872,6 +878,18 @@ abstract class AppLocalizations {
   /// **'Partial open'**
   String get deviceShareCapabilityPartialOpen;
 
+  /// No description provided for @deviceShareCapabilityPartialOpenLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Partial opening level'**
+  String get deviceShareCapabilityPartialOpenLevel;
+
+  /// No description provided for @deviceShareCapabilityLedControl.
+  ///
+  /// In en, this message translates to:
+  /// **'LED control'**
+  String get deviceShareCapabilityLedControl;
+
   /// LED off delay capability label on the device sharing page
   ///
   /// In en, this message translates to:
@@ -883,6 +901,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Auto-close'**
   String get deviceShareCapabilityAutoClose;
+
+  /// No description provided for @deviceShareCapabilityTransmitterPairing.
+  ///
+  /// In en, this message translates to:
+  /// **'Transmitter pairing'**
+  String get deviceShareCapabilityTransmitterPairing;
 
   /// Capability option displayed when sharing a device
   ///
@@ -913,6 +937,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Confirm'**
   String get deviceShareConfirmAction;
+
+  /// No description provided for @deviceShareDoorUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This door is unavailable for sharing.'**
+  String get deviceShareDoorUnavailable;
+
+  /// No description provided for @deviceShareCapabilitiesLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load share capabilities. Tap to retry.'**
+  String get deviceShareCapabilitiesLoadFailed;
+
+  /// No description provided for @deviceShareSubmitFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to create the share. Please try again.'**
+  String get deviceShareSubmitFailed;
 
   /// Title and accessibility label for the account profile menu page
   ///
@@ -1094,6 +1136,24 @@ abstract class AppLocalizations {
   /// **'Add shared device'**
   String get sharedDevicesAddLabel;
 
+  /// Empty state for the shared devices list
+  ///
+  /// In en, this message translates to:
+  /// **'No shared devices yet.'**
+  String get sharedDevicesEmpty;
+
+  /// Error state for the shared devices list
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load shared devices.'**
+  String get sharedDevicesLoadFailed;
+
+  /// Retry action for the shared devices list
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get sharedDevicesRetry;
+
   /// Heading for device administrators in shared member management
   ///
   /// In en, this message translates to:
@@ -1142,29 +1202,29 @@ abstract class AppLocalizations {
   /// **'RECEIVING DEVICES'**
   String get receivingDevicesTitle;
 
-  /// Demo receiving device name shown in the first card
+  /// Owner email shown below a receiving device name
   ///
   /// In en, this message translates to:
-  /// **'Smart door A'**
-  String get receivingDevicesSmartDoorA;
+  /// **'Shared by: {ownerEmail}'**
+  String receivingDevicesOwnerEmail(String ownerEmail);
 
-  /// Demo receiving device name shown in the second and third cards
+  /// Empty state for the receiving devices list
   ///
   /// In en, this message translates to:
-  /// **'Smart door B'**
-  String get receivingDevicesSmartDoorB;
+  /// **'No receiving devices yet.'**
+  String get receivingDevicesEmpty;
 
-  /// Sharing status for a receiving device
+  /// Error state for the receiving devices list
   ///
   /// In en, this message translates to:
-  /// **'Share to {count} people'**
-  String receivingDevicesSharedWithPeople(int count);
+  /// **'Unable to load receiving devices.'**
+  String get receivingDevicesLoadFailed;
 
-  /// Sharing status for a receiving device that is not shared
+  /// Retry action for the receiving devices list
   ///
   /// In en, this message translates to:
-  /// **'Not shared'**
-  String get receivingDevicesNotShared;
+  /// **'Retry'**
+  String get receivingDevicesRetry;
 
   /// Accessibility label for the decorative edit action on the receiving devices page
   ///

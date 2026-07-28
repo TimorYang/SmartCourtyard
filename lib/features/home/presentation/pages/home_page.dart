@@ -25,6 +25,7 @@ import '../widgets/device_delete_dialog.dart';
 import '../widgets/device_name_dialog.dart';
 import '../widgets/scene_name_dialog.dart';
 import '../../../device_control/presentation/pages/device_command_page.dart';
+import '../../../device_control/application/device_command_controller.dart';
 import 'choose_scene_page.dart';
 import 'device_share_page.dart';
 import 'scene_page.dart';
@@ -50,6 +51,7 @@ class HomeAssetPaths {
   static const deviceEditNameIcon = 'assets/icons/home/home_device_edit_name_icon.png';
   static const deviceEditDeleteIcon = 'assets/icons/home/home_device_edit_delete_icon.png';
   static const deviceEditCustomizeIcon = 'assets/icons/home/home_device_edit_customize_icon.png';
+  static const deviceCardSharingBadge = 'assets/icons/home/home_device_card_sharing_badge.png';
 }
 
 class HomePage extends ConsumerStatefulWidget {
@@ -521,7 +523,7 @@ class _HomeDevicePanel extends StatelessWidget {
                 _DoorCount(count: home.doorCount),
                 const SizedBox(height: 16),
                 if (isSingleColumn)
-                  for (final device in home.devices) ...[SizedBox(height: 160, child: _DeviceCard(device: device)), const SizedBox(height: 18)]
+                  for (final device in home.devices) ...[SizedBox(height: 162, child: _DeviceCard(device: device)), const SizedBox(height: 18)]
                 else
                   GridView.builder(
                     itemCount: home.devices.length,
@@ -530,8 +532,8 @@ class _HomeDevicePanel extends StatelessWidget {
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       mainAxisSpacing: 18,
-                      crossAxisSpacing: 22,
-                      childAspectRatio: 0.96,
+                      crossAxisSpacing: 16,
+                      childAspectRatio: 1,
                     ),
                     itemBuilder: (context, index) {
                       return _DeviceCard(device: home.devices[index]);
@@ -720,9 +722,16 @@ class _DeviceCard extends StatelessWidget {
 
   final DeviceSummary device;
 
+  static const _sharingBadgeKey = ValueKey<String>('home-device-sharing-badge');
+  static const _statusDotKey = ValueKey<String>('home-device-status-dot');
+  static const _sharingBadgeSize = 52.0;
+  static const _cardInset = 10.0;
+  static const _statusDotSpacing = 8.0;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final isSharing = device.shareStatus == 2;
 
     return GestureDetector(
       onTap: () {
@@ -739,7 +748,24 @@ class _DeviceCard extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: Stack(
           children: [
-            Positioned(top: 10, right: 10, child: _DeviceStatusDot(onlineState: device.onlineState)),
+            Positioned(
+              top: isSharing ? _sharingBadgeSize + _statusDotSpacing : _cardInset,
+              right: _cardInset,
+              child: _DeviceStatusDot(key: _statusDotKey, onlineState: device.onlineState),
+            ),
+            if (isSharing)
+              Positioned(
+                top: -6,
+                right: 0,
+                child: Image.asset(
+                  HomeAssetPaths.deviceCardSharingBadge,
+                  key: _sharingBadgeKey,
+                  width: _sharingBadgeSize,
+                  height: _sharingBadgeSize,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                ),
+              ),
             Positioned.fill(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(10, 18, 10, 14),
@@ -757,7 +783,7 @@ class _DeviceCard extends StatelessWidget {
                         textAlign: TextAlign.center,
                         style: AppTextTokens.homeDeviceCardTitle(Theme.of(context).textTheme),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 4),
                       Text(
                         _doorStateLabel(l10n, device.doorState),
                         maxLines: 1,
@@ -809,38 +835,38 @@ class _DeviceEditingSheet extends ConsumerStatefulWidget {
 
 class _DeviceEditingSheetState extends ConsumerState<_DeviceEditingSheet> {
   var _isTopping = false;
+  var _isCheckingShareDevice = false;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final textTheme = Theme.of(context).textTheme;
-    final items = [
-      _DeviceEditingAction(
-        label: l10n.homeDeviceEditTopAction,
-        assetPath: HomeAssetPaths.deviceEditTopIcon,
-        fallbackIcon: Icons.vertical_align_top_rounded,
-        isPending: _isTopping,
-        onPressed: _isTopping ? null : _topDevice,
-      ),
-      _DeviceEditingAction(
-        label: l10n.homeDeviceEditCustomizeAction,
-        assetPath: HomeAssetPaths.deviceEditCustomizeIcon,
-        fallbackIcon: Icons.image_outlined,
-        onPressed: () {
-          Navigator.of(context).pop();
-          showDeviceCustomizeDialog(widget.parentContext, device: widget.device);
-        },
-      ),
-      _DeviceEditingAction(
-        label: l10n.homeDeviceEditShareAction,
-        assetPath: HomeAssetPaths.deviceEditShareIcon,
-        fallbackIcon: Icons.person_add_alt_1_outlined,
-        onPressed: () {
-          final router = GoRouter.of(context);
-          Navigator.of(context).pop();
-          router.push(DeviceSharePage.routePath);
-        },
-      ),
+    final items = <_DeviceEditingAction>[
+      if (widget.device.shareStatus != 2) ...[
+        _DeviceEditingAction(
+          label: l10n.homeDeviceEditTopAction,
+          assetPath: HomeAssetPaths.deviceEditTopIcon,
+          fallbackIcon: Icons.vertical_align_top_rounded,
+          isPending: _isTopping,
+          onPressed: _isTopping ? null : _topDevice,
+        ),
+        _DeviceEditingAction(
+          label: l10n.homeDeviceEditCustomizeAction,
+          assetPath: HomeAssetPaths.deviceEditCustomizeIcon,
+          fallbackIcon: Icons.image_outlined,
+          onPressed: () {
+            Navigator.of(context).pop();
+            showDeviceCustomizeDialog(widget.parentContext, device: widget.device);
+          },
+        ),
+        _DeviceEditingAction(
+          label: l10n.homeDeviceEditShareAction,
+          assetPath: HomeAssetPaths.deviceEditShareIcon,
+          fallbackIcon: Icons.person_add_alt_1_outlined,
+          isPending: _isCheckingShareDevice,
+          onPressed: _isCheckingShareDevice ? null : _shareDevice,
+        ),
+      ],
       _DeviceEditingAction(
         label: l10n.homeDeviceEditMoveSceneAction,
         assetPath: HomeAssetPaths.deviceEditMoveSceneIcon,
@@ -940,6 +966,40 @@ class _DeviceEditingSheetState extends ConsumerState<_DeviceEditingSheet> {
     }
   }
 
+  Future<void> _shareDevice() async {
+    final noDeviceMessage = AppLocalizations.of(widget.parentContext).homeNoDeviceMessage;
+    setState(() {
+      _isCheckingShareDevice = true;
+    });
+
+    try {
+      final devices = await ref.read(fetchDoorDevicesUseCaseProvider)(
+        doorId: widget.device.id,
+        requestId: 'home-share-door-${widget.device.id}-${DateTime.now().toUtc().microsecondsSinceEpoch}',
+      );
+      if (!mounted) {
+        return;
+      }
+      if (devices.isEmpty) {
+        Navigator.of(context).pop();
+        if (widget.parentContext.mounted) {
+          AppToast.info(widget.parentContext, noDeviceMessage);
+        }
+        return;
+      }
+
+      final router = GoRouter.of(context);
+      Navigator.of(context).pop();
+      router.push(DeviceSharePage.routePath, extra: widget.device);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isCheckingShareDevice = false;
+        });
+      }
+    }
+  }
+
   void _showTopFailure() {
     AppToast.error(widget.parentContext, 'Failed to top device');
   }
@@ -1001,7 +1061,7 @@ class _DeviceEditingActionIcon extends StatelessWidget {
 }
 
 class _DeviceStatusDot extends StatelessWidget {
-  const _DeviceStatusDot({required this.onlineState});
+  const _DeviceStatusDot({super.key, required this.onlineState});
 
   final DeviceOnlineState onlineState;
 
@@ -1029,11 +1089,11 @@ class _DeviceDoorIcon extends StatelessWidget {
 
     return Image.asset(
       visual.assetPath,
-      width: 45,
-      height: 45,
+      width: 64,
+      height: 64,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) {
-        return Icon(visual.fallbackIcon, color: AppColors.iconHomeAction, size: 45);
+        return Icon(visual.fallbackIcon, color: AppColors.iconHomeAction, size: 64);
       },
     );
   }

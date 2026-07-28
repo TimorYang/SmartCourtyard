@@ -10,7 +10,9 @@ import '../../domain/entities/upgrade_check.dart';
 class CheckUpgradedVersionKeys {
   const CheckUpgradedVersionKeys._();
 
-  static const applicationCheckbox = ValueKey('upgrade-check-application-checkbox');
+  static const applicationCheckbox = ValueKey(
+    'upgrade-check-application-checkbox',
+  );
   static const startButton = ValueKey('upgrade-check-start-button');
   static const scheduleDialog = ValueKey('upgrade-check-schedule-dialog');
   static const scheduleImmediate = ValueKey('upgrade-check-schedule-immediate');
@@ -18,13 +20,17 @@ class CheckUpgradedVersionKeys {
   static const scheduleConfirm = ValueKey('upgrade-check-schedule-confirm');
   static const scheduleCancel = ValueKey('upgrade-check-schedule-cancel');
 
-  static ValueKey<String> deviceCheckbox(String id) => ValueKey('upgrade-check-device-checkbox-$id');
+  static ValueKey<String> deviceCheckbox(String id) =>
+      ValueKey('upgrade-check-device-checkbox-$id');
 
-  static ValueKey<String> deviceExpansion(String id) => ValueKey('upgrade-check-device-expansion-$id');
+  static ValueKey<String> deviceExpansion(String id) =>
+      ValueKey('upgrade-check-device-expansion-$id');
 
-  static ValueKey<String> packageCheckbox(String deviceId, String packageId) => ValueKey('upgrade-check-package-checkbox-$deviceId-$packageId');
+  static ValueKey<String> packageCheckbox(String deviceId, String packageId) =>
+      ValueKey('upgrade-check-package-checkbox-$deviceId-$packageId');
 
-  static ValueKey<String> progressCard(String id) => ValueKey('upgrade-check-progress-card-$id');
+  static ValueKey<String> progressCard(String id) =>
+      ValueKey('upgrade-check-progress-card-$id');
 }
 
 class CheckUpgradedVersionPage extends ConsumerWidget {
@@ -36,12 +42,17 @@ class CheckUpgradedVersionPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(checkUpgradedVersionControllerProvider);
-    final controller = ref.read(checkUpgradedVersionControllerProvider.notifier);
+    final controller = ref.read(
+      checkUpgradedVersionControllerProvider.notifier,
+    );
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: AppColors.upgradeCheckBackground,
-      appBar: FlinxNavigationBar(title: l10n.upgradeCheckTitle, showBottomDivider: false),
+      appBar: FlinxNavigationBar(
+        title: l10n.upgradeCheckTitle,
+        showBottomDivider: false,
+      ),
       body: SafeArea(
         top: false,
         child: state.isShowingProgress
@@ -49,18 +60,33 @@ class CheckUpgradedVersionPage extends ConsumerWidget {
             : ListView(
                 padding: const EdgeInsets.fromLTRB(24, 24, 24, 108),
                 children: [
-                  Text(l10n.upgradeCheckAppSection, style: AppTextTokens.upgradeCheckSectionTitle(Theme.of(context).textTheme)),
+                  Text(
+                    l10n.upgradeCheckAppSection,
+                    style: AppTextTokens.upgradeCheckSectionTitle(
+                      Theme.of(context).textTheme,
+                    ),
+                  ),
                   const SizedBox(height: 12),
-                  _ApplicationCard(item: state.application, onChanged: controller.toggleApplication),
+                  _ApplicationCard(
+                    item: state.application,
+                    onChanged: controller.toggleApplication,
+                  ),
                   const SizedBox(height: 20),
-                  Text(l10n.upgradeCheckFirmwareSection, style: AppTextTokens.upgradeCheckSectionTitle(Theme.of(context).textTheme)),
+                  Text(
+                    l10n.upgradeCheckFirmwareSection,
+                    style: AppTextTokens.upgradeCheckSectionTitle(
+                      Theme.of(context).textTheme,
+                    ),
+                  ),
                   const SizedBox(height: 12),
                   for (final device in state.devices) ...[
                     _DeviceCard(
                       device: device,
-                      onDeviceSelected: () => controller.toggleDevice(device.id),
+                      onDeviceSelected: () =>
+                          controller.toggleDevice(device.id),
                       onExpanded: () => controller.toggleExpanded(device.id),
-                      onPackageSelected: (packageId) => controller.togglePackage(device.id, packageId),
+                      onPackageSelected: (packageId) =>
+                          controller.togglePackage(device.id, packageId),
                     ),
                     const SizedBox(height: 18),
                   ],
@@ -75,13 +101,22 @@ class CheckUpgradedVersionPage extends ConsumerWidget {
             height: 50,
             child: FilledButton(
               key: CheckUpgradedVersionKeys.startButton,
-              onPressed: state.hasSelection && !state.isShowingProgress ? () => _showScheduleDialog(context, state.targets, controller) : null,
+              onPressed: state.hasSelection && !state.isShowingProgress
+                  ? () =>
+                        _showScheduleDialog(context, state.targets, controller)
+                  : null,
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.upgradeCheckCheckboxSelected,
                 disabledBackgroundColor: AppColors.upgradeCheckDisabledAction,
                 shape: const StadiumBorder(),
               ),
-              child: Text(l10n.upgradeCheckStartAction, style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.white, fontSize: 18)),
+              child: Text(
+                l10n.upgradeCheckStartAction,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Colors.white,
+                  fontSize: 18,
+                ),
+              ),
             ),
           ),
         ),
@@ -89,7 +124,11 @@ class CheckUpgradedVersionPage extends ConsumerWidget {
     );
   }
 
-  Future<void> _showScheduleDialog(BuildContext context, List<UpgradeTargetStatus> targets, CheckUpgradedVersionController controller) async {
+  Future<void> _showScheduleDialog(
+    BuildContext context,
+    List<UpgradeTargetStatus> targets,
+    CheckUpgradedVersionController controller,
+  ) async {
     final schedule = await showDialog<UpgradeSchedule>(
       context: context,
       barrierColor: AppColors.upgradeCheckDialogScrim,
@@ -110,13 +149,23 @@ class _ApplicationCard extends StatelessWidget {
     return _UpdateCard(
       child: Row(
         children: [
-          _SelectionBox(key: CheckUpgradedVersionKeys.applicationCheckbox, selected: item.isSelected, onTap: onChanged, label: item.name),
+          _SelectionBox(
+            key: CheckUpgradedVersionKeys.applicationCheckbox,
+            selected: item.isSelected,
+            onTap: onChanged,
+            label: item.name,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item.name, style: AppTextTokens.upgradeCheckCardTitle(Theme.of(context).textTheme)),
+                Text(
+                  item.name,
+                  style: AppTextTokens.upgradeCheckCardTitle(
+                    Theme.of(context).textTheme,
+                  ),
+                ),
                 const SizedBox(height: 10),
                 _PackageMeta(item: item),
               ],
@@ -129,7 +178,12 @@ class _ApplicationCard extends StatelessWidget {
 }
 
 class _DeviceCard extends StatelessWidget {
-  const _DeviceCard({required this.device, required this.onDeviceSelected, required this.onExpanded, required this.onPackageSelected});
+  const _DeviceCard({
+    required this.device,
+    required this.onDeviceSelected,
+    required this.onExpanded,
+    required this.onPackageSelected,
+  });
 
   final UpgradeableDevice device;
   final VoidCallback onDeviceSelected;
@@ -153,14 +207,28 @@ class _DeviceCard extends StatelessWidget {
                 label: device.name,
               ),
               const SizedBox(width: 10),
-              Expanded(child: Text(device.name, style: AppTextTokens.upgradeCheckCardTitle(Theme.of(context).textTheme))),
+              Expanded(
+                child: Text(
+                  device.name,
+                  style: AppTextTokens.upgradeCheckCardTitle(
+                    Theme.of(context).textTheme,
+                  ),
+                ),
+              ),
               Semantics(
                 button: true,
-                label: device.isExpanded ? 'collapse ${device.name}' : 'expand ${device.name}',
+                label: device.isExpanded
+                    ? 'collapse ${device.name}'
+                    : 'expand ${device.name}',
                 child: GestureDetector(
                   key: CheckUpgradedVersionKeys.deviceExpansion(device.id),
                   onTap: onExpanded,
-                  child: Icon(device.isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded, size: 28),
+                  child: Icon(
+                    device.isExpanded
+                        ? Icons.keyboard_arrow_up_rounded
+                        : Icons.keyboard_arrow_down_rounded,
+                    size: 28,
+                  ),
                 ),
               ),
             ],
@@ -170,18 +238,40 @@ class _DeviceCard extends StatelessWidget {
               padding: EdgeInsets.symmetric(vertical: 14),
               child: Divider(height: 1, color: AppColors.upgradeCheckDivider),
             ),
-            Text(l10n.upgradeCheckDoorDeviceName(device.doorDeviceName), style: AppTextTokens.upgradeCheckBody(Theme.of(context).textTheme)),
+            Text(
+              l10n.upgradeCheckDoorDeviceName(device.doorDeviceName),
+              style: AppTextTokens.upgradeCheckBody(
+                Theme.of(context).textTheme,
+              ),
+            ),
             const SizedBox(height: 14),
-            Text(l10n.upgradeCheckSerialNumber(device.serialNumber), style: AppTextTokens.upgradeCheckBody(Theme.of(context).textTheme)),
+            Text(
+              l10n.upgradeCheckSerialNumber(device.serialNumber),
+              style: AppTextTokens.upgradeCheckBody(
+                Theme.of(context).textTheme,
+              ),
+            ),
             const SizedBox(height: 14),
-            Text(l10n.upgradeCheckCurrentVersion(device.currentVersion), style: AppTextTokens.upgradeCheckBody(Theme.of(context).textTheme)),
+            Text(
+              l10n.upgradeCheckCurrentVersion(device.currentVersion),
+              style: AppTextTokens.upgradeCheckBody(
+                Theme.of(context).textTheme,
+              ),
+            ),
             const SizedBox(height: 20),
             for (var index = 0; index < device.packages.length; index++) ...[
-              _PackageRow(deviceId: device.id, item: device.packages[index], onChanged: () => onPackageSelected(device.packages[index].id)),
+              _PackageRow(
+                deviceId: device.id,
+                item: device.packages[index],
+                onChanged: () => onPackageSelected(device.packages[index].id),
+              ),
               if (index != device.packages.length - 1)
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 12),
-                  child: Divider(height: 1, color: AppColors.upgradeCheckDivider),
+                  child: Divider(
+                    height: 1,
+                    color: AppColors.upgradeCheckDivider,
+                  ),
                 ),
             ],
           ],
@@ -192,7 +282,11 @@ class _DeviceCard extends StatelessWidget {
 }
 
 class _PackageRow extends StatelessWidget {
-  const _PackageRow({required this.deviceId, required this.item, required this.onChanged});
+  const _PackageRow({
+    required this.deviceId,
+    required this.item,
+    required this.onChanged,
+  });
 
   final String deviceId;
   final UpgradePackage item;
@@ -205,9 +299,21 @@ class _PackageRow extends StatelessWidget {
       children: [
         Row(
           children: [
-            _SelectionBox(key: CheckUpgradedVersionKeys.packageCheckbox(deviceId, item.id), selected: item.isSelected, onTap: onChanged, label: item.name),
+            _SelectionBox(
+              key: CheckUpgradedVersionKeys.packageCheckbox(deviceId, item.id),
+              selected: item.isSelected,
+              onTap: onChanged,
+              label: item.name,
+            ),
             const SizedBox(width: 14),
-            Expanded(child: Text(item.name, style: AppTextTokens.upgradeCheckCardTitle(Theme.of(context).textTheme))),
+            Expanded(
+              child: Text(
+                item.name,
+                style: AppTextTokens.upgradeCheckCardTitle(
+                  Theme.of(context).textTheme,
+                ),
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 12),
@@ -229,9 +335,18 @@ class _PackageMeta extends StatelessWidget {
   Widget build(BuildContext context) => Wrap(
     spacing: 22,
     children: [
-      Text(item.version, style: AppTextTokens.upgradeCheckMeta(Theme.of(context).textTheme)),
-      Text(item.sizeLabel, style: AppTextTokens.upgradeCheckMeta(Theme.of(context).textTheme)),
-      Text(item.releaseDateLabel, style: AppTextTokens.upgradeCheckMeta(Theme.of(context).textTheme)),
+      Text(
+        item.version,
+        style: AppTextTokens.upgradeCheckMeta(Theme.of(context).textTheme),
+      ),
+      Text(
+        item.sizeLabel,
+        style: AppTextTokens.upgradeCheckMeta(Theme.of(context).textTheme),
+      ),
+      Text(
+        item.releaseDateLabel,
+        style: AppTextTokens.upgradeCheckMeta(Theme.of(context).textTheme),
+      ),
     ],
   );
 }
@@ -243,13 +358,24 @@ class _UpdateCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => DecoratedBox(
-    decoration: const BoxDecoration(color: AppColors.upgradeCheckCard, borderRadius: BorderRadius.all(Radius.circular(AppShapeTokens.upgradeCheckCardRadius))),
+    decoration: const BoxDecoration(
+      color: AppColors.upgradeCheckCard,
+      borderRadius: BorderRadius.all(
+        Radius.circular(AppShapeTokens.upgradeCheckCardRadius),
+      ),
+    ),
     child: Padding(padding: const EdgeInsets.all(16), child: child),
   );
 }
 
 class _SelectionBox extends StatelessWidget {
-  const _SelectionBox({required this.selected, required this.onTap, required this.label, this.mixed = false, super.key});
+  const _SelectionBox({
+    required this.selected,
+    required this.onTap,
+    required this.label,
+    this.mixed = false,
+    super.key,
+  });
 
   final bool selected;
   final bool mixed;
@@ -266,9 +392,15 @@ class _SelectionBox extends StatelessWidget {
         width: 22,
         height: 22,
         decoration: BoxDecoration(
-          color: selected || mixed ? AppColors.upgradeCheckCheckboxSelected : Colors.transparent,
+          color: selected || mixed
+              ? AppColors.upgradeCheckCheckboxSelected
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(3),
-          border: Border.all(color: selected || mixed ? AppColors.upgradeCheckCheckboxSelected : AppColors.upgradeCheckCheckboxBorder),
+          border: Border.all(
+            color: selected || mixed
+                ? AppColors.upgradeCheckCheckboxSelected
+                : AppColors.upgradeCheckCheckboxBorder,
+          ),
         ),
         child: selected
             ? const Icon(Icons.check_rounded, size: 20, color: Colors.white)
@@ -302,12 +434,18 @@ class _UpgradeScheduleDialogState extends State<_UpgradeScheduleDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final isScheduledTimeValid = _mode == UpgradeScheduleMode.immediate || !_scheduledAt.isBefore(DateTime.now());
+    final isScheduledTimeValid =
+        _mode == UpgradeScheduleMode.immediate ||
+        !_scheduledAt.isBefore(DateTime.now());
     return Dialog(
       key: CheckUpgradedVersionKeys.scheduleDialog,
       insetPadding: const EdgeInsets.symmetric(horizontal: 32),
       backgroundColor: AppColors.upgradeCheckDialogSurface,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(AppShapeTokens.upgradeCheckDialogRadius))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(
+          Radius.circular(AppShapeTokens.upgradeCheckDialogRadius),
+        ),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: SingleChildScrollView(
@@ -317,27 +455,61 @@ class _UpgradeScheduleDialogState extends State<_UpgradeScheduleDialog> {
             children: [
               Row(
                 children: [
-                  Expanded(child: Text(l10n.upgradeCheckSelectTimeTitle, style: AppTextTokens.upgradeCheckDialogTitle(Theme.of(context).textTheme))),
-                  IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close_rounded)),
+                  Expanded(
+                    child: Text(
+                      l10n.upgradeCheckSelectTimeTitle,
+                      style: AppTextTokens.upgradeCheckDialogTitle(
+                        Theme.of(context).textTheme,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close_rounded),
+                  ),
                 ],
               ),
               const SizedBox(height: 22),
               Row(
                 children: [
-                  Expanded(child: Text('West Gate Access Control', style: AppTextTokens.upgradeCheckCardTitle(Theme.of(context).textTheme))),
-                  Text(l10n.upgradeCheckStatus, style: AppTextTokens.upgradeCheckCardTitle(Theme.of(context).textTheme)),
+                  Expanded(
+                    child: Text(
+                      'West Gate Access Control',
+                      style: AppTextTokens.upgradeCheckCardTitle(
+                        Theme.of(context).textTheme,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    l10n.upgradeCheckStatus,
+                    style: AppTextTokens.upgradeCheckCardTitle(
+                      Theme.of(context).textTheme,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 14),
               for (final target in widget.targets) _StatusRow(target: target),
               const SizedBox(height: 10),
-              _ScheduleModeRow(mode: _mode, onChanged: (mode) => setState(() => _mode = mode)),
+              _ScheduleModeRow(
+                mode: _mode,
+                onChanged: (mode) => setState(() => _mode = mode),
+              ),
               if (_mode == UpgradeScheduleMode.postpone) ...[
                 const SizedBox(height: 14),
-                _DateTimeSelector(value: _scheduledAt, onChanged: (value) => setState(() => _scheduledAt = value)),
+                _DateTimeSelector(
+                  value: _scheduledAt,
+                  onChanged: (value) => setState(() => _scheduledAt = value),
+                ),
                 if (!isScheduledTimeValid) ...[
                   const SizedBox(height: 8),
-                  Text(l10n.upgradeCheckSchedulePastError, style: AppTextTokens.upgradeCheckStatus(Theme.of(context).textTheme, online: false)),
+                  Text(
+                    l10n.upgradeCheckSchedulePastError,
+                    style: AppTextTokens.upgradeCheckStatus(
+                      Theme.of(context).textTheme,
+                      online: false,
+                    ),
+                  ),
                 ],
               ],
               const SizedBox(height: 24),
@@ -358,7 +530,16 @@ class _UpgradeScheduleDialogState extends State<_UpgradeScheduleDialog> {
                       label: l10n.upgradeCheckConfirmAction,
                       primary: true,
                       onPressed: isScheduledTimeValid
-                          ? () => Navigator.pop(context, UpgradeSchedule(mode: _mode, scheduledAt: _mode == UpgradeScheduleMode.postpone ? _scheduledAt : null))
+                          ? () => Navigator.pop(
+                              context,
+                              UpgradeSchedule(
+                                mode: _mode,
+                                scheduledAt:
+                                    _mode == UpgradeScheduleMode.postpone
+                                    ? _scheduledAt
+                                    : null,
+                              ),
+                            )
                           : null,
                     ),
                   ),
@@ -385,17 +566,29 @@ class _StatusRow extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 14),
       child: Row(
         children: [
-          Expanded(child: Text(target.name, style: AppTextTokens.upgradeCheckBody(Theme.of(context).textTheme))),
+          Expanded(
+            child: Text(
+              target.name,
+              style: AppTextTokens.upgradeCheckBody(
+                Theme.of(context).textTheme,
+              ),
+            ),
+          ),
           DecoratedBox(
             decoration: BoxDecoration(
-              color: isOnline ? AppColors.upgradeCheckOnlineSurface : AppColors.upgradeCheckOfflineSurface,
+              color: isOnline
+                  ? AppColors.upgradeCheckOnlineSurface
+                  : AppColors.upgradeCheckOfflineSurface,
               borderRadius: BorderRadius.circular(7),
             ),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
               child: Text(
                 isOnline ? l10n.upgradeCheckOnline : l10n.upgradeCheckOffline,
-                style: AppTextTokens.upgradeCheckStatus(Theme.of(context).textTheme, online: isOnline),
+                style: AppTextTokens.upgradeCheckStatus(
+                  Theme.of(context).textTheme,
+                  online: isOnline,
+                ),
               ),
             ),
           ),
@@ -416,17 +609,31 @@ class _ScheduleModeRow extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     return Row(
       children: [
-        Expanded(child: Text(l10n.upgradeCheckUpgradeTime, style: AppTextTokens.upgradeCheckBody(Theme.of(context).textTheme))),
+        Expanded(
+          child: Text(
+            l10n.upgradeCheckUpgradeTime,
+            style: AppTextTokens.upgradeCheckBody(Theme.of(context).textTheme),
+          ),
+        ),
         SizedBox(
           width: 180,
           child: DropdownButtonFormField<UpgradeScheduleMode>(
             initialValue: mode,
             isDense: true,
             isExpanded: true,
-            decoration: const InputDecoration(isDense: true, border: OutlineInputBorder()),
+            decoration: const InputDecoration(
+              isDense: true,
+              border: OutlineInputBorder(),
+            ),
             items: [
-              DropdownMenuItem(value: UpgradeScheduleMode.immediate, child: Text(l10n.upgradeCheckImmediate)),
-              DropdownMenuItem(value: UpgradeScheduleMode.postpone, child: Text(l10n.upgradeCheckPostpone)),
+              DropdownMenuItem(
+                value: UpgradeScheduleMode.immediate,
+                child: Text(l10n.upgradeCheckImmediate),
+              ),
+              DropdownMenuItem(
+                value: UpgradeScheduleMode.postpone,
+                child: Text(l10n.upgradeCheckPostpone),
+              ),
             ],
             onChanged: (value) {
               if (value != null) {
@@ -453,7 +660,12 @@ class _DateTimeSelector extends StatelessWidget {
         '${value.year}/${value.month.toString().padLeft(2, '0')}/${value.day.toString().padLeft(2, '0')} ${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';
     return Row(
       children: [
-        Expanded(child: Text(l10n.upgradeCheckDateAndTime, style: AppTextTokens.upgradeCheckBody(Theme.of(context).textTheme))),
+        Expanded(
+          child: Text(
+            l10n.upgradeCheckDateAndTime,
+            style: AppTextTokens.upgradeCheckBody(Theme.of(context).textTheme),
+          ),
+        ),
         SizedBox(
           width: 228,
           child: OutlinedButton.icon(
@@ -467,9 +679,20 @@ class _DateTimeSelector extends StatelessWidget {
               if (date == null || !context.mounted) {
                 return;
               }
-              final time = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(value));
+              final time = await showTimePicker(
+                context: context,
+                initialTime: TimeOfDay.fromDateTime(value),
+              );
               if (time != null) {
-                onChanged(DateTime(date.year, date.month, date.day, time.hour, time.minute));
+                onChanged(
+                  DateTime(
+                    date.year,
+                    date.month,
+                    date.day,
+                    time.hour,
+                    time.minute,
+                  ),
+                );
               }
             },
             icon: const Icon(Icons.calendar_month_outlined, size: 18),
@@ -482,7 +705,12 @@ class _DateTimeSelector extends StatelessWidget {
 }
 
 class _DialogButton extends StatelessWidget {
-  const _DialogButton({required this.label, required this.primary, required this.onPressed, super.key});
+  const _DialogButton({
+    required this.label,
+    required this.primary,
+    required this.onPressed,
+    super.key,
+  });
 
   final String label;
   final bool primary;
@@ -494,11 +722,16 @@ class _DialogButton extends StatelessWidget {
     child: FilledButton(
       onPressed: onPressed,
       style: FilledButton.styleFrom(
-        backgroundColor: primary ? AppColors.upgradeCheckCheckboxSelected : AppColors.accountLanguageDialogCancelSurface,
+        backgroundColor: primary
+            ? AppColors.upgradeCheckCheckboxSelected
+            : AppColors.accountLanguageDialogCancelSurface,
         foregroundColor: primary ? Colors.white : AppColors.textPrimary,
         shape: const StadiumBorder(),
       ),
-      child: Text(label, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontSize: 18)),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontSize: 18),
+      ),
     ),
   );
 }
@@ -511,18 +744,35 @@ class _UpgradeProgressList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final selected = state.devices.where((device) => device.hasSelection).toList(growable: false);
+    final selected = state.devices
+        .where((device) => device.hasSelection)
+        .toList(growable: false);
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
-        Text(l10n.upgradeCheckFirmwareSection, style: AppTextTokens.upgradeCheckSectionTitle(Theme.of(context).textTheme)),
+        Text(
+          l10n.upgradeCheckFirmwareSection,
+          style: AppTextTokens.upgradeCheckSectionTitle(
+            Theme.of(context).textTheme,
+          ),
+        ),
         const SizedBox(height: 10),
         if (state.application.isSelected) ...[
-          _ProgressCard(id: 'application', title: state.application.name, progress: state.applicationProgress, status: state.applicationStatus),
+          _ProgressCard(
+            id: 'application',
+            title: state.application.name,
+            progress: state.applicationProgress,
+            status: state.applicationStatus,
+          ),
           const SizedBox(height: 18),
         ],
         for (final device in selected) ...[
-          _ProgressCard(id: device.id, title: device.name, progress: device.progress, status: device.status),
+          _ProgressCard(
+            id: device.id,
+            title: device.name,
+            progress: device.progress,
+            status: device.status,
+          ),
           const SizedBox(height: 18),
         ],
       ],
@@ -531,7 +781,12 @@ class _UpgradeProgressList extends StatelessWidget {
 }
 
 class _ProgressCard extends StatelessWidget {
-  const _ProgressCard({required this.id, required this.title, required this.progress, required this.status});
+  const _ProgressCard({
+    required this.id,
+    required this.title,
+    required this.progress,
+    required this.status,
+  });
 
   final String id;
   final String title;
@@ -550,7 +805,12 @@ class _ProgressCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: AppTextTokens.upgradeCheckCardTitle(Theme.of(context).textTheme)),
+            Text(
+              title,
+              style: AppTextTokens.upgradeCheckCardTitle(
+                Theme.of(context).textTheme,
+              ),
+            ),
             const SizedBox(height: 16),
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
@@ -564,11 +824,20 @@ class _ProgressCard extends StatelessWidget {
             const SizedBox(height: 12),
             Row(
               children: [
-                Text(isComplete ? l10n.upgradeCheckCompleted : l10n.upgradeCheckUpgrading, style: AppTextTokens.upgradeCheckBody(Theme.of(context).textTheme)),
+                Text(
+                  isComplete
+                      ? l10n.upgradeCheckCompleted
+                      : l10n.upgradeCheckUpgrading,
+                  style: AppTextTokens.upgradeCheckBody(
+                    Theme.of(context).textTheme,
+                  ),
+                ),
                 const Spacer(),
                 Text(
                   l10n.upgradeCheckProgressPercent(progress),
-                  style: AppTextTokens.upgradeCheckBody(Theme.of(context).textTheme).copyWith(color: AppColors.upgradeCheckProgress),
+                  style: AppTextTokens.upgradeCheckBody(
+                    Theme.of(context).textTheme,
+                  ).copyWith(color: AppColors.upgradeCheckProgress),
                 ),
               ],
             ),

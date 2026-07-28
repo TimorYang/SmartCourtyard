@@ -3,7 +3,12 @@ import 'package:flinx/features/account/application/providers.dart';
 import 'package:flinx/features/account/data/data_sources/account_local_data_source.dart';
 import 'package:flinx/features/account/data/data_sources/app_locale_local_data_source.dart';
 import 'package:flinx/features/account/data/dto/account_profile_dto.dart';
+import 'package:flinx/features/account/domain/entities/receiving_door.dart';
 import 'package:flinx/features/account/domain/entities/system_permission.dart';
+import 'package:flinx/features/account/domain/entities/shared_door.dart';
+import 'package:flinx/features/account/domain/entities/shared_door_members.dart';
+import 'package:flinx/features/account/domain/repositories/receiving_devices_repository.dart';
+import 'package:flinx/features/account/domain/repositories/shared_devices_repository.dart';
 import 'package:flinx/features/account/presentation/pages/account_details_page.dart';
 import 'package:flinx/features/account/presentation/pages/account_profile_page.dart';
 import 'package:flinx/features/account/presentation/pages/manage_devices_page.dart';
@@ -324,7 +329,7 @@ void main() {
     expect(find.text('Log out'), findsOneWidget);
   });
 
-  testWidgets('opens device share page when tapping a shared device', (
+  testWidgets('opens member management when tapping a shared device', (
     tester,
   ) async {
     final router = GoRouter(
@@ -336,19 +341,28 @@ void main() {
           builder: (context, state) => const SharedDevicesPage(),
         ),
         GoRoute(
-          path: DeviceSharePage.routePath,
-          name: DeviceSharePage.routeName,
-          builder: (context, state) => const DeviceSharePage(),
+          path: SharedDeviceMemberManagementPage.routePath,
+          name: SharedDeviceMemberManagementPage.routeName,
+          builder: (context, state) => SharedDeviceMemberManagementPage(
+            device: state.extra as SharedDoor?,
+          ),
         ),
       ],
     );
 
     await tester.pumpWidget(
-      MaterialApp.router(
-        theme: AppTheme.light(),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        routerConfig: router,
+      ProviderScope(
+        overrides: [
+          sharedDevicesRepositoryProvider.overrideWithValue(
+            _FakeSharedDevicesRepository(),
+          ),
+        ],
+        child: MaterialApp.router(
+          theme: AppTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          routerConfig: router,
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -356,7 +370,7 @@ void main() {
     await tester.tap(find.byKey(SharedDevicesKeys.deviceCard(0)));
     await tester.pumpAndSettle();
 
-    expect(find.byType(DeviceSharePage), findsOneWidget);
+    expect(find.byType(SharedDeviceMemberManagementPage), findsOneWidget);
   });
 
   testWidgets('opens shared devices and returns to the account profile', (
@@ -385,6 +399,11 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
+        overrides: [
+          sharedDevicesRepositoryProvider.overrideWithValue(
+            _FakeSharedDevicesRepository(),
+          ),
+        ],
         child: MaterialApp.router(
           theme: AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -404,15 +423,15 @@ void main() {
     expect(find.text('Share to 3 people'), findsNWidgets(2));
     expect(find.byKey(SharedDevicesKeys.addButton), findsOneWidget);
 
-    await tester.tap(find.byKey(SharedDevicesKeys.addButton));
+    await tester.tap(find.byKey(SharedDevicesKeys.deviceCard(0)));
     await tester.pumpAndSettle();
 
     expect(find.text('Garage door'), findsOneWidget);
     expect(find.text('Administrator'), findsOneWidget);
     expect(find.text('Guest'), findsOneWidget);
-    expect(find.text('Andy@forcedoor.cn'), findsNWidgets(3));
-    expect(find.text('2025-10-16 17:54:28'), findsNWidgets(3));
-    expect(find.text('Accepted'), findsNWidgets(3));
+    expect(find.text('Andy@forcedoor.cn'), findsNWidgets(4));
+    expect(find.text('2025-10-16 17:54:28'), findsNWidgets(4));
+    expect(find.text('Accepted'), findsNWidgets(4));
     expect(
       find.byKey(
         SharedDeviceMemberManagementKeys.editButton('member-admin-001'),
@@ -469,6 +488,11 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
+        overrides: [
+          receivingDevicesRepositoryProvider.overrideWithValue(
+            _StaticReceivingDevicesRepository(),
+          ),
+        ],
         child: MaterialApp.router(
           theme: AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -483,15 +507,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('RECEIVING DEVICES'), findsOneWidget);
-    expect(find.text('Smart door A'), findsOneWidget);
-    expect(find.text('Smart door B'), findsNWidgets(2));
-    expect(find.text('Share to 2 people'), findsOneWidget);
-    expect(find.text('Not shared'), findsNWidgets(2));
+    expect(find.text('Main gate'), findsOneWidget);
+    expect(find.text('Shared by: owner@example.com'), findsOneWidget);
     expect(find.byKey(ReceivingDevicesKeys.editButton), findsOneWidget);
     expect(find.byKey(ReceivingDevicesKeys.deviceCard(0)), findsOneWidget);
-    expect(find.byKey(ReceivingDevicesKeys.deviceCard(1)), findsOneWidget);
-    expect(find.byKey(ReceivingDevicesKeys.deviceCard(2)), findsOneWidget);
-    expect(find.byType(Image), findsNWidgets(3));
+    expect(find.byKey(ReceivingDevicesKeys.deviceCard(1)), findsNothing);
 
     await tester.tap(find.byType(BackButtonIcon));
     await tester.pumpAndSettle();
@@ -733,6 +753,48 @@ void main() {
     expect(find.text('Welcome'), findsOneWidget);
     expect(container.read(activeAuthSessionProvider).isAuthenticated, isFalse);
   });
+}
+
+class _FakeSharedDevicesRepository implements SharedDevicesRepository {
+  @override
+  Future<List<SharedDoor>> fetchSharedDoors({required String requestId}) async {
+    return const [
+      SharedDoor(doorId: 1, name: 'Garage door', sharedUserCount: 3),
+      SharedDoor(doorId: 2, name: 'Industrial door', sharedUserCount: 3),
+    ];
+  }
+
+  @override
+  Future<SharedDoorMembers> fetchDoorMembers({
+    required int doorId,
+    required String requestId,
+  }) async => SharedDoorMembers(
+    doorId: doorId,
+    doorName: 'Door $doorId',
+    administrators: const [],
+    guests: const [],
+  );
+
+  @override
+  Future<void> deleteDoorMember({
+    required int shareId,
+    required String requestId,
+  }) async {}
+}
+
+class _StaticReceivingDevicesRepository implements ReceivingDevicesRepository {
+  @override
+  Future<List<ReceivingDoor>> fetchReceivingDoors({
+    required String requestId,
+  }) async => const [
+    ReceivingDoor(
+      shareId: 1,
+      doorId: 2,
+      name: 'Main gate',
+      ownerEmail: 'owner@example.com',
+      expiresAt: null,
+    ),
+  ];
 }
 
 class _LocaleTestHarness extends ConsumerWidget {

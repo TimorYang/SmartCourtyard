@@ -27,7 +27,7 @@ import '../../features/account/presentation/pages/receiving_devices_page.dart';
 import '../../features/account/presentation/pages/region_page.dart';
 import '../../features/account/presentation/pages/shared_devices_page.dart';
 import '../../features/account/presentation/pages/shared_device_member_management_page.dart';
-import '../../features/account/domain/entities/shared_device_share.dart';
+import '../../features/account/domain/entities/shared_door.dart';
 import '../../features/account/presentation/pages/system_permissions_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_code_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
@@ -193,7 +193,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: SharedDeviceMemberManagementPage.routePath,
         name: SharedDeviceMemberManagementPage.routeName,
-        builder: (context, state) => const SharedDeviceMemberManagementPage(),
+        builder: (context, state) => SharedDeviceMemberManagementPage(
+          device: state.extra is SharedDoor ? state.extra! as SharedDoor : null,
+        ),
       ),
       GoRoute(
         path: ReceivingDevicesPage.routePath,
@@ -249,11 +251,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: DeviceSharePage.routePath,
         name: DeviceSharePage.routeName,
-        builder: (context, state) => DeviceSharePage(
-          editingMember: state.extra is SharedDeviceMember
-              ? state.extra! as SharedDeviceMember
-              : null,
-        ),
+        builder: (context, state) {
+          final extra = state.extra;
+          final editingData = extra is DeviceShareEditRouteData ? extra : null;
+          return DeviceSharePage(
+            doorId:
+                editingData?.doorId ??
+                (extra is DeviceSummary ? int.tryParse(extra.id) : null),
+            editingMember: editingData?.member,
+          );
+        },
       ),
       GoRoute(
         path: ScenePage.routePath,

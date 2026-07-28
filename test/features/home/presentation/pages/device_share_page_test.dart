@@ -1,7 +1,10 @@
 import 'package:flinx/app/theme/app_theme.dart';
 import 'package:flinx/features/home/presentation/pages/device_share_page.dart';
+import 'package:flinx/features/home/application/door_share_controller.dart';
+import 'package:flinx/features/home/domain/entities/door_share.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
 
@@ -10,6 +13,7 @@ void main() {
     'administrator capabilities can be edited and reset after guest',
     (tester) async {
       await tester.pumpWidget(_DeviceShareTestApp());
+      await tester.pumpAndSettle();
 
       expect(
         _capabilityAsset(tester, 'doorControl'),
@@ -174,11 +178,18 @@ VoidCallback? _timeTap(WidgetTester tester) {
 class _DeviceShareTestApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      theme: AppTheme.light(),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: const DeviceSharePage(),
+    return ProviderScope(
+      overrides: [
+        doorShareCapabilitiesProvider(
+          1,
+        ).overrideWith((ref) async => ShareCapability.values),
+      ],
+      child: MaterialApp(
+        theme: AppTheme.light(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const DeviceSharePage(doorId: 1),
+      ),
     );
   }
 }
