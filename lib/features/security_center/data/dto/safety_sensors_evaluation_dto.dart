@@ -7,6 +7,8 @@ class SafetySensorsEvaluationDto {
     this.lowBatteryCount,
     this.statisticsStartTime,
     this.statisticsEndTime,
+    this.wiredSensorStatus,
+    this.wirelessSensorStatus,
     this.wiredSensors = const [],
     this.wirelessSensors = const [],
   });
@@ -18,6 +20,8 @@ class SafetySensorsEvaluationDto {
   final int? lowBatteryCount;
   final int? statisticsStartTime;
   final int? statisticsEndTime;
+  final String? wiredSensorStatus;
+  final String? wirelessSensorStatus;
   final List<SafetySensorItemDto> wiredSensors;
   final List<SafetySensorItemDto> wirelessSensors;
 
@@ -30,6 +34,8 @@ class SafetySensorsEvaluationDto {
         lowBatteryCount: _asInt(json['lowBatteryCount']),
         statisticsStartTime: _asInt(json['statisticsStartTime']),
         statisticsEndTime: _asInt(json['statisticsEndTime']),
+        wiredSensorStatus: json['wiredSensorStatus']?.toString(),
+        wirelessSensorStatus: json['wirelessSensorStatus']?.toString(),
         wiredSensors: _sensors(json['wiredSensors']),
         wirelessSensors: _sensors(json['wirelessSensors']),
       );
@@ -42,8 +48,12 @@ class SafetySensorsEvaluationDto {
     'lowBatteryCount': lowBatteryCount,
     'statisticsStartTime': statisticsStartTime,
     'statisticsEndTime': statisticsEndTime,
+    'wiredSensorStatus': wiredSensorStatus,
+    'wirelessSensorStatus': wirelessSensorStatus,
     'wiredSensors': wiredSensors.map((sensor) => sensor.toJson()).toList(),
-    'wirelessSensors': wirelessSensors.map((sensor) => sensor.toJson()).toList(),
+    'wirelessSensors': wirelessSensors
+        .map((sensor) => sensor.toJson())
+        .toList(),
   };
 }
 
@@ -121,14 +131,21 @@ int? _asInt(Object? value) => value is num
 
 List<SafetySensorItemDto> _sensors(Object? value) => value is List
     ? value
-        .whereType<Map>()
-        .map((item) => SafetySensorItemDto.fromJson(Map<String, dynamic>.from(item)))
-        .toList(growable: false)
+          .whereType<Map>()
+          .map(
+            (item) =>
+                SafetySensorItemDto.fromJson(Map<String, dynamic>.from(item)),
+          )
+          .toList(growable: false)
     : const [];
 
 List<SafetySensorTriggerBucketDto> _buckets(Object? value) => value is List
     ? value
-        .whereType<Map>()
-        .map((item) => SafetySensorTriggerBucketDto.fromJson(Map<String, dynamic>.from(item)))
-        .toList(growable: false)
+          .whereType<Map>()
+          .map(
+            (item) => SafetySensorTriggerBucketDto.fromJson(
+              Map<String, dynamic>.from(item),
+            ),
+          )
+          .toList(growable: false)
     : const [];

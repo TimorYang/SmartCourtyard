@@ -11,14 +11,22 @@ import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/general_evaluation_controller.dart';
-import '../../application/providers.dart';
+import '../../application/safety_sensors_evaluation_controller.dart';
 import '../../domain/entities/full_report.dart';
 import '../../domain/entities/general_evaluation_report.dart';
+import '../../domain/entities/safety_sensors_evaluation.dart';
 import '../widgets/security_report_widgets.dart';
 
 typedef ReportImageSaver = Future<void> Function(Uint8List bytes);
 typedef ReportImageCapture =
     Future<Uint8List> Function(GlobalKey boundaryKey, BuildContext context);
+
+const _safetySuggestions = [
+  FullReportSafetySuggestionCode.cycleMaintenance,
+  FullReportSafetySuggestionCode.safetyEdgeLowBattery,
+  FullReportSafetySuggestionCode.contactInstaller,
+  FullReportSafetySuggestionCode.openingCurrentExceeded,
+];
 
 class FullReportPage extends ConsumerStatefulWidget {
   const FullReportPage({
@@ -48,11 +56,16 @@ class _FullReportPageState extends ConsumerState<FullReportPage> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(
-      () => ref
-          .read(generalEvaluationControllerProvider.notifier)
-          .load(doorId: widget.doorId),
-    );
+    Future.microtask(_loadReportData);
+  }
+
+  void _loadReportData() {
+    ref
+        .read(generalEvaluationControllerProvider.notifier)
+        .load(doorId: widget.doorId);
+    ref
+        .read(safetySensorsEvaluationControllerProvider(widget.doorId).notifier)
+        .load(doorId: widget.doorId);
   }
 
   Future<void> _saveReportImage() async {
@@ -86,30 +99,35 @@ class _FullReportPageState extends ConsumerState<FullReportPage> {
   @override
   Widget build(BuildContext context) {
     final reportState = ref.watch(generalEvaluationControllerProvider);
-    final supplementalReport = ref.watch(fullReportProvider(widget.deviceId));
-    return reportState.when(
-      loading: () =>
-          _stateScaffold(const Center(child: CircularProgressIndicator())),
-      error: (_, _) => _stateScaffold(
+    final sensorsState = ref.watch(
+      safetySensorsEvaluationControllerProvider(widget.doorId),
+    );
+    if (reportState.isLoading || sensorsState.isLoading) {
+      return _stateScaffold(const Center(child: CircularProgressIndicator()));
+    }
+    if (reportState.hasError || sensorsState.hasError) {
+      return _stateScaffold(
         Center(
           child: TextButton(
-            onPressed: () => ref
-                .read(generalEvaluationControllerProvider.notifier)
-                .load(doorId: widget.doorId),
+            onPressed: _loadReportData,
             child: Text(
               AppLocalizations.of(context).generalEvaluationLoadFailed,
             ),
           ),
         ),
-      ),
-      data: (report) => _buildReport(context, report, supplementalReport),
+      );
+    }
+    return _buildReport(
+      context,
+      reportState.requireValue,
+      sensorsState.requireValue,
     );
   }
 
   Widget _buildReport(
     BuildContext context,
     GeneralEvaluationReport report,
-    FullReport supplementalReport,
+    SafetySensorsEvaluation sensorEvaluation,
   ) {
     return Scaffold(
       backgroundColor: AppColors.securityCenterBackground,
@@ -168,17 +186,18 @@ class _FullReportPageState extends ConsumerState<FullReportPage> {
                           ),
                           const SizedBox(height: 16),
                           SensorDiagnosisSection.wired(
-                            diagnosis: supplementalReport.wiredSensorDiagnosis,
+                            diagnosis: _diagnosis(
+                              sensorEvaluation.wiredSensorGroup,
+                            ),
                           ),
                           const SizedBox(height: 16),
                           SensorDiagnosisSection.wireless(
-                            diagnosis:
-                                supplementalReport.wirelessSensorDiagnosis,
+                            diagnosis: _diagnosis(
+                              sensorEvaluation.wirelessSensorGroup,
+                            ),
                           ),
                           const SizedBox(height: 16),
-                          SafetySuggestionCard(
-                            suggestions: supplementalReport.safetySuggestions,
-                          ),
+                          SafetySuggestionCard(suggestions: _safetySuggestions),
                           const SizedBox(height: 28),
                         ],
                       ),
@@ -217,6 +236,54 @@ class _FullReportPageState extends ConsumerState<FullReportPage> {
       GalleryImageSaveFailure.failed => 'Unable to save report image.',
     };
   }
+
+  FullReportSensorDiagnosis _diagnosis(SafetySensorGroup group) {
+    final sensors = group.sensors
+        .map(
+          (sensor) => FullReportSensor(
+            id: sensor.id,
+            type: _sensorType(sensor.sensorCode),
+            states: const [],
+            status: sensor.status,
+            batteryStatus: sensor.batteryStatus,
+            statusLabel: sensor.statusLabel,
+          ),
+        )
+        .toList(growable: false);
+    return FullReportSensorDiagnosis(
+      summary: FullReportSensorSummary(
+        normalCount: group.sensors
+            .where(
+              (sensor) =>
+                  sensor.status == SafetySensorStatus.notTriggered ||
+                  sensor.status == SafetySensorStatus.unlocked,
+            )
+            .length,
+        disconnectedCount: group.sensors
+            .where((sensor) => sensor.status == SafetySensorStatus.disconnected)
+            .length,
+        abnormalCount: group.sensors
+            .where(
+              (sensor) =>
+                  sensor.status == SafetySensorStatus.triggered ||
+                  sensor.status == SafetySensorStatus.locked,
+            )
+            .length,
+      ),
+      sensors: sensors,
+    );
+  }
+
+  FullReportSensorType _sensorType(String sensorCode) => switch (sensorCode) {
+    'WIRED_PHOTO_BEAM' => FullReportSensorType.wiredPhotoBeam,
+    'WIRED_ELECTRONIC_LOCK' => FullReportSensorType.wiredELock,
+    'WIRELESS_PHOTO_BEAM' => FullReportSensorType.wirelessPhotoBeam,
+    'WIRELESS_WICKET_DOOR' => FullReportSensorType.wirelessWicketDoor,
+    'WIRELESS_SAFETY_EDGE' => FullReportSensorType.wirelessSafetyEdge,
+    'WIRELESS_SLACK_ROPE' => FullReportSensorType.wirelessSlackRope,
+    'WIRELESS_ELECTRONIC_LOCK' => FullReportSensorType.wirelessELock,
+    _ => FullReportSensorType.wirelessPositionSensor,
+  };
 }
 
 Future<Uint8List> captureReportPngBytes(

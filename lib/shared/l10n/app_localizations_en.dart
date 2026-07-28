@@ -1852,6 +1852,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get securityReportBatteryEnough => 'Battery power enough';
 
   @override
+  String get securityReportBatteryLow => 'Battery is low';
+
+  @override
   String get securityReportWirelessWicketDoor => 'Wireless wicket door';
 
   @override

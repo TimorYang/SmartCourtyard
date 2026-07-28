@@ -606,6 +606,7 @@
   "securityReportNotTriggered": "未触发",
   "securityReportLocked": "已锁定",
   "securityReportBatteryEnough": "电池电量充足",
+  "securityReportBatteryLow": "电池电量低",
   "securityReportWirelessWicketDoor": "无线小门传感器",
   "securityReportWirelessSafetyEdge": "无线安全边",
   "securityReportWirelessPositionSensor": "无线位置传感器",

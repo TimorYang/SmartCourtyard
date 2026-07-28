@@ -1,3 +1,5 @@
+import 'safety_sensors_evaluation.dart';
+
 /// 完整安全报告的领域数据；后台接口完成后应映射为此实体供页面展示。
 class FullReport {
   const FullReport({
@@ -264,6 +266,9 @@ class FullReportSensor {
     required this.id,
     required this.type,
     required this.states,
+    this.status,
+    this.batteryStatus,
+    this.statusLabel,
   });
 
   /// 传感器业务唯一标识。
@@ -274,12 +279,24 @@ class FullReportSensor {
 
   /// 传感器需要展示的状态代码，按页面展示顺序返回。
   final List<FullReportSensorDisplayState> states;
+
+  /// 实时接口状态；为空时使用 [states] 兼容静态报告内容。
+  final SafetySensorStatus? status;
+
+  /// 无线传感器的实时电池状态。
+  final SafetySensorBatteryStatus? batteryStatus;
+
+  /// 接口原样返回的状态标签，用于无线传感器第二行。
+  final String? statusLabel;
 }
 
 /// 完整报告当前支持的传感器类型。
 enum FullReportSensorType {
   /// 有线光电保护传感器。
   wiredPhotoBeam,
+
+  /// 无线光电保护传感器。
+  wirelessPhotoBeam,
 
   /// 有线电锁。
   wiredELock,
@@ -292,6 +309,9 @@ enum FullReportSensorType {
 
   /// 无线位置传感器。
   wirelessPositionSensor,
+
+  /// 无线松绳传感器。
+  wirelessSlackRope,
 
   /// 无线电锁。
   wirelessELock,

@@ -1756,6 +1756,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get securityReportBatteryEnough => '电池电量充足';
 
   @override
+  String get securityReportBatteryLow => '电池电量低';
+
+  @override
   String get securityReportWirelessWicketDoor => '无线小门传感器';
 
   @override

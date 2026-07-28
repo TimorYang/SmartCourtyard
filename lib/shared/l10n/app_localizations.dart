@@ -3446,6 +3446,12 @@ abstract class AppLocalizations {
   /// **'Battery power enough'**
   String get securityReportBatteryEnough;
 
+  /// No description provided for @securityReportBatteryLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery is low'**
+  String get securityReportBatteryLow;
+
   /// No description provided for @securityReportWirelessWicketDoor.
   ///
   /// In en, this message translates to:

@@ -69,6 +69,7 @@ class SafetySensor {
     required this.id,
     required this.sensorCode,
     required this.status,
+    this.statusLabel,
     required this.batteryStatus,
     required this.operationPoints,
   });
@@ -81,6 +82,9 @@ class SafetySensor {
 
   /// 传感器当前的连接或触发状态，用于展示断开、触发等状态信息。
   final SafetySensorStatus status;
+
+  /// 服务端提供的状态英文标签，供完整报告等接口文案展示场景使用。
+  final String? statusLabel;
 
   /// 传感器的电池状态，用于决定正常电池图标、低电量告警和更换电池提示。
   final SafetySensorBatteryStatus batteryStatus;

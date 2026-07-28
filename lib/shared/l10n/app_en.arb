@@ -1591,6 +1591,7 @@
   "securityReportNotTriggered": "Not triggered",
   "securityReportLocked": "Locked",
   "securityReportBatteryEnough": "Battery power enough",
+  "securityReportBatteryLow": "Battery is low",
   "securityReportWirelessWicketDoor": "Wireless wicket door",
   "securityReportWirelessSafetyEdge": "Wireless safety edge",
   "securityReportWirelessPositionSensor": "Wireless position sensor",

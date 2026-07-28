@@ -33,6 +33,8 @@ void main() {
   test('DTO parses tolerant numeric fields and serializes sensor buckets', () {
     final dto = SafetySensorsEvaluationDto.fromJson(const {
       'sensorCount': '2',
+      'wiredSensorStatus': 1,
+      'wirelessSensorStatus': '2',
       'wiredSensors': [
         {'sensorCode': 'WIRED_ELECTRONIC_LOCK', 'status': 4},
       ],
@@ -40,6 +42,7 @@ void main() {
         {
           'sensorCode': 'WIRELESS_PHOTO_BEAM',
           'status': '2',
+          'statusLabel': 'Triggered',
           'triggerBuckets': [
             {'hour': '9', 'triggerCount': 21, 'abnormal': true},
           ],
@@ -49,9 +52,13 @@ void main() {
     });
 
     expect(dto.sensorCount, 2);
+    expect(dto.wiredSensorStatus, '1');
+    expect(dto.wirelessSensorStatus, '2');
     expect(dto.wiredSensors.single.status, '4');
     expect(dto.wirelessSensors.single.triggerBuckets.single.hour, 9);
+    expect(dto.wirelessSensors.single.statusLabel, 'Triggered');
     expect(dto.toJson()['sensorCount'], 2);
+    expect(dto.toJson()['wiredSensorStatus'], '1');
   });
 
   test(
@@ -77,6 +84,55 @@ void main() {
       await expectLater(
         failing.fetchEvaluation(doorId: 12, requestId: 'safety-12'),
         throwsA(isA<SafetySensorsEvaluationRemoteException>()),
+      );
+    },
+  );
+
+  test('repository uses reported group statuses for the title icons', () async {
+    const statusResponse = SafetySensorsEvaluationDto(
+      wiredSensorStatus: '1',
+      wirelessSensorStatus: '2',
+      wiredSensors: [
+        SafetySensorItemDto(sensorCode: 'WIRED_ELECTRONIC_LOCK', status: '4'),
+      ],
+      wirelessSensors: [
+        SafetySensorItemDto(sensorCode: 'WIRELESS_PHOTO_BEAM', status: '1'),
+      ],
+    );
+    final repository = SafetySensorsEvaluationRepositoryImpl(
+      remoteDataSource: const _FakeRemote(statusResponse),
+      logger: const _NoopLogger(),
+    );
+
+    final evaluation = await repository.fetchEvaluation(
+      doorId: '12',
+      requestId: 'safety-12',
+    );
+
+    expect(evaluation.wiredSensorGroup.status, SafetySensorGroupStatus.normal);
+    expect(
+      evaluation.wirelessSensorGroup.status,
+      SafetySensorGroupStatus.abnormal,
+    );
+  });
+
+  test(
+    'repository preserves a reported status when a group has no sensors',
+    () async {
+      const statusResponse = SafetySensorsEvaluationDto(wiredSensorStatus: '2');
+      final repository = SafetySensorsEvaluationRepositoryImpl(
+        remoteDataSource: const _FakeRemote(statusResponse),
+        logger: const _NoopLogger(),
+      );
+
+      final evaluation = await repository.fetchEvaluation(
+        doorId: '12',
+        requestId: 'safety-12',
+      );
+
+      expect(
+        evaluation.wiredSensorGroup.status,
+        SafetySensorGroupStatus.abnormal,
       );
     },
   );
