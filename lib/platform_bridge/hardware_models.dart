@@ -291,6 +291,18 @@ class BleConnectionEvent {
   final String? nativeCode;
 }
 
+class ConnectedBleDevice {
+  const ConnectedBleDevice({
+    required this.deviceId,
+    required this.state,
+    this.name,
+  });
+
+  final String deviceId;
+  final String? name;
+  final BleConnectionState state;
+}
+
 class BleCharacteristic {
   const BleCharacteristic({
     required this.serviceUuid,

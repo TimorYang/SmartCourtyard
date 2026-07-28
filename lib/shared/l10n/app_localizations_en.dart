@@ -1145,6 +1145,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deviceCommandMoreTooltip => 'More';
 
   @override
+  String get deviceCommandDoorStateRunning => 'Running';
+
+  @override
+  String deviceCommandDoorStateWithPercent(String state, int percent) {
+    return '$state · $percent%';
+  }
+
+  @override
   String get smartOpenerDefaultDeviceSubtitle => 'Default encoding door|54-89';
 
   @override

@@ -79,6 +79,24 @@ class HardwareHostApiImpl(
     bleManager.stopScan(requestId)
   }
 
+  override fun getConnectedBleDevices(
+    requestId: String,
+    callback: (Result<List<ConnectedBleDeviceDto>>) -> Unit,
+  ) {
+    callback(Result.success(bleManager.connectedManagedDevices()))
+  }
+
+  override fun disconnectAllManagedBleDevices(
+    requestId: String,
+    callback: (Result<List<BleConnectionEventDto>>) -> Unit,
+  ) {
+    bleManager.disconnectAllManagedDevices(
+      requestId = requestId,
+      onConnectionChanged = ::emitConnectionChanged,
+      callback = callback,
+    )
+  }
+
   /** 连接 BLE 设备。 */
   override fun connectBleDevice(
     requestId: String,

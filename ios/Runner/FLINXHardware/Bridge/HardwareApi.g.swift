@@ -468,6 +468,47 @@ struct BleConnectionEventDto: Hashable {
 }
 
 /// Generated class from Pigeon that represents data sent in messages.
+struct ConnectedBleDeviceDto: Hashable {
+  var deviceId: String
+  var name: String? = nil
+  var state: BleConnectionStateDto
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> ConnectedBleDeviceDto? {
+    let deviceId = pigeonVar_list[0] as! String
+    let name: String? = nilOrValue(pigeonVar_list[1])
+    let state = pigeonVar_list[2] as! BleConnectionStateDto
+
+    return ConnectedBleDeviceDto(
+      deviceId: deviceId,
+      name: name,
+      state: state
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      deviceId,
+      name,
+      state,
+    ]
+  }
+  static func == (lhs: ConnectedBleDeviceDto, rhs: ConnectedBleDeviceDto) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return deepEqualsHardwareApi(lhs.deviceId, rhs.deviceId) && deepEqualsHardwareApi(lhs.name, rhs.name) && deepEqualsHardwareApi(lhs.state, rhs.state)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("ConnectedBleDeviceDto")
+    deepHashHardwareApi(value: deviceId, hasher: &hasher)
+    deepHashHardwareApi(value: name, hasher: &hasher)
+    deepHashHardwareApi(value: state, hasher: &hasher)
+  }
+}
+
+/// Generated class from Pigeon that represents data sent in messages.
 struct BleAuthenticationResultDto: Hashable {
   var requestId: String
   var deviceId: String
@@ -1553,42 +1594,44 @@ private class HardwareApiPigeonCodecReader: FlutterStandardReader {
     case 142:
       return BleConnectionEventDto.fromList(self.readValue() as! [Any?])
     case 143:
-      return BleAuthenticationResultDto.fromList(self.readValue() as! [Any?])
+      return ConnectedBleDeviceDto.fromList(self.readValue() as! [Any?])
     case 144:
-      return WifiScanResultDto.fromList(self.readValue() as! [Any?])
+      return BleAuthenticationResultDto.fromList(self.readValue() as! [Any?])
     case 145:
-      return WifiProvisionResultDto.fromList(self.readValue() as! [Any?])
+      return WifiScanResultDto.fromList(self.readValue() as! [Any?])
     case 146:
-      return BleCharacteristicDto.fromList(self.readValue() as! [Any?])
+      return WifiProvisionResultDto.fromList(self.readValue() as! [Any?])
     case 147:
-      return BleServiceDto.fromList(self.readValue() as! [Any?])
+      return BleCharacteristicDto.fromList(self.readValue() as! [Any?])
     case 148:
-      return BleServicesDto.fromList(self.readValue() as! [Any?])
+      return BleServiceDto.fromList(self.readValue() as! [Any?])
     case 149:
-      return BleReadResultDto.fromList(self.readValue() as! [Any?])
+      return BleServicesDto.fromList(self.readValue() as! [Any?])
     case 150:
-      return BleWriteResultDto.fromList(self.readValue() as! [Any?])
+      return BleReadResultDto.fromList(self.readValue() as! [Any?])
     case 151:
-      return BleNotificationDto.fromList(self.readValue() as! [Any?])
+      return BleWriteResultDto.fromList(self.readValue() as! [Any?])
     case 152:
-      return NativeErrorDto.fromList(self.readValue() as! [Any?])
+      return BleNotificationDto.fromList(self.readValue() as! [Any?])
     case 153:
-      return BleDiagnosticEventDto.fromList(self.readValue() as! [Any?])
+      return NativeErrorDto.fromList(self.readValue() as! [Any?])
     case 154:
-      return CommandResultDto.fromList(self.readValue() as! [Any?])
+      return BleDiagnosticEventDto.fromList(self.readValue() as! [Any?])
     case 155:
-      return DeviceAttributeDto.fromList(self.readValue() as! [Any?])
+      return CommandResultDto.fromList(self.readValue() as! [Any?])
     case 156:
-      return DeviceAttributeSnapshotDto.fromList(self.readValue() as! [Any?])
+      return DeviceAttributeDto.fromList(self.readValue() as! [Any?])
     case 157:
-      return DeviceAttributeWriteResultDto.fromList(self.readValue() as! [Any?])
+      return DeviceAttributeSnapshotDto.fromList(self.readValue() as! [Any?])
     case 158:
-      return RemotePairingResultDto.fromList(self.readValue() as! [Any?])
+      return DeviceAttributeWriteResultDto.fromList(self.readValue() as! [Any?])
     case 159:
-      return RemoteControlDto.fromList(self.readValue() as! [Any?])
+      return RemotePairingResultDto.fromList(self.readValue() as! [Any?])
     case 160:
-      return RemoteControlListResultDto.fromList(self.readValue() as! [Any?])
+      return RemoteControlDto.fromList(self.readValue() as! [Any?])
     case 161:
+      return RemoteControlListResultDto.fromList(self.readValue() as! [Any?])
+    case 162:
       return RemoteOperationResultDto.fromList(self.readValue() as! [Any?])
     default:
       return super.readValue(ofType: type)
@@ -1640,62 +1683,65 @@ private class HardwareApiPigeonCodecWriter: FlutterStandardWriter {
     } else if let value = value as? BleConnectionEventDto {
       super.writeByte(142)
       super.writeValue(value.toList())
-    } else if let value = value as? BleAuthenticationResultDto {
+    } else if let value = value as? ConnectedBleDeviceDto {
       super.writeByte(143)
       super.writeValue(value.toList())
-    } else if let value = value as? WifiScanResultDto {
+    } else if let value = value as? BleAuthenticationResultDto {
       super.writeByte(144)
       super.writeValue(value.toList())
-    } else if let value = value as? WifiProvisionResultDto {
+    } else if let value = value as? WifiScanResultDto {
       super.writeByte(145)
       super.writeValue(value.toList())
-    } else if let value = value as? BleCharacteristicDto {
+    } else if let value = value as? WifiProvisionResultDto {
       super.writeByte(146)
       super.writeValue(value.toList())
-    } else if let value = value as? BleServiceDto {
+    } else if let value = value as? BleCharacteristicDto {
       super.writeByte(147)
       super.writeValue(value.toList())
-    } else if let value = value as? BleServicesDto {
+    } else if let value = value as? BleServiceDto {
       super.writeByte(148)
       super.writeValue(value.toList())
-    } else if let value = value as? BleReadResultDto {
+    } else if let value = value as? BleServicesDto {
       super.writeByte(149)
       super.writeValue(value.toList())
-    } else if let value = value as? BleWriteResultDto {
+    } else if let value = value as? BleReadResultDto {
       super.writeByte(150)
       super.writeValue(value.toList())
-    } else if let value = value as? BleNotificationDto {
+    } else if let value = value as? BleWriteResultDto {
       super.writeByte(151)
       super.writeValue(value.toList())
-    } else if let value = value as? NativeErrorDto {
+    } else if let value = value as? BleNotificationDto {
       super.writeByte(152)
       super.writeValue(value.toList())
-    } else if let value = value as? BleDiagnosticEventDto {
+    } else if let value = value as? NativeErrorDto {
       super.writeByte(153)
       super.writeValue(value.toList())
-    } else if let value = value as? CommandResultDto {
+    } else if let value = value as? BleDiagnosticEventDto {
       super.writeByte(154)
       super.writeValue(value.toList())
-    } else if let value = value as? DeviceAttributeDto {
+    } else if let value = value as? CommandResultDto {
       super.writeByte(155)
       super.writeValue(value.toList())
-    } else if let value = value as? DeviceAttributeSnapshotDto {
+    } else if let value = value as? DeviceAttributeDto {
       super.writeByte(156)
       super.writeValue(value.toList())
-    } else if let value = value as? DeviceAttributeWriteResultDto {
+    } else if let value = value as? DeviceAttributeSnapshotDto {
       super.writeByte(157)
       super.writeValue(value.toList())
-    } else if let value = value as? RemotePairingResultDto {
+    } else if let value = value as? DeviceAttributeWriteResultDto {
       super.writeByte(158)
       super.writeValue(value.toList())
-    } else if let value = value as? RemoteControlDto {
+    } else if let value = value as? RemotePairingResultDto {
       super.writeByte(159)
       super.writeValue(value.toList())
-    } else if let value = value as? RemoteControlListResultDto {
+    } else if let value = value as? RemoteControlDto {
       super.writeByte(160)
       super.writeValue(value.toList())
-    } else if let value = value as? RemoteOperationResultDto {
+    } else if let value = value as? RemoteControlListResultDto {
       super.writeByte(161)
+      super.writeValue(value.toList())
+    } else if let value = value as? RemoteOperationResultDto {
+      super.writeByte(162)
       super.writeValue(value.toList())
     } else {
       super.writeValue(value)
@@ -1726,6 +1772,8 @@ protocol HardwareHostApi {
   func openAppSettings(requestId: String) throws
   func startBleScan(requestId: String, filter: BleScanFilterDto) throws
   func stopBleScan(requestId: String) throws
+  func getConnectedBleDevices(requestId: String, completion: @escaping (Result<[ConnectedBleDeviceDto], Error>) -> Void)
+  func disconnectAllManagedBleDevices(requestId: String, completion: @escaping (Result<[BleConnectionEventDto], Error>) -> Void)
   func connectBleDevice(requestId: String, deviceId: String, completion: @escaping (Result<BleConnectionEventDto, Error>) -> Void)
   func authenticateBleDevice(requestId: String, deviceId: String, token: String, aesKey: String, aesKeyVersion: String, completion: @escaping (Result<BleAuthenticationResultDto, Error>) -> Void)
   func scanWifiNetworks(requestId: String, deviceId: String, completion: @escaping (Result<WifiScanResultDto, Error>) -> Void)
@@ -1842,6 +1890,40 @@ class HardwareHostApiSetup {
       }
     } else {
       stopBleScanChannel.setMessageHandler(nil)
+    }
+    let getConnectedBleDevicesChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flinx.HardwareHostApi.getConnectedBleDevices\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      getConnectedBleDevicesChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let requestIdArg = args[0] as! String
+        api.getConnectedBleDevices(requestId: requestIdArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      getConnectedBleDevicesChannel.setMessageHandler(nil)
+    }
+    let disconnectAllManagedBleDevicesChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flinx.HardwareHostApi.disconnectAllManagedBleDevices\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      disconnectAllManagedBleDevicesChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let requestIdArg = args[0] as! String
+        api.disconnectAllManagedBleDevices(requestId: requestIdArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      disconnectAllManagedBleDevicesChannel.setMessageHandler(nil)
     }
     let connectBleDeviceChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flinx.HardwareHostApi.connectBleDevice\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {

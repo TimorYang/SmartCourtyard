@@ -2198,6 +2198,18 @@ abstract class AppLocalizations {
   /// **'More'**
   String get deviceCommandMoreTooltip;
 
+  /// Door state shown while the device reports generic movement without a direction
+  ///
+  /// In en, this message translates to:
+  /// **'Running'**
+  String get deviceCommandDoorStateRunning;
+
+  /// Door state label with the reported open percentage
+  ///
+  /// In en, this message translates to:
+  /// **'{state} · {percent}%'**
+  String deviceCommandDoorStateWithPercent(String state, int percent);
+
   /// No description provided for @smartOpenerDefaultDeviceSubtitle.
   ///
   /// In en, this message translates to:

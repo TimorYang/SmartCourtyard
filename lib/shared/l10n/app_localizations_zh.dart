@@ -1094,6 +1094,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get deviceCommandMoreTooltip => '更多';
 
   @override
+  String get deviceCommandDoorStateRunning => '运行中';
+
+  @override
+  String deviceCommandDoorStateWithPercent(String state, int percent) {
+    return '$state · $percent%';
+  }
+
+  @override
   String get smartOpenerDefaultDeviceSubtitle => '默认编码门|54-89';
 
   @override

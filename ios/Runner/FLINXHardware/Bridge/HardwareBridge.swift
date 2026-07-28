@@ -118,6 +118,32 @@ final class HardwareBridge: HardwareHostApi {
     func stopBleScan(requestId: String) throws {
         bleManager.stopScan(requestId: requestId)
     }
+
+    func getConnectedBleDevices(
+        requestId: String,
+        completion: @escaping (Result<[ConnectedBleDeviceDto], Error>) -> Void
+    ) {
+        completion(
+            .success(
+                bleManager.connectedManagedDevices().map {
+                    ConnectedBleDeviceDto(
+                        deviceId: $0.deviceId,
+                        name: $0.name,
+                        state: $0.state.toDto()
+                    )
+                }
+            )
+        )
+    }
+
+    func disconnectAllManagedBleDevices(
+        requestId: String,
+        completion: @escaping (Result<[BleConnectionEventDto], Error>) -> Void
+    ) {
+        bleManager.disconnectAllManaged(requestId: requestId) { events in
+            completion(.success(events.map { $0.toDto() }))
+        }
+    }
     
     func connectBleDevice(
         requestId: String,

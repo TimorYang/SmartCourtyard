@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flinx/features/add_device/application/providers.dart';
 import 'package:flinx/features/add_device/domain/entities/onboarding_device_key.dart';
@@ -84,6 +85,57 @@ void main() {
 
     expect(gateway.commands.last, DoorCommand.close);
     expect(find.text('关门指令已发送（0x1002）。'), findsOneWidget);
+  });
+
+  testWidgets('updates the door frame and state from attribute reports', (
+    tester,
+  ) async {
+    final gateway = _RecordingHardwareGateway();
+    await _pumpDevicePage(
+      tester,
+      gateway,
+      repository: const _FakeDoorDetailRepository(
+        doorType: 0,
+        positionPercent: 0,
+      ),
+    );
+
+    expect(_doorHeroAsset(tester), endsWith('garage_door_01.png'));
+
+    gateway.emitDeviceAttributeSnapshot(
+      DeviceAttributeSnapshot(
+        deviceId: 'mock-ble-device',
+        sequence: 1,
+        timestampMillis: 1,
+        origin: DeviceAttributeReportOrigin.activeReport,
+        attributes: [
+          DeviceAttribute(id: 0x2715, value: Uint8List.fromList([0x03])),
+          DeviceAttribute(id: 0x271C, value: Uint8List.fromList([50])),
+        ],
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('Opening · 50%'), findsOneWidget);
+
+    expect(_doorHeroAsset(tester), endsWith('garage_door_11.png'));
+  });
+
+  testWidgets('uses swing gate frames for the reported position', (
+    tester,
+  ) async {
+    final gateway = _RecordingHardwareGateway();
+    await _pumpDevicePage(
+      tester,
+      gateway,
+      repository: const _FakeDoorDetailRepository(
+        doorType: 3,
+        positionPercent: 100,
+      ),
+    );
+
+    expect(_doorHeroAsset(tester), endsWith('swing_door_20.png'));
   });
 
   testWidgets('quick actions send light, partial open, and open settings', (
@@ -436,6 +488,18 @@ void main() {
 
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('cleans all managed BLE connections when page is removed', (
+    tester,
+  ) async {
+    final gateway = _RecordingHardwareGateway();
+
+    await _pumpDevicePage(tester, gateway);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+
+    expect(gateway.disconnectAllCount, greaterThanOrEqualTo(1));
+  });
 }
 
 Widget _buildPage(
@@ -549,6 +613,14 @@ List<String> _connectionGroupAssets(WidgetTester tester, String deviceType) {
       .toList();
 }
 
+String _doorHeroAsset(WidgetTester tester) {
+  final frame = find.byKey(const ValueKey<String>('door-hero-frame'));
+  final image = tester.widget<Image>(
+    find.descendant(of: frame, matching: find.byType(Image)),
+  );
+  return (image.image as AssetImage).assetName;
+}
+
 bool _hasConnectionBorder(WidgetTester tester, String deviceType) {
   final group = find.byKey(ValueKey<String>('connection-device-$deviceType'));
   final box = tester.widget<DecoratedBox>(
@@ -571,6 +643,15 @@ class _RecordingHardwareGateway extends MockHardwareGateway {
   final List<String> deviceIds = <String>[];
   int queryCount = 0;
   final List<String> authenticatedDeviceIds = <String>[];
+  int disconnectAllCount = 0;
+
+  @override
+  Future<List<BleConnectionEvent>> disconnectAllManagedBleDevices({
+    required String requestId,
+  }) async {
+    disconnectAllCount += 1;
+    return super.disconnectAllManagedBleDevices(requestId: requestId);
+  }
 
   @override
   Future<BleAuthenticationResult> authenticateBleDevice({
@@ -671,20 +752,26 @@ class _FakeDoorDetailRepository implements DoorDetailRepository {
       'AUTO_CLOSE',
       'DOOR_OPEN_REMINDER',
     ],
+    this.doorType,
+    this.positionPercent,
   });
 
   final List<String> capabilities;
+  final int? doorType;
+  final double? positionPercent;
 
   @override
   Future<DoorDetail> fetchDoorDetail({
     required String doorId,
     required String requestId,
   }) async {
-    return const DoorDetail(
+    return DoorDetail(
       id: '12',
       name: 'Garage door',
       doorState: DoorState.closed,
       doorStateLabel: 'Closed',
+      doorType: doorType,
+      positionPercent: positionPercent,
       operatedCycles: 123,
       remainingCycles: 4567,
       ledStatus: 1,

@@ -16,6 +16,7 @@ final class BleManager: NSObject {
   private lazy var centralManager = CBCentralManager(delegate: self, queue: .main)
 
   private var peripheralsById: [String: CBPeripheral] = [:]
+  private var namesById: [String: String] = [:]
   private var currentScan: ScanSession?
   // CBCentralManager reports its initial state asynchronously. Retain a scan
   // requested during `.unknown`/`.resetting` and begin it once CoreBluetooth is
@@ -113,6 +114,50 @@ final class BleManager: NSObject {
       nativeCode: session?.sessionId,
       details: "discoveredDevices=\(session?.devices.count ?? 0)"
     )
+  }
+
+  func connectedManagedDevices() -> [(deviceId: String, name: String?, state: BleConnectionState)] {
+    peripheralsById.compactMap { deviceId, peripheral in
+      guard isManagedDeviceName(namesById[deviceId] ?? peripheral.name) else {
+        return nil
+      }
+      switch peripheral.state {
+      case .connected:
+        return (deviceId, namesById[deviceId] ?? peripheral.name, .connected)
+      case .connecting:
+        return (deviceId, namesById[deviceId] ?? peripheral.name, .connecting)
+      default:
+        return nil
+      }
+    }
+  }
+
+  func disconnectAllManaged(
+    requestId: String,
+    completion: @escaping ([BleConnectionEvent]) -> Void
+  ) {
+    stopScan(requestId: "\(requestId)-scan-stop")
+    let devices = connectedManagedDevices()
+    guard !devices.isEmpty else {
+      completion([])
+      return
+    }
+    var results: [BleConnectionEvent] = []
+    var remaining = devices.count
+    for device in devices {
+      disconnect(
+        requestId: "\(requestId)-\(device.deviceId)",
+        deviceId: device.deviceId
+      ) { result in
+        if case .success(let event) = result {
+          results.append(event)
+        }
+        remaining -= 1
+        if remaining == 0 {
+          completion(results)
+        }
+      }
+    }
   }
 
   func connect(
@@ -741,6 +786,9 @@ extension BleManager: CBCentralManagerDelegate {
 
     let deviceId = peripheral.identifier.uuidString
     peripheralsById[deviceId] = peripheral
+    if let normalizedName {
+      namesById[deviceId] = normalizedName
+    }
     peripheral.delegate = self
 
     let serviceUuids = normalizedUuids(
@@ -898,12 +946,17 @@ extension BleManager: CBCentralManagerDelegate {
   }
 
   private func parseSmartOpenerSn(from name: String?) -> String? {
-    let prefixes = ["Noru_", "opener_", "Evo_", "Fbox_"]
-    guard let name, prefixes.contains(where: name.hasPrefix) else {
+    guard let name, isManagedDeviceName(name) else {
       return nil
     }
     let sn = name.trimmingCharacters(in: .whitespacesAndNewlines)
     return sn.isEmpty ? nil : sn
+  }
+
+  private func isManagedDeviceName(_ name: String?) -> Bool {
+    let prefixes = ["Noru_", "opener_", "Evo_", "Fbox_"]
+    guard let name else { return false }
+    return prefixes.contains(where: name.hasPrefix)
   }
 }
 
