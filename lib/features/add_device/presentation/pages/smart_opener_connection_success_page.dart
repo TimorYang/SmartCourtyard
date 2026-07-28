@@ -6,7 +6,9 @@ import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
+import '../../../device_control/presentation/pages/already_added_devices_page.dart';
 import '../../../device_control/presentation/pages/device_command_page.dart';
+import 'add_new_doors_page.dart';
 
 class SmartOpenerConnectionSuccessPage extends ConsumerStatefulWidget {
   const SmartOpenerConnectionSuccessPage({super.key});
@@ -102,25 +104,13 @@ class _SmartOpenerConnectionSuccessPageState
                     label: l10n.smartOpenerTryAction,
                     onPressed: onboardedDoor == null
                         ? null
-                        : () {
-                            ref
-                                .read(addDeviceControllerProvider.notifier)
-                                .logDeviceDetailNavigation();
-                            final doorId = Uri.encodeQueryComponent(
-                              onboardedDoor.id.toString(),
-                            );
-                            final encodedDeviceId = Uri.encodeQueryComponent(
-                              deviceId,
-                            );
-                            final encodedFlowId = Uri.encodeQueryComponent(
-                              addDeviceState.onboardingFlowId ?? '',
-                            );
-                            context.push(
-                              '${DeviceCommandPage.routePath}'
-                              '?doorId=$doorId&deviceId=$encodedDeviceId'
-                              '&onboardingFlowId=$encodedFlowId',
-                            );
-                          },
+                        : () => _openDeviceCommand(
+                            context,
+                            doorId: onboardedDoor.id.toString(),
+                            deviceId: deviceId,
+                            onboardingFlowId:
+                                addDeviceState.onboardingFlowId ?? '',
+                          ),
                   ),
                 ),
               ],
@@ -129,6 +119,42 @@ class _SmartOpenerConnectionSuccessPageState
         },
       ),
     );
+  }
+
+  void _openDeviceCommand(
+    BuildContext context, {
+    required String doorId,
+    required String deviceId,
+    required String onboardingFlowId,
+  }) {
+    ref.read(addDeviceControllerProvider.notifier).logDeviceDetailNavigation();
+
+    final router = GoRouter.of(context);
+    final navigator = Navigator.of(context);
+    String? flowBoundaryRouteName;
+    final location =
+        '${DeviceCommandPage.routePath}'
+        '?doorId=${Uri.encodeQueryComponent(doorId)}'
+        '&deviceId=${Uri.encodeQueryComponent(deviceId)}'
+        '&onboardingFlowId=${Uri.encodeQueryComponent(onboardingFlowId)}';
+
+    navigator.popUntil((route) {
+      final routeName = route.settings.name;
+      if (routeName == AddNewDoorsPage.routeName ||
+          routeName == AlreadyAddedDevicesPage.routeName) {
+        flowBoundaryRouteName = routeName;
+        return true;
+      }
+      return route.isFirst;
+    });
+
+    if (flowBoundaryRouteName == AlreadyAddedDevicesPage.routeName &&
+        navigator.canPop()) {
+      navigator.pop(deviceId);
+      return;
+    }
+
+    router.pushReplacement(location);
   }
 
   Future<void> _showShareDialog(BuildContext context) {

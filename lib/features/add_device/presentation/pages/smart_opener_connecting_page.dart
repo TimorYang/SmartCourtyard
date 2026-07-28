@@ -63,7 +63,7 @@ class _SmartOpenerConnectingPageState
     }
     if (ok) {
       ref.invalidate(homeDevicesProvider);
-      context.go(SmartOpenerConnectionSuccessPage.routePath);
+      context.pushReplacement(SmartOpenerConnectionSuccessPage.routePath);
       return;
     }
 

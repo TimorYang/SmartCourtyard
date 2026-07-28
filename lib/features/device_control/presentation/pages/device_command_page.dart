@@ -127,10 +127,10 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     setState(() => _selectedTab = tab);
   }
 
-  void _loadDoorDetail() {
+  void _loadDoorDetail({String? preferredDeviceId}) {
     _controller.loadDoorDetail(
       doorId: widget.doorId,
-      preferredDeviceId: widget.deviceId,
+      preferredDeviceId: preferredDeviceId ?? widget.deviceId,
     );
   }
 
@@ -237,11 +237,20 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
             tooltip: l10n.deviceCommandMoreTooltip,
             onPressed: isBusy
                 ? null
-                : () => context.push(
-                    '${AlreadyAddedDevicesPage.routePath}'
-                    '?doorId=${Uri.encodeComponent(widget.doorId)}'
-                    '&deviceId=${Uri.encodeComponent(hardwareDeviceId)}',
-                  ),
+                : () async {
+                    final addedDeviceId = await context.push<String>(
+                      '${AlreadyAddedDevicesPage.routePath}'
+                      '?doorId=${Uri.encodeComponent(widget.doorId)}'
+                      '&deviceId=${Uri.encodeComponent(hardwareDeviceId)}',
+                    );
+                    final normalizedDeviceId = addedDeviceId?.trim();
+                    if (!mounted ||
+                        normalizedDeviceId == null ||
+                        normalizedDeviceId.isEmpty) {
+                      return;
+                    }
+                    _loadDoorDetail(preferredDeviceId: normalizedDeviceId);
+                  },
             icon: const Icon(Icons.more_horiz, size: 24),
           ),
           const SizedBox(width: 4),
