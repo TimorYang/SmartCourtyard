@@ -364,6 +364,8 @@
   "smartOpenerAddedRetryAction": "重试",
   "smartOpenerAddedNoMore": "没有更多设备了",
   "deviceCommandMoreTooltip": "更多",
+  "deviceCommandDoorStateRunning": "运行中",
+  "deviceCommandDoorStateWithPercent": "{state} · {percent}%",
   "smartOpenerDefaultDeviceSubtitle": "默认编码门|54-89",
   "smartOpenerDeviceNotFoundTitle": "未发现设备",
   "smartOpenerDeviceNotFoundDescription": "未检测到附近设备。请确认设备已成功重置后重新扫描！",

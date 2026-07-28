@@ -1186,6 +1186,22 @@
   "smartOpenerAddedRetryAction": "Retry",
   "smartOpenerAddedNoMore": "No more devices",
   "deviceCommandMoreTooltip": "More",
+  "deviceCommandDoorStateRunning": "Running",
+  "@deviceCommandDoorStateRunning": {
+    "description": "Door state shown while the device reports generic movement without a direction"
+  },
+  "deviceCommandDoorStateWithPercent": "{state} · {percent}%",
+  "@deviceCommandDoorStateWithPercent": {
+    "description": "Door state label with the reported open percentage",
+    "placeholders": {
+      "state": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "smartOpenerDefaultDeviceSubtitle": "Default encoding door|54-89",
   "smartOpenerDeviceNotFoundTitle": "Device not found",
   "smartOpenerDeviceNotFoundDescription": "No nearby device is detected. Please confirm the device has been reset successfully and try scanning again!",

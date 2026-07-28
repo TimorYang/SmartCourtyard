@@ -8,7 +8,7 @@ Read `docs/flutter_architecture.md` before making architecture-level changes.
 Read `docs/network_requests.md` before adding or changing REST APIs, network
 configuration, JSON DTOs, remote data sources, repository mappings, or network
 error handling.
-Read `docs/Door设备蓝牙协议.docx` before investigating, implementing, or changing
+Read `docs/设备与平台通讯协议.pdf` before investigating, implementing, or changing
 Bluetooth/BLE behavior, device protocol handling, or Bluetooth diagnostics.
 
 ## Git Flow
@@ -449,6 +449,17 @@ Log these categories:
 - Transmitter pairing flow.
 - Accessory management actions.
 - API request summaries.
+
+For `0x0202` device attribute reports, diagnostics must make the complete UI
+alignment path observable without logging unrelated attribute values:
+
+- Log receipt of the parsed snapshot with source device ID, selected hardware
+  device ID, origin, sequence, attribute count, and attribute IDs.
+- Log an explicit reason when a snapshot is ignored.
+- Log raw bytes and semantic mappings for `0x2715` door status and `0x271C`
+  door percentage, including validation issues and the state applied to UI.
+- Do not log values of unrelated attributes merely because they share the same
+  report.
 
 Rules:
 

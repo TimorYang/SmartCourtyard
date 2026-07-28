@@ -15,6 +15,7 @@ import '../../../records/presentation/pages/operation_record_page.dart';
 import '../../../security_center/presentation/pages/security_center_page.dart';
 import '../../application/device_command_controller.dart';
 import '../../domain/entities/door_device.dart';
+import '../../domain/entities/door_realtime_state.dart';
 import '../widgets/device_detail_bottom_navigation.dart';
 import 'already_added_devices_page.dart';
 import 'device_settings_page.dart';
@@ -222,6 +223,9 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     final canUseAutoClose = capabilities.contains('AUTO_CLOSE');
     final canUseOpenReminder = capabilities.contains('DOOR_OPEN_REMINDER');
     final l10n = AppLocalizations.of(context);
+    final doorPositionPercent =
+        commandState.doorRealtimeState?.positionPercent ??
+        doorDetail?.positionPercent;
     return Scaffold(
       backgroundColor: AppColors.backgroundPrimary,
       appBar: FlinxNavigationBar(
@@ -280,11 +284,19 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                 children: [
                   _DoorHeroImage(
                     doorType: DoorType.fromWireValue(doorDetail?.doorType),
+                    doorTypeWireValue: doorDetail?.doorType,
+                    positionPercent: doorPositionPercent ?? 0,
+                    logger: ref.read(appLoggerProvider),
                   ),
                   const SizedBox(height: 4),
                   Center(
                     child: Text(
-                      doorDetail?.doorStateLabel ?? 'Closed',
+                      _doorStateLabel(
+                        l10n,
+                        realtimeStatus: commandState.doorRealtimeState?.status,
+                        fallbackState: doorDetail?.doorState,
+                        positionPercent: doorPositionPercent,
+                      ),
                       style: AppTextTokens.deviceControlDoorState(textTheme),
                     ),
                   ),
@@ -374,6 +386,39 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
           ],
         ),
       ),
+    );
+  }
+
+  String _doorStateLabel(
+    AppLocalizations l10n, {
+    required DoorRealtimeStatus? realtimeStatus,
+    required DoorState? fallbackState,
+    required double? positionPercent,
+  }) {
+    final stateLabel = realtimeStatus != null
+        ? switch (realtimeStatus) {
+            DoorRealtimeStatus.open => l10n.homeDoorStateOpen,
+            DoorRealtimeStatus.closed => l10n.homeDoorStateClosed,
+            DoorRealtimeStatus.stopped => l10n.homeDoorStateStopped,
+            DoorRealtimeStatus.opening => l10n.homeDoorStateOpening,
+            DoorRealtimeStatus.closing => l10n.homeDoorStateClosing,
+            DoorRealtimeStatus.running => l10n.deviceCommandDoorStateRunning,
+            DoorRealtimeStatus.unknown => l10n.homeDoorStateUnknown,
+          }
+        : switch (fallbackState) {
+            DoorState.open => l10n.homeDoorStateOpen,
+            DoorState.opening => l10n.homeDoorStateOpening,
+            DoorState.stopped => l10n.homeDoorStateStopped,
+            DoorState.closing => l10n.homeDoorStateClosing,
+            DoorState.closed => l10n.homeDoorStateClosed,
+            DoorState.unknown || null => l10n.homeDoorStateUnknown,
+          };
+    if (positionPercent == null) {
+      return stateLabel;
+    }
+    return l10n.deviceCommandDoorStateWithPercent(
+      stateLabel,
+      positionPercent.clamp(0, 100).round(),
     );
   }
 }
@@ -696,35 +741,106 @@ class _DeviceControlAssetIcon extends StatelessWidget {
   }
 }
 
-class _DoorHeroImage extends StatelessWidget {
-  const _DoorHeroImage({required this.doorType});
+class _DoorHeroImage extends StatefulWidget {
+  const _DoorHeroImage({
+    required this.doorType,
+    required this.doorTypeWireValue,
+    required this.positionPercent,
+    required this.logger,
+  });
 
   final DoorType doorType;
+  final int? doorTypeWireValue;
+  final double positionPercent;
+  final AppLogger logger;
+
+  @override
+  State<_DoorHeroImage> createState() => _DoorHeroImageState();
+}
+
+class _DoorHeroImageState extends State<_DoorHeroImage> {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _precacheFrames();
+    _logVisualTarget();
+  }
+
+  @override
+  void didUpdateWidget(covariant _DoorHeroImage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.doorType != widget.doorType) {
+      _precacheFrames();
+    }
+    if (oldWidget.doorType != widget.doorType ||
+        oldWidget.doorTypeWireValue != widget.doorTypeWireValue ||
+        oldWidget.positionPercent != widget.positionPercent) {
+      _logVisualTarget();
+    }
+  }
+
+  void _precacheFrames() {
+    final assets = _DoorHeroAssetPaths.forType(widget.doorType);
+    for (final assetPath in assets.assetPaths) {
+      unawaited(
+        precacheImage(
+          AssetImage(assetPath),
+          context,
+          onError: (error, stackTrace) {},
+        ),
+      );
+    }
+  }
+
+  void _logVisualTarget() {
+    final assets = _DoorHeroAssetPaths.forType(widget.doorType);
+    final positionPercent = widget.positionPercent.clamp(0, 100).toDouble();
+    widget.logger.info(
+      'device_door_visual_target',
+      tag: AppLogTag.ble,
+      context: {
+        'doorType': widget.doorType.name,
+        'doorTypeWireValue': widget.doorTypeWireValue,
+        'doorTypeResolved': widget.doorTypeWireValue != null,
+        'positionPercent': positionPercent,
+        'frameIndex': assets.frameIndexForPercent(positionPercent),
+        'frameCount': assets.frameCount,
+        'assetPath': assets.assetPathForPercent(positionPercent),
+        'animationEnabled': assets.frameCount > 1,
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final asset = _DoorHeroAssetPaths.forType(doorType);
+    final assets = _DoorHeroAssetPaths.forType(widget.doorType);
+    final positionPercent = widget.positionPercent.clamp(0, 100).toDouble();
+    final assetPath = assets.assetPathForPercent(positionPercent);
     return AspectRatio(
       aspectRatio: 1.95,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 26),
-        child: Image.asset(
-          asset.assetPath,
-          fit: BoxFit.contain,
-          errorBuilder: (context, error, stackTrace) {
-            return DecoratedBox(
-              decoration: const BoxDecoration(
-                color: AppColors.backgroundPrimary,
-              ),
-              child: Center(
-                child: Image.asset(
-                  asset.fallbackAssetPath,
-                  width: 180,
-                  fit: BoxFit.contain,
+        child: KeyedSubtree(
+          key: const ValueKey<String>('door-hero-frame'),
+          child: Image.asset(
+            key: ValueKey<String>(assetPath),
+            assetPath,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              return DecoratedBox(
+                decoration: const BoxDecoration(
+                  color: AppColors.backgroundPrimary,
                 ),
-              ),
-            );
-          },
+                child: Center(
+                  child: Image.asset(
+                    assets.fallbackAssetPath,
+                    width: 180,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
@@ -733,40 +849,67 @@ class _DoorHeroImage extends StatelessWidget {
 
 class _DoorHeroAssetPaths {
   const _DoorHeroAssetPaths._({
-    required this.assetPath,
     required this.fallbackAssetPath,
+    required this.frameAssetPrefix,
+    required this.frameCount,
   });
 
-  final String assetPath;
   final String fallbackAssetPath;
+  final String frameAssetPrefix;
+  final int frameCount;
+
+  Iterable<String> get assetPaths sync* {
+    for (var frame = 1; frame <= frameCount; frame += 1) {
+      yield '$frameAssetPrefix${frame.toString().padLeft(2, '0')}.png';
+    }
+  }
+
+  String assetPathForPercent(double percent) {
+    final frame = frameIndexForPercent(percent);
+    return '$frameAssetPrefix${frame.toString().padLeft(2, '0')}.png';
+  }
+
+  int frameIndexForPercent(double percent) {
+    if (frameCount == 1) {
+      return 1;
+    }
+    return ((percent.clamp(0, 100) / 100) * (frameCount - 1)).round() + 1;
+  }
 
   static _DoorHeroAssetPaths forType(DoorType doorType) {
     return switch (doorType) {
       DoorType.garage => const _DoorHeroAssetPaths._(
-        assetPath: 'assets/images/device_control_garage_door_closed.png',
+        frameAssetPrefix:
+            'assets/images/device_control/device_control_garage_door_',
+        frameCount: 20,
         fallbackAssetPath:
             'assets/images/device_control/device_control_garage_door_placeholder.png',
       ),
       DoorType.roller => const _DoorHeroAssetPaths._(
-        assetPath:
-            'assets/images/device_control/device_control_roller_door_01.png',
+        frameAssetPrefix:
+            'assets/images/device_control/device_control_roller_door_',
+        frameCount: 20,
         fallbackAssetPath:
             'assets/images/device_control/device_control_roller_door_placeholder.png',
       ),
       DoorType.industrial => const _DoorHeroAssetPaths._(
-        assetPath:
-            'assets/images/device_control/device_control_industrial_door_01.png',
+        frameAssetPrefix:
+            'assets/images/device_control/device_control_industrial_door_',
+        frameCount: 20,
         fallbackAssetPath:
             'assets/images/device_control/device_control_industrial_door_placeholder.png',
       ),
       DoorType.swing => const _DoorHeroAssetPaths._(
-        assetPath: 'assets/icons/add_device/add_new_doors_swing_gate.png',
+        frameAssetPrefix:
+            'assets/images/device_control/device_control_swing_door_',
+        frameCount: 20,
         fallbackAssetPath:
             'assets/icons/add_device/add_new_doors_swing_gate.png',
       ),
       DoorType.sliding => const _DoorHeroAssetPaths._(
-        assetPath:
-            'assets/images/device_control/device_control_sliding_door_01.png',
+        frameAssetPrefix:
+            'assets/images/device_control/device_control_sliding_door_',
+        frameCount: 20,
         fallbackAssetPath:
             'assets/images/device_control/device_control_sliding_door_placeholder.png',
       ),

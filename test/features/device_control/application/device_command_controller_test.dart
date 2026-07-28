@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:flinx/core/logging/app_logger.dart';
+import 'package:flinx/core/logging/providers.dart';
 import 'package:flinx/features/add_device/application/providers.dart';
 import 'package:flinx/features/add_device/domain/entities/onboarded_force_door.dart';
 import 'package:flinx/features/add_device/domain/entities/onboarding_device_key.dart';
@@ -403,6 +405,112 @@ void main() {
     expect(gateway.connectedDeviceIds, hasLength(connectCount));
     expect(gateway.commandDeviceIds, ['native-fbox']);
   });
+
+  test('logs how a 0x0202 report is aligned with the selected UI', () async {
+    final gateway = _BleSessionGateway();
+    final logger = _RecordingLogger();
+    final container = _createContainer(gateway: gateway, logger: logger);
+    addTearDown(container.dispose);
+
+    await container
+        .read(deviceCommandControllerProvider.notifier)
+        .loadDoorDetail(doorId: '12');
+    await _settleBleSession();
+
+    gateway.emitDeviceAttributeSnapshot(
+      DeviceAttributeSnapshot(
+        requestId: 'attribute-report-1',
+        deviceId: 'target-device',
+        sequence: 7,
+        timestampMillis: 1,
+        origin: DeviceAttributeReportOrigin.activeReport,
+        attributes: [
+          DeviceAttribute(id: 0x2715, value: Uint8List.fromList([0x03])),
+          DeviceAttribute(id: 0x271C, value: Uint8List.fromList([50])),
+        ],
+      ),
+    );
+    await _settleBleSession();
+
+    final received = logger.records.singleWhere(
+      (record) => record.message == 'device_attribute_snapshot_received',
+    );
+    expect(received.context['sourceDeviceId'], 'target-device');
+    expect(received.context['selectedHardwareDeviceId'], 'target-device');
+
+    final parsed = logger.records.singleWhere(
+      (record) => record.message == 'device_attribute_report_parsed',
+    );
+    expect(parsed.context['relevantRaw'], ['0x2715=[0x03]', '0x271C=[0x32]']);
+    expect(parsed.context['doorStatusParsed'], 'opening');
+    expect(parsed.context['doorPositionParsedPercent'], 50.0);
+    expect(parsed.context['uiUpdate'], 'applied');
+  });
+
+  test(
+    'clears realtime state and refreshes door detail after disconnect',
+    () async {
+      final gateway = _BleSessionGateway();
+      final repository = _DoorDetailRepository(_doorDetail());
+      final container = _createContainer(
+        gateway: gateway,
+        repository: repository,
+      );
+      addTearDown(container.dispose);
+
+      await container
+          .read(deviceCommandControllerProvider.notifier)
+          .loadDoorDetail(doorId: '12');
+      await _settleBleSession();
+
+      gateway.emitDeviceAttributeSnapshot(
+        DeviceAttributeSnapshot(
+          deviceId: 'target-device',
+          sequence: 1,
+          timestampMillis: 1,
+          origin: DeviceAttributeReportOrigin.activeReport,
+          attributes: [
+            DeviceAttribute(id: 0x2715, value: Uint8List.fromList([0x03])),
+            DeviceAttribute(id: 0x271C, value: Uint8List.fromList([50])),
+          ],
+        ),
+      );
+      await _settleBleSession();
+      expect(
+        container
+            .read(deviceCommandControllerProvider)
+            .doorRealtimeState
+            ?.positionPercent,
+        50,
+      );
+
+      repository.detail = DoorDetail(
+        id: '12',
+        name: 'Test door',
+        doorState: DoorState.open,
+        doorStateLabel: 'Open',
+        positionPercent: 100,
+        operatedCycles: 0,
+        remainingCycles: 0,
+      );
+      gateway.emitBleConnectionEvent(
+        const BleConnectionEvent(
+          requestId: 'disconnect-event',
+          deviceId: 'target-device',
+          state: BleConnectionState.disconnected,
+        ),
+      );
+      await _settleBleSession();
+
+      final state = container.read(deviceCommandControllerProvider);
+      expect(state.doorRealtimeState, isNull);
+      expect(state.lastSelectedAttributeSnapshot, isNull);
+      expect(state.lastSelectedBleNotification, isNull);
+      expect(state.doorDetail?.doorState, DoorState.open);
+      expect(state.doorDetail?.positionPercent, 100);
+      expect(repository.doorDetailRequestCount, 2);
+    },
+  );
 }
 
 ProviderContainer _createContainer({
@@ -410,6 +518,7 @@ ProviderContainer _createContainer({
   DoorDetail? doorDetail,
   _DoorDetailRepository? repository,
   _DeviceKeyRepository? deviceKeyRepository,
+  AppLogger? logger,
   Duration scanDuration = const Duration(seconds: 10),
 }) {
   return ProviderContainer(
@@ -422,6 +531,7 @@ ProviderContainer _createContainer({
         deviceKeyRepository ?? _DeviceKeyRepository(),
       ),
       deviceCommandBleScanDurationProvider.overrideWithValue(scanDuration),
+      if (logger != null) appLoggerProvider.overrideWithValue(logger),
     ],
   );
 }
@@ -456,14 +566,18 @@ class _DoorDetailRepository implements DoorDetailRepository {
     ],
   });
 
-  final DoorDetail detail;
+  DoorDetail detail;
   List<DoorDevice> devices;
+  var doorDetailRequestCount = 0;
 
   @override
   Future<DoorDetail> fetchDoorDetail({
     required String doorId,
     required String requestId,
-  }) async => detail;
+  }) async {
+    doorDetailRequestCount += 1;
+    return detail;
+  }
 
   @override
   Future<List<DoorDevice>> fetchDoorDevices({
@@ -511,6 +625,52 @@ class _DeviceKeyRepository implements AddDeviceOnboardingRepository {
       aesKeyVersion: 'test',
     );
   }
+}
+
+class _RecordingLogger implements AppLogger {
+  final List<_LogRecord> records = <_LogRecord>[];
+
+  @override
+  void info(
+    String message, {
+    AppLogTag tag = AppLogTag.general,
+    String? flowId,
+    String? requestId,
+    Map<String, Object?> context = const {},
+  }) {
+    records.add(_LogRecord(message, context));
+  }
+
+  @override
+  void warning(
+    String message, {
+    AppLogTag tag = AppLogTag.general,
+    String? flowId,
+    String? requestId,
+    Map<String, Object?> context = const {},
+  }) {
+    records.add(_LogRecord(message, context));
+  }
+
+  @override
+  void error(
+    String message, {
+    AppLogTag tag = AppLogTag.general,
+    String? flowId,
+    String? requestId,
+    Object? error,
+    StackTrace? stackTrace,
+    Map<String, Object?> context = const {},
+  }) {
+    records.add(_LogRecord(message, context));
+  }
+}
+
+class _LogRecord {
+  const _LogRecord(this.message, this.context);
+
+  final String message;
+  final Map<String, Object?> context;
 }
 
 class _BleSessionGateway extends MockHardwareGateway {

@@ -45,6 +45,10 @@ class MockHardwareGateway implements HardwareGateway {
   Stream<BleConnectionEvent> get bleConnectionEvents =>
       _connectionController.stream;
 
+  void emitBleConnectionEvent(BleConnectionEvent event) {
+    _connectionController.add(event);
+  }
+
   @override
   Stream<BleNotification> get bleNotifications =>
       _notificationController.stream;
@@ -59,6 +63,10 @@ class MockHardwareGateway implements HardwareGateway {
   @override
   Stream<DeviceAttributeSnapshot> get deviceAttributeSnapshots =>
       _attributeController.stream;
+
+  void emitDeviceAttributeSnapshot(DeviceAttributeSnapshot snapshot) {
+    _attributeController.add(snapshot);
+  }
 
   @override
   Future<void> configureHardwareLogging({

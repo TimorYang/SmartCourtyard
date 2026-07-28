@@ -7,6 +7,7 @@ import '../../add_device/application/providers.dart';
 import '../../add_device/domain/entities/onboarding_device_key.dart';
 import '../../add_device/domain/use_cases/fetch_onboarding_device_key_use_case.dart';
 import '../../../core/errors/app_error.dart';
+import '../../../core/logging/app_logger.dart';
 import '../../../core/logging/providers.dart';
 import '../../../core/network/providers.dart';
 import '../../../platform_bridge/hardware_gateway.dart';
@@ -14,9 +15,11 @@ import '../../../platform_bridge/hardware_models.dart';
 import '../../../platform_bridge/providers.dart';
 import '../data/data_sources/door_detail_api.dart';
 import '../data/data_sources/door_detail_remote_data_source.dart';
+import '../data/mappers/door_realtime_state_mapper.dart';
 import '../data/repositories/door_detail_repository_impl.dart';
 import '../domain/entities/door_detail.dart';
 import '../domain/entities/door_device.dart';
+import '../domain/entities/door_realtime_state.dart';
 import '../domain/repositories/door_detail_repository.dart';
 import '../domain/use_cases/fetch_door_detail_use_case.dart';
 import '../domain/use_cases/fetch_door_devices_use_case.dart';
@@ -151,6 +154,7 @@ class DeviceCommandState {
     this.selectedDeviceId,
     this.lastSelectedBleNotification,
     this.lastSelectedAttributeSnapshot,
+    this.doorRealtimeState,
   });
 
   final DoorDetail? doorDetail;
@@ -176,6 +180,7 @@ class DeviceCommandState {
   final String? selectedDeviceId;
   final BleNotification? lastSelectedBleNotification;
   final DeviceAttributeSnapshot? lastSelectedAttributeSnapshot;
+  final DoorRealtimeState? doorRealtimeState;
 
   DeviceCommandState copyWith({
     DoorDetail? doorDetail,
@@ -210,7 +215,11 @@ class DeviceCommandState {
     String? selectedDeviceId,
     bool clearSelectedDeviceId = false,
     BleNotification? lastSelectedBleNotification,
+    bool clearLastSelectedBleNotification = false,
     DeviceAttributeSnapshot? lastSelectedAttributeSnapshot,
+    bool clearLastSelectedAttributeSnapshot = false,
+    DoorRealtimeState? doorRealtimeState,
+    bool clearDoorRealtimeState = false,
   }) {
     return DeviceCommandState(
       doorDetail: clearDoorDetail ? null : doorDetail ?? this.doorDetail,
@@ -249,10 +258,15 @@ class DeviceCommandState {
       selectedDeviceId: clearSelectedDeviceId
           ? null
           : selectedDeviceId ?? this.selectedDeviceId,
-      lastSelectedBleNotification:
-          lastSelectedBleNotification ?? this.lastSelectedBleNotification,
-      lastSelectedAttributeSnapshot:
-          lastSelectedAttributeSnapshot ?? this.lastSelectedAttributeSnapshot,
+      lastSelectedBleNotification: clearLastSelectedBleNotification
+          ? null
+          : lastSelectedBleNotification ?? this.lastSelectedBleNotification,
+      lastSelectedAttributeSnapshot: clearLastSelectedAttributeSnapshot
+          ? null
+          : lastSelectedAttributeSnapshot ?? this.lastSelectedAttributeSnapshot,
+      doorRealtimeState: clearDoorRealtimeState
+          ? null
+          : doorRealtimeState ?? this.doorRealtimeState,
     );
   }
 }
@@ -262,6 +276,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
   late final FetchDoorDetailUseCase _fetchDoorDetailUseCase;
   late final FetchDoorDevicesUseCase _fetchDoorDevicesUseCase;
   late final FetchOnboardingDeviceKeyUseCase _fetchDeviceKeyUseCase;
+  late final AppLogger _logger;
   late final Duration _bleScanDuration;
   final List<StreamSubscription<Object?>> _subscriptions =
       <StreamSubscription<Object?>>[];
@@ -280,6 +295,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
     _fetchDoorDetailUseCase = ref.watch(fetchDoorDetailUseCaseProvider);
     _fetchDoorDevicesUseCase = ref.watch(fetchDoorDevicesUseCaseProvider);
     _fetchDeviceKeyUseCase = ref.watch(fetchOnboardingDeviceKeyUseCaseProvider);
+    _logger = ref.watch(appLoggerProvider);
     _bleScanDuration = ref.watch(deviceCommandBleScanDurationProvider);
     ref.listen<DoorDevicesRefreshRequest?>(doorDevicesRefreshRequestProvider, (
       _,
@@ -523,6 +539,9 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
       bleConnectionStatuses: const <String, DeviceBleConnectionStatus>{},
       bleDeviceIds: const <String, String>{},
       bleConnectionErrors: const <String>{},
+      clearLastSelectedBleNotification: true,
+      clearLastSelectedAttributeSnapshot: true,
+      clearDoorRealtimeState: true,
     );
   }
 
@@ -557,6 +576,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
     }
     final status =
         state.bleConnectionStatuses[deviceId] ?? DeviceBleConnectionStatus.idle;
+    final deviceChanged = state.selectedDeviceId != deviceId;
     state = state.copyWith(
       selectedDeviceId: deviceId,
       bleConnectionStatus: status,
@@ -564,6 +584,9 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
       clearBleDeviceId: !state.bleDeviceIds.containsKey(deviceId),
       bleTargetName: selected.bleName,
       clearBleTargetName: (selected.bleName?.trim().isEmpty ?? true),
+      clearLastSelectedBleNotification: deviceChanged,
+      clearLastSelectedAttributeSnapshot: deviceChanged,
+      clearDoorRealtimeState: deviceChanged,
     );
   }
 
@@ -831,6 +854,10 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
     if (doorDeviceId == null) {
       return;
     }
+    final selectedDeviceDisconnected =
+        event.state == BleConnectionState.disconnected &&
+        doorDeviceId == state.selectedDeviceId;
+    final doorId = state.doorDetail?.id.trim() ?? '';
     final status = switch (event.state) {
       BleConnectionState.disconnected => DeviceBleConnectionStatus.idle,
       BleConnectionState.connecting => DeviceBleConnectionStatus.connecting,
@@ -842,6 +869,48 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
       nativeDeviceId: event.deviceId,
       clearNativeDeviceId: event.state == BleConnectionState.disconnected,
     );
+    if (event.state == BleConnectionState.disconnected) {
+      _nativeToDoorDeviceId.remove(event.deviceId);
+    }
+    if (selectedDeviceDisconnected) {
+      state = state.copyWith(
+        clearLastSelectedBleNotification: true,
+        clearLastSelectedAttributeSnapshot: true,
+        clearDoorRealtimeState: true,
+      );
+      if (doorId.isNotEmpty) {
+        unawaited(_refreshDoorDetailAfterDisconnect(doorId));
+      }
+    }
+  }
+
+  Future<void> _refreshDoorDetailAfterDisconnect(String doorId) async {
+    final requestId = _nextDoorDetailRequestId(doorId);
+    try {
+      final detail = await _fetchDoorDetailUseCase(
+        doorId: doorId,
+        requestId: requestId,
+      );
+      if (!ref.mounted || state.doorDetail?.id != doorId) {
+        return;
+      }
+      state = state.copyWith(doorDetail: detail);
+      _logger.info(
+        'door_detail_refreshed_after_ble_disconnect',
+        tag: AppLogTag.ble,
+        requestId: requestId,
+        context: {'doorId': doorId},
+      );
+    } catch (error, stackTrace) {
+      _logger.error(
+        'door_detail_refresh_after_ble_disconnect_failed',
+        tag: AppLogTag.ble,
+        requestId: requestId,
+        error: error,
+        stackTrace: stackTrace,
+        context: {'doorId': doorId, 'errorType': error.runtimeType.toString()},
+      );
+    }
   }
 
   void _onBleNotification(BleNotification notification) {
@@ -852,10 +921,82 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
   }
 
   void _onDeviceAttributeSnapshot(DeviceAttributeSnapshot snapshot) {
-    if (snapshot.deviceId != selectedHardwareDeviceId) {
+    final activeHardwareDeviceId = selectedHardwareDeviceId;
+    _logger.info(
+      'device_attribute_snapshot_received',
+      tag: AppLogTag.ble,
+      requestId: snapshot.requestId,
+      context: {
+        'command': '0x0202',
+        'sourceDeviceId': snapshot.deviceId,
+        'selectedHardwareDeviceId': activeHardwareDeviceId,
+        'selectedDoorDeviceId': state.selectedDeviceId,
+        'origin': snapshot.origin.name,
+        'sequence': snapshot.sequence,
+        'attributeCount': snapshot.attributes.length,
+        'attributeIds': snapshot.attributes
+            .map(
+              (attribute) =>
+                  '0x${attribute.id.toRadixString(16).padLeft(4, '0').toUpperCase()}',
+            )
+            .toList(growable: false),
+      },
+    );
+    if (snapshot.deviceId != activeHardwareDeviceId) {
+      _logger.info(
+        'device_attribute_snapshot_ignored',
+        tag: AppLogTag.ble,
+        requestId: snapshot.requestId,
+        context: {
+          'command': '0x0202',
+          'reason': activeHardwareDeviceId == null
+              ? 'no_selected_connected_hardware_device'
+              : 'source_device_does_not_match_selected_device',
+          'sourceDeviceId': snapshot.deviceId,
+          'selectedHardwareDeviceId': activeHardwareDeviceId,
+          'selectedDoorDeviceId': state.selectedDeviceId,
+        },
+      );
       return;
     }
-    state = state.copyWith(lastSelectedAttributeSnapshot: snapshot);
+    final selectedDevice = state.doorDevices
+        .where((device) => device.deviceId == state.selectedDeviceId)
+        .firstOrNull;
+    final parseResult = DoorRealtimeStateMapper.parse(
+      snapshot,
+      previous: state.doorRealtimeState,
+      isDongle: selectedDevice?.deviceType.trim().toLowerCase() == 'dongle',
+    );
+    final logContext = <String, Object?>{
+      ...parseResult.diagnosticContext,
+      'sourceDeviceId': snapshot.deviceId,
+      'selectedDoorDeviceId': state.selectedDeviceId,
+      'selectedDeviceType': selectedDevice?.deviceType,
+      'uiUpdate': parseResult.hasValidUpdate
+          ? 'applied'
+          : parseResult.hasDoorAttributes
+          ? 'rejected'
+          : 'no_door_attributes_in_report',
+    };
+    if (parseResult.issues.isEmpty) {
+      _logger.info(
+        'device_attribute_report_parsed',
+        tag: AppLogTag.ble,
+        requestId: snapshot.requestId,
+        context: logContext,
+      );
+    } else {
+      _logger.warning(
+        'device_attribute_report_parsed_with_issues',
+        tag: AppLogTag.ble,
+        requestId: snapshot.requestId,
+        context: logContext,
+      );
+    }
+    state = state.copyWith(
+      lastSelectedAttributeSnapshot: snapshot,
+      doorRealtimeState: parseResult.state,
+    );
   }
 
   void _setDeviceBleStatus(
