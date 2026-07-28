@@ -4,16 +4,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../../core/storage/app_storage_paths.dart';
+import '../../../core/logging/providers.dart';
+import '../../../core/network/providers.dart';
 import '../../../platform_bridge/providers.dart';
 import '../data/data_sources/account_local_data_source.dart';
+import '../data/data_sources/account_overview_api.dart';
+import '../data/data_sources/account_overview_local_data_source.dart';
+import '../data/data_sources/account_overview_remote_data_source.dart';
 import '../data/data_sources/account_secure_data_source.dart';
 import '../data/data_sources/app_locale_local_data_source.dart';
 import '../data/repositories/app_locale_repository_impl.dart';
 import '../data/repositories/account_repository_impl.dart';
+import '../data/repositories/account_overview_repository_impl.dart';
 import '../data/repositories/system_permissions_repository_impl.dart';
 import '../domain/entities/account_profile.dart';
+import '../domain/entities/account_overview.dart';
 import '../domain/entities/app_locale_preference.dart';
 import '../domain/repositories/account_repository.dart';
+import '../domain/repositories/account_overview_repository.dart';
 import '../domain/repositories/app_locale_repository.dart';
 import '../domain/repositories/system_permissions_repository.dart';
 import '../domain/use_cases/open_system_permission_settings_use_case.dart';
@@ -22,6 +30,7 @@ import '../domain/use_cases/request_system_permission_use_case.dart';
 import '../domain/use_cases/read_app_locale_preference_use_case.dart';
 import '../domain/use_cases/save_app_locale_preference_use_case.dart';
 import 'account_controller.dart';
+import 'account_overview_controller.dart';
 import 'app_locale_controller.dart';
 export 'managed_devices_controller.dart';
 
@@ -71,6 +80,22 @@ final accountSecureDataSourceProvider = Provider<AccountSecureDataSource>((
 
   return InMemoryAccountSecureDataSource();
 });
+
+final accountOverviewLocalDataSourceProvider =
+    Provider<AccountOverviewLocalDataSource>((ref) {
+      if (AppStoragePaths.isFlutterTest) {
+        return InMemoryAccountOverviewLocalDataSource();
+      }
+      final locations = ref.watch(appStorageLocationsProvider);
+      if (locations == null) {
+        return InMemoryAccountOverviewLocalDataSource();
+      }
+      return JsonFileAccountOverviewLocalDataSource(
+        overviewFile: File(
+          '${locations.persistentDirectory.path}/account_overview.json',
+        ),
+      );
+    });
 
 final appLocaleLocalDataSourceProvider = Provider<AppLocaleLocalDataSource>((
   ref,
@@ -124,6 +149,27 @@ final accountRepositoryProvider = Provider<AccountRepository>((ref) {
   );
 });
 
+final accountOverviewApiProvider = Provider<AccountOverviewApi>((ref) {
+  return AccountOverviewApi(ref.watch(dioProvider));
+});
+
+final accountOverviewRemoteDataSourceProvider =
+    Provider<AccountOverviewRemoteDataSource>((ref) {
+      return AccountOverviewRemoteDataSourceImpl(
+        api: ref.watch(accountOverviewApiProvider),
+      );
+    });
+
+final accountOverviewRepositoryProvider = Provider<AccountOverviewRepository>((
+  ref,
+) {
+  return AccountOverviewRepositoryImpl(
+    remoteDataSource: ref.watch(accountOverviewRemoteDataSourceProvider),
+    localDataSource: ref.watch(accountOverviewLocalDataSourceProvider),
+    logger: ref.watch(appLoggerProvider),
+  );
+});
+
 final systemPermissionsRepositoryProvider =
     Provider<SystemPermissionsRepository>((ref) {
       final gateway = AppStoragePaths.isFlutterTest
@@ -167,3 +213,12 @@ final accountControllerProvider =
     AsyncNotifierProvider<AccountController, AccountProfile?>(
       AccountController.new,
     );
+
+final accountOverviewControllerProvider =
+    AsyncNotifierProvider<AccountOverviewController, AccountOverview?>(
+      AccountOverviewController.new,
+    );
+
+final accountOverviewAutoRefreshProvider = Provider<bool>(
+  (ref) => !AppStoragePaths.isFlutterTest,
+);

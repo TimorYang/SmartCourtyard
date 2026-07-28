@@ -9,6 +9,7 @@ import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
 import '../../domain/entities/app_locale_preference.dart';
 import '../../domain/entities/account_profile.dart';
+import '../../domain/entities/account_overview.dart';
 import '../../../auth/application/providers.dart';
 import '../../../auth/presentation/pages/welcome_page.dart';
 import '../../../home/application/providers.dart';
@@ -58,17 +59,41 @@ class AccountProfileKeys {
   static const logoutButton = ValueKey('account-profile-logout-button');
 }
 
-class AccountProfilePage extends ConsumerWidget {
+class AccountProfilePage extends ConsumerStatefulWidget {
   const AccountProfilePage({super.key});
 
   static const routeName = 'account-profile';
   static const routePath = '/account/profile';
 
-  static final _fallbackRegisteredAt = DateTime(2023, 5, 4, 14, 34, 48);
+  @override
+  ConsumerState<AccountProfilePage> createState() => _AccountProfilePageState();
+}
+
+class _AccountProfilePageState extends ConsumerState<AccountProfilePage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (ref.read(accountOverviewAutoRefreshProvider)) {
+        _refreshOverview();
+      }
+    });
+  }
+
+  Future<void> _refreshOverview() async {
+    try {
+      await ref.read(accountOverviewControllerProvider.notifier).refresh();
+    } on Object {
+      if (mounted) {
+        AppToast.error(context, AppLocalizations.of(context).accountOverviewRefreshFailed);
+      }
+    }
+  }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final profile = ref.watch(accountControllerProvider).maybeWhen(data: (value) => value, orElse: () => null);
+    final overview = ref.watch(accountOverviewControllerProvider).maybeWhen(data: (value) => value, orElse: () => null);
     final localePreference = ref.watch(appLocaleControllerProvider).maybeWhen(data: (value) => value, orElse: () => AppLocalePreference.english);
 
     return Scaffold(
@@ -82,8 +107,10 @@ class AccountProfilePage extends ConsumerWidget {
               constraints: const BoxConstraints(maxWidth: 430),
               child: _AccountProfileContent(
                 profile: profile,
+                overview: overview,
                 localePreference: localePreference,
                 maxHeight: constraints.maxHeight,
+                onRefresh: _refreshOverview,
                 onLocaleConfirmed: (locale) => ref.read(appLocaleControllerProvider.notifier).selectLocale(locale),
                 onLogout: () async {
                   final authSessionController = ref.read(activeAuthSessionProvider.notifier);
@@ -112,40 +139,45 @@ class AccountProfilePage extends ConsumerWidget {
 class _AccountProfileContent extends StatelessWidget {
   const _AccountProfileContent({
     required this.profile,
+    required this.overview,
     required this.localePreference,
     required this.maxHeight,
+    required this.onRefresh,
     required this.onLocaleConfirmed,
     required this.onLogout,
   });
 
   final AccountProfile? profile;
+  final AccountOverview? overview;
   final AppLocalePreference localePreference;
   final double maxHeight;
+  final Future<void> Function() onRefresh;
   final Future<void> Function(AppLocalePreference locale) onLocaleConfirmed;
   final Future<void> Function() onLogout;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final registeredAt = profile?.registeredAt ?? AccountProfilePage._fallbackRegisteredAt;
+    final nickname = overview?.nickname.isNotEmpty == true ? overview!.nickname : profile?.nickname ?? l10n.accountFallbackEmail;
+    final refreshedAt = overview?.refreshedAt;
     final menuItems = [
       _AccountMenuItem(
         label: l10n.accountSharedDevices,
-        trailingText: '0',
+        trailingText: overview?.sharedDoorCount.toString() ?? '0',
         iconAssetPath: AccountProfileAssetPaths.menuSharedDevices,
         onTap: () => context.pushNamed(SharedDevicesPage.routeName),
         key: AccountProfileKeys.sharedDevicesMenuItem,
       ),
       _AccountMenuItem(
         label: l10n.accountReceivingDevices,
-        trailingText: '0',
+        trailingText: overview?.receivingDoorCount.toString() ?? '0',
         iconAssetPath: AccountProfileAssetPaths.menuReceivingDevices,
         onTap: () => context.pushNamed(ReceivingDevicesPage.routeName),
         key: AccountProfileKeys.receivingDevicesMenuItem,
       ),
       _AccountMenuItem(
         label: l10n.accountManageDevices,
-        trailingText: '0',
+        trailingText: overview?.ownedDoorCount.toString() ?? '0',
         iconAssetPath: AccountProfileAssetPaths.menuManageDevices,
         onTap: () => context.pushNamed(ManageDevicesPage.routeName),
         key: AccountProfileKeys.manageDevicesMenuItem,
@@ -184,7 +216,6 @@ class _AccountProfileContent extends StatelessWidget {
       _AccountMenuItem(label: l10n.accountManualGuide, iconAssetPath: AccountProfileAssetPaths.menuManualGuide, key: AccountProfileKeys.manualGuideMenuItem),
       _AccountMenuItem(
         label: l10n.accountCheckForUpdates,
-        trailingText: '2',
         iconAssetPath: AccountProfileAssetPaths.menuCheckForUpdates,
         key: AccountProfileKeys.checkForUpdatesMenuItem,
         onTap: () => context.pushNamed(CheckUpgradedVersionPage.routeName),
@@ -200,13 +231,17 @@ class _AccountProfileContent extends StatelessWidget {
       top: false,
       child: SizedBox(
         height: maxHeight,
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            _AccountHeader(email: profile?.email ?? l10n.accountFallbackEmail, registeredAt: _formatTimestamp(registeredAt)),
-            _AccountMenu(items: menuItems),
-            _AccountProfileLogoutButton(onPressed: onLogout),
-          ],
+        child: RefreshIndicator(
+          onRefresh: onRefresh,
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: EdgeInsets.zero,
+            children: [
+              _AccountHeader(nickname: nickname, refreshedAt: refreshedAt == null ? l10n.accountOverviewRefreshTimeUnavailable : _formatTimestamp(refreshedAt)),
+              _AccountMenu(items: menuItems),
+              _AccountProfileLogoutButton(onPressed: onLogout),
+            ],
+          ),
         ),
       ),
     );
@@ -280,39 +315,39 @@ class _LanguageDialogState extends State<_LanguageDialog> {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 22, 20, 36),
               child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(l10n.accountLanguageDialogTitle, style: AppTextTokens.accountLanguageDialogTitle(textTheme)),
-              const SizedBox(height: 18),
-              _LanguagePicker(
-                controller: _languagePickerController,
-                languages: languages,
-                selectedLocale: _selectedLocale,
-                onScrollEnd: () => _selectCenteredLocale(languages),
-              ),
-              const SizedBox(height: 30),
-              Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Expanded(
-                    child: _LanguageDialogButton(
-                      key: AccountProfileKeys.languageCancelButton,
-                      label: l10n.accountLanguageCancelAction,
-                      isPrimary: false,
-                      onPressed: _isConfirming ? null : () => Navigator.of(context).pop(),
-                    ),
+                  Text(l10n.accountLanguageDialogTitle, style: AppTextTokens.accountLanguageDialogTitle(textTheme)),
+                  const SizedBox(height: 18),
+                  _LanguagePicker(
+                    controller: _languagePickerController,
+                    languages: languages,
+                    selectedLocale: _selectedLocale,
+                    onScrollEnd: () => _selectCenteredLocale(languages),
                   ),
-                  const SizedBox(width: 40),
-                  Expanded(
-                    child: _LanguageDialogButton(
-                      key: AccountProfileKeys.languageConfirmButton,
-                      label: l10n.accountLanguageConfirmAction,
-                      isPrimary: true,
-                      onPressed: _isConfirming ? null : () => _confirm(),
-                    ),
+                  const SizedBox(height: 30),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _LanguageDialogButton(
+                          key: AccountProfileKeys.languageCancelButton,
+                          label: l10n.accountLanguageCancelAction,
+                          isPrimary: false,
+                          onPressed: _isConfirming ? null : () => Navigator.of(context).pop(),
+                        ),
+                      ),
+                      const SizedBox(width: 40),
+                      Expanded(
+                        child: _LanguageDialogButton(
+                          key: AccountProfileKeys.languageConfirmButton,
+                          label: l10n.accountLanguageConfirmAction,
+                          isPrimary: true,
+                          onPressed: _isConfirming ? null : () => _confirm(),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
-              ),
-            ],
               ),
             ),
           ),
@@ -433,13 +468,13 @@ class _LanguageDialogButton extends StatelessWidget {
 }
 
 class _AccountHeader extends StatelessWidget {
-  const _AccountHeader({required this.email, required this.registeredAt});
+  const _AccountHeader({required this.nickname, required this.refreshedAt});
 
   static const _headerImageWidth = 1125.0;
   static const _headerImageHeight = 600.0;
 
-  final String email;
-  final String registeredAt;
+  final String nickname;
+  final String refreshedAt;
 
   @override
   Widget build(BuildContext context) {
@@ -475,9 +510,9 @@ class _AccountHeader extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(email, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextTokens.accountProfileEmail(textTheme)),
+                          Text(nickname, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextTokens.accountProfileEmail(textTheme)),
                           const SizedBox(height: 6),
-                          Text(registeredAt, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextTokens.accountProfileRegisteredAt(textTheme)),
+                          Text(refreshedAt, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextTokens.accountProfileRegisteredAt(textTheme)),
                         ],
                       ),
                     ),

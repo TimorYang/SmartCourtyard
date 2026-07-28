@@ -166,6 +166,8 @@
   "accountDetailsHidePasswordAction": "Hide password",
   "accountDetailsAvatarOptionLabel": "Avatar option {index}",
   "accountFallbackEmail": "739059568@qq.com",
+  "accountOverviewRefreshFailed": "账号概览刷新失败，请重试。",
+  "accountOverviewRefreshTimeUnavailable": "暂无刷新时间",
   "accountSharedDevices": "共享设备",
   "sharedDevicesTitle": "共享设备",
   "sharedDevicesShareToPeople": "分享给 {count} 人",

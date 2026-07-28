@@ -500,6 +500,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get accountFallbackEmail => '739059568@qq.com';
 
   @override
+  String get accountOverviewRefreshFailed => '账号概览刷新失败，请重试。';
+
+  @override
+  String get accountOverviewRefreshTimeUnavailable => '暂无刷新时间';
+
+  @override
   String get accountSharedDevices => '共享设备';
 
   @override

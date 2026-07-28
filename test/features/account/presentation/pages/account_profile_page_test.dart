@@ -38,7 +38,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('739059568@qq.com'), findsOneWidget);
-    expect(find.text('2023-05-04 14:34:48'), findsOneWidget);
+    expect(find.text('Refresh time unavailable'), findsOneWidget);
     expect(find.text('Shared devices'), findsOneWidget);
     expect(find.text('Receiving devices'), findsOneWidget);
     expect(find.text('manage devices'), findsOneWidget);
@@ -50,8 +50,7 @@ void main() {
     expect(find.text('Check for updates'), findsOneWidget);
     expect(find.text('About'), findsOneWidget);
     expect(find.text('message'), findsNothing);
-    expect(find.text('12'), findsOneWidget);
-    expect(find.text('2'), findsNWidgets(3));
+    expect(find.text('2'), findsNothing);
     expect(find.text('England'), findsOneWidget);
     expect(find.text('English'), findsOneWidget);
 
@@ -196,8 +195,8 @@ void main() {
       await tester.tap(find.byKey(AccountProfileKeys.languageMenuItem));
       await tester.pumpAndSettle();
 
-    expect(find.byKey(AccountProfileKeys.languageDialog), findsOneWidget);
-    expect(find.byType(BottomSheet), findsOneWidget);
+      expect(find.byKey(AccountProfileKeys.languageDialog), findsOneWidget);
+      expect(find.byType(BottomSheet), findsOneWidget);
       expect(find.byKey(AccountProfileKeys.languagePicker), findsOneWidget);
       expect(find.text('France'), findsNothing);
       expect(find.text('中文(简体)'), findsOneWidget);

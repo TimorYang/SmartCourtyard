@@ -524,6 +524,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountFallbackEmail => '739059568@qq.com';
 
   @override
+  String get accountOverviewRefreshFailed =>
+      'Unable to refresh account overview. Please try again.';
+
+  @override
+  String get accountOverviewRefreshTimeUnavailable =>
+      'Refresh time unavailable';
+
+  @override
   String get accountSharedDevices => 'Shared devices';
 
   @override

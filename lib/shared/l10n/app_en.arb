@@ -591,6 +591,8 @@
     }
   },
   "accountFallbackEmail": "739059568@qq.com",
+  "accountOverviewRefreshFailed": "Unable to refresh account overview. Please try again.",
+  "accountOverviewRefreshTimeUnavailable": "Refresh time unavailable",
   "@accountFallbackEmail": {
     "description": "Fallback account email shown on the profile page while account data is unavailable"
   },
