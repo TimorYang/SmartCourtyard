@@ -380,6 +380,10 @@
   "@homeDeviceEditShareAction": {
     "description": "Share action in the home device editing sheet"
   },
+  "homeNoDeviceMessage": "No Device",
+  "@homeNoDeviceMessage": {
+    "description": "Message shown when sharing a door that has no device"
+  },
   "homeDeviceEditMoveSceneAction": "Move Scene",
   "@homeDeviceEditMoveSceneAction": {
     "description": "Move scene action in the home device editing sheet"
@@ -461,6 +465,8 @@
     "description": "Door control capability label on the device sharing page"
   },
   "deviceShareCapabilityPartialOpen": "Partial open",
+  "deviceShareCapabilityPartialOpenLevel": "Partial opening level",
+  "deviceShareCapabilityLedControl": "LED control",
   "@deviceShareCapabilityPartialOpen": {
     "description": "Partial open capability label on the device sharing page"
   },
@@ -469,6 +475,7 @@
     "description": "LED off delay capability label on the device sharing page"
   },
   "deviceShareCapabilityAutoClose": "Auto-close",
+  "deviceShareCapabilityTransmitterPairing": "Transmitter pairing",
   "@deviceShareCapabilityAutoClose": {
     "description": "Capability option displayed when sharing a device"
   },
@@ -489,6 +496,9 @@
     "description": "Cancel button label on the device sharing page"
   },
   "deviceShareConfirmAction": "Confirm",
+  "deviceShareDoorUnavailable": "This door is unavailable for sharing.",
+  "deviceShareCapabilitiesLoadFailed": "Unable to load share capabilities. Tap to retry.",
+  "deviceShareSubmitFailed": "Unable to create the share. Please try again.",
   "@deviceShareConfirmAction": {
     "description": "Confirm button label on the device sharing page"
   },
@@ -618,6 +628,18 @@
   "@sharedDevicesAddLabel": {
     "description": "Accessibility label for the shared devices add button"
   },
+  "sharedDevicesEmpty": "No shared devices yet.",
+  "@sharedDevicesEmpty": {
+    "description": "Empty state for the shared devices list"
+  },
+  "sharedDevicesLoadFailed": "Unable to load shared devices.",
+  "@sharedDevicesLoadFailed": {
+    "description": "Error state for the shared devices list"
+  },
+  "sharedDevicesRetry": "Retry",
+  "@sharedDevicesRetry": {
+    "description": "Retry action for the shared devices list"
+  },
   "sharedDeviceMemberAdministrator": "Administrator",
   "@sharedDeviceMemberAdministrator": {
     "description": "Heading for device administrators in shared member management"
@@ -650,27 +672,27 @@
   "@receivingDevicesTitle": {
     "description": "Title for the receiving devices page"
   },
-  "receivingDevicesSmartDoorA": "Smart door A",
-  "@receivingDevicesSmartDoorA": {
-    "description": "Demo receiving device name shown in the first card"
-  },
-  "receivingDevicesSmartDoorB": "Smart door B",
-  "@receivingDevicesSmartDoorB": {
-    "description": "Demo receiving device name shown in the second and third cards"
-  },
-  "receivingDevicesSharedWithPeople": "Share to {count} people",
-  "@receivingDevicesSharedWithPeople": {
-    "description": "Sharing status for a receiving device",
+  "receivingDevicesOwnerEmail": "Shared by: {ownerEmail}",
+  "@receivingDevicesOwnerEmail": {
+    "description": "Owner email shown below a receiving device name",
     "placeholders": {
-      "count": {
-        "type": "int",
-        "example": "2"
+      "ownerEmail": {
+        "type": "String",
+        "example": "owner@example.com"
       }
     }
   },
-  "receivingDevicesNotShared": "Not shared",
-  "@receivingDevicesNotShared": {
-    "description": "Sharing status for a receiving device that is not shared"
+  "receivingDevicesEmpty": "No receiving devices yet.",
+  "@receivingDevicesEmpty": {
+    "description": "Empty state for the receiving devices list"
+  },
+  "receivingDevicesLoadFailed": "Unable to load receiving devices.",
+  "@receivingDevicesLoadFailed": {
+    "description": "Error state for the receiving devices list"
+  },
+  "receivingDevicesRetry": "Retry",
+  "@receivingDevicesRetry": {
+    "description": "Retry action for the receiving devices list"
   },
   "receivingDevicesEditLabel": "Edit receiving devices",
   "@receivingDevicesEditLabel": {

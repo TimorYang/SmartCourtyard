@@ -10,6 +10,10 @@ import 'package:flinx/features/auth/application/providers.dart';
 import 'package:flinx/features/auth/domain/entities/auth_session.dart';
 import 'package:flinx/features/home/application/providers.dart';
 import 'package:flinx/features/home/domain/entities/home_scene.dart';
+import 'package:flinx/features/device_control/application/device_command_controller.dart';
+import 'package:flinx/features/device_control/domain/entities/door_detail.dart';
+import 'package:flinx/features/device_control/domain/entities/door_device.dart';
+import 'package:flinx/features/device_control/domain/repositories/door_detail_repository.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -178,10 +182,242 @@ void main() {
     devices.complete(const <DeviceSummary>[]);
     await tester.pumpAndSettle();
   });
+
+  testWidgets('shows the sharing badge and places the status dot below it', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authSessionProvider.overrideWith(
+            (ref) async =>
+                const AuthSession(isAuthenticated: true, userId: 'user-1'),
+          ),
+          accountLocalDataSourceProvider.overrideWithValue(
+            InMemoryAccountLocalDataSource(),
+          ),
+          homeScenesProvider.overrideWith(
+            (ref) async => const [
+              HomeScene(id: 1, name: 'Home', doorCount: 1, isDefault: true),
+            ],
+          ),
+          homeDevicesProvider.overrideWith(
+            (ref) async => const [
+              DeviceSummary(
+                id: 'door-1',
+                name: 'Shared garage',
+                onlineState: DeviceOnlineState.online,
+                bleState: BleConnectionState.connected,
+                doorState: DoorState.closed,
+                cycleCount: 0,
+                remainingLifePercent: 100,
+                sceneId: 1,
+                shareStatus: 2,
+                shareStatusLabel: 'Sharing',
+              ),
+            ],
+          ),
+          addDeviceControllerProvider.overrideWith(
+            () => _HomeBleDisconnectController(_HomeBleDisconnectTracker()),
+          ),
+        ],
+        child: const FlinxApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final badge = find.byKey(const ValueKey('home-device-sharing-badge'));
+    final statusDot = find.byKey(const ValueKey('home-device-status-dot'));
+
+    expect(badge, findsOneWidget);
+    expect(statusDot, findsOneWidget);
+    expect(
+      tester.getTopLeft(statusDot).dy,
+      greaterThan(tester.getTopLeft(badge).dy),
+    );
+  });
+
+  testWidgets('shows only shared-door editing actions for share status 2', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authSessionProvider.overrideWith(
+            (ref) async =>
+                const AuthSession(isAuthenticated: true, userId: 'user-1'),
+          ),
+          accountLocalDataSourceProvider.overrideWithValue(
+            InMemoryAccountLocalDataSource(),
+          ),
+          homeScenesProvider.overrideWith(
+            (ref) async => const [
+              HomeScene(id: 1, name: 'Home', doorCount: 1, isDefault: true),
+            ],
+          ),
+          homeDevicesProvider.overrideWith(
+            (ref) async => const [
+              DeviceSummary(
+                id: 'door-1',
+                name: 'Shared garage',
+                onlineState: DeviceOnlineState.online,
+                bleState: BleConnectionState.connected,
+                doorState: DoorState.closed,
+                cycleCount: 0,
+                remainingLifePercent: 100,
+                sceneId: 1,
+                shareStatus: 2,
+              ),
+            ],
+          ),
+          addDeviceControllerProvider.overrideWith(
+            () => _HomeBleDisconnectController(_HomeBleDisconnectTracker()),
+          ),
+        ],
+        child: const FlinxApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.longPress(find.text('Shared garage'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Move Scene'), findsOneWidget);
+    expect(find.text('Name'), findsOneWidget);
+    expect(find.text('Delete Device'), findsOneWidget);
+    expect(find.text('Top'), findsNothing);
+    expect(find.text('Customize'), findsNothing);
+    expect(find.text('Share'), findsNothing);
+  });
+
+  testWidgets('shows No Device when sharing a door without a device', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authSessionProvider.overrideWith(
+            (ref) async =>
+                const AuthSession(isAuthenticated: true, userId: 'user-1'),
+          ),
+          accountLocalDataSourceProvider.overrideWithValue(
+            InMemoryAccountLocalDataSource(),
+          ),
+          doorDetailRepositoryProvider.overrideWithValue(_NoDeviceRepository()),
+          homeScenesProvider.overrideWith(
+            (ref) async => const [
+              HomeScene(id: 1, name: 'Home', doorCount: 1, isDefault: true),
+            ],
+          ),
+          homeDevicesProvider.overrideWith(
+            (ref) async => const [
+              DeviceSummary(
+                id: 'door-1',
+                name: 'Garage',
+                onlineState: DeviceOnlineState.online,
+                bleState: BleConnectionState.connected,
+                doorState: DoorState.closed,
+                cycleCount: 0,
+                remainingLifePercent: 100,
+                sceneId: 1,
+              ),
+            ],
+          ),
+          addDeviceControllerProvider.overrideWith(
+            () => _HomeBleDisconnectController(_HomeBleDisconnectTracker()),
+          ),
+        ],
+        child: const FlinxApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.longPress(find.text('Garage'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Share'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('No Device'), findsOneWidget);
+    expect(find.text('Device editing'), findsNothing);
+    await tester.pump(const Duration(seconds: 2));
+  });
+
+  testWidgets('keeps the sharing badge hidden for non-shared doors', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authSessionProvider.overrideWith(
+            (ref) async =>
+                const AuthSession(isAuthenticated: true, userId: 'user-1'),
+          ),
+          accountLocalDataSourceProvider.overrideWithValue(
+            InMemoryAccountLocalDataSource(),
+          ),
+          homeScenesProvider.overrideWith(
+            (ref) async => const [
+              HomeScene(id: 1, name: 'Home', doorCount: 1, isDefault: true),
+            ],
+          ),
+          homeDevicesProvider.overrideWith(
+            (ref) async => const [
+              DeviceSummary(
+                id: 'door-1',
+                name: 'Garage',
+                onlineState: DeviceOnlineState.online,
+                bleState: BleConnectionState.connected,
+                doorState: DoorState.closed,
+                cycleCount: 0,
+                remainingLifePercent: 100,
+                sceneId: 1,
+                shareStatus: 1,
+              ),
+            ],
+          ),
+          addDeviceControllerProvider.overrideWith(
+            () => _HomeBleDisconnectController(_HomeBleDisconnectTracker()),
+          ),
+        ],
+        child: const FlinxApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('home-device-sharing-badge')),
+      findsNothing,
+    );
+    expect(
+      find.byKey(const ValueKey('home-device-status-dot')),
+      findsOneWidget,
+    );
+  });
 }
 
 class _HomeBleDisconnectTracker {
   var callCount = 0;
+}
+
+class _NoDeviceRepository implements DoorDetailRepository {
+  @override
+  Future<DoorDetail> fetchDoorDetail({
+    required String doorId,
+    required String requestId,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<List<DoorDevice>> fetchDoorDevices({
+    required String doorId,
+    required String requestId,
+  }) async => const <DoorDevice>[];
+
+  @override
+  Future<void> unbindDoorDevice({
+    required String doorId,
+    required String deviceId,
+    required String requestId,
+  }) => throw UnimplementedError();
 }
 
 class _HomeBleDisconnectController extends AddDeviceController {

@@ -1,12 +1,18 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../core/validation/input_validators.dart';
+import '../../../account/application/providers.dart';
+import '../../../account/application/shared_door_member_actions_controller.dart';
 import '../../../account/domain/entities/shared_device_share.dart';
+import '../../../account/domain/entities/shared_door_members.dart';
+import '../../application/door_share_controller.dart';
+import '../../domain/entities/door_share.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 
@@ -21,32 +27,31 @@ class ChooseSceneAssetPaths {
       'assets/icons/home/garagePlaceholderCapabilitiesNoSelected.png';
 }
 
-class DeviceSharePage extends StatefulWidget {
-  const DeviceSharePage({super.key, this.editingMember});
+class DeviceSharePage extends ConsumerStatefulWidget {
+  const DeviceSharePage({super.key, this.doorId, this.editingMember});
 
   static const routeName = 'device-share';
   static const routePath = '/device-share';
 
   /// When provided, the page renders the member-editing variant.
-  final SharedDeviceMember? editingMember;
+  final int? doorId;
+  final SharedDoorMember? editingMember;
 
   @override
-  State<DeviceSharePage> createState() => _DeviceSharePageState();
+  ConsumerState<DeviceSharePage> createState() => _DeviceSharePageState();
+}
+
+/// Complete route context required to edit an outgoing door share.
+class DeviceShareEditRouteData {
+  const DeviceShareEditRouteData({required this.doorId, required this.member});
+
+  final int doorId;
+  final SharedDoorMember member;
 }
 
 enum _SharePermission { administrator, guest }
 
 enum _SharePeriod { neverExpired, twoHours, customize }
-
-enum _ShareCapability {
-  doorControl,
-  partialOpen,
-  ledDelay,
-  autoClose,
-  doorOpenReminder,
-  doorOpenForce,
-  doorOpenSpeed,
-}
 
 class DeviceSharePageKeys {
   const DeviceSharePageKeys._();
@@ -55,25 +60,46 @@ class DeviceSharePageKeys {
   static const editDeleteAction = ValueKey('device-share-edit-delete-action');
 }
 
-class _DeviceSharePageState extends State<DeviceSharePage> {
+class _DeviceSharePageState extends ConsumerState<DeviceSharePage> {
   final _emailController = TextEditingController();
   var _permission = _SharePermission.administrator;
   var _period = _SharePeriod.neverExpired;
-  var _selectedCapabilities = _ShareCapability.values.toSet();
+  var _selectedCapabilities = <ShareCapability>{};
   DateTime? _periodEndsAt;
   var _showAddressFormatError = false;
 
   bool get _isEditing => widget.editingMember != null;
+  int? get _doorId => widget.doorId;
 
   @override
   void initState() {
     super.initState();
-    if (_isEditing) {
-      _emailController.text = '123@123.com';
-      _permission = _SharePermission.guest;
-      _period = _SharePeriod.customize;
-      _periodEndsAt = DateTime(2026, 4, 11, 18);
-      _selectedCapabilities = _ShareCapability.values.toSet();
+    final doorId = _doorId;
+    if (doorId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ref.invalidate(doorShareCapabilitiesProvider(doorId));
+        }
+      });
+    }
+    final member = widget.editingMember;
+    if (member != null) {
+      _emailController.text = member.email;
+      _permission = member.role == SharedDoorMemberRole.administrator
+          ? _SharePermission.administrator
+          : _SharePermission.guest;
+      _period = switch (member.expiryType) {
+        SharedDoorMemberExpiryType.neverExpired => _SharePeriod.neverExpired,
+        SharedDoorMemberExpiryType.twoHours => _SharePeriod.twoHours,
+        SharedDoorMemberExpiryType.customize => _SharePeriod.customize,
+      };
+      _periodEndsAt = member.expiryType == SharedDoorMemberExpiryType.customize
+          ? member.expiresAt
+          : null;
+      _selectedCapabilities = member.capabilityCodes
+          .map(ShareCapability.fromWireValue)
+          .whereType<ShareCapability>()
+          .toSet();
     }
     _emailController.addListener(_onAddressChanged);
   }
@@ -90,36 +116,12 @@ class _DeviceSharePageState extends State<DeviceSharePage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final textTheme = Theme.of(context).textTheme;
-    final capabilities = [
-      _CapabilityItem(
-        capability: _ShareCapability.doorControl,
-        label: l10n.deviceShareCapabilityDoorControl,
-      ),
-      _CapabilityItem(
-        capability: _ShareCapability.partialOpen,
-        label: l10n.deviceShareCapabilityPartialOpen,
-      ),
-      _CapabilityItem(
-        capability: _ShareCapability.ledDelay,
-        label: l10n.deviceShareCapabilityLedDelay,
-      ),
-      _CapabilityItem(
-        capability: _ShareCapability.autoClose,
-        label: l10n.deviceShareCapabilityAutoClose,
-      ),
-      _CapabilityItem(
-        capability: _ShareCapability.doorOpenReminder,
-        label: l10n.deviceShareCapabilityDoorOpenReminder,
-      ),
-      _CapabilityItem(
-        capability: _ShareCapability.doorOpenForce,
-        label: l10n.deviceShareCapabilityDoorOpenForce,
-      ),
-      _CapabilityItem(
-        capability: _ShareCapability.doorOpenSpeed,
-        label: l10n.deviceShareCapabilityDoorOpenSpeed,
-      ),
-    ];
+    final doorId = _doorId;
+    final capabilitiesAsync = doorId == null
+        ? const AsyncValue<List<ShareCapability>>.data([])
+        : ref.watch(doorShareCapabilitiesProvider(doorId));
+    final submitState = ref.watch(doorShareControllerProvider);
+    final isDeleting = ref.watch(sharedDoorMemberActionsControllerProvider);
 
     return Scaffold(
       backgroundColor: AppColors.backgroundPrimary,
@@ -133,15 +135,20 @@ class _DeviceSharePageState extends State<DeviceSharePage> {
                   child: Semantics(
                     label: l10n.sharedDeviceMemberDeleteLabel,
                     enabled: false,
-                    child: SizedBox.square(
-                      key: DeviceSharePageKeys.editDeleteAction,
-                      dimension: AppSpacingTokens.deviceShareEditActionSize,
-                      child: Image.asset(
-                        SharedDeviceMemberAssetPaths.deleteAction,
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, _, _) => const Icon(
-                          Icons.delete_outline,
-                          color: AppColors.sharedDeviceMemberActionIcon,
+                    child: GestureDetector(
+                      onTap: submitState.isSubmitting || isDeleting
+                          ? null
+                          : _deleteMember,
+                      child: SizedBox.square(
+                        key: DeviceSharePageKeys.editDeleteAction,
+                        dimension: AppSpacingTokens.deviceShareEditActionSize,
+                        child: Image.asset(
+                          SharedDeviceMemberAssetPaths.deleteAction,
+                          fit: BoxFit.contain,
+                          errorBuilder: (_, _, _) => const Icon(
+                            Icons.delete_outline,
+                            color: AppColors.sharedDeviceMemberActionIcon,
+                          ),
                         ),
                       ),
                     ),
@@ -195,6 +202,7 @@ class _DeviceSharePageState extends State<DeviceSharePage> {
                           controller: _emailController,
                           hasError: _showAddressFormatError,
                           errorText: l10n.deviceShareAddressInvalid,
+                          readOnly: _isEditing,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -221,14 +229,51 @@ class _DeviceSharePageState extends State<DeviceSharePage> {
                         style: AppTextTokens.deviceShareSectionTitle(textTheme),
                       ),
                       const SizedBox(height: 8),
-                      _CapabilitiesPanel(
-                        items: capabilities,
-                        selectedCapabilities: _selectedCapabilities,
-                        isEnabled:
-                            _isEditing ||
-                            _permission == _SharePermission.administrator,
-                        onChanged: _toggleCapability,
-                      ),
+                      if (doorId == null && !_isEditing)
+                        Text(
+                          l10n.deviceShareDoorUnavailable,
+                          style: AppTextTokens.deviceShareField(textTheme),
+                        )
+                      else
+                        capabilitiesAsync.when(
+                          loading: () => const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(20),
+                              child: CircularProgressIndicator(),
+                            ),
+                          ),
+                          error: (_, _) => TextButton(
+                            onPressed: () => ref.invalidate(
+                              doorShareCapabilitiesProvider(doorId!),
+                            ),
+                            child: Text(l10n.deviceShareCapabilitiesLoadFailed),
+                          ),
+                          data: (capabilities) {
+                            _syncCapabilities(capabilities);
+                            return _CapabilitiesPanel(
+                              items: capabilities
+                                  .map(
+                                    (capability) => _CapabilityItem(
+                                      capability: capability,
+                                      label: _capabilityLabel(l10n, capability),
+                                    ),
+                                  )
+                                  .toList(growable: false),
+                              selectedCapabilities: _selectedCapabilities,
+                              isEnabled:
+                                  _isEditing ||
+                                  _permission == _SharePermission.administrator,
+                              onChanged: _toggleCapability,
+                            );
+                          },
+                        ),
+                      if (submitState.error != null) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          _submitErrorLabel(l10n, submitState.error!),
+                          style: AppTextTokens.deviceShareFieldError(textTheme),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -249,10 +294,10 @@ class _DeviceSharePageState extends State<DeviceSharePage> {
                         child: _ShareActionButton(
                           label: l10n.deviceShareConfirmAction,
                           foregroundColor: Colors.white,
-                          backgroundColor: _canConfirm
+                          backgroundColor: _canSubmit
                               ? AppColors.brandPrimary
                               : AppColors.brandPrimaryDisabled,
-                          onPressed: _canConfirm ? _confirm : null,
+                          onPressed: _canSubmit ? _confirm : null,
                           buttonKey: const Key('device_share_confirm'),
                         ),
                       ),
@@ -288,9 +333,12 @@ class _DeviceSharePageState extends State<DeviceSharePage> {
     }
     setState(() {
       _permission = selected;
+      final available = _availableCapabilities;
       _selectedCapabilities = selected == _SharePermission.administrator
-          ? _ShareCapability.values.toSet()
-          : {_ShareCapability.doorControl};
+          ? available.toSet()
+          : available.contains(ShareCapability.doorControl)
+          ? {ShareCapability.doorControl}
+          : {};
     });
   }
 
@@ -378,6 +426,16 @@ class _DeviceSharePageState extends State<DeviceSharePage> {
         (_period != _SharePeriod.customize || _periodEndsAt != null);
   }
 
+  bool get _canSubmit {
+    final doorId = _doorId;
+    if (!_canConfirm || doorId == null) return false;
+    final capabilities = ref.read(doorShareCapabilitiesProvider(doorId));
+    final submitState = ref.read(doorShareControllerProvider);
+    return capabilities.hasValue &&
+        !submitState.isSubmitting &&
+        !ref.read(sharedDoorMemberActionsControllerProvider);
+  }
+
   void _onAddressChanged() {
     if (_showAddressFormatError) {
       setState(() {
@@ -388,7 +446,7 @@ class _DeviceSharePageState extends State<DeviceSharePage> {
     setState(() {});
   }
 
-  void _toggleCapability(_ShareCapability capability) {
+  void _toggleCapability(ShareCapability capability) {
     if (!_isEditing && _permission != _SharePermission.administrator) {
       return;
     }
@@ -401,13 +459,104 @@ class _DeviceSharePageState extends State<DeviceSharePage> {
     });
   }
 
-  void _confirm() {
+  Future<void> _confirm() async {
     if (!InputValidators.isValidEmail(_emailController.text)) {
       setState(() {
         _showAddressFormatError = true;
       });
+      return;
+    }
+    final doorId = _doorId;
+    if (doorId == null) return;
+    final role = _permission == _SharePermission.administrator
+        ? DoorShareRole.administrator
+        : DoorShareRole.guest;
+    final expiryType = switch (_period) {
+      _SharePeriod.neverExpired => DoorShareExpiryType.neverExpired,
+      _SharePeriod.twoHours => DoorShareExpiryType.twoHours,
+      _SharePeriod.customize => DoorShareExpiryType.customize,
+    };
+    final expiresAtUtcMillis = _period == _SharePeriod.customize
+        ? _periodEndsAt?.toUtc().millisecondsSinceEpoch
+        : null;
+    final controller = ref.read(doorShareControllerProvider.notifier);
+    final success = _isEditing
+        ? await controller.update(
+            shareId: widget.editingMember!.shareId,
+            command: UpdateDoorShareCommand(
+              role: role,
+              expiryType: expiryType,
+              expiresAtUtcMillis: expiresAtUtcMillis,
+              capabilities: _selectedCapabilities.toList(growable: false),
+            ),
+          )
+        : await controller.submit(
+            doorId: doorId,
+            command: CreateDoorShareCommand(
+              receiverEmail: _emailController.text,
+              role: role,
+              expiryType: expiryType,
+              expiresAtUtcMillis: expiresAtUtcMillis,
+              capabilities: _selectedCapabilities.toList(growable: false),
+            ),
+          );
+    if (success && mounted) {
+      if (_isEditing) ref.invalidate(sharedDoorMembersProvider(doorId));
+      context.pop();
     }
   }
+
+  Future<void> _deleteMember() async {
+    final doorId = _doorId;
+    final member = widget.editingMember;
+    if (doorId == null || member == null) return;
+    final error = await ref
+        .read(sharedDoorMemberActionsControllerProvider.notifier)
+        .delete(shareId: member.shareId);
+    if (error == null && mounted) {
+      ref.invalidate(sharedDoorMembersProvider(doorId));
+      context.pop();
+    }
+  }
+
+  List<ShareCapability> get _availableCapabilities => _doorId == null
+      ? const []
+      : ref
+            .read(doorShareCapabilitiesProvider(_doorId!))
+            .maybeWhen(data: (value) => value, orElse: () => const []);
+
+  void _syncCapabilities(List<ShareCapability> capabilities) {
+    final valid = _selectedCapabilities.intersection(capabilities.toSet());
+    if (_selectedCapabilities.isEmpty) {
+      _selectedCapabilities = _permission == _SharePermission.administrator
+          ? capabilities.toSet()
+          : capabilities.contains(ShareCapability.doorControl)
+          ? {ShareCapability.doorControl}
+          : {};
+    } else if (valid.length != _selectedCapabilities.length) {
+      _selectedCapabilities = valid;
+    }
+  }
+
+  String _capabilityLabel(AppLocalizations l10n, ShareCapability capability) =>
+      switch (capability) {
+        ShareCapability.doorControl => l10n.deviceShareCapabilityDoorControl,
+        ShareCapability.partialOpen => l10n.deviceShareCapabilityPartialOpen,
+        ShareCapability.partialOpenLevel =>
+          l10n.deviceShareCapabilityPartialOpenLevel,
+        ShareCapability.ledControl => l10n.deviceShareCapabilityLedControl,
+        ShareCapability.ledOffDelay => l10n.deviceShareCapabilityLedDelay,
+        ShareCapability.autoClose => l10n.deviceShareCapabilityAutoClose,
+        ShareCapability.transmitterPairing =>
+          l10n.deviceShareCapabilityTransmitterPairing,
+        ShareCapability.forceMargin => l10n.deviceShareCapabilityDoorOpenForce,
+        ShareCapability.doorOpenReminder =>
+          l10n.deviceShareCapabilityDoorOpenReminder,
+        ShareCapability.openingSpeed => l10n.deviceShareCapabilityDoorOpenSpeed,
+      };
+
+  String _submitErrorLabel(AppLocalizations l10n, Object _) =>
+      l10n.deviceShareSubmitFailed;
 
   String _formatExpiry(DateTime value) {
     return DateFormat('HH:mm dd-MM-yyyy').format(value);
@@ -417,7 +566,7 @@ class _DeviceSharePageState extends State<DeviceSharePage> {
 class _DeviceShareEditMemberSummary extends StatelessWidget {
   const _DeviceShareEditMemberSummary({required this.member});
 
-  final SharedDeviceMember member;
+  final SharedDoorMember member;
 
   @override
   Widget build(BuildContext context) {
@@ -441,16 +590,12 @@ class _DeviceShareEditMemberSummary extends StatelessWidget {
           SizedBox.square(
             dimension: AppSpacingTokens.deviceShareEditSummaryAvatarSize,
             child: ClipOval(
-              child: Image.asset(
-                member.avatarAssetPath,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => const ColoredBox(
-                  color: AppColors.sharedDeviceMemberAvatarPlaceholder,
-                  child: Center(
-                    child: Icon(
-                      Icons.person_outline,
-                      color: AppColors.sharedDeviceMemberAvatarPlaceholderIcon,
-                    ),
+              child: const ColoredBox(
+                color: AppColors.sharedDeviceMemberAvatarPlaceholder,
+                child: Center(
+                  child: Icon(
+                    Icons.person_outline,
+                    color: AppColors.sharedDeviceMemberAvatarPlaceholderIcon,
                   ),
                 ),
               ),
@@ -473,22 +618,21 @@ class _DeviceShareEditMemberSummary extends StatelessWidget {
                 const SizedBox(
                   height: AppSpacingTokens.deviceShareEditSummaryTextGap,
                 ),
-                Text(
-                  DateFormat('yyyy-MM-dd HH:mm:ss').format(member.authorizedAt),
-                  style: AppTextTokens.deviceShareEditSummaryMetadata(
-                    textTheme,
+                if (member.expiryType ==
+                    SharedDoorMemberExpiryType.neverExpired)
+                  Text(
+                    l10n.deviceShareNeverExpired,
+                    style: AppTextTokens.deviceShareEditSummaryMetadata(
+                      textTheme,
+                    ),
+                  )
+                else if (member.expiresAt != null)
+                  Text(
+                    DateFormat('yyyy-MM-dd HH:mm:ss').format(member.expiresAt!),
+                    style: AppTextTokens.deviceShareEditSummaryMetadata(
+                      textTheme,
+                    ),
                   ),
-                ),
-                const SizedBox(
-                  height: AppSpacingTokens.deviceShareEditSummaryTextGap,
-                ),
-                Text(
-                  switch (member.status) {
-                    SharedDeviceMemberStatus.accepted =>
-                      l10n.sharedDeviceMemberAccepted,
-                  },
-                  style: AppTextTokens.deviceShareEditSummaryStatus(textTheme),
-                ),
               ],
             ),
           ),
@@ -560,11 +704,13 @@ class _ShareTextField extends StatelessWidget {
     required this.controller,
     required this.hasError,
     required this.errorText,
+    required this.readOnly,
   });
 
   final TextEditingController controller;
   final bool hasError;
   final String errorText;
+  final bool readOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -578,6 +724,7 @@ class _ShareTextField extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14),
           child: TextField(
             controller: controller,
+            readOnly: readOnly,
             style: AppTextTokens.deviceShareInputValue(
               Theme.of(context).textTheme,
             ),
@@ -703,9 +850,9 @@ class _CapabilitiesPanel extends StatelessWidget {
   });
 
   final List<_CapabilityItem> items;
-  final Set<_ShareCapability> selectedCapabilities;
+  final Set<ShareCapability> selectedCapabilities;
   final bool isEnabled;
-  final ValueChanged<_ShareCapability> onChanged;
+  final ValueChanged<ShareCapability> onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -752,7 +899,7 @@ class _CapabilitiesPanel extends StatelessWidget {
 class _CapabilityItem {
   const _CapabilityItem({required this.capability, required this.label});
 
-  final _ShareCapability capability;
+  final ShareCapability capability;
   final String label;
 }
 
@@ -764,7 +911,7 @@ class _CapabilityAvailabilityIcon extends StatelessWidget {
     required this.onTap,
   });
 
-  final _ShareCapability capability;
+  final ShareCapability capability;
   final bool isSelected;
   final bool isEnabled;
   final VoidCallback onTap;

@@ -5,15 +5,20 @@ import '../../../core/network/providers.dart';
 import '../../../platform_bridge/hardware_models.dart';
 import '../../auth/application/providers.dart';
 import '../data/data_sources/home_api.dart';
+import '../data/data_sources/door_share_remote_data_source.dart';
+import '../data/repositories/door_share_repository_impl.dart';
 import '../data/data_sources/home_door_remote_data_source.dart';
 import '../data/data_sources/home_scene_remote_data_source.dart';
 import '../data/repositories/home_door_repository_impl.dart';
 import '../data/repositories/home_scene_repository_impl.dart';
 import '../domain/entities/home_scene.dart';
+import '../domain/repositories/door_share_repository.dart';
 import '../domain/repositories/home_door_repository.dart';
 import '../domain/repositories/home_scene_repository.dart';
 import '../domain/use_cases/create_home_scene_use_case.dart';
 import '../domain/use_cases/delete_home_scene_use_case.dart';
+import '../domain/use_cases/create_door_share_use_case.dart';
+import '../domain/use_cases/fetch_door_share_capabilities_use_case.dart';
 import '../domain/use_cases/fetch_home_doors_use_case.dart';
 import '../domain/use_cases/fetch_home_scenes_use_case.dart';
 import '../domain/use_cases/move_home_door_to_scene_use_case.dart';
@@ -22,6 +27,7 @@ import '../domain/use_cases/rename_home_door_use_case.dart';
 import '../domain/use_cases/reset_home_door_cover_use_case.dart';
 import '../domain/use_cases/top_home_door_use_case.dart';
 import '../domain/use_cases/unbind_home_door_use_case.dart';
+import '../domain/use_cases/update_door_share_use_case.dart';
 
 final homeApiProvider = Provider<HomeApi>((ref) {
   return HomeApi(ref.watch(dioProvider));
@@ -33,6 +39,36 @@ final homeDoorRemoteDataSourceProvider = Provider<HomeDoorRemoteDataSource>(
 
 final homeSceneRemoteDataSourceProvider = Provider<HomeSceneRemoteDataSource>(
   (ref) => HomeSceneRemoteDataSourceImpl(api: ref.watch(homeApiProvider)),
+);
+
+final doorShareRemoteDataSourceProvider = Provider<DoorShareRemoteDataSource>(
+  (ref) => DoorShareRemoteDataSourceImpl(api: ref.watch(homeApiProvider)),
+);
+
+final doorShareRepositoryProvider = Provider<DoorShareRepository>(
+  (ref) => DoorShareRepositoryImpl(
+    remoteDataSource: ref.watch(doorShareRemoteDataSourceProvider),
+    logger: ref.watch(appLoggerProvider),
+  ),
+);
+
+final fetchDoorShareCapabilitiesUseCaseProvider =
+    Provider<FetchDoorShareCapabilitiesUseCase>(
+      (ref) => FetchDoorShareCapabilitiesUseCase(
+        repository: ref.watch(doorShareRepositoryProvider),
+      ),
+    );
+
+final createDoorShareUseCaseProvider = Provider<CreateDoorShareUseCase>(
+  (ref) => CreateDoorShareUseCase(
+    repository: ref.watch(doorShareRepositoryProvider),
+  ),
+);
+
+final updateDoorShareUseCaseProvider = Provider<UpdateDoorShareUseCase>(
+  (ref) => UpdateDoorShareUseCase(
+    repository: ref.watch(doorShareRepositoryProvider),
+  ),
 );
 
 final homeDoorRepositoryProvider = Provider<HomeDoorRepository>((ref) {

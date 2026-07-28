@@ -17,6 +17,8 @@ class HomeDoorResponseDto {
     this.onlineStatus,
     this.onlineStatusLabel,
     this.positionPercent,
+    this.shareStatus,
+    this.shareStatusLabel,
     this.top = false,
   });
 
@@ -37,6 +39,8 @@ class HomeDoorResponseDto {
   final int? onlineStatus;
   final String? onlineStatusLabel;
   final double? positionPercent;
+  final int? shareStatus;
+  final String? shareStatusLabel;
   final bool top;
 
   factory HomeDoorResponseDto.fromJson(Map<String, dynamic> json) {
@@ -58,6 +62,8 @@ class HomeDoorResponseDto {
       onlineStatus: _parseNullableInt(json['onlineStatus']),
       onlineStatusLabel: json['onlineStatusLabel'] as String?,
       positionPercent: _parseNullableDouble(json['positionPercent']),
+      shareStatus: _parseNullableInt(json['shareStatus']),
+      shareStatusLabel: json['shareStatusLabel'] as String?,
       top: json['top'] as bool? ?? false,
     );
   }

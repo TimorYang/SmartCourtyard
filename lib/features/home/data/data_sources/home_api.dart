@@ -3,6 +3,7 @@ import 'package:retrofit/retrofit.dart';
 
 import '../../../../core/network/api_envelope_dto.dart';
 import '../dto/create_home_scene_request_dto.dart';
+import '../dto/door_share_dto.dart';
 import '../dto/home_door_response_dto.dart';
 import '../dto/home_scene_response_dto.dart';
 import '../dto/move_home_door_scene_request_dto.dart';
@@ -22,6 +23,27 @@ abstract class HomeApi {
   @GET('app/doors')
   Future<ApiEnvelopeDto<List<HomeDoorResponseDto>>> fetchDoors(
     @Query('sceneId') int sceneId,
+    @DioOptions() Options options,
+  );
+
+  @GET('app/door-shares/outgoing/doors/{doorId}/capabilities')
+  Future<ApiEnvelopeDto<List<ShareCapabilityResponseDto>>>
+  fetchDoorShareCapabilities(
+    @Path('doorId') int doorId,
+    @DioOptions() Options options,
+  );
+
+  @POST('app/door-shares/outgoing/doors/{doorId}/users')
+  Future<ApiEnvelopeDto<DoorShareRecipientResponseDto>> createDoorShare(
+    @Path('doorId') int doorId,
+    @Body() CreateDoorShareRequestDto request,
+    @DioOptions() Options options,
+  );
+
+  @PUT('app/door-shares/outgoing/{shareId}')
+  Future<ApiEnvelopeDto<dynamic>> updateDoorShare(
+    @Path('shareId') int shareId,
+    @Body() UpdateDoorShareRequestDto request,
     @DioOptions() Options options,
   );
 

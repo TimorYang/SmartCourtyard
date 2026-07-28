@@ -21,6 +21,8 @@ void main() {
           doorStateLabel: '正在关门',
           doorType: 3,
           coverFileId: 30001,
+          shareStatus: 2,
+          shareStatusLabel: 'Sharing',
         ),
       ]),
       logger: const _NoopLogger(),
@@ -40,6 +42,8 @@ void main() {
     expect(doors.single.doorState, DoorState.closing);
     expect(doors.single.doorType, DoorType.swing);
     expect(doors.single.coverFileId, 30001);
+    expect(doors.single.shareStatus, 2);
+    expect(doors.single.shareStatusLabel, 'Sharing');
   });
 
   for (final fixture in [

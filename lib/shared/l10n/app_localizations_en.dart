@@ -366,6 +366,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeDeviceEditShareAction => 'Share';
 
   @override
+  String get homeNoDeviceMessage => 'No Device';
+
+  @override
   String get homeDeviceEditMoveSceneAction => 'Move Scene';
 
   @override
@@ -429,10 +432,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deviceShareCapabilityPartialOpen => 'Partial open';
 
   @override
+  String get deviceShareCapabilityPartialOpenLevel => 'Partial opening level';
+
+  @override
+  String get deviceShareCapabilityLedControl => 'LED control';
+
+  @override
   String get deviceShareCapabilityLedDelay => 'LED off delay';
 
   @override
   String get deviceShareCapabilityAutoClose => 'Auto-close';
+
+  @override
+  String get deviceShareCapabilityTransmitterPairing => 'Transmitter pairing';
 
   @override
   String get deviceShareCapabilityDoorOpenReminder => 'Door open reminder';
@@ -448,6 +460,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deviceShareConfirmAction => 'Confirm';
+
+  @override
+  String get deviceShareDoorUnavailable =>
+      'This door is unavailable for sharing.';
+
+  @override
+  String get deviceShareCapabilitiesLoadFailed =>
+      'Unable to load share capabilities. Tap to retry.';
+
+  @override
+  String get deviceShareSubmitFailed =>
+      'Unable to create the share. Please try again.';
 
   @override
   String get accountProfileTitle => 'Account profile';
@@ -546,6 +570,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sharedDevicesAddLabel => 'Add shared device';
 
   @override
+  String get sharedDevicesEmpty => 'No shared devices yet.';
+
+  @override
+  String get sharedDevicesLoadFailed => 'Unable to load shared devices.';
+
+  @override
+  String get sharedDevicesRetry => 'Retry';
+
+  @override
   String get sharedDeviceMemberAdministrator => 'Administrator';
 
   @override
@@ -571,18 +604,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get receivingDevicesTitle => 'RECEIVING DEVICES';
 
   @override
-  String get receivingDevicesSmartDoorA => 'Smart door A';
-
-  @override
-  String get receivingDevicesSmartDoorB => 'Smart door B';
-
-  @override
-  String receivingDevicesSharedWithPeople(int count) {
-    return 'Share to $count people';
+  String receivingDevicesOwnerEmail(String ownerEmail) {
+    return 'Shared by: $ownerEmail';
   }
 
   @override
-  String get receivingDevicesNotShared => 'Not shared';
+  String get receivingDevicesEmpty => 'No receiving devices yet.';
+
+  @override
+  String get receivingDevicesLoadFailed => 'Unable to load receiving devices.';
+
+  @override
+  String get receivingDevicesRetry => 'Retry';
 
   @override
   String get receivingDevicesEditLabel => 'Edit receiving devices';

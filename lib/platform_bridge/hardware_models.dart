@@ -138,6 +138,8 @@ class DeviceSummary {
     this.lastSeenAt,
     this.doorType = DoorType.garage,
     this.coverFileId,
+    this.shareStatus,
+    this.shareStatusLabel,
   });
 
   final String id;
@@ -151,6 +153,8 @@ class DeviceSummary {
   final DateTime? lastSeenAt;
   final DoorType doorType;
   final int? coverFileId;
+  final int? shareStatus;
+  final String? shareStatusLabel;
 }
 
 class CommandResult {

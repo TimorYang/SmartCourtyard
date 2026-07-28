@@ -342,6 +342,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeDeviceEditShareAction => '分享';
 
   @override
+  String get homeNoDeviceMessage => '没有设备';
+
+  @override
   String get homeDeviceEditMoveSceneAction => '移动场景';
 
   @override
@@ -405,10 +408,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get deviceShareCapabilityPartialOpen => '部分打开';
 
   @override
+  String get deviceShareCapabilityPartialOpenLevel => '部分开门档位';
+
+  @override
+  String get deviceShareCapabilityLedControl => 'LED 控制';
+
+  @override
   String get deviceShareCapabilityLedDelay => 'LED 延时关闭';
 
   @override
   String get deviceShareCapabilityAutoClose => '自动关闭';
+
+  @override
+  String get deviceShareCapabilityTransmitterPairing => '遥控器配对';
 
   @override
   String get deviceShareCapabilityDoorOpenReminder => '开门提醒';
@@ -424,6 +436,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get deviceShareConfirmAction => '确认';
+
+  @override
+  String get deviceShareDoorUnavailable => '当前门不可分享。';
+
+  @override
+  String get deviceShareCapabilitiesLoadFailed => '无法加载可分享能力，点击重试。';
+
+  @override
+  String get deviceShareSubmitFailed => '创建分享失败，请重试。';
 
   @override
   String get accountProfileTitle => '账户资料';
@@ -520,6 +541,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sharedDevicesAddLabel => '添加共享设备';
 
   @override
+  String get sharedDevicesEmpty => '暂无共享设备';
+
+  @override
+  String get sharedDevicesLoadFailed => '共享设备加载失败';
+
+  @override
+  String get sharedDevicesRetry => '重试';
+
+  @override
   String get sharedDeviceMemberAdministrator => '管理员';
 
   @override
@@ -544,18 +574,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get receivingDevicesTitle => '接收设备';
 
   @override
-  String get receivingDevicesSmartDoorA => '智能门 A';
-
-  @override
-  String get receivingDevicesSmartDoorB => '智能门 B';
-
-  @override
-  String receivingDevicesSharedWithPeople(int count) {
-    return '分享给 $count 人';
+  String receivingDevicesOwnerEmail(String ownerEmail) {
+    return '共享用户名:$ownerEmail';
   }
 
   @override
-  String get receivingDevicesNotShared => '未分享';
+  String get receivingDevicesEmpty => '暂无接收设备';
+
+  @override
+  String get receivingDevicesLoadFailed => '接收设备加载失败';
+
+  @override
+  String get receivingDevicesRetry => '重试';
 
   @override
   String get receivingDevicesEditLabel => '编辑接收设备';

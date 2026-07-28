@@ -211,6 +211,8 @@ extension HomeDoorResponseDtoMapper on HomeDoorResponseDto {
       sceneId: sceneId,
       doorType: DoorType.fromWireValue(doorType),
       coverFileId: coverFileId,
+      shareStatus: shareStatus,
+      shareStatusLabel: shareStatusLabel,
     );
   }
 

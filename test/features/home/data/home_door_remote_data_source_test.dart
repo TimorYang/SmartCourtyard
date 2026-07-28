@@ -28,6 +28,8 @@ void main() {
       'doorState': '4',
       'doorStateLabel': '正在关门',
       'positionPercent': '68.5',
+      'shareStatus': '2',
+      'shareStatusLabel': 'Sharing',
       'top': true,
       'ignored': 'value',
     });
@@ -40,6 +42,8 @@ void main() {
     expect(dto.doorState, 4);
     expect(dto.doorStateLabel, '正在关门');
     expect(dto.positionPercent, 68.5);
+    expect(dto.shareStatus, 2);
+    expect(dto.shareStatusLabel, 'Sharing');
     expect(dto.top, isTrue);
   });
 

@@ -31,7 +31,12 @@ class RegionPage extends ConsumerWidget {
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(32, 26, 32, 0),
-                  child: Text(l10n.regionPageTitle, style: AppTextTokens.regionPageTitle(Theme.of(context).textTheme)),
+                  child: Text(
+                    l10n.regionPageTitle,
+                    style: AppTextTokens.regionPageTitle(
+                      Theme.of(context).textTheme,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16),
                 Expanded(
@@ -44,7 +49,9 @@ class RegionPage extends ConsumerWidget {
                         option: region,
                         label: _localizedRegionName(l10n, region.code),
                         selected: state.selectedRegionCode == region.code,
-                        onTap: () => ref.read(regionSelectionControllerProvider.notifier).select(region.code),
+                        onTap: () => ref
+                            .read(regionSelectionControllerProvider.notifier)
+                            .select(region.code),
                       );
                     },
                   ),
@@ -76,7 +83,12 @@ String _localizedRegionName(AppLocalizations l10n, String regionCode) {
 }
 
 class _RegionRow extends StatelessWidget {
-  const _RegionRow({required this.option, required this.label, required this.selected, required this.onTap});
+  const _RegionRow({
+    required this.option,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
 
   final RegionOption option;
   final String label;
@@ -95,12 +107,26 @@ class _RegionRow extends StatelessWidget {
         child: Container(
           height: 60,
           decoration: const BoxDecoration(
-            border: Border(bottom: BorderSide(color: AppColors.borderRegionDivider)),
+            border: Border(
+              bottom: BorderSide(color: AppColors.borderRegionDivider),
+            ),
           ),
           child: Row(
             children: [
-              Expanded(child: Text(label, style: AppTextTokens.regionRowLabel(Theme.of(context).textTheme))),
-              if (selected) const Icon(Icons.check_rounded, color: AppColors.regionSelection, size: 24),
+              Expanded(
+                child: Text(
+                  label,
+                  style: AppTextTokens.regionRowLabel(
+                    Theme.of(context).textTheme,
+                  ),
+                ),
+              ),
+              if (selected)
+                const Icon(
+                  Icons.check_rounded,
+                  color: AppColors.regionSelection,
+                  size: 24,
+                ),
             ],
           ),
         ),
