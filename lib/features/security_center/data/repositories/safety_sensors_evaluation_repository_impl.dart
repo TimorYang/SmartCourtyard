@@ -42,8 +42,11 @@ class SafetySensorsEvaluationRepositoryImpl
         lowPowerSensorCount: dto.lowBatteryCount ?? 0,
         statisticsStartAt: _date(dto.statisticsStartTime),
         statisticsEndAt: _date(dto.statisticsEndTime),
-        wiredSensorGroup: _group(dto.wiredSensors),
-        wirelessSensorGroup: _group(dto.wirelessSensors),
+        wiredSensorGroup: _group(dto.wiredSensors, dto.wiredSensorStatus),
+        wirelessSensorGroup: _group(
+          dto.wirelessSensors,
+          dto.wirelessSensorStatus,
+        ),
       );
     } on SafetySensorsEvaluationRemoteException catch (error, stackTrace) {
       logger.error(
@@ -68,15 +71,23 @@ class SafetySensorsEvaluationRepositoryImpl
     }
   }
 
-  SafetySensorGroup _group(List<SafetySensorItemDto> sensors) {
+  SafetySensorGroup _group(
+    List<SafetySensorItemDto> sensors,
+    String? reportedStatus,
+  ) {
     final mapped = sensors
         .where((sensor) => sensor.sensorCode?.trim().isNotEmpty ?? false)
         .map(_sensor)
         .toList(growable: false);
+    final status = switch (reportedStatus?.trim()) {
+      '1' => SafetySensorGroupStatus.normal,
+      '2' => SafetySensorGroupStatus.abnormal,
+      _ => null,
+    };
     if (mapped.isEmpty) {
-      return const SafetySensorGroup(
-        status: SafetySensorGroupStatus.offline,
-        sensors: [],
+      return SafetySensorGroup(
+        status: status ?? SafetySensorGroupStatus.offline,
+        sensors: const [],
       );
     }
     final hasAbnormalSensor = mapped.any(
@@ -85,9 +96,11 @@ class SafetySensorsEvaluationRepositoryImpl
           sensor.status != SafetySensorStatus.unlocked,
     );
     return SafetySensorGroup(
-      status: hasAbnormalSensor
-          ? SafetySensorGroupStatus.abnormal
-          : SafetySensorGroupStatus.normal,
+      status:
+          status ??
+          (hasAbnormalSensor
+              ? SafetySensorGroupStatus.abnormal
+              : SafetySensorGroupStatus.normal),
       sensors: mapped,
     );
   }
@@ -95,6 +108,7 @@ class SafetySensorsEvaluationRepositoryImpl
   SafetySensor _sensor(SafetySensorItemDto dto) => SafetySensor(
     id: dto.sensorCode!.trim(),
     sensorCode: dto.sensorCode!.trim(),
+    statusLabel: dto.statusLabel?.trim(),
     status: switch (dto.status?.trim()) {
       '0' => SafetySensorStatus.disconnected,
       '2' => SafetySensorStatus.triggered,

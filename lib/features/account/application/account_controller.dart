@@ -29,5 +29,6 @@ class AccountController extends AsyncNotifier<AccountProfile?> {
   Future<void> clearAccount() async {
     state = const AsyncData<AccountProfile?>(null);
     await _repository.clearAccount();
+    await ref.read(accountOverviewRepositoryProvider).clearCachedOverview();
   }
 }

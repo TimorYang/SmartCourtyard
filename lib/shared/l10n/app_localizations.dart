@@ -1058,6 +1058,18 @@ abstract class AppLocalizations {
   /// **'739059568@qq.com'**
   String get accountFallbackEmail;
 
+  /// No description provided for @accountOverviewRefreshFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to refresh account overview. Please try again.'**
+  String get accountOverviewRefreshFailed;
+
+  /// No description provided for @accountOverviewRefreshTimeUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh time unavailable'**
+  String get accountOverviewRefreshTimeUnavailable;
+
   /// Account menu item for devices shared by the user
   ///
   /// In en, this message translates to:
@@ -3445,6 +3457,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Battery power enough'**
   String get securityReportBatteryEnough;
+
+  /// No description provided for @securityReportBatteryLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery is low'**
+  String get securityReportBatteryLow;
 
   /// No description provided for @securityReportWirelessWicketDoor.
   ///

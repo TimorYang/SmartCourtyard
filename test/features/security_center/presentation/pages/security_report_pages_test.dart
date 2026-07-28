@@ -359,6 +359,24 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('full report renders live sensor battery and status details', (
+    tester,
+  ) async {
+    await _pumpPage(
+      tester,
+      const FullReportPage(deviceId: 'mock-device', doorId: '12'),
+    );
+
+    await tester.scrollUntilVisible(
+      find.text('Battery is low'),
+      500,
+      scrollable: _scrollableInside('full-report-scroll'),
+    );
+    expect(find.text('Battery is low'), findsOneWidget);
+    expect(find.text('Triggered'), findsOneWidget);
+    expect(find.text('Offline'), findsAtLeastNWidgets(2));
+  });
+
   testWidgets('full report shows loading until general evaluation is ready', (
     tester,
   ) async {
@@ -369,6 +387,13 @@ void main() {
           fetchGeneralEvaluationUseCaseProvider.overrideWithValue(
             FetchGeneralEvaluationUseCase(
               repository: _DelayedGeneralEvaluationRepository(completer),
+            ),
+          ),
+          fetchSafetySensorsEvaluationUseCaseProvider.overrideWithValue(
+            FetchSafetySensorsEvaluationUseCase(
+              repository: _FakeSafetySensorsEvaluationRepository(
+                _testSafetyEvaluation,
+              ),
             ),
           ),
         ],
@@ -398,6 +423,13 @@ void main() {
           fetchGeneralEvaluationUseCaseProvider.overrideWithValue(
             FetchGeneralEvaluationUseCase(repository: repository),
           ),
+          fetchSafetySensorsEvaluationUseCaseProvider.overrideWithValue(
+            FetchSafetySensorsEvaluationUseCase(
+              repository: _FakeSafetySensorsEvaluationRepository(
+                _testSafetyEvaluation,
+              ),
+            ),
+          ),
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -415,7 +447,7 @@ void main() {
     expect(repository.calls, 2);
   });
 
-  testWidgets('full report renders values supplied by its provider', (
+  testWidgets('full report renders values supplied by general evaluation', (
     tester,
   ) async {
     const report = FullReport(
@@ -488,7 +520,6 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          fullReportProvider('custom-device').overrideWith((ref) => report),
           fetchGeneralEvaluationUseCaseProvider.overrideWithValue(
             FetchGeneralEvaluationUseCase(
               repository: _FakeGeneralEvaluationRepository(
@@ -502,6 +533,13 @@ void main() {
                   motorFunctionStatus: report.motorFunctionStatus,
                   balancePending: false,
                 ),
+              ),
+            ),
+          ),
+          fetchSafetySensorsEvaluationUseCaseProvider.overrideWithValue(
+            FetchSafetySensorsEvaluationUseCase(
+              repository: _FakeSafetySensorsEvaluationRepository(
+                _testSafetyEvaluation,
               ),
             ),
           ),
@@ -1240,6 +1278,7 @@ final _testSafetyEvaluation = SafetySensorsEvaluation(
         id: 'WIRED_PHOTO_BEAM',
         sensorCode: 'WIRED_PHOTO_BEAM',
         status: SafetySensorStatus.disconnected,
+        statusLabel: 'Offline',
         batteryStatus: SafetySensorBatteryStatus.unknown,
         operationPoints: [],
       ),
@@ -1247,6 +1286,7 @@ final _testSafetyEvaluation = SafetySensorsEvaluation(
         id: 'WIRED_ELECTRONIC_LOCK',
         sensorCode: 'WIRED_ELECTRONIC_LOCK',
         status: SafetySensorStatus.locked,
+        statusLabel: 'Locked',
         batteryStatus: SafetySensorBatteryStatus.unknown,
         operationPoints: [],
       ),
@@ -1259,6 +1299,7 @@ final _testSafetyEvaluation = SafetySensorsEvaluation(
         id: 'WIRELESS_PHOTO_BEAM',
         sensorCode: 'WIRELESS_PHOTO_BEAM',
         status: SafetySensorStatus.triggered,
+        statusLabel: 'Triggered',
         batteryStatus: SafetySensorBatteryStatus.low,
         operationPoints: [
           SafetySensorOperationPoint(
@@ -1271,6 +1312,7 @@ final _testSafetyEvaluation = SafetySensorsEvaluation(
         id: 'WIRELESS_WICKET_DOOR',
         sensorCode: 'WIRELESS_WICKET_DOOR',
         status: SafetySensorStatus.notTriggered,
+        statusLabel: 'Not triggered',
         batteryStatus: SafetySensorBatteryStatus.normal,
         operationPoints: [],
       ),
@@ -1278,6 +1320,7 @@ final _testSafetyEvaluation = SafetySensorsEvaluation(
         id: 'WIRELESS_ELECTRONIC_LOCK',
         sensorCode: 'WIRELESS_ELECTRONIC_LOCK',
         status: SafetySensorStatus.locked,
+        statusLabel: 'Locked',
         batteryStatus: SafetySensorBatteryStatus.normal,
         operationPoints: [],
       ),
@@ -1285,7 +1328,16 @@ final _testSafetyEvaluation = SafetySensorsEvaluation(
         id: 'WIRELESS_SAFETY_EDGE',
         sensorCode: 'WIRELESS_SAFETY_EDGE',
         status: SafetySensorStatus.notTriggered,
+        statusLabel: 'Not triggered',
         batteryStatus: SafetySensorBatteryStatus.normal,
+        operationPoints: [],
+      ),
+      const SafetySensor(
+        id: 'WIRELESS_SLACK_ROPE',
+        sensorCode: 'WIRELESS_SLACK_ROPE',
+        status: SafetySensorStatus.disconnected,
+        statusLabel: 'Offline',
+        batteryStatus: SafetySensorBatteryStatus.unknown,
         operationPoints: [],
       ),
     ],

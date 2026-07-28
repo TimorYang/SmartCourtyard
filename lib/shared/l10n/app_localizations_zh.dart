@@ -500,6 +500,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get accountFallbackEmail => '739059568@qq.com';
 
   @override
+  String get accountOverviewRefreshFailed => '账号概览刷新失败，请重试。';
+
+  @override
+  String get accountOverviewRefreshTimeUnavailable => '暂无刷新时间';
+
+  @override
   String get accountSharedDevices => '共享设备';
 
   @override
@@ -1754,6 +1760,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get securityReportBatteryEnough => '电池电量充足';
+
+  @override
+  String get securityReportBatteryLow => '电池电量低';
 
   @override
   String get securityReportWirelessWicketDoor => '无线小门传感器';

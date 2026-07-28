@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../domain/entities/full_report.dart';
+import '../../domain/entities/safety_sensors_evaluation.dart';
 
 /// Replace these named placeholders with exported design cut assets when ready.
 const securityReportMotorBlueBg =
@@ -1019,13 +1020,23 @@ class SensorDiagnosisSection extends StatelessWidget {
                     asset: securityReportWiredPhotoBeamAsset,
                     fallback: Icons.sensor_door_outlined,
                     title: l10n.securityCenterWiredPhotoBeam,
-                    details: [l10n.securityReportNotTriggered],
+                    details: [
+                      _SensorDetail(
+                        l10n.securityReportNotTriggered,
+                        _SensorDetailTone.normal,
+                      ),
+                    ],
                   ),
                   _SensorItem(
                     asset: securityReportWiredELockAsset,
                     fallback: Icons.lock_outline,
                     title: l10n.securityCenterWiredELock,
-                    details: [l10n.securityReportLocked],
+                    details: [
+                      _SensorDetail(
+                        l10n.securityReportLocked,
+                        _SensorDetailTone.alert,
+                      ),
+                    ],
                   ),
                 ]
               : [
@@ -1033,45 +1044,39 @@ class SensorDiagnosisSection extends StatelessWidget {
                     asset: securityReportWiredPhotoBeamAsset,
                     fallback: Icons.sensor_door_outlined,
                     title: l10n.securityCenterWiredPhotoBeam,
-                    details: [
-                      l10n.securityReportBatteryEnough,
-                      l10n.securityReportNotTriggered,
-                    ],
+                    details: _defaultWirelessDetails(l10n),
                   ),
                   _SensorItem(
                     asset: securityReportWirelessWicketDoorAsset,
                     fallback: Icons.meeting_room_outlined,
                     title: l10n.securityReportWirelessWicketDoor,
-                    details: [
-                      l10n.securityReportNotTriggered,
-                      l10n.securityReportBatteryEnough,
-                    ],
+                    details: _defaultWirelessDetails(l10n),
                   ),
                   _SensorItem(
                     asset: securityReportWirelessSafetyEdgeAsset,
                     fallback: Icons.rounded_corner_outlined,
                     title: l10n.securityReportWirelessSafetyEdge,
-                    details: [
-                      l10n.securityReportBatteryEnough,
-                      l10n.securityReportNotTriggered,
-                    ],
+                    details: _defaultWirelessDetails(l10n),
                   ),
                   _SensorItem(
                     asset: securityReportWirelessPositionSensorAsset,
                     fallback: Icons.sensors_outlined,
                     title: l10n.securityReportWirelessPositionSensor,
-                    details: [
-                      l10n.securityReportNotTriggered,
-                      l10n.securityReportBatteryEnough,
-                    ],
+                    details: _defaultWirelessDetails(l10n),
                   ),
                   _SensorItem(
                     asset: securityReportWiredELockAsset,
                     fallback: Icons.lock_outline,
                     title: l10n.securityCenterWirelessELock,
                     details: [
-                      l10n.securityReportBatteryEnough,
-                      l10n.securityReportLocked,
+                      _SensorDetail(
+                        l10n.securityReportBatteryEnough,
+                        _SensorDetailTone.normal,
+                      ),
+                      _SensorDetail(
+                        l10n.securityReportLocked,
+                        _SensorDetailTone.alert,
+                      ),
                     ],
                   ),
                 ]
@@ -1106,6 +1111,11 @@ class SensorDiagnosisSection extends StatelessWidget {
         Icons.sensor_door_outlined,
         l10n.securityCenterWiredPhotoBeam,
       ),
+      FullReportSensorType.wirelessPhotoBeam => (
+        securityReportWiredPhotoBeamAsset,
+        Icons.sensor_door_outlined,
+        l10n.securityCenterWirelessPhotoBeam,
+      ),
       FullReportSensorType.wiredELock => (
         securityReportWiredELockAsset,
         Icons.lock_outline,
@@ -1126,6 +1136,11 @@ class SensorDiagnosisSection extends StatelessWidget {
         Icons.sensors_outlined,
         l10n.securityReportWirelessPositionSensor,
       ),
+      FullReportSensorType.wirelessSlackRope => (
+        securityReportWirelessSafetyEdgeAsset,
+        Icons.radar,
+        l10n.safetySensorsWirelessSlackRope,
+      ),
       FullReportSensorType.wirelessELock => (
         securityReportWiredELockAsset,
         Icons.lock_outline,
@@ -1136,19 +1151,87 @@ class SensorDiagnosisSection extends StatelessWidget {
       asset: asset,
       fallback: fallback,
       title: title,
-      details: sensor.states
-          .map(
-            (state) => switch (state) {
-              FullReportSensorDisplayState.batterySufficient =>
-                l10n.securityReportBatteryEnough,
-              FullReportSensorDisplayState.notTriggered =>
-                l10n.securityReportNotTriggered,
-              FullReportSensorDisplayState.locked => l10n.securityReportLocked,
-            },
-          )
-          .toList(),
+      details: _detailsFor(sensor, l10n),
     );
   }
+
+  List<_SensorDetail> _detailsFor(
+    FullReportSensor sensor,
+    AppLocalizations l10n,
+  ) {
+    final status = sensor.status;
+    if (status == null) {
+      return sensor.states
+          .map(
+            (state) => switch (state) {
+              FullReportSensorDisplayState.batterySufficient => _SensorDetail(
+                l10n.securityReportBatteryEnough,
+                _SensorDetailTone.normal,
+              ),
+              FullReportSensorDisplayState.notTriggered => _SensorDetail(
+                l10n.securityReportNotTriggered,
+                _SensorDetailTone.normal,
+              ),
+              FullReportSensorDisplayState.locked => _SensorDetail(
+                l10n.securityReportLocked,
+                _SensorDetailTone.alert,
+              ),
+            },
+          )
+          .toList(growable: false);
+    }
+    if (!_isWired && status == SafetySensorStatus.disconnected) {
+      return [
+        _SensorDetail(l10n.safetySensorOffline, _SensorDetailTone.offline),
+      ];
+    }
+    final statusDetail = _SensorDetail(
+      sensor.statusLabel?.trim().isNotEmpty == true
+          ? sensor.statusLabel!.trim()
+          : _statusLabel(l10n, status),
+      _statusTone(status),
+    );
+    if (_isWired) return [statusDetail];
+    return [_batteryDetail(sensor.batteryStatus, l10n), statusDetail];
+  }
+
+  List<_SensorDetail> _defaultWirelessDetails(AppLocalizations l10n) => [
+    _SensorDetail(l10n.securityReportBatteryEnough, _SensorDetailTone.normal),
+    _SensorDetail(l10n.securityReportNotTriggered, _SensorDetailTone.normal),
+  ];
+
+  _SensorDetail _batteryDetail(
+    SafetySensorBatteryStatus? status,
+    AppLocalizations l10n,
+  ) => switch (status) {
+    SafetySensorBatteryStatus.normal => _SensorDetail(
+      l10n.securityReportBatteryEnough,
+      _SensorDetailTone.normal,
+    ),
+    SafetySensorBatteryStatus.low => _SensorDetail(
+      l10n.securityReportBatteryLow,
+      _SensorDetailTone.alert,
+    ),
+    SafetySensorBatteryStatus.unknown ||
+    null => _SensorDetail(l10n.homeDoorStateUnknown, _SensorDetailTone.offline),
+  };
+
+  String _statusLabel(AppLocalizations l10n, SafetySensorStatus status) =>
+      switch (status) {
+        SafetySensorStatus.notTriggered => l10n.safetySensorNotTriggered,
+        SafetySensorStatus.disconnected => l10n.safetySensorOffline,
+        SafetySensorStatus.triggered => l10n.safetySensorTriggered,
+        SafetySensorStatus.unlocked => l10n.safetySensorUnlocked,
+        SafetySensorStatus.locked => l10n.safetySensorLocked,
+      };
+
+  _SensorDetailTone _statusTone(SafetySensorStatus status) => switch (status) {
+    SafetySensorStatus.disconnected => _SensorDetailTone.offline,
+    SafetySensorStatus.triggered ||
+    SafetySensorStatus.locked => _SensorDetailTone.alert,
+    SafetySensorStatus.notTriggered ||
+    SafetySensorStatus.unlocked => _SensorDetailTone.normal,
+  };
 }
 
 class _SensorSummaryCard extends StatelessWidget {
@@ -1207,7 +1290,7 @@ class _SensorItem extends StatelessWidget {
   final String asset;
   final IconData fallback;
   final String title;
-  final List<String> details;
+  final List<_SensorDetail> details;
 
   @override
   Widget build(BuildContext context) => SecurityReportCard(
@@ -1234,10 +1317,21 @@ class _SensorItem extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: 5),
                   child: Text(
-                    detail,
-                    style: AppTextTokens.securityReportSensorDetail(
-                      Theme.of(context).textTheme,
-                    ),
+                    detail.text,
+                    style: switch (detail.tone) {
+                      _SensorDetailTone.normal =>
+                        AppTextTokens.safetySensorItemSuccess(
+                          Theme.of(context).textTheme,
+                        ),
+                      _SensorDetailTone.alert =>
+                        AppTextTokens.safetySensorItemAlert(
+                          Theme.of(context).textTheme,
+                        ),
+                      _SensorDetailTone.offline =>
+                        AppTextTokens.safetySensorItemOffline(
+                          Theme.of(context).textTheme,
+                        ),
+                    },
                   ),
                 ),
             ],
@@ -1247,6 +1341,15 @@ class _SensorItem extends StatelessWidget {
     ),
   );
 }
+
+class _SensorDetail {
+  const _SensorDetail(this.text, this.tone);
+
+  final String text;
+  final _SensorDetailTone tone;
+}
+
+enum _SensorDetailTone { normal, alert, offline }
 
 class _ReportAssetPlaceholder extends StatelessWidget {
   const _ReportAssetPlaceholder({
