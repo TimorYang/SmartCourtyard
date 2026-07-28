@@ -2500,7 +2500,7 @@ class BleManager(
 
   private fun parseSmartOpenerSn(name: String?): String? {
     if (!isManagedDeviceName(name)) return null
-    return name.trim().takeIf { it.isNotEmpty() }
+    return name?.trim()?.takeIf { it.isNotEmpty() }
   }
 
   private fun isManagedDeviceName(name: String?): Boolean {
