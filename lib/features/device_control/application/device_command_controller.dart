@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../add_device/application/ble_auth_token.dart';
 import '../../add_device/application/providers.dart';
+import '../../add_device/domain/entities/onboarding_device_key.dart';
 import '../../add_device/domain/use_cases/fetch_onboarding_device_key_use_case.dart';
 import '../../../core/errors/app_error.dart';
 import '../../../core/logging/providers.dart';
@@ -144,6 +145,12 @@ class DeviceCommandState {
     this.bleConnectionStatus = DeviceBleConnectionStatus.idle,
     this.bleDeviceId,
     this.bleTargetName,
+    this.bleConnectionStatuses = const <String, DeviceBleConnectionStatus>{},
+    this.bleDeviceIds = const <String, String>{},
+    this.bleConnectionErrors = const <String>{},
+    this.selectedDeviceId,
+    this.lastSelectedBleNotification,
+    this.lastSelectedAttributeSnapshot,
   });
 
   final DoorDetail? doorDetail;
@@ -163,6 +170,12 @@ class DeviceCommandState {
   final DeviceBleConnectionStatus bleConnectionStatus;
   final String? bleDeviceId;
   final String? bleTargetName;
+  final Map<String, DeviceBleConnectionStatus> bleConnectionStatuses;
+  final Map<String, String> bleDeviceIds;
+  final Set<String> bleConnectionErrors;
+  final String? selectedDeviceId;
+  final BleNotification? lastSelectedBleNotification;
+  final DeviceAttributeSnapshot? lastSelectedAttributeSnapshot;
 
   DeviceCommandState copyWith({
     DoorDetail? doorDetail,
@@ -191,6 +204,13 @@ class DeviceCommandState {
     bool clearBleDeviceId = false,
     String? bleTargetName,
     bool clearBleTargetName = false,
+    Map<String, DeviceBleConnectionStatus>? bleConnectionStatuses,
+    Map<String, String>? bleDeviceIds,
+    Set<String>? bleConnectionErrors,
+    String? selectedDeviceId,
+    bool clearSelectedDeviceId = false,
+    BleNotification? lastSelectedBleNotification,
+    DeviceAttributeSnapshot? lastSelectedAttributeSnapshot,
   }) {
     return DeviceCommandState(
       doorDetail: clearDoorDetail ? null : doorDetail ?? this.doorDetail,
@@ -222,6 +242,17 @@ class DeviceCommandState {
       bleTargetName: clearBleTargetName
           ? null
           : bleTargetName ?? this.bleTargetName,
+      bleConnectionStatuses:
+          bleConnectionStatuses ?? this.bleConnectionStatuses,
+      bleDeviceIds: bleDeviceIds ?? this.bleDeviceIds,
+      bleConnectionErrors: bleConnectionErrors ?? this.bleConnectionErrors,
+      selectedDeviceId: clearSelectedDeviceId
+          ? null
+          : selectedDeviceId ?? this.selectedDeviceId,
+      lastSelectedBleNotification:
+          lastSelectedBleNotification ?? this.lastSelectedBleNotification,
+      lastSelectedAttributeSnapshot:
+          lastSelectedAttributeSnapshot ?? this.lastSelectedAttributeSnapshot,
     );
   }
 }
@@ -235,8 +266,11 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
   final List<StreamSubscription<Object?>> _subscriptions =
       <StreamSubscription<Object?>>[];
   Timer? _bleScanTimer;
-  String? _targetHardwareSn;
-  String? _activeBleDeviceId;
+  final Map<String, DoorDevice> _pendingBleNames = <String, DoorDevice>{};
+  final Map<String, String> _nativeToDoorDeviceId = <String, String>{};
+  final Map<String, OnboardingDeviceKey> _deviceKeys =
+      <String, OnboardingDeviceKey>{};
+  final Set<String> _connectingDoorDeviceIds = <String>{};
   var _bleSessionId = 0;
   int _requestCounter = 0;
 
@@ -257,6 +291,13 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
       unawaited(refreshDoorDevices(doorId: request.doorId));
     });
     _subscriptions.add(_gateway.bleScanResults.listen(_onBleDeviceFound));
+    _subscriptions.add(
+      _gateway.bleConnectionEvents.listen(_onBleConnectionChanged),
+    );
+    _subscriptions.add(_gateway.bleNotifications.listen(_onBleNotification));
+    _subscriptions.add(
+      _gateway.deviceAttributeSnapshots.listen(_onDeviceAttributeSnapshot),
+    );
     ref.onDispose(() {
       unawaited(disposeBleSession());
       for (final subscription in _subscriptions) {
@@ -267,8 +308,11 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
     return const DeviceCommandState();
   }
 
-  Future<void> loadDoorDetail({required String doorId}) async {
-    await disposeBleSession();
+  Future<void> loadDoorDetail({
+    required String doorId,
+    String preferredDeviceId = '',
+  }) async {
+    await _resetBleSessionTracking();
     final trimmedDoorId = doorId.trim();
     if (trimmedDoorId.isEmpty) {
       state = state.copyWith(
@@ -302,10 +346,8 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
         isLoadingDoorDetail: false,
         clearDoorDetailErrorMessage: true,
       );
-      final hardwareSn = detail.name.trim();
-      if (hardwareSn.isNotEmpty) {
-        unawaited(_startBleSession(hardwareSn));
-      }
+      _selectInitialDevice(doorDevices, preferredDeviceId);
+      unawaited(_startBlePool(doorDevices));
     } on AppError catch (error) {
       state = state.copyWith(
         isLoadingDoorDetail: false,
@@ -330,7 +372,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
         doorId: trimmedDoorId,
         requestId: _nextDoorDevicesRequestId(trimmedDoorId),
       );
-      state = state.copyWith(doorDevices: doorDevices);
+      await _reconcileBlePool(doorDevices);
     } on AppError {
       // Preserve the currently rendered device cards when a background refresh
       // fails; the originating page already presents the unbind failure state.
@@ -338,6 +380,89 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
       // Preserve the currently rendered device cards when a background refresh
       // fails; the originating page already presents the unbind failure state.
     }
+  }
+
+  Future<void> _reconcileBlePool(List<DoorDevice> doorDevices) async {
+    final previousSelectedDeviceId = state.selectedDeviceId;
+    final retainedDeviceIds = doorDevices
+        .map((device) => device.deviceId)
+        .toSet();
+    final nativeDeviceIdsToDisconnect = <String>{};
+
+    for (final entry in state.bleDeviceIds.entries) {
+      final status = state.bleConnectionStatuses[entry.key];
+      if (!retainedDeviceIds.contains(entry.key) ||
+          status == DeviceBleConnectionStatus.connecting ||
+          status == DeviceBleConnectionStatus.authenticating) {
+        nativeDeviceIdsToDisconnect.add(entry.value);
+      }
+    }
+
+    _bleSessionId += 1;
+    _pendingBleNames.clear();
+    _nativeToDoorDeviceId.clear();
+    _deviceKeys.clear();
+    _connectingDoorDeviceIds.clear();
+    _bleScanTimer?.cancel();
+    _bleScanTimer = null;
+
+    try {
+      await _gateway.stopBleScan(
+        requestId: _nextBleRequestId('refresh-scan-stop'),
+      );
+    } catch (_) {
+      // The page-level scan may already have completed.
+    }
+    await Future.wait(
+      nativeDeviceIdsToDisconnect.map((nativeDeviceId) async {
+        try {
+          await _gateway.disconnectBleDevice(
+            requestId: _nextBleRequestId('refresh-disconnect'),
+            deviceId: nativeDeviceId,
+          );
+        } catch (_) {
+          // A removed or in-flight device may already be disconnected.
+        }
+      }),
+    );
+
+    final retainedStatuses = <String, DeviceBleConnectionStatus>{};
+    final retainedNativeDeviceIds = <String, String>{};
+    for (final deviceId in retainedDeviceIds) {
+      if (state.bleConnectionStatuses[deviceId] ==
+          DeviceBleConnectionStatus.connected) {
+        final nativeDeviceId = state.bleDeviceIds[deviceId];
+        if (nativeDeviceId != null &&
+            !nativeDeviceIdsToDisconnect.contains(nativeDeviceId)) {
+          retainedStatuses[deviceId] = DeviceBleConnectionStatus.connected;
+          retainedNativeDeviceIds[deviceId] = nativeDeviceId;
+          _nativeToDoorDeviceId[nativeDeviceId] = deviceId;
+        }
+      }
+    }
+
+    final selectedDeviceId =
+        previousSelectedDeviceId != null &&
+            retainedDeviceIds.contains(previousSelectedDeviceId)
+        ? previousSelectedDeviceId
+        : doorDevices.firstOrNull?.deviceId;
+    state = state.copyWith(
+      doorDevices: doorDevices,
+      bleConnectionStatuses: retainedStatuses,
+      bleDeviceIds: retainedNativeDeviceIds,
+      bleConnectionErrors: state.bleConnectionErrors
+          .where(retainedDeviceIds.contains)
+          .toSet(),
+      selectedDeviceId: selectedDeviceId,
+      clearSelectedDeviceId: selectedDeviceId == null,
+      bleConnectionStatus: DeviceBleConnectionStatus.idle,
+      clearBleDeviceId: true,
+      clearBleTargetName: true,
+    );
+    if (selectedDeviceId != null) {
+      selectDevice(selectedDeviceId);
+    }
+    await _startBlePool(doorDevices);
   }
 
   String _nextDoorDevicesRequestId(String doorId) {
@@ -348,7 +473,10 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
 
   Future<void> disposeBleSession() async {
     _bleSessionId += 1;
-    _targetHardwareSn = null;
+    _pendingBleNames.clear();
+    _nativeToDoorDeviceId.clear();
+    _deviceKeys.clear();
+    _connectingDoorDeviceIds.clear();
     _bleScanTimer?.cancel();
     _bleScanTimer = null;
     try {
@@ -356,50 +484,161 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
     } catch (_) {
       // Scanning may already be stopped by native code.
     }
-    final deviceId = _activeBleDeviceId;
-    _activeBleDeviceId = null;
-    if (deviceId != null) {
-      try {
-        await _gateway.disconnectBleDevice(
-          requestId: _nextBleRequestId('disconnect'),
-          deviceId: deviceId,
-        );
-      } catch (_) {
-        // The page is leaving; no user-facing action is required.
-      }
+    try {
+      await _gateway.disconnectAllManagedBleDevices(
+        requestId: _nextBleRequestId('disconnect-all'),
+      );
+    } catch (_) {
+      // Cleanup is best effort while the page/provider is leaving.
     }
     if (ref.mounted) {
       state = state.copyWith(
         bleConnectionStatus: DeviceBleConnectionStatus.idle,
         clearBleDeviceId: true,
         clearBleTargetName: true,
+        bleConnectionStatuses: const <String, DeviceBleConnectionStatus>{},
+        bleDeviceIds: const <String, String>{},
+        bleConnectionErrors: const <String>{},
       );
     }
   }
 
-  Future<void> connectDoorDevice({required String bleName}) async {
-    final normalizedBleName = bleName.trim();
-    if (normalizedBleName.isEmpty ||
-        (state.bleConnectionStatus == DeviceBleConnectionStatus.connected &&
-            state.bleTargetName == normalizedBleName)) {
-      return;
+  Future<void> _resetBleSessionTracking() async {
+    _bleSessionId += 1;
+    _pendingBleNames.clear();
+    _nativeToDoorDeviceId.clear();
+    _deviceKeys.clear();
+    _connectingDoorDeviceIds.clear();
+    _bleScanTimer?.cancel();
+    _bleScanTimer = null;
+    try {
+      await _gateway.stopBleScan(requestId: _nextBleRequestId('scan-stop'));
+    } catch (_) {
+      // A previous page scan may already have stopped.
     }
-    await disposeBleSession();
-    await _startBleSession(normalizedBleName);
+    state = state.copyWith(
+      bleConnectionStatus: DeviceBleConnectionStatus.idle,
+      clearBleDeviceId: true,
+      clearBleTargetName: true,
+      bleConnectionStatuses: const <String, DeviceBleConnectionStatus>{},
+      bleDeviceIds: const <String, String>{},
+      bleConnectionErrors: const <String>{},
+    );
   }
 
-  Future<void> _startBleSession(String hardwareSn) async {
-    final sessionId = _bleSessionId;
-    _targetHardwareSn = hardwareSn;
+  void _selectInitialDevice(
+    List<DoorDevice> devices,
+    String preferredDeviceId,
+  ) {
+    final preferred = preferredDeviceId.trim();
+    DoorDevice? selected;
+    for (final device in devices) {
+      if (preferred.isNotEmpty &&
+          (device.deviceId == preferred ||
+              device.sn == preferred ||
+              device.bleUuid == preferred ||
+              device.bleMac == preferred)) {
+        selected = device;
+        break;
+      }
+    }
+    selected ??= devices.firstOrNull;
+    if (selected != null) {
+      selectDevice(selected.deviceId);
+    }
+  }
+
+  void selectDevice(String deviceId) {
+    final selected = state.doorDevices
+        .where((device) => device.deviceId == deviceId)
+        .firstOrNull;
+    if (selected == null) {
+      return;
+    }
+    final status =
+        state.bleConnectionStatuses[deviceId] ?? DeviceBleConnectionStatus.idle;
     state = state.copyWith(
-      bleConnectionStatus: DeviceBleConnectionStatus.scanning,
-      clearBleDeviceId: true,
-      bleTargetName: hardwareSn,
+      selectedDeviceId: deviceId,
+      bleConnectionStatus: status,
+      bleDeviceId: state.bleDeviceIds[deviceId],
+      clearBleDeviceId: !state.bleDeviceIds.containsKey(deviceId),
+      bleTargetName: selected.bleName,
+      clearBleTargetName: (selected.bleName?.trim().isEmpty ?? true),
     );
+  }
+
+  Future<void> connectDoorDevice({required String bleName}) async {
+    final normalizedBleName = bleName.trim();
+    final device = state.doorDevices
+        .where((item) => item.bleName?.trim() == normalizedBleName)
+        .firstOrNull;
+    if (device != null) {
+      selectDevice(device.deviceId);
+    }
+  }
+
+  String? get selectedHardwareDeviceId {
+    final selectedDeviceId = state.selectedDeviceId;
+    if (selectedDeviceId == null ||
+        state.bleConnectionStatuses[selectedDeviceId] !=
+            DeviceBleConnectionStatus.connected) {
+      return null;
+    }
+    return state.bleDeviceIds[selectedDeviceId];
+  }
+
+  Future<void> _startBlePool(List<DoorDevice> devices) async {
+    final sessionId = _bleSessionId;
+    final eligibleDevices = devices
+        .where((device) => _targetBleName(device).isNotEmpty)
+        .toList(growable: false);
+    await _prefetchDeviceKeys(eligibleDevices, sessionId);
+    if (!_isCurrentBleSession(sessionId)) {
+      return;
+    }
+    List<ConnectedBleDevice> connectedDevices;
+    try {
+      connectedDevices = await _gateway.getConnectedBleDevices(
+        requestId: _nextBleRequestId('connected-snapshot'),
+      );
+    } catch (_) {
+      connectedDevices = const <ConnectedBleDevice>[];
+    }
+    if (!_isCurrentBleSession(sessionId)) {
+      return;
+    }
+    final statuses = Map<String, DeviceBleConnectionStatus>.from(
+      state.bleConnectionStatuses,
+    );
+    final deviceIds = Map<String, String>.from(state.bleDeviceIds);
+    for (final device in eligibleDevices) {
+      final bleName = _targetBleName(device);
+      final existing = connectedDevices
+          .where((connected) => _matchesConnectedDevice(device, connected))
+          .firstOrNull;
+      if (existing != null && existing.state == BleConnectionState.connected) {
+        statuses[device.deviceId] = DeviceBleConnectionStatus.connected;
+        deviceIds[device.deviceId] = existing.deviceId;
+        _nativeToDoorDeviceId[existing.deviceId] = device.deviceId;
+      } else if (_deviceKeys.containsKey(device.deviceId)) {
+        _pendingBleNames[bleName] = device;
+        statuses[device.deviceId] = DeviceBleConnectionStatus.scanning;
+      } else {
+        statuses[device.deviceId] = DeviceBleConnectionStatus.idle;
+      }
+    }
+    state = state.copyWith(
+      bleConnectionStatuses: statuses,
+      bleDeviceIds: deviceIds,
+    );
+    _refreshSelectedBleView();
+    if (_pendingBleNames.isEmpty) {
+      return;
+    }
     try {
       await _gateway.startBleScan(
         requestId: _nextBleRequestId('scan'),
-        filter: BleScanFilter(exactName: hardwareSn),
+        filter: const BleScanFilter(),
       );
       if (!_isCurrentBleSession(sessionId)) {
         return;
@@ -417,26 +656,62 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
     }
   }
 
+  Future<void> _prefetchDeviceKeys(
+    List<DoorDevice> devices,
+    int sessionId,
+  ) async {
+    final failedDeviceIds = <String>{};
+    await Future.wait(
+      devices.map((device) async {
+        final sn = device.sn.trim();
+        if (sn.isEmpty) {
+          failedDeviceIds.add(device.deviceId);
+          return;
+        }
+        try {
+          final key = await _fetchDeviceKeyUseCase(
+            sn: sn,
+            requestId: _nextBleRequestId('device-key'),
+          );
+          if (_isCurrentBleSession(sessionId)) {
+            _deviceKeys[device.deviceId] = key;
+          }
+        } catch (_) {
+          failedDeviceIds.add(device.deviceId);
+        }
+      }),
+    );
+    if (_isCurrentBleSession(sessionId) && failedDeviceIds.isNotEmpty) {
+      state = state.copyWith(
+        bleConnectionErrors: <String>{
+          ...state.bleConnectionErrors,
+          ...failedDeviceIds,
+        },
+      );
+    }
+  }
+
   void _onBleDeviceFound(Object? event) {
-    if (event is! BleDevice ||
-        state.bleConnectionStatus != DeviceBleConnectionStatus.scanning) {
+    if (event is! BleDevice) {
       return;
     }
-    final hardwareSn = _targetHardwareSn;
-    if (hardwareSn == null ||
-        (event.name?.trim() != hardwareSn && event.sn?.trim() != hardwareSn)) {
+    final name = event.name?.trim();
+    final sn = event.sn?.trim();
+    final target =
+        (name == null ? null : _pendingBleNames[name]) ??
+        (sn == null ? null : _pendingBleNames[sn]);
+    if (target == null || _connectingDoorDeviceIds.contains(target.deviceId)) {
       return;
     }
     final sessionId = _bleSessionId;
-    _targetHardwareSn = null;
-    _bleScanTimer?.cancel();
-    _bleScanTimer = null;
-    unawaited(_connectAndAuthenticate(event, hardwareSn, sessionId));
+    _pendingBleNames.remove(_targetBleName(target));
+    _connectingDoorDeviceIds.add(target.deviceId);
+    _nativeToDoorDeviceId[event.id] = target.deviceId;
+    unawaited(_connectAndAuthenticate(event, target, sessionId));
   }
 
   Future<void> _stopBleScanAfterTimeout(int sessionId) async {
-    if (!_isCurrentBleSession(sessionId) ||
-        state.bleConnectionStatus != DeviceBleConnectionStatus.scanning) {
+    if (!_isCurrentBleSession(sessionId) || _pendingBleNames.isEmpty) {
       return;
     }
     try {
@@ -445,26 +720,28 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
       // Timeout is intentionally silent.
     }
     if (_isCurrentBleSession(sessionId)) {
-      state = state.copyWith(
-        bleConnectionStatus: DeviceBleConnectionStatus.idle,
-        clearBleTargetName: true,
+      final statuses = Map<String, DeviceBleConnectionStatus>.from(
+        state.bleConnectionStatuses,
       );
+      for (final target in _pendingBleNames.values) {
+        statuses[target.deviceId] = DeviceBleConnectionStatus.idle;
+      }
+      _pendingBleNames.clear();
+      state = state.copyWith(bleConnectionStatuses: statuses);
+      _refreshSelectedBleView();
     }
   }
 
   Future<void> _connectAndAuthenticate(
     BleDevice device,
-    String hardwareSn,
+    DoorDevice target,
     int sessionId,
   ) async {
     try {
-      await _gateway.stopBleScan(requestId: _nextBleRequestId('scan-stop'));
-      if (!_isCurrentBleSession(sessionId)) {
-        return;
-      }
-      _activeBleDeviceId = device.id;
-      state = state.copyWith(
-        bleConnectionStatus: DeviceBleConnectionStatus.connecting,
+      _setDeviceBleStatus(
+        target.deviceId,
+        DeviceBleConnectionStatus.connecting,
+        nativeDeviceId: device.id,
       );
       final connection = await _gateway.connectBleDevice(
         requestId: _nextBleRequestId('connect'),
@@ -472,16 +749,18 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
       );
       if (!_isCurrentBleSession(sessionId) ||
           connection.state != BleConnectionState.connected) {
-        await _failBleSession(sessionId);
+        await _failBleDevice(target.deviceId, device.id, sessionId);
         return;
       }
-      state = state.copyWith(
-        bleConnectionStatus: DeviceBleConnectionStatus.authenticating,
+      _setDeviceBleStatus(
+        target.deviceId,
+        DeviceBleConnectionStatus.authenticating,
       );
-      final deviceKey = await _fetchDeviceKeyUseCase(
-        sn: hardwareSn,
-        requestId: _nextBleRequestId('device-key'),
-      );
+      final deviceKey = _deviceKeys[target.deviceId];
+      if (deviceKey == null) {
+        await _failBleDevice(target.deviceId, device.id, sessionId);
+        return;
+      }
       if (!_isCurrentBleSession(sessionId)) {
         return;
       }
@@ -493,41 +772,152 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
         aesKeyVersion: deviceKey.aesKeyVersion,
       );
       if (!_isCurrentBleSession(sessionId) || !authenticated.authenticated) {
-        await _failBleSession(sessionId);
+        await _failBleDevice(target.deviceId, device.id, sessionId);
         return;
       }
-      state = state.copyWith(
-        bleConnectionStatus: DeviceBleConnectionStatus.connected,
-        bleDeviceId: device.id,
+      _setDeviceBleStatus(
+        target.deviceId,
+        DeviceBleConnectionStatus.connected,
+        nativeDeviceId: device.id,
       );
     } catch (_) {
-      await _failBleSession(sessionId);
+      await _failBleDevice(target.deviceId, device.id, sessionId);
+    } finally {
+      _connectingDoorDeviceIds.remove(target.deviceId);
+      if (_pendingBleNames.isEmpty && _connectingDoorDeviceIds.isEmpty) {
+        _bleScanTimer?.cancel();
+        _bleScanTimer = null;
+        try {
+          await _gateway.stopBleScan(
+            requestId: _nextBleRequestId('scan-complete'),
+          );
+        } catch (_) {
+          // The scan may have already stopped.
+        }
+      }
     }
   }
 
-  Future<void> _failBleSession(int sessionId) async {
+  Future<void> _failBleDevice(
+    String doorDeviceId,
+    String nativeDeviceId,
+    int sessionId,
+  ) async {
     if (!_isCurrentBleSession(sessionId)) {
       return;
     }
-    final deviceId = _activeBleDeviceId;
-    _activeBleDeviceId = null;
-    if (deviceId != null) {
-      try {
-        await _gateway.disconnectBleDevice(
-          requestId: _nextBleRequestId('disconnect'),
-          deviceId: deviceId,
-        );
-      } catch (_) {
-        // Connection failures are intentionally silent.
-      }
+    try {
+      await _gateway.disconnectBleDevice(
+        requestId: _nextBleRequestId('disconnect'),
+        deviceId: nativeDeviceId,
+      );
+    } catch (_) {
+      // A failed connection may already be disconnected.
     }
     if (_isCurrentBleSession(sessionId)) {
-      state = state.copyWith(
-        bleConnectionStatus: DeviceBleConnectionStatus.idle,
-        clearBleDeviceId: true,
-        clearBleTargetName: true,
+      final errors = Set<String>.from(state.bleConnectionErrors)
+        ..add(doorDeviceId);
+      _setDeviceBleStatus(
+        doorDeviceId,
+        DeviceBleConnectionStatus.idle,
+        clearNativeDeviceId: true,
+        errors: errors,
       );
     }
+  }
+
+  void _onBleConnectionChanged(BleConnectionEvent event) {
+    final doorDeviceId = _nativeToDoorDeviceId[event.deviceId];
+    if (doorDeviceId == null) {
+      return;
+    }
+    final status = switch (event.state) {
+      BleConnectionState.disconnected => DeviceBleConnectionStatus.idle,
+      BleConnectionState.connecting => DeviceBleConnectionStatus.connecting,
+      BleConnectionState.connected => DeviceBleConnectionStatus.connected,
+    };
+    _setDeviceBleStatus(
+      doorDeviceId,
+      status,
+      nativeDeviceId: event.deviceId,
+      clearNativeDeviceId: event.state == BleConnectionState.disconnected,
+    );
+  }
+
+  void _onBleNotification(BleNotification notification) {
+    if (notification.deviceId != selectedHardwareDeviceId) {
+      return;
+    }
+    state = state.copyWith(lastSelectedBleNotification: notification);
+  }
+
+  void _onDeviceAttributeSnapshot(DeviceAttributeSnapshot snapshot) {
+    if (snapshot.deviceId != selectedHardwareDeviceId) {
+      return;
+    }
+    state = state.copyWith(lastSelectedAttributeSnapshot: snapshot);
+  }
+
+  void _setDeviceBleStatus(
+    String doorDeviceId,
+    DeviceBleConnectionStatus status, {
+    String? nativeDeviceId,
+    bool clearNativeDeviceId = false,
+    Set<String>? errors,
+  }) {
+    final statuses = Map<String, DeviceBleConnectionStatus>.from(
+      state.bleConnectionStatuses,
+    )..[doorDeviceId] = status;
+    final deviceIds = Map<String, String>.from(state.bleDeviceIds);
+    if (clearNativeDeviceId) {
+      deviceIds.remove(doorDeviceId);
+    } else if (nativeDeviceId != null) {
+      deviceIds[doorDeviceId] = nativeDeviceId;
+    }
+    state = state.copyWith(
+      bleConnectionStatuses: statuses,
+      bleDeviceIds: deviceIds,
+      bleConnectionErrors: errors,
+    );
+    _refreshSelectedBleView();
+  }
+
+  void _refreshSelectedBleView() {
+    final selectedDeviceId = state.selectedDeviceId;
+    if (selectedDeviceId == null) {
+      return;
+    }
+    final selected = state.doorDevices
+        .where((device) => device.deviceId == selectedDeviceId)
+        .firstOrNull;
+    final nativeId = state.bleDeviceIds[selectedDeviceId];
+    state = state.copyWith(
+      bleConnectionStatus:
+          state.bleConnectionStatuses[selectedDeviceId] ??
+          DeviceBleConnectionStatus.idle,
+      bleDeviceId: nativeId,
+      clearBleDeviceId: nativeId == null,
+      bleTargetName: selected?.bleName,
+      clearBleTargetName: (selected?.bleName?.trim().isEmpty ?? true),
+    );
+  }
+
+  bool _matchesConnectedDevice(
+    DoorDevice device,
+    ConnectedBleDevice connected,
+  ) {
+    final connectedId = connected.deviceId.trim().toLowerCase();
+    final ids = <String>{
+      device.bleUuid?.trim().toLowerCase() ?? '',
+      device.bleMac?.trim().toLowerCase() ?? '',
+    }..remove('');
+    return ids.contains(connectedId) ||
+        (connected.name?.trim().isNotEmpty == true &&
+            connected.name!.trim() == _targetBleName(device));
+  }
+
+  String _targetBleName(DoorDevice device) {
+    return device.bleName?.trim() ?? '';
   }
 
   bool _isCurrentBleSession(int sessionId) =>
@@ -537,9 +927,10 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
     required String deviceId,
     required DeviceCommandAction action,
   }) async {
-    if (deviceId.trim().isEmpty) {
+    final targetDeviceId = _resolveSelectedHardwareDeviceId(deviceId);
+    if (_deviceIdMissing(targetDeviceId)) {
       state = state.copyWith(
-        errorMessage: '未找到当前设备，请返回重新连接设备。',
+        errorMessage: '当前设备蓝牙未连接，无法发送控制指令。',
         clearInfoMessage: true,
       );
       return;
@@ -554,7 +945,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
     try {
       final result = await _gateway.sendDoorCommand(
         requestId: _nextRequestId(action),
-        deviceId: deviceId,
+        deviceId: targetDeviceId,
         command: action.doorCommand,
       );
       state = state.copyWith(
@@ -578,11 +969,8 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
     required String deviceId,
     required RemotePairingAction action,
   }) async {
-    if (deviceId.trim().isEmpty) {
-      state = state.copyWith(
-        errorMessage: '未找到当前设备，请返回重新连接设备。',
-        clearInfoMessage: true,
-      );
+    final targetDeviceId = _resolveSelectedHardwareDeviceId(deviceId);
+    if (_deviceIdMissing(targetDeviceId)) {
       return;
     }
 
@@ -597,7 +985,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
     try {
       final result = await _gateway.pairRemote(
         requestId: _nextRemotePairingRequestId(action),
-        deviceId: deviceId,
+        deviceId: targetDeviceId,
         action: action,
       );
       state = state.copyWith(
@@ -618,7 +1006,8 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
   }
 
   Future<void> queryRemotes({required String deviceId}) async {
-    if (_deviceIdMissing(deviceId)) {
+    final targetDeviceId = _resolveSelectedHardwareDeviceId(deviceId);
+    if (_deviceIdMissing(targetDeviceId)) {
       return;
     }
 
@@ -631,7 +1020,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
     try {
       final result = await _gateway.queryRemotes(
         requestId: _nextRemoteManagementRequestId('query'),
-        deviceId: deviceId,
+        deviceId: targetDeviceId,
       );
       state = state.copyWith(
         clearPendingRemoteManagementAction: true,
@@ -658,7 +1047,8 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
     required String deviceId,
     int? serialNumber,
   }) async {
-    if (_deviceIdMissing(deviceId)) {
+    final targetDeviceId = _resolveSelectedHardwareDeviceId(deviceId);
+    if (_deviceIdMissing(targetDeviceId)) {
       return;
     }
 
@@ -676,7 +1066,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
     try {
       final result = await _gateway.deleteRemote(
         requestId: _nextRemoteManagementRequestId('delete'),
-        deviceId: deviceId,
+        deviceId: targetDeviceId,
         serialNumber: serialNumber,
       );
       final nextRemotes = result.successful
@@ -715,7 +1105,8 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
     required int serialNumber,
     required String name,
   }) async {
-    if (_deviceIdMissing(deviceId)) {
+    final targetDeviceId = _resolveSelectedHardwareDeviceId(deviceId);
+    if (_deviceIdMissing(targetDeviceId)) {
       return;
     }
 
@@ -737,7 +1128,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
     try {
       final result = await _gateway.renameRemote(
         requestId: _nextRemoteManagementRequestId('rename'),
-        deviceId: deviceId,
+        deviceId: targetDeviceId,
         serialNumber: serialNumber,
         name: trimmedName,
       );
@@ -824,6 +1215,18 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
         .padLeft(8, '0')
         .toUpperCase();
     return 'remote_pairing_${result.status.name}_0x$reason';
+  }
+
+  String _resolveSelectedHardwareDeviceId(String fallbackDeviceId) {
+    final selectedDeviceId = state.selectedDeviceId;
+    if (selectedDeviceId == null) {
+      return fallbackDeviceId.trim();
+    }
+    if (state.bleConnectionStatuses[selectedDeviceId] !=
+        DeviceBleConnectionStatus.connected) {
+      return '';
+    }
+    return state.bleDeviceIds[selectedDeviceId]?.trim() ?? '';
   }
 
   bool _deviceIdMissing(String deviceId) {

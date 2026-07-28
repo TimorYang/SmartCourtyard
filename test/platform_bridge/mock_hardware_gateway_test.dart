@@ -24,7 +24,10 @@ void main() {
       ),
     );
 
-    await gateway.startBleScan(requestId: 'scan-1');
+    await gateway.startBleScan(
+      requestId: 'scan-1',
+      filter: const BleScanFilter(exactName: 'opener_MOCK-SN-001'),
+    );
 
     await scanEvent;
   });

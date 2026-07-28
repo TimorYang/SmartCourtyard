@@ -112,6 +112,18 @@ class BleConnectionEventDto {
   final String? nativeCode;
 }
 
+class ConnectedBleDeviceDto {
+  ConnectedBleDeviceDto({
+    required this.deviceId,
+    this.name,
+    required this.state,
+  });
+
+  final String deviceId;
+  final String? name;
+  final BleConnectionStateDto state;
+}
+
 class BleAuthenticationResultDto {
   BleAuthenticationResultDto({
     required this.requestId,
@@ -444,6 +456,12 @@ abstract class HardwareHostApi {
   void startBleScan(String requestId, BleScanFilterDto filter);
 
   void stopBleScan(String requestId);
+
+  @async
+  List<ConnectedBleDeviceDto> getConnectedBleDevices(String requestId);
+
+  @async
+  List<BleConnectionEventDto> disconnectAllManagedBleDevices(String requestId);
 
   @async
   BleConnectionEventDto connectBleDevice(String requestId, String deviceId);

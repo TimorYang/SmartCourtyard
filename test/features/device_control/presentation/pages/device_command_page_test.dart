@@ -436,6 +436,18 @@ void main() {
 
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('cleans all managed BLE connections when page is removed', (
+    tester,
+  ) async {
+    final gateway = _RecordingHardwareGateway();
+
+    await _pumpDevicePage(tester, gateway);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+
+    expect(gateway.disconnectAllCount, greaterThanOrEqualTo(1));
+  });
 }
 
 Widget _buildPage(
@@ -571,6 +583,15 @@ class _RecordingHardwareGateway extends MockHardwareGateway {
   final List<String> deviceIds = <String>[];
   int queryCount = 0;
   final List<String> authenticatedDeviceIds = <String>[];
+  int disconnectAllCount = 0;
+
+  @override
+  Future<List<BleConnectionEvent>> disconnectAllManagedBleDevices({
+    required String requestId,
+  }) async {
+    disconnectAllCount += 1;
+    return super.disconnectAllManagedBleDevices(requestId: requestId);
+  }
 
   @override
   Future<BleAuthenticationResult> authenticateBleDevice({

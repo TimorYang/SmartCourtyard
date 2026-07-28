@@ -114,6 +114,28 @@ class PigeonHardwareGateway implements HardwareGateway {
   }
 
   @override
+  Future<List<ConnectedBleDevice>> getConnectedBleDevices({
+    required String requestId,
+  }) async {
+    final dtos = await _mapPigeonCall(
+      () => _hostApi.getConnectedBleDevices(requestId),
+      requestId: requestId,
+    );
+    return dtos.map((dto) => dto.toModel()).toList(growable: false);
+  }
+
+  @override
+  Future<List<BleConnectionEvent>> disconnectAllManagedBleDevices({
+    required String requestId,
+  }) async {
+    final dtos = await _mapPigeonCall(
+      () => _hostApi.disconnectAllManagedBleDevices(requestId),
+      requestId: requestId,
+    );
+    return dtos.map((dto) => dto.toModel()).toList(growable: false);
+  }
+
+  @override
   Future<BleConnectionEvent> connectBleDevice({
     required String requestId,
     required String deviceId,
@@ -894,6 +916,16 @@ extension _BleDiagnosticEventDtoMapper on pigeon.BleDiagnosticEventDto {
       packet: packet,
       elapsedMillis: elapsedMillis,
       result: result,
+    );
+  }
+}
+
+extension _ConnectedBleDeviceDtoMapper on pigeon.ConnectedBleDeviceDto {
+  ConnectedBleDevice toModel() {
+    return ConnectedBleDevice(
+      deviceId: deviceId,
+      name: name,
+      state: state.toModel(),
     );
   }
 }

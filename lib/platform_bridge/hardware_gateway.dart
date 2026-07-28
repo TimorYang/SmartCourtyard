@@ -38,6 +38,14 @@ abstract interface class HardwareGateway {
 
   Future<void> stopBleScan({required String requestId});
 
+  Future<List<ConnectedBleDevice>> getConnectedBleDevices({
+    required String requestId,
+  });
+
+  Future<List<BleConnectionEvent>> disconnectAllManagedBleDevices({
+    required String requestId,
+  });
+
   Future<BleConnectionEvent> connectBleDevice({
     required String requestId,
     required String deviceId,

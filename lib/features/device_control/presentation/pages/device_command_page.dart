@@ -127,14 +127,19 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
   }
 
   void _loadDoorDetail() {
-    _controller.loadDoorDetail(doorId: widget.doorId);
+    _controller.loadDoorDetail(
+      doorId: widget.doorId,
+      preferredDeviceId: widget.deviceId,
+    );
   }
 
   String _hardwareDeviceId(DeviceCommandState commandState) {
-    if (commandState.bleConnectionStatus ==
-            DeviceBleConnectionStatus.connected &&
-        (commandState.bleDeviceId?.trim().isNotEmpty ?? false)) {
-      return commandState.bleDeviceId!.trim();
+    final selectedDeviceId = commandState.selectedDeviceId;
+    if (selectedDeviceId != null) {
+      final nativeId = commandState.bleDeviceIds[selectedDeviceId]?.trim();
+      if (nativeId?.isNotEmpty == true) {
+        return nativeId!;
+      }
     }
     final detailDeviceId = commandState.doorDetail?.name ?? '';
     if (detailDeviceId.trim().isNotEmpty) {
@@ -147,6 +152,14 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
   }
 
   DoorDevice? _selectedDoorDevice(DeviceCommandState commandState) {
+    final selectedDeviceId = commandState.selectedDeviceId;
+    if (selectedDeviceId != null) {
+      for (final device in commandState.doorDevices) {
+        if (device.deviceId == selectedDeviceId) {
+          return device;
+        }
+      }
+    }
     final candidates = <String>{
       commandState.bleDeviceId?.trim() ?? '',
       commandState.bleTargetName?.trim() ?? '',
@@ -255,14 +268,9 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
             ),
             _DeviceConnectionStrip(
               devices: commandState.doorDevices,
-              connectedBleName:
-                  commandState.bleConnectionStatus ==
-                      DeviceBleConnectionStatus.connected
-                  ? commandState.bleTargetName
-                  : null,
-              onDeviceTap: (device) => unawaited(
-                controller.connectDoorDevice(bleName: device.bleName ?? ''),
-              ),
+              connectionStatuses: commandState.bleConnectionStatuses,
+              selectedDeviceId: commandState.selectedDeviceId,
+              onDeviceTap: (device) => controller.selectDevice(device.deviceId),
             ),
             const SizedBox(height: 12),
             Expanded(
@@ -414,12 +422,14 @@ abstract final class _DeviceCommandAssetPaths {
 class _DeviceConnectionStrip extends StatelessWidget {
   const _DeviceConnectionStrip({
     required this.devices,
-    required this.connectedBleName,
+    required this.connectionStatuses,
+    required this.selectedDeviceId,
     required this.onDeviceTap,
   });
 
   final List<DoorDevice> devices;
-  final String? connectedBleName;
+  final Map<String, DeviceBleConnectionStatus> connectionStatuses;
+  final String? selectedDeviceId;
   final ValueChanged<DoorDevice> onDeviceTap;
 
   DoorDevice? _deviceFor(String deviceType) {
@@ -470,6 +480,11 @@ class _DeviceConnectionStrip extends StatelessWidget {
   Widget _group(String type, String activeAsset, String inactiveAsset) {
     final device = _deviceFor(type);
     final isActive = device != null;
+    final isSelected = device?.deviceId == selectedDeviceId;
+    final isBleConnected =
+        device != null &&
+        connectionStatuses[device.deviceId] ==
+            DeviceBleConnectionStatus.connected;
     return Expanded(
       child: _ConnectionGroup(
         key: ValueKey<String>('connection-device-$type'),
@@ -477,18 +492,10 @@ class _DeviceConnectionStrip extends StatelessWidget {
         activeDeviceIconAsset: activeAsset,
         inactiveDeviceIconAsset: inactiveAsset,
         showBluetooth: type != 'video',
-        bluetoothActive: device != null && device.bleName == connectedBleName,
+        bluetoothActive: isBleConnected,
         wifiActive: device?.isWifiConnected ?? false,
-        hasConnectionBorder:
-            type != 'video' &&
-            device != null &&
-            device.bleName == connectedBleName,
-        onTap:
-            type != 'video' &&
-                isActive &&
-                (device.bleName?.trim().isNotEmpty ?? false)
-            ? () => onDeviceTap(device)
-            : null,
+        hasConnectionBorder: isSelected,
+        onTap: isActive ? () => onDeviceTap(device) : null,
       ),
     );
   }

@@ -35,6 +35,8 @@ class MockHardwareGateway implements HardwareGateway {
   };
   bool flutterConsoleLoggingEnabled = false;
   bool nativeConsoleLoggingEnabled = false;
+  final Map<String, ConnectedBleDevice> connectedBleDevices =
+      <String, ConnectedBleDevice>{};
 
   @override
   Stream<BleDevice> get bleScanResults => _scanController.stream;
@@ -103,22 +105,60 @@ class MockHardwareGateway implements HardwareGateway {
     required String requestId,
     BleScanFilter filter = const BleScanFilter(),
   }) async {
-    final device = BleDevice(
-      requestId: requestId,
-      scanSessionId: '$requestId-mock-session',
-      id: 'mock-ble-device',
-      name: filter.exactName ?? 'opener_MOCK-SN-001',
-      sn: filter.exactName ?? 'opener_MOCK-SN-001',
-      rssi: -52,
-      seenAtMillis: DateTime.now().millisecondsSinceEpoch,
-      advertisementServiceUuids: filter.serviceUuids,
-      manufacturerData: Uint8List.fromList(<int>[0x46, 0x4c, 0x49, 0x4e, 0x58]),
-    );
-    _scanController.add(device);
+    final names = filter.exactName == null
+        ? const <String>['Garage door', 'Test door', 'opener_MOCK-SN-001']
+        : <String>[filter.exactName!];
+    for (var index = 0; index < names.length; index += 1) {
+      final name = names[index];
+      _scanController.add(
+        BleDevice(
+          requestId: requestId,
+          scanSessionId: '$requestId-mock-session',
+          id: index == 0 ? 'mock-ble-device' : 'mock-ble-device-$index',
+          name: name,
+          sn: name,
+          rssi: -52 - index,
+          seenAtMillis: DateTime.now().millisecondsSinceEpoch,
+          advertisementServiceUuids: filter.serviceUuids,
+          manufacturerData: Uint8List.fromList(<int>[
+            0x46,
+            0x4c,
+            0x49,
+            0x4e,
+            0x58,
+          ]),
+        ),
+      );
+    }
   }
 
   @override
   Future<void> stopBleScan({required String requestId}) async {}
+
+  @override
+  Future<List<ConnectedBleDevice>> getConnectedBleDevices({
+    required String requestId,
+  }) async => connectedBleDevices.values.toList(growable: false);
+
+  @override
+  Future<List<BleConnectionEvent>> disconnectAllManagedBleDevices({
+    required String requestId,
+  }) async {
+    final events = connectedBleDevices.values
+        .map(
+          (device) => BleConnectionEvent(
+            requestId: requestId,
+            deviceId: device.deviceId,
+            state: BleConnectionState.disconnected,
+          ),
+        )
+        .toList(growable: false);
+    connectedBleDevices.clear();
+    for (final event in events) {
+      _connectionController.add(event);
+    }
+    return events;
+  }
 
   @override
   Future<BleConnectionEvent> connectBleDevice({
@@ -138,6 +178,10 @@ class MockHardwareGateway implements HardwareGateway {
       state: BleConnectionState.connected,
     );
     _connectionController.add(connected);
+    connectedBleDevices[deviceId] = ConnectedBleDevice(
+      deviceId: deviceId,
+      state: BleConnectionState.connected,
+    );
     return connected;
   }
 
@@ -205,6 +249,7 @@ class MockHardwareGateway implements HardwareGateway {
       state: BleConnectionState.disconnected,
     );
     _connectionController.add(event);
+    connectedBleDevices.remove(deviceId);
     return event;
   }
 

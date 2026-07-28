@@ -35,6 +35,7 @@ import com.flinx.flinx.flinxhardware.bridge.BleServicesDto
 import com.flinx.flinx.flinxhardware.bridge.BleWriteResultDto
 import com.flinx.flinx.flinxhardware.bridge.BleWriteTypeDto
 import com.flinx.flinx.flinxhardware.bridge.CommandResultDto
+import com.flinx.flinx.flinxhardware.bridge.ConnectedBleDeviceDto
 import com.flinx.flinx.flinxhardware.bridge.FlutterError
 import com.flinx.flinx.flinxhardware.bridge.WifiProvisionResultDto
 import com.flinx.flinx.flinxhardware.bridge.WifiScanResultDto
@@ -86,6 +87,9 @@ class BleManager(
   private var noResultLogRunnable: Runnable? = null
 
   private val gattMap = ConcurrentHashMap<String, BluetoothGatt>()
+  private val connectionStatesById =
+    ConcurrentHashMap<String, BleConnectionStateDto>()
+  private val deviceNamesById = ConcurrentHashMap<String, String>()
   private val connectCallbacks =
     ConcurrentHashMap<String, (Result<BleConnectionEventDto>) -> Unit>()
   private val disconnectCallbacks =
@@ -200,6 +204,7 @@ class BleManager(
     val device = runCatching { bluetoothAdapter.getRemoteDevice(deviceId) }.getOrNull()
       ?: throw FlutterError("peripheral_unavailable", "BLE device not found.")
     gattMap.remove(deviceId)?.close()
+    connectionStatesById.remove(deviceId)
     aesKeysByDevice.remove(deviceId)
     aesKeyVersionsByDevice.remove(deviceId)
     explicitDisconnects.remove(deviceId)
@@ -224,6 +229,65 @@ class BleManager(
     )
   }
 
+  @SuppressLint("MissingPermission")
+  fun connectedManagedDevices(): List<ConnectedBleDeviceDto> {
+    return gattMap.mapNotNull { (deviceId, gatt) ->
+      val name = deviceNamesById[deviceId] ?: gatt.device.name
+      val state = connectionStatesById[deviceId]
+      if (!isManagedDeviceName(name) || state == null) {
+        null
+      } else {
+        ConnectedBleDeviceDto(
+          deviceId = deviceId,
+          name = name,
+          state = state,
+        )
+      }
+    }
+  }
+
+  @SuppressLint("MissingPermission")
+  fun disconnectAllManagedDevices(
+    requestId: String,
+    onConnectionChanged: (BleConnectionEventDto) -> Unit,
+    callback: (Result<List<BleConnectionEventDto>>) -> Unit,
+  ) {
+    stopScan("$requestId-scan-stop")
+    val adapter = context.bluetoothAdapterOrNull()
+    val candidateIds = buildSet {
+      addAll(gattMap.keys)
+      addAll(connectionStatesById.keys)
+      addAll(reconnectRunnables.keys)
+      addAll(connectCallbacks.keys)
+    }
+    val deviceIds = candidateIds.filter { deviceId ->
+      val name = deviceNamesById[deviceId]
+        ?: gattMap[deviceId]?.device?.name
+        ?: runCatching { adapter?.getRemoteDevice(deviceId)?.name }.getOrNull()
+      isManagedDeviceName(name)
+    }
+    if (deviceIds.isEmpty()) {
+      callback(Result.success(emptyList()))
+      return
+    }
+    val results = java.util.Collections.synchronizedList(
+      mutableListOf<BleConnectionEventDto>(),
+    )
+    val remaining = java.util.concurrent.atomic.AtomicInteger(deviceIds.size)
+    deviceIds.forEach { deviceId ->
+      disconnectDevice(
+        requestId = "$requestId-$deviceId",
+        deviceId = deviceId,
+        onConnectionChanged = onConnectionChanged,
+      ) { result ->
+        result.getOrNull()?.let(results::add)
+        if (remaining.decrementAndGet() == 0) {
+          callback(Result.success(results.toList()))
+        }
+      }
+    }
+  }
+
   /** 断开 BLE 设备连接，并在断开完成时回调结果。 */
   @SuppressLint("MissingPermission")
   fun disconnectDevice(
@@ -237,6 +301,7 @@ class BleManager(
     cancelMtuFallbackDiscovery(deviceId)
     val gatt = gattMap[deviceId]
       ?: run {
+        connectionStatesById.remove(deviceId)
         requestIdsByDevice.remove(deviceId)
         aesKeysByDevice.remove(deviceId)
         aesKeyVersionsByDevice.remove(deviceId)
@@ -259,6 +324,7 @@ class BleManager(
     removeAuthSession(deviceId)
     removePendingAuthDiscovery(deviceId)
     Log.d(TAG, "主动断开设备 requestId=$requestId deviceId=$deviceId")
+    connectionStatesById.remove(deviceId)
     gatt.disconnect()
     onConnectionChanged(
       BleConnectionEventDto(
@@ -870,12 +936,18 @@ class BleManager(
       TAG,
       "发起连接 requestId=$requestId deviceId=${device.address} name=${device.name ?: ""}$reconnectSuffix",
     )
-    val gatt = device.connectGatt(
-      context,
-      false,
-      createGattCallback(device, onConnectionChanged),
-      BluetoothDevice.TRANSPORT_LE,
-    )
+    connectionStatesById[device.address] = BleConnectionStateDto.CONNECTING
+    val gatt = try {
+      device.connectGatt(
+        context,
+        false,
+        createGattCallback(device, onConnectionChanged),
+        BluetoothDevice.TRANSPORT_LE,
+      )
+    } catch (error: Throwable) {
+      connectionStatesById.remove(device.address)
+      throw error
+    }
     gattMap[device.address] = gatt
   }
 
@@ -961,6 +1033,7 @@ class BleManager(
           BluetoothProfile.STATE_CONNECTED -> {
             explicitDisconnects.remove(deviceId)
             cancelPendingReconnect(deviceId, resetAttempts = true)
+            connectionStatesById[deviceId] = BleConnectionStateDto.CONNECTED
             val event = BleConnectionEventDto(
               requestId = requestId,
               deviceId = deviceId,
@@ -981,6 +1054,7 @@ class BleManager(
           BluetoothProfile.STATE_DISCONNECTED -> {
             gatt.close()
             gattMap.remove(deviceId)
+            connectionStatesById.remove(deviceId)
             cancelMtuFallbackDiscovery(deviceId)
             serviceDiscoveryInProgress.remove(deviceId)
             discoverServicesCallbacks.remove(deviceId)
@@ -2416,6 +2490,7 @@ class BleManager(
       manufacturerData = flattenManufacturerData(result),
       seenAtMillis = System.currentTimeMillis(),
     )
+    deviceNamesById[device.id] = deviceName
     Log.d(
       TAG,
       "蓝牙扫描结果 requestId=$requestId deviceId=${device.id} name=${device.name} rssi=${device.rssi} serviceUuids=${device.advertisementServiceUuids}",
@@ -2424,9 +2499,13 @@ class BleManager(
   }
 
   private fun parseSmartOpenerSn(name: String?): String? {
-    val prefixes = listOf("Noru_", "opener_", "Evo_", "Fbox_")
-    if (name == null || prefixes.none { name.startsWith(it) }) return null
+    if (!isManagedDeviceName(name)) return null
     return name.trim().takeIf { it.isNotEmpty() }
+  }
+
+  private fun isManagedDeviceName(name: String?): Boolean {
+    val prefixes = listOf("Noru_", "opener_", "Evo_", "Fbox_")
+    return name != null && prefixes.any { name.startsWith(it) }
   }
 
   private fun buildScanFilters(filter: BleScanFilterDto): List<ScanFilter> {
