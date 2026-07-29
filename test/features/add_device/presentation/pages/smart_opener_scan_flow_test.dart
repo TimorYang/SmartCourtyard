@@ -6,6 +6,7 @@ import 'package:flinx/features/add_device/domain/entities/onboarded_force_door.d
 import 'package:flinx/features/add_device/domain/entities/onboarding_device_key.dart';
 import 'package:flinx/features/add_device/domain/repositories/add_device_onboarding_repository.dart';
 import 'package:flinx/features/add_device/presentation/pages/add_device_page.dart';
+import 'package:flinx/features/add_device/presentation/pages/add_new_doors_page.dart';
 import 'package:flinx/features/add_device/presentation/pages/smart_opener_ble_scan_page.dart';
 import 'package:flinx/features/add_device/presentation/pages/smart_opener_choose_wifi_page.dart';
 import 'package:flinx/features/add_device/presentation/pages/smart_opener_connecting_page.dart';
@@ -14,6 +15,7 @@ import 'package:flinx/features/add_device/presentation/pages/smart_opener_device
 import 'package:flinx/features/add_device/presentation/pages/smart_opener_qr_scan_page.dart';
 import 'package:flinx/features/add_device/presentation/pages/smart_opener_scan_guide_page.dart';
 import 'package:flinx/features/add_device/presentation/pages/smart_opener_scan_results_page.dart';
+import 'package:flinx/features/device_control/presentation/pages/already_added_devices_page.dart';
 import 'package:flinx/features/device_control/presentation/pages/device_command_page.dart';
 import 'package:flinx/features/home/application/providers.dart';
 import 'package:flinx/features/home/domain/entities/home_scene.dart';
@@ -314,9 +316,11 @@ void main() {
     expect(find.text('SCAN RESULTS'), findsOneWidget);
   });
 
-  testWidgets(
-    'configure success opens success page and Try it opens bound door',
-    (tester) async {
+  for (final useSystemBack in [false, true]) {
+    testWidgets('Try it removes onboarding routes and '
+        '${useSystemBack ? 'system' : 'app bar'} back returns home', (
+      tester,
+    ) async {
       var homeDeviceRequests = 0;
       final container = ProviderContainer(
         overrides: [
@@ -336,11 +340,32 @@ void main() {
       await container.read(homeDevicesProvider.future);
       expect(homeDeviceRequests, 1);
 
-      await _openChooseWifi(
+      await _pumpScanFlowTestApp(
         tester,
+        HomePage.routePath,
         scanDuration: scanDuration,
         container: container,
       );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('New door'));
+      await tester.pumpAndSettle();
+      expect(find.byType(AddNewDoorsPage), findsOneWidget);
+
+      await tester.tap(find.text('Garage door'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Smart Opener (Built-in Wi-Fi)'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Scan Bluetooth devices'));
+      await tester.pump();
+      await tester.pump(scanDuration);
+      await tester.pump();
+      expect(find.text('SCAN RESULTS'), findsOneWidget);
+
+      await _tapAddDevice(tester);
+      await tester.pump();
+      await tester.pumpAndSettle();
+      expect(find.text('CHOOSE WIFI'), findsOneWidget);
 
       await tester.tap(find.text('FLINX Office'));
       await tester.pumpAndSettle();
@@ -352,17 +377,77 @@ void main() {
       expect(find.text('Connection successful'), findsOneWidget);
       await container.read(homeDevicesProvider.future);
       expect(homeDeviceRequests, 2);
+      final selectedDeviceId = container
+          .read(addDeviceControllerProvider)
+          .selectedDevice!
+          .id;
       await tester.tap(find.widgetWithText(FilledButton, 'Try it'));
       await tester.pumpAndSettle();
       expect(
-        find.text('Device command door=1 device=mock-ble-device'),
+        find.text('Device command door=1 device=$selectedDeviceId'),
         findsOneWidget,
       );
       expect(find.byType(BackButtonIcon), findsOneWidget);
 
-      await tester.binding.handlePopRoute();
+      if (useSystemBack) {
+        await tester.binding.handlePopRoute();
+      } else {
+        await tester.tap(find.byType(BackButtonIcon));
+      }
       await tester.pumpAndSettle();
+      expect(find.byType(HomePage), findsOneWidget);
+      expect(find.byType(AddNewDoorsPage), findsNothing);
+      expect(find.byType(SmartOpenerConnectionSuccessPage), findsNothing);
+    });
+  }
+
+  testWidgets(
+    'child device flow removes already-added routes and returns to command',
+    (tester) async {
+      await _pumpScanFlowTestApp(
+        tester,
+        '${DeviceCommandPage.routePath}?doorId=1&deviceId=parent-device',
+        scanDuration: scanDuration,
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(
+        find.byKey(const ValueKey<String>('open-already-added-test-action')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const ValueKey<String>('start-child-device-test-action')),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Smart Opener (Built-in Wi-Fi)'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Scan Bluetooth devices'));
+      await tester.pump();
+      await tester.pump(scanDuration);
+      await tester.pump();
+
+      await _tapAddDevice(tester);
+      await tester.pump();
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('FLINX Office'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'password123');
+      await _scrollToAction(tester, 'NEXT');
+      await _tapAction(tester, 'NEXT');
+      await tester.pumpAndSettle();
+
       expect(find.text('Connection successful'), findsOneWidget);
+      await tester.tap(find.widgetWithText(FilledButton, 'Try it'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Device command door=1 device=parent-device'),
+        findsOneWidget,
+      );
+      expect(find.byType(BackButtonIcon), findsNothing);
+      expect(find.byType(AlreadyAddedDevicesPage), findsNothing);
+      expect(find.byType(SmartOpenerConnectionSuccessPage), findsNothing);
     },
   );
 
@@ -528,10 +613,17 @@ Widget _scanFlowTestApp(
     routes: [
       GoRoute(
         path: HomePage.routePath,
+        name: HomePage.routeName,
         builder: (context, state) => const HomePage(),
       ),
       GoRoute(
+        path: AddNewDoorsPage.routePath,
+        name: AddNewDoorsPage.routeName,
+        builder: (context, state) => const AddNewDoorsPage(),
+      ),
+      GoRoute(
         path: AddDevicePage.routePath,
+        name: AddDevicePage.routeName,
         builder: (context, state) =>
             const AddDevicePage(doorType: DoorType.garage, doorId: '1'),
       ),
@@ -575,11 +667,45 @@ Widget _scanFlowTestApp(
       ),
       GoRoute(
         path: DeviceCommandPage.routePath,
+        name: DeviceCommandPage.routeName,
         builder: (context, state) => Scaffold(
           appBar: const FlinxNavigationBar(title: 'Device command'),
-          body: Text(
-            'Device command door=${state.uri.queryParameters['doorId']} '
-            'device=${state.uri.queryParameters['deviceId']}',
+          body: Column(
+            children: [
+              Text(
+                'Device command door=${state.uri.queryParameters['doorId']} '
+                'device=${state.uri.queryParameters['deviceId']}',
+              ),
+              FilledButton(
+                key: const ValueKey<String>('open-already-added-test-action'),
+                onPressed: () => context.pushNamed(
+                  AlreadyAddedDevicesPage.routeName,
+                  queryParameters: {
+                    'doorId': state.uri.queryParameters['doorId'] ?? '',
+                    'deviceId': state.uri.queryParameters['deviceId'] ?? '',
+                  },
+                ),
+                child: const Text('Open already added'),
+              ),
+            ],
+          ),
+        ),
+      ),
+      GoRoute(
+        path: AlreadyAddedDevicesPage.routePath,
+        name: AlreadyAddedDevicesPage.routeName,
+        builder: (context, state) => Scaffold(
+          appBar: const FlinxNavigationBar(title: 'Already added'),
+          body: FilledButton(
+            key: const ValueKey<String>('start-child-device-test-action'),
+            onPressed: () => context.pushNamed(
+              AddDevicePage.routeName,
+              queryParameters: {
+                AddDevicePage.doorIdQueryParameter:
+                    state.uri.queryParameters['doorId'] ?? '',
+              },
+            ),
+            child: const Text('Add child device'),
           ),
         ),
       ),
