@@ -34,11 +34,14 @@ class LoginFormState {
   }
 }
 
-const defaultLoginAccount = '19901462575@163.com';
-const defaultLoginPassword = '12345678';
+// const defaultLoginAccount = '19901462575@163.com';
+// const defaultLoginPassword = '12345678';
 
 // const defaultLoginAccount = '1067648090@qq.com';
 // const defaultLoginPassword = '123456';
+
+const defaultLoginAccount = '346054814@qq.com';
+const defaultLoginPassword = 'qaz1234WSX';
 
 class LoginFormController extends Notifier<LoginFormState> {
   @override

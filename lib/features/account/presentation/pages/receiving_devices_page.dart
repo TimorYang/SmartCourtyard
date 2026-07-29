@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../platform_bridge/hardware_models.dart';
-import '../../../../shared/design_system/door_type_visuals.dart';
+import '../../../../shared/design_system/door_type_option.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
@@ -141,7 +141,7 @@ class _ReceivingDeviceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context);
-    final visual = DoorTypeVisuals.forType(DoorType.garage);
+    final visual = DoorTypeOption.fromDoorType(DoorType.garage);
 
     return Container(
       height: AppSpacingTokens.receivingDevicesCardHeight,

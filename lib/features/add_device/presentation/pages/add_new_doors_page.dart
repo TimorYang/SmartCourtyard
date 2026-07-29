@@ -3,12 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
-import '../../../../platform_bridge/hardware_models.dart';
 import '../../../../shared/l10n/app_localizations.dart';
-import '../../../../shared/design_system/door_type_visuals.dart';
+import '../../../../shared/design_system/door_type_option.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
-import '../../application/providers.dart';
-import '../widgets/add_door_name_dialog.dart';
 import 'add_device_page.dart';
 
 class AddNewDoorsPage extends ConsumerWidget {
@@ -21,15 +18,7 @@ class AddNewDoorsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final textTheme = Theme.of(context).textTheme;
-    final doorTypes = DoorType.values
-        .map(
-          (type) => _DoorTypeOption(
-            type: type,
-            label: _labelForType(l10n, type),
-            visual: DoorTypeVisuals.forType(type),
-          ),
-        )
-        .toList(growable: false);
+    final doorTypes = DoorTypeOption.values;
 
     return Scaffold(
       backgroundColor: AppColors.backgroundPrimary,
@@ -57,7 +46,9 @@ class AddNewDoorsPage extends ConsumerWidget {
               onPressed: () => context.pushNamed(
                 AddDevicePage.routeName,
                 queryParameters: {
-                  AddDevicePage.doorTypeQueryParameter: option.type.wireValue
+                  AddDevicePage.doorTypeQueryParameter: option
+                      .doorType
+                      .wireValue
                       .toString(),
                 },
               ),
@@ -68,34 +59,12 @@ class AddNewDoorsPage extends ConsumerWidget {
       ),
     );
   }
-
-  String _labelForType(AppLocalizations l10n, DoorType type) {
-    return switch (type) {
-      DoorType.garage => l10n.addNewDoorsGarageDoor,
-      DoorType.roller => l10n.addNewDoorsRollerDoor,
-      DoorType.industrial => l10n.addNewDoorsIndustrialDoor,
-      DoorType.swing => l10n.addNewDoorsSwingGate,
-      DoorType.sliding => l10n.addNewDoorsSlidingGate,
-    };
-  }
-}
-
-class _DoorTypeOption {
-  const _DoorTypeOption({
-    required this.type,
-    required this.label,
-    required this.visual,
-  });
-
-  final DoorType type;
-  final String label;
-  final DoorTypeVisual visual;
 }
 
 class _DoorTypeCard extends StatelessWidget {
   const _DoorTypeCard({required this.option, required this.onPressed});
 
-  final _DoorTypeOption option;
+  final DoorTypeOption option;
   final VoidCallback onPressed;
 
   @override
@@ -112,13 +81,13 @@ class _DoorTypeCard extends StatelessWidget {
             children: [
               const SizedBox(width: 30),
               _DoorTypeIcon(
-                assetPath: option.visual.assetPath,
-                fallbackIcon: option.visual.fallbackIcon,
+                assetPath: option.assetPath,
+                fallbackIcon: option.fallbackIcon,
               ),
               const SizedBox(width: 34),
               Expanded(
                 child: Text(
-                  option.label,
+                  option.localizedName(AppLocalizations.of(context)),
                   style: AppTextTokens.addNewDoorsCardTitle(
                     Theme.of(context).textTheme,
                   ),

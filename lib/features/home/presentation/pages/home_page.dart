@@ -12,7 +12,7 @@ import '../../../../features/account/application/providers.dart';
 import '../../../../features/account/domain/entities/account_profile.dart';
 import '../../../../features/account/presentation/pages/account_profile_page.dart';
 import '../../../../shared/l10n/app_localizations.dart';
-import '../../../../shared/design_system/door_type_visuals.dart';
+import '../../../../shared/design_system/door_type_option.dart';
 import '../../../add_device/presentation/pages/add_new_doors_page.dart';
 import '../../../add_device/application/providers.dart';
 import '../../../../platform_bridge/hardware_models.dart';
@@ -1085,7 +1085,7 @@ class _DeviceDoorIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final visual = DoorTypeVisuals.forType(device.doorType);
+    final visual = DoorTypeOption.fromDoorType(device.doorType);
 
     return Image.asset(
       visual.assetPath,

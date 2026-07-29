@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../platform_bridge/hardware_models.dart';
-import '../../../../shared/design_system/door_type_visuals.dart';
+import '../../../../shared/design_system/door_type_option.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
@@ -137,7 +137,7 @@ class _SharedDeviceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final visual = DoorTypeVisuals.forType(DoorType.garage);
+    final visual = DoorTypeOption.fromDoorType(DoorType.garage);
 
     return Semantics(
       button: true,
