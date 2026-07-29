@@ -22,6 +22,36 @@ class AccountController extends AsyncNotifier<AccountProfile?> {
     }
   }
 
+  Future<bool> updateNickname(String value) => _update(nickname: value.trim());
+
+  Future<bool> updateAvatar(List<int> bytes, String fileName) =>
+      _update(avatarBytes: bytes, avatarFileName: fileName);
+
+  Future<bool> _update({
+    String? nickname,
+    List<int>? avatarBytes,
+    String? avatarFileName,
+  }) async {
+    if (state.isLoading || (nickname?.isEmpty ?? false)) return false;
+    final current = state.whenOrNull(data: (value) => value);
+    if (current == null) return false;
+    state = const AsyncLoading<AccountProfile?>();
+    try {
+      await _repository.updateProfile(
+        nickname: nickname,
+        avatarBytes: avatarBytes,
+        avatarFileName: avatarFileName,
+        requestId: 'account-profile-${DateTime.now().microsecondsSinceEpoch}',
+      );
+      state = AsyncData(await _repository.readCachedProfile());
+      return true;
+    } catch (error, stackTrace) {
+      state = AsyncError(error, stackTrace);
+      state = AsyncData(current);
+      return false;
+    }
+  }
+
   void setSessionProfile(AccountProfile profile) {
     state = AsyncData(profile);
   }

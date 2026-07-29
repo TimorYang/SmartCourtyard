@@ -10,6 +10,7 @@ class FlinxNavigationBar extends StatelessWidget
     this.showBottomDivider = true, //是否展示底部分割线
     this.isTransparent = false,
     this.foregroundColor,
+    this.onBackPressed,
   });
 
   final String title;
@@ -18,6 +19,7 @@ class FlinxNavigationBar extends StatelessWidget
   final bool showBottomDivider;
   final bool isTransparent;
   final Color? foregroundColor;
+  final VoidCallback? onBackPressed;
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -38,7 +40,10 @@ class FlinxNavigationBar extends StatelessWidget
           : IconThemeData(color: foregroundColor, size: 22),
       leadingWidth: 64,
       leading: automaticallyImplyLeading && canPop
-          ? _FlinxNavigationBackButton(color: foregroundColor)
+          ? _FlinxNavigationBackButton(
+              color: foregroundColor,
+              onPressed: onBackPressed ?? () => Navigator.maybePop(context),
+            )
           : null,
       title: Text(title),
       actions: actions,
@@ -56,9 +61,10 @@ class FlinxNavigationBar extends StatelessWidget
 }
 
 class _FlinxNavigationBackButton extends StatelessWidget {
-  const _FlinxNavigationBackButton({this.color});
+  const _FlinxNavigationBackButton({this.color, required this.onPressed});
 
   final Color? color;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +76,7 @@ class _FlinxNavigationBackButton extends StatelessWidget {
           width: 24,
           height: 24,
           child: IconButton(
-            onPressed: () => Navigator.maybePop(context),
+            onPressed: onPressed,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints.tightFor(width: 24, height: 24),
             iconSize: 24,

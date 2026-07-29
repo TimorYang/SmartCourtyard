@@ -8,6 +8,14 @@ abstract class AccountRepository {
 
   Future<void> saveProfile(AccountProfile profile);
 
+  Future<void> updateProfile({
+    String? nickname,
+    int? avatarFileId,
+    required List<int>? avatarBytes,
+    String? avatarFileName,
+    required String requestId,
+  }) => throw UnimplementedError();
+
   Future<void> clearAccount();
 
   Future<void> saveTokenSet(AccountTokenSet tokenSet);

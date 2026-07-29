@@ -9,6 +9,8 @@ import '../../../core/network/providers.dart';
 import '../../../platform_bridge/providers.dart';
 import '../data/data_sources/account_local_data_source.dart';
 import '../data/data_sources/account_overview_api.dart';
+import '../data/data_sources/account_profile_api.dart';
+import '../data/data_sources/account_profile_remote_data_source.dart';
 import '../data/data_sources/account_overview_local_data_source.dart';
 import '../data/data_sources/account_overview_remote_data_source.dart';
 import '../data/data_sources/account_secure_data_source.dart';
@@ -103,6 +105,16 @@ final accountSecureDataSourceProvider = Provider<AccountSecureDataSource>((
   return InMemoryAccountSecureDataSource();
 });
 
+final accountProfileApiProvider = Provider<AccountProfileApi>(
+  (ref) => AccountProfileApi(ref.watch(dioProvider)),
+);
+final accountProfileRemoteDataSourceProvider =
+    Provider<AccountProfileRemoteDataSource>(
+      (ref) => AccountProfileRemoteDataSourceImpl(
+        api: ref.watch(accountProfileApiProvider),
+      ),
+    );
+
 final accountOverviewLocalDataSourceProvider =
     Provider<AccountOverviewLocalDataSource>((ref) {
       if (AppStoragePaths.isFlutterTest) {
@@ -168,6 +180,7 @@ final accountRepositoryProvider = Provider<AccountRepository>((ref) {
   return AccountRepositoryImpl(
     localDataSource: ref.watch(accountLocalDataSourceProvider),
     secureDataSource: ref.watch(accountSecureDataSourceProvider),
+    remoteDataSource: ref.watch(accountProfileRemoteDataSourceProvider),
   );
 });
 

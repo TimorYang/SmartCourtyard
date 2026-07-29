@@ -6,6 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
+import '../../../../core/config/app_api_configuration.dart';
+import '../../../../core/network/access_token_cache.dart';
+import '../../../../core/network/dio_factory.dart';
 import '../../../../app/router/app_route_observer.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../features/account/application/providers.dart';
@@ -484,6 +487,7 @@ class _HomeHeader extends StatelessWidget {
               _AvatarPlaceholder(
                 assetPath: HomeAssetPaths.avatarPlaceholder,
                 imageUrl: profile?.avatarUrl,
+                avatarFileId: profile?.avatarFileId,
                 size: 58,
                 tooltip: l10n.accountProfileTitle,
                 onPressed: () => context.push(AccountProfilePage.routePath),
@@ -779,6 +783,7 @@ class _AvatarPlaceholder extends StatelessWidget {
     required this.assetPath,
     required this.size,
     this.imageUrl,
+    this.avatarFileId,
     this.tooltip,
     this.onPressed,
   });
@@ -786,25 +791,37 @@ class _AvatarPlaceholder extends StatelessWidget {
   final String assetPath;
   final double size;
   final String? imageUrl;
+  final int? avatarFileId;
   final String? tooltip;
   final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
     final avatarUrl = imageUrl?.trim();
+    final attachmentUrl = avatarFileId == null || avatarFileId! <= 0
+        ? null
+        : AppApiConfiguration.fromEnvironment()
+              .resolveApiPath('attachments/$avatarFileId')
+              .toString();
+    final imageSource = avatarUrl?.isNotEmpty == true
+        ? avatarUrl
+        : attachmentUrl;
     final avatar = ClipOval(
       child: SizedBox(
         width: size,
         height: size,
-        child: avatarUrl == null || avatarUrl.isEmpty
+        child: imageSource == null || imageSource.isEmpty
             ? Image.asset(
                 assetPath,
                 fit: BoxFit.cover,
                 errorBuilder: _buildFallback,
               )
             : Image.network(
-                avatarUrl,
+                imageSource,
                 fit: BoxFit.cover,
+                headers: attachmentUrl == null || AccessTokenCache.value == null
+                    ? null
+                    : {NetworkHeaders.bladeAuth: AccessTokenCache.value!},
                 errorBuilder: _buildFallback,
               ),
       ),

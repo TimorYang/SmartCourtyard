@@ -168,8 +168,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get forgotPasswordResetDescription => '设置您的密码';
 
   @override
-  String get authPasswordRule =>
-      'Password: 8-16 chars, 1 uppercase, lowercase & number';
+  String get authPasswordRule => '密码：8 至 16 个字符，须包含大写字母、小写字母和数字';
 
   @override
   String get finishAction => '完成';
@@ -450,28 +449,28 @@ class AppLocalizationsZh extends AppLocalizations {
   String get accountProfileTitle => '账户资料';
 
   @override
-  String get accountDetailsTitle => 'ACCOUNT';
+  String get accountDetailsTitle => '账户';
 
   @override
-  String get accountDetailsHeadPortrait => 'Head portrait';
+  String get accountDetailsHeadPortrait => '头像';
 
   @override
-  String get accountDetailsAccountNumber => 'Account number';
+  String get accountDetailsAccountNumber => '账号';
 
   @override
-  String get accountDetailsFullName => 'Full name';
+  String get accountDetailsFullName => '姓名';
 
   @override
-  String get accountDetailsMailbox => 'Mailbox';
+  String get accountDetailsMailbox => '邮箱';
 
   @override
-  String get accountDetailsChangePassword => 'Change Password';
+  String get accountDetailsChangePassword => '修改密码';
 
   @override
-  String get accountDetailsForgotPassword => 'Forgot password';
+  String get accountDetailsForgotPassword => '忘记密码';
 
   @override
-  String get accountDetailsLogout => 'Log out';
+  String get accountDetailsLogout => '退出登录';
 
   @override
   String get accountDetailsFallbackNumber => '34345435@qq.com';
@@ -483,38 +482,38 @@ class AppLocalizationsZh extends AppLocalizations {
   String get accountDetailsFallbackMailbox => '123456@qq.com';
 
   @override
-  String get accountDetailsPhotoAlbumAction => 'Photo album';
+  String get accountDetailsPhotoAlbumAction => '相册';
 
   @override
-  String get accountDetailsPhotographAction => 'Photograph';
+  String get accountDetailsPhotographAction => '拍照';
 
   @override
-  String get accountDetailsCancelAction => 'Cancel';
+  String get accountDetailsCancelAction => '取消';
 
   @override
-  String get accountDetailsConfirmAction => 'confirm';
+  String get accountDetailsConfirmAction => '确认';
 
   @override
-  String get accountDetailsRenameTitle => 'Rename';
+  String get accountDetailsRenameTitle => '修改名称';
 
   @override
   String get accountDetailsNameInputPlaceholder => 'JAMES';
 
   @override
-  String get accountDetailsChangePasswordTitle => 'Change Password';
+  String get accountDetailsChangePasswordTitle => '修改密码';
 
   @override
-  String get accountDetailsNewPasswordPlaceholder => 'Enter New Password';
+  String get accountDetailsNewPasswordPlaceholder => '请输入新密码';
 
   @override
-  String get accountDetailsShowPasswordAction => 'Show password';
+  String get accountDetailsShowPasswordAction => '显示密码';
 
   @override
-  String get accountDetailsHidePasswordAction => 'Hide password';
+  String get accountDetailsHidePasswordAction => '隐藏密码';
 
   @override
   String accountDetailsAvatarOptionLabel(int index) {
-    return 'Avatar option $index';
+    return '头像选项 $index';
   }
 
   @override
@@ -784,10 +783,10 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get accountDefaultRegion => 'England';
+  String get accountDefaultRegion => '英国';
 
   @override
-  String get accountDefaultLanguage => 'English';
+  String get accountDefaultLanguage => '英语';
 
   @override
   String get accountLanguageDialogTitle => '语言';
@@ -1185,11 +1184,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get smartOpenerConnectingTip => '请尽量让手机靠近设备';
 
   @override
-  String get smartOpenerConnectionFailedMessage =>
-      'Connection failed. Please check Wi-Fi password and try again.';
+  String get smartOpenerConnectionFailedMessage => '连接失败。请检查 Wi-Fi 密码后重试。';
 
   @override
-  String get smartOpenerOkAction => 'OK';
+  String get smartOpenerOkAction => '确定';
 
   @override
   String get smartOpenerStopAdditionTitle => '停止添加设备';
@@ -1313,84 +1311,79 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sceneNameConfirmAction => '确认';
 
   @override
-  String get notificationTitle => 'Notification';
+  String get notificationTitle => '消息通知';
 
   @override
-  String get notificationAllRead => 'All read';
+  String get notificationAllRead => '全部已读';
 
   @override
-  String get notificationAllReadMessage =>
-      'All notifications have been marked as read';
+  String get notificationAllReadMessage => '所有通知已标记为已读';
 
   @override
-  String get notificationNotFound => 'Notification not found';
+  String get notificationNotFound => '未找到该通知';
 
   @override
-  String get notificationViewDetails => 'View details';
+  String get notificationViewDetails => '查看详情';
 
   @override
-  String get notificationAppointmentAfterSales =>
-      'Appointment for after-sales service';
+  String get notificationAppointmentAfterSales => '预约售后服务';
 
   @override
-  String get notificationUpgrade => 'Upgrade';
+  String get notificationUpgrade => '升级';
 
   @override
-  String get notificationAppointmentTime => 'Appointment time';
+  String get notificationAppointmentTime => '预约时间';
 
   @override
-  String get notificationUpgradeComingSoon => 'Device upgrade is coming soon';
+  String get notificationUpgradeComingSoon => '设备升级功能即将上线';
 
   @override
-  String get afterSalesDetailsTitle => 'After sales service details';
+  String get afterSalesDetailsTitle => '售后服务详情';
 
   @override
-  String get afterSalesAppointmentTitle =>
-      'Appointment for after-sales service';
+  String get afterSalesAppointmentTitle => '预约售后服务';
 
   @override
-  String get afterSalesProblemDescription => 'Problem description';
+  String get afterSalesProblemDescription => '问题描述';
 
   @override
-  String get afterSalesAppointmentTime => 'appointment time';
+  String get afterSalesAppointmentTime => '预约时间';
 
   @override
-  String get afterSalesRemark => 'Remark';
+  String get afterSalesRemark => '备注';
 
   @override
-  String get afterSalesPicture => 'Picture';
+  String get afterSalesPicture => '图片';
 
   @override
-  String get afterSalesInstallerConfirm => 'Installation personnel confirm';
+  String get afterSalesInstallerConfirm => '安装人员确认';
 
   @override
-  String get afterSalesConfirmed => 'Confirmed';
+  String get afterSalesConfirmed => '已确认';
 
   @override
-  String get afterSalesFeedback => 'feedback';
+  String get afterSalesFeedback => '反馈';
 
   @override
-  String get afterSalesContactInstaller => 'Contact the installer';
+  String get afterSalesContactInstaller => '联系安装人员';
 
   @override
-  String get afterSalesFeedbackSubmitted => 'Feedback submitted';
+  String get afterSalesFeedbackSubmitted => '反馈已提交';
 
   @override
-  String get afterSalesContactComingSoon => 'Installer contact is coming soon';
+  String get afterSalesContactComingSoon => '联系安装人员功能即将上线';
 
   @override
-  String get afterSalesDescriptionHint =>
-      'Suggest including key information such as equipment model, fault symptoms, etc';
+  String get afterSalesDescriptionHint => '建议填写设备型号、故障症状等关键信息';
 
   @override
-  String get afterSalesSubmitToEngineer => 'Submit to Engineer';
+  String get afterSalesSubmitToEngineer => '提交给工程师';
 
   @override
-  String get afterSalesDescriptionRequired =>
-      'Please enter a problem description';
+  String get afterSalesDescriptionRequired => '请输入问题描述';
 
   @override
-  String get afterSalesSubmitSuccess => 'Appointment submitted successfully';
+  String get afterSalesSubmitSuccess => '预约提交成功';
 
   @override
   String get deviceSettingsTitle => '设置';

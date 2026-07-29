@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
+import '../../../../core/config/app_api_configuration.dart';
+import '../../../../core/network/access_token_cache.dart';
+import '../../../../core/network/dio_factory.dart';
 import '../../../auth/application/providers.dart';
 import '../../../auth/presentation/pages/welcome_page.dart';
+import '../../../auth/presentation/pages/forgot_password_page.dart';
 import '../../../home/application/providers.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/app_toast.dart';
@@ -59,6 +64,16 @@ class AccountDetailsPage extends ConsumerWidget {
                   }
                   context.go(WelcomePage.routePath);
                 },
+                onRename: (name) => ref
+                    .read(accountControllerProvider.notifier)
+                    .updateNickname(name),
+                onAvatar: (source) async {
+                  final image = await ImagePicker().pickImage(source: source);
+                  if (image == null) return false;
+                  return ref
+                      .read(accountControllerProvider.notifier)
+                      .updateAvatar(await image.readAsBytes(), image.name);
+                },
               ),
             ),
           );
@@ -88,11 +103,15 @@ class _AccountDetailsContent extends StatelessWidget {
     required this.profile,
     required this.maxHeight,
     required this.onLogout,
+    required this.onRename,
+    required this.onAvatar,
   });
 
   final AccountProfile? profile;
   final double maxHeight;
   final Future<void> Function() onLogout;
+  final Future<bool> Function(String) onRename;
+  final Future<bool> Function(ImageSource) onAvatar;
 
   @override
   Widget build(BuildContext context) {
@@ -130,9 +149,11 @@ class _AccountDetailsContent extends StatelessWidget {
                           label: l10n.accountDetailsHeadPortrait,
                           trailing: _AccountDetailsAvatar(
                             imageUrl: profile?.avatarUrl,
+                            avatarFileId: profile?.avatarFileId,
                           ),
                           showChevron: true,
-                          onTap: () => _showAccountAvatarSheet(context),
+                          onTap: () =>
+                              _showAccountAvatarSheet(context, onAvatar),
                         ),
                         _AccountDetailsRowData(
                           label: l10n.accountDetailsAccountNumber,
@@ -145,6 +166,7 @@ class _AccountDetailsContent extends StatelessWidget {
                           onTap: () => _showAccountRenameDialog(
                             context,
                             initialName: fullName,
+                            onConfirm: onRename,
                           ),
                         ),
                         _AccountDetailsRowData(
@@ -159,6 +181,8 @@ class _AccountDetailsContent extends StatelessWidget {
                         _AccountDetailsRowData(
                           label: l10n.accountDetailsForgotPassword,
                           showChevron: true,
+                          onTap: () =>
+                              context.push(ForgotPasswordPage.routePath),
                         ),
                       ],
                     ),
@@ -294,7 +318,10 @@ class _AccountDetailsRow extends StatelessWidget {
   }
 }
 
-Future<void> _showAccountAvatarSheet(BuildContext context) {
+Future<void> _showAccountAvatarSheet(
+  BuildContext context,
+  Future<bool> Function(ImageSource) onPick,
+) {
   return showModalBottomSheet<void>(
     context: context,
     isDismissible: true,
@@ -303,18 +330,20 @@ Future<void> _showAccountAvatarSheet(BuildContext context) {
     isScrollControlled: true,
     barrierColor: AppColors.overlaySoft,
     backgroundColor: Colors.transparent,
-    builder: (context) => const _AvatarBottomSheet(),
+    builder: (context) => _AvatarBottomSheet(onPick: onPick),
   );
 }
 
 Future<void> _showAccountRenameDialog(
   BuildContext context, {
   required String initialName,
+  required Future<bool> Function(String) onConfirm,
 }) {
   return showDialog<void>(
     context: context,
     barrierColor: AppColors.overlaySoft,
-    builder: (context) => _RenameDialog(initialName: initialName),
+    builder: (context) =>
+        _RenameDialog(initialName: initialName, onConfirm: onConfirm),
   );
 }
 
@@ -406,7 +435,8 @@ class _AccountBottomSheetFrame extends StatelessWidget {
 }
 
 class _AvatarBottomSheet extends StatefulWidget {
-  const _AvatarBottomSheet();
+  const _AvatarBottomSheet({required this.onPick});
+  final Future<bool> Function(ImageSource) onPick;
 
   @override
   State<_AvatarBottomSheet> createState() => _AvatarBottomSheetState();
@@ -452,7 +482,11 @@ class _AvatarBottomSheetState extends State<_AvatarBottomSheet> {
                 foregroundColor: AppColors.textPrimary,
                 backgroundColor: AppColors.accountDetailsSheetActionSurface,
                 textTheme: textTheme,
-                onPressed: () => Navigator.pop(context),
+                onPressed: () async {
+                  if (await widget.onPick(ImageSource.gallery) &&
+                      context.mounted)
+                    Navigator.pop(context);
+                },
               ),
               const SizedBox(height: 18),
               _AccountSheetActionButton(
@@ -460,7 +494,11 @@ class _AvatarBottomSheetState extends State<_AvatarBottomSheet> {
                 foregroundColor: AppColors.textPrimary,
                 backgroundColor: AppColors.accountDetailsSheetActionSurface,
                 textTheme: textTheme,
-                onPressed: () => Navigator.pop(context),
+                onPressed: () async {
+                  if (await widget.onPick(ImageSource.camera) &&
+                      context.mounted)
+                    Navigator.pop(context);
+                },
               ),
               const SizedBox(height: 34),
               _AccountSheetActionButton(
@@ -572,9 +610,10 @@ class _AvatarOptionFallback extends StatelessWidget {
 }
 
 class _RenameDialog extends StatefulWidget {
-  const _RenameDialog({required this.initialName});
+  const _RenameDialog({required this.initialName, required this.onConfirm});
 
   final String initialName;
+  final Future<bool> Function(String) onConfirm;
 
   @override
   State<_RenameDialog> createState() => _RenameDialogState();
@@ -623,19 +662,25 @@ class _RenameDialogState extends State<_RenameDialog> {
               hintText: l10n.accountDetailsNameInputPlaceholder,
               prefixIcon: Icons.person_outline_rounded,
               textInputAction: TextInputAction.done,
-              onSubmitted: (_) => Navigator.pop(context),
+              onSubmitted: (_) => _submit(),
             ),
             const SizedBox(height: 31),
             _AccountSheetButtonRow(
               cancelLabel: l10n.accountDetailsCancelAction,
               confirmLabel: l10n.accountDetailsConfirmAction,
               onCancel: () => Navigator.pop(context),
-              onConfirm: () => Navigator.pop(context),
+              onConfirm: _submit,
             ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _submit() async {
+    final value = _controller.text.trim();
+    if (value.isNotEmpty && await widget.onConfirm(value) && mounted)
+      Navigator.pop(context);
   }
 }
 
@@ -912,26 +957,38 @@ class _AccountSheetActionButton extends StatelessWidget {
 }
 
 class _AccountDetailsAvatar extends StatelessWidget {
-  const _AccountDetailsAvatar({this.imageUrl});
+  const _AccountDetailsAvatar({this.imageUrl, this.avatarFileId});
 
   final String? imageUrl;
+  final int? avatarFileId;
 
   @override
   Widget build(BuildContext context) {
     final avatarUrl = imageUrl?.trim();
+    final attachmentUrl = avatarFileId == null || avatarFileId! <= 0
+        ? null
+        : AppApiConfiguration.fromEnvironment()
+              .resolveApiPath('attachments/$avatarFileId')
+              .toString();
+    final imageSource = avatarUrl?.isNotEmpty == true
+        ? avatarUrl
+        : attachmentUrl;
     return SizedBox(
       width: 52,
       height: 52,
       child: ClipOval(
-        child: avatarUrl == null || avatarUrl.isEmpty
+        child: imageSource == null || imageSource.isEmpty
             ? Image.asset(
                 AccountProfileAssetPaths.avatarPlaceholder,
                 fit: BoxFit.cover,
                 errorBuilder: _buildFallback,
               )
             : Image.network(
-                avatarUrl,
+                imageSource,
                 fit: BoxFit.cover,
+                headers: attachmentUrl == null || AccessTokenCache.value == null
+                    ? null
+                    : {NetworkHeaders.bladeAuth: AccessTokenCache.value!},
                 errorBuilder: _buildFallback,
               ),
       ),

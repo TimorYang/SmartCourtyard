@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
+import '../../../../core/config/app_api_configuration.dart';
+import '../../../../core/network/access_token_cache.dart';
+import '../../../../core/network/dio_factory.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
@@ -213,9 +216,9 @@ class _AccountProfileContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final nickname = overview?.nickname.isNotEmpty == true
-        ? overview!.nickname
-        : profile?.nickname ?? l10n.accountFallbackEmail;
+    final nickname = profile?.nickname.isNotEmpty == true
+        ? profile!.nickname
+        : overview?.nickname ?? l10n.accountFallbackEmail;
     final refreshedAt = overview?.refreshedAt;
     final menuItems = [
       _AccountMenuItem(
@@ -303,6 +306,7 @@ class _AccountProfileContent extends StatelessWidget {
             children: [
               _AccountHeader(
                 nickname: nickname,
+                avatarFileId: profile?.avatarFileId,
                 refreshedAt: refreshedAt == null
                     ? l10n.accountOverviewRefreshTimeUnavailable
                     : _formatTimestamp(refreshedAt),
@@ -586,12 +590,17 @@ class _LanguageDialogButton extends StatelessWidget {
 }
 
 class _AccountHeader extends StatelessWidget {
-  const _AccountHeader({required this.nickname, required this.refreshedAt});
+  const _AccountHeader({
+    required this.nickname,
+    required this.avatarFileId,
+    required this.refreshedAt,
+  });
 
   static const _headerImageWidth = 1125.0;
   static const _headerImageHeight = 600.0;
 
   final String nickname;
+  final int? avatarFileId;
   final String refreshedAt;
 
   @override
@@ -624,6 +633,7 @@ class _AccountHeader extends StatelessWidget {
                   children: [
                     _AccountAvatar(
                       size: 66,
+                      avatarFileId: avatarFileId,
                       onTap: () =>
                           context.pushNamed(AccountDetailsPage.routeName),
                     ),
@@ -691,9 +701,10 @@ class _HeaderFallbackArt extends StatelessWidget {
 }
 
 class _AccountAvatar extends StatelessWidget {
-  const _AccountAvatar({required this.size, this.onTap});
+  const _AccountAvatar({required this.size, this.avatarFileId, this.onTap});
 
   final double size;
+  final int? avatarFileId;
   final VoidCallback? onTap;
 
   @override
@@ -716,21 +727,40 @@ class _AccountAvatar extends StatelessWidget {
             ),
           ),
           child: ClipOval(
-            child: Image.asset(
-              AccountProfileAssetPaths.avatarPlaceholder,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  color: AppColors.surfaceHomeAvatar,
-                  alignment: Alignment.center,
-                  child: Icon(
-                    Icons.person,
-                    color: AppColors.iconHomePlaceholder,
-                    size: size * 0.62,
+            child: avatarFileId == null || avatarFileId! <= 0
+                ? Image.asset(
+                    AccountProfileAssetPaths.avatarPlaceholder,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: AppColors.surfaceHomeAvatar,
+                        alignment: Alignment.center,
+                        child: Icon(
+                          Icons.person,
+                          color: AppColors.iconHomePlaceholder,
+                          size: size * 0.62,
+                        ),
+                      );
+                    },
+                  )
+                : Image.network(
+                    AppApiConfiguration.fromEnvironment()
+                        .resolveApiPath('attachments/$avatarFileId')
+                        .toString(),
+                    fit: BoxFit.cover,
+                    headers: AccessTokenCache.value == null
+                        ? null
+                        : {NetworkHeaders.bladeAuth: AccessTokenCache.value!},
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: AppColors.surfaceHomeAvatar,
+                      alignment: Alignment.center,
+                      child: Icon(
+                        Icons.person,
+                        color: AppColors.iconHomePlaceholder,
+                        size: size * 0.62,
+                      ),
+                    ),
                   ),
-                );
-              },
-            ),
           ),
         ),
       ),

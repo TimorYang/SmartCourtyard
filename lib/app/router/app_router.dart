@@ -85,12 +85,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           isAuthRoute ||
           location == AppWebViewPage.routePath ||
           location == SmartOpenerConnectionSuccessPage.routePath;
+      final isRecoveryRoute =
+          location == ForgotPasswordPage.routePath ||
+          location == ForgotPasswordCodePage.routePath ||
+          location == ForgotPasswordResetPage.routePath ||
+          location == ForgotPasswordSuccessPage.routePath;
 
       if (!isSignedIn && !isPublicRoute) {
         return LoginPage.routePath;
       }
 
-      if (isSignedIn && isAuthRoute) {
+      if (isSignedIn && isAuthRoute && !isRecoveryRoute) {
         return HomePage.routePath;
       }
 

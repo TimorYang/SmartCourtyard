@@ -15,7 +15,7 @@ class AuthProfileResponseDto {
   final String email;
   final bool emailVerified;
   final String nickname;
-  final String? avatarFileId;
+  final int? avatarFileId;
   final String? telephone;
   final String? regionCode;
   final String? locale;
@@ -27,7 +27,7 @@ class AuthProfileResponseDto {
       email: json['email'] as String? ?? '',
       emailVerified: json['emailVerified'] as bool? ?? false,
       nickname: json['nickname'] as String? ?? '',
-      avatarFileId: json['avatarFileId'] as String?,
+      avatarFileId: _intValue(json['avatarFileId']),
       telephone: json['telephone'] as String?,
       regionCode: json['regionCode'] as String?,
       locale: json['locale'] as String?,
@@ -35,3 +35,9 @@ class AuthProfileResponseDto {
     );
   }
 }
+
+int? _intValue(Object? value) => value is num
+    ? value.toInt()
+    : value is String
+    ? int.tryParse(value)
+    : null;

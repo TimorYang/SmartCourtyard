@@ -59,6 +59,7 @@ class AuthLoginRepositoryImpl implements AuthLoginRepository {
           email: result.profile.email,
           nickname: result.profile.nickname,
           country: result.profile.regionCode,
+          avatarFileId: result.profile.avatarFileId,
         ),
       );
     } on AuthLoginRemoteException catch (error, stackTrace) {

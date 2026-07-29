@@ -5,6 +5,7 @@ class AccountProfile {
     required String nickname,
     this.registeredAt,
     this.avatarUrl,
+    this.avatarFileId,
     this.country,
   }) : userId = userId.trim(),
        email = normalizeEmail(email),
@@ -14,6 +15,7 @@ class AccountProfile {
   final String email;
   final String nickname;
   final String? avatarUrl;
+  final int? avatarFileId;
   final DateTime? registeredAt;
   final String? country;
 
@@ -26,6 +28,7 @@ class AccountProfile {
     String? email,
     String? nickname,
     String? avatarUrl,
+    int? avatarFileId,
     bool clearAvatarUrl = false,
     DateTime? registeredAt,
     String? country,
@@ -36,6 +39,7 @@ class AccountProfile {
       email: email ?? this.email,
       nickname: nickname ?? this.nickname,
       avatarUrl: clearAvatarUrl ? null : avatarUrl ?? this.avatarUrl,
+      avatarFileId: avatarFileId ?? this.avatarFileId,
       registeredAt: registeredAt ?? this.registeredAt,
       country: clearCountry ? null : country ?? this.country,
     );
@@ -56,6 +60,7 @@ class AccountProfile {
             other.email == email &&
             other.nickname == nickname &&
             other.avatarUrl == avatarUrl &&
+            other.avatarFileId == avatarFileId &&
             other.registeredAt == registeredAt &&
             other.country == country;
   }
@@ -67,6 +72,7 @@ class AccountProfile {
       email,
       nickname,
       avatarUrl,
+      avatarFileId,
       registeredAt,
       country,
     );

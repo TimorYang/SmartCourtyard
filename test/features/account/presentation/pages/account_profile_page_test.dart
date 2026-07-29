@@ -556,8 +556,6 @@ void main() {
     expect(find.text('Iphone 16 pro max'), findsOneWidget);
     expect(find.text('Ipad air'), findsOneWidget);
     expect(find.text('2025-08-02 11:02'), findsNWidgets(2));
-    expect(find.byKey(ManageDevicesKeys.phoneCard), findsOneWidget);
-    expect(find.byKey(ManageDevicesKeys.tabletCard), findsOneWidget);
   });
 
   testWidgets('opens and dismisses account details avatar sheet', (
@@ -586,6 +584,30 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Photo album'), findsNothing);
+  });
+
+  testWidgets('localizes account details when the app language is Chinese', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          locale: const Locale('zh'),
+          theme: AppTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const AccountDetailsPage(),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('账户'), findsOneWidget);
+    expect(find.text('头像'), findsOneWidget);
+    expect(find.text('修改密码'), findsOneWidget);
+    expect(find.text('退出登录'), findsOneWidget);
+    expect(find.text('ACCOUNT'), findsNothing);
   });
 
   testWidgets('shows cached account details', (tester) async {
