@@ -3,14 +3,15 @@ class SharedDoorResponseDto {
     required this.doorId,
     required this.name,
     required this.coverFileId,
+    this.doorType,
     required this.sharedUserCount,
   });
 
   final int doorId;
   final String name;
 
-  /// API field retained for protocol fidelity; cover rendering is not connected yet.
   final int? coverFileId;
+  final int? doorType;
   final int sharedUserCount;
 
   factory SharedDoorResponseDto.fromJson(Map<String, dynamic> json) {
@@ -22,6 +23,7 @@ class SharedDoorResponseDto {
       doorId: doorId,
       name: json['name'] as String? ?? '',
       coverFileId: _parseInt(json['coverFileId']),
+      doorType: _parseInt(json['doorType']),
       sharedUserCount: _parseInt(json['sharedUserCount']) ?? 0,
     );
   }
@@ -30,6 +32,7 @@ class SharedDoorResponseDto {
     'doorId': doorId,
     'name': name,
     'coverFileId': coverFileId,
+    'doorType': doorType,
     'sharedUserCount': sharedUserCount,
   };
 

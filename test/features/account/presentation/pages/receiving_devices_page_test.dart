@@ -65,6 +65,36 @@ void main() {
     expect(find.text('Unable to load receiving devices.'), findsOneWidget);
     expect(find.byKey(ReceivingDevicesKeys.retryButton), findsOneWidget);
   });
+
+  testWidgets('uses the door type local image when no cover is returned', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _TestApp(
+        repository: _FakeReceivingDevicesRepository(
+          loader: () async => const [
+            ReceivingDoor(
+              shareId: 1,
+              doorId: 3,
+              name: 'Garden gate',
+              ownerEmail: 'owner@example.com',
+              expiresAt: null,
+              doorType: 4,
+            ),
+          ],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final image = tester.widget<Image>(find.byType(Image).first);
+    expect(
+      image.image,
+      const AssetImage(
+        'assets/icons/add_device/add_new_doors_sliding_gate.png',
+      ),
+    );
+  });
 }
 
 class _TestApp extends StatelessWidget {

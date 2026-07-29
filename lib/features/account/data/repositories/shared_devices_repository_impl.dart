@@ -136,6 +136,7 @@ extension SharedDoorMemberResponseDtoMapper on SharedDoorMemberResponseDto {
       _ => SharedDoorMemberExpiryType.customize,
     },
     capabilityCodes: capabilities,
+    receiverAvatarFileId: receiverAvatarFileId,
     expiresAt: expiresAt == null
         ? null
         : DateTime.fromMillisecondsSinceEpoch(
@@ -149,6 +150,8 @@ extension SharedDoorResponseDtoMapper on SharedDoorResponseDto {
   SharedDoor toDomain() => SharedDoor(
     doorId: doorId,
     name: name.trim().isEmpty ? 'Door $doorId' : name.trim(),
+    coverFileId: coverFileId,
+    doorType: doorType,
     sharedUserCount: sharedUserCount,
   );
 }

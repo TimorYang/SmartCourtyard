@@ -10,6 +10,7 @@ import '../../domain/entities/shared_door_members.dart';
 import '../../domain/entities/shared_device_share.dart'
     show SharedDeviceMemberAssetPaths;
 import '../../../home/presentation/pages/device_share_page.dart';
+import '../../../home/application/providers.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 
@@ -28,19 +29,6 @@ class SharedDeviceMemberManagementPage extends ConsumerStatefulWidget {
 
 class _SharedDeviceMemberManagementPageState
     extends ConsumerState<SharedDeviceMemberManagementPage> {
-  @override
-  void initState() {
-    super.initState();
-    final doorId = widget.device?.doorId;
-    if (doorId != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          ref.invalidate(sharedDoorMembersProvider(doorId));
-        }
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -233,31 +221,50 @@ class _SharedDeviceMemberCard extends ConsumerWidget {
   }
 }
 
-class _SharedDeviceMemberAvatar extends StatelessWidget {
+class _SharedDeviceMemberAvatar extends ConsumerWidget {
   const _SharedDeviceMemberAvatar({required this.member});
 
   final SharedDoorMember member;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
+    final avatarImage = ref.watch(
+      homeDoorCoverImageSourceProvider(member.receiverAvatarFileId),
+    );
     return Semantics(
       image: true,
       label: l10n.sharedDeviceMemberAvatarPlaceholderLabel,
       child: SizedBox.square(
         dimension: AppSpacingTokens.sharedDeviceMemberAvatarSize,
         child: ClipOval(
-          child: const ColoredBox(
-            color: AppColors.sharedDeviceMemberAvatarPlaceholder,
-            child: Center(
-              child: Icon(
-                Icons.person_outline,
-                color: AppColors.sharedDeviceMemberAvatarPlaceholderIcon,
-                size: AppSpacingTokens
-                    .sharedDeviceMemberAvatarPlaceholderIconSize,
-              ),
-            ),
-          ),
+          child: avatarImage == null
+              ? const _SharedDeviceMemberAvatarPlaceholder()
+              : Image.network(
+                  avatarImage.url,
+                  headers: avatarImage.headers,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) =>
+                      const _SharedDeviceMemberAvatarPlaceholder(),
+                ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SharedDeviceMemberAvatarPlaceholder extends StatelessWidget {
+  const _SharedDeviceMemberAvatarPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return const ColoredBox(
+      color: AppColors.sharedDeviceMemberAvatarPlaceholder,
+      child: Center(
+        child: Icon(
+          Icons.person_outline,
+          color: AppColors.sharedDeviceMemberAvatarPlaceholderIcon,
+          size: AppSpacingTokens.sharedDeviceMemberAvatarPlaceholderIconSize,
         ),
       ),
     );

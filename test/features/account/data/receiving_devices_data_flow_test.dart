@@ -19,6 +19,7 @@ void main() {
         'doorId': 12,
         'name': 'Main gate',
         'coverFileId': null,
+        'doorType': '4',
         'ownerEmail': 'owner@example.com',
         'expiresAt': null,
       });
@@ -26,6 +27,7 @@ void main() {
       expect(dto.shareId, 9);
       expect(dto.doorId, 12);
       expect(dto.coverFileId, isNull);
+      expect(dto.doorType, 4);
       expect(dto.ownerEmail, 'owner@example.com');
       expect(dto.expiresAt, isNull);
       expect(dto.toJson()['name'], 'Main gate');

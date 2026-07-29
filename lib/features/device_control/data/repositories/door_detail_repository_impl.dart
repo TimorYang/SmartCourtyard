@@ -189,6 +189,7 @@ extension DoorDetailResponseDtoMapper on DoorDetailResponseDto {
       doorStateLabel: _doorStateLabel(),
       positionPercent: positionPercent,
       coverFileId: coverFileId,
+      operatorAvatarFileId: operatorAvatarFileId,
       operatedCycles: operatedCycles ?? 0,
       remainingCycles: remainingCycles ?? 0,
       ledStatus: ledStatus,

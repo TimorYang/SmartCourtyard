@@ -12,6 +12,7 @@ class DoorDetailResponseDto {
     this.doorStateLabel,
     this.positionPercent,
     this.coverFileId,
+    this.operatorAvatarFileId,
     this.operatedCycles,
     this.remainingCycles,
     this.ledStatus,
@@ -33,6 +34,7 @@ class DoorDetailResponseDto {
   final String? doorStateLabel;
   final double? positionPercent;
   final int? coverFileId;
+  final int? operatorAvatarFileId;
   final int? operatedCycles;
   final int? remainingCycles;
   final int? ledStatus;
@@ -55,6 +57,7 @@ class DoorDetailResponseDto {
       doorStateLabel: json['doorStateLabel'] as String?,
       positionPercent: _parseNullableDouble(json['positionPercent']),
       coverFileId: _parseNullableInt(json['coverFileId']),
+      operatorAvatarFileId: _parseNullableInt(json['operatorAvatarFileId']),
       operatedCycles: _parseNullableInt(json['operatedCycles']),
       remainingCycles: _parseNullableInt(json['remainingCycles']),
       ledStatus: _parseNullableInt(json['ledStatus']),

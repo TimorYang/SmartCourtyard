@@ -42,12 +42,14 @@ class SharedDoorMemberResponseDto {
     required this.expiryType,
     required this.capabilities,
     this.expiresAt,
+    this.receiverAvatarFileId,
   });
   final int shareId;
   final String receiverEmail;
   final String role;
   final String expiryType;
   final int? expiresAt;
+  final int? receiverAvatarFileId;
   final List<String> capabilities;
   factory SharedDoorMemberResponseDto.fromJson(Map<String, dynamic> json) =>
       SharedDoorMemberResponseDto(
@@ -56,7 +58,12 @@ class SharedDoorMemberResponseDto {
         role: json['role']?.toString() ?? '',
         expiryType: json['expiryType']?.toString() ?? '',
         expiresAt: SharedDoorMembersResponseDto._int(json['expiresAt']),
-        capabilities: (json['capabilities'] as List<Object?>? ?? const []).whereType<String>().toList(growable: false),
+        receiverAvatarFileId: SharedDoorMembersResponseDto._int(
+          json['receiverAvatarFileId'],
+        ),
+        capabilities: (json['capabilities'] as List<Object?>? ?? const [])
+            .whereType<String>()
+            .toList(growable: false),
       );
   Map<String, dynamic> toJson() => {
     'shareId': shareId,
@@ -64,6 +71,7 @@ class SharedDoorMemberResponseDto {
     'role': role,
     'expiryType': expiryType,
     'expiresAt': expiresAt,
+    'receiverAvatarFileId': receiverAvatarFileId,
     'capabilities': capabilities,
   };
 }

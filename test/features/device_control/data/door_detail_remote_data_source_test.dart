@@ -37,6 +37,7 @@ void main() {
       'doorState': 0,
       'doorStateLabel': 'Unknown',
       'positionPercent': null,
+      'operatorAvatarFileId': '101',
       'operatedCycles': 0,
       'remainingCycles': 0,
       'ledStatus': 2,
@@ -54,6 +55,7 @@ void main() {
     expect(dto.doorState, 0);
     expect(dto.doorStateLabel, 'Unknown');
     expect(dto.positionPercent, isNull);
+    expect(dto.operatorAvatarFileId, 101);
     expect(dto.operatedCycles, 0);
     expect(dto.remainingCycles, 0);
     expect(dto.ledStatus, 2);

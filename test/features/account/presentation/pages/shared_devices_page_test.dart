@@ -46,6 +46,32 @@ void main() {
     expect(find.text('No shared devices yet.'), findsOneWidget);
   });
 
+  testWidgets('uses the door type local image when no cover is returned', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _TestApp(
+        repository: _FakeSharedDevicesRepository(
+          loader: () async => const [
+            SharedDoor(
+              doorId: 3,
+              name: 'Garden gate',
+              sharedUserCount: 0,
+              doorType: 3,
+            ),
+          ],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final image = tester.widget<Image>(find.byType(Image).first);
+    expect(
+      image.image,
+      const AssetImage('assets/icons/add_device/add_new_doors_swing_gate.png'),
+    );
+  });
+
   testWidgets('renders a localized retryable error state', (tester) async {
     await tester.pumpWidget(
       _TestApp(
@@ -93,5 +119,5 @@ class _FakeSharedDevicesRepository implements SharedDevicesRepository {
       loader();
 
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

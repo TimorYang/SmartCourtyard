@@ -16,6 +16,7 @@ void main() {
         DoorDetailResponseDto(
           id: '12',
           name: 'Main Gate',
+          operatorAvatarFileId: 101,
           doorStateLabel: 'Closing',
           operatedCycles: 123,
           remainingCycles: 4567,
@@ -36,6 +37,7 @@ void main() {
 
     expect(detail.id, '12');
     expect(detail.name, 'Main Gate');
+    expect(detail.operatorAvatarFileId, 101);
     expect(detail.doorState, DoorState.closing);
     expect(detail.doorStateLabel, 'Closing');
     expect(detail.operatedCycles, 123);

@@ -17,11 +17,13 @@ void main() {
       'doorId': '12',
       'name': 'Main gate',
       'coverFileId': null,
+      'doorType': '3',
       'sharedUserCount': 0,
     });
 
     expect(dto.doorId, 12);
     expect(dto.coverFileId, isNull);
+    expect(dto.doorType, 3);
     expect(dto.sharedUserCount, 0);
     expect(dto.toJson()['name'], 'Main gate');
   });
@@ -31,6 +33,20 @@ void main() {
       () => SharedDoorResponseDto.fromJson(const {'doorId': 'invalid'}),
       throwsFormatException,
     );
+  });
+
+  test('parses a shared member avatar attachment ID', () {
+    final dto = SharedDoorMemberResponseDto.fromJson(const {
+      'shareId': 7,
+      'receiverEmail': 'alex@example.com',
+      'role': '0',
+      'expiryType': '0',
+      'receiverAvatarFileId': '30001',
+      'capabilities': <String>[],
+    });
+
+    expect(dto.receiverAvatarFileId, 30001);
+    expect(dto.toDomain(12).receiverAvatarFileId, 30001);
   });
 
   test('passes the request ID and validates a successful response', () async {

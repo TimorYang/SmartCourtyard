@@ -7,6 +7,8 @@ import '../../../../platform_bridge/hardware_models.dart';
 import '../../../../shared/design_system/door_type_option.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
+import '../../../home/application/home_door_cover_image_source.dart';
+import '../../../home/application/providers.dart';
 import '../../application/providers.dart';
 import '../../domain/entities/shared_door.dart';
 import 'shared_device_member_management_page.dart';
@@ -122,7 +124,7 @@ class SharedDevicesKeys {
       ValueKey('shared-devices-device-card-$index');
 }
 
-class _SharedDeviceCard extends StatelessWidget {
+class _SharedDeviceCard extends ConsumerWidget {
   const _SharedDeviceCard({
     super.key,
     required this.device,
@@ -135,9 +137,14 @@ class _SharedDeviceCard extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final textTheme = Theme.of(context).textTheme;
-    final visual = DoorTypeOption.fromDoorType(DoorType.garage);
+    final visual = DoorTypeOption.fromDoorType(
+      DoorType.fromWireValue(device.doorType),
+    );
+    final coverImage = ref.watch(
+      homeDoorCoverImageSourceProvider(device.coverFileId),
+    );
 
     return Semantics(
       button: true,
@@ -156,15 +163,10 @@ class _SharedDeviceCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Image.asset(
-                visual.assetPath,
-                width: AppSpacingTokens.sharedDevicesIconSize,
-                height: AppSpacingTokens.sharedDevicesIconSize,
-                errorBuilder: (context, error, stackTrace) => Icon(
-                  visual.fallbackIcon,
-                  color: AppColors.textPrimary,
-                  size: AppSpacingTokens.sharedDevicesIconSize,
-                ),
+              _SharedDeviceCoverImage(
+                coverImage: coverImage,
+                visual: visual,
+                doorId: device.doorId,
               ),
               const SizedBox(width: AppSpacingTokens.sharedDevicesIconToText),
               Expanded(
@@ -193,6 +195,63 @@ class _SharedDeviceCard extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _SharedDeviceCoverImage extends StatelessWidget {
+  const _SharedDeviceCoverImage({
+    required this.coverImage,
+    required this.visual,
+    required this.doorId,
+  });
+
+  final HomeDoorCoverImageSource? coverImage;
+  final DoorTypeOption visual;
+  final int doorId;
+
+  @override
+  Widget build(BuildContext context) {
+    if (coverImage != null) {
+      return Image.network(
+        coverImage!.url,
+        key: ValueKey<String>('shared-device-cover-$doorId'),
+        headers: coverImage!.headers,
+        width: AppSpacingTokens.sharedDevicesIconSize,
+        height: AppSpacingTokens.sharedDevicesIconSize,
+        fit: BoxFit.contain,
+        loadingBuilder: (context, child, loadingProgress) =>
+            loadingProgress == null
+            ? child
+            : const SizedBox(
+                width: AppSpacingTokens.sharedDevicesIconSize,
+                height: AppSpacingTokens.sharedDevicesIconSize,
+              ),
+        errorBuilder: (context, error, stackTrace) =>
+            _SharedDeviceDefaultCover(visual: visual),
+      );
+    }
+    return _SharedDeviceDefaultCover(visual: visual);
+  }
+}
+
+class _SharedDeviceDefaultCover extends StatelessWidget {
+  const _SharedDeviceDefaultCover({required this.visual});
+
+  final DoorTypeOption visual;
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.asset(
+      visual.assetPath,
+      width: AppSpacingTokens.sharedDevicesIconSize,
+      height: AppSpacingTokens.sharedDevicesIconSize,
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) => Icon(
+        visual.fallbackIcon,
+        color: AppColors.textPrimary,
+        size: AppSpacingTokens.sharedDevicesIconSize,
       ),
     );
   }

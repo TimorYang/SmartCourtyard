@@ -16,6 +16,7 @@ class DoorDetail {
     this.onlineStatusLabel,
     this.positionPercent,
     this.coverFileId,
+    this.operatorAvatarFileId,
     this.ledStatus,
     this.ledStatusLabel,
     this.autoCloseEnabled = false,
@@ -35,6 +36,7 @@ class DoorDetail {
   final String doorStateLabel;
   final double? positionPercent;
   final int? coverFileId;
+  final int? operatorAvatarFileId;
   final int? ledStatus;
   final String? ledStatusLabel;
   final bool autoCloseEnabled;

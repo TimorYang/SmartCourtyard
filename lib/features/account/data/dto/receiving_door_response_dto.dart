@@ -4,6 +4,7 @@ class ReceivingDoorResponseDto {
     required this.doorId,
     required this.name,
     required this.coverFileId,
+    this.doorType,
     required this.ownerEmail,
     required this.expiresAt,
   });
@@ -14,8 +15,8 @@ class ReceivingDoorResponseDto {
   /// Card title supplied by the receiving-door API.
   final String name;
 
-  /// Retained for API fidelity; cover rendering is not connected yet.
   final int? coverFileId;
+  final int? doorType;
 
   /// Card subtitle supplied by the receiving-door API.
   final String ownerEmail;
@@ -36,6 +37,7 @@ class ReceivingDoorResponseDto {
       doorId: doorId,
       name: json['name'] as String? ?? '',
       coverFileId: _parseInt(json['coverFileId']),
+      doorType: _parseInt(json['doorType']),
       ownerEmail: json['ownerEmail'] as String? ?? '',
       expiresAt: _parseInt(json['expiresAt']),
     );
@@ -46,6 +48,7 @@ class ReceivingDoorResponseDto {
     'doorId': doorId,
     'name': name,
     'coverFileId': coverFileId,
+    'doorType': doorType,
     'ownerEmail': ownerEmail,
     'expiresAt': expiresAt,
   };

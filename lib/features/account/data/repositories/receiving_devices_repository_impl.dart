@@ -74,6 +74,8 @@ extension ReceivingDoorResponseDtoMapper on ReceivingDoorResponseDto {
     doorId: doorId,
     name: name.trim(),
     ownerEmail: ownerEmail.trim(),
+    coverFileId: coverFileId,
+    doorType: doorType,
     expiresAt: expiresAt == null
         ? null
         : DateTime.fromMillisecondsSinceEpoch(expiresAt!, isUtc: true),

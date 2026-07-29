@@ -9,6 +9,22 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
 
 void main() {
+  testWidgets('loads share capabilities once when the page opens', (
+    tester,
+  ) async {
+    var loadCount = 0;
+    await tester.pumpWidget(
+      _DeviceShareTestApp(
+        onCapabilitiesLoad: () {
+          loadCount++;
+        },
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(loadCount, 1);
+  });
+
   testWidgets(
     'administrator capabilities can be edited and reset after guest',
     (tester) async {
@@ -176,13 +192,18 @@ VoidCallback? _timeTap(WidgetTester tester) {
 }
 
 class _DeviceShareTestApp extends StatelessWidget {
+  const _DeviceShareTestApp({this.onCapabilitiesLoad});
+
+  final VoidCallback? onCapabilitiesLoad;
+
   @override
   Widget build(BuildContext context) {
     return ProviderScope(
       overrides: [
-        doorShareCapabilitiesProvider(
-          1,
-        ).overrideWith((ref) async => ShareCapability.values),
+        doorShareCapabilitiesProvider(1).overrideWith((ref) async {
+          onCapabilitiesLoad?.call();
+          return ShareCapability.values;
+        }),
       ],
       child: MaterialApp(
         theme: AppTheme.light(),

@@ -20,6 +20,7 @@ class SharedDoorMember {
     required this.expiryType,
     required this.capabilityCodes,
     this.expiresAt,
+    this.receiverAvatarFileId,
   });
   final int doorId;
   final int shareId;
@@ -28,6 +29,7 @@ class SharedDoorMember {
   final SharedDoorMemberExpiryType expiryType;
   final List<String> capabilityCodes;
   final DateTime? expiresAt;
+  final int? receiverAvatarFileId;
 
   String get id => shareId.toString();
 }

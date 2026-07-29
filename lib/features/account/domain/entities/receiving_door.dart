@@ -6,6 +6,8 @@ class ReceivingDoor {
     required this.name,
     required this.ownerEmail,
     required this.expiresAt,
+    this.coverFileId,
+    this.doorType,
   });
 
   /// Stable share ID reserved for future receiver-side share operations.
@@ -20,6 +22,9 @@ class ReceivingDoor {
   /// Secondary text rendered on the Receiving devices card.
   final String ownerEmail;
 
+  final int? coverFileId;
+  final int? doorType;
+
   /// UTC expiry time, or null when the share does not expire.
   final DateTime? expiresAt;
 
@@ -31,8 +36,18 @@ class ReceivingDoor {
           other.doorId == doorId &&
           other.name == name &&
           other.ownerEmail == ownerEmail &&
+          other.coverFileId == coverFileId &&
+          other.doorType == doorType &&
           other.expiresAt == expiresAt;
 
   @override
-  int get hashCode => Object.hash(shareId, doorId, name, ownerEmail, expiresAt);
+  int get hashCode => Object.hash(
+    shareId,
+    doorId,
+    name,
+    ownerEmail,
+    coverFileId,
+    doorType,
+    expiresAt,
+  );
 }

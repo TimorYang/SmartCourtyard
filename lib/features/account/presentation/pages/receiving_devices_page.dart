@@ -6,6 +6,8 @@ import '../../../../platform_bridge/hardware_models.dart';
 import '../../../../shared/design_system/door_type_option.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
+import '../../../home/application/home_door_cover_image_source.dart';
+import '../../../home/application/providers.dart';
 import '../../application/providers.dart';
 import '../../domain/entities/receiving_door.dart';
 
@@ -132,16 +134,21 @@ class ReceivingDevicesKeys {
       ValueKey('receiving-devices-card-$index');
 }
 
-class _ReceivingDeviceCard extends StatelessWidget {
+class _ReceivingDeviceCard extends ConsumerWidget {
   const _ReceivingDeviceCard({super.key, required this.device});
 
   final ReceivingDoor device;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final textTheme = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context);
-    final visual = DoorTypeOption.fromDoorType(DoorType.garage);
+    final visual = DoorTypeOption.fromDoorType(
+      DoorType.fromWireValue(device.doorType),
+    );
+    final coverImage = ref.watch(
+      homeDoorCoverImageSourceProvider(device.coverFileId),
+    );
 
     return Container(
       height: AppSpacingTokens.receivingDevicesCardHeight,
@@ -156,15 +163,10 @@ class _ReceivingDeviceCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Image.asset(
-            visual.assetPath,
-            width: AppSpacingTokens.receivingDevicesIconSize,
-            height: AppSpacingTokens.receivingDevicesIconSize,
-            errorBuilder: (context, error, stackTrace) => Icon(
-              visual.fallbackIcon,
-              color: AppColors.textPrimary,
-              size: AppSpacingTokens.receivingDevicesIconSize,
-            ),
+          _ReceivingDeviceCoverImage(
+            coverImage: coverImage,
+            visual: visual,
+            doorId: device.doorId,
           ),
           const SizedBox(width: AppSpacingTokens.receivingDevicesIconToText),
           Expanded(
@@ -191,6 +193,63 @@ class _ReceivingDeviceCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ReceivingDeviceCoverImage extends StatelessWidget {
+  const _ReceivingDeviceCoverImage({
+    required this.coverImage,
+    required this.visual,
+    required this.doorId,
+  });
+
+  final HomeDoorCoverImageSource? coverImage;
+  final DoorTypeOption visual;
+  final int doorId;
+
+  @override
+  Widget build(BuildContext context) {
+    if (coverImage != null) {
+      return Image.network(
+        coverImage!.url,
+        key: ValueKey<String>('receiving-device-cover-$doorId'),
+        headers: coverImage!.headers,
+        width: AppSpacingTokens.receivingDevicesIconSize,
+        height: AppSpacingTokens.receivingDevicesIconSize,
+        fit: BoxFit.contain,
+        loadingBuilder: (context, child, loadingProgress) =>
+            loadingProgress == null
+            ? child
+            : const SizedBox(
+                width: AppSpacingTokens.receivingDevicesIconSize,
+                height: AppSpacingTokens.receivingDevicesIconSize,
+              ),
+        errorBuilder: (context, error, stackTrace) =>
+            _ReceivingDeviceDefaultCover(visual: visual),
+      );
+    }
+    return _ReceivingDeviceDefaultCover(visual: visual);
+  }
+}
+
+class _ReceivingDeviceDefaultCover extends StatelessWidget {
+  const _ReceivingDeviceDefaultCover({required this.visual});
+
+  final DoorTypeOption visual;
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.asset(
+      visual.assetPath,
+      width: AppSpacingTokens.receivingDevicesIconSize,
+      height: AppSpacingTokens.receivingDevicesIconSize,
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) => Icon(
+        visual.fallbackIcon,
+        color: AppColors.textPrimary,
+        size: AppSpacingTokens.receivingDevicesIconSize,
       ),
     );
   }
