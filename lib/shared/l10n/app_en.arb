@@ -710,6 +710,38 @@
   "@manageDevicesSubtitle": {
     "description": "Subtitle of the signed-in device management page"
   },
+  "manageDevicesEmpty": "No signed-in devices.",
+  "@manageDevicesEmpty": {
+    "description": "Empty state for the signed-in device list"
+  },
+  "manageDevicesLoadFailed": "Unable to load signed-in devices.",
+  "@manageDevicesLoadFailed": {
+    "description": "Error state for the signed-in device list"
+  },
+  "manageDevicesRetry": "Retry",
+  "@manageDevicesRetry": {
+    "description": "Retry action for the signed-in device list"
+  },
+  "manageDevicesIosName": "iOS device",
+  "@manageDevicesIosName": {
+    "description": "Fallback name for an iOS signed-in device"
+  },
+  "manageDevicesAndroidName": "Android device",
+  "@manageDevicesAndroidName": {
+    "description": "Fallback name for an Android signed-in device"
+  },
+  "manageDevicesUnknownDevice": "Unknown device",
+  "@manageDevicesUnknownDevice": {
+    "description": "Fallback name for a signed-in device with an unknown platform"
+  },
+  "manageDevicesUnknownLoginTime": "Unknown login time",
+  "@manageDevicesUnknownLoginTime": {
+    "description": "Fallback timestamp for a signed-in device with no valid login time"
+  },
+  "manageDevicesRemoveFailed": "Unable to remove this device. Please try again.",
+  "@manageDevicesRemoveFailed": {
+    "description": "Shown when removing a signed-in device fails"
+  },
   "manageDevicesPhoneName": "Iphone 16 pro max",
   "@manageDevicesPhoneName": {
     "description": "Sample phone name displayed in the device management page"

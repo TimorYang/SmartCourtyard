@@ -1250,6 +1250,54 @@ abstract class AppLocalizations {
   /// **'Devices logged in'**
   String get manageDevicesSubtitle;
 
+  /// Empty state for the signed-in device list
+  ///
+  /// In en, this message translates to:
+  /// **'No signed-in devices.'**
+  String get manageDevicesEmpty;
+
+  /// Error state for the signed-in device list
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load signed-in devices.'**
+  String get manageDevicesLoadFailed;
+
+  /// Retry action for the signed-in device list
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get manageDevicesRetry;
+
+  /// Fallback name for an iOS signed-in device
+  ///
+  /// In en, this message translates to:
+  /// **'iOS device'**
+  String get manageDevicesIosName;
+
+  /// Fallback name for an Android signed-in device
+  ///
+  /// In en, this message translates to:
+  /// **'Android device'**
+  String get manageDevicesAndroidName;
+
+  /// Fallback name for a signed-in device with an unknown platform
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown device'**
+  String get manageDevicesUnknownDevice;
+
+  /// Fallback timestamp for a signed-in device with no valid login time
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown login time'**
+  String get manageDevicesUnknownLoginTime;
+
+  /// Shown when removing a signed-in device fails
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to remove this device. Please try again.'**
+  String get manageDevicesRemoveFailed;
+
   /// Sample phone name displayed in the device management page
   ///
   /// In en, this message translates to:

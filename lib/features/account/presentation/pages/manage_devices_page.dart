@@ -3,57 +3,77 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
 import '../../domain/entities/managed_login_device.dart';
 
-class ManageDevicesPage extends ConsumerWidget {
+class ManageDevicesPage extends ConsumerStatefulWidget {
   const ManageDevicesPage({super.key});
 
   static const routeName = 'manage-devices';
   static const routePath = '/account/manage-devices';
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ManageDevicesPage> createState() => _ManageDevicesPageState();
+}
+
+class _ManageDevicesPageState extends ConsumerState<ManageDevicesPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(managedDevicesControllerProvider.notifier).refresh();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final textTheme = Theme.of(context).textTheme;
     final devices = ref.watch(managedDevicesControllerProvider);
 
     return Scaffold(
       backgroundColor: AppColors.backgroundPrimary,
-      appBar: FlinxNavigationBar(
-        title: '',
-        showBottomDivider: false,
-        actions: [
-          Semantics(
-            label: l10n.manageDevicesEditLabel,
-            child: Image.asset(
-              ManageDevicesAssetPaths.edit,
-              width: AppSpacingTokens.manageDevicesActionIconSize,
-              height: AppSpacingTokens.manageDevicesActionIconSize,
-              errorBuilder: (context, error, stackTrace) {
-                return const Icon(
-                  Icons.edit,
-                  color: AppColors.textMuted,
-                  size: 22,
-                );
-              },
-            ),
-          ),
-          const SizedBox(width: AppSpacingTokens.manageDevicesActionEndPadding),
-        ],
-      ),
-      body: _ManageDevicesContent(
-        devices: devices,
-        title: l10n.manageDevicesTitle,
-        subtitle: l10n.manageDevicesSubtitle,
-        textTheme: textTheme,
-        onRemoveRequested: (device) => _showManagedDeviceRemovalDialog(
-          context,
-          onConfirm: () => ref
-              .read(managedDevicesControllerProvider.notifier)
-              .removeDevice(device.id),
+      appBar: FlinxNavigationBar(title: '', showBottomDivider: false),
+      body: devices.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stackTrace) => _ManageDevicesErrorState(
+          message: l10n.manageDevicesLoadFailed,
+          retryLabel: l10n.manageDevicesRetry,
+          onRetry: () =>
+              ref.read(managedDevicesControllerProvider.notifier).refresh(),
         ),
+        data: (items) => items.isEmpty
+            ? Center(
+                child: Text(
+                  l10n.manageDevicesEmpty,
+                  style: AppTextTokens.manageDevicesSubtitle(textTheme),
+                ),
+              )
+            : _ManageDevicesContent(
+                devices: items,
+                title: l10n.manageDevicesTitle,
+                subtitle: l10n.manageDevicesSubtitle,
+                textTheme: textTheme,
+                onRemoveRequested: (device) => _showManagedDeviceRemovalDialog(
+                  context,
+                  onConfirm: () async {
+                    try {
+                      await ref
+                          .read(managedDevicesControllerProvider.notifier)
+                          .removeDevice(device.sessionId);
+                    } catch (_) {
+                      if (context.mounted) {
+                        AppToast.error(context, l10n.manageDevicesRemoveFailed);
+                      }
+                      rethrow;
+                    }
+                  },
+                ),
+              ),
       ),
     );
   }
@@ -62,9 +82,7 @@ class ManageDevicesPage extends ConsumerWidget {
 class ManageDevicesAssetPaths {
   const ManageDevicesAssetPaths._();
 
-  static const edit = 'assets/icons/account/manage_devices_edit.png';
   static const phone = 'assets/icons/account/manage_devices_phone.png';
-  static const tablet = 'assets/icons/account/manage_devices_tablet.png';
   static const logout = 'assets/icons/account/manage_devices_logout.png';
 }
 
@@ -135,14 +153,14 @@ class _ManageDevicesContent extends StatelessWidget {
 class ManageDevicesKeys {
   const ManageDevicesKeys._();
 
-  static const phoneCard = ValueKey('manage-devices-phone-card');
-  static const tabletCard = ValueKey('manage-devices-tablet-card');
   static const removeDialog = ValueKey('manage-devices-remove-dialog');
   static const removeCancelButton = ValueKey('manage-devices-remove-cancel');
   static const removeConfirmButton = ValueKey('manage-devices-remove-confirm');
 
-  static ValueKey<String> logoutButton(String deviceId) =>
-      ValueKey('manage-devices-logout-$deviceId');
+  static ValueKey<String> deviceCard(String sessionId) =>
+      ValueKey('manage-devices-card-$sessionId');
+  static ValueKey<String> logoutButton(String sessionId) =>
+      ValueKey('manage-devices-logout-$sessionId');
 }
 
 class _ManagedDeviceCard extends StatelessWidget {
@@ -157,13 +175,10 @@ class _ManagedDeviceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final cardKey = device.type == ManagedLoginDeviceType.phone
-        ? ManageDevicesKeys.phoneCard
-        : ManageDevicesKeys.tabletCard;
     final l10n = AppLocalizations.of(context);
 
     return Container(
-      key: cardKey,
+      key: ManageDevicesKeys.deviceCard(device.sessionId),
       height: AppSpacingTokens.manageDevicesCardHeight,
       padding: const EdgeInsets.symmetric(horizontal: 30),
       decoration: const BoxDecoration(
@@ -175,9 +190,7 @@ class _ManagedDeviceCard extends StatelessWidget {
       child: Row(
         children: [
           Image.asset(
-            device.type == ManagedLoginDeviceType.phone
-                ? ManageDevicesAssetPaths.phone
-                : ManageDevicesAssetPaths.tablet,
+            ManageDevicesAssetPaths.phone,
             width: AppSpacingTokens.manageDevicesIconSize,
             height: AppSpacingTokens.manageDevicesIconSize,
             errorBuilder: (context, error, stackTrace) {
@@ -202,13 +215,7 @@ class _ManagedDeviceCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  l10n.manageDevicesLoginTimestamp(
-                    device.loggedInAt.year,
-                    device.loggedInAt.month.toString().padLeft(2, '0'),
-                    device.loggedInAt.day.toString().padLeft(2, '0'),
-                    device.loggedInAt.hour.toString().padLeft(2, '0'),
-                    device.loggedInAt.minute.toString().padLeft(2, '0'),
-                  ),
+                  _loginTimestamp(l10n),
                   style: AppTextTokens.manageDevicesCardTimestamp(textTheme),
                 ),
               ],
@@ -218,7 +225,7 @@ class _ManagedDeviceCard extends StatelessWidget {
             button: true,
             label: l10n.manageDevicesLogoutLabel,
             child: GestureDetector(
-              key: ManageDevicesKeys.logoutButton(device.id),
+              key: ManageDevicesKeys.logoutButton(device.sessionId),
               behavior: HitTestBehavior.opaque,
               onTap: onRemoveRequested,
               child: Padding(
@@ -244,16 +251,57 @@ class _ManagedDeviceCard extends StatelessWidget {
   }
 
   String _deviceName(AppLocalizations l10n) {
-    return switch (device.type) {
-      ManagedLoginDeviceType.phone => l10n.manageDevicesPhoneName,
-      ManagedLoginDeviceType.tablet => l10n.manageDevicesTabletName,
+    final model = device.deviceModel?.trim();
+    if (model != null && model.isNotEmpty) {
+      return model;
+    }
+    return switch (device.platform) {
+      ManagedLoginDevicePlatform.ios => l10n.manageDevicesIosName,
+      ManagedLoginDevicePlatform.android => l10n.manageDevicesAndroidName,
+      ManagedLoginDevicePlatform.unknown => l10n.manageDevicesUnknownDevice,
     };
   }
+
+  String _loginTimestamp(AppLocalizations l10n) {
+    final timestamp = device.lastLoginTime;
+    if (timestamp == null) return l10n.manageDevicesUnknownLoginTime;
+    return l10n.manageDevicesLoginTimestamp(
+      timestamp.year,
+      timestamp.month.toString().padLeft(2, '0'),
+      timestamp.day.toString().padLeft(2, '0'),
+      timestamp.hour.toString().padLeft(2, '0'),
+      timestamp.minute.toString().padLeft(2, '0'),
+    );
+  }
+}
+
+class _ManageDevicesErrorState extends StatelessWidget {
+  const _ManageDevicesErrorState({
+    required this.message,
+    required this.retryLabel,
+    required this.onRetry,
+  });
+
+  final String message;
+  final String retryLabel;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) => Center(
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(message),
+        const SizedBox(height: 12),
+        TextButton(onPressed: onRetry, child: Text(retryLabel)),
+      ],
+    ),
+  );
 }
 
 Future<void> _showManagedDeviceRemovalDialog(
   BuildContext context, {
-  required VoidCallback onConfirm,
+  required Future<void> Function() onConfirm,
 }) {
   return showDialog<void>(
     context: context,
@@ -266,78 +314,99 @@ Future<void> _showManagedDeviceRemovalDialog(
 class _ManagedDeviceRemovalDialog extends StatelessWidget {
   const _ManagedDeviceRemovalDialog({required this.onConfirm});
 
-  final VoidCallback onConfirm;
+  final Future<void> Function() onConfirm;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final textTheme = Theme.of(context).textTheme;
+    var isRemoving = false;
 
-    return Dialog(
-      key: ManageDevicesKeys.removeDialog,
-      insetPadding: const EdgeInsets.symmetric(
-        horizontal: AppSpacingTokens.manageDevicesRemoveDialogHorizontalInset,
-      ),
-      backgroundColor: AppColors.manageDevicesRemoveDialogSurface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(
-          Radius.circular(AppShapeTokens.manageDevicesRemoveDialogRadius),
-        ),
-      ),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(
-          maxWidth: AppSpacingTokens.manageDevicesRemoveDialogMaxWidth,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacingTokens.manageDevicesRemoveDialogContentHorizontal,
-            AppSpacingTokens.manageDevicesRemoveDialogContentTop,
-            AppSpacingTokens.manageDevicesRemoveDialogContentHorizontal,
-            AppSpacingTokens.manageDevicesRemoveDialogContentBottom,
+    return StatefulBuilder(
+      builder: (context, setState) {
+        return Dialog(
+          key: ManageDevicesKeys.removeDialog,
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal:
+                AppSpacingTokens.manageDevicesRemoveDialogHorizontalInset,
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                l10n.manageDevicesRemoveConfirmationMessage,
-                textAlign: TextAlign.center,
-                style: AppTextTokens.manageDevicesRemoveDialogMessage(
-                  textTheme,
-                ),
+          backgroundColor: AppColors.manageDevicesRemoveDialogSurface,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(
+              Radius.circular(AppShapeTokens.manageDevicesRemoveDialogRadius),
+            ),
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: AppSpacingTokens.manageDevicesRemoveDialogMaxWidth,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacingTokens.manageDevicesRemoveDialogContentHorizontal,
+                AppSpacingTokens.manageDevicesRemoveDialogContentTop,
+                AppSpacingTokens.manageDevicesRemoveDialogContentHorizontal,
+                AppSpacingTokens.manageDevicesRemoveDialogContentBottom,
               ),
-              const SizedBox(
-                height: AppSpacingTokens.manageDevicesRemoveDialogActionsTop,
-              ),
-              Row(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Expanded(
-                    child: _ManagedDeviceRemovalDialogAction(
-                      key: ManageDevicesKeys.removeCancelButton,
-                      label: l10n.manageDevicesRemoveCancelAction,
-                      isPrimary: false,
-                      onPressed: () => Navigator.of(context).pop(),
+                  Text(
+                    l10n.manageDevicesRemoveConfirmationMessage,
+                    textAlign: TextAlign.center,
+                    style: AppTextTokens.manageDevicesRemoveDialogMessage(
+                      textTheme,
                     ),
                   ),
                   const SizedBox(
-                    width: AppSpacingTokens.manageDevicesRemoveDialogActionGap,
+                    height:
+                        AppSpacingTokens.manageDevicesRemoveDialogActionsTop,
                   ),
-                  Expanded(
-                    child: _ManagedDeviceRemovalDialogAction(
-                      key: ManageDevicesKeys.removeConfirmButton,
-                      label: l10n.manageDevicesRemoveConfirmAction,
-                      isPrimary: true,
-                      onPressed: () {
-                        onConfirm();
-                        Navigator.of(context).pop();
-                      },
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _ManagedDeviceRemovalDialogAction(
+                          key: ManageDevicesKeys.removeCancelButton,
+                          label: l10n.manageDevicesRemoveCancelAction,
+                          isPrimary: false,
+                          onPressed: isRemoving
+                              ? null
+                              : () => Navigator.of(context).pop(),
+                        ),
+                      ),
+                      const SizedBox(
+                        width:
+                            AppSpacingTokens.manageDevicesRemoveDialogActionGap,
+                      ),
+                      Expanded(
+                        child: _ManagedDeviceRemovalDialogAction(
+                          key: ManageDevicesKeys.removeConfirmButton,
+                          label: l10n.manageDevicesRemoveConfirmAction,
+                          isPrimary: true,
+                          onPressed: isRemoving
+                              ? null
+                              : () async {
+                                  setState(() => isRemoving = true);
+                                  try {
+                                    await onConfirm();
+                                    if (context.mounted) {
+                                      Navigator.of(context).pop();
+                                    }
+                                  } catch (_) {
+                                    if (context.mounted) {
+                                      setState(() => isRemoving = false);
+                                    }
+                                  }
+                                },
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -352,7 +421,7 @@ class _ManagedDeviceRemovalDialogAction extends StatelessWidget {
 
   final String label;
   final bool isPrimary;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {

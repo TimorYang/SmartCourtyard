@@ -1,44 +1,45 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/entities/managed_login_device.dart';
+import '../domain/use_cases/fetch_managed_login_devices_use_case.dart';
+import '../domain/use_cases/remove_managed_login_device_use_case.dart';
+import 'providers.dart';
 
 final managedDevicesControllerProvider =
-    NotifierProvider<ManagedDevicesController, List<ManagedLoginDevice>>(
+    AsyncNotifierProvider<ManagedDevicesController, List<ManagedLoginDevice>>(
       ManagedDevicesController.new,
     );
 
-/// Owns the temporary, in-memory device sessions shown by Manage devices.
-///
-/// This controller intentionally remains local-only until the signed-in device
-/// management API is available.
-class ManagedDevicesController extends Notifier<List<ManagedLoginDevice>> {
-  static final _initialDevices = <ManagedLoginDevice>[
-    ManagedLoginDevice(
-      id: 'iphone-16-pro-max',
-      type: ManagedLoginDeviceType.phone,
-      loggedInAt: _iphoneLoggedInAt,
-      isCurrentDevice: true,
-    ),
-    ManagedLoginDevice(
-      id: 'ipad-air',
-      type: ManagedLoginDeviceType.tablet,
-      loggedInAt: _ipadLoggedInAt,
-      isCurrentDevice: false,
-    ),
-  ];
-
-  static final _iphoneLoggedInAt = DateTime(2025, 8, 2, 11, 2);
-  static final _ipadLoggedInAt = DateTime(2025, 8, 2, 11, 2);
+class ManagedDevicesController extends AsyncNotifier<List<ManagedLoginDevice>> {
+  FetchManagedLoginDevicesUseCase get _fetchDevices =>
+      ref.read(fetchManagedLoginDevicesUseCaseProvider);
+  RemoveManagedLoginDeviceUseCase get _removeDevice =>
+      ref.read(removeManagedLoginDeviceUseCaseProvider);
 
   @override
-  List<ManagedLoginDevice> build() => _initialDevices;
+  Future<List<ManagedLoginDevice>> build() async => const [];
 
-  void removeDevice(String deviceId) {
-    if (!state.any((device) => device.id == deviceId)) {
-      return;
-    }
-    state = state
-        .where((device) => device.id != deviceId)
-        .toList(growable: false);
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(_load);
   }
+
+  Future<void> removeDevice(String sessionId) async {
+    await _removeDevice(
+      sessionId: sessionId,
+      requestId:
+          'remove-login-device-$sessionId-${DateTime.now().toUtc().microsecondsSinceEpoch}',
+    );
+    final devices = state.asData?.value ?? const <ManagedLoginDevice>[];
+    state = AsyncData(
+      devices
+          .where((device) => device.sessionId != sessionId)
+          .toList(growable: false),
+    );
+  }
+
+  Future<List<ManagedLoginDevice>> _load() => _fetchDevices(
+    requestId:
+        'managed-login-devices-${DateTime.now().toUtc().microsecondsSinceEpoch}',
+  );
 }

@@ -630,6 +630,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get manageDevicesSubtitle => 'Devices logged in';
 
   @override
+  String get manageDevicesEmpty => 'No signed-in devices.';
+
+  @override
+  String get manageDevicesLoadFailed => 'Unable to load signed-in devices.';
+
+  @override
+  String get manageDevicesRetry => 'Retry';
+
+  @override
+  String get manageDevicesIosName => 'iOS device';
+
+  @override
+  String get manageDevicesAndroidName => 'Android device';
+
+  @override
+  String get manageDevicesUnknownDevice => 'Unknown device';
+
+  @override
+  String get manageDevicesUnknownLoginTime => 'Unknown login time';
+
+  @override
+  String get manageDevicesRemoveFailed =>
+      'Unable to remove this device. Please try again.';
+
+  @override
   String get manageDevicesPhoneName => 'Iphone 16 pro max';
 
   @override

@@ -600,6 +600,30 @@ class AppLocalizationsZh extends AppLocalizations {
   String get manageDevicesSubtitle => '已登录的设备';
 
   @override
+  String get manageDevicesEmpty => '暂无已登录设备。';
+
+  @override
+  String get manageDevicesLoadFailed => '无法加载已登录设备。';
+
+  @override
+  String get manageDevicesRetry => '重试';
+
+  @override
+  String get manageDevicesIosName => 'iOS 设备';
+
+  @override
+  String get manageDevicesAndroidName => 'Android 设备';
+
+  @override
+  String get manageDevicesUnknownDevice => '未知设备';
+
+  @override
+  String get manageDevicesUnknownLoginTime => '未知登录时间';
+
+  @override
+  String get manageDevicesRemoveFailed => '无法移除此设备，请重试。';
+
+  @override
   String get manageDevicesPhoneName => 'Iphone 16 pro max';
 
   @override

@@ -13,11 +13,14 @@ import '../data/data_sources/account_overview_local_data_source.dart';
 import '../data/data_sources/account_overview_remote_data_source.dart';
 import '../data/data_sources/account_secure_data_source.dart';
 import '../data/data_sources/app_locale_local_data_source.dart';
+import '../data/data_sources/managed_devices_api.dart';
+import '../data/data_sources/managed_devices_remote_data_source.dart';
 import '../data/data_sources/receiving_devices_api.dart';
 import '../data/data_sources/receiving_devices_remote_data_source.dart';
 import '../data/data_sources/shared_devices_api.dart';
 import '../data/data_sources/shared_devices_remote_data_source.dart';
 import '../data/repositories/app_locale_repository_impl.dart';
+import '../data/repositories/managed_devices_repository_impl.dart';
 import '../data/repositories/account_repository_impl.dart';
 import '../data/repositories/account_overview_repository_impl.dart';
 import '../data/repositories/receiving_devices_repository_impl.dart';
@@ -32,15 +35,18 @@ import '../domain/entities/shared_door_members.dart';
 import '../domain/repositories/account_repository.dart';
 import '../domain/repositories/account_overview_repository.dart';
 import '../domain/repositories/app_locale_repository.dart';
+import '../domain/repositories/managed_devices_repository.dart';
 import '../domain/repositories/receiving_devices_repository.dart';
 import '../domain/repositories/system_permissions_repository.dart';
 import '../domain/repositories/shared_devices_repository.dart';
 import '../domain/use_cases/fetch_shared_doors_use_case.dart';
+import '../domain/use_cases/fetch_managed_login_devices_use_case.dart';
 import '../domain/use_cases/delete_shared_door_member_use_case.dart';
 import '../domain/use_cases/fetch_receiving_doors_use_case.dart';
 import '../domain/use_cases/open_system_permission_settings_use_case.dart';
 import '../domain/use_cases/read_system_permissions_use_case.dart';
 import '../domain/use_cases/request_system_permission_use_case.dart';
+import '../domain/use_cases/remove_managed_login_device_use_case.dart';
 import '../domain/use_cases/read_app_locale_preference_use_case.dart';
 import '../domain/use_cases/save_app_locale_preference_use_case.dart';
 import 'account_controller.dart';
@@ -218,6 +224,40 @@ final sharedDevicesControllerProvider =
     AsyncNotifierProvider<SharedDevicesController, List<SharedDoor>>(
       SharedDevicesController.new,
     );
+
+final managedDevicesApiProvider = Provider<ManagedDevicesApi>((ref) {
+  return ManagedDevicesApi(ref.watch(dioProvider));
+});
+
+final managedDevicesRemoteDataSourceProvider =
+    Provider<ManagedDevicesRemoteDataSource>((ref) {
+      return ManagedDevicesRemoteDataSourceImpl(
+        api: ref.watch(managedDevicesApiProvider),
+      );
+    });
+
+final managedDevicesRepositoryProvider = Provider<ManagedDevicesRepository>((
+  ref,
+) {
+  return ManagedDevicesRepositoryImpl(
+    remoteDataSource: ref.watch(managedDevicesRemoteDataSourceProvider),
+    logger: ref.watch(appLoggerProvider),
+  );
+});
+
+final fetchManagedLoginDevicesUseCaseProvider =
+    Provider<FetchManagedLoginDevicesUseCase>((ref) {
+      return FetchManagedLoginDevicesUseCase(
+        repository: ref.watch(managedDevicesRepositoryProvider),
+      );
+    });
+
+final removeManagedLoginDeviceUseCaseProvider =
+    Provider<RemoveManagedLoginDeviceUseCase>((ref) {
+      return RemoveManagedLoginDeviceUseCase(
+        repository: ref.watch(managedDevicesRepositoryProvider),
+      );
+    });
 
 final sharedDoorMembersProvider = FutureProvider.autoDispose
     .family<SharedDoorMembers, int>((ref, doorId) {
