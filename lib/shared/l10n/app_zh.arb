@@ -291,6 +291,8 @@
   "deviceCustomizeTitle": "自定义",
   "deviceCustomizeChangePictureAction": "更换图片",
   "deviceCustomizeDefaultPictureAction": "默认图片",
+  "deviceCustomizeChangePictureFailed": "更换图片失败，请重试。",
+  "deviceCustomizeResetPictureFailed": "恢复默认图片失败，请重试。",
   "addNewDoorsTitle": "添加新门",
   "addNewDoorsSubtitle": "选择要添加的门",
   "addNewDoorsBackTooltip": "返回",

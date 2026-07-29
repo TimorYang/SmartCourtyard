@@ -895,6 +895,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deviceCustomizeDefaultPictureAction => 'Default picture';
 
   @override
+  String get deviceCustomizeChangePictureFailed =>
+      'Failed to change picture. Please try again.';
+
+  @override
+  String get deviceCustomizeResetPictureFailed =>
+      'Failed to reset the default picture. Please try again.';
+
+  @override
   String get addNewDoorsTitle => 'Add new doors';
 
   @override

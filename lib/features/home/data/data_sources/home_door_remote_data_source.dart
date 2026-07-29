@@ -5,6 +5,8 @@ import '../../../../core/network/network_exception.dart';
 import '../dto/home_door_response_dto.dart';
 import '../dto/move_home_door_scene_request_dto.dart';
 import '../dto/rename_home_door_request_dto.dart';
+import '../dto/update_home_door_cover_request_dto.dart';
+import '../../domain/entities/home_door_cover_image.dart';
 import 'home_api.dart';
 
 abstract interface class HomeDoorRemoteDataSource {
@@ -18,6 +20,12 @@ abstract interface class HomeDoorRemoteDataSource {
   Future<void> unbindDoor({required int doorId, required String requestId});
 
   Future<void> resetDoorCover({required int doorId, required String requestId});
+
+  Future<void> updateDoorCover({
+    required int doorId,
+    required HomeDoorCoverImage image,
+    required String requestId,
+  });
 
   Future<void> renameDoor({
     required int doorId,
@@ -115,6 +123,49 @@ class HomeDoorRemoteDataSourceImpl implements HomeDoorRemoteDataSource {
       if (!_isSuccessCode(response.code) ||
           !response.success ||
           response.data != true) {
+        throw const HomeDoorRemoteException.invalidResponse();
+      }
+    } on DioException catch (error) {
+      throw HomeDoorRemoteException.fromNetwork(
+        NetworkException.fromDio(error),
+      );
+    } on HomeDoorRemoteException {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> updateDoorCover({
+    required int doorId,
+    required HomeDoorCoverImage image,
+    required String requestId,
+  }) async {
+    try {
+      final uploadResponse = await api.uploadDoorCoverImage(
+        FormData.fromMap({
+          'file': MultipartFile.fromBytes(image.bytes, filename: image.fileName),
+        }),
+        Options(
+          contentType: Headers.multipartFormDataContentType,
+          extra: {NetworkRequestExtras.requestId: requestId},
+        ),
+      );
+      final uploadResult = uploadResponse.data;
+      if (!_isSuccessCode(uploadResponse.code) ||
+          !uploadResponse.success ||
+          uploadResult == null ||
+          uploadResult.fileId <= 0) {
+        throw const HomeDoorRemoteException.invalidResponse();
+      }
+
+      final coverResponse = await api.updateDoorCover(
+        doorId,
+        UpdateHomeDoorCoverRequestDto(coverFileId: uploadResult.fileId),
+        Options(extra: {NetworkRequestExtras.requestId: requestId}),
+      );
+      if (!_isSuccessCode(coverResponse.code) ||
+          !coverResponse.success ||
+          coverResponse.data != true) {
         throw const HomeDoorRemoteException.invalidResponse();
       }
     } on DioException catch (error) {

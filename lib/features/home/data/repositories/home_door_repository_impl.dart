@@ -2,6 +2,7 @@ import '../../../../core/errors/app_error.dart';
 import '../../../../core/logging/app_logger.dart';
 import '../../../../platform_bridge/hardware_models.dart';
 import '../../domain/repositories/home_door_repository.dart';
+import '../../domain/entities/home_door_cover_image.dart';
 import '../data_sources/home_door_remote_data_source.dart';
 import '../dto/home_door_response_dto.dart';
 
@@ -105,6 +106,35 @@ class HomeDoorRepositoryImpl implements HomeDoorRepository {
     } on HomeDoorRemoteException catch (error, stackTrace) {
       logger.error(
         'Failed to reset home door cover.',
+        requestId: requestId,
+        error: error,
+        stackTrace: stackTrace,
+        context: {'doorId': doorId, 'statusCode': error.statusCode},
+      );
+      throw _mapError(error, requestId);
+    }
+  }
+
+  @override
+  Future<void> updateDoorCover({
+    required int doorId,
+    required HomeDoorCoverImage image,
+    required String requestId,
+  }) async {
+    try {
+      await remoteDataSource.updateDoorCover(
+        doorId: doorId,
+        image: image,
+        requestId: requestId,
+      );
+      logger.info(
+        'Updated home door cover.',
+        requestId: requestId,
+        context: {'doorId': doorId},
+      );
+    } on HomeDoorRemoteException catch (error, stackTrace) {
+      logger.error(
+        'Failed to update home door cover.',
         requestId: requestId,
         error: error,
         stackTrace: stackTrace,

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import 'package:flinx/core/network/api_envelope_dto.dart';
 import 'package:flinx/core/network/dio_factory.dart';
@@ -8,6 +10,9 @@ import 'package:flinx/features/home/data/dto/home_door_response_dto.dart';
 import 'package:flinx/features/home/data/dto/home_scene_response_dto.dart';
 import 'package:flinx/features/home/data/dto/move_home_door_scene_request_dto.dart';
 import 'package:flinx/features/home/data/dto/rename_home_door_request_dto.dart';
+import 'package:flinx/features/home/data/dto/attachment_upload_result_dto.dart';
+import 'package:flinx/features/home/data/dto/update_home_door_cover_request_dto.dart';
+import 'package:flinx/features/home/domain/entities/home_door_cover_image.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -169,6 +174,82 @@ void main() {
       api.resetCoverOptions.extra?[NetworkRequestExtras.requestId],
       'home-reset-door-cover-123',
     );
+  });
+
+  test(
+    'uploads an image then updates the door cover with one request id',
+    () async {
+      final api = _FakeHomeApi(
+        doorResponse: const ApiEnvelopeDto(
+          code: 200,
+          success: true,
+          data: <HomeDoorResponseDto>[],
+        ),
+        uploadCoverResponse: const ApiEnvelopeDto(
+          code: 200,
+          success: true,
+          data: AttachmentUploadResultDto(fileId: 30001),
+        ),
+        updateCoverResponse: const ApiEnvelopeDto(
+          code: 200,
+          success: true,
+          data: true,
+        ),
+      );
+      final dataSource = HomeDoorRemoteDataSourceImpl(api: api);
+
+      await dataSource.updateDoorCover(
+        doorId: 12,
+        image: HomeDoorCoverImage(
+          bytes: Uint8List.fromList([1, 2, 3]),
+          fileName: 'cover.jpg',
+        ),
+        requestId: 'home-update-door-cover-12-123',
+      );
+
+      expect(api.callOrder, ['upload', 'update']);
+      expect(api.uploadFormData.fields, isEmpty);
+      expect(api.uploadFormData.files.single.key, 'file');
+      expect(api.uploadFormData.files.single.value.filename, 'cover.jpg');
+      expect(
+        api.uploadOptions.contentType,
+        Headers.multipartFormDataContentType,
+      );
+      expect(
+        api.uploadOptions.extra?[NetworkRequestExtras.requestId],
+        'home-update-door-cover-12-123',
+      );
+      expect(api.updateCoverDoorId, 12);
+      expect(api.updateCoverRequest.toJson(), {'coverFileId': 30001});
+      expect(
+        api.updateCoverOptions.extra?[NetworkRequestExtras.requestId],
+        'home-update-door-cover-12-123',
+      );
+    },
+  );
+
+  test('does not update a door cover when image upload fails', () async {
+    final api = _FakeHomeApi(
+      doorResponse: const ApiEnvelopeDto(
+        code: 200,
+        success: true,
+        data: <HomeDoorResponseDto>[],
+      ),
+      uploadCoverResponse: const ApiEnvelopeDto(code: 200, success: true),
+    );
+
+    await expectLater(
+      HomeDoorRemoteDataSourceImpl(api: api).updateDoorCover(
+        doorId: 12,
+        image: HomeDoorCoverImage(
+          bytes: Uint8List.fromList([1]),
+          fileName: 'cover.jpg',
+        ),
+        requestId: 'home-update-door-cover-12-123',
+      ),
+      throwsA(isA<HomeDoorRemoteException>()),
+    );
+    expect(api.callOrder, ['upload']);
   });
 
   test('renames a door with request body and request id', () async {
@@ -340,6 +421,8 @@ class _FakeHomeApi implements HomeApi {
     this.resetCoverResponse,
     this.renameDoorResponse,
     this.moveDoorToSceneResponse,
+    this.uploadCoverResponse,
+    this.updateCoverResponse,
   });
 
   final ApiEnvelopeDto<List<HomeDoorResponseDto>> doorResponse;
@@ -348,6 +431,14 @@ class _FakeHomeApi implements HomeApi {
   final ApiEnvelopeDto<bool>? resetCoverResponse;
   final ApiEnvelopeDto<bool>? renameDoorResponse;
   final ApiEnvelopeDto<bool>? moveDoorToSceneResponse;
+  final ApiEnvelopeDto<AttachmentUploadResultDto>? uploadCoverResponse;
+  final ApiEnvelopeDto<bool>? updateCoverResponse;
+  final callOrder = <String>[];
+  late FormData uploadFormData;
+  late Options uploadOptions;
+  late int updateCoverDoorId;
+  late UpdateHomeDoorCoverRequestDto updateCoverRequest;
+  late Options updateCoverOptions;
   late final Options options;
   late final int sceneId;
   late final Options topOptions;
@@ -397,6 +488,36 @@ class _FakeHomeApi implements HomeApi {
     resetCoverOptions = requestOptions;
     return resetCoverResponse ??
         const ApiEnvelopeDto<bool>(code: 200, success: true, data: true);
+  }
+
+  @override
+  Future<ApiEnvelopeDto<AttachmentUploadResultDto>> uploadDoorCoverImage(
+    FormData formData,
+    Options requestOptions,
+  ) async {
+    callOrder.add('upload');
+    uploadFormData = formData;
+    uploadOptions = requestOptions;
+    return uploadCoverResponse ??
+        const ApiEnvelopeDto(
+          code: 200,
+          success: true,
+          data: AttachmentUploadResultDto(fileId: 1),
+        );
+  }
+
+  @override
+  Future<ApiEnvelopeDto<bool>> updateDoorCover(
+    int doorId,
+    UpdateHomeDoorCoverRequestDto request,
+    Options requestOptions,
+  ) async {
+    callOrder.add('update');
+    updateCoverDoorId = doorId;
+    updateCoverRequest = request;
+    updateCoverOptions = requestOptions;
+    return updateCoverResponse ??
+        const ApiEnvelopeDto(code: 200, success: true, data: true);
   }
 
   @override
@@ -489,6 +610,23 @@ class _ThrowingHomeApi implements HomeApi {
 
   @override
   Future<ApiEnvelopeDto<bool>> resetDoorCover(int doorId, Options options) {
+    throw error;
+  }
+
+  @override
+  Future<ApiEnvelopeDto<AttachmentUploadResultDto>> uploadDoorCoverImage(
+    FormData formData,
+    Options options,
+  ) {
+    throw error;
+  }
+
+  @override
+  Future<ApiEnvelopeDto<bool>> updateDoorCover(
+    int doorId,
+    UpdateHomeDoorCoverRequestDto request,
+    Options options,
+  ) {
     throw error;
   }
 

@@ -1742,6 +1742,18 @@ abstract class AppLocalizations {
   /// **'Default picture'**
   String get deviceCustomizeDefaultPictureAction;
 
+  /// No description provided for @deviceCustomizeChangePictureFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to change picture. Please try again.'**
+  String get deviceCustomizeChangePictureFailed;
+
+  /// No description provided for @deviceCustomizeResetPictureFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to reset the default picture. Please try again.'**
+  String get deviceCustomizeResetPictureFailed;
+
   /// Add new doors page title
   ///
   /// In en, this message translates to:

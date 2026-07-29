@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/config/providers.dart';
 import '../../../core/logging/providers.dart';
+import '../../../core/network/access_token_cache.dart';
 import '../../../core/network/providers.dart';
 import '../../../platform_bridge/hardware_models.dart';
 import '../../auth/application/providers.dart';
@@ -28,10 +30,24 @@ import '../domain/use_cases/reset_home_door_cover_use_case.dart';
 import '../domain/use_cases/top_home_door_use_case.dart';
 import '../domain/use_cases/unbind_home_door_use_case.dart';
 import '../domain/use_cases/update_door_share_use_case.dart';
+import '../domain/use_cases/update_home_door_cover_use_case.dart';
+import 'home_door_cover_image_source.dart';
 
 final homeApiProvider = Provider<HomeApi>((ref) {
   return HomeApi(ref.watch(dioProvider));
 });
+
+final homeDoorCoverImageSourceProvider =
+    Provider.family<HomeDoorCoverImageSource?, int?>((ref, fileId) {
+      if (fileId == null || fileId <= 0) {
+        return null;
+      }
+      return HomeDoorCoverImageSource.fromFileId(
+        fileId: fileId,
+        configuration: ref.watch(appApiConfigurationProvider),
+        accessToken: AccessTokenCache.value,
+      );
+    });
 
 final homeDoorRemoteDataSourceProvider = Provider<HomeDoorRemoteDataSource>(
   (ref) => HomeDoorRemoteDataSourceImpl(api: ref.watch(homeApiProvider)),
@@ -100,6 +116,14 @@ final fetchHomeDoorsUseCaseProvider = Provider<FetchHomeDoorsUseCase>((ref) {
 final topHomeDoorUseCaseProvider = Provider<TopHomeDoorUseCase>((ref) {
   return TopHomeDoorUseCase(repository: ref.watch(homeDoorRepositoryProvider));
 });
+
+final updateHomeDoorCoverUseCaseProvider = Provider<UpdateHomeDoorCoverUseCase>(
+  (ref) {
+    return UpdateHomeDoorCoverUseCase(
+      repository: ref.watch(homeDoorRepositoryProvider),
+    );
+  },
+);
 
 final moveHomeDoorToSceneUseCaseProvider = Provider<MoveHomeDoorToSceneUseCase>(
   (ref) {

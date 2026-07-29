@@ -1,5 +1,6 @@
 import 'package:flinx/features/home/application/providers.dart';
 import 'package:flinx/features/home/domain/repositories/home_door_repository.dart';
+import 'package:flinx/features/home/domain/entities/home_door_cover_image.dart';
 import 'package:flinx/features/home/domain/use_cases/rename_home_door_use_case.dart';
 import 'package:flinx/features/home/presentation/widgets/device_name_dialog.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
@@ -93,6 +94,13 @@ class _RenameDoorRepository implements HomeDoorRepository {
   @override
   Future<void> resetDoorCover({
     required int doorId,
+    required String requestId,
+  }) async {}
+
+  @override
+  Future<void> updateDoorCover({
+    required int doorId,
+    required HomeDoorCoverImage image,
     required String requestId,
   }) async {}
 

@@ -171,6 +171,9 @@ class _FakeHomeApi implements HomeApi {
   late CreateHomeSceneRequestDto createRequest;
 
   @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+
+  @override
   Future<ApiEnvelopeDto<bool>> topDoor(
     int doorId,
     Options requestOptions,
@@ -273,6 +276,9 @@ class _ThrowingHomeApi implements HomeApi {
   const _ThrowingHomeApi(this.error);
 
   final DioException error;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 
   @override
   Future<ApiEnvelopeDto<bool>> topDoor(int doorId, Options options) {

@@ -1,4 +1,5 @@
 import '../../../../platform_bridge/hardware_models.dart';
+import '../entities/home_door_cover_image.dart';
 
 abstract interface class HomeDoorRepository {
   Future<List<DeviceSummary>> fetchDoors({
@@ -11,6 +12,12 @@ abstract interface class HomeDoorRepository {
   Future<void> unbindDoor({required int doorId, required String requestId});
 
   Future<void> resetDoorCover({required int doorId, required String requestId});
+
+  Future<void> updateDoorCover({
+    required int doorId,
+    required HomeDoorCoverImage image,
+    required String requestId,
+  });
 
   Future<void> renameDoor({
     required int doorId,

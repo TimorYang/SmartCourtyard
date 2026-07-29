@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import 'package:flinx/core/errors/app_error.dart';
 import 'package:flinx/core/logging/app_logger.dart';
@@ -5,6 +7,7 @@ import 'package:flinx/core/network/network_exception.dart';
 import 'package:flinx/features/home/data/data_sources/home_door_remote_data_source.dart';
 import 'package:flinx/features/home/data/dto/home_door_response_dto.dart';
 import 'package:flinx/features/home/data/repositories/home_door_repository_impl.dart';
+import 'package:flinx/features/home/domain/entities/home_door_cover_image.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -152,6 +155,31 @@ void main() {
     expect(dataSource.resetDoorCoverRequestId, 'home-reset-door-cover-123');
   });
 
+  test('uploads and updates a door cover', () async {
+    final dataSource = _FakeHomeDoorRemoteDataSource(const []);
+    final repository = HomeDoorRepositoryImpl(
+      remoteDataSource: dataSource,
+      logger: const _NoopLogger(),
+    );
+    final image = HomeDoorCoverImage(
+      bytes: Uint8List.fromList([1]),
+      fileName: 'cover.jpg',
+    );
+
+    await repository.updateDoorCover(
+      doorId: 12,
+      image: image,
+      requestId: 'home-update-door-cover-12-123',
+    );
+
+    expect(dataSource.updateDoorCoverId, 12);
+    expect(dataSource.updateDoorCoverImage, same(image));
+    expect(
+      dataSource.updateDoorCoverRequestId,
+      'home-update-door-cover-12-123',
+    );
+  });
+
   test('renames a door', () async {
     final dataSource = _FakeHomeDoorRemoteDataSource(const []);
     final repository = HomeDoorRepositoryImpl(
@@ -199,6 +227,9 @@ class _FakeHomeDoorRemoteDataSource implements HomeDoorRemoteDataSource {
   String? unbindRequestId;
   int? resetDoorCoverId;
   String? resetDoorCoverRequestId;
+  int? updateDoorCoverId;
+  HomeDoorCoverImage? updateDoorCoverImage;
+  String? updateDoorCoverRequestId;
   int? renameDoorId;
   String? renameDoorName;
   String? renameDoorRequestId;
@@ -228,6 +259,17 @@ class _FakeHomeDoorRemoteDataSource implements HomeDoorRemoteDataSource {
   }) async {
     resetDoorCoverId = doorId;
     resetDoorCoverRequestId = requestId;
+  }
+
+  @override
+  Future<void> updateDoorCover({
+    required int doorId,
+    required HomeDoorCoverImage image,
+    required String requestId,
+  }) async {
+    updateDoorCoverId = doorId;
+    updateDoorCoverImage = image;
+    updateDoorCoverRequestId = requestId;
   }
 
   @override
@@ -279,6 +321,15 @@ class _FailingHomeDoorRemoteDataSource implements HomeDoorRemoteDataSource {
   @override
   Future<void> resetDoorCover({
     required int doorId,
+    required String requestId,
+  }) {
+    throw error;
+  }
+
+  @override
+  Future<void> updateDoorCover({
+    required int doorId,
+    required HomeDoorCoverImage image,
     required String requestId,
   }) {
     throw error;

@@ -1,14 +1,18 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flinx/features/home/application/providers.dart';
 import 'package:flinx/features/home/domain/repositories/home_door_repository.dart';
 import 'package:flinx/features/home/domain/use_cases/reset_home_door_cover_use_case.dart';
+import 'package:flinx/features/home/domain/use_cases/update_home_door_cover_use_case.dart';
+import 'package:flinx/features/home/domain/entities/home_door_cover_image.dart';
 import 'package:flinx/features/home/presentation/widgets/device_customize_dialog.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:image_picker/image_picker.dart';
 
 void main() {
   const device = DeviceSummary(
@@ -19,6 +23,7 @@ void main() {
     doorState: DoorState.closed,
     cycleCount: 0,
     remainingLifePercent: 100,
+    sceneId: 7,
   );
 
   testWidgets('resets the default picture once and closes the dialog', (
@@ -65,6 +70,52 @@ void main() {
     expect(repository.requestId, startsWith('home-reset-door-cover-12-'));
     expect(find.text('Default picture'), findsNothing);
   });
+
+  testWidgets(
+    'uploads the selected image and closes after updating the cover',
+    (tester) async {
+      final repository = _UpdateCoverRepository();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            updateHomeDoorCoverUseCaseProvider.overrideWithValue(
+              UpdateHomeDoorCoverUseCase(repository: repository),
+            ),
+          ],
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Builder(
+              builder: (context) => Scaffold(
+                body: TextButton(
+                  onPressed: () => showDeviceCustomizeDialog(
+                    context,
+                    device: device,
+                    pickImage: () async => XFile.fromData(
+                      Uint8List.fromList([1, 2, 3]),
+                      name: 'cover.jpg',
+                    ),
+                  ),
+                  child: const Text('Open customize'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open customize'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Change picture'));
+      await tester.pumpAndSettle();
+
+      expect(repository.doorId, 12);
+      expect(repository.image?.fileName, 'door-cover.jpg');
+      expect(repository.image?.bytes, [1, 2, 3]);
+      expect(repository.requestId, startsWith('home-update-door-cover-12-'));
+      expect(find.text('Change picture'), findsNothing);
+    },
+  );
 }
 
 class _ResetCoverRepository implements HomeDoorRepository {
@@ -93,6 +144,13 @@ class _ResetCoverRepository implements HomeDoorRepository {
   }
 
   @override
+  Future<void> updateDoorCover({
+    required int doorId,
+    required HomeDoorCoverImage image,
+    required String requestId,
+  }) async {}
+
+  @override
   Future<void> renameDoor({
     required int doorId,
     required String name,
@@ -115,6 +173,61 @@ class _ResetCoverRepository implements HomeDoorRepository {
   Future<void> moveDoorToScene({
     required int doorId,
     required int sceneId,
+    required String requestId,
+  }) async {}
+}
+
+class _UpdateCoverRepository implements HomeDoorRepository {
+  int? doorId;
+  HomeDoorCoverImage? image;
+  String? requestId;
+
+  @override
+  Future<List<DeviceSummary>> fetchDoors({
+    required int sceneId,
+    required String requestId,
+  }) async => const [];
+
+  @override
+  Future<void> updateDoorCover({
+    required int doorId,
+    required HomeDoorCoverImage image,
+    required String requestId,
+  }) async {
+    this.doorId = doorId;
+    this.image = image;
+    this.requestId = requestId;
+  }
+
+  @override
+  Future<void> moveDoorToScene({
+    required int doorId,
+    required int sceneId,
+    required String requestId,
+  }) async {}
+
+  @override
+  Future<void> renameDoor({
+    required int doorId,
+    required String name,
+    required String requestId,
+  }) async {}
+
+  @override
+  Future<void> resetDoorCover({
+    required int doorId,
+    required String requestId,
+  }) async {}
+
+  @override
+  Future<void> topDoor({
+    required int doorId,
+    required String requestId,
+  }) async {}
+
+  @override
+  Future<void> unbindDoor({
+    required int doorId,
     required String requestId,
   }) async {}
 }

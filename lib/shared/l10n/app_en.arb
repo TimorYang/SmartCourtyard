@@ -945,6 +945,8 @@
   "@deviceCustomizeDefaultPictureAction": {
     "description": "Default picture action in the device customization dialog"
   },
+  "deviceCustomizeChangePictureFailed": "Failed to change picture. Please try again.",
+  "deviceCustomizeResetPictureFailed": "Failed to reset the default picture. Please try again.",
   "addNewDoorsTitle": "Add new doors",
   "@addNewDoorsTitle": {
     "description": "Add new doors page title"

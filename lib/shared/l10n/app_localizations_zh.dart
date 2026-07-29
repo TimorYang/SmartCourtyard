@@ -861,6 +861,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get deviceCustomizeDefaultPictureAction => '默认图片';
 
   @override
+  String get deviceCustomizeChangePictureFailed => '更换图片失败，请重试。';
+
+  @override
+  String get deviceCustomizeResetPictureFailed => '恢复默认图片失败，请重试。';
+
+  @override
   String get addNewDoorsTitle => '添加新门';
 
   @override
