@@ -21,12 +21,7 @@ import 'already_added_devices_page.dart';
 import 'device_settings_page.dart';
 
 class DeviceCommandPage extends ConsumerStatefulWidget {
-  const DeviceCommandPage({
-    required this.doorId,
-    this.deviceId = '',
-    this.onboardingFlowId,
-    super.key,
-  });
+  const DeviceCommandPage({required this.doorId, this.deviceId = '', this.onboardingFlowId, super.key});
 
   static const routeName = 'device-command';
   static const routePath = '/device-command';
@@ -58,12 +53,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
             'device_detail_entered',
             tag: AppLogTag.binding,
             flowId: flowId,
-            context: {
-              'deviceId': widget.deviceId,
-              'doorId': widget.doorId,
-              'stage': 'device_detail',
-              'result': 'entered',
-            },
+            context: {'deviceId': widget.deviceId, 'doorId': widget.doorId, 'stage': 'device_detail', 'result': 'entered'},
           );
     }
     Future.microtask(_loadDoorDetail);
@@ -90,26 +80,14 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
   Widget build(BuildContext context) {
     final commandState = ref.watch(deviceCommandControllerProvider);
     final controller = _controller;
-    final isBusy =
-        commandState.pendingAction != null ||
-        commandState.pendingRemotePairingAction != null ||
-        commandState.pendingRemoteManagementAction != null;
+    final isBusy = commandState.pendingAction != null || commandState.pendingRemotePairingAction != null || commandState.pendingRemoteManagementAction != null;
     final textTheme = Theme.of(context).textTheme;
 
     return IndexedStack(
       index: _selectedTab.index,
       children: [
-        OperationRecordPage(
-          doorId: widget.doorId,
-          onTabSelected: _selectTab,
-          isActive: _selectedTab == DeviceDetailTab.operationRecords,
-        ),
-        _buildCommandPage(
-          commandState: commandState,
-          controller: controller,
-          isBusy: isBusy,
-          textTheme: textTheme,
-        ),
+        OperationRecordPage(doorId: widget.doorId, onTabSelected: _selectTab, isActive: _selectedTab == DeviceDetailTab.operationRecords),
+        _buildCommandPage(commandState: commandState, controller: controller, isBusy: isBusy, textTheme: textTheme),
         SecurityCenterPage(
           doorId: widget.doorId,
           deviceId: _hardwareDeviceId(commandState),
@@ -128,10 +106,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
   }
 
   void _loadDoorDetail({String? preferredDeviceId}) {
-    _controller.loadDoorDetail(
-      doorId: widget.doorId,
-      preferredDeviceId: preferredDeviceId ?? widget.deviceId,
-    );
+    _controller.loadDoorDetail(doorId: widget.doorId, preferredDeviceId: preferredDeviceId ?? widget.deviceId);
   }
 
   String _hardwareDeviceId(DeviceCommandState commandState) {
@@ -169,9 +144,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     }..remove('');
 
     for (final device in commandState.doorDevices) {
-      if (candidates.contains(device.bleName?.trim()) ||
-          candidates.contains(device.sn.trim()) ||
-          candidates.contains(device.deviceId.trim())) {
+      if (candidates.contains(device.bleName?.trim()) || candidates.contains(device.sn.trim()) || candidates.contains(device.deviceId.trim())) {
         return device;
       }
     }
@@ -182,10 +155,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
   Set<String> _capabilitiesForCurrentDevice(DeviceCommandState commandState) {
     final device = _selectedDoorDevice(commandState);
     if (device != null) {
-      return device.capabilities
-          .map((capability) => capability.trim().toUpperCase())
-          .where((capability) => capability.isNotEmpty)
-          .toSet();
+      return device.capabilities.map((capability) => capability.trim().toUpperCase()).where((capability) => capability.isNotEmpty).toSet();
     }
     // Capabilities must be tied to a known device type. Do not enable an
     // extension when the response cannot be matched to the active device.
@@ -200,22 +170,12 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
   }) {
     final doorDetail = commandState.doorDetail;
     final ledEnabled = _ledEnabledOverride ?? doorDetail?.isLedEnabled ?? false;
-    final autoCloseEnabled =
-        _autoCloseEnabledOverride ?? doorDetail?.autoCloseEnabled ?? false;
-    final openReminderEnabled =
-        _openReminderEnabledOverride ??
-        doorDetail?.openReminderEnabled ??
-        false;
+    final autoCloseEnabled = _autoCloseEnabledOverride ?? doorDetail?.autoCloseEnabled ?? false;
+    final openReminderEnabled = _openReminderEnabledOverride ?? doorDetail?.openReminderEnabled ?? false;
     final hardwareDeviceId = _hardwareDeviceId(commandState);
-    final selectedDeviceId =
-        _selectedDoorDevice(commandState)?.deviceId.trim() ??
-        widget.deviceId.trim();
-    final selectedBleName =
-        _selectedDoorDevice(commandState)?.bleName?.trim() ?? '';
-    final connectedBleDeviceId =
-        commandState.bleConnectionStatus == DeviceBleConnectionStatus.connected
-        ? commandState.bleDeviceId?.trim() ?? ''
-        : '';
+    final selectedDeviceId = _selectedDoorDevice(commandState)?.deviceId.trim() ?? widget.deviceId.trim();
+    final selectedBleName = _selectedDoorDevice(commandState)?.bleName?.trim() ?? '';
+    final connectedBleDeviceId = commandState.bleConnectionStatus == DeviceBleConnectionStatus.connected ? commandState.bleDeviceId?.trim() ?? '' : '';
     final capabilities = _capabilitiesForCurrentDevice(commandState);
     final canControlDoor = capabilities.contains('DOOR_CONTROL');
     final canControlLed = capabilities.contains('LED_CONTROL');
@@ -223,9 +183,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     final canUseAutoClose = capabilities.contains('AUTO_CLOSE');
     final canUseOpenReminder = capabilities.contains('DOOR_OPEN_REMINDER');
     final l10n = AppLocalizations.of(context);
-    final doorPositionPercent =
-        commandState.doorRealtimeState?.positionPercent ??
-        doorDetail?.positionPercent;
+    final doorPositionPercent = commandState.doorRealtimeState?.positionPercent ?? doorDetail?.positionPercent;
     return Scaffold(
       backgroundColor: AppColors.backgroundPrimary,
       appBar: FlinxNavigationBar(
@@ -244,9 +202,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                       '&deviceId=${Uri.encodeComponent(hardwareDeviceId)}',
                     );
                     final normalizedDeviceId = addedDeviceId?.trim();
-                    if (!mounted ||
-                        normalizedDeviceId == null ||
-                        normalizedDeviceId.isEmpty) {
+                    if (!mounted || normalizedDeviceId == null || normalizedDeviceId.isEmpty) {
                       return;
                     }
                     _loadDoorDetail(preferredDeviceId: normalizedDeviceId);
@@ -256,10 +212,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
           const SizedBox(width: 4),
         ],
       ),
-      bottomNavigationBar: DeviceDetailBottomNavigation(
-        selectedTab: DeviceDetailTab.command,
-        onSelected: _selectTab,
-      ),
+      bottomNavigationBar: DeviceDetailBottomNavigation(selectedTab: DeviceDetailTab.command, onSelected: _selectTab),
       body: SafeArea(
         top: false,
         child: Column(
@@ -268,15 +221,9 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
               child: DecoratedBox(
                 decoration: const BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(color: AppColors.deviceControlDivider),
-                  ),
+                  border: Border(bottom: BorderSide(color: AppColors.deviceControlDivider)),
                 ),
-                child: _CycleSummary(
-                  operatedCycles: doorDetail?.operatedCycles,
-                  remainingCycles: doorDetail?.remainingCycles,
-                  textTheme: textTheme,
-                ),
+                child: _CycleSummary(operatedCycles: doorDetail?.operatedCycles, remainingCycles: doorDetail?.remainingCycles, textTheme: textTheme),
               ),
             ),
             _DeviceConnectionStrip(
@@ -311,44 +258,23 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                   ),
                   const SizedBox(height: 16),
                   if (commandState.doorDetailErrorMessage != null) ...[
-                    _CommandFeedback(
-                      message: commandState.doorDetailErrorMessage!,
-                      icon: Icons.error_outline,
-                      foregroundColor: AppColors.textPrimary,
-                    ),
+                    _CommandFeedback(message: commandState.doorDetailErrorMessage!, icon: Icons.error_outline, foregroundColor: AppColors.textPrimary),
                     const SizedBox(height: 12),
                   ],
                   _DoorCommandRow(
                     enabled: canControlDoor,
                     busy: isBusy,
                     pendingAction: commandState.pendingAction,
-                    onClose: () => controller.runAction(
-                      deviceId: hardwareDeviceId,
-                      action: DeviceCommandAction.closeDoor,
-                    ),
-                    onStop: () => controller.runAction(
-                      deviceId: hardwareDeviceId,
-                      action: DeviceCommandAction.stopDoor,
-                    ),
-                    onOpen: () => controller.runAction(
-                      deviceId: hardwareDeviceId,
-                      action: DeviceCommandAction.openDoor,
-                    ),
+                    onClose: () => controller.runAction(deviceId: hardwareDeviceId, action: DeviceCommandAction.closeDoor),
+                    onStop: () => controller.runAction(deviceId: hardwareDeviceId, action: DeviceCommandAction.stopDoor),
+                    onOpen: () => controller.runAction(deviceId: hardwareDeviceId, action: DeviceCommandAction.openDoor),
                   ),
                   const SizedBox(height: 18),
                   if (commandState.errorMessage != null) ...[
-                    _CommandFeedback(
-                      message: commandState.errorMessage!,
-                      icon: Icons.error_outline,
-                      foregroundColor: AppColors.textPrimary,
-                    ),
+                    _CommandFeedback(message: commandState.errorMessage!, icon: Icons.error_outline, foregroundColor: AppColors.textPrimary),
                     const SizedBox(height: 12),
                   ] else if (commandState.infoMessage != null) ...[
-                    _CommandFeedback(
-                      message: commandState.infoMessage!,
-                      icon: Icons.check_circle_outline,
-                      foregroundColor: AppColors.textMuted,
-                    ),
+                    _CommandFeedback(message: commandState.infoMessage!, icon: Icons.check_circle_outline, foregroundColor: AppColors.textMuted),
                     const SizedBox(height: 12),
                   ],
                   _QuickActionGrid(
@@ -365,9 +291,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                       setState(() => _ledEnabledOverride = enabled);
                       await controller.runAction(
                         deviceId: hardwareDeviceId,
-                        action: enabled
-                            ? DeviceCommandAction.turnLightOn
-                            : DeviceCommandAction.turnLightOff,
+                        action: enabled ? DeviceCommandAction.turnLightOn : DeviceCommandAction.turnLightOff,
                       );
                     },
                     onAutoCloseChanged: (enabled) {
@@ -376,10 +300,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                     onOpenReminderChanged: (enabled) {
                       setState(() => _openReminderEnabledOverride = enabled);
                     },
-                    onPartialOpen: () => controller.runAction(
-                      deviceId: hardwareDeviceId,
-                      action: DeviceCommandAction.partialOpenDoor,
-                    ),
+                    onPartialOpen: () => controller.runAction(deviceId: hardwareDeviceId, action: DeviceCommandAction.partialOpenDoor),
                     onMoreSettings: () => context.push(
                       '${DeviceSettingsPage.routePath}'
                       '?doorId=${Uri.encodeComponent(widget.doorId)}'
@@ -425,61 +346,34 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     if (positionPercent == null) {
       return stateLabel;
     }
-    return l10n.deviceCommandDoorStateWithPercent(
-      stateLabel,
-      positionPercent.clamp(0, 100).round(),
-    );
+    return l10n.deviceCommandDoorStateWithPercent(stateLabel, positionPercent.clamp(0, 100).round());
   }
 }
 
 abstract final class _DeviceCommandAssetPaths {
-  static const videoActive =
-      'assets/icons/device_control/device_command_video_active.png';
-  static const videoInactive =
-      'assets/icons/device_control/device_command_video_inactive.png';
-  static const dongleActive =
-      'assets/icons/device_control/device_command_dongle_active.png';
-  static const dongleInactive =
-      'assets/icons/device_control/device_command_dongle_inactive.png';
-  static const fboxActive =
-      'assets/icons/device_control/device_command_fbox_active.png';
-  static const fboxInactive =
-      'assets/icons/device_control/device_command_fbox_inactive.png';
-  static const evoActive =
-      'assets/icons/device_control/device_command_evo_active.png';
-  static const evoInactive =
-      'assets/icons/device_control/device_command_evo_inactive.png';
-  static const openerActive =
-      'assets/icons/device_control/device_command_opener_active.png';
-  static const openerInactive =
-      'assets/icons/device_control/device_command_opener_inactive.png';
-  static const bluetoothActive =
-      'assets/icons/device_control/device_command_bluetooth_active_placeholder.png';
-  static const bluetoothInactive =
-      'assets/icons/device_control/device_command_bluetooth_inactive_placeholder.png';
-  static const wifiActive =
-      'assets/icons/device_control/device_command_wifi_active_placeholder.png';
-  static const wifiInactive =
-      'assets/icons/device_control/device_command_wifi_inactive_placeholder.png';
-  static const led =
-      'assets/icons/device_control/device_command_led_placeholder.png';
-  static const autoClose =
-      'assets/icons/device_control/device_command_auto_close_placeholder.png';
-  static const partialOpen =
-      'assets/icons/device_control/device_command_partial_open_placeholder.png';
-  static const moreSetting =
-      'assets/icons/device_control/device_command_more_setting_placeholder.png';
-  static const openReminder =
-      'assets/icons/device_settings/device_settings_door_open_reminder_icon.png';
+  static const videoActive = 'assets/icons/device_control/device_command_video_active.png';
+  static const videoInactive = 'assets/icons/device_control/device_command_video_inactive.png';
+  static const dongleActive = 'assets/icons/device_control/device_command_dongle_active.png';
+  static const dongleInactive = 'assets/icons/device_control/device_command_dongle_inactive.png';
+  static const fboxActive = 'assets/icons/device_control/device_command_fbox_active.png';
+  static const fboxInactive = 'assets/icons/device_control/device_command_fbox_inactive.png';
+  static const evoActive = 'assets/icons/device_control/device_command_evo_active.png';
+  static const evoInactive = 'assets/icons/device_control/device_command_evo_inactive.png';
+  static const openerActive = 'assets/icons/device_control/device_command_opener_active.png';
+  static const openerInactive = 'assets/icons/device_control/device_command_opener_inactive.png';
+  static const bluetoothActive = 'assets/icons/device_control/device_command_bluetooth_active_placeholder.png';
+  static const bluetoothInactive = 'assets/icons/device_control/device_command_bluetooth_inactive_placeholder.png';
+  static const wifiActive = 'assets/icons/device_control/device_command_wifi_active_placeholder.png';
+  static const wifiInactive = 'assets/icons/device_control/device_command_wifi_inactive_placeholder.png';
+  static const led = 'assets/icons/device_control/device_command_led_placeholder.png';
+  static const autoClose = 'assets/icons/device_control/device_command_auto_close_placeholder.png';
+  static const partialOpen = 'assets/icons/device_control/device_command_partial_open_placeholder.png';
+  static const moreSetting = 'assets/icons/device_control/device_command_more_setting_placeholder.png';
+  static const openReminder = 'assets/icons/device_settings/device_settings_door_open_reminder_icon.png';
 }
 
 class _DeviceConnectionStrip extends StatelessWidget {
-  const _DeviceConnectionStrip({
-    required this.devices,
-    required this.connectionStatuses,
-    required this.selectedDeviceId,
-    required this.onDeviceTap,
-  });
+  const _DeviceConnectionStrip({required this.devices, required this.connectionStatuses, required this.selectedDeviceId, required this.onDeviceTap});
 
   final List<DoorDevice> devices;
   final Map<String, DeviceBleConnectionStatus> connectionStatuses;
@@ -497,36 +391,19 @@ class _DeviceConnectionStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 44,
-      child: Row(
-        children: [
-          _group(
-            'dongle',
-            _DeviceCommandAssetPaths.dongleActive,
-            _DeviceCommandAssetPaths.dongleInactive,
-          ),
-          _group(
-            'fbox',
-            _DeviceCommandAssetPaths.fboxActive,
-            _DeviceCommandAssetPaths.fboxInactive,
-          ),
-          _group(
-            'opener',
-            _DeviceCommandAssetPaths.openerActive,
-            _DeviceCommandAssetPaths.openerInactive,
-          ),
-          _group(
-            'video',
-            _DeviceCommandAssetPaths.videoActive,
-            _DeviceCommandAssetPaths.videoInactive,
-          ),
-          _group(
-            'evo',
-            _DeviceCommandAssetPaths.evoActive,
-            _DeviceCommandAssetPaths.evoInactive,
-          ),
-        ],
+    return Padding(
+      padding: EdgeInsets.only(left: 20, right: 20, top: 10),
+      child: SizedBox(
+        height: 36,
+        child: Row(
+          children: [
+            _group('dongle', _DeviceCommandAssetPaths.dongleActive, _DeviceCommandAssetPaths.dongleInactive),
+            _group('fbox', _DeviceCommandAssetPaths.fboxActive, _DeviceCommandAssetPaths.fboxInactive),
+            _group('opener', _DeviceCommandAssetPaths.openerActive, _DeviceCommandAssetPaths.openerInactive),
+            _group('video', _DeviceCommandAssetPaths.videoActive, _DeviceCommandAssetPaths.videoInactive),
+            _group('evo', _DeviceCommandAssetPaths.evoActive, _DeviceCommandAssetPaths.evoInactive),
+          ],
+        ),
       ),
     );
   }
@@ -535,10 +412,7 @@ class _DeviceConnectionStrip extends StatelessWidget {
     final device = _deviceFor(type);
     final isActive = device != null;
     final isSelected = device?.deviceId == selectedDeviceId;
-    final isBleConnected =
-        device != null &&
-        connectionStatuses[device.deviceId] ==
-            DeviceBleConnectionStatus.connected;
+    final isBleConnected = device != null && connectionStatuses[device.deviceId] == DeviceBleConnectionStatus.connected;
     return Expanded(
       child: _ConnectionGroup(
         key: ValueKey<String>('connection-device-$type'),
@@ -584,35 +458,21 @@ class _ConnectionGroup extends StatelessWidget {
       onTap: onTap,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          border: hasConnectionBorder
-              ? Border.all(color: AppColors.deviceControlPrimaryAction)
-              : null,
-          borderRadius: BorderRadius.circular(6),
+          border: hasConnectionBorder ? Border.all(color: AppColors.deviceControlPrimaryAction) : null,
+          borderRadius: BorderRadius.circular(5),
         ),
         child: Center(
           child: FittedBox(
             fit: BoxFit.scaleDown,
             child: Row(
               children: [
-                _DeviceControlAssetIcon(
-                  assetPath: deviceActive
-                      ? activeDeviceIconAsset
-                      : inactiveDeviceIconAsset,
-                ),
+                _DeviceControlAssetIcon(assetPath: deviceActive ? activeDeviceIconAsset : inactiveDeviceIconAsset),
                 if (showBluetooth) ...[
-                  const SizedBox(width: 7),
-                  _DeviceControlAssetIcon(
-                    assetPath: bluetoothActive
-                        ? _DeviceCommandAssetPaths.bluetoothActive
-                        : _DeviceCommandAssetPaths.bluetoothInactive,
-                  ),
+                  const SizedBox(width: 4),
+                  _DeviceControlAssetIcon(assetPath: bluetoothActive ? _DeviceCommandAssetPaths.bluetoothActive : _DeviceCommandAssetPaths.bluetoothInactive),
                 ],
-                const SizedBox(width: 7),
-                _DeviceControlAssetIcon(
-                  assetPath: wifiActive
-                      ? _DeviceCommandAssetPaths.wifiActive
-                      : _DeviceCommandAssetPaths.wifiInactive,
-                ),
+                const SizedBox(width: 6),
+                _DeviceControlAssetIcon(assetPath: wifiActive ? _DeviceCommandAssetPaths.wifiActive : _DeviceCommandAssetPaths.wifiInactive),
               ],
             ),
           ),
@@ -623,11 +483,7 @@ class _ConnectionGroup extends StatelessWidget {
 }
 
 class _CycleSummary extends StatelessWidget {
-  const _CycleSummary({
-    required this.operatedCycles,
-    required this.remainingCycles,
-    required this.textTheme,
-  });
+  const _CycleSummary({required this.operatedCycles, required this.remainingCycles, required this.textTheme});
 
   final int? operatedCycles;
   final int? remainingCycles;
@@ -640,26 +496,14 @@ class _CycleSummary extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: _CycleMetric(
-              label: 'Operated cycles',
-              value: operatedCycles?.toString() ?? '100',
-              textTheme: textTheme,
-            ),
+            child: _CycleMetric(label: 'Operated cycles', value: operatedCycles?.toString() ?? '100', textTheme: textTheme),
           ),
           Padding(
             padding: EdgeInsetsGeometry.only(top: 10, bottom: 10),
-            child: VerticalDivider(
-              width: 58,
-              thickness: 1,
-              color: AppColors.deviceControlDivider,
-            ),
+            child: VerticalDivider(width: 58, thickness: 1, color: AppColors.deviceControlDivider),
           ),
           Expanded(
-            child: _CycleMetric(
-              label: 'Remaining',
-              value: remainingCycles?.toString() ?? '4900',
-              textTheme: textTheme,
-            ),
+            child: _CycleMetric(label: 'Remaining', value: remainingCycles?.toString() ?? '4900', textTheme: textTheme),
           ),
           const _CommandVideoButton(),
         ],
@@ -669,11 +513,7 @@ class _CycleSummary extends StatelessWidget {
 }
 
 class _CycleMetric extends StatelessWidget {
-  const _CycleMetric({
-    required this.label,
-    required this.value,
-    required this.textTheme,
-  });
+  const _CycleMetric({required this.label, required this.value, required this.textTheme});
 
   final String label;
   final String value;
@@ -688,21 +528,13 @@ class _CycleMetric extends StatelessWidget {
         FittedBox(
           fit: BoxFit.scaleDown,
           alignment: Alignment.centerLeft,
-          child: Text(
-            label,
-            maxLines: 1,
-            style: AppTextTokens.deviceControlMetricLabel(textTheme),
-          ),
+          child: Text(label, maxLines: 1, style: AppTextTokens.deviceControlMetricLabel(textTheme)),
         ),
         const SizedBox(height: 6),
         FittedBox(
           fit: BoxFit.scaleDown,
           alignment: Alignment.centerLeft,
-          child: Text(
-            value,
-            maxLines: 1,
-            style: AppTextTokens.deviceControlMetricValue(textTheme),
-          ),
+          child: Text(value, maxLines: 1, style: AppTextTokens.deviceControlMetricValue(textTheme)),
         ),
       ],
     );
@@ -718,18 +550,13 @@ class _CommandVideoButton extends StatelessWidget {
       width: 30,
       height: 30,
       margin: const EdgeInsets.only(left: 8),
-      decoration: const BoxDecoration(
-        color: AppColors.deviceControlPanel,
-        shape: BoxShape.circle,
-      ),
+      decoration: const BoxDecoration(color: AppColors.deviceControlPanel, shape: BoxShape.circle),
       child: IconButton(
         tooltip: 'Video',
         padding: EdgeInsets.zero,
         constraints: const BoxConstraints.tightFor(width: 30, height: 30),
         onPressed: () {},
-        icon: const _DeviceControlAssetIcon(
-          assetPath: _DeviceCommandAssetPaths.videoActive,
-        ),
+        icon: const _DeviceControlAssetIcon(assetPath: _DeviceCommandAssetPaths.videoActive),
       ),
     );
   }
@@ -742,21 +569,12 @@ class _DeviceControlAssetIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
-      assetPath,
-      fit: BoxFit.contain,
-      errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
-    );
+    return Image.asset(assetPath, fit: BoxFit.contain, errorBuilder: (context, error, stackTrace) => const SizedBox.shrink());
   }
 }
 
 class _DoorHeroImage extends StatefulWidget {
-  const _DoorHeroImage({
-    required this.doorType,
-    required this.doorTypeWireValue,
-    required this.positionPercent,
-    required this.logger,
-  });
+  const _DoorHeroImage({required this.doorType, required this.doorTypeWireValue, required this.positionPercent, required this.logger});
 
   final DoorType doorType;
   final int? doorTypeWireValue;
@@ -791,13 +609,7 @@ class _DoorHeroImageState extends State<_DoorHeroImage> {
   void _precacheFrames() {
     final assets = _DoorHeroAssetPaths.forType(widget.doorType);
     for (final assetPath in assets.assetPaths) {
-      unawaited(
-        precacheImage(
-          AssetImage(assetPath),
-          context,
-          onError: (error, stackTrace) {},
-        ),
-      );
+      unawaited(precacheImage(AssetImage(assetPath), context, onError: (error, stackTrace) {}));
     }
   }
 
@@ -837,16 +649,8 @@ class _DoorHeroImageState extends State<_DoorHeroImage> {
             fit: BoxFit.contain,
             errorBuilder: (context, error, stackTrace) {
               return DecoratedBox(
-                decoration: const BoxDecoration(
-                  color: AppColors.backgroundPrimary,
-                ),
-                child: Center(
-                  child: Image.asset(
-                    assets.fallbackAssetPath,
-                    width: 180,
-                    fit: BoxFit.contain,
-                  ),
-                ),
+                decoration: const BoxDecoration(color: AppColors.backgroundPrimary),
+                child: Center(child: Image.asset(assets.fallbackAssetPath, width: 180, fit: BoxFit.contain)),
               );
             },
           ),
@@ -857,11 +661,7 @@ class _DoorHeroImageState extends State<_DoorHeroImage> {
 }
 
 class _DoorHeroAssetPaths {
-  const _DoorHeroAssetPaths._({
-    required this.fallbackAssetPath,
-    required this.frameAssetPrefix,
-    required this.frameCount,
-  });
+  const _DoorHeroAssetPaths._({required this.fallbackAssetPath, required this.frameAssetPrefix, required this.frameCount});
 
   final String fallbackAssetPath;
   final String frameAssetPrefix;
@@ -888,39 +688,29 @@ class _DoorHeroAssetPaths {
   static _DoorHeroAssetPaths forType(DoorType doorType) {
     return switch (doorType) {
       DoorType.garage => const _DoorHeroAssetPaths._(
-        frameAssetPrefix:
-            'assets/images/device_control/device_control_garage_door_',
+        frameAssetPrefix: 'assets/images/device_control/device_control_garage_door_',
         frameCount: 20,
-        fallbackAssetPath:
-            'assets/images/device_control/device_control_garage_door_placeholder.png',
+        fallbackAssetPath: 'assets/images/device_control/device_control_garage_door_placeholder.png',
       ),
       DoorType.roller => const _DoorHeroAssetPaths._(
-        frameAssetPrefix:
-            'assets/images/device_control/device_control_roller_door_',
+        frameAssetPrefix: 'assets/images/device_control/device_control_roller_door_',
         frameCount: 20,
-        fallbackAssetPath:
-            'assets/images/device_control/device_control_roller_door_placeholder.png',
+        fallbackAssetPath: 'assets/images/device_control/device_control_roller_door_placeholder.png',
       ),
       DoorType.industrial => const _DoorHeroAssetPaths._(
-        frameAssetPrefix:
-            'assets/images/device_control/device_control_industrial_door_',
+        frameAssetPrefix: 'assets/images/device_control/device_control_industrial_door_',
         frameCount: 20,
-        fallbackAssetPath:
-            'assets/images/device_control/device_control_industrial_door_placeholder.png',
+        fallbackAssetPath: 'assets/images/device_control/device_control_industrial_door_placeholder.png',
       ),
       DoorType.swing => const _DoorHeroAssetPaths._(
-        frameAssetPrefix:
-            'assets/images/device_control/device_control_swing_door_',
+        frameAssetPrefix: 'assets/images/device_control/device_control_swing_door_',
         frameCount: 20,
-        fallbackAssetPath:
-            'assets/icons/add_device/add_new_doors_swing_gate.png',
+        fallbackAssetPath: 'assets/icons/add_device/add_new_doors_swing_gate.png',
       ),
       DoorType.sliding => const _DoorHeroAssetPaths._(
-        frameAssetPrefix:
-            'assets/images/device_control/device_control_sliding_door_',
+        frameAssetPrefix: 'assets/images/device_control/device_control_sliding_door_',
         frameCount: 20,
-        fallbackAssetPath:
-            'assets/images/device_control/device_control_sliding_door_placeholder.png',
+        fallbackAssetPath: 'assets/images/device_control/device_control_sliding_door_placeholder.png',
       ),
     };
   }
@@ -974,12 +764,7 @@ class _DoorCommandRow extends StatelessWidget {
 }
 
 class _DoorCommandButton extends StatelessWidget {
-  const _DoorCommandButton({
-    required this.tooltip,
-    required this.icon,
-    required this.pending,
-    required this.onPressed,
-  });
+  const _DoorCommandButton({required this.tooltip, required this.icon, required this.pending, required this.onPressed});
 
   final String tooltip;
   final IconData icon;
@@ -994,31 +779,20 @@ class _DoorCommandButton extends StatelessWidget {
       style: IconButton.styleFrom(
         fixedSize: const Size.square(46),
         backgroundColor: AppColors.deviceControlPrimaryAction,
-        disabledBackgroundColor: AppColors.deviceControlPrimaryAction
-            .withValues(alpha: 0.5),
+        disabledBackgroundColor: AppColors.deviceControlPrimaryAction.withValues(alpha: 0.5),
         foregroundColor: AppColors.deviceControlPrimaryActionForeground,
         disabledForegroundColor: AppColors.deviceControlPrimaryActionForeground,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
       icon: pending
-          ? const SizedBox.square(
-              dimension: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 3,
-                color: AppColors.deviceControlPrimaryActionForeground,
-              ),
-            )
+          ? const SizedBox.square(dimension: 24, child: CircularProgressIndicator(strokeWidth: 3, color: AppColors.deviceControlPrimaryActionForeground))
           : Icon(icon, size: 30),
     );
   }
 }
 
 class _CommandFeedback extends StatelessWidget {
-  const _CommandFeedback({
-    required this.message,
-    required this.icon,
-    required this.foregroundColor,
-  });
+  const _CommandFeedback({required this.message, required this.icon, required this.foregroundColor});
 
   final String message;
   final IconData icon;
@@ -1027,10 +801,7 @@ class _CommandFeedback extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppColors.deviceControlPanel,
-        borderRadius: BorderRadius.circular(8),
-      ),
+      decoration: BoxDecoration(color: AppColors.deviceControlPanel, borderRadius: BorderRadius.circular(8)),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         child: Row(
@@ -1040,10 +811,7 @@ class _CommandFeedback extends StatelessWidget {
             Expanded(
               child: Text(
                 message,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: foregroundColor,
-                  fontWeight: FontWeight.w400,
-                ),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: foregroundColor, fontWeight: FontWeight.w400),
               ),
             ),
           ],
@@ -1098,13 +866,7 @@ class _QuickActionGrid extends StatelessWidget {
             child: Column(
               children: [
                 Expanded(
-                  child: _LedActionCard(
-                    enabled: ledEnabled,
-                    available: ledAvailable,
-                    busy: busy,
-                    textTheme: textTheme,
-                    onChanged: onLedChanged,
-                  ),
+                  child: _LedActionCard(enabled: ledEnabled, available: ledAvailable, busy: busy, textTheme: textTheme, onChanged: onLedChanged),
                 ),
                 const SizedBox(height: 10),
                 Expanded(
@@ -1143,22 +905,12 @@ class _QuickActionGrid extends StatelessWidget {
               children: [
                 Expanded(
                   flex: 140,
-                  child: _PartialOpenCard(
-                    value: partialOpenValue,
-                    available: partialOpenAvailable,
-                    busy: busy,
-                    textTheme: textTheme,
-                    onPressed: onPartialOpen,
-                  ),
+                  child: _PartialOpenCard(value: partialOpenValue, available: partialOpenAvailable, busy: busy, textTheme: textTheme, onPressed: onPartialOpen),
                 ),
                 const SizedBox(height: 12),
                 Expanded(
                   flex: 44,
-                  child: _MoreSettingsCard(
-                    busy: busy,
-                    textTheme: textTheme,
-                    onPressed: onMoreSettings,
-                  ),
+                  child: _MoreSettingsCard(busy: busy, textTheme: textTheme, onPressed: onMoreSettings),
                 ),
               ],
             ),
@@ -1170,13 +922,7 @@ class _QuickActionGrid extends StatelessWidget {
 }
 
 class _LedActionCard extends StatelessWidget {
-  const _LedActionCard({
-    required this.enabled,
-    required this.available,
-    required this.busy,
-    required this.textTheme,
-    required this.onChanged,
-  });
+  const _LedActionCard({required this.enabled, required this.available, required this.busy, required this.textTheme, required this.onChanged});
 
   final bool enabled;
   final bool available;
@@ -1193,33 +939,18 @@ class _LedActionCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const _DeviceControlAssetIcon(
-                assetPath: _DeviceCommandAssetPaths.led,
-              ),
+              const _DeviceControlAssetIcon(assetPath: _DeviceCommandAssetPaths.led),
               const Spacer(),
-              FlinxSwitch(
-                key: const ValueKey<String>('led-switch'),
-                value: enabled,
-                enabled: available && !busy,
-                onChanged: onChanged,
-              ),
+              FlinxSwitch(key: const ValueKey<String>('led-switch'), value: enabled, enabled: available && !busy, onChanged: onChanged),
             ],
           ),
           const Spacer(),
           Padding(
             padding: EdgeInsetsGeometry.only(left: 4),
-            child: Text(
-              'LED',
-              maxLines: 1,
-              style: AppTextTokens.deviceControlQuickActionTitle(textTheme),
-            ),
+            child: Text('LED', maxLines: 1, style: AppTextTokens.deviceControlQuickActionTitle(textTheme)),
           ),
           const SizedBox(height: 4),
-          Text(
-            '1 min',
-            maxLines: 1,
-            style: AppTextTokens.deviceControlQuickActionMeta(textTheme),
-          ),
+          Text('1 min', maxLines: 1, style: AppTextTokens.deviceControlQuickActionMeta(textTheme)),
         ],
       ),
     );
@@ -1261,29 +992,12 @@ class _ToggleActionCard extends StatelessWidget {
             children: [
               _DeviceControlAssetIcon(assetPath: iconAssetPath),
               const Spacer(),
-              FlinxSwitch(
-                key: switchKey,
-                value: enabled,
-                enabled: available && !busy,
-                onChanged: onChanged,
-              ),
+              FlinxSwitch(key: switchKey, value: enabled, enabled: available && !busy, onChanged: onChanged),
             ],
           ),
           const Spacer(),
-          Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppTextTokens.deviceControlQuickActionTitle(textTheme),
-          ),
-          if (subtitle != null) ...[
-            const SizedBox(height: 2),
-            Text(
-              subtitle!,
-              maxLines: 1,
-              style: AppTextTokens.deviceControlQuickActionMeta(textTheme),
-            ),
-          ],
+          Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextTokens.deviceControlQuickActionTitle(textTheme)),
+          if (subtitle != null) ...[const SizedBox(height: 2), Text(subtitle!, maxLines: 1, style: AppTextTokens.deviceControlQuickActionMeta(textTheme))],
         ],
       ),
     );
@@ -1291,13 +1005,7 @@ class _ToggleActionCard extends StatelessWidget {
 }
 
 class _PartialOpenCard extends StatelessWidget {
-  const _PartialOpenCard({
-    required this.value,
-    required this.available,
-    required this.busy,
-    required this.textTheme,
-    required this.onPressed,
-  });
+  const _PartialOpenCard({required this.value, required this.available, required this.busy, required this.textTheme, required this.onPressed});
 
   final bool busy;
   final int? value;
@@ -1316,21 +1024,10 @@ class _PartialOpenCard extends StatelessWidget {
             Align(
               alignment: Alignment.topRight,
               child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: AppColors.deviceControlInactive.withValues(
-                    alpha: 0.42,
-                  ),
-                  borderRadius: BorderRadius.circular(8),
-                ),
+                decoration: BoxDecoration(color: AppColors.deviceControlInactive.withValues(alpha: 0.42), borderRadius: BorderRadius.circular(8)),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 7,
-                    vertical: 4,
-                  ),
-                  child: Text(
-                    '${value}cm',
-                    style: AppTextTokens.deviceControlBadge(textTheme),
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                  child: Text('${value}cm', style: AppTextTokens.deviceControlBadge(textTheme)),
                 ),
               ),
             ),
@@ -1340,24 +1037,14 @@ class _PartialOpenCard extends StatelessWidget {
               height: 82,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(
-                  width: 1.4,
-                  color: AppColors.deviceControlPrimaryAction,
-                ),
+                border: Border.all(width: 1.4, color: AppColors.deviceControlPrimaryAction),
               ),
-              child: const Center(
-                child: _DeviceControlAssetIcon(
-                  assetPath: _DeviceCommandAssetPaths.partialOpen,
-                ),
-              ),
+              child: const Center(child: _DeviceControlAssetIcon(assetPath: _DeviceCommandAssetPaths.partialOpen)),
             ),
           ),
           Align(
             alignment: const Alignment(0, 1),
-            child: Text(
-              'Partial open',
-              style: AppTextTokens.deviceControlQuickActionTitle(textTheme),
-            ),
+            child: Text('Partial open', style: AppTextTokens.deviceControlQuickActionTitle(textTheme)),
           ),
         ],
       ),
@@ -1366,11 +1053,7 @@ class _PartialOpenCard extends StatelessWidget {
 }
 
 class _MoreSettingsCard extends StatelessWidget {
-  const _MoreSettingsCard({
-    required this.busy,
-    required this.textTheme,
-    required this.onPressed,
-  });
+  const _MoreSettingsCard({required this.busy, required this.textTheme, required this.onPressed});
 
   final bool busy;
   final TextTheme textTheme;
@@ -1384,16 +1067,9 @@ class _MoreSettingsCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       child: Row(
         children: [
-          const _DeviceControlAssetIcon(
-            assetPath: _DeviceCommandAssetPaths.moreSetting,
-          ),
+          const _DeviceControlAssetIcon(assetPath: _DeviceCommandAssetPaths.moreSetting),
           const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              'More setting',
-              style: AppTextTokens.deviceControlQuickActionTitle(textTheme),
-            ),
-          ),
+          Expanded(child: Text('More setting', style: AppTextTokens.deviceControlQuickActionTitle(textTheme))),
         ],
       ),
     );
@@ -1401,12 +1077,7 @@ class _MoreSettingsCard extends StatelessWidget {
 }
 
 class _ControlCard extends StatelessWidget {
-  const _ControlCard({
-    required this.child,
-    this.onTap,
-    this.padding = const EdgeInsets.all(18),
-    super.key,
-  });
+  const _ControlCard({required this.child, this.onTap, this.padding = const EdgeInsets.all(18), super.key});
 
   final Widget child;
   final VoidCallback? onTap;
