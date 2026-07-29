@@ -140,6 +140,7 @@ class DeviceSummary {
     this.coverFileId,
     this.shareStatus,
     this.shareStatusLabel,
+    this.hasBoundDevices = false,
   });
 
   final String id;
@@ -155,6 +156,7 @@ class DeviceSummary {
   final int? coverFileId;
   final int? shareStatus;
   final String? shareStatusLabel;
+  final bool hasBoundDevices;
 }
 
 class CommandResult {

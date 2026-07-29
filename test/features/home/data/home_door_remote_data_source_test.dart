@@ -30,6 +30,7 @@ void main() {
       'positionPercent': '68.5',
       'shareStatus': '2',
       'shareStatusLabel': 'Sharing',
+      'hasBoundDevices': true,
       'top': true,
       'ignored': 'value',
     });
@@ -44,6 +45,7 @@ void main() {
     expect(dto.positionPercent, 68.5);
     expect(dto.shareStatus, 2);
     expect(dto.shareStatusLabel, 'Sharing');
+    expect(dto.hasBoundDevices, isTrue);
     expect(dto.top, isTrue);
   });
 
@@ -362,6 +364,9 @@ class _FakeHomeApi implements HomeApi {
   late final MoveHomeDoorSceneRequestDto moveDoorRequest;
 
   @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+
+  @override
   Future<ApiEnvelopeDto<bool>> topDoor(
     int doorId,
     Options requestOptions,
@@ -468,6 +473,9 @@ class _ThrowingHomeApi implements HomeApi {
   const _ThrowingHomeApi(this.error);
 
   final DioException error;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 
   @override
   Future<ApiEnvelopeDto<bool>> topDoor(int doorId, Options options) {

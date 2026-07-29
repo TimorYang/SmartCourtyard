@@ -23,6 +23,7 @@ void main() {
           coverFileId: 30001,
           shareStatus: 2,
           shareStatusLabel: 'Sharing',
+          hasBoundDevices: true,
         ),
       ]),
       logger: const _NoopLogger(),
@@ -44,6 +45,7 @@ void main() {
     expect(doors.single.coverFileId, 30001);
     expect(doors.single.shareStatus, 2);
     expect(doors.single.shareStatusLabel, 'Sharing');
+    expect(doors.single.hasBoundDevices, isTrue);
   });
 
   for (final fixture in [

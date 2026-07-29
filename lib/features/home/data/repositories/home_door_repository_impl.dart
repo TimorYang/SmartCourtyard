@@ -213,6 +213,7 @@ extension HomeDoorResponseDtoMapper on HomeDoorResponseDto {
       coverFileId: coverFileId,
       shareStatus: shareStatus,
       shareStatusLabel: shareStatusLabel,
+      hasBoundDevices: hasBoundDevices,
     );
   }
 

@@ -25,7 +25,6 @@ import '../widgets/device_delete_dialog.dart';
 import '../widgets/device_name_dialog.dart';
 import '../widgets/scene_name_dialog.dart';
 import '../../../device_control/presentation/pages/device_command_page.dart';
-import '../../../device_control/application/device_command_controller.dart';
 import 'choose_scene_page.dart';
 import 'device_share_page.dart';
 import 'scene_page.dart';
@@ -835,7 +834,6 @@ class _DeviceEditingSheet extends ConsumerStatefulWidget {
 
 class _DeviceEditingSheetState extends ConsumerState<_DeviceEditingSheet> {
   var _isTopping = false;
-  var _isCheckingShareDevice = false;
 
   @override
   Widget build(BuildContext context) {
@@ -863,8 +861,7 @@ class _DeviceEditingSheetState extends ConsumerState<_DeviceEditingSheet> {
           label: l10n.homeDeviceEditShareAction,
           assetPath: HomeAssetPaths.deviceEditShareIcon,
           fallbackIcon: Icons.person_add_alt_1_outlined,
-          isPending: _isCheckingShareDevice,
-          onPressed: _isCheckingShareDevice ? null : _shareDevice,
+          onPressed: _shareDevice,
         ),
       ],
       _DeviceEditingAction(
@@ -968,35 +965,20 @@ class _DeviceEditingSheetState extends ConsumerState<_DeviceEditingSheet> {
 
   Future<void> _shareDevice() async {
     final noDeviceMessage = AppLocalizations.of(widget.parentContext).homeNoDeviceMessage;
-    setState(() {
-      _isCheckingShareDevice = true;
-    });
+    if (!widget.device.hasBoundDevices) {
+      await Navigator.of(context).maybePop();
+      if (widget.parentContext.mounted) {
+        AppToast.info(widget.parentContext, noDeviceMessage);
+      }
+      return;
+    }
 
-    try {
-      final devices = await ref.read(fetchDoorDevicesUseCaseProvider)(
-        doorId: widget.device.id,
-        requestId: 'home-share-door-${widget.device.id}-${DateTime.now().toUtc().microsecondsSinceEpoch}',
+    await Navigator.of(context).maybePop();
+    if (widget.parentContext.mounted) {
+      GoRouter.of(widget.parentContext).push(
+        DeviceSharePage.routePath,
+        extra: widget.device,
       );
-      if (!mounted) {
-        return;
-      }
-      if (devices.isEmpty) {
-        Navigator.of(context).pop();
-        if (widget.parentContext.mounted) {
-          AppToast.info(widget.parentContext, noDeviceMessage);
-        }
-        return;
-      }
-
-      final router = GoRouter.of(context);
-      Navigator.of(context).pop();
-      router.push(DeviceSharePage.routePath, extra: widget.device);
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isCheckingShareDevice = false;
-        });
-      }
     }
   }
 

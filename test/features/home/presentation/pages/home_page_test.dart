@@ -10,10 +10,6 @@ import 'package:flinx/features/auth/application/providers.dart';
 import 'package:flinx/features/auth/domain/entities/auth_session.dart';
 import 'package:flinx/features/home/application/providers.dart';
 import 'package:flinx/features/home/domain/entities/home_scene.dart';
-import 'package:flinx/features/device_control/application/device_command_controller.dart';
-import 'package:flinx/features/device_control/domain/entities/door_detail.dart';
-import 'package:flinx/features/device_control/domain/entities/door_device.dart';
-import 'package:flinx/features/device_control/domain/repositories/door_detail_repository.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -303,7 +299,6 @@ void main() {
           accountLocalDataSourceProvider.overrideWithValue(
             InMemoryAccountLocalDataSource(),
           ),
-          doorDetailRepositoryProvider.overrideWithValue(_NoDeviceRepository()),
           homeScenesProvider.overrideWith(
             (ref) async => const [
               HomeScene(id: 1, name: 'Home', doorCount: 1, isDefault: true),
@@ -320,6 +315,7 @@ void main() {
                 cycleCount: 0,
                 remainingLifePercent: 100,
                 sceneId: 1,
+                hasBoundDevices: false,
               ),
             ],
           ),
@@ -340,6 +336,57 @@ void main() {
     expect(find.text('No Device'), findsOneWidget);
     expect(find.text('Device editing'), findsNothing);
     await tester.pump(const Duration(seconds: 2));
+  });
+
+  testWidgets('opens sharing when a door has bound devices', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authSessionProvider.overrideWith(
+            (ref) async =>
+                const AuthSession(isAuthenticated: true, userId: 'user-1'),
+          ),
+          accountLocalDataSourceProvider.overrideWithValue(
+            InMemoryAccountLocalDataSource(),
+          ),
+          homeScenesProvider.overrideWith(
+            (ref) async => const [
+              HomeScene(id: 1, name: 'Home', doorCount: 1, isDefault: true),
+            ],
+          ),
+          homeDevicesProvider.overrideWith(
+            (ref) async => const [
+              DeviceSummary(
+                id: '1',
+                name: 'Garage',
+                onlineState: DeviceOnlineState.online,
+                bleState: BleConnectionState.connected,
+                doorState: DoorState.closed,
+                cycleCount: 0,
+                remainingLifePercent: 100,
+                sceneId: 1,
+                hasBoundDevices: true,
+              ),
+            ],
+          ),
+          addDeviceControllerProvider.overrideWith(
+            () => _HomeBleDisconnectController(_HomeBleDisconnectTracker()),
+          ),
+        ],
+        child: const FlinxApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.longPress(find.text('Garage'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Share'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('Share'), findsOneWidget);
+    expect(find.text('Device editing'), findsNothing);
   });
 
   testWidgets('keeps the sharing badge hidden for non-shared doors', (
@@ -397,27 +444,6 @@ void main() {
 
 class _HomeBleDisconnectTracker {
   var callCount = 0;
-}
-
-class _NoDeviceRepository implements DoorDetailRepository {
-  @override
-  Future<DoorDetail> fetchDoorDetail({
-    required String doorId,
-    required String requestId,
-  }) => throw UnimplementedError();
-
-  @override
-  Future<List<DoorDevice>> fetchDoorDevices({
-    required String doorId,
-    required String requestId,
-  }) async => const <DoorDevice>[];
-
-  @override
-  Future<void> unbindDoorDevice({
-    required String doorId,
-    required String deviceId,
-    required String requestId,
-  }) => throw UnimplementedError();
 }
 
 class _HomeBleDisconnectController extends AddDeviceController {
