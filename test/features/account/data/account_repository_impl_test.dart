@@ -1,12 +1,16 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flinx/core/errors/app_error.dart';
 import 'package:flinx/core/network/access_token_cache.dart';
 import 'package:flinx/features/account/data/data_sources/account_local_data_source.dart';
 import 'package:flinx/features/account/data/data_sources/account_secure_data_source.dart';
 import 'package:flinx/features/account/data/data_sources/account_profile_remote_data_source.dart';
 import 'package:flinx/features/account/data/dto/account_profile_dto.dart';
+import 'package:flinx/features/account/data/dto/app_language_option_dto.dart';
+import 'package:flinx/features/account/data/dto/app_region_option_dto.dart';
 import 'package:flinx/features/account/data/mappers/account_profile_mapper.dart';
+import 'package:flinx/features/account/data/dto/account_profile_remote_dto.dart';
 import 'package:flinx/features/account/data/repositories/account_repository_impl.dart';
 import 'package:flinx/features/account/domain/entities/account_profile.dart';
 import 'package:flinx/features/account/domain/entities/account_avatar_code.dart';
@@ -278,12 +282,64 @@ void main() {
       expect(profile?.avatarFileId, 302);
     },
   );
+
+  test('confirms account deletion with the original request ID', () async {
+    final remoteDataSource = _RecordingProfileRemoteDataSource();
+    final repository = AccountRepositoryImpl(
+      localDataSource: InMemoryAccountLocalDataSource(),
+      secureDataSource: InMemoryAccountSecureDataSource(),
+      remoteDataSource: remoteDataSource,
+    );
+
+    await repository.confirmAccountDeletion(requestId: 'delete-account-1');
+
+    expect(remoteDataSource.confirmedDeletionRequestId, 'delete-account-1');
+  });
+
+  test('maps an account deletion response failure to an app error', () async {
+    final remoteDataSource = _RecordingProfileRemoteDataSource()
+      ..deletionError = const AccountProfileRemoteException.invalidResponse();
+    final repository = AccountRepositoryImpl(
+      localDataSource: InMemoryAccountLocalDataSource(),
+      secureDataSource: InMemoryAccountSecureDataSource(),
+      remoteDataSource: remoteDataSource,
+    );
+
+    expect(
+      () => repository.confirmAccountDeletion(requestId: 'delete-account-2'),
+      throwsA(isA<AppError>()),
+    );
+  });
 }
 
 class _RecordingProfileRemoteDataSource
     implements AccountProfileRemoteDataSource {
   AccountAvatarCode? avatarCode;
   int? avatarFileId;
+  String? confirmedDeletionRequestId;
+  Object? deletionError;
+
+  @override
+  Future<AccountProfileRemoteDto> fetchProfile({
+    required String requestId,
+  }) async => AccountProfileRemoteDto(
+    userId: 'user-1',
+    email: 'user@example.com',
+    emailVerified: true,
+    nickname: 'Alice',
+    avatarCode: avatarCode?.wireValue,
+    avatarFileId: avatarFileId,
+  );
+
+  @override
+  Future<List<AppRegionOptionDto>> fetchRegionOptions({
+    required String requestId,
+  }) async => const [];
+
+  @override
+  Future<List<AppLanguageOptionDto>> fetchLanguageOptions({
+    required String requestId,
+  }) async => const [];
 
   @override
   Future<int> uploadImage({
@@ -297,9 +353,18 @@ class _RecordingProfileRemoteDataSource
     String? nickname,
     AccountAvatarCode? avatarCode,
     int? avatarFileId,
+    String? regionCode,
+    String? locale,
     required String requestId,
   }) async {
     this.avatarCode = avatarCode;
     this.avatarFileId = avatarFileId;
+  }
+
+  @override
+  Future<void> confirmAccountDeletion({required String requestId}) async {
+    confirmedDeletionRequestId = requestId;
+    final error = deletionError;
+    if (error != null) throw error;
   }
 }

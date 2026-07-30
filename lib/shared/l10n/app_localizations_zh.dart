@@ -470,6 +470,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get accountDetailsForgotPassword => '忘记密码';
 
   @override
+  String get accountDetailsCancelAccount => '注销账号';
+
+  @override
+  String get accountDetailsDeletionPrompt => '确定要注销账号吗？';
+
+  @override
+  String get accountDetailsDeletionNoAction => '否';
+
+  @override
+  String get accountDetailsDeletionYesAction => '是';
+
+  @override
+  String get accountDetailsDeletionSubmitting => '注销中...';
+
+  @override
+  String get accountDetailsDeletionFailed => '注销账号失败，请重试。';
+
+  @override
   String get accountDetailsLogout => '退出登录';
 
   @override
@@ -811,6 +829,24 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get accountLanguageConfirmAction => '确认';
+
+  @override
+  String get accountLanguageOptionsLoading => '正在加载可选语言…';
+
+  @override
+  String get accountLanguageOptionsLoadFailed => '无法加载可选语言。';
+
+  @override
+  String get accountLanguageOptionsRetryAction => '重试';
+
+  @override
+  String get accountLanguageSaveFailed => '无法更新语言。';
+
+  @override
+  String get regionOptionsRetryAction => '重试';
+
+  @override
+  String get regionOptionsSaveFailed => '无法更新地区。';
 
   @override
   String get regionPageTitle => '地区';

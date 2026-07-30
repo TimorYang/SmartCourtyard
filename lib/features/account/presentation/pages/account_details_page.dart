@@ -10,6 +10,7 @@ import '../../../../core/network/dio_factory.dart';
 import '../../../auth/application/providers.dart';
 import '../../../auth/presentation/pages/welcome_page.dart';
 import '../../../auth/presentation/pages/forgot_password_page.dart';
+import '../../../auth/presentation/pages/login_page.dart';
 import '../../../home/application/providers.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/app_toast.dart';
@@ -32,6 +33,27 @@ class AccountDetailsPage extends ConsumerWidget {
         .watch(accountControllerProvider)
         .maybeWhen(data: (value) => value, orElse: () => null);
 
+    Future<void> clearAccountAndNavigate(String routePath) async {
+      final authSessionController = ref.read(
+        activeAuthSessionProvider.notifier,
+      );
+      final accountController = ref.read(accountControllerProvider.notifier);
+
+      ref.invalidate(homeScenesProvider);
+      ref.invalidate(homeDevicesProvider);
+      ref.invalidate(cachedAccountProfileProvider);
+      ref.invalidate(authSessionProvider);
+
+      await accountController.clearAccount();
+
+      // Clearing the active session redirects away from this page and disposes
+      // its WidgetRef. Do it only after all ref work is done.
+      authSessionController.clear();
+      if (context.mounted) {
+        context.go(routePath);
+      }
+    }
+
     return Scaffold(
       appBar: const FlinxNavigationBar(title: '', showBottomDivider: false),
       backgroundColor: AppColors.accountProfileBackground,
@@ -43,28 +65,14 @@ class AccountDetailsPage extends ConsumerWidget {
               child: _AccountDetailsContent(
                 profile: profile,
                 maxHeight: constraints.maxHeight,
-                onLogout: () async {
-                  final authSessionController = ref.read(
-                    activeAuthSessionProvider.notifier,
-                  );
-                  final accountController = ref.read(
-                    accountControllerProvider.notifier,
-                  );
-
-                  ref.invalidate(homeScenesProvider);
-                  ref.invalidate(homeDevicesProvider);
-                  ref.invalidate(cachedAccountProfileProvider);
-                  ref.invalidate(authSessionProvider);
-
-                  await accountController.clearAccount();
-
-                  // Clearing the active session redirects away from this page and
-                  // disposes its WidgetRef. Do it only after all ref work is done.
-                  authSessionController.clear();
-                  if (!context.mounted) {
-                    return;
-                  }
-                  context.go(WelcomePage.routePath);
+                onLogout: () => clearAccountAndNavigate(WelcomePage.routePath),
+                onConfirmAccountDeletion: () async {
+                  final succeeded = await ref
+                      .read(accountDeletionControllerProvider.notifier)
+                      .confirm();
+                  if (!succeeded) return false;
+                  await clearAccountAndNavigate(LoginPage.routePath);
+                  return true;
                 },
                 onRename: (name) => ref
                     .read(accountControllerProvider.notifier)
@@ -93,6 +101,7 @@ class _AccountDetailsContent extends StatelessWidget {
     required this.profile,
     required this.maxHeight,
     required this.onLogout,
+    required this.onConfirmAccountDeletion,
     required this.onRename,
     required this.onAvatar,
     required this.onAvatarCode,
@@ -101,6 +110,7 @@ class _AccountDetailsContent extends StatelessWidget {
   final AccountProfile? profile;
   final double maxHeight;
   final Future<void> Function() onLogout;
+  final Future<bool> Function() onConfirmAccountDeletion;
   final Future<bool> Function(String) onRename;
   final Future<bool> Function(ImageSource) onAvatar;
   final Future<bool> Function(AccountAvatarCode) onAvatarCode;
@@ -180,6 +190,14 @@ class _AccountDetailsContent extends StatelessWidget {
                           showChevron: true,
                           onTap: () =>
                               context.push(ForgotPasswordPage.routePath),
+                        ),
+                        _AccountDetailsRowData(
+                          label: l10n.accountDetailsCancelAccount,
+                          showChevron: true,
+                          onTap: () => _showAccountDeletionSheet(
+                            context,
+                            onConfirm: onConfirmAccountDeletion,
+                          ),
                         ),
                       ],
                     ),
@@ -356,6 +374,101 @@ Future<void> _showAccountPasswordDialog(BuildContext context) {
     barrierColor: AppColors.overlaySoft,
     builder: (context) => const _PasswordDialog(),
   );
+}
+
+Future<void> _showAccountDeletionSheet(
+  BuildContext context, {
+  required Future<bool> Function() onConfirm,
+}) {
+  return showModalBottomSheet<void>(
+    context: context,
+    isDismissible: false,
+    enableDrag: false,
+    useSafeArea: true,
+    barrierColor: AppColors.overlaySoft,
+    backgroundColor: Colors.transparent,
+    builder: (context) => _AccountDeletionSheet(onConfirm: onConfirm),
+  );
+}
+
+class _AccountDeletionSheet extends StatefulWidget {
+  const _AccountDeletionSheet({required this.onConfirm});
+
+  final Future<bool> Function() onConfirm;
+
+  @override
+  State<_AccountDeletionSheet> createState() => _AccountDeletionSheetState();
+}
+
+class _AccountDeletionSheetState extends State<_AccountDeletionSheet> {
+  var _isSubmitting = false;
+
+  Future<void> _confirm() async {
+    setState(() => _isSubmitting = true);
+    final succeeded = await widget.onConfirm();
+    if (!mounted || succeeded) return;
+    setState(() => _isSubmitting = false);
+    AppToast.error(
+      context,
+      AppLocalizations.of(context).accountDetailsDeletionFailed,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final textTheme = Theme.of(context).textTheme;
+
+    return _AccountBottomSheetFrame(
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(34, 38, 34, 51),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                l10n.accountDetailsDeletionPrompt,
+                textAlign: TextAlign.center,
+                style: AppTextTokens.accountDetailsSheetTitle(textTheme),
+              ),
+              const SizedBox(height: 54),
+              Row(
+                children: [
+                  Expanded(
+                    child: _AccountSheetActionButton(
+                      label: l10n.accountDetailsDeletionNoAction,
+                      foregroundColor: AppColors.textPrimary,
+                      backgroundColor:
+                          AppColors.accountDetailsSheetActionSurface,
+                      textTheme: textTheme,
+                      onPressed: _isSubmitting
+                          ? null
+                          : () => Navigator.of(context).pop(),
+                    ),
+                  ),
+                  const SizedBox(width: 52),
+                  Expanded(
+                    child: _AccountSheetActionButton(
+                      label: _isSubmitting
+                          ? l10n.accountDetailsDeletionSubmitting
+                          : l10n.accountDetailsDeletionYesAction,
+                      foregroundColor:
+                          AppColors.accountDetailsDeletionConfirmForeground,
+                      backgroundColor:
+                          AppColors.accountDetailsDeletionConfirmSurface,
+                      textTheme: textTheme,
+                      onPressed: _isSubmitting ? null : _confirm,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _AccountCenterDialogFrame extends StatelessWidget {

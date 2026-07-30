@@ -42,22 +42,12 @@ class DioFactory {
         responseType: ResponseType.json,
       ),
     );
-    if (kDebugMode &&
-        (NetworkDebugSettings.proxy.trim().isNotEmpty ||
-            NetworkDebugSettings.allowInvalidProxyCertificates)) {
-      configureDebugNetworkProxy(
-        dio,
-        proxy: NetworkDebugSettings.proxy.trim(),
-        allowInvalidCertificates:
-            NetworkDebugSettings.allowInvalidProxyCertificates,
-      );
+    if (kDebugMode && (NetworkDebugSettings.proxy.trim().isNotEmpty || NetworkDebugSettings.allowInvalidProxyCertificates)) {
+      configureDebugNetworkProxy(dio, proxy: NetworkDebugSettings.proxy.trim(), allowInvalidCertificates: NetworkDebugSettings.allowInvalidProxyCertificates);
     }
     dio.interceptors.addAll([
       _RequestIdInterceptor(),
-      _SessionExpiredInterceptor(
-        onSessionExpired: onSessionExpired,
-        onTokenRefresh: onTokenRefresh,
-      ),
+      _SessionExpiredInterceptor(onSessionExpired: onSessionExpired, onTokenRefresh: onTokenRefresh),
       _BladeAuthInterceptor(),
       _SafeNetworkLogInterceptor(logger),
     ]);
@@ -66,32 +56,20 @@ class DioFactory {
 }
 
 class _SessionExpiredInterceptor extends Interceptor {
-  _SessionExpiredInterceptor({
-    required this._onSessionExpired,
-    required this._onTokenRefresh,
-  });
+  _SessionExpiredInterceptor({required this._onSessionExpired, required this._onTokenRefresh});
 
   final SessionExpiredHandler _onSessionExpired;
   final TokenRefreshHandler _onTokenRefresh;
 
   @override
-  Future<void> onRequest(
-    RequestOptions options,
-    RequestInterceptorHandler handler,
-  ) async {
+  Future<void> onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
     if (!_isAuthenticationRequest(options) &&
         options.extra[NetworkRequestExtras.skipTokenRefresh] != true &&
         AccessTokenCache.requiresRefresh) {
       final refreshResult = await _onTokenRefresh();
       if (refreshResult == TokenRefreshResult.sessionExpired) {
         await _expireSession();
-        handler.reject(
-          DioException(
-            requestOptions: options,
-            type: DioExceptionType.cancel,
-            message: 'The authentication session has expired.',
-          ),
-        );
+        handler.reject(DioException(requestOptions: options, type: DioExceptionType.cancel, message: 'The authentication session has expired.'));
         return;
       }
     }
@@ -99,24 +77,16 @@ class _SessionExpiredInterceptor extends Interceptor {
   }
 
   @override
-  Future<void> onResponse(
-    Response<dynamic> response,
-    ResponseInterceptorHandler handler,
-  ) async {
-    if (_isSessionExpiredResponse(response) &&
-        !_isAuthenticationRequest(response.requestOptions)) {
+  Future<void> onResponse(Response<dynamic> response, ResponseInterceptorHandler handler) async {
+    if (_isSessionExpiredResponse(response) && !_isAuthenticationRequest(response.requestOptions)) {
       await _expireSession();
     }
     handler.next(response);
   }
 
   @override
-  Future<void> onError(
-    DioException error,
-    ErrorInterceptorHandler handler,
-  ) async {
-    if (_isUnauthorizedHttpResponse(error) &&
-        !_isAuthenticationRequest(error.requestOptions)) {
+  Future<void> onError(DioException error, ErrorInterceptorHandler handler) async {
+    if (_isUnauthorizedHttpResponse(error) && !_isAuthenticationRequest(error.requestOptions)) {
       await _expireSession();
     }
     handler.next(error);
@@ -151,10 +121,7 @@ class _BladeAuthInterceptor extends Interceptor {
     if (!options.path.startsWith('app/auth/')) {
       final accessToken = AccessTokenCache.value;
       if (accessToken != null) {
-        options.headers.putIfAbsent(
-          NetworkHeaders.bladeAuth,
-          () => accessToken,
-        );
+        options.headers.putIfAbsent(NetworkHeaders.bladeAuth, () => accessToken);
       }
     }
     handler.next(options);
@@ -190,20 +157,13 @@ class _SafeNetworkLogInterceptor extends Interceptor {
   }
 
   @override
-  void onResponse(
-    Response<dynamic> response,
-    ResponseInterceptorHandler handler,
-  ) {
+  void onResponse(Response<dynamic> response, ResponseInterceptorHandler handler) {
     _logger.info(
       'HTTP request completed.',
       tag: _logTag(response.requestOptions),
       flowId: _flowId(response.requestOptions),
       requestId: _requestId(response.requestOptions),
-      context: {
-        'method': response.requestOptions.method,
-        'path': response.requestOptions.path,
-        'statusCode': response.statusCode,
-      },
+      context: {'method': response.requestOptions.method, 'path': response.requestOptions.path, 'statusCode': response.statusCode},
     );
     handler.next(response);
   }
@@ -212,10 +172,7 @@ class _SafeNetworkLogInterceptor extends Interceptor {
   void onError(DioException error, ErrorInterceptorHandler handler) {
     if (kDebugMode) {
       debugPrint('[FLINX][DIO] Raw failure: $error');
-      debugPrintStack(
-        label: '[FLINX][DIO] Raw failure stack trace',
-        stackTrace: error.stackTrace,
-      );
+      debugPrintStack(label: '[FLINX][DIO] Raw failure stack trace', stackTrace: error.stackTrace);
     }
     _logger.warning(
       'HTTP request failed.',

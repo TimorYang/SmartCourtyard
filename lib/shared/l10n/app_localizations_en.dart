@@ -498,6 +498,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountDetailsForgotPassword => 'Forgot password';
 
   @override
+  String get accountDetailsCancelAccount => 'Cancel account';
+
+  @override
+  String get accountDetailsDeletionPrompt =>
+      'Are you sure to cancel the account?';
+
+  @override
+  String get accountDetailsDeletionNoAction => 'No';
+
+  @override
+  String get accountDetailsDeletionYesAction => 'Yes';
+
+  @override
+  String get accountDetailsDeletionSubmitting => 'Deleting...';
+
+  @override
+  String get accountDetailsDeletionFailed =>
+      'Unable to cancel the account. Please try again.';
+
+  @override
   String get accountDetailsLogout => 'Log out';
 
   @override
@@ -845,6 +865,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accountLanguageConfirmAction => 'Confirm';
+
+  @override
+  String get accountLanguageOptionsLoading => 'Loading available languages…';
+
+  @override
+  String get accountLanguageOptionsLoadFailed =>
+      'Unable to load available languages.';
+
+  @override
+  String get accountLanguageOptionsRetryAction => 'Retry';
+
+  @override
+  String get accountLanguageSaveFailed => 'Unable to update the language.';
+
+  @override
+  String get regionOptionsRetryAction => 'Retry';
+
+  @override
+  String get regionOptionsSaveFailed => 'Unable to update the region.';
 
   @override
   String get regionPageTitle => 'REGION';

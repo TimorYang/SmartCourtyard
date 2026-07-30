@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/region_selection_controller.dart';
 import '../../domain/entities/region_option.dart';
@@ -16,7 +17,7 @@ class RegionPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final state = ref.watch(regionSelectionControllerProvider);
+    final regionState = ref.watch(regionSelectionControllerProvider);
 
     return Scaffold(
       backgroundColor: AppColors.backgroundPrimary,
@@ -40,20 +41,42 @@ class RegionPage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 32),
-                    itemCount: state.regions.length,
-                    itemBuilder: (context, index) {
-                      final region = state.regions[index];
-                      return _RegionRow(
-                        option: region,
-                        label: _localizedRegionName(l10n, region.code),
-                        selected: state.selectedRegionCode == region.code,
-                        onTap: () => ref
-                            .read(regionSelectionControllerProvider.notifier)
-                            .select(region.code),
-                      );
-                    },
+                  child: regionState.when(
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
+                    error: (_, _) => Center(
+                      child: FilledButton(
+                        onPressed: () =>
+                            ref.invalidate(regionSelectionControllerProvider),
+                        child: Text(l10n.regionOptionsRetryAction),
+                      ),
+                    ),
+                    data: (state) => ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      itemCount: state.regions.length,
+                      itemBuilder: (context, index) {
+                        final region = state.regions[index];
+                        return _RegionRow(
+                          option: region,
+                          label: region.displayName,
+                          selected: state.selectedRegionCode == region.code,
+                          isEnabled: !state.isSaving,
+                          onTap: () async {
+                            final saved = await ref
+                                .read(
+                                  regionSelectionControllerProvider.notifier,
+                                )
+                                .select(region.code);
+                            if (!saved && context.mounted) {
+                              AppToast.error(
+                                context,
+                                l10n.regionOptionsSaveFailed,
+                              );
+                            }
+                          },
+                        );
+                      },
+                    ),
                   ),
                 ),
               ],
@@ -71,28 +94,19 @@ class RegionPageKeys {
   static ValueKey<String> option(String id) => ValueKey('region-option-$id');
 }
 
-String _localizedRegionName(AppLocalizations l10n, String regionCode) {
-  return switch (regionCode) {
-    'CN' => l10n.regionChina,
-    'US' => l10n.regionAmerica,
-    'GB' => l10n.regionEngland,
-    'FR' => l10n.regionFrance,
-    'CA' => l10n.regionCanada,
-    _ => regionCode,
-  };
-}
-
 class _RegionRow extends StatelessWidget {
   const _RegionRow({
     required this.option,
     required this.label,
     required this.selected,
+    required this.isEnabled,
     required this.onTap,
   });
 
   final RegionOption option;
   final String label;
   final bool selected;
+  final bool isEnabled;
   final VoidCallback onTap;
 
   @override
@@ -103,7 +117,7 @@ class _RegionRow extends StatelessWidget {
       label: label,
       child: InkWell(
         key: RegionPageKeys.option(option.code.toLowerCase()),
-        onTap: onTap,
+        onTap: isEnabled ? onTap : null,
         child: Container(
           height: 60,
           decoration: const BoxDecoration(

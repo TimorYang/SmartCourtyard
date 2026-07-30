@@ -11,6 +11,7 @@ import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
 import '../../domain/entities/app_locale_preference.dart';
+import '../../domain/entities/app_language_option.dart';
 import '../../domain/entities/account_profile.dart';
 import '../../domain/entities/account_avatar_code.dart';
 import '../widgets/account_avatar_code_assets.dart';
@@ -54,12 +55,15 @@ class AccountProfileAssetPaths {
       'assets/icons/account/account_profile_menu_check_for_updates.png';
   static const menuAbout =
       'assets/icons/account/account_profile_menu_about.png';
+  static const themeIcon =
+      'assets/icons/account/account_profile_theme_icon.png';
 }
 
 class AccountProfileKeys {
   const AccountProfileKeys._();
 
   static const avatarButton = ValueKey('account-profile-avatar-button');
+  static const themeIcon = ValueKey('account-profile-theme-icon');
   static const sharedDevicesMenuItem = ValueKey(
     'account-profile-shared-devices-menu-item',
   );
@@ -114,6 +118,7 @@ class _AccountProfilePageState extends ConsumerState<AccountProfilePage> {
       if (ref.read(accountOverviewAutoRefreshProvider)) {
         _refreshOverview();
       }
+      ref.read(accountControllerProvider.notifier).refreshProfile();
     });
   }
 
@@ -152,6 +157,7 @@ class _AccountProfilePageState extends ConsumerState<AccountProfilePage> {
         showBottomDivider: false,
         isTransparent: true,
         foregroundColor: Colors.white,
+        actions: [_AccountProfileThemeIcon()],
       ),
       backgroundColor: AppColors.accountProfileBackground,
       body: LayoutBuilder(
@@ -165,9 +171,17 @@ class _AccountProfilePageState extends ConsumerState<AccountProfilePage> {
                 localePreference: localePreference,
                 maxHeight: constraints.maxHeight,
                 onRefresh: _refreshOverview,
-                onLocaleConfirmed: (locale) => ref
-                    .read(appLocaleControllerProvider.notifier)
-                    .selectLocale(locale),
+                onLocaleConfirmed: (locale, serverLocale) async {
+                  final updated = await ref
+                      .read(accountControllerProvider.notifier)
+                      .updateLocale(serverLocale);
+                  if (updated) {
+                    await ref
+                        .read(appLocaleControllerProvider.notifier)
+                        .selectLocale(locale);
+                  }
+                  return updated;
+                },
                 onLogout: () async {
                   final authSessionController = ref.read(
                     activeAuthSessionProvider.notifier,
@@ -196,6 +210,32 @@ class _AccountProfilePageState extends ConsumerState<AccountProfilePage> {
   }
 }
 
+class _AccountProfileThemeIcon extends StatelessWidget {
+  const _AccountProfileThemeIcon();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(
+        right: AppLayoutTokens.accountProfileThemeIconRightInset,
+      ),
+      child: Center(
+        child: Image.asset(
+          AccountProfileAssetPaths.themeIcon,
+          key: AccountProfileKeys.themeIcon,
+          width: AppLayoutTokens.accountProfileThemeIconSize,
+          height: AppLayoutTokens.accountProfileThemeIconSize,
+          fit: BoxFit.contain,
+          errorBuilder: (_, _, _) => const SizedBox(
+            width: AppLayoutTokens.accountProfileThemeIconSize,
+            height: AppLayoutTokens.accountProfileThemeIconSize,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _AccountProfileContent extends StatelessWidget {
   const _AccountProfileContent({
     required this.profile,
@@ -212,7 +252,8 @@ class _AccountProfileContent extends StatelessWidget {
   final AppLocalePreference localePreference;
   final double maxHeight;
   final Future<void> Function() onRefresh;
-  final Future<void> Function(AppLocalePreference locale) onLocaleConfirmed;
+  final Future<bool> Function(AppLocalePreference locale, String serverLocale)
+  onLocaleConfirmed;
   final Future<void> Function() onLogout;
 
   @override
@@ -250,7 +291,10 @@ class _AccountProfileContent extends StatelessWidget {
       ),
       _AccountMenuItem(
         label: l10n.accountRegion,
-        trailingText: profile?.country ?? l10n.accountDefaultRegion,
+        trailingText:
+            profile?.regionCode ??
+            profile?.country ??
+            l10n.accountDefaultRegion,
         iconAssetPath: AccountProfileAssetPaths.menuRegion,
         onTap: () => context.pushNamed(RegionPage.routeName),
         key: AccountProfileKeys.regionMenuItem,
@@ -264,9 +308,41 @@ class _AccountProfileContent extends StatelessWidget {
           isScrollControlled: true,
           barrierColor: AppColors.accountLanguageDialogScrim,
           backgroundColor: Colors.transparent,
-          builder: (context) => _LanguageDialog(
-            initialLocale: localePreference,
-            onConfirm: onLocaleConfirmed,
+          builder: (context) => Consumer(
+            builder: (context, ref, _) {
+              final languageOptions = ref.watch(appLanguageOptionsProvider);
+              final fallbackOptions = _fallbackLanguageOptions(l10n);
+              return languageOptions.when(
+                loading: () => _LanguageDialog(
+                  key: const ValueKey('default-language-options'),
+                  initialLocale: localePreference,
+                  initialServerLocale: profile?.locale,
+                  languages: fallbackOptions,
+                  onConfirm: onLocaleConfirmed,
+                ),
+                error: (_, _) => _LanguageDialog(
+                  key: const ValueKey('default-language-options'),
+                  initialLocale: localePreference,
+                  initialServerLocale: profile?.locale,
+                  languages: fallbackOptions,
+                  onConfirm: onLocaleConfirmed,
+                ),
+                data: (options) {
+                  final remoteOptions = _remoteLanguageOptions(options);
+                  return _LanguageDialog(
+                    key: ValueKey(
+                      remoteOptions.map((option) => option.serverLocale).join(),
+                    ),
+                    initialLocale: localePreference,
+                    initialServerLocale: profile?.locale,
+                    languages: remoteOptions.isEmpty
+                        ? fallbackOptions
+                        : remoteOptions,
+                    onConfirm: onLocaleConfirmed,
+                  );
+                },
+              );
+            },
           ),
         ),
         key: AccountProfileKeys.languageMenuItem,
@@ -337,32 +413,93 @@ class _AccountProfileContent extends StatelessWidget {
         l10n.accountLanguageOptionSimplifiedChinese,
     };
   }
+
+  List<_LanguageOptionData> _fallbackLanguageOptions(AppLocalizations l10n) {
+    return [
+      _LanguageOptionData(
+        label: l10n.accountLanguageOptionSimplifiedChinese,
+        locale: AppLocalePreference.simplifiedChinese,
+        serverLocale: 'zh-CN',
+      ),
+      _LanguageOptionData(
+        label: l10n.accountLanguageOptionEnglish,
+        locale: AppLocalePreference.english,
+        serverLocale: 'en-US',
+      ),
+    ];
+  }
+
+  List<_LanguageOptionData> _remoteLanguageOptions(
+    List<AppLanguageOption> options,
+  ) {
+    final seenLocales = <String>{};
+    return options
+        .map(
+          (option) => (
+            locale:
+                AppLocalePreference.fromLanguageCode(option.locale) ??
+                AppLocalePreference.english,
+            label: option.nativeName,
+            serverLocale: option.locale,
+          ),
+        )
+        .where(
+          (option) =>
+              option.serverLocale.trim().isNotEmpty && option.label.isNotEmpty,
+        )
+        .where((option) => seenLocales.add(option.serverLocale.toLowerCase()))
+        .map(
+          (option) => _LanguageOptionData(
+            label: option.label,
+            locale: option.locale,
+            serverLocale: option.serverLocale,
+          ),
+        )
+        .toList(growable: false);
+  }
 }
 
 class _LanguageDialog extends StatefulWidget {
-  const _LanguageDialog({required this.initialLocale, required this.onConfirm});
+  const _LanguageDialog({
+    super.key,
+    required this.initialLocale,
+    this.initialServerLocale,
+    required this.languages,
+    required this.onConfirm,
+  });
 
   final AppLocalePreference initialLocale;
-  final Future<void> Function(AppLocalePreference locale) onConfirm;
+  final String? initialServerLocale;
+  final List<_LanguageOptionData> languages;
+  final Future<bool> Function(AppLocalePreference locale, String serverLocale)
+  onConfirm;
 
   @override
   State<_LanguageDialog> createState() => _LanguageDialogState();
 }
 
 class _LanguageDialogState extends State<_LanguageDialog> {
-  late AppLocalePreference _selectedLocale;
+  late String _selectedServerLocale;
   late final FixedExtentScrollController _languagePickerController;
   var _isConfirming = false;
 
   @override
   void initState() {
     super.initState();
-    _selectedLocale = widget.initialLocale;
-    final selectedLocaleIndex = AppLocalePreference.values.indexOf(
-      _selectedLocale,
+    final selectedLanguageIndex = widget.languages.indexWhere(
+      (language) =>
+          language.serverLocale.toLowerCase() ==
+          widget.initialServerLocale?.toLowerCase(),
     );
+    final initialIndex = selectedLanguageIndex >= 0
+        ? selectedLanguageIndex
+        : widget.languages.indexWhere(
+            (language) => language.locale == widget.initialLocale,
+          );
+    final resolvedIndex = initialIndex < 0 ? 0 : initialIndex;
+    _selectedServerLocale = widget.languages[resolvedIndex].serverLocale;
     _languagePickerController = FixedExtentScrollController(
-      initialItem: selectedLocaleIndex,
+      initialItem: resolvedIndex,
     );
   }
 
@@ -376,16 +513,7 @@ class _LanguageDialogState extends State<_LanguageDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final textTheme = Theme.of(context).textTheme;
-    final languages = [
-      _LanguageOptionData(
-        label: l10n.accountLanguageOptionEnglish,
-        locale: AppLocalePreference.english,
-      ),
-      _LanguageOptionData(
-        label: l10n.accountLanguageOptionSimplifiedChinese,
-        locale: AppLocalePreference.simplifiedChinese,
-      ),
-    ];
+    final languages = widget.languages;
 
     return SafeArea(
       top: false,
@@ -415,7 +543,7 @@ class _LanguageDialogState extends State<_LanguageDialog> {
                   _LanguagePicker(
                     controller: _languagePickerController,
                     languages: languages,
-                    selectedLocale: _selectedLocale,
+                    selectedServerLocale: _selectedServerLocale,
                     onScrollEnd: () => _selectCenteredLocale(languages),
                   ),
                   const SizedBox(height: 30),
@@ -453,39 +581,56 @@ class _LanguageDialogState extends State<_LanguageDialog> {
 
   Future<void> _confirm() async {
     setState(() => _isConfirming = true);
-    await widget.onConfirm(_selectedLocale);
-    if (mounted) {
+    final selectedLanguage = widget.languages.firstWhere(
+      (language) => language.serverLocale == _selectedServerLocale,
+    );
+    final updated = await widget.onConfirm(
+      selectedLanguage.locale,
+      selectedLanguage.serverLocale,
+    );
+    if (updated && mounted) {
       Navigator.of(context).pop();
+    } else if (mounted) {
+      setState(() => _isConfirming = false);
+      AppToast.error(
+        context,
+        AppLocalizations.of(context).accountLanguageSaveFailed,
+      );
     }
   }
 
   void _selectCenteredLocale(List<_LanguageOptionData> languages) {
     final selectedIndex = _languagePickerController.selectedItem;
-    final locale = languages[selectedIndex].locale;
-    if (locale != _selectedLocale) {
-      setState(() => _selectedLocale = locale);
+    final serverLocale = languages[selectedIndex].serverLocale;
+    if (serverLocale != _selectedServerLocale) {
+      setState(() => _selectedServerLocale = serverLocale);
     }
   }
 }
 
 class _LanguageOptionData {
-  const _LanguageOptionData({required this.label, required this.locale});
+  const _LanguageOptionData({
+    required this.label,
+    required this.locale,
+    required this.serverLocale,
+  });
 
   final String label;
   final AppLocalePreference locale;
+  final String serverLocale;
 }
 
 class _LanguagePicker extends StatelessWidget {
   const _LanguagePicker({
     required this.controller,
     required this.languages,
-    required this.selectedLocale,
+    required this.selectedServerLocale,
     required this.onScrollEnd,
   });
 
   final FixedExtentScrollController controller;
   final List<_LanguageOptionData> languages;
-  final AppLocalePreference selectedLocale;
+  final String selectedServerLocale;
   final VoidCallback onScrollEnd;
 
   @override
@@ -511,14 +656,15 @@ class _LanguagePicker extends StatelessWidget {
                 builder: (context, index) {
                   final language = languages[index];
                   return Semantics(
-                    selected: language.locale == selectedLocale,
+                    selected: language.serverLocale == selectedServerLocale,
                     label: language.label,
                     child: Center(
                       child: Text(
                         language.label,
                         style: AppTextTokens.accountLanguageDialogOption(
                           Theme.of(context).textTheme,
-                          isSelected: language.locale == selectedLocale,
+                          isSelected:
+                              language.serverLocale == selectedServerLocale,
                         ),
                       ),
                     ),

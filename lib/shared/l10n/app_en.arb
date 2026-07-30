@@ -534,6 +534,30 @@
   "@accountDetailsForgotPassword": {
     "description": "Account details row label for forgot password"
   },
+  "accountDetailsCancelAccount": "Cancel account",
+  "@accountDetailsCancelAccount": {
+    "description": "Account details row label for deleting the current account"
+  },
+  "accountDetailsDeletionPrompt": "Are you sure to cancel the account?",
+  "@accountDetailsDeletionPrompt": {
+    "description": "Confirmation prompt before deleting the current account"
+  },
+  "accountDetailsDeletionNoAction": "No",
+  "@accountDetailsDeletionNoAction": {
+    "description": "Dismiss account deletion confirmation"
+  },
+  "accountDetailsDeletionYesAction": "Yes",
+  "@accountDetailsDeletionYesAction": {
+    "description": "Confirm account deletion"
+  },
+  "accountDetailsDeletionSubmitting": "Deleting...",
+  "@accountDetailsDeletionSubmitting": {
+    "description": "Account deletion confirmation action while submitting"
+  },
+  "accountDetailsDeletionFailed": "Unable to cancel the account. Please try again.",
+  "@accountDetailsDeletionFailed": {
+    "description": "Shown when account deletion fails"
+  },
   "accountDetailsLogout": "Log out",
   "@accountDetailsLogout": {
     "description": "Account details log out button label"
@@ -879,6 +903,12 @@
   "accountLanguageOptionGerman": "Das ist Deutsch",
   "accountLanguageCancelAction": "Cancel",
   "accountLanguageConfirmAction": "Confirm",
+  "accountLanguageOptionsLoading": "Loading available languages…",
+  "accountLanguageOptionsLoadFailed": "Unable to load available languages.",
+  "accountLanguageOptionsRetryAction": "Retry",
+  "accountLanguageSaveFailed": "Unable to update the language.",
+  "regionOptionsRetryAction": "Retry",
+  "regionOptionsSaveFailed": "Unable to update the region.",
   "regionPageTitle": "REGION",
   "@regionPageTitle": {
     "description": "Title for the region selection page"

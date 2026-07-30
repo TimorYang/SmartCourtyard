@@ -10,6 +10,10 @@ class AccountProfile {
     this.avatarCode,
     this.avatarFileId,
     this.country,
+    this.regionCode,
+    this.locale,
+    this.telephone,
+    this.timezone,
   }) : userId = userId.trim(),
        email = normalizeEmail(email),
        nickname = nickname.trim();
@@ -22,6 +26,10 @@ class AccountProfile {
   final int? avatarFileId;
   final DateTime? registeredAt;
   final String? country;
+  final String? regionCode;
+  final String? locale;
+  final String? telephone;
+  final String? timezone;
 
   static String normalizeEmail(String value) {
     return value.trim().toLowerCase();
@@ -40,6 +48,14 @@ class AccountProfile {
     DateTime? registeredAt,
     String? country,
     bool clearCountry = false,
+    String? regionCode,
+    bool clearRegionCode = false,
+    String? locale,
+    bool clearLocale = false,
+    String? telephone,
+    bool clearTelephone = false,
+    String? timezone,
+    bool clearTimezone = false,
   }) {
     return AccountProfile(
       userId: userId ?? this.userId,
@@ -52,6 +68,10 @@ class AccountProfile {
           : avatarFileId ?? this.avatarFileId,
       registeredAt: registeredAt ?? this.registeredAt,
       country: clearCountry ? null : country ?? this.country,
+      regionCode: clearRegionCode ? null : regionCode ?? this.regionCode,
+      locale: clearLocale ? null : locale ?? this.locale,
+      telephone: clearTelephone ? null : telephone ?? this.telephone,
+      timezone: clearTimezone ? null : timezone ?? this.timezone,
     );
   }
 
@@ -59,7 +79,7 @@ class AccountProfile {
   String toString() {
     return 'AccountProfile(userId: $userId, email: $email, nickname: $nickname, '
         'avatarUrl: $avatarUrl, registeredAt: $registeredAt, '
-        'country: $country)';
+        'country: $country, regionCode: $regionCode, locale: $locale)';
   }
 
   @override
@@ -73,7 +93,11 @@ class AccountProfile {
             other.avatarCode == avatarCode &&
             other.avatarFileId == avatarFileId &&
             other.registeredAt == registeredAt &&
-            other.country == country;
+            other.country == country &&
+            other.regionCode == regionCode &&
+            other.locale == locale &&
+            other.telephone == telephone &&
+            other.timezone == timezone;
   }
 
   @override
@@ -87,6 +111,10 @@ class AccountProfile {
       avatarFileId,
       registeredAt,
       country,
+      regionCode,
+      locale,
+      telephone,
+      timezone,
     );
   }
 }

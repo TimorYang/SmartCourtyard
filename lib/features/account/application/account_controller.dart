@@ -31,15 +31,44 @@ class AccountController extends AsyncNotifier<AccountProfile?> {
   Future<bool> updateAvatarCode(AccountAvatarCode avatarCode) =>
       _update(avatarCode: avatarCode);
 
+  Future<bool> updateRegion(String regionCode) =>
+      _update(regionCode: regionCode.trim());
+
+  Future<bool> updateLocale(String locale) => _update(locale: locale.trim());
+
+  Future<bool> refreshProfile() async {
+    if (state.isLoading) return false;
+    final current = state.whenOrNull(data: (value) => value);
+    try {
+      final profile = await _repository.refreshProfile(
+        requestId:
+            'account-profile-refresh-${DateTime.now().microsecondsSinceEpoch}',
+      );
+      state = AsyncData(profile);
+      return true;
+    } catch (_) {
+      if (current != null) {
+        state = AsyncData(current);
+      }
+      return false;
+    }
+  }
+
   Future<bool> _update({
     String? nickname,
     AccountAvatarCode? avatarCode,
     List<int>? avatarBytes,
     String? avatarFileName,
+    String? regionCode,
+    String? locale,
   }) async {
-    if (state.isLoading || (nickname?.isEmpty ?? false)) return false;
+    if (state.isLoading ||
+        (nickname?.isEmpty ?? false) ||
+        (regionCode?.isEmpty ?? false) ||
+        (locale?.isEmpty ?? false)) {
+      return false;
+    }
     final current = state.whenOrNull(data: (value) => value);
-    if (current == null) return false;
     state = const AsyncLoading<AccountProfile?>();
     try {
       await _repository.updateProfile(
@@ -47,6 +76,8 @@ class AccountController extends AsyncNotifier<AccountProfile?> {
         avatarCode: avatarCode,
         avatarBytes: avatarBytes,
         avatarFileName: avatarFileName,
+        regionCode: regionCode,
+        locale: locale,
         requestId: 'account-profile-${DateTime.now().microsecondsSinceEpoch}',
       );
       state = AsyncData(await _repository.readCachedProfile());

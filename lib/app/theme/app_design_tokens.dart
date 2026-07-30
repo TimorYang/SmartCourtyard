@@ -50,6 +50,8 @@ class AppColors {
   static const accountDetailsAvatarForeground = Color(0xFFFFFFFF);
   static const accountDetailsSheetSurface = Color(0xFFFFFFFF);
   static const accountDetailsSheetActionSurface = Color(0xFFF2F3F5);
+  static const accountDetailsDeletionConfirmSurface = Color(0xFFFF1717);
+  static const accountDetailsDeletionConfirmForeground = Color(0xFFFFFFFF);
   static const accountDetailsSheetInputBorder = Color(0xFFC8C8C8);
   static const accountDetailsSheetInputFocusedBorder = Color(0xFF176CFF);
   static const accountDetailsSheetInputIcon = Color(0xFFB4B6BA);
@@ -283,6 +285,13 @@ class AppShapeTokens {
   static const upgradeCheckDialogRadius = 16.0;
   static const upgradeCheckActionRadius = 28.0;
   static const fBoxWiringTestControlRadius = 12.0;
+}
+
+class AppLayoutTokens {
+  const AppLayoutTokens._();
+
+  static const accountProfileThemeIconSize = 26.0;
+  static const accountProfileThemeIconRightInset = 21.0;
 }
 
 class AppSpacingTokens {

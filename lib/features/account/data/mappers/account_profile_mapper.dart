@@ -2,6 +2,7 @@ import '../../domain/entities/account_profile.dart';
 import '../../domain/entities/account_avatar_code.dart';
 import '../dto/account_profile_dto.dart';
 import '../dto/account_remote_dto.dart';
+import '../dto/account_profile_remote_dto.dart';
 
 extension AccountProfileDtoMapper on AccountProfileDto {
   AccountProfile toDomain() {
@@ -14,6 +15,10 @@ extension AccountProfileDtoMapper on AccountProfileDto {
       avatarFileId: avatarFileId,
       registeredAt: _parseRegisteredAt(registeredAtIso8601),
       country: _blankToNull(country),
+      regionCode: _blankToNull(regionCode),
+      locale: _blankToNull(locale),
+      telephone: _blankToNull(telephone),
+      timezone: _blankToNull(timezone),
     );
   }
 }
@@ -30,6 +35,10 @@ extension AccountProfileDomainMapper on AccountProfile {
       avatarFileId: avatarFileId,
       registeredAtIso8601: registeredAt?.toUtc().toIso8601String() ?? '',
       country: _blankToNull(country),
+      regionCode: _blankToNull(regionCode),
+      locale: _blankToNull(locale),
+      telephone: _blankToNull(telephone),
+      timezone: _blankToNull(timezone),
     );
   }
 }
@@ -44,6 +53,25 @@ extension AccountRemoteDtoMapper on AccountRemoteDto {
       avatarCode: AccountAvatarCode.fromWireValue(avatarCode),
       registeredAt: _parseRegisteredAt(registeredAtIso8601),
       country: _blankToNull(country),
+    );
+  }
+}
+
+extension AccountProfileRemoteDtoMapper on AccountProfileRemoteDto {
+  AccountProfile toDomain({AccountProfile? cachedProfile}) {
+    return AccountProfile(
+      userId: _fallbackUserId(userId, email),
+      email: email,
+      nickname: nickname,
+      avatarUrl: cachedProfile?.avatarUrl,
+      avatarCode: AccountAvatarCode.fromWireValue(avatarCode),
+      avatarFileId: avatarFileId,
+      registeredAt: cachedProfile?.registeredAt,
+      country: _blankToNull(regionCode),
+      regionCode: _blankToNull(regionCode),
+      locale: _blankToNull(locale),
+      telephone: _blankToNull(telephone),
+      timezone: _blankToNull(timezone),
     );
   }
 }

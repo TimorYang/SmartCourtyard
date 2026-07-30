@@ -23,8 +23,10 @@ class SmartOpenerQrScanAssetPaths {
 
   static const galleryIcon =
       'assets/icons/add_device/smart_opener_qr_gallery_icon.png';
-  static const flashlightIcon =
-      'assets/icons/add_device/smart_opener_qr_flashlight_icon.png';
+  static const flashlightOffIcon =
+      'assets/icons/add_device/smart_opener_qr_flashlight_off_icon.png';
+  static const flashlightOnIcon =
+      'assets/icons/add_device/smart_opener_qr_flashlight_on_icon.png';
 }
 
 class SmartOpenerQrScanPage extends ConsumerStatefulWidget {
@@ -335,11 +337,22 @@ class _SmartOpenerQrScanPageState extends ConsumerState<SmartOpenerQrScanPage> {
                       onPressed: _isProcessing ? null : _pickFromGallery,
                     ),
                     const SizedBox(width: 76),
-                    _ScannerActionButton(
-                      label: l10n.smartOpenerScannerFlashlightAction,
-                      assetPath: SmartOpenerQrScanAssetPaths.flashlightIcon,
-                      fallbackIcon: Icons.flashlight_on_outlined,
-                      onPressed: _isProcessing ? null : _toggleTorch,
+                    ValueListenableBuilder<MobileScannerState>(
+                      valueListenable: _scannerController,
+                      builder: (context, scannerState, child) {
+                        final isTorchOn =
+                            scannerState.torchState == TorchState.on;
+                        return _ScannerActionButton(
+                          label: l10n.smartOpenerScannerFlashlightAction,
+                          assetPath: isTorchOn
+                              ? SmartOpenerQrScanAssetPaths.flashlightOnIcon
+                              : SmartOpenerQrScanAssetPaths.flashlightOffIcon,
+                          fallbackIcon: isTorchOn
+                              ? Icons.flashlight_on_outlined
+                              : Icons.flashlight_off_outlined,
+                          onPressed: _isProcessing ? null : _toggleTorch,
+                        );
+                      },
                     ),
                   ],
                 ),

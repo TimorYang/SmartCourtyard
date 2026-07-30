@@ -1,7 +1,10 @@
 import '../../../../core/network/access_token_cache.dart';
+import '../../../../core/errors/app_error.dart';
+import '../../../../core/logging/app_logger.dart';
 import '../../domain/entities/account_profile.dart';
 import '../../domain/entities/account_avatar_code.dart';
 import '../../domain/entities/account_token_set.dart';
+import '../../domain/entities/region_option.dart';
 import '../../domain/repositories/account_repository.dart';
 import '../data_sources/account_local_data_source.dart';
 import '../data_sources/account_secure_data_source.dart';
@@ -13,11 +16,13 @@ class AccountRepositoryImpl implements AccountRepository {
     required this.localDataSource,
     required this.secureDataSource,
     this.remoteDataSource,
+    this.logger,
   });
 
   final AccountLocalDataSource localDataSource;
   final AccountSecureDataSource secureDataSource;
   final AccountProfileRemoteDataSource? remoteDataSource;
+  final AppLogger? logger;
 
   @override
   Future<AccountProfile?> readCachedProfile() async {
@@ -36,47 +41,94 @@ class AccountRepositoryImpl implements AccountRepository {
   }
 
   @override
+  Future<AccountProfile> refreshProfile({required String requestId}) async {
+    final source = _requireRemoteDataSource();
+    try {
+      final cachedProfile = await readCachedProfile();
+      final profile = (await source.fetchProfile(
+        requestId: requestId,
+      )).toDomain(cachedProfile: cachedProfile);
+      await saveProfile(profile);
+      return profile;
+    } on AccountProfileRemoteException catch (error, stackTrace) {
+      throw _mapRemoteError(error, requestId, stackTrace);
+    }
+  }
+
+  @override
+  Future<List<RegionOption>> fetchRegionOptions({
+    required String requestId,
+  }) async {
+    final source = _requireRemoteDataSource();
+    try {
+      return (await source.fetchRegionOptions(requestId: requestId))
+          .where((option) => option.regionCode.trim().isNotEmpty)
+          .map(
+            (option) => RegionOption(
+              code: option.regionCode.trim(),
+              displayName: option.displayName.trim().isEmpty
+                  ? option.regionCode.trim()
+                  : option.displayName.trim(),
+            ),
+          )
+          .toList(growable: false);
+    } on AccountProfileRemoteException catch (error, stackTrace) {
+      throw _mapRemoteError(error, requestId, stackTrace);
+    }
+  }
+
+  @override
   Future<void> updateProfile({
     String? nickname,
     AccountAvatarCode? avatarCode,
     int? avatarFileId,
+    String? regionCode,
+    String? locale,
     required List<int>? avatarBytes,
     String? avatarFileName,
     required String requestId,
   }) async {
-    final current = await readCachedProfile();
-    if (current == null) throw StateError('No account profile');
-    final source = remoteDataSource;
-    if (source == null) {
-      throw StateError('Account profile remote data source is unavailable');
-    }
+    final source = _requireRemoteDataSource();
     if (avatarCode != null && (avatarFileId != null || avatarBytes != null)) {
       throw ArgumentError(
         'avatarCode and avatarFileId are mutually exclusive.',
       );
     }
-    final uploadedFileId = avatarBytes == null
-        ? avatarFileId
-        : await source.uploadImage(
-            bytes: avatarBytes,
-            fileName: avatarFileName ?? 'avatar.jpg',
-            requestId: requestId,
-          );
-    await source.updateProfile(
-      nickname: nickname,
-      avatarCode: avatarCode,
-      avatarFileId: uploadedFileId,
-      requestId: requestId,
-    );
-    await saveProfile(
-      current.copyWith(
+    try {
+      final uploadedFileId = avatarBytes == null
+          ? avatarFileId
+          : await source.uploadImage(
+              bytes: avatarBytes,
+              fileName: avatarFileName ?? 'avatar.jpg',
+              requestId: requestId,
+            );
+      await source.updateProfile(
         nickname: nickname,
         avatarCode: avatarCode,
-        clearAvatarCode: uploadedFileId != null,
         avatarFileId: uploadedFileId,
-        clearAvatarFileId: avatarCode != null,
-      ),
-    );
+        regionCode: regionCode,
+        locale: locale,
+        requestId: requestId,
+      );
+      await refreshProfile(requestId: requestId);
+    } on AccountProfileRemoteException catch (error, stackTrace) {
+      throw _mapRemoteError(error, requestId, stackTrace);
+    }
+  }
+
+  @override
+  Future<void> confirmAccountDeletion({required String requestId}) async {
+    final source = _requireRemoteDataSource();
+    try {
+      await source.confirmAccountDeletion(requestId: requestId);
+    } on AccountProfileRemoteException catch (error, stackTrace) {
+      throw _mapRemoteError(
+        error,
+        requestId,
+        stackTrace,
+        messageKey: 'account.deletionFailed',
+      );
+    }
   }
 
   @override
@@ -101,5 +153,39 @@ class AccountRepositoryImpl implements AccountRepository {
       AccessTokenCache.set(tokenSet.accessToken, expiresAt: tokenSet.expiresAt);
     }
     return tokenSet;
+  }
+
+  AccountProfileRemoteDataSource _requireRemoteDataSource() {
+    final source = remoteDataSource;
+    if (source == null) {
+      throw StateError('Account profile remote data source is unavailable');
+    }
+    return source;
+  }
+
+  AppError _mapRemoteError(
+    AccountProfileRemoteException error,
+    String requestId,
+    StackTrace stackTrace, {
+    String messageKey = 'account.profileRequestFailed',
+  }) {
+    logger?.error(
+      'Account profile request failed.',
+      requestId: requestId,
+      error: error,
+      stackTrace: stackTrace,
+      context: {'statusCode': error.network?.statusCode},
+    );
+    return AppError(
+      code: error.network == null
+          ? AppErrorCode.serverError
+          : error.network?.statusCode == 401 || error.network?.statusCode == 403
+          ? AppErrorCode.accessDenied
+          : AppErrorCode.networkUnavailable,
+      messageKey: messageKey,
+      action: AppErrorAction.retry,
+      requestId: requestId,
+      retryable: true,
+    );
   }
 }

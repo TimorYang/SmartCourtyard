@@ -22,6 +22,7 @@ import '../data/data_sources/receiving_devices_remote_data_source.dart';
 import '../data/data_sources/shared_devices_api.dart';
 import '../data/data_sources/shared_devices_remote_data_source.dart';
 import '../data/repositories/app_locale_repository_impl.dart';
+import '../data/repositories/app_language_options_repository_impl.dart';
 import '../data/repositories/managed_devices_repository_impl.dart';
 import '../data/repositories/account_repository_impl.dart';
 import '../data/repositories/account_overview_repository_impl.dart';
@@ -31,12 +32,14 @@ import '../data/repositories/system_permissions_repository_impl.dart';
 import '../domain/entities/account_profile.dart';
 import '../domain/entities/account_overview.dart';
 import '../domain/entities/app_locale_preference.dart';
+import '../domain/entities/app_language_option.dart';
 import '../domain/entities/receiving_door.dart';
 import '../domain/entities/shared_door.dart';
 import '../domain/entities/shared_door_members.dart';
 import '../domain/repositories/account_repository.dart';
 import '../domain/repositories/account_overview_repository.dart';
 import '../domain/repositories/app_locale_repository.dart';
+import '../domain/repositories/app_language_options_repository.dart';
 import '../domain/repositories/managed_devices_repository.dart';
 import '../domain/repositories/receiving_devices_repository.dart';
 import '../domain/repositories/system_permissions_repository.dart';
@@ -51,7 +54,10 @@ import '../domain/use_cases/request_system_permission_use_case.dart';
 import '../domain/use_cases/remove_managed_login_device_use_case.dart';
 import '../domain/use_cases/read_app_locale_preference_use_case.dart';
 import '../domain/use_cases/save_app_locale_preference_use_case.dart';
+import '../domain/use_cases/fetch_app_language_options_use_case.dart';
+import '../domain/use_cases/confirm_account_deletion_use_case.dart';
 import 'account_controller.dart';
+import 'account_deletion_controller.dart';
 import 'account_overview_controller.dart';
 import 'app_locale_controller.dart';
 import 'receiving_devices_controller.dart';
@@ -157,6 +163,29 @@ final appLocaleRepositoryProvider = Provider<AppLocaleRepository>((ref) {
   return AppLocaleRepositoryImpl(ref.watch(appLocaleLocalDataSourceProvider));
 });
 
+final appLanguageOptionsRepositoryProvider =
+    Provider<AppLanguageOptionsRepository>((ref) {
+      return AppLanguageOptionsRepositoryImpl(
+        remoteDataSource: ref.watch(accountProfileRemoteDataSourceProvider),
+        logger: ref.watch(appLoggerProvider),
+      );
+    });
+
+final fetchAppLanguageOptionsUseCaseProvider =
+    Provider<FetchAppLanguageOptionsUseCase>((ref) {
+      return FetchAppLanguageOptionsUseCase(
+        repository: ref.watch(appLanguageOptionsRepositoryProvider),
+      );
+    });
+
+final appLanguageOptionsProvider =
+    FutureProvider.autoDispose<List<AppLanguageOption>>((ref) {
+      return ref.watch(fetchAppLanguageOptionsUseCaseProvider)(
+        requestId:
+            'account-language-options-${DateTime.now().microsecondsSinceEpoch}',
+      );
+    });
+
 final readAppLocalePreferenceUseCaseProvider =
     Provider<ReadAppLocalePreferenceUseCase>((ref) {
       return ReadAppLocalePreferenceUseCase(
@@ -181,8 +210,21 @@ final accountRepositoryProvider = Provider<AccountRepository>((ref) {
     localDataSource: ref.watch(accountLocalDataSourceProvider),
     secureDataSource: ref.watch(accountSecureDataSourceProvider),
     remoteDataSource: ref.watch(accountProfileRemoteDataSourceProvider),
+    logger: ref.watch(appLoggerProvider),
   );
 });
+
+final confirmAccountDeletionUseCaseProvider =
+    Provider<ConfirmAccountDeletionUseCase>((ref) {
+      return ConfirmAccountDeletionUseCase(
+        ref.watch(accountRepositoryProvider),
+      );
+    });
+
+final accountDeletionControllerProvider =
+    AsyncNotifierProvider<AccountDeletionController, void>(
+      AccountDeletionController.new,
+    );
 
 final accountOverviewApiProvider = Provider<AccountOverviewApi>((ref) {
   return AccountOverviewApi(ref.watch(dioProvider));

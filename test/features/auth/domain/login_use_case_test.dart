@@ -137,6 +137,10 @@ class _FakeAccountRepository implements AccountRepository {
   Future<void> clearAccount() => throw UnimplementedError();
 
   @override
+  Future<void> confirmAccountDeletion({required String requestId}) =>
+      throw UnimplementedError();
+
+  @override
   Future<AccountProfile?> readCachedProfile() => throw UnimplementedError();
 
   @override
@@ -149,6 +153,9 @@ class _FakeAccountRepository implements AccountRepository {
 
   @override
   Stream<AccountProfile?> watchProfile() => throw UnimplementedError();
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class _FakeEncryptor implements PasswordCiphertextEncryptor {

@@ -1004,6 +1004,42 @@ abstract class AppLocalizations {
   /// **'Forgot password'**
   String get accountDetailsForgotPassword;
 
+  /// Account details row label for deleting the current account
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel account'**
+  String get accountDetailsCancelAccount;
+
+  /// Confirmation prompt before deleting the current account
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure to cancel the account?'**
+  String get accountDetailsDeletionPrompt;
+
+  /// Dismiss account deletion confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get accountDetailsDeletionNoAction;
+
+  /// Confirm account deletion
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get accountDetailsDeletionYesAction;
+
+  /// Account deletion confirmation action while submitting
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting...'**
+  String get accountDetailsDeletionSubmitting;
+
+  /// Shown when account deletion fails
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to cancel the account. Please try again.'**
+  String get accountDetailsDeletionFailed;
+
   /// Account details log out button label
   ///
   /// In en, this message translates to:
@@ -1651,6 +1687,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Confirm'**
   String get accountLanguageConfirmAction;
+
+  /// No description provided for @accountLanguageOptionsLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading available languages…'**
+  String get accountLanguageOptionsLoading;
+
+  /// No description provided for @accountLanguageOptionsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load available languages.'**
+  String get accountLanguageOptionsLoadFailed;
+
+  /// No description provided for @accountLanguageOptionsRetryAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get accountLanguageOptionsRetryAction;
+
+  /// No description provided for @accountLanguageSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to update the language.'**
+  String get accountLanguageSaveFailed;
+
+  /// No description provided for @regionOptionsRetryAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get regionOptionsRetryAction;
+
+  /// No description provided for @regionOptionsSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to update the region.'**
+  String get regionOptionsSaveFailed;
 
   /// Title for the region selection page
   ///

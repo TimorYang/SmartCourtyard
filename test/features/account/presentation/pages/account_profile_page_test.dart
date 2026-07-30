@@ -4,8 +4,12 @@ import 'package:flinx/features/account/data/data_sources/account_local_data_sour
 import 'package:flinx/features/account/data/data_sources/account_profile_remote_data_source.dart';
 import 'package:flinx/features/account/data/data_sources/app_locale_local_data_source.dart';
 import 'package:flinx/features/account/data/dto/account_profile_dto.dart';
+import 'package:flinx/features/account/data/dto/app_language_option_dto.dart';
+import 'package:flinx/features/account/data/dto/app_region_option_dto.dart';
+import 'package:flinx/features/account/data/dto/account_profile_remote_dto.dart';
 import 'package:flinx/features/account/domain/entities/receiving_door.dart';
 import 'package:flinx/features/account/domain/entities/account_avatar_code.dart';
+import 'package:flinx/features/account/domain/entities/app_language_option.dart';
 import 'package:flinx/features/account/domain/entities/system_permission.dart';
 import 'package:flinx/features/account/domain/entities/shared_door.dart';
 import 'package:flinx/features/account/domain/entities/shared_door_members.dart';
@@ -20,6 +24,7 @@ import 'package:flinx/features/account/presentation/pages/shared_devices_page.da
 import 'package:flinx/features/account/presentation/pages/shared_device_member_management_page.dart';
 import 'package:flinx/features/account/presentation/pages/system_permissions_page.dart';
 import 'package:flinx/features/auth/application/providers.dart';
+import 'package:flinx/features/auth/presentation/pages/login_page.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -59,11 +64,12 @@ void main() {
     expect(find.text('2'), findsNothing);
     expect(find.text('England'), findsOneWidget);
     expect(find.text('English'), findsOneWidget);
+    expect(find.byKey(AccountProfileKeys.themeIcon), findsOneWidget);
 
     await tester.scrollUntilVisible(
       find.byKey(AccountProfileKeys.logoutButton),
       250,
-      scrollable: find.byType(Scrollable).first,
+      scrollable: find.byType(ListView),
     );
     expect(find.text('Log out'), findsOneWidget);
   });
@@ -88,6 +94,11 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
+        overrides: [
+          accountProfileRemoteDataSourceProvider.overrideWithValue(
+            _AvatarProfileRemoteDataSource(),
+          ),
+        ],
         child: MaterialApp.router(
           theme: AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -115,7 +126,7 @@ void main() {
 
     await tester.tap(find.byType(BackButtonIcon));
     await tester.pumpAndSettle();
-    expect(find.text('739059568@qq.com'), findsOneWidget);
+    expect(find.text('Alex'), findsOneWidget);
     semantics.dispose();
   });
 
@@ -191,6 +202,26 @@ void main() {
           overrides: [
             appLocaleLocalDataSourceProvider.overrideWithValue(
               InMemoryAppLocaleLocalDataSource(initialLanguageCode: 'en'),
+            ),
+            appLanguageOptionsProvider.overrideWith(
+              (ref) async => const [
+                AppLanguageOption(locale: 'en-US', nativeName: 'English'),
+                AppLanguageOption(locale: 'zh-CN', nativeName: '中文(简体)'),
+              ],
+            ),
+            accountLocalDataSourceProvider.overrideWithValue(
+              InMemoryAccountLocalDataSource(
+                initialProfile: const AccountProfileDto(
+                  schemaVersion: AccountProfileDto.currentSchemaVersion,
+                  userId: 'user-1',
+                  email: '739059568@qq.com',
+                  nickname: 'Alex',
+                  registeredAtIso8601: '',
+                ),
+              ),
+            ),
+            accountProfileRemoteDataSourceProvider.overrideWithValue(
+              _AvatarProfileRemoteDataSource(),
             ),
           ],
           child: const _LocaleTestHarness(),
@@ -649,8 +680,73 @@ void main() {
     expect(find.text('账户'), findsOneWidget);
     expect(find.text('头像'), findsOneWidget);
     expect(find.text('修改密码'), findsOneWidget);
+    expect(find.text('注销账号'), findsOneWidget);
     expect(find.text('退出登录'), findsOneWidget);
     expect(find.text('ACCOUNT'), findsNothing);
+  });
+
+  testWidgets('confirms account deletion and returns to login', (tester) async {
+    final remoteDataSource = _AvatarProfileRemoteDataSource();
+    final router = GoRouter(
+      initialLocation: AccountDetailsPage.routePath,
+      routes: [
+        GoRoute(
+          path: LoginPage.routePath,
+          builder: (context, state) => const Scaffold(body: Text('Login')),
+        ),
+        GoRoute(
+          path: AccountDetailsPage.routePath,
+          name: AccountDetailsPage.routeName,
+          builder: (context, state) => const AccountDetailsPage(),
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          accountProfileRemoteDataSourceProvider.overrideWithValue(
+            remoteDataSource,
+          ),
+        ],
+        child: MaterialApp.router(
+          theme: AppTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          routerConfig: router,
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(AccountDetailsPage)),
+    );
+    container
+        .read(activeAuthSessionProvider.notifier)
+        .markAuthenticated(userId: 'test-user');
+
+    await tester.ensureVisible(find.text('Cancel account'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cancel account'));
+    await tester.pumpAndSettle();
+    expect(find.text('Are you sure to cancel the account?'), findsOneWidget);
+
+    await tester.tap(find.text('No'));
+    await tester.pumpAndSettle();
+    expect(find.text('Are you sure to cancel the account?'), findsNothing);
+
+    await tester.tap(find.text('Cancel account'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Yes'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Login'), findsOneWidget);
+    expect(
+      remoteDataSource.confirmedDeletionRequestId,
+      startsWith('account-deletion-'),
+    );
+    expect(container.read(activeAuthSessionProvider).isAuthenticated, isFalse);
   });
 
   testWidgets('shows cached account details', (tester) async {
@@ -823,6 +919,38 @@ void main() {
 class _AvatarProfileRemoteDataSource implements AccountProfileRemoteDataSource {
   AccountAvatarCode? avatarCode;
   int? avatarFileId;
+  String? confirmedDeletionRequestId;
+
+  @override
+  Future<AccountProfileRemoteDto> fetchProfile({
+    required String requestId,
+  }) async => AccountProfileRemoteDto(
+    userId: 'user-1',
+    email: '739059568@qq.com',
+    emailVerified: true,
+    nickname: 'Alex',
+    avatarCode: avatarCode?.wireValue,
+    avatarFileId: avatarFileId,
+  );
+
+  @override
+  Future<List<AppRegionOptionDto>> fetchRegionOptions({
+    required String requestId,
+  }) async => const [
+    AppRegionOptionDto(regionCode: 'CN', displayName: 'China'),
+    AppRegionOptionDto(regionCode: 'US', displayName: 'America'),
+    AppRegionOptionDto(regionCode: 'GB', displayName: 'England'),
+    AppRegionOptionDto(
+      regionCode: 'FR',
+      displayName: 'La Republique francaise',
+    ),
+    AppRegionOptionDto(regionCode: 'CA', displayName: 'Canada'),
+  ];
+
+  @override
+  Future<List<AppLanguageOptionDto>> fetchLanguageOptions({
+    required String requestId,
+  }) async => const [];
 
   @override
   Future<int> uploadImage({
@@ -836,10 +964,17 @@ class _AvatarProfileRemoteDataSource implements AccountProfileRemoteDataSource {
     String? nickname,
     AccountAvatarCode? avatarCode,
     int? avatarFileId,
+    String? regionCode,
+    String? locale,
     required String requestId,
   }) async {
     this.avatarCode = avatarCode;
     this.avatarFileId = avatarFileId;
+  }
+
+  @override
+  Future<void> confirmAccountDeletion({required String requestId}) async {
+    confirmedDeletionRequestId = requestId;
   }
 }
 
