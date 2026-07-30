@@ -1,6 +1,7 @@
 import '../../../../core/errors/app_error.dart';
 import '../../../../core/logging/app_logger.dart';
 import '../../../account/domain/entities/account_profile.dart';
+import '../../../account/domain/entities/account_avatar_code.dart';
 import '../../../account/domain/entities/account_token_set.dart';
 import '../../domain/entities/auth_login_result.dart';
 import '../../domain/repositories/auth_login_repository.dart';
@@ -60,6 +61,9 @@ class AuthLoginRepositoryImpl implements AuthLoginRepository {
           nickname: result.profile.nickname,
           country: result.profile.regionCode,
           avatarFileId: result.profile.avatarFileId,
+          avatarCode: AccountAvatarCode.fromWireValue(
+            result.profile.avatarCode,
+          ),
         ),
       );
     } on AuthLoginRemoteException catch (error, stackTrace) {

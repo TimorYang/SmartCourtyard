@@ -1,3 +1,5 @@
+import '../../../account/domain/entities/account_avatar_code.dart';
+
 /// 操作记录页面展示的单条操作数据。
 class OperationRecord {
   const OperationRecord({
@@ -7,6 +9,7 @@ class OperationRecord {
     this.operatorAccount,
     this.operatorName,
     this.operationMethodLabel,
+    this.operatorAvatarCode,
     this.operatorAvatarFileId,
   });
 
@@ -18,6 +21,7 @@ class OperationRecord {
 
   /// 页面第二行展示的被操作门名称，对应接口 [doorName]。
   final String? doorName;
+
   /// 页面第二行展示的被操作方式，对应接口 [operationMethodLabel]。
   final String? operationMethodLabel;
 
@@ -27,7 +31,10 @@ class OperationRecord {
   /// [operatorAccount] 缺失时的操作者展示名称，对应接口 [operatorName]。
   final String? operatorName;
 
-  /// 页面头像关联的文件 ID；当前接口未提供可访问 URL，页面使用本地占位图。
+  /// 触发操作用户的内置头像编码。
+  final AccountAvatarCode? operatorAvatarCode;
+
+  /// 页面头像关联的自定义头像文件 ID。
   final int? operatorAvatarFileId;
 
   /// UI 中的操作者文本，账号优先，缺失时回退为名称。

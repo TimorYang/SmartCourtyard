@@ -11,6 +11,7 @@ import '../../../account/application/providers.dart';
 import '../../../account/application/shared_door_member_actions_controller.dart';
 import '../../../account/domain/entities/shared_device_share.dart';
 import '../../../account/domain/entities/shared_door_members.dart';
+import '../../../account/presentation/widgets/account_avatar_code_assets.dart';
 import '../../application/door_share_controller.dart';
 import '../../application/providers.dart';
 import '../../domain/entities/door_share.dart';
@@ -586,7 +587,12 @@ class _DeviceShareEditMemberSummary extends ConsumerWidget {
           SizedBox.square(
             dimension: AppSpacingTokens.deviceShareEditSummaryAvatarSize,
             child: ClipOval(
-              child: avatarImage == null
+              child: member.receiverAvatarCode != null
+                  ? Image.asset(
+                      member.receiverAvatarCode!.assetPath,
+                      fit: BoxFit.cover,
+                    )
+                  : avatarImage == null
                   ? const _DeviceShareEditMemberAvatarPlaceholder()
                   : Image.network(
                       avatarImage.url,

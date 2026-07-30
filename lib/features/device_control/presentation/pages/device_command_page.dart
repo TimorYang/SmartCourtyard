@@ -187,7 +187,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     return Scaffold(
       backgroundColor: AppColors.backgroundPrimary,
       appBar: FlinxNavigationBar(
-        title: doorDetail?.name ?? 'Garage door',
+        title: doorDetail?.name ?? l10n.deviceCommandFallbackDoorName,
         showBottomDivider: false,
         foregroundColor: AppColors.textPrimary,
         actions: [
@@ -496,14 +496,14 @@ class _CycleSummary extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: _CycleMetric(label: 'Operated cycles', value: operatedCycles?.toString() ?? '100', textTheme: textTheme),
+            child: _CycleMetric(label: AppLocalizations.of(context).deviceCommandOperatedCycles, value: operatedCycles?.toString() ?? '100', textTheme: textTheme),
           ),
           Padding(
             padding: EdgeInsetsGeometry.only(top: 10, bottom: 10),
             child: VerticalDivider(width: 58, thickness: 1, color: AppColors.deviceControlDivider),
           ),
           Expanded(
-            child: _CycleMetric(label: 'Remaining', value: remainingCycles?.toString() ?? '4900', textTheme: textTheme),
+            child: _CycleMetric(label: AppLocalizations.of(context).deviceCommandRemainingCycles, value: remainingCycles?.toString() ?? '4900', textTheme: textTheme),
           ),
           const _CommandVideoButton(),
         ],
@@ -552,7 +552,7 @@ class _CommandVideoButton extends StatelessWidget {
       margin: const EdgeInsets.only(left: 8),
       decoration: const BoxDecoration(color: AppColors.deviceControlPanel, shape: BoxShape.circle),
       child: IconButton(
-        tooltip: 'Video',
+        tooltip: AppLocalizations.of(context).deviceCommandVideoTooltip,
         padding: EdgeInsets.zero,
         constraints: const BoxConstraints.tightFor(width: 30, height: 30),
         onPressed: () {},
@@ -739,21 +739,21 @@ class _DoorCommandRow extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         _DoorCommandButton(
-          tooltip: 'Close',
+          tooltip: AppLocalizations.of(context).deviceCommandCloseTooltip,
           icon: Icons.keyboard_arrow_down,
           pending: pendingAction == DeviceCommandAction.closeDoor,
           onPressed: enabled && !busy ? onClose : null,
         ),
         const SizedBox(width: 34),
         _DoorCommandButton(
-          tooltip: 'Stop',
+          tooltip: AppLocalizations.of(context).deviceCommandStopTooltip,
           icon: Icons.pause,
           pending: pendingAction == DeviceCommandAction.stopDoor,
           onPressed: enabled && !busy ? onStop : null,
         ),
         const SizedBox(width: 34),
         _DoorCommandButton(
-          tooltip: 'Open',
+          tooltip: AppLocalizations.of(context).deviceCommandOpenTooltip,
           icon: Icons.keyboard_arrow_up,
           pending: pendingAction == DeviceCommandAction.openDoor,
           onPressed: enabled && !busy ? onOpen : null,
@@ -873,7 +873,7 @@ class _QuickActionGrid extends StatelessWidget {
                   child: _ToggleActionCard(
                     switchKey: const ValueKey<String>('auto-close-switch'),
                     iconAssetPath: _DeviceCommandAssetPaths.autoClose,
-                    title: 'Auto close',
+                    title: AppLocalizations.of(context).deviceCommandAutoCloseTitle,
                     enabled: autoCloseEnabled,
                     available: autoCloseAvailable,
                     busy: busy,
@@ -887,8 +887,8 @@ class _QuickActionGrid extends StatelessWidget {
                     key: const ValueKey<String>('open-reminder-action'),
                     switchKey: const ValueKey<String>('open-reminder-switch'),
                     iconAssetPath: _DeviceCommandAssetPaths.openReminder,
-                    title: 'Open reminder',
-                    subtitle: '10 min',
+                    title: AppLocalizations.of(context).deviceCommandOpenReminderTitle,
+                    subtitle: AppLocalizations.of(context).deviceCommandMinutes(10),
                     enabled: openReminderEnabled,
                     available: openReminderAvailable,
                     busy: busy,
@@ -947,10 +947,10 @@ class _LedActionCard extends StatelessWidget {
           const Spacer(),
           Padding(
             padding: EdgeInsetsGeometry.only(left: 4),
-            child: Text('LED', maxLines: 1, style: AppTextTokens.deviceControlQuickActionTitle(textTheme)),
+            child: Text(AppLocalizations.of(context).deviceCommandLedTitle, maxLines: 1, style: AppTextTokens.deviceControlQuickActionTitle(textTheme)),
           ),
           const SizedBox(height: 4),
-          Text('1 min', maxLines: 1, style: AppTextTokens.deviceControlQuickActionMeta(textTheme)),
+          Text(AppLocalizations.of(context).deviceCommandMinutes(1), maxLines: 1, style: AppTextTokens.deviceControlQuickActionMeta(textTheme)),
         ],
       ),
     );
@@ -1027,7 +1027,7 @@ class _PartialOpenCard extends StatelessWidget {
                 decoration: BoxDecoration(color: AppColors.deviceControlInactive.withValues(alpha: 0.42), borderRadius: BorderRadius.circular(8)),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-                  child: Text('${value}cm', style: AppTextTokens.deviceControlBadge(textTheme)),
+                  child: Text(AppLocalizations.of(context).deviceCommandCentimeters(value!), style: AppTextTokens.deviceControlBadge(textTheme)),
                 ),
               ),
             ),
@@ -1044,7 +1044,7 @@ class _PartialOpenCard extends StatelessWidget {
           ),
           Align(
             alignment: const Alignment(0, 1),
-            child: Text('Partial open', style: AppTextTokens.deviceControlQuickActionTitle(textTheme)),
+            child: Text(AppLocalizations.of(context).deviceCommandPartialOpenTitle, style: AppTextTokens.deviceControlQuickActionTitle(textTheme)),
           ),
         ],
       ),
@@ -1069,7 +1069,7 @@ class _MoreSettingsCard extends StatelessWidget {
         children: [
           const _DeviceControlAssetIcon(assetPath: _DeviceCommandAssetPaths.moreSetting),
           const SizedBox(width: 10),
-          Expanded(child: Text('More setting', style: AppTextTokens.deviceControlQuickActionTitle(textTheme))),
+          Expanded(child: Text(AppLocalizations.of(context).deviceCommandMoreSettingsTitle, style: AppTextTokens.deviceControlQuickActionTitle(textTheme))),
         ],
       ),
     );

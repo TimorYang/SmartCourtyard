@@ -1,4 +1,5 @@
 import 'package:flinx/features/records/application/providers.dart';
+import 'package:flinx/features/account/domain/entities/account_avatar_code.dart';
 import 'package:flinx/features/records/domain/entities/operation_record.dart';
 import 'package:flinx/features/records/domain/entities/operation_record_page_result.dart';
 import 'package:flinx/features/records/domain/repositories/operation_record_repository.dart';
@@ -83,6 +84,30 @@ void main() {
       'assets/images/records/operation_record_avatar_placeholder.png',
     );
   });
+
+  testWidgets('uses the built-in avatar when an avatar code is present', (
+    tester,
+  ) async {
+    await _pumpPage(
+      tester,
+      repository: _FakeOperationRecordRepository(
+        pages: <int, OperationRecordPageResult>{
+          1: _result(<OperationRecord>[
+            _record('Garage door', avatarCode: AccountAvatarCode.avatar03),
+          ]),
+        },
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final avatar = tester.widget<CircleAvatar>(
+      find.byKey(const ValueKey<String>('operation-record-avatar')),
+    );
+    expect(
+      (avatar.backgroundImage! as AssetImage).assetName,
+      'assets/icons/account/account_avatar_option_03.png',
+    );
+  });
 }
 
 Future<void> _pumpPage(
@@ -103,12 +128,14 @@ Future<void> _pumpPage(
   );
 }
 
-OperationRecord _record(String doorName) => OperationRecord(
-  action: OperationRecordAction.open,
-  occurredAt: DateTime(2026, 7, 9, 13, 34, 52),
-  doorName: doorName,
-  operatorAccount: 'mark@f-linx.com',
-);
+OperationRecord _record(String doorName, {AccountAvatarCode? avatarCode}) =>
+    OperationRecord(
+      action: OperationRecordAction.open,
+      occurredAt: DateTime(2026, 7, 9, 13, 34, 52),
+      doorName: doorName,
+      operatorAccount: 'mark@f-linx.com',
+      operatorAvatarCode: avatarCode,
+    );
 
 OperationRecordPageResult _result(
   List<OperationRecord> records, {

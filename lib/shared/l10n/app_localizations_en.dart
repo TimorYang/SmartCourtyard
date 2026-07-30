@@ -1521,6 +1521,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deviceSettingsRawUnavailable => 'Not reported';
 
   @override
+  String deviceSettingsRawValueDisplay(String hexValue, int decimalValue) {
+    return '$hexValue ($decimalValue)';
+  }
+
+  @override
   String get deviceSettingsRawValueHelp =>
       'Enter the raw device value in decimal or hexadecimal (for example, 30 or 0x1E).';
 
@@ -1651,6 +1656,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String deviceSettingsOpeningSpeedCurrent(int value) {
     return 'Current setting: $value% (motor setting)';
   }
+
+  @override
+  String deviceSettingsPercent(int value) {
+    return '$value%';
+  }
+
+  @override
+  String deviceSettingsOpeningSpeedStandardGuide(int value) {
+    return '$value%\n(STD)';
+  }
+
+  @override
+  String get deviceSettingsForceMarginMaximumGuide => '+15%';
+
+  @override
+  String get deviceSettingsStandardAbbreviation => 'STD';
 
   @override
   String get deviceSettingsForceMarginWarning15Days =>
@@ -2076,4 +2097,50 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get safetySensorOffline => 'Offline';
+
+  @override
+  String get deviceCommandFallbackDoorName => 'Garage door';
+
+  @override
+  String get deviceCommandOperatedCycles => 'Operated cycles';
+
+  @override
+  String get deviceCommandRemainingCycles => 'Remaining';
+
+  @override
+  String get deviceCommandVideoTooltip => 'Video';
+
+  @override
+  String get deviceCommandCloseTooltip => 'Close';
+
+  @override
+  String get deviceCommandStopTooltip => 'Stop';
+
+  @override
+  String get deviceCommandOpenTooltip => 'Open';
+
+  @override
+  String get deviceCommandAutoCloseTitle => 'Auto close';
+
+  @override
+  String get deviceCommandOpenReminderTitle => 'Open reminder';
+
+  @override
+  String deviceCommandMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String get deviceCommandLedTitle => 'LED';
+
+  @override
+  String deviceCommandCentimeters(int value) {
+    return '$value cm';
+  }
+
+  @override
+  String get deviceCommandPartialOpenTitle => 'Partial open';
+
+  @override
+  String get deviceCommandMoreSettingsTitle => 'More settings';
 }

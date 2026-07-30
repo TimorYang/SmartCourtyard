@@ -16,6 +16,8 @@ import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
 import '../../domain/entities/account_profile.dart';
+import '../../domain/entities/account_avatar_code.dart';
+import '../widgets/account_avatar_code_assets.dart';
 import 'account_profile_page.dart';
 
 class AccountDetailsPage extends ConsumerWidget {
@@ -74,6 +76,9 @@ class AccountDetailsPage extends ConsumerWidget {
                       .read(accountControllerProvider.notifier)
                       .updateAvatar(await image.readAsBytes(), image.name);
                 },
+                onAvatarCode: (avatarCode) => ref
+                    .read(accountControllerProvider.notifier)
+                    .updateAvatarCode(avatarCode),
               ),
             ),
           );
@@ -83,21 +88,6 @@ class AccountDetailsPage extends ConsumerWidget {
   }
 }
 
-class AccountDetailsAssetPaths {
-  const AccountDetailsAssetPaths._();
-
-  static const avatarOptions = [
-    'assets/icons/account/account_avatar_option_01.png',
-    'assets/icons/account/account_avatar_option_02.png',
-    'assets/icons/account/account_avatar_option_03.png',
-    'assets/icons/account/account_avatar_option_04.png',
-    'assets/icons/account/account_avatar_option_05.png',
-    'assets/icons/account/account_avatar_option_06.png',
-    'assets/icons/account/account_avatar_option_07.png',
-    'assets/icons/account/account_avatar_option_08.png',
-  ];
-}
-
 class _AccountDetailsContent extends StatelessWidget {
   const _AccountDetailsContent({
     required this.profile,
@@ -105,6 +95,7 @@ class _AccountDetailsContent extends StatelessWidget {
     required this.onLogout,
     required this.onRename,
     required this.onAvatar,
+    required this.onAvatarCode,
   });
 
   final AccountProfile? profile;
@@ -112,6 +103,7 @@ class _AccountDetailsContent extends StatelessWidget {
   final Future<void> Function() onLogout;
   final Future<bool> Function(String) onRename;
   final Future<bool> Function(ImageSource) onAvatar;
+  final Future<bool> Function(AccountAvatarCode) onAvatarCode;
 
   @override
   Widget build(BuildContext context) {
@@ -149,11 +141,16 @@ class _AccountDetailsContent extends StatelessWidget {
                           label: l10n.accountDetailsHeadPortrait,
                           trailing: _AccountDetailsAvatar(
                             imageUrl: profile?.avatarUrl,
+                            avatarCode: profile?.avatarCode,
                             avatarFileId: profile?.avatarFileId,
                           ),
                           showChevron: true,
-                          onTap: () =>
-                              _showAccountAvatarSheet(context, onAvatar),
+                          onTap: () => _showAccountAvatarSheet(
+                            context,
+                            initialAvatarCode: profile?.avatarCode,
+                            onPick: onAvatar,
+                            onPickAvatarCode: onAvatarCode,
+                          ),
                         ),
                         _AccountDetailsRowData(
                           label: l10n.accountDetailsAccountNumber,
@@ -319,9 +316,11 @@ class _AccountDetailsRow extends StatelessWidget {
 }
 
 Future<void> _showAccountAvatarSheet(
-  BuildContext context,
-  Future<bool> Function(ImageSource) onPick,
-) {
+  BuildContext context, {
+  required AccountAvatarCode? initialAvatarCode,
+  required Future<bool> Function(ImageSource) onPick,
+  required Future<bool> Function(AccountAvatarCode) onPickAvatarCode,
+}) {
   return showModalBottomSheet<void>(
     context: context,
     isDismissible: true,
@@ -330,7 +329,11 @@ Future<void> _showAccountAvatarSheet(
     isScrollControlled: true,
     barrierColor: AppColors.overlaySoft,
     backgroundColor: Colors.transparent,
-    builder: (context) => _AvatarBottomSheet(onPick: onPick),
+    builder: (context) => _AvatarBottomSheet(
+      initialAvatarCode: initialAvatarCode,
+      onPick: onPick,
+      onPickAvatarCode: onPickAvatarCode,
+    ),
   );
 }
 
@@ -435,15 +438,21 @@ class _AccountBottomSheetFrame extends StatelessWidget {
 }
 
 class _AvatarBottomSheet extends StatefulWidget {
-  const _AvatarBottomSheet({required this.onPick});
+  const _AvatarBottomSheet({
+    required this.initialAvatarCode,
+    required this.onPick,
+    required this.onPickAvatarCode,
+  });
+  final AccountAvatarCode? initialAvatarCode;
   final Future<bool> Function(ImageSource) onPick;
+  final Future<bool> Function(AccountAvatarCode) onPickAvatarCode;
 
   @override
   State<_AvatarBottomSheet> createState() => _AvatarBottomSheetState();
 }
 
 class _AvatarBottomSheetState extends State<_AvatarBottomSheet> {
-  var _selectedIndex = 1;
+  var _isSubmitting = false;
 
   @override
   Widget build(BuildContext context) {
@@ -466,13 +475,28 @@ class _AvatarBottomSheetState extends State<_AvatarBottomSheet> {
                   mainAxisSpacing: 16,
                   crossAxisSpacing: 28,
                 ),
-                itemCount: AccountDetailsAssetPaths.avatarOptions.length,
+                itemCount: AccountAvatarCode.values.length,
                 itemBuilder: (context, index) {
+                  final avatarCode = AccountAvatarCode.values[index];
                   return _AvatarOptionButton(
-                    assetPath: AccountDetailsAssetPaths.avatarOptions[index],
+                    assetPath: avatarCode.assetPath,
                     index: index,
-                    selected: index == _selectedIndex,
-                    onSelected: () => setState(() => _selectedIndex = index),
+                    selected: avatarCode == widget.initialAvatarCode,
+                    onSelected: _isSubmitting
+                        ? null
+                        : () async {
+                            final navigator = Navigator.of(context);
+                            setState(() => _isSubmitting = true);
+                            final updated = await widget.onPickAvatarCode(
+                              avatarCode,
+                            );
+                            if (!mounted) return;
+                            if (updated) {
+                              navigator.pop();
+                            } else {
+                              setState(() => _isSubmitting = false);
+                            }
+                          },
                   );
                 },
               ),
@@ -482,11 +506,9 @@ class _AvatarBottomSheetState extends State<_AvatarBottomSheet> {
                 foregroundColor: AppColors.textPrimary,
                 backgroundColor: AppColors.accountDetailsSheetActionSurface,
                 textTheme: textTheme,
-                onPressed: () async {
-                  if (await widget.onPick(ImageSource.gallery) &&
-                      context.mounted)
-                    Navigator.pop(context);
-                },
+                onPressed: _isSubmitting
+                    ? null
+                    : () => _pickImage(ImageSource.gallery),
               ),
               const SizedBox(height: 18),
               _AccountSheetActionButton(
@@ -494,11 +516,9 @@ class _AvatarBottomSheetState extends State<_AvatarBottomSheet> {
                 foregroundColor: AppColors.textPrimary,
                 backgroundColor: AppColors.accountDetailsSheetActionSurface,
                 textTheme: textTheme,
-                onPressed: () async {
-                  if (await widget.onPick(ImageSource.camera) &&
-                      context.mounted)
-                    Navigator.pop(context);
-                },
+                onPressed: _isSubmitting
+                    ? null
+                    : () => _pickImage(ImageSource.camera),
               ),
               const SizedBox(height: 34),
               _AccountSheetActionButton(
@@ -506,13 +526,25 @@ class _AvatarBottomSheetState extends State<_AvatarBottomSheet> {
                 foregroundColor: AppColors.textPrimary,
                 backgroundColor: AppColors.accountDetailsSheetActionSurface,
                 textTheme: textTheme,
-                onPressed: () => Navigator.pop(context),
+                onPressed: _isSubmitting ? null : () => Navigator.pop(context),
               ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    final navigator = Navigator.of(context);
+    setState(() => _isSubmitting = true);
+    final updated = await widget.onPick(source);
+    if (!mounted) return;
+    if (updated) {
+      navigator.pop();
+    } else {
+      setState(() => _isSubmitting = false);
+    }
   }
 }
 
@@ -527,7 +559,7 @@ class _AvatarOptionButton extends StatelessWidget {
   final String assetPath;
   final int index;
   final bool selected;
-  final VoidCallback onSelected;
+  final VoidCallback? onSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -860,7 +892,7 @@ class _PasswordVisibilityButton extends StatelessWidget {
   });
 
   final bool visible;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -934,7 +966,7 @@ class _AccountSheetActionButton extends StatelessWidget {
   final Color foregroundColor;
   final Color backgroundColor;
   final TextTheme textTheme;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -957,9 +989,14 @@ class _AccountSheetActionButton extends StatelessWidget {
 }
 
 class _AccountDetailsAvatar extends StatelessWidget {
-  const _AccountDetailsAvatar({this.imageUrl, this.avatarFileId});
+  const _AccountDetailsAvatar({
+    this.imageUrl,
+    this.avatarCode,
+    this.avatarFileId,
+  });
 
   final String? imageUrl;
+  final AccountAvatarCode? avatarCode;
   final int? avatarFileId;
 
   @override
@@ -977,7 +1014,9 @@ class _AccountDetailsAvatar extends StatelessWidget {
       width: 52,
       height: 52,
       child: ClipOval(
-        child: imageSource == null || imageSource.isEmpty
+        child: avatarCode != null
+            ? Image.asset(avatarCode!.assetPath, fit: BoxFit.cover)
+            : imageSource == null || imageSource.isEmpty
             ? Image.asset(
                 AccountProfileAssetPaths.avatarPlaceholder,
                 fit: BoxFit.cover,

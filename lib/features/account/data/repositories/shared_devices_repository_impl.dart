@@ -2,6 +2,7 @@ import '../../../../core/errors/app_error.dart';
 import '../../../../core/logging/app_logger.dart';
 import '../../domain/entities/shared_door.dart';
 import '../../domain/entities/shared_door_members.dart';
+import '../../domain/entities/account_avatar_code.dart';
 import '../../domain/repositories/shared_devices_repository.dart';
 import '../data_sources/shared_devices_remote_data_source.dart';
 import '../dto/shared_door_response_dto.dart';
@@ -136,6 +137,7 @@ extension SharedDoorMemberResponseDtoMapper on SharedDoorMemberResponseDto {
       _ => SharedDoorMemberExpiryType.customize,
     },
     capabilityCodes: capabilities,
+    receiverAvatarCode: AccountAvatarCode.fromWireValue(receiverAvatarCode),
     receiverAvatarFileId: receiverAvatarFileId,
     expiresAt: expiresAt == null
         ? null

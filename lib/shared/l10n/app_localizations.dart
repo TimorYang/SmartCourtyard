@@ -2846,6 +2846,12 @@ abstract class AppLocalizations {
   /// **'Not reported'**
   String get deviceSettingsRawUnavailable;
 
+  /// No description provided for @deviceSettingsRawValueDisplay.
+  ///
+  /// In en, this message translates to:
+  /// **'{hexValue} ({decimalValue})'**
+  String deviceSettingsRawValueDisplay(String hexValue, int decimalValue);
+
   /// No description provided for @deviceSettingsRawValueHelp.
   ///
   /// In en, this message translates to:
@@ -3079,6 +3085,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Current setting: {value}% (motor setting)'**
   String deviceSettingsOpeningSpeedCurrent(int value);
+
+  /// No description provided for @deviceSettingsPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'{value}%'**
+  String deviceSettingsPercent(int value);
+
+  /// No description provided for @deviceSettingsOpeningSpeedStandardGuide.
+  ///
+  /// In en, this message translates to:
+  /// **'{value}%\n(STD)'**
+  String deviceSettingsOpeningSpeedStandardGuide(int value);
+
+  /// No description provided for @deviceSettingsForceMarginMaximumGuide.
+  ///
+  /// In en, this message translates to:
+  /// **'+15%'**
+  String get deviceSettingsForceMarginMaximumGuide;
+
+  /// No description provided for @deviceSettingsStandardAbbreviation.
+  ///
+  /// In en, this message translates to:
+  /// **'STD'**
+  String get deviceSettingsStandardAbbreviation;
 
   /// No description provided for @deviceSettingsForceMarginWarning15Days.
   ///
@@ -3859,6 +3889,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Offline'**
   String get safetySensorOffline;
+
+  /// No description provided for @deviceCommandFallbackDoorName.
+  ///
+  /// In en, this message translates to:
+  /// **'Garage door'**
+  String get deviceCommandFallbackDoorName;
+
+  /// No description provided for @deviceCommandOperatedCycles.
+  ///
+  /// In en, this message translates to:
+  /// **'Operated cycles'**
+  String get deviceCommandOperatedCycles;
+
+  /// No description provided for @deviceCommandRemainingCycles.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining'**
+  String get deviceCommandRemainingCycles;
+
+  /// No description provided for @deviceCommandVideoTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Video'**
+  String get deviceCommandVideoTooltip;
+
+  /// No description provided for @deviceCommandCloseTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get deviceCommandCloseTooltip;
+
+  /// No description provided for @deviceCommandStopTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get deviceCommandStopTooltip;
+
+  /// No description provided for @deviceCommandOpenTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get deviceCommandOpenTooltip;
+
+  /// No description provided for @deviceCommandAutoCloseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto close'**
+  String get deviceCommandAutoCloseTitle;
+
+  /// No description provided for @deviceCommandOpenReminderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open reminder'**
+  String get deviceCommandOpenReminderTitle;
+
+  /// No description provided for @deviceCommandMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String deviceCommandMinutes(int minutes);
+
+  /// No description provided for @deviceCommandLedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'LED'**
+  String get deviceCommandLedTitle;
+
+  /// No description provided for @deviceCommandCentimeters.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} cm'**
+  String deviceCommandCentimeters(int value);
+
+  /// No description provided for @deviceCommandPartialOpenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Partial open'**
+  String get deviceCommandPartialOpenTitle;
+
+  /// No description provided for @deviceCommandMoreSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'More settings'**
+  String get deviceCommandMoreSettingsTitle;
 }
 
 class _AppLocalizationsDelegate

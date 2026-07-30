@@ -1,9 +1,11 @@
 import 'package:flinx/app/theme/app_theme.dart';
 import 'package:flinx/features/account/application/providers.dart';
 import 'package:flinx/features/account/data/data_sources/account_local_data_source.dart';
+import 'package:flinx/features/account/data/data_sources/account_profile_remote_data_source.dart';
 import 'package:flinx/features/account/data/data_sources/app_locale_local_data_source.dart';
 import 'package:flinx/features/account/data/dto/account_profile_dto.dart';
 import 'package:flinx/features/account/domain/entities/receiving_door.dart';
+import 'package:flinx/features/account/domain/entities/account_avatar_code.dart';
 import 'package:flinx/features/account/domain/entities/system_permission.dart';
 import 'package:flinx/features/account/domain/entities/shared_door.dart';
 import 'package:flinx/features/account/domain/entities/shared_door_members.dart';
@@ -18,7 +20,6 @@ import 'package:flinx/features/account/presentation/pages/shared_devices_page.da
 import 'package:flinx/features/account/presentation/pages/shared_device_member_management_page.dart';
 import 'package:flinx/features/account/presentation/pages/system_permissions_page.dart';
 import 'package:flinx/features/auth/application/providers.dart';
-import 'package:flinx/features/home/presentation/pages/device_share_page.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -586,6 +587,48 @@ void main() {
     expect(find.text('Photo album'), findsNothing);
   });
 
+  testWidgets('updates a built-in avatar and closes the sheet on success', (
+    tester,
+  ) async {
+    final remoteDataSource = _AvatarProfileRemoteDataSource();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          accountLocalDataSourceProvider.overrideWithValue(
+            InMemoryAccountLocalDataSource(
+              initialProfile: const AccountProfileDto(
+                schemaVersion: AccountProfileDto.currentSchemaVersion,
+                userId: 'user-1',
+                email: 'alex@example.com',
+                nickname: 'Alex',
+                registeredAtIso8601: '',
+              ),
+            ),
+          ),
+          accountProfileRemoteDataSourceProvider.overrideWithValue(
+            remoteDataSource,
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const AccountDetailsPage(),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Head portrait'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsLabel('Avatar option 4'));
+    await tester.pumpAndSettle();
+
+    expect(remoteDataSource.avatarCode, AccountAvatarCode.avatar04);
+    expect(remoteDataSource.avatarFileId, isNull);
+    expect(find.text('Photo album'), findsNothing);
+  });
+
   testWidgets('localizes account details when the app language is Chinese', (
     tester,
   ) async {
@@ -775,6 +818,29 @@ void main() {
     expect(find.text('Welcome'), findsOneWidget);
     expect(container.read(activeAuthSessionProvider).isAuthenticated, isFalse);
   });
+}
+
+class _AvatarProfileRemoteDataSource implements AccountProfileRemoteDataSource {
+  AccountAvatarCode? avatarCode;
+  int? avatarFileId;
+
+  @override
+  Future<int> uploadImage({
+    required List<int> bytes,
+    required String fileName,
+    required String requestId,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<void> updateProfile({
+    String? nickname,
+    AccountAvatarCode? avatarCode,
+    int? avatarFileId,
+    required String requestId,
+  }) async {
+    this.avatarCode = avatarCode;
+    this.avatarFileId = avatarFileId;
+  }
 }
 
 class _FakeSharedDevicesRepository implements SharedDevicesRepository {

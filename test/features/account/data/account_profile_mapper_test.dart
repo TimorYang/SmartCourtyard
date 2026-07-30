@@ -3,6 +3,7 @@ import 'package:flinx/features/account/data/dto/account_profile_dto.dart';
 import 'package:flinx/features/account/data/dto/account_remote_dto.dart';
 import 'package:flinx/features/account/data/mappers/account_profile_mapper.dart';
 import 'package:flinx/features/account/domain/entities/account_profile.dart';
+import 'package:flinx/features/account/domain/entities/account_avatar_code.dart';
 
 void main() {
   test('maps local dto to domain and normalizes values', () {
@@ -67,4 +68,22 @@ void main() {
     expect(profile.country, isNull);
     expect(profile.registeredAt, DateTime.utc(2026, 4, 5, 6, 7, 8));
   });
+
+  test(
+    'maps the persisted built-in avatar code and ignores an unknown code',
+    () {
+      final profile = AccountProfileDto(
+        schemaVersion: 1,
+        userId: 'user-1',
+        email: 'user@example.com',
+        nickname: 'Alice',
+        avatarCode: 'AVATAR_06',
+        registeredAtIso8601: '',
+      ).toDomain();
+
+      expect(profile.avatarCode, AccountAvatarCode.avatar06);
+      expect(profile.toLocalDto().toJson()['avatarCode'], 'AVATAR_06');
+      expect(AccountAvatarCode.fromWireValue('UNKNOWN_AVATAR'), isNull);
+    },
+  );
 }

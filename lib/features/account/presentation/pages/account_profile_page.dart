@@ -12,6 +12,8 @@ import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
 import '../../domain/entities/app_locale_preference.dart';
 import '../../domain/entities/account_profile.dart';
+import '../../domain/entities/account_avatar_code.dart';
+import '../widgets/account_avatar_code_assets.dart';
 import '../../domain/entities/account_overview.dart';
 import '../../../auth/application/providers.dart';
 import '../../../auth/presentation/pages/welcome_page.dart';
@@ -237,7 +239,6 @@ class _AccountProfileContent extends StatelessWidget {
       ),
       _AccountMenuItem(
         label: l10n.accountManageDevices,
-        trailingText: overview?.ownedDoorCount.toString() ?? '0',
         iconAssetPath: AccountProfileAssetPaths.menuManageDevices,
         onTap: () => context.pushNamed(ManageDevicesPage.routeName),
         key: AccountProfileKeys.manageDevicesMenuItem,
@@ -306,6 +307,7 @@ class _AccountProfileContent extends StatelessWidget {
             children: [
               _AccountHeader(
                 nickname: nickname,
+                avatarCode: profile?.avatarCode,
                 avatarFileId: profile?.avatarFileId,
                 refreshedAt: refreshedAt == null
                     ? l10n.accountOverviewRefreshTimeUnavailable
@@ -592,6 +594,7 @@ class _LanguageDialogButton extends StatelessWidget {
 class _AccountHeader extends StatelessWidget {
   const _AccountHeader({
     required this.nickname,
+    required this.avatarCode,
     required this.avatarFileId,
     required this.refreshedAt,
   });
@@ -600,6 +603,7 @@ class _AccountHeader extends StatelessWidget {
   static const _headerImageHeight = 600.0;
 
   final String nickname;
+  final AccountAvatarCode? avatarCode;
   final int? avatarFileId;
   final String refreshedAt;
 
@@ -633,6 +637,7 @@ class _AccountHeader extends StatelessWidget {
                   children: [
                     _AccountAvatar(
                       size: 66,
+                      avatarCode: avatarCode,
                       avatarFileId: avatarFileId,
                       onTap: () =>
                           context.pushNamed(AccountDetailsPage.routeName),
@@ -701,9 +706,15 @@ class _HeaderFallbackArt extends StatelessWidget {
 }
 
 class _AccountAvatar extends StatelessWidget {
-  const _AccountAvatar({required this.size, this.avatarFileId, this.onTap});
+  const _AccountAvatar({
+    required this.size,
+    this.avatarCode,
+    this.avatarFileId,
+    this.onTap,
+  });
 
   final double size;
+  final AccountAvatarCode? avatarCode;
   final int? avatarFileId;
   final VoidCallback? onTap;
 
@@ -727,7 +738,9 @@ class _AccountAvatar extends StatelessWidget {
             ),
           ),
           child: ClipOval(
-            child: avatarFileId == null || avatarFileId! <= 0
+            child: avatarCode != null
+                ? Image.asset(avatarCode!.assetPath, fit: BoxFit.cover)
+                : avatarFileId == null || avatarFileId! <= 0
                 ? Image.asset(
                     AccountProfileAssetPaths.avatarPlaceholder,
                     fit: BoxFit.cover,

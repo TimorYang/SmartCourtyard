@@ -1,5 +1,6 @@
 import '../../../../core/network/access_token_cache.dart';
 import '../../domain/entities/account_profile.dart';
+import '../../domain/entities/account_avatar_code.dart';
 import '../../domain/entities/account_token_set.dart';
 import '../../domain/repositories/account_repository.dart';
 import '../data_sources/account_local_data_source.dart';
@@ -37,6 +38,7 @@ class AccountRepositoryImpl implements AccountRepository {
   @override
   Future<void> updateProfile({
     String? nickname,
+    AccountAvatarCode? avatarCode,
     int? avatarFileId,
     required List<int>? avatarBytes,
     String? avatarFileName,
@@ -48,6 +50,11 @@ class AccountRepositoryImpl implements AccountRepository {
     if (source == null) {
       throw StateError('Account profile remote data source is unavailable');
     }
+    if (avatarCode != null && (avatarFileId != null || avatarBytes != null)) {
+      throw ArgumentError(
+        'avatarCode and avatarFileId are mutually exclusive.',
+      );
+    }
     final uploadedFileId = avatarBytes == null
         ? avatarFileId
         : await source.uploadImage(
@@ -57,11 +64,18 @@ class AccountRepositoryImpl implements AccountRepository {
           );
     await source.updateProfile(
       nickname: nickname,
+      avatarCode: avatarCode,
       avatarFileId: uploadedFileId,
       requestId: requestId,
     );
     await saveProfile(
-      current.copyWith(nickname: nickname, avatarFileId: uploadedFileId),
+      current.copyWith(
+        nickname: nickname,
+        avatarCode: avatarCode,
+        clearAvatarCode: uploadedFileId != null,
+        avatarFileId: uploadedFileId,
+        clearAvatarFileId: avatarCode != null,
+      ),
     );
   }
 

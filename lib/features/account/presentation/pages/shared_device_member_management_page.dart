@@ -7,6 +7,7 @@ import '../../application/providers.dart';
 import '../../application/shared_door_member_actions_controller.dart';
 import '../../domain/entities/shared_door.dart';
 import '../../domain/entities/shared_door_members.dart';
+import '../widgets/account_avatar_code_assets.dart';
 import '../../domain/entities/shared_device_share.dart'
     show SharedDeviceMemberAssetPaths;
 import '../../../home/presentation/pages/device_share_page.dart';
@@ -238,7 +239,12 @@ class _SharedDeviceMemberAvatar extends ConsumerWidget {
       child: SizedBox.square(
         dimension: AppSpacingTokens.sharedDeviceMemberAvatarSize,
         child: ClipOval(
-          child: avatarImage == null
+          child: member.receiverAvatarCode != null
+              ? Image.asset(
+                  member.receiverAvatarCode!.assetPath,
+                  fit: BoxFit.cover,
+                )
+              : avatarImage == null
               ? const _SharedDeviceMemberAvatarPlaceholder()
               : Image.network(
                   avatarImage.url,

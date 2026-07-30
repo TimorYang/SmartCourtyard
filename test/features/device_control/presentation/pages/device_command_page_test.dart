@@ -49,8 +49,8 @@ void main() {
     expect(find.text('Open reminder'), findsOneWidget);
     expect(find.text('10 min'), findsOneWidget);
     expect(find.text('Partial open'), findsOneWidget);
-    expect(find.text('More setting'), findsOneWidget);
-    expect(find.text('60cm'), findsOneWidget);
+    expect(find.text('More settings'), findsOneWidget);
+    expect(find.text('60 cm'), findsOneWidget);
     expect(
       tester
           .widget<FlinxSwitch>(find.byKey(const ValueKey<String>('led-switch')))

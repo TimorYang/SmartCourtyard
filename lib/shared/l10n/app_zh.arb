@@ -479,6 +479,13 @@
   "deviceSettingsRetry": "重试",
   "deviceSettingsWriting": "正在写入…",
   "deviceSettingsRawUnavailable": "设备未上报",
+  "deviceSettingsRawValueDisplay": "{hexValue}（{decimalValue}）",
+  "@deviceSettingsRawValueDisplay": {
+    "placeholders": {
+      "hexValue": {"type": "String"},
+      "decimalValue": {"type": "int"}
+    }
+  },
   "deviceSettingsRawValueHelp": "请输入设备原始值，可使用十进制或十六进制（例如 30 或 0x1E）。",
   "deviceSettingsRawValueLabel": "原始值",
   "deviceSettingsRawValueInvalid": "请输入 0 到 {maximum} 之间的值。",
@@ -534,6 +541,12 @@
   },
   "deviceSettingsOpeningSpeedCurrent": "当前设置：{value}%（电机设置）",
   "@deviceSettingsOpeningSpeedCurrent": {"placeholders": {"value": {"type": "int"}}},
+  "deviceSettingsPercent": "{value}%",
+  "@deviceSettingsPercent": {"placeholders": {"value": {"type": "int"}}},
+  "deviceSettingsOpeningSpeedStandardGuide": "{value}%\n(标准)",
+  "@deviceSettingsOpeningSpeedStandardGuide": {"placeholders": {"value": {"type": "int"}}},
+  "deviceSettingsForceMarginMaximumGuide": "+15%",
+  "deviceSettingsStandardAbbreviation": "标准",
   "deviceSettingsForceMarginWarning15Days": "1. 当弹簧松动或轨道堵塞导致无法操作门时，可暂时使用此功能。\n\n2. 此功能仅在 15 天内有效，请尽快联系维修人员。",
   "deviceSettingsForceMarginWarning3Days": "此临时设置仅在三天内有效，请尽快联系维修人员。",
   "deviceSettingsForceMarginWarning3DaysFull": "1. 当弹簧松动或轨道堵塞导致无法操作门时，可暂时使用此功能。\n\n2. 此功能仅在三天内有效，请尽快联系维修人员。",
@@ -700,5 +713,35 @@
   "afterSalesDescriptionHint": "建议填写设备型号、故障症状等关键信息",
   "afterSalesSubmitToEngineer": "提交给工程师",
   "afterSalesDescriptionRequired": "请输入问题描述",
-  "afterSalesSubmitSuccess": "预约提交成功"
+  "afterSalesSubmitSuccess": "预约提交成功",
+  "deviceCommandFallbackDoorName": "车库门",
+  "deviceCommandOperatedCycles": "已运行次数",
+  "deviceCommandRemainingCycles": "剩余次数",
+  "deviceCommandVideoTooltip": "视频",
+  "deviceCommandCloseTooltip": "关门",
+  "deviceCommandStopTooltip": "停止",
+  "deviceCommandOpenTooltip": "开门",
+  "deviceCommandAutoCloseTitle": "自动关门",
+  "deviceCommandOpenReminderTitle": "开门提醒",
+  "deviceCommandMinutes": "{minutes} 分钟",
+  "@deviceCommandMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int",
+        "example": "10"
+      }
+    }
+  },
+  "deviceCommandLedTitle": "LED",
+  "deviceCommandCentimeters": "{value} 厘米",
+  "@deviceCommandCentimeters": {
+    "placeholders": {
+      "value": {
+        "type": "int",
+        "example": "30"
+      }
+    }
+  },
+  "deviceCommandPartialOpenTitle": "部分开门",
+  "deviceCommandMoreSettingsTitle": "更多设置"
 }

@@ -1513,6 +1513,13 @@
   "deviceSettingsRetry": "Retry",
   "deviceSettingsWriting": "Writing…",
   "deviceSettingsRawUnavailable": "Not reported",
+  "deviceSettingsRawValueDisplay": "{hexValue} ({decimalValue})",
+  "@deviceSettingsRawValueDisplay": {
+    "placeholders": {
+      "hexValue": {"type": "String"},
+      "decimalValue": {"type": "int"}
+    }
+  },
   "deviceSettingsRawValueHelp": "Enter the raw device value in decimal or hexadecimal (for example, 30 or 0x1E).",
   "deviceSettingsRawValueLabel": "Raw value",
   "deviceSettingsRawValueInvalid": "Enter a value from 0 to {maximum}.",
@@ -1568,6 +1575,12 @@
   },
   "deviceSettingsOpeningSpeedCurrent": "Current setting: {value}% (motor setting)",
   "@deviceSettingsOpeningSpeedCurrent": {"placeholders": {"value": {"type": "int"}}},
+  "deviceSettingsPercent": "{value}%",
+  "@deviceSettingsPercent": {"placeholders": {"value": {"type": "int"}}},
+  "deviceSettingsOpeningSpeedStandardGuide": "{value}%\n(STD)",
+  "@deviceSettingsOpeningSpeedStandardGuide": {"placeholders": {"value": {"type": "int"}}},
+  "deviceSettingsForceMarginMaximumGuide": "+15%",
+  "deviceSettingsStandardAbbreviation": "STD",
   "deviceSettingsForceMarginWarning15Days": "1. This function is temporarily used when you can't operate the door due to the spring being loose or the track being blocked.\n\n2. This function is only effective for 15 days. Please contact the maintenance party as soon as possible.",
   "deviceSettingsForceMarginWarning3Days": "This temporary setting is effective for three days only. Please contact the maintenance party as soon as possible.",
   "deviceSettingsForceMarginWarning3DaysFull": "1. This function is temporarily used when you can't operate the door due to the spring being loose or the track being blocked.\n\n2. This function is only effective for three days. Please contact the maintenance party as soon as possible.",
@@ -1709,5 +1722,35 @@
   "safetySensorUnlocked": "Unlocked",
   "safetySensorLocked": "Locked",
   "safetySensorNotTriggered": "Not triggered",
-  "safetySensorOffline": "Offline"
+  "safetySensorOffline": "Offline",
+  "deviceCommandFallbackDoorName": "Garage door",
+  "deviceCommandOperatedCycles": "Operated cycles",
+  "deviceCommandRemainingCycles": "Remaining",
+  "deviceCommandVideoTooltip": "Video",
+  "deviceCommandCloseTooltip": "Close",
+  "deviceCommandStopTooltip": "Stop",
+  "deviceCommandOpenTooltip": "Open",
+  "deviceCommandAutoCloseTitle": "Auto close",
+  "deviceCommandOpenReminderTitle": "Open reminder",
+  "deviceCommandMinutes": "{minutes} min",
+  "@deviceCommandMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int",
+        "example": "10"
+      }
+    }
+  },
+  "deviceCommandLedTitle": "LED",
+  "deviceCommandCentimeters": "{value} cm",
+  "@deviceCommandCentimeters": {
+    "placeholders": {
+      "value": {
+        "type": "int",
+        "example": "30"
+      }
+    }
+  },
+  "deviceCommandPartialOpenTitle": "Partial open",
+  "deviceCommandMoreSettingsTitle": "More settings"
 }

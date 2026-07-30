@@ -49,6 +49,19 @@ void main() {
     expect(dto.toDomain(12).receiverAvatarFileId, 30001);
   });
 
+  test('parses a shared member built-in avatar code', () {
+    final dto = SharedDoorMemberResponseDto.fromJson(const {
+      'shareId': 7,
+      'receiverEmail': 'alex@example.com',
+      'role': '0',
+      'expiryType': '0',
+      'receiverAvatarCode': 'AVATAR_07',
+      'capabilities': <String>[],
+    });
+
+    expect(dto.toDomain(12).receiverAvatarCode?.wireValue, 'AVATAR_07');
+  });
+
   test('passes the request ID and validates a successful response', () async {
     final api = _FakeSharedDevicesApi(
       const ApiEnvelopeDto(

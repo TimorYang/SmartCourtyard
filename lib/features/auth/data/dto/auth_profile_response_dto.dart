@@ -8,6 +8,7 @@ class AuthProfileResponseDto {
     required this.locale,
     required this.timezone,
     this.avatarFileId,
+    this.avatarCode,
     this.telephone,
   });
 
@@ -16,6 +17,7 @@ class AuthProfileResponseDto {
   final bool emailVerified;
   final String nickname;
   final int? avatarFileId;
+  final String? avatarCode;
   final String? telephone;
   final String? regionCode;
   final String? locale;
@@ -28,6 +30,7 @@ class AuthProfileResponseDto {
       emailVerified: json['emailVerified'] as bool? ?? false,
       nickname: json['nickname'] as String? ?? '',
       avatarFileId: _intValue(json['avatarFileId']),
+      avatarCode: json['avatarCode'] as String?,
       telephone: json['telephone'] as String?,
       regionCode: json['regionCode'] as String?,
       locale: json['locale'] as String?,

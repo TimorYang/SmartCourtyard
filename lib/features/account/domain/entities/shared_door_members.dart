@@ -1,3 +1,5 @@
+import 'account_avatar_code.dart';
+
 class SharedDoorMembers {
   const SharedDoorMembers({
     required this.doorId,
@@ -20,6 +22,7 @@ class SharedDoorMember {
     required this.expiryType,
     required this.capabilityCodes,
     this.expiresAt,
+    this.receiverAvatarCode,
     this.receiverAvatarFileId,
   });
   final int doorId;
@@ -29,6 +32,7 @@ class SharedDoorMember {
   final SharedDoorMemberExpiryType expiryType;
   final List<String> capabilityCodes;
   final DateTime? expiresAt;
+  final AccountAvatarCode? receiverAvatarCode;
   final int? receiverAvatarFileId;
 
   String get id => shareId.toString();

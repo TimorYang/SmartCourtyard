@@ -13,6 +13,8 @@ import '../../../../app/router/app_route_observer.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../features/account/application/providers.dart';
 import '../../../../features/account/domain/entities/account_profile.dart';
+import '../../../../features/account/domain/entities/account_avatar_code.dart';
+import '../../../../features/account/presentation/widgets/account_avatar_code_assets.dart';
 import '../../../../features/account/presentation/pages/account_profile_page.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/design_system/door_type_option.dart';
@@ -487,6 +489,7 @@ class _HomeHeader extends StatelessWidget {
               _AvatarPlaceholder(
                 assetPath: HomeAssetPaths.avatarPlaceholder,
                 imageUrl: profile?.avatarUrl,
+                avatarCode: profile?.avatarCode,
                 avatarFileId: profile?.avatarFileId,
                 size: 58,
                 tooltip: l10n.accountProfileTitle,
@@ -783,6 +786,7 @@ class _AvatarPlaceholder extends StatelessWidget {
     required this.assetPath,
     required this.size,
     this.imageUrl,
+    this.avatarCode,
     this.avatarFileId,
     this.tooltip,
     this.onPressed,
@@ -791,6 +795,7 @@ class _AvatarPlaceholder extends StatelessWidget {
   final String assetPath;
   final double size;
   final String? imageUrl;
+  final AccountAvatarCode? avatarCode;
   final int? avatarFileId;
   final String? tooltip;
   final VoidCallback? onPressed;
@@ -810,7 +815,9 @@ class _AvatarPlaceholder extends StatelessWidget {
       child: SizedBox(
         width: size,
         height: size,
-        child: imageSource == null || imageSource.isEmpty
+        child: avatarCode != null
+            ? Image.asset(avatarCode!.assetPath, fit: BoxFit.cover)
+            : imageSource == null || imageSource.isEmpty
             ? Image.asset(
                 assetPath,
                 fit: BoxFit.cover,

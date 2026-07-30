@@ -1,5 +1,6 @@
 import '../../../../core/errors/app_error.dart';
 import '../../../../core/logging/app_logger.dart';
+import '../../../account/domain/entities/account_avatar_code.dart';
 import '../../domain/entities/operation_record.dart';
 import '../../domain/entities/operation_record_page_result.dart';
 import '../../domain/repositories/operation_record_repository.dart';
@@ -123,6 +124,7 @@ extension OperationRecordResponseDtoMapper on OperationRecordResponseDto {
     doorName: doorName,
     operatorAccount: operatorAccount,
     operatorName: operatorName,
+    operatorAvatarCode: AccountAvatarCode.fromWireValue(operatorAvatarCode),
     operatorAvatarFileId: operatorAvatarFileId,
     operationMethodLabel: operationMethodLabel,
   );

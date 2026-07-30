@@ -6,6 +6,7 @@ class AccountProfileDto {
     required this.nickname,
     required this.registeredAtIso8601,
     this.avatarUrl,
+    this.avatarCode,
     this.avatarFileId,
     this.country,
   });
@@ -17,6 +18,7 @@ class AccountProfileDto {
   final String email;
   final String nickname;
   final String? avatarUrl;
+  final String? avatarCode;
   final int? avatarFileId;
   final String registeredAtIso8601;
   final String? country;
@@ -28,6 +30,7 @@ class AccountProfileDto {
       email: json['email'] as String? ?? '',
       nickname: json['nickname'] as String? ?? '',
       avatarUrl: json['avatarUrl'] as String?,
+      avatarCode: json['avatarCode'] as String?,
       avatarFileId: _intValue(json['avatarFileId']),
       registeredAtIso8601: json['registeredAt'] as String? ?? '',
       country: json['country'] as String?,
@@ -41,6 +44,7 @@ class AccountProfileDto {
       'email': email,
       'nickname': nickname,
       'avatarUrl': avatarUrl,
+      'avatarCode': avatarCode,
       'avatarFileId': avatarFileId,
       'registeredAt': registeredAtIso8601,
       'country': country,

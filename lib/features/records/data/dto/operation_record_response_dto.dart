@@ -8,6 +8,7 @@ class OperationRecordResponseDto {
     this.operatorUserId,
     this.operatorName,
     this.operatorAccount,
+    this.operatorAvatarCode,
     this.operatorAvatarFileId,
     this.operationMethod,
     this.operationMethodLabel,
@@ -28,6 +29,7 @@ class OperationRecordResponseDto {
   final int? operatorUserId;
   final String? operatorName;
   final String? operatorAccount;
+  final String? operatorAvatarCode;
   final int? operatorAvatarFileId;
   final String? operationMethod;
   final String? operationMethodLabel;
@@ -49,6 +51,7 @@ class OperationRecordResponseDto {
       operatorUserId: _intValue(json['operatorUserId']),
       operatorName: json['operatorName'] as String?,
       operatorAccount: json['operatorAccount'] as String?,
+      operatorAvatarCode: json['operatorAvatarCode'] as String?,
       operatorAvatarFileId: _intValue(json['operatorAvatarFileId']),
       operationMethod: json['operationMethod'] as String?,
       operationMethodLabel: json['operationMethodLabel'] as String?,
@@ -71,6 +74,7 @@ class OperationRecordResponseDto {
     'operatorUserId': operatorUserId,
     'operatorName': operatorName,
     'operatorAccount': operatorAccount,
+    'operatorAvatarCode': operatorAvatarCode,
     'operatorAvatarFileId': operatorAvatarFileId,
     'operationMethod': operationMethod,
     'operationMethodLabel': operationMethodLabel,

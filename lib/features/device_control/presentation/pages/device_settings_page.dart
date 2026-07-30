@@ -370,7 +370,14 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
     if (option != null && option.isNotEmpty) {
       return _optionLabel(option.first, capability?.unit);
     }
-    return state.values[key]?.displayValue ?? l10n.deviceSettingsRawUnavailable;
+    final rawSettingValue = state.values[key];
+    if (rawSettingValue == null) {
+      return l10n.deviceSettingsRawUnavailable;
+    }
+    return l10n.deviceSettingsRawValueDisplay(
+      rawSettingValue.hexValue,
+      rawSettingValue.rawValue,
+    );
   }
 
   _SettingsRowData _capabilitySettingsRow({
@@ -1140,7 +1147,9 @@ class _SpeedAdjustmentSheetState extends State<_SpeedAdjustmentSheet> {
                         index < widget.speedConfig.allowedValues.length;
                         index++
                       )
-                        '${widget.speedConfig.allowedValues[index]}%${index == widget.speedConfig.allowedValues.length - 1 ? '\n(STD)' : ''}',
+                        index == widget.speedConfig.allowedValues.length - 1
+                            ? AppLocalizations.of(context).deviceSettingsOpeningSpeedStandardGuide(widget.speedConfig.allowedValues[index])
+                            : AppLocalizations.of(context).deviceSettingsPercent(widget.speedConfig.allowedValues[index]),
                     ],
                     guideKeyPrefix: 'openingSpeedSliderGuide',
                   ),
@@ -1472,9 +1481,12 @@ class _ForceMarginAdjustmentSheetState
                   onChanged: (value) => setState(() => _value = value),
                 ),
                 const SizedBox(width: 10),
-                const Expanded(
+                Expanded(
                   child: _SliderScaleGuides(
-                    labels: ['+15%', 'STD'],
+                    labels: [
+                      AppLocalizations.of(context).deviceSettingsForceMarginMaximumGuide,
+                      AppLocalizations.of(context).deviceSettingsStandardAbbreviation,
+                    ],
                     guideKeyPrefix: 'forceMarginSliderGuide',
                   ),
                 ),

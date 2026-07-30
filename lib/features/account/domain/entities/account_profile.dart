@@ -1,3 +1,5 @@
+import 'account_avatar_code.dart';
+
 class AccountProfile {
   AccountProfile({
     required String userId,
@@ -5,6 +7,7 @@ class AccountProfile {
     required String nickname,
     this.registeredAt,
     this.avatarUrl,
+    this.avatarCode,
     this.avatarFileId,
     this.country,
   }) : userId = userId.trim(),
@@ -15,6 +18,7 @@ class AccountProfile {
   final String email;
   final String nickname;
   final String? avatarUrl;
+  final AccountAvatarCode? avatarCode;
   final int? avatarFileId;
   final DateTime? registeredAt;
   final String? country;
@@ -28,7 +32,10 @@ class AccountProfile {
     String? email,
     String? nickname,
     String? avatarUrl,
+    AccountAvatarCode? avatarCode,
+    bool clearAvatarCode = false,
     int? avatarFileId,
+    bool clearAvatarFileId = false,
     bool clearAvatarUrl = false,
     DateTime? registeredAt,
     String? country,
@@ -39,7 +46,10 @@ class AccountProfile {
       email: email ?? this.email,
       nickname: nickname ?? this.nickname,
       avatarUrl: clearAvatarUrl ? null : avatarUrl ?? this.avatarUrl,
-      avatarFileId: avatarFileId ?? this.avatarFileId,
+      avatarCode: clearAvatarCode ? null : avatarCode ?? this.avatarCode,
+      avatarFileId: clearAvatarFileId
+          ? null
+          : avatarFileId ?? this.avatarFileId,
       registeredAt: registeredAt ?? this.registeredAt,
       country: clearCountry ? null : country ?? this.country,
     );
@@ -60,6 +70,7 @@ class AccountProfile {
             other.email == email &&
             other.nickname == nickname &&
             other.avatarUrl == avatarUrl &&
+            other.avatarCode == avatarCode &&
             other.avatarFileId == avatarFileId &&
             other.registeredAt == registeredAt &&
             other.country == country;
@@ -72,6 +83,7 @@ class AccountProfile {
       email,
       nickname,
       avatarUrl,
+      avatarCode,
       avatarFileId,
       registeredAt,
       country,

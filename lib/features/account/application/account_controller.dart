@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/entities/account_profile.dart';
+import '../domain/entities/account_avatar_code.dart';
 import '../domain/repositories/account_repository.dart';
 import 'providers.dart';
 
@@ -27,8 +28,12 @@ class AccountController extends AsyncNotifier<AccountProfile?> {
   Future<bool> updateAvatar(List<int> bytes, String fileName) =>
       _update(avatarBytes: bytes, avatarFileName: fileName);
 
+  Future<bool> updateAvatarCode(AccountAvatarCode avatarCode) =>
+      _update(avatarCode: avatarCode);
+
   Future<bool> _update({
     String? nickname,
+    AccountAvatarCode? avatarCode,
     List<int>? avatarBytes,
     String? avatarFileName,
   }) async {
@@ -39,6 +44,7 @@ class AccountController extends AsyncNotifier<AccountProfile?> {
     try {
       await _repository.updateProfile(
         nickname: nickname,
+        avatarCode: avatarCode,
         avatarBytes: avatarBytes,
         avatarFileName: avatarFileName,
         requestId: 'account-profile-${DateTime.now().microsecondsSinceEpoch}',

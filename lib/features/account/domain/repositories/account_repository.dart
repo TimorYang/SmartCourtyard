@@ -1,4 +1,5 @@
 import '../entities/account_profile.dart';
+import '../entities/account_avatar_code.dart';
 import '../entities/account_token_set.dart';
 
 abstract class AccountRepository {
@@ -10,6 +11,7 @@ abstract class AccountRepository {
 
   Future<void> updateProfile({
     String? nickname,
+    AccountAvatarCode? avatarCode,
     int? avatarFileId,
     required List<int>? avatarBytes,
     String? avatarFileName,

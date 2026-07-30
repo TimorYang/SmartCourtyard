@@ -4,9 +4,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flinx/core/network/access_token_cache.dart';
 import 'package:flinx/features/account/data/data_sources/account_local_data_source.dart';
 import 'package:flinx/features/account/data/data_sources/account_secure_data_source.dart';
+import 'package:flinx/features/account/data/data_sources/account_profile_remote_data_source.dart';
+import 'package:flinx/features/account/data/dto/account_profile_dto.dart';
 import 'package:flinx/features/account/data/mappers/account_profile_mapper.dart';
 import 'package:flinx/features/account/data/repositories/account_repository_impl.dart';
 import 'package:flinx/features/account/domain/entities/account_profile.dart';
+import 'package:flinx/features/account/domain/entities/account_avatar_code.dart';
 import 'package:flinx/features/account/domain/entities/account_token_set.dart';
 
 void main() {
@@ -210,4 +213,93 @@ void main() {
       expect(AccessTokenCache.requiresRefresh, isTrue);
     },
   );
+
+  test('switches to a built-in avatar without sending a file ID', () async {
+    final localDataSource = InMemoryAccountLocalDataSource(
+      initialProfile: const AccountProfileDto(
+        schemaVersion: 1,
+        userId: 'user-1',
+        email: 'user@example.com',
+        nickname: 'Alice',
+        avatarFileId: 301,
+        registeredAtIso8601: '',
+      ),
+    );
+    final remoteDataSource = _RecordingProfileRemoteDataSource();
+    final repository = AccountRepositoryImpl(
+      localDataSource: localDataSource,
+      secureDataSource: InMemoryAccountSecureDataSource(),
+      remoteDataSource: remoteDataSource,
+    );
+
+    await repository.updateProfile(
+      avatarCode: AccountAvatarCode.avatar04,
+      avatarBytes: null,
+      requestId: 'avatar-code-test',
+    );
+
+    expect(remoteDataSource.avatarCode, AccountAvatarCode.avatar04);
+    expect(remoteDataSource.avatarFileId, isNull);
+    final profile = await repository.readCachedProfile();
+    expect(profile?.avatarCode, AccountAvatarCode.avatar04);
+    expect(profile?.avatarFileId, isNull);
+  });
+
+  test(
+    'switches to a custom avatar and clears the built-in avatar code',
+    () async {
+      final localDataSource = InMemoryAccountLocalDataSource(
+        initialProfile: const AccountProfileDto(
+          schemaVersion: 1,
+          userId: 'user-1',
+          email: 'user@example.com',
+          nickname: 'Alice',
+          avatarCode: 'AVATAR_02',
+          registeredAtIso8601: '',
+        ),
+      );
+      final remoteDataSource = _RecordingProfileRemoteDataSource();
+      final repository = AccountRepositoryImpl(
+        localDataSource: localDataSource,
+        secureDataSource: InMemoryAccountSecureDataSource(),
+        remoteDataSource: remoteDataSource,
+      );
+
+      await repository.updateProfile(
+        avatarBytes: [1, 2, 3],
+        avatarFileName: 'avatar.png',
+        requestId: 'avatar-file-test',
+      );
+
+      expect(remoteDataSource.avatarCode, isNull);
+      expect(remoteDataSource.avatarFileId, 302);
+      final profile = await repository.readCachedProfile();
+      expect(profile?.avatarCode, isNull);
+      expect(profile?.avatarFileId, 302);
+    },
+  );
+}
+
+class _RecordingProfileRemoteDataSource
+    implements AccountProfileRemoteDataSource {
+  AccountAvatarCode? avatarCode;
+  int? avatarFileId;
+
+  @override
+  Future<int> uploadImage({
+    required List<int> bytes,
+    required String fileName,
+    required String requestId,
+  }) async => 302;
+
+  @override
+  Future<void> updateProfile({
+    String? nickname,
+    AccountAvatarCode? avatarCode,
+    int? avatarFileId,
+    required String requestId,
+  }) async {
+    this.avatarCode = avatarCode;
+    this.avatarFileId = avatarFileId;
+  }
 }

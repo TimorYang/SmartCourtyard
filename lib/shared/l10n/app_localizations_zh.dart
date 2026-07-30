@@ -1428,6 +1428,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get deviceSettingsRawUnavailable => '设备未上报';
 
   @override
+  String deviceSettingsRawValueDisplay(String hexValue, int decimalValue) {
+    return '$hexValue（$decimalValue）';
+  }
+
+  @override
   String get deviceSettingsRawValueHelp =>
       '请输入设备原始值，可使用十进制或十六进制（例如 30 或 0x1E）。';
 
@@ -1552,6 +1557,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String deviceSettingsOpeningSpeedCurrent(int value) {
     return '当前设置：$value%（电机设置）';
   }
+
+  @override
+  String deviceSettingsPercent(int value) {
+    return '$value%';
+  }
+
+  @override
+  String deviceSettingsOpeningSpeedStandardGuide(int value) {
+    return '$value%\n(标准)';
+  }
+
+  @override
+  String get deviceSettingsForceMarginMaximumGuide => '+15%';
+
+  @override
+  String get deviceSettingsStandardAbbreviation => '标准';
 
   @override
   String get deviceSettingsForceMarginWarning15Days =>
@@ -1956,4 +1977,50 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get safetySensorOffline => '离线';
+
+  @override
+  String get deviceCommandFallbackDoorName => '车库门';
+
+  @override
+  String get deviceCommandOperatedCycles => '已运行次数';
+
+  @override
+  String get deviceCommandRemainingCycles => '剩余次数';
+
+  @override
+  String get deviceCommandVideoTooltip => '视频';
+
+  @override
+  String get deviceCommandCloseTooltip => '关门';
+
+  @override
+  String get deviceCommandStopTooltip => '停止';
+
+  @override
+  String get deviceCommandOpenTooltip => '开门';
+
+  @override
+  String get deviceCommandAutoCloseTitle => '自动关门';
+
+  @override
+  String get deviceCommandOpenReminderTitle => '开门提醒';
+
+  @override
+  String deviceCommandMinutes(int minutes) {
+    return '$minutes 分钟';
+  }
+
+  @override
+  String get deviceCommandLedTitle => 'LED';
+
+  @override
+  String deviceCommandCentimeters(int value) {
+    return '$value 厘米';
+  }
+
+  @override
+  String get deviceCommandPartialOpenTitle => '部分开门';
+
+  @override
+  String get deviceCommandMoreSettingsTitle => '更多设置';
 }

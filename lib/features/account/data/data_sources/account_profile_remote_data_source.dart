@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../../../../core/network/dio_factory.dart';
 import '../../../../core/network/network_exception.dart';
+import '../../domain/entities/account_avatar_code.dart';
 import 'account_profile_api.dart';
 
 abstract interface class AccountProfileRemoteDataSource {
@@ -12,6 +13,7 @@ abstract interface class AccountProfileRemoteDataSource {
   });
   Future<void> updateProfile({
     String? nickname,
+    AccountAvatarCode? avatarCode,
     int? avatarFileId,
     required String requestId,
   });
@@ -60,12 +62,19 @@ class AccountProfileRemoteDataSourceImpl
   @override
   Future<void> updateProfile({
     String? nickname,
+    AccountAvatarCode? avatarCode,
     int? avatarFileId,
     required String requestId,
   }) async {
+    if (avatarCode != null && avatarFileId != null) {
+      throw ArgumentError(
+        'avatarCode and avatarFileId are mutually exclusive.',
+      );
+    }
     try {
       final body = <String, dynamic>{
         if (nickname != null) 'nickname': nickname,
+        if (avatarCode != null) 'avatarCode': avatarCode.wireValue,
         if (avatarFileId != null) 'avatarFileId': avatarFileId,
       };
       final response = await api.updateProfile(
