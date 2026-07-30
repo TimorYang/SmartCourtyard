@@ -129,6 +129,7 @@ class AppColors {
   static const safetySensorDisconnected = Color(0xFFB1B4BA);
   static const safetySensorAction = Color(0xFF0878ED);
   static const safetySensorPlaceholder = Color(0xFFD8DCE2);
+  static const safetySensorPositionMarkerShadow = Color(0x33000000);
   static const safetyBatterySolutionPlaceholderSurface = Color(0xFFF1F3F5);
   static const safetyBatterySolutionHighlightBorder = Color(0xFF176CFF);
   static const backgroundDarkTop = Color(0xFF0D1B30);
@@ -272,6 +273,8 @@ class AppShapeTokens {
   static const deviceShareEditSummaryRadius = 12.0;
   static const receivingDevicesCardRadius = 16.0;
   static const safetySensorMetricIconRadius = 8.0;
+  static const safetySensorPositionMarkerSize = 21.0;
+  static const safetySensorPositionMarkerBorderWidth = 1.5;
   static const safetyBatterySolutionCardRadius = 14.0;
   static const safetyBatterySolutionImageRadius = 10.0;
   static const smartOpenerAddedDeviceCardRadius = 16.0;

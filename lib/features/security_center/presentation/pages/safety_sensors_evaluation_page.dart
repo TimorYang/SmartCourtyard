@@ -23,6 +23,38 @@ class SafetySensorsEvaluationPage extends ConsumerStatefulWidget {
       'assets/icons/security_center/safety_wired_door_layout.png';
   static const _wirelessDoorAsset =
       'assets/icons/security_center/safety_wired_door_asset.png';
+  static const _wiredDoorAspectRatio = 1232 / 744;
+  static const _wirelessDoorAspectRatio = 1088 / 840;
+  static const _wiredDoorMarkerPositions = <_SensorPosition>[
+    _SensorPosition(sensorCode: 'WIRED_PHOTO_BEAM', offset: Offset(0.18, 0.75)),
+    _SensorPosition(
+      sensorCode: 'WIRED_ELECTRONIC_LOCK',
+      offset: Offset(0.98, 0.50),
+    ),
+  ];
+  static const _wirelessDoorMarkerPositions = <_SensorPosition>[
+    _SensorPosition(
+      sensorCode: 'WIRELESS_PHOTO_BEAM',
+      offset: Offset(0.15, 0.80),
+    ),
+    _SensorPosition(
+      sensorCode: 'WIRELESS_SAFETY_EDGE',
+      offset: Offset(0.29, 0.87),
+    ),
+    _SensorPosition(
+      sensorCode: 'WIRELESS_SLACK_ROPE',
+      offset: Offset(0.60, 0.32),
+    ),
+    _SensorPosition(
+      sensorCode: 'WIRELESS_WICKET_DOOR',
+      offset: Offset(0.66, 0.68),
+    ),
+    _SensorPosition(
+      sensorCode: 'WIRELESS_ELECTRONIC_LOCK',
+      offset: Offset(1, 0.63),
+    ),
+    _SensorPosition(sensorCode: 'WIRELESS_PHOTO_BEAM', offset: Offset(1, 0.91)),
+  ];
   final String doorId;
   final String deviceId;
 
@@ -109,6 +141,7 @@ class _SafetySensorsEvaluationPageState
             title: l10n.safetySensorsWiredStatus,
             doorAsset: SafetySensorsEvaluationPage._wiredDoorAsset,
             group: evaluation.wiredSensorGroup,
+            height: 190,
             deviceId: widget.deviceId,
             doorId: widget.doorId,
           ),
@@ -116,6 +149,7 @@ class _SafetySensorsEvaluationPageState
           _SensorGroupCard(
             title: l10n.safetySensorsWirelessStatus,
             doorAsset: SafetySensorsEvaluationPage._wirelessDoorAsset,
+            height: 210,
             showActions: true,
             group: evaluation.wirelessSensorGroup,
             deviceId: widget.deviceId,
@@ -257,6 +291,7 @@ class _SensorGroupCard extends StatelessWidget {
     required this.group,
     required this.deviceId,
     required this.doorId,
+    required this.height,
     this.showActions = false,
   });
 
@@ -266,6 +301,7 @@ class _SensorGroupCard extends StatelessWidget {
   final String deviceId;
   final String doorId;
   final bool showActions;
+  final double height;
 
   @override
   Widget build(BuildContext context) {
@@ -293,7 +329,18 @@ class _SensorGroupCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 20),
-            _DoorLayoutPlaceholder(assetPath: doorAsset),
+            _DoorLayout(
+              assetPath: doorAsset,
+              aspectRatio: showActions
+                  ? SafetySensorsEvaluationPage._wirelessDoorAspectRatio
+                  : SafetySensorsEvaluationPage._wiredDoorAspectRatio,
+              height: height,
+              keyPrefix: showActions ? 'wireless' : 'wired',
+              sensors: group.sensors,
+              markerPositions: showActions
+                  ? SafetySensorsEvaluationPage._wirelessDoorMarkerPositions
+                  : SafetySensorsEvaluationPage._wiredDoorMarkerPositions,
+            ),
             if (showActions) ...[
               const SizedBox(height: 8),
               Row(
@@ -338,36 +385,119 @@ class _SensorGroupCard extends StatelessWidget {
   }
 }
 
-class _DoorLayoutPlaceholder extends StatelessWidget {
-  const _DoorLayoutPlaceholder({required this.assetPath});
+class _DoorLayout extends StatelessWidget {
+  const _DoorLayout({
+    required this.assetPath,
+    required this.aspectRatio,
+    required this.height,
+    required this.keyPrefix,
+    required this.markerPositions,
+    required this.sensors,
+  });
 
   final String assetPath;
+  final double aspectRatio;
+  final double height;
+  final String keyPrefix;
+  final List<_SensorPosition> markerPositions;
+  final List<SafetySensor> sensors;
 
   @override
   Widget build(BuildContext context) {
+    final sensorStatusByCode = {
+      for (final sensor in sensors) sensor.sensorCode: sensor.status,
+    };
     return SizedBox(
-      height: 225,
+      height: height,
       width: double.infinity,
-      child: Image.asset(
-        assetPath,
-        fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) => DecoratedBox(
-          decoration: BoxDecoration(
-            color: AppColors.securityCenterBackground,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: const Center(
-            child: Icon(
-              Icons.image_outlined,
-              size: 54,
-              color: AppColors.safetySensorPlaceholder,
-            ),
+      child: Center(
+        child: AspectRatio(
+          key: ValueKey<String>('sensor-door-layout-$keyPrefix'),
+          aspectRatio: aspectRatio,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.asset(
+                assetPath,
+                fit: BoxFit.fill,
+                errorBuilder: (context, error, stackTrace) => DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppColors.securityCenterBackground,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.image_outlined,
+                      size: 54,
+                      color: AppColors.safetySensorPlaceholder,
+                    ),
+                  ),
+                ),
+              ),
+              for (var index = 0; index < markerPositions.length; index++)
+                Align(
+                  alignment: Alignment(
+                    markerPositions[index].offset.dx * 2 - 1,
+                    markerPositions[index].offset.dy * 2 - 1,
+                  ),
+                  child: _SensorPositionMarker(
+                    key: ValueKey<String>(
+                      'sensor-position-marker-$keyPrefix-${markerPositions[index].sensorCode}-$index',
+                    ),
+                    color: _sensorPositionMarkerColor(
+                      sensorStatusByCode[markerPositions[index].sensorCode],
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ),
     );
   }
 }
+
+class _SensorPosition {
+  const _SensorPosition({required this.sensorCode, required this.offset});
+
+  final String sensorCode;
+  final Offset offset;
+}
+
+class _SensorPositionMarker extends StatelessWidget {
+  const _SensorPositionMarker({required this.color, super.key});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 16,
+    height: 16,
+    decoration: BoxDecoration(
+      color: color,
+      shape: BoxShape.circle,
+      border: Border.all(
+        color: AppColors.securityCenterCard,
+        width: AppShapeTokens.safetySensorPositionMarkerBorderWidth,
+      ),
+      boxShadow: const [
+        BoxShadow(
+          color: AppColors.safetySensorPositionMarkerShadow,
+          blurRadius: 3,
+          offset: Offset(0, 1),
+        ),
+      ],
+    ),
+  );
+}
+
+Color _sensorPositionMarkerColor(SafetySensorStatus? status) =>
+    switch (status) {
+      SafetySensorStatus.disconnected => AppColors.safetySensorDisconnected,
+      SafetySensorStatus.triggered ||
+      SafetySensorStatus.locked => AppColors.securityCenterError,
+      _ => AppColors.safetySensorAction,
+    };
 
 class _GroupStatusIcon extends StatelessWidget {
   const _GroupStatusIcon({required this.status});

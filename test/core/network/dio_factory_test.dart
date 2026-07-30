@@ -111,6 +111,41 @@ void main() {
   );
 
   test(
+    'does not refresh a request that explicitly skips token refresh',
+    () async {
+      addTearDown(AccessTokenCache.clear);
+      AccessTokenCache.set(
+        'expired-access-token',
+        expiresAt: DateTime.utc(2020),
+      );
+      var refreshCount = 0;
+      final adapter = _CapturingAdapter();
+      final dio = DioFactory.create(
+        configuration: const AppApiConfiguration(
+          apiOrigin: 'https://api.flinx.example',
+          apiPathPrefix: '/api/force-door',
+        ),
+        logger: _FakeLogger(),
+        onTokenRefresh: () async {
+          refreshCount++;
+          return TokenRefreshResult.refreshed;
+        },
+      )..httpClientAdapter = adapter;
+
+      await dio.get<void>(
+        'app/account/profile',
+        options: Options(extra: {NetworkRequestExtras.skipTokenRefresh: true}),
+      );
+
+      expect(refreshCount, 0);
+      expect(
+        adapter.requestOptions.headers[NetworkHeaders.bladeAuth],
+        'expired-access-token',
+      );
+    },
+  );
+
+  test(
     'notifies the session handler when a response body contains code 401',
     () async {
       addTearDown(AccessTokenCache.clear);

@@ -60,6 +60,10 @@ void main() {
         api.profileOptions.extra?[NetworkRequestExtras.requestId],
         'login-123',
       );
+      expect(
+        api.profileOptions.extra?[NetworkRequestExtras.skipTokenRefresh],
+        isTrue,
+      );
       expect(result.profile.userId, '2');
       expect(result.profile.email, 'alice@example.com');
       expect(result.profile.regionCode, 'NL');

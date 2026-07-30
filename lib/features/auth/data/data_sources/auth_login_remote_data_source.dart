@@ -49,7 +49,10 @@ class AuthLoginRemoteDataSourceImpl implements AuthLoginRemoteDataSource {
       final profileResponse = await api.fetchAccountProfile(
         Options(
           headers: {'Blade-Auth': data.accessToken},
-          extra: {NetworkRequestExtras.requestId: requestId},
+          extra: {
+            NetworkRequestExtras.requestId: requestId,
+            NetworkRequestExtras.skipTokenRefresh: true,
+          },
         ),
       );
       final profile = profileResponse.data;

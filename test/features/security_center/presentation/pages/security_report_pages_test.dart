@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:flinx/app/theme/app_design_tokens.dart';
 import 'package:flinx/core/platform/gallery_image_saver.dart';
 import 'package:flinx/features/security_center/application/providers.dart';
 import 'package:flinx/features/security_center/domain/entities/general_evaluation_report.dart';
@@ -784,6 +785,71 @@ void main() {
     );
     expect(find.text('Wired sensor status'), findsOneWidget);
     expect(find.text('Wireless Sensors Status'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('sensor-door-layout-wired')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey<String>('sensor-door-layout-wireless')),
+      findsOneWidget,
+    );
+    _expectMarker(tester, 'wired', 'WIRED_PHOTO_BEAM', 0, findsOneWidget);
+    _expectMarker(tester, 'wired', 'WIRED_ELECTRONIC_LOCK', 1, findsOneWidget);
+    _expectMarker(tester, 'wireless', 'WIRELESS_SLACK_ROPE', 2, findsOneWidget);
+    _expectMarker(tester, 'wireless', 'WIRELESS_PHOTO_BEAM', 0, findsOneWidget);
+    _expectMarker(tester, 'wireless', 'WIRELESS_PHOTO_BEAM', 5, findsOneWidget);
+    _expectMarkerColor(
+      tester,
+      'wired',
+      'WIRED_PHOTO_BEAM',
+      0,
+      AppColors.safetySensorDisconnected,
+    );
+    _expectMarkerColor(
+      tester,
+      'wired',
+      'WIRED_ELECTRONIC_LOCK',
+      1,
+      AppColors.securityCenterError,
+    );
+    _expectMarkerColor(
+      tester,
+      'wireless',
+      'WIRELESS_SLACK_ROPE',
+      2,
+      AppColors.safetySensorDisconnected,
+    );
+    _expectMarkerColor(
+      tester,
+      'wireless',
+      'WIRELESS_PHOTO_BEAM',
+      0,
+      AppColors.securityCenterError,
+    );
+    _expectMarkerColor(
+      tester,
+      'wireless',
+      'WIRELESS_PHOTO_BEAM',
+      5,
+      AppColors.securityCenterError,
+    );
+    _expectMarkersWithinDoor(
+      tester,
+      keyPrefix: 'wired',
+      markerKeys: const ['WIRED_PHOTO_BEAM-0', 'WIRED_ELECTRONIC_LOCK-1'],
+    );
+    _expectMarkersWithinDoor(
+      tester,
+      keyPrefix: 'wireless',
+      markerKeys: const [
+        'WIRELESS_PHOTO_BEAM-0',
+        'WIRELESS_SAFETY_EDGE-1',
+        'WIRELESS_SLACK_ROPE-2',
+        'WIRELESS_WICKET_DOOR-3',
+        'WIRELESS_ELECTRONIC_LOCK-4',
+        'WIRELESS_PHOTO_BEAM-5',
+      ],
+    );
     expect(find.text('Match'), findsOneWidget);
     expect(find.text('Manage'), findsOneWidget);
     expect(find.text('Wired photo beam'), findsOneWidget);
@@ -1064,8 +1130,173 @@ void main() {
       500,
       scrollable: _scrollableInside('safety-sensors-scroll-compact-device'),
     );
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey<String>('sensor-door-layout-wireless')),
+      500,
+      scrollable: _scrollableInside('safety-sensors-scroll-compact-device'),
+    );
+    _expectMarkersWithinDoor(
+      tester,
+      keyPrefix: 'wireless',
+      markerKeys: const [
+        'WIRELESS_PHOTO_BEAM-0',
+        'WIRELESS_SAFETY_EDGE-1',
+        'WIRELESS_SLACK_ROPE-2',
+        'WIRELESS_WICKET_DOOR-3',
+        'WIRELESS_ELECTRONIC_LOCK-4',
+        'WIRELESS_PHOTO_BEAM-5',
+      ],
+    );
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('safety sensor points remain visible for nonzero statuses', (
+    tester,
+  ) async {
+    await _pumpPage(
+      tester,
+      const SafetySensorsEvaluationPage(
+        doorId: '12',
+        deviceId: 'active-sensor-device',
+      ),
+      evaluation: _activeMarkerSafetyEvaluation,
+    );
+
+    _expectMarkersWithinDoor(
+      tester,
+      keyPrefix: 'wired',
+      markerKeys: const ['WIRED_PHOTO_BEAM-0', 'WIRED_ELECTRONIC_LOCK-1'],
+    );
+    _expectMarkersWithinDoor(
+      tester,
+      keyPrefix: 'wireless',
+      markerKeys: const [
+        'WIRELESS_PHOTO_BEAM-0',
+        'WIRELESS_SAFETY_EDGE-1',
+        'WIRELESS_SLACK_ROPE-2',
+        'WIRELESS_WICKET_DOOR-3',
+        'WIRELESS_ELECTRONIC_LOCK-4',
+        'WIRELESS_PHOTO_BEAM-5',
+      ],
+    );
+    for (final marker in const [
+      ('wired', 'WIRED_PHOTO_BEAM', 0),
+      ('wired', 'WIRED_ELECTRONIC_LOCK', 1),
+      ('wireless', 'WIRELESS_PHOTO_BEAM', 0),
+      ('wireless', 'WIRELESS_SAFETY_EDGE', 1),
+      ('wireless', 'WIRELESS_SLACK_ROPE', 2),
+      ('wireless', 'WIRELESS_WICKET_DOOR', 3),
+      ('wireless', 'WIRELESS_ELECTRONIC_LOCK', 4),
+      ('wireless', 'WIRELESS_PHOTO_BEAM', 5),
+    ]) {
+      _expectMarkerColor(
+        tester,
+        marker.$1,
+        marker.$2,
+        marker.$3,
+        AppColors.safetySensorAction,
+      );
+    }
+  });
+
+  testWidgets('safety sensor points use grey and red status colors', (
+    tester,
+  ) async {
+    await _pumpPage(
+      tester,
+      const SafetySensorsEvaluationPage(
+        doorId: '12',
+        deviceId: 'status-sensor-device',
+      ),
+    );
+
+    _expectMarkerColor(
+      tester,
+      'wired',
+      'WIRED_PHOTO_BEAM',
+      0,
+      AppColors.safetySensorDisconnected,
+    );
+    _expectMarkerColor(
+      tester,
+      'wired',
+      'WIRED_ELECTRONIC_LOCK',
+      1,
+      AppColors.securityCenterError,
+    );
+    _expectMarkerColor(
+      tester,
+      'wireless',
+      'WIRELESS_SLACK_ROPE',
+      2,
+      AppColors.safetySensorDisconnected,
+    );
+    _expectMarkerColor(
+      tester,
+      'wireless',
+      'WIRELESS_PHOTO_BEAM',
+      0,
+      AppColors.securityCenterError,
+    );
+    _expectMarkerColor(
+      tester,
+      'wireless',
+      'WIRELESS_PHOTO_BEAM',
+      5,
+      AppColors.securityCenterError,
+    );
+  });
+}
+
+void _expectMarker(
+  WidgetTester tester,
+  String keyPrefix,
+  String sensorCode,
+  int index,
+  Matcher matcher,
+) => expect(
+  find.byKey(
+    ValueKey<String>('sensor-position-marker-$keyPrefix-$sensorCode-$index'),
+  ),
+  matcher,
+);
+
+void _expectMarkerColor(
+  WidgetTester tester,
+  String keyPrefix,
+  String sensorCode,
+  int index,
+  Color color,
+) {
+  final marker = tester.widget<Container>(
+    find.descendant(
+      of: find.byKey(
+        ValueKey<String>(
+          'sensor-position-marker-$keyPrefix-$sensorCode-$index',
+        ),
+      ),
+      matching: find.byType(Container),
+    ),
+  );
+  expect((marker.decoration! as BoxDecoration).color, color);
+}
+
+void _expectMarkersWithinDoor(
+  WidgetTester tester, {
+  required String keyPrefix,
+  required List<String> markerKeys,
+}) {
+  final doorRect = tester.getRect(
+    find.byKey(ValueKey<String>('sensor-door-layout-$keyPrefix')),
+  );
+  for (final markerKey in markerKeys) {
+    final markerRect = tester.getRect(
+      find.byKey(
+        ValueKey<String>('sensor-position-marker-$keyPrefix-$markerKey'),
+      ),
+    );
+    expect(doorRect.overlaps(markerRect), isTrue);
+  }
 }
 
 Finder _scrollableInside(String key) {
@@ -1188,6 +1419,7 @@ Future<void> _pumpPage(
   Widget page, {
   bool setViewport = true,
   Locale? locale,
+  SafetySensorsEvaluation? evaluation,
 }) async {
   if (setViewport) {
     tester.view.physicalSize = const Size(393, 852);
@@ -1209,7 +1441,7 @@ Future<void> _pumpPage(
         fetchSafetySensorsEvaluationUseCaseProvider.overrideWithValue(
           FetchSafetySensorsEvaluationUseCase(
             repository: _FakeSafetySensorsEvaluationRepository(
-              _testSafetyEvaluation,
+              evaluation ?? _testSafetyEvaluation,
             ),
           ),
         ),
@@ -1338,6 +1570,73 @@ final _testSafetyEvaluation = SafetySensorsEvaluation(
         status: SafetySensorStatus.disconnected,
         statusLabel: 'Offline',
         batteryStatus: SafetySensorBatteryStatus.unknown,
+        operationPoints: [],
+      ),
+    ],
+  ),
+);
+
+final _activeMarkerSafetyEvaluation = SafetySensorsEvaluation(
+  deviceId: 'active-sensor-device',
+  totalSensorCount: 7,
+  fineSensorCount: 7,
+  abnormalSensorCount: 0,
+  lowPowerSensorCount: 0,
+  wiredSensorGroup: const SafetySensorGroup(
+    status: SafetySensorGroupStatus.normal,
+    sensors: [
+      SafetySensor(
+        id: 'WIRED_PHOTO_BEAM',
+        sensorCode: 'WIRED_PHOTO_BEAM',
+        status: SafetySensorStatus.notTriggered,
+        batteryStatus: SafetySensorBatteryStatus.unknown,
+        operationPoints: [],
+      ),
+      SafetySensor(
+        id: 'WIRED_ELECTRONIC_LOCK',
+        sensorCode: 'WIRED_ELECTRONIC_LOCK',
+        status: SafetySensorStatus.notTriggered,
+        batteryStatus: SafetySensorBatteryStatus.unknown,
+        operationPoints: [],
+      ),
+    ],
+  ),
+  wirelessSensorGroup: const SafetySensorGroup(
+    status: SafetySensorGroupStatus.normal,
+    sensors: [
+      SafetySensor(
+        id: 'WIRELESS_PHOTO_BEAM',
+        sensorCode: 'WIRELESS_PHOTO_BEAM',
+        status: SafetySensorStatus.notTriggered,
+        batteryStatus: SafetySensorBatteryStatus.normal,
+        operationPoints: [],
+      ),
+      SafetySensor(
+        id: 'WIRELESS_WICKET_DOOR',
+        sensorCode: 'WIRELESS_WICKET_DOOR',
+        status: SafetySensorStatus.notTriggered,
+        batteryStatus: SafetySensorBatteryStatus.normal,
+        operationPoints: [],
+      ),
+      SafetySensor(
+        id: 'WIRELESS_ELECTRONIC_LOCK',
+        sensorCode: 'WIRELESS_ELECTRONIC_LOCK',
+        status: SafetySensorStatus.notTriggered,
+        batteryStatus: SafetySensorBatteryStatus.normal,
+        operationPoints: [],
+      ),
+      SafetySensor(
+        id: 'WIRELESS_SAFETY_EDGE',
+        sensorCode: 'WIRELESS_SAFETY_EDGE',
+        status: SafetySensorStatus.notTriggered,
+        batteryStatus: SafetySensorBatteryStatus.normal,
+        operationPoints: [],
+      ),
+      SafetySensor(
+        id: 'WIRELESS_SLACK_ROPE',
+        sensorCode: 'WIRELESS_SLACK_ROPE',
+        status: SafetySensorStatus.notTriggered,
+        batteryStatus: SafetySensorBatteryStatus.normal,
         operationPoints: [],
       ),
     ],

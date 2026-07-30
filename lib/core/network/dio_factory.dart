@@ -12,6 +12,10 @@ abstract final class NetworkRequestExtras {
   static const requestId = 'requestId';
   static const logTag = 'logTag';
   static const flowId = 'flowId';
+
+  /// Skips access-token refresh for a request authenticated with a token that
+  /// has not yet been persisted to [AccessTokenCache].
+  static const skipTokenRefresh = 'skipTokenRefresh';
 }
 
 abstract final class NetworkHeaders {
@@ -76,6 +80,7 @@ class _SessionExpiredInterceptor extends Interceptor {
     RequestInterceptorHandler handler,
   ) async {
     if (!_isAuthenticationRequest(options) &&
+        options.extra[NetworkRequestExtras.skipTokenRefresh] != true &&
         AccessTokenCache.requiresRefresh) {
       final refreshResult = await _onTokenRefresh();
       if (refreshResult == TokenRefreshResult.sessionExpired) {
