@@ -2182,4 +2182,65 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deviceCommandMoreSettingsTitle => 'More settings';
+
+  @override
+  String get deviceCommandActionOpen => 'Open';
+
+  @override
+  String get deviceCommandActionClose => 'Close';
+
+  @override
+  String get deviceCommandActionStop => 'Stop';
+
+  @override
+  String get deviceCommandActionPartialOpen => 'Partial open';
+
+  @override
+  String get deviceCommandActionLedOn => 'Turn LED on';
+
+  @override
+  String get deviceCommandActionLedOff => 'Turn LED off';
+
+  @override
+  String get deviceCommandActionPb => 'PB';
+
+  @override
+  String deviceCommandSending(String action, String controlCode) {
+    return 'Sending $action command ($controlCode)...';
+  }
+
+  @override
+  String deviceCommandSucceeded(String action, String controlCode) {
+    return '$action command sent ($controlCode).';
+  }
+
+  @override
+  String deviceCommandRejected(String action, String controlCode) {
+    return '$action command was rejected ($controlCode).';
+  }
+
+  @override
+  String deviceCommandBluetoothRequired(String action) {
+    return 'Connect the selected device via Bluetooth to use $action.';
+  }
+
+  @override
+  String deviceCommandRemoteFailed(String action) {
+    return 'Unable to complete $action. Please try again.';
+  }
+
+  @override
+  String deviceCommandRemoteUnconfirmed(String action) {
+    return 'The device acknowledged $action, but the actual door movement could not be confirmed.';
+  }
+
+  @override
+  String deviceCommandRemoteTimeout(String action) {
+    return '$action timed out. Check the door state and try again.';
+  }
+
+  @override
+  String deviceCommandNetworkFailure(String action) {
+    return 'Unable to send $action. Check your network and try again.';
+  }
 }

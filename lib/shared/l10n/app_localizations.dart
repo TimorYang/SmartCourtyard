@@ -4045,6 +4045,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'More settings'**
   String get deviceCommandMoreSettingsTitle;
+
+  /// No description provided for @deviceCommandActionOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get deviceCommandActionOpen;
+
+  /// No description provided for @deviceCommandActionClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get deviceCommandActionClose;
+
+  /// No description provided for @deviceCommandActionStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get deviceCommandActionStop;
+
+  /// No description provided for @deviceCommandActionPartialOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Partial open'**
+  String get deviceCommandActionPartialOpen;
+
+  /// No description provided for @deviceCommandActionLedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn LED on'**
+  String get deviceCommandActionLedOn;
+
+  /// No description provided for @deviceCommandActionLedOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn LED off'**
+  String get deviceCommandActionLedOff;
+
+  /// No description provided for @deviceCommandActionPb.
+  ///
+  /// In en, this message translates to:
+  /// **'PB'**
+  String get deviceCommandActionPb;
+
+  /// No description provided for @deviceCommandSending.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending {action} command ({controlCode})...'**
+  String deviceCommandSending(String action, String controlCode);
+
+  /// No description provided for @deviceCommandSucceeded.
+  ///
+  /// In en, this message translates to:
+  /// **'{action} command sent ({controlCode}).'**
+  String deviceCommandSucceeded(String action, String controlCode);
+
+  /// No description provided for @deviceCommandRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'{action} command was rejected ({controlCode}).'**
+  String deviceCommandRejected(String action, String controlCode);
+
+  /// No description provided for @deviceCommandBluetoothRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect the selected device via Bluetooth to use {action}.'**
+  String deviceCommandBluetoothRequired(String action);
+
+  /// No description provided for @deviceCommandRemoteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to complete {action}. Please try again.'**
+  String deviceCommandRemoteFailed(String action);
+
+  /// No description provided for @deviceCommandRemoteUnconfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'The device acknowledged {action}, but the actual door movement could not be confirmed.'**
+  String deviceCommandRemoteUnconfirmed(String action);
+
+  /// No description provided for @deviceCommandRemoteTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'{action} timed out. Check the door state and try again.'**
+  String deviceCommandRemoteTimeout(String action);
+
+  /// No description provided for @deviceCommandNetworkFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to send {action}. Check your network and try again.'**
+  String deviceCommandNetworkFailure(String action);
 }
 
 class _AppLocalizationsDelegate

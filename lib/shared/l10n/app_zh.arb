@@ -755,5 +755,63 @@
     }
   },
   "deviceCommandPartialOpenTitle": "部分开门",
-  "deviceCommandMoreSettingsTitle": "更多设置"
+  "deviceCommandMoreSettingsTitle": "更多设置",
+  "deviceCommandActionOpen": "开门",
+  "deviceCommandActionClose": "关门",
+  "deviceCommandActionStop": "暂停",
+  "deviceCommandActionPartialOpen": "部分开门",
+  "deviceCommandActionLedOn": "开灯",
+  "deviceCommandActionLedOff": "关灯",
+  "deviceCommandActionPb": "PB",
+  "deviceCommandSending": "正在发送{action}指令（{controlCode}）...",
+  "@deviceCommandSending": {
+    "placeholders": {
+      "action": {"type": "String"},
+      "controlCode": {"type": "String"}
+    }
+  },
+  "deviceCommandSucceeded": "{action}指令已发送（{controlCode}）。",
+  "@deviceCommandSucceeded": {
+    "placeholders": {
+      "action": {"type": "String"},
+      "controlCode": {"type": "String"}
+    }
+  },
+  "deviceCommandRejected": "{action}指令未被接收（{controlCode}）。",
+  "@deviceCommandRejected": {
+    "placeholders": {
+      "action": {"type": "String"},
+      "controlCode": {"type": "String"}
+    }
+  },
+  "deviceCommandBluetoothRequired": "请先通过蓝牙连接选中的设备，再使用{action}。",
+  "@deviceCommandBluetoothRequired": {
+    "placeholders": {
+      "action": {"type": "String"}
+    }
+  },
+  "deviceCommandRemoteFailed": "{action}执行失败，请重试。",
+  "@deviceCommandRemoteFailed": {
+    "placeholders": {
+      "action": {"type": "String"}
+    }
+  },
+  "deviceCommandRemoteUnconfirmed": "设备已成功回执{action}指令，但未确认实际运行状态。",
+  "@deviceCommandRemoteUnconfirmed": {
+    "placeholders": {
+      "action": {"type": "String"}
+    }
+  },
+  "deviceCommandRemoteTimeout": "{action}执行超时，请检查门状态后重试。",
+  "@deviceCommandRemoteTimeout": {
+    "placeholders": {
+      "action": {"type": "String"}
+    }
+  },
+  "deviceCommandNetworkFailure": "{action}发送失败，请检查网络后重试。",
+  "@deviceCommandNetworkFailure": {
+    "placeholders": {
+      "action": {"type": "String"}
+    }
+  }
 }

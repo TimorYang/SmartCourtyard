@@ -1782,5 +1782,63 @@
     }
   },
   "deviceCommandPartialOpenTitle": "Partial open",
-  "deviceCommandMoreSettingsTitle": "More settings"
+  "deviceCommandMoreSettingsTitle": "More settings",
+  "deviceCommandActionOpen": "Open",
+  "deviceCommandActionClose": "Close",
+  "deviceCommandActionStop": "Stop",
+  "deviceCommandActionPartialOpen": "Partial open",
+  "deviceCommandActionLedOn": "Turn LED on",
+  "deviceCommandActionLedOff": "Turn LED off",
+  "deviceCommandActionPb": "PB",
+  "deviceCommandSending": "Sending {action} command ({controlCode})...",
+  "@deviceCommandSending": {
+    "placeholders": {
+      "action": {"type": "String"},
+      "controlCode": {"type": "String"}
+    }
+  },
+  "deviceCommandSucceeded": "{action} command sent ({controlCode}).",
+  "@deviceCommandSucceeded": {
+    "placeholders": {
+      "action": {"type": "String"},
+      "controlCode": {"type": "String"}
+    }
+  },
+  "deviceCommandRejected": "{action} command was rejected ({controlCode}).",
+  "@deviceCommandRejected": {
+    "placeholders": {
+      "action": {"type": "String"},
+      "controlCode": {"type": "String"}
+    }
+  },
+  "deviceCommandBluetoothRequired": "Connect the selected device via Bluetooth to use {action}.",
+  "@deviceCommandBluetoothRequired": {
+    "placeholders": {
+      "action": {"type": "String"}
+    }
+  },
+  "deviceCommandRemoteFailed": "Unable to complete {action}. Please try again.",
+  "@deviceCommandRemoteFailed": {
+    "placeholders": {
+      "action": {"type": "String"}
+    }
+  },
+  "deviceCommandRemoteUnconfirmed": "The device acknowledged {action}, but the actual door movement could not be confirmed.",
+  "@deviceCommandRemoteUnconfirmed": {
+    "placeholders": {
+      "action": {"type": "String"}
+    }
+  },
+  "deviceCommandRemoteTimeout": "{action} timed out. Check the door state and try again.",
+  "@deviceCommandRemoteTimeout": {
+    "placeholders": {
+      "action": {"type": "String"}
+    }
+  },
+  "deviceCommandNetworkFailure": "Unable to send {action}. Check your network and try again.",
+  "@deviceCommandNetworkFailure": {
+    "placeholders": {
+      "action": {"type": "String"}
+    }
+  }
 }

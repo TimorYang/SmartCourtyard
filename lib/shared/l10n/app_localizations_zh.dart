@@ -2059,4 +2059,65 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get deviceCommandMoreSettingsTitle => '更多设置';
+
+  @override
+  String get deviceCommandActionOpen => '开门';
+
+  @override
+  String get deviceCommandActionClose => '关门';
+
+  @override
+  String get deviceCommandActionStop => '暂停';
+
+  @override
+  String get deviceCommandActionPartialOpen => '部分开门';
+
+  @override
+  String get deviceCommandActionLedOn => '开灯';
+
+  @override
+  String get deviceCommandActionLedOff => '关灯';
+
+  @override
+  String get deviceCommandActionPb => 'PB';
+
+  @override
+  String deviceCommandSending(String action, String controlCode) {
+    return '正在发送$action指令（$controlCode）...';
+  }
+
+  @override
+  String deviceCommandSucceeded(String action, String controlCode) {
+    return '$action指令已发送（$controlCode）。';
+  }
+
+  @override
+  String deviceCommandRejected(String action, String controlCode) {
+    return '$action指令未被接收（$controlCode）。';
+  }
+
+  @override
+  String deviceCommandBluetoothRequired(String action) {
+    return '请先通过蓝牙连接选中的设备，再使用$action。';
+  }
+
+  @override
+  String deviceCommandRemoteFailed(String action) {
+    return '$action执行失败，请重试。';
+  }
+
+  @override
+  String deviceCommandRemoteUnconfirmed(String action) {
+    return '设备已成功回执$action指令，但未确认实际运行状态。';
+  }
+
+  @override
+  String deviceCommandRemoteTimeout(String action) {
+    return '$action执行超时，请检查门状态后重试。';
+  }
+
+  @override
+  String deviceCommandNetworkFailure(String action) {
+    return '$action发送失败，请检查网络后重试。';
+  }
 }

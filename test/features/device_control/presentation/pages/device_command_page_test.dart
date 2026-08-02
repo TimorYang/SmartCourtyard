@@ -9,7 +9,9 @@ import 'package:flinx/features/add_device/domain/use_cases/fetch_onboarding_devi
 import 'package:flinx/features/device_control/application/device_command_controller.dart';
 import 'package:flinx/features/device_control/domain/entities/door_detail.dart';
 import 'package:flinx/features/device_control/domain/entities/door_device.dart';
+import 'package:flinx/features/device_control/domain/entities/remote_door_command.dart';
 import 'package:flinx/features/device_control/domain/repositories/door_detail_repository.dart';
+import 'package:flinx/features/device_control/domain/repositories/remote_door_command_repository.dart';
 import 'package:flinx/features/device_control/presentation/pages/device_command_page.dart';
 import 'package:flinx/features/device_control/presentation/pages/device_settings_page.dart';
 import 'package:flinx/features/device_control/presentation/pages/already_added_devices_page.dart';
@@ -72,19 +74,19 @@ void main() {
     expect(gateway.commands.last, DoorCommand.open);
     expect(gateway.deviceIds.last, 'mock-ble-device');
     expect(gateway.authenticatedDeviceIds, ['mock-ble-device']);
-    expect(find.text('开门指令已发送（0x1001）。'), findsOneWidget);
+    expect(find.text('Open command sent (0x1001).'), findsOneWidget);
 
     await tester.tap(find.byTooltip('Stop'));
     await tester.pumpAndSettle();
 
     expect(gateway.commands.last, DoorCommand.stop);
-    expect(find.text('暂停指令已发送（0x1003）。'), findsOneWidget);
+    expect(find.text('Stop command sent (0x1003).'), findsOneWidget);
 
     await tester.tap(find.byTooltip('Close'));
     await tester.pumpAndSettle();
 
     expect(gateway.commands.last, DoorCommand.close);
-    expect(find.text('关门指令已发送（0x1002）。'), findsOneWidget);
+    expect(find.text('Close command sent (0x1002).'), findsOneWidget);
   });
 
   testWidgets('updates the door frame and state from attribute reports', (
@@ -149,7 +151,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(gateway.commands.last, DoorCommand.lightOn);
-    expect(find.text('开灯指令已发送（0x1005）。'), findsOneWidget);
+    expect(find.text('Turn LED on command sent (0x1005).'), findsOneWidget);
 
     final partialOpenAction = find.byKey(
       const ValueKey<String>('partial-open-action'),
@@ -161,7 +163,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(gateway.commands.last, DoorCommand.partialOpen);
-    expect(find.text('半开门指令已发送（0x1004）。'), findsOneWidget);
+    expect(find.text('Partial open command sent (0x1004).'), findsOneWidget);
 
     final moreSettingsAction = find.byKey(
       const ValueKey<String>('more-settings-action'),
@@ -435,7 +437,7 @@ void main() {
     await tester.tap(find.byTooltip('Open'));
     await tester.pump();
 
-    expect(find.text('正在发送开门指令（0x1001）...'), findsOneWidget);
+    expect(find.text('Sending Open command (0x1001)...'), findsOneWidget);
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
     for (final button in tester.widgetList<IconButton>(
@@ -449,7 +451,7 @@ void main() {
     gateway.complete(DoorCommand.open);
     await tester.pumpAndSettle();
 
-    expect(find.text('开门指令已发送（0x1001）。'), findsOneWidget);
+    expect(find.text('Open command sent (0x1001).'), findsOneWidget);
   });
 
   testWidgets('switches between records and command tabs', (tester) async {
@@ -500,16 +502,46 @@ void main() {
 
     expect(gateway.disconnectAllCount, greaterThanOrEqualTo(1));
   });
+
+  testWidgets(
+    'uses remote control without BLE and renders polled door position',
+    (tester) async {
+      final repository = _SequencedDoorDetailRepository();
+      final remoteRepository = _SuccessfulRemoteDoorCommandRepository();
+      await _pumpDevicePage(
+        tester,
+        _DisconnectedHardwareGateway(),
+        repository: repository,
+        remoteRepository: remoteRepository,
+        remotePollInterval: Duration.zero,
+      );
+
+      await tester.tap(find.byTooltip('Open'));
+      await tester.pumpAndSettle();
+
+      expect(remoteRepository.actions, [RemoteDoorCommandAction.open]);
+      expect(find.text('Open command sent (0x1001).'), findsOneWidget);
+      expect(find.text('Opened · 100%'), findsOneWidget);
+      expect(_doorHeroAsset(tester), endsWith('garage_door_20.png'));
+    },
+  );
 }
 
 Widget _buildPage(
   MockHardwareGateway gateway, {
   DoorDetailRepository repository = const _FakeDoorDetailRepository(),
+  RemoteDoorCommandRepository? remoteRepository,
+  Duration remotePollInterval = const Duration(seconds: 1),
 }) {
   return ProviderScope(
     overrides: [
       deviceCommandHardwareGatewayProvider.overrideWithValue(gateway),
       doorDetailRepositoryProvider.overrideWithValue(repository),
+      if (remoteRepository != null)
+        remoteDoorCommandRepositoryProvider.overrideWithValue(remoteRepository),
+      deviceCommandRemotePollIntervalProvider.overrideWithValue(
+        remotePollInterval,
+      ),
       fetchOnboardingDeviceKeyUseCaseProvider.overrideWithValue(
         const _FakeFetchOnboardingDeviceKeyUseCase(),
       ),
@@ -589,13 +621,22 @@ Future<void> _pumpDevicePage(
   WidgetTester tester,
   MockHardwareGateway gateway, {
   DoorDetailRepository repository = const _FakeDoorDetailRepository(),
+  RemoteDoorCommandRepository? remoteRepository,
+  Duration remotePollInterval = const Duration(seconds: 1),
 }) async {
   tester.view.physicalSize = const Size(393, 852);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
 
-  await tester.pumpWidget(_buildPage(gateway, repository: repository));
+  await tester.pumpWidget(
+    _buildPage(
+      gateway,
+      repository: repository,
+      remoteRepository: remoteRepository,
+      remotePollInterval: remotePollInterval,
+    ),
+  );
   await tester.pumpAndSettle();
 }
 
@@ -711,6 +752,104 @@ class _FakeFetchOnboardingDeviceKeyUseCase
       aesKey: '0123456789abcdef0123456789abcdef',
       aesKeyVersion: 'test',
     );
+  }
+}
+
+class _DisconnectedHardwareGateway extends MockHardwareGateway {}
+
+class _SuccessfulRemoteDoorCommandRepository
+    implements RemoteDoorCommandRepository {
+  final List<RemoteDoorCommandAction> actions = <RemoteDoorCommandAction>[];
+
+  @override
+  Future<RemoteDoorCommand> submitCommand({
+    required String doorId,
+    required RemoteDoorCommandAction action,
+    required String requestId,
+  }) async {
+    actions.add(action);
+    return RemoteDoorCommand(
+      commandId: 'command-1',
+      doorId: doorId,
+      action: action,
+      status: RemoteDoorCommandStatus.succeeded,
+    );
+  }
+
+  @override
+  Future<RemoteDoorCommand> fetchCommand({
+    required String doorId,
+    required String commandId,
+    required String requestId,
+  }) {
+    throw StateError('A terminal submit response must not be polled.');
+  }
+}
+
+class _SequencedDoorDetailRepository implements DoorDetailRepository {
+  final List<DoorDetail> _details = <DoorDetail>[
+    const DoorDetail(
+      id: '12',
+      name: 'Garage door',
+      doorState: DoorState.closed,
+      doorStateLabel: 'Closed',
+      positionPercent: 0,
+      operatedCycles: 0,
+      remainingCycles: 0,
+    ),
+    const DoorDetail(
+      id: '12',
+      name: 'Garage door',
+      doorState: DoorState.opening,
+      doorStateLabel: 'Opening',
+      positionPercent: 40,
+      operatedCycles: 0,
+      remainingCycles: 0,
+    ),
+    const DoorDetail(
+      id: '12',
+      name: 'Garage door',
+      doorState: DoorState.open,
+      doorStateLabel: 'Open',
+      positionPercent: 100,
+      operatedCycles: 0,
+      remainingCycles: 0,
+    ),
+  ];
+
+  DoorDetail? _lastDetail;
+
+  @override
+  Future<DoorDetail> fetchDoorDetail({
+    required String doorId,
+    required String requestId,
+  }) async {
+    if (_details.isNotEmpty) {
+      _lastDetail = _details.removeAt(0);
+    }
+    return _lastDetail!;
+  }
+
+  @override
+  Future<List<DoorDevice>> fetchDoorDevices({
+    required String doorId,
+    required String requestId,
+  }) async => const [
+    DoorDevice(
+      deviceId: '3',
+      sn: 'remote-only',
+      deviceType: 'opener',
+      capabilities: ['DOOR_CONTROL', 'LED_CONTROL'],
+    ),
+  ];
+
+  @override
+  Future<void> unbindDoorDevice({
+    required String doorId,
+    required String deviceId,
+    required String requestId,
+  }) {
+    throw UnimplementedError();
   }
 }
 

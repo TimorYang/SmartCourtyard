@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:flinx/core/errors/app_error.dart';
 import 'package:flinx/core/logging/app_logger.dart';
 import 'package:flinx/core/logging/providers.dart';
 import 'package:flinx/features/add_device/application/providers.dart';
@@ -10,7 +11,9 @@ import 'package:flinx/features/add_device/domain/repositories/add_device_onboard
 import 'package:flinx/features/device_control/application/device_command_controller.dart';
 import 'package:flinx/features/device_control/domain/entities/door_detail.dart';
 import 'package:flinx/features/device_control/domain/entities/door_device.dart';
+import 'package:flinx/features/device_control/domain/entities/remote_door_command.dart';
 import 'package:flinx/features/device_control/domain/repositories/door_detail_repository.dart';
+import 'package:flinx/features/device_control/domain/repositories/remote_door_command_repository.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
 import 'package:flinx/platform_bridge/mock_hardware_gateway.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -511,6 +514,184 @@ void main() {
       expect(repository.doorDetailRequestCount, 2);
     },
   );
+
+  test(
+    'uses remote command polling without BLE and refreshes movement details',
+    () async {
+      final gateway = _BleSessionGateway(emitTargetDevice: false);
+      final detailRepository = _DoorDetailRepository(_doorDetail());
+      detailRepository.detailResponses.addAll([
+        _doorDetail(),
+        DoorDetail(
+          id: '12',
+          name: 'Test door',
+          doorState: DoorState.opening,
+          doorStateLabel: 'Opening',
+          positionPercent: 40,
+          operatedCycles: 0,
+          remainingCycles: 0,
+        ),
+        DoorDetail(
+          id: '12',
+          name: 'Test door',
+          doorState: DoorState.open,
+          doorStateLabel: 'Open',
+          positionPercent: 100,
+          operatedCycles: 0,
+          remainingCycles: 0,
+        ),
+      ]);
+      final remoteRepository = _RemoteDoorCommandRepository([
+        _remoteCommand(RemoteDoorCommandStatus.processing),
+        _remoteCommand(RemoteDoorCommandStatus.succeeded),
+      ]);
+      final container = _createContainer(
+        gateway: gateway,
+        repository: detailRepository,
+        remoteRepository: remoteRepository,
+        scanDuration: Duration.zero,
+        remotePollInterval: Duration.zero,
+      );
+      addTearDown(container.dispose);
+      final controller = container.read(
+        deviceCommandControllerProvider.notifier,
+      );
+
+      await controller.loadDoorDetail(doorId: '12');
+      await _settleBleSession();
+      await controller.runAction(
+        deviceId: 'ignored-without-ble',
+        action: DeviceCommandAction.openDoor,
+      );
+      await _settleBleSession();
+
+      final state = container.read(deviceCommandControllerProvider);
+      expect(gateway.commandDeviceIds, isEmpty);
+      expect(remoteRepository.submittedActions, [RemoteDoorCommandAction.open]);
+      expect(remoteRepository.fetchCount, 1);
+      expect(remoteRepository.requestIds.toSet(), hasLength(1));
+      expect(state.pendingAction, isNull);
+      expect(state.commandFeedback?.kind, DeviceCommandFeedbackKind.succeeded);
+      expect(state.doorDetail?.doorState, DoorState.open);
+      expect(state.doorDetail?.positionPercent, 100);
+    },
+  );
+
+  test('does not remotely execute unsupported actions without BLE', () async {
+    final gateway = _BleSessionGateway(emitTargetDevice: false);
+    final remoteRepository = _RemoteDoorCommandRepository([]);
+    final container = _createContainer(
+      gateway: gateway,
+      remoteRepository: remoteRepository,
+      scanDuration: Duration.zero,
+      remotePollInterval: Duration.zero,
+    );
+    addTearDown(container.dispose);
+    final controller = container.read(deviceCommandControllerProvider.notifier);
+
+    await controller.loadDoorDetail(doorId: '12');
+    await _settleBleSession();
+    await controller.runAction(
+      deviceId: 'ignored-without-ble',
+      action: DeviceCommandAction.partialOpenDoor,
+    );
+
+    expect(remoteRepository.submittedActions, isEmpty);
+    expect(
+      container.read(deviceCommandControllerProvider).commandFeedback?.kind,
+      DeviceCommandFeedbackKind.requiresBluetooth,
+    );
+  });
+
+  test('clears pending state when a remote request fails', () async {
+    final container = _createContainer(
+      gateway: _BleSessionGateway(emitTargetDevice: false),
+      remoteRepository: const _FailingRemoteDoorCommandRepository(),
+      scanDuration: Duration.zero,
+      remotePollInterval: Duration.zero,
+    );
+    addTearDown(container.dispose);
+    final controller = container.read(deviceCommandControllerProvider.notifier);
+
+    await controller.loadDoorDetail(doorId: '12');
+    await _settleBleSession();
+    await controller.runAction(
+      deviceId: 'ignored-without-ble',
+      action: DeviceCommandAction.closeDoor,
+    );
+
+    final state = container.read(deviceCommandControllerProvider);
+    expect(state.pendingAction, isNull);
+    expect(
+      state.commandFeedback?.kind,
+      DeviceCommandFeedbackKind.networkFailure,
+    );
+  });
+
+  test(
+    'stops remote polling at the client deadline and refreshes detail',
+    () async {
+      final detailRepository = _DoorDetailRepository(_doorDetail());
+      final remoteRepository = _RemoteDoorCommandRepository([
+        _remoteCommand(RemoteDoorCommandStatus.processing),
+      ]);
+      final container = _createContainer(
+        gateway: _BleSessionGateway(emitTargetDevice: false),
+        repository: detailRepository,
+        remoteRepository: remoteRepository,
+        scanDuration: Duration.zero,
+        remotePollInterval: Duration.zero,
+        remotePollTimeout: Duration.zero,
+      );
+      addTearDown(container.dispose);
+      final controller = container.read(
+        deviceCommandControllerProvider.notifier,
+      );
+
+      await controller.loadDoorDetail(doorId: '12');
+      await _settleBleSession();
+      await controller.runAction(
+        deviceId: 'ignored-without-ble',
+        action: DeviceCommandAction.openDoor,
+      );
+
+      final state = container.read(deviceCommandControllerProvider);
+      expect(remoteRepository.fetchCount, 0);
+      expect(detailRepository.doorDetailRequestCount, 2);
+      expect(state.pendingAction, isNull);
+      expect(
+        state.commandFeedback?.kind,
+        DeviceCommandFeedbackKind.remoteTimeout,
+      );
+    },
+  );
+
+  test('treats unconfirmed as a terminal remote result', () async {
+    final remoteRepository = _RemoteDoorCommandRepository([
+      _remoteCommand(RemoteDoorCommandStatus.unconfirmed),
+    ]);
+    final container = _createContainer(
+      gateway: _BleSessionGateway(emitTargetDevice: false),
+      remoteRepository: remoteRepository,
+      scanDuration: Duration.zero,
+      remotePollInterval: Duration.zero,
+    );
+    addTearDown(container.dispose);
+    final controller = container.read(deviceCommandControllerProvider.notifier);
+
+    await controller.loadDoorDetail(doorId: '12');
+    await _settleBleSession();
+    await controller.runAction(
+      deviceId: 'ignored-without-ble',
+      action: DeviceCommandAction.openDoor,
+    );
+
+    expect(remoteRepository.fetchCount, 0);
+    expect(
+      container.read(deviceCommandControllerProvider).commandFeedback?.kind,
+      DeviceCommandFeedbackKind.remoteUnconfirmed,
+    );
+  });
 }
 
 ProviderContainer _createContainer({
@@ -518,8 +699,11 @@ ProviderContainer _createContainer({
   DoorDetail? doorDetail,
   _DoorDetailRepository? repository,
   _DeviceKeyRepository? deviceKeyRepository,
+  RemoteDoorCommandRepository? remoteRepository,
   AppLogger? logger,
   Duration scanDuration = const Duration(seconds: 10),
+  Duration remotePollInterval = const Duration(seconds: 1),
+  Duration remotePollTimeout = const Duration(seconds: 15),
 }) {
   return ProviderContainer(
     overrides: [
@@ -530,7 +714,15 @@ ProviderContainer _createContainer({
       addDeviceOnboardingRepositoryProvider.overrideWithValue(
         deviceKeyRepository ?? _DeviceKeyRepository(),
       ),
+      if (remoteRepository != null)
+        remoteDoorCommandRepositoryProvider.overrideWithValue(remoteRepository),
       deviceCommandBleScanDurationProvider.overrideWithValue(scanDuration),
+      deviceCommandRemotePollIntervalProvider.overrideWithValue(
+        remotePollInterval,
+      ),
+      deviceCommandRemotePollTimeoutProvider.overrideWithValue(
+        remotePollTimeout,
+      ),
       if (logger != null) appLoggerProvider.overrideWithValue(logger),
     ],
   );
@@ -567,6 +759,7 @@ class _DoorDetailRepository implements DoorDetailRepository {
   });
 
   DoorDetail detail;
+  final List<DoorDetail> detailResponses = <DoorDetail>[];
   List<DoorDevice> devices;
   var doorDetailRequestCount = 0;
 
@@ -576,6 +769,9 @@ class _DoorDetailRepository implements DoorDetailRepository {
     required String requestId,
   }) async {
     doorDetailRequestCount += 1;
+    if (detailResponses.isNotEmpty) {
+      detail = detailResponses.removeAt(0);
+    }
     return detail;
   }
 
@@ -591,6 +787,75 @@ class _DoorDetailRepository implements DoorDetailRepository {
     required String deviceId,
     required String requestId,
   }) => throw UnimplementedError();
+}
+
+RemoteDoorCommand _remoteCommand(RemoteDoorCommandStatus status) {
+  return RemoteDoorCommand(
+    commandId: 'command-1',
+    doorId: '12',
+    action: RemoteDoorCommandAction.open,
+    status: status,
+  );
+}
+
+class _RemoteDoorCommandRepository implements RemoteDoorCommandRepository {
+  _RemoteDoorCommandRepository(this.responses);
+
+  final List<RemoteDoorCommand> responses;
+  final List<RemoteDoorCommandAction> submittedActions =
+      <RemoteDoorCommandAction>[];
+  final List<String> requestIds = <String>[];
+  var fetchCount = 0;
+
+  @override
+  Future<RemoteDoorCommand> submitCommand({
+    required String doorId,
+    required RemoteDoorCommandAction action,
+    required String requestId,
+  }) async {
+    submittedActions.add(action);
+    requestIds.add(requestId);
+    return responses.removeAt(0);
+  }
+
+  @override
+  Future<RemoteDoorCommand> fetchCommand({
+    required String doorId,
+    required String commandId,
+    required String requestId,
+  }) async {
+    fetchCount += 1;
+    requestIds.add(requestId);
+    return responses.removeAt(0);
+  }
+}
+
+class _FailingRemoteDoorCommandRepository
+    implements RemoteDoorCommandRepository {
+  const _FailingRemoteDoorCommandRepository();
+
+  @override
+  Future<RemoteDoorCommand> submitCommand({
+    required String doorId,
+    required RemoteDoorCommandAction action,
+    required String requestId,
+  }) {
+    throw AppError(
+      code: AppErrorCode.networkUnavailable,
+      messageKey: 'remote_door_command_network_unavailable',
+      requestId: requestId,
+      retryable: true,
+    );
+  }
+
+  @override
+  Future<RemoteDoorCommand> fetchCommand({
+    required String doorId,
+    required String commandId,
+    required String requestId,
+  }) {
+    throw UnimplementedError();
+  }
 }
 
 class _DeviceKeyRepository implements AddDeviceOnboardingRepository {
