@@ -132,6 +132,23 @@ class AppColors {
   static const safetySensorAction = Color(0xFF0878ED);
   static const safetySensorPlaceholder = Color(0xFFD8DCE2);
   static const safetySensorPositionMarkerShadow = Color(0x33000000);
+  static const safetySensorPairingBackground = Color(0xFFFFFFFF);
+  static const safetySensorPairingPrimaryAction = Color(0xFF176CFF);
+  static const safetySensorPairingSecondaryAction = Color(0xFFF1F3F5);
+  static const safetySensorPairingSecondaryForeground = Color(0xFF41464D);
+  static const safetySensorPairingPlaceholderSurface = Color(0xFFF1F3F5);
+  static const safetySensorPairingPlaceholderForeground = Color(0xFF9DA2A9);
+  static const safetySensorPairingSuccess = Color(0xFF19C966);
+  static const safetySensorManagementBackground = Color(0xFFFFFFFF);
+  static const safetySensorManagementCard = Color(0xFFF1F2F3);
+  static const safetySensorManagementIcon = Color(0xFF60646A);
+  static const safetySensorManagementDelete = Color(0xFF000000);
+  static const safetySensorManagementDialogScrim = Color(0x66000000);
+  static const safetySensorManagementDialogSurface = Color(0xFFFFFFFF);
+  static const safetySensorManagementWarning = Color(0xFFFF7B00);
+  static const safetySensorManagementCancel = Color(0xFFF1F3F5);
+  static const safetySensorManagementCancelForeground = Color(0xFF41464D);
+  static const safetySensorManagementConfirm = Color(0xFF176CFF);
   static const safetyBatterySolutionPlaceholderSurface = Color(0xFFF1F3F5);
   static const safetyBatterySolutionHighlightBorder = Color(0xFF176CFF);
   static const backgroundDarkTop = Color(0xFF0D1B30);
@@ -279,6 +296,10 @@ class AppShapeTokens {
   static const safetySensorPositionMarkerBorderWidth = 1.5;
   static const safetyBatterySolutionCardRadius = 14.0;
   static const safetyBatterySolutionImageRadius = 10.0;
+  static const safetySensorPairingActionRadius = 28.0;
+  static const safetySensorPairingPlaceholderRadius = 16.0;
+  static const safetySensorManagementCardRadius = 14.0;
+  static const safetySensorManagementDialogRadius = 16.0;
   static const smartOpenerAddedDeviceCardRadius = 16.0;
   static const systemPermissionsCardRadius = 16.0;
   static const upgradeCheckCardRadius = 16.0;
@@ -1502,6 +1523,63 @@ class AppTextTokens {
       fontSize: 12,
       fontWeight: FontWeight.w400,
       height: 1.2,
+    );
+  }
+
+  static TextStyle safetySensorPairingStatus(TextTheme textTheme) {
+    return (textTheme.headlineSmall ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 25,
+      fontWeight: FontWeight.w600,
+      height: 1.25,
+    );
+  }
+
+  static TextStyle safetySensorPairingBody(TextTheme textTheme) {
+    return (textTheme.bodyLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 16,
+      fontWeight: FontWeight.w400,
+      height: 1.55,
+    );
+  }
+
+  static TextStyle safetySensorPairingAction(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: Colors.white,
+      fontSize: 18,
+      fontWeight: FontWeight.w500,
+    );
+  }
+
+  static TextStyle safetySensorPairingSecondaryAction(TextTheme textTheme) {
+    return safetySensorPairingAction(
+      textTheme,
+    ).copyWith(color: AppColors.safetySensorPairingSecondaryForeground);
+  }
+
+  static TextStyle safetySensorManagementItem(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 17,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle safetySensorManagementDeleteMessage(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.securityCenterError,
+      fontSize: 17,
+      fontWeight: FontWeight.w600,
+      height: 1.35,
+    );
+  }
+
+  static TextStyle safetySensorManagementDialogAction(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: Colors.white,
+      fontSize: 18,
+      fontWeight: FontWeight.w500,
     );
   }
 

@@ -2127,6 +2127,60 @@ class AppLocalizationsEn extends AppLocalizations {
   String get safetySensorsManage => 'Manage';
 
   @override
+  String get safetySensorPairingTitle => 'Sensor pairing';
+
+  @override
+  String get safetySensorPairingBluetoothEnabled => 'Keep Bluetooth enabled';
+
+  @override
+  String get safetySensorPairingGuideDescription =>
+      '1. Keep your phone within 5 meters of the opener.\n2. Keep the safety sensor within 10 meters of the opener.\n3. Pairing ends automatically if no learning action is performed within 30 seconds.';
+
+  @override
+  String get safetySensorPairingStart => 'Start pairing';
+
+  @override
+  String get safetySensorPairingInProgress => 'Pairing in progress...';
+
+  @override
+  String get safetySensorPairingMatchingDescription =>
+      'Press and hold the pairing button on the wireless safety sensor.';
+
+  @override
+  String get safetySensorPairingCancel => 'Cancel';
+
+  @override
+  String get safetySensorPairingSuccess =>
+      'Wireless safety sensor pairing successful';
+
+  @override
+  String get safetySensorPairingComplete => 'Done';
+
+  @override
+  String get safetySensorPairingImagePlaceholder =>
+      'Pairing illustration placeholder';
+
+  @override
+  String get safetySensorManagementTitle => 'Sensor management';
+
+  @override
+  String get safetySensorManagementEmpty => 'No wireless sensors to manage.';
+
+  @override
+  String get safetySensorManagementDeleteLabel => 'Delete sensor';
+
+  @override
+  String safetySensorManagementDeleteMessage(String sensorName) {
+    return 'Delete $sensorName? The device will no longer be available and all settings will be cleared. Are you sure?';
+  }
+
+  @override
+  String get safetySensorManagementCancel => 'Cancel';
+
+  @override
+  String get safetySensorManagementConfirm => 'Confirm';
+
+  @override
   String get safetySensorsWirelessWicketDoor => 'Wireless wicket door';
 
   @override

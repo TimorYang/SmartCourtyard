@@ -3938,6 +3938,102 @@ abstract class AppLocalizations {
   /// **'Manage'**
   String get safetySensorsManage;
 
+  /// No description provided for @safetySensorPairingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sensor pairing'**
+  String get safetySensorPairingTitle;
+
+  /// No description provided for @safetySensorPairingBluetoothEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Bluetooth enabled'**
+  String get safetySensorPairingBluetoothEnabled;
+
+  /// No description provided for @safetySensorPairingGuideDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Keep your phone within 5 meters of the opener.\n2. Keep the safety sensor within 10 meters of the opener.\n3. Pairing ends automatically if no learning action is performed within 30 seconds.'**
+  String get safetySensorPairingGuideDescription;
+
+  /// No description provided for @safetySensorPairingStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start pairing'**
+  String get safetySensorPairingStart;
+
+  /// No description provided for @safetySensorPairingInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Pairing in progress...'**
+  String get safetySensorPairingInProgress;
+
+  /// No description provided for @safetySensorPairingMatchingDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Press and hold the pairing button on the wireless safety sensor.'**
+  String get safetySensorPairingMatchingDescription;
+
+  /// No description provided for @safetySensorPairingCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get safetySensorPairingCancel;
+
+  /// No description provided for @safetySensorPairingSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Wireless safety sensor pairing successful'**
+  String get safetySensorPairingSuccess;
+
+  /// No description provided for @safetySensorPairingComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get safetySensorPairingComplete;
+
+  /// No description provided for @safetySensorPairingImagePlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Pairing illustration placeholder'**
+  String get safetySensorPairingImagePlaceholder;
+
+  /// No description provided for @safetySensorManagementTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sensor management'**
+  String get safetySensorManagementTitle;
+
+  /// No description provided for @safetySensorManagementEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No wireless sensors to manage.'**
+  String get safetySensorManagementEmpty;
+
+  /// No description provided for @safetySensorManagementDeleteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete sensor'**
+  String get safetySensorManagementDeleteLabel;
+
+  /// No description provided for @safetySensorManagementDeleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {sensorName}? The device will no longer be available and all settings will be cleared. Are you sure?'**
+  String safetySensorManagementDeleteMessage(String sensorName);
+
+  /// No description provided for @safetySensorManagementCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get safetySensorManagementCancel;
+
+  /// No description provided for @safetySensorManagementConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get safetySensorManagementConfirm;
+
   /// No description provided for @safetySensorsWirelessWicketDoor.
   ///
   /// In en, this message translates to:

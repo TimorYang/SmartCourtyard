@@ -2003,6 +2003,57 @@ class AppLocalizationsZh extends AppLocalizations {
   String get safetySensorsManage => '管理';
 
   @override
+  String get safetySensorPairingTitle => '传感器对码';
+
+  @override
+  String get safetySensorPairingBluetoothEnabled => '请保持蓝牙开启';
+
+  @override
+  String get safetySensorPairingGuideDescription =>
+      '1. 确保手机与电机的距离小于 5 米；\n2. 确保安全传感器与电机的距离小于 10 米；\n3. 如果 30 秒内未进行学习操作，对码将自动结束。';
+
+  @override
+  String get safetySensorPairingStart => '开始对码';
+
+  @override
+  String get safetySensorPairingInProgress => '对码中…';
+
+  @override
+  String get safetySensorPairingMatchingDescription => '长按无线传感器上的配对按钮。';
+
+  @override
+  String get safetySensorPairingCancel => '取消';
+
+  @override
+  String get safetySensorPairingSuccess => '无线安全传感器学习成功';
+
+  @override
+  String get safetySensorPairingComplete => '完成';
+
+  @override
+  String get safetySensorPairingImagePlaceholder => '对码插图占位图';
+
+  @override
+  String get safetySensorManagementTitle => '传感器管理';
+
+  @override
+  String get safetySensorManagementEmpty => '暂无可管理的无线传感器。';
+
+  @override
+  String get safetySensorManagementDeleteLabel => '删除传感器';
+
+  @override
+  String safetySensorManagementDeleteMessage(String sensorName) {
+    return '确认删除$sensorName？删除后设备将无法使用，且所有配置将被清除。是否确认？';
+  }
+
+  @override
+  String get safetySensorManagementCancel => '取消';
+
+  @override
+  String get safetySensorManagementConfirm => '确认';
+
+  @override
   String get safetySensorsWirelessWicketDoor => '无线小门传感器';
 
   @override

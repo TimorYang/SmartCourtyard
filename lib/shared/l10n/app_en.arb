@@ -1758,6 +1758,30 @@
   "safetySensorsMetricLowPower": "Low power",
   "safetySensorsMatch": "Match",
   "safetySensorsManage": "Manage",
+  "safetySensorPairingTitle": "Sensor pairing",
+  "safetySensorPairingBluetoothEnabled": "Keep Bluetooth enabled",
+  "safetySensorPairingGuideDescription": "1. Keep your phone within 5 meters of the opener.\n2. Keep the safety sensor within 10 meters of the opener.\n3. Pairing ends automatically if no learning action is performed within 30 seconds.",
+  "safetySensorPairingStart": "Start pairing",
+  "safetySensorPairingInProgress": "Pairing in progress...",
+  "safetySensorPairingMatchingDescription": "Press and hold the pairing button on the wireless safety sensor.",
+  "safetySensorPairingCancel": "Cancel",
+  "safetySensorPairingSuccess": "Wireless safety sensor pairing successful",
+  "safetySensorPairingComplete": "Done",
+  "safetySensorPairingImagePlaceholder": "Pairing illustration placeholder",
+  "safetySensorManagementTitle": "Sensor management",
+  "safetySensorManagementEmpty": "No wireless sensors to manage.",
+  "safetySensorManagementDeleteLabel": "Delete sensor",
+  "safetySensorManagementDeleteMessage": "Delete {sensorName}? The device will no longer be available and all settings will be cleared. Are you sure?",
+  "@safetySensorManagementDeleteMessage": {
+    "placeholders": {
+      "sensorName": {
+        "type": "String",
+        "example": "Wireless wicket door"
+      }
+    }
+  },
+  "safetySensorManagementCancel": "Cancel",
+  "safetySensorManagementConfirm": "Confirm",
   "safetySensorsWirelessWicketDoor": "Wireless wicket door",
   "safetySensorsWirelessSafetyEdge": "Wireless safety edge",
   "safetySensorsWirelessSlackRope": "Wireless slack rope",

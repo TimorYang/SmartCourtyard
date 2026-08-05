@@ -706,6 +706,30 @@
   "safetySensorsMetricLowPower": "低电量",
   "safetySensorsMatch": "配对",
   "safetySensorsManage": "管理",
+  "safetySensorPairingTitle": "传感器对码",
+  "safetySensorPairingBluetoothEnabled": "请保持蓝牙开启",
+  "safetySensorPairingGuideDescription": "1. 确保手机与电机的距离小于 5 米；\n2. 确保安全传感器与电机的距离小于 10 米；\n3. 如果 30 秒内未进行学习操作，对码将自动结束。",
+  "safetySensorPairingStart": "开始对码",
+  "safetySensorPairingInProgress": "对码中…",
+  "safetySensorPairingMatchingDescription": "长按无线传感器上的配对按钮。",
+  "safetySensorPairingCancel": "取消",
+  "safetySensorPairingSuccess": "无线安全传感器学习成功",
+  "safetySensorPairingComplete": "完成",
+  "safetySensorPairingImagePlaceholder": "对码插图占位图",
+  "safetySensorManagementTitle": "传感器管理",
+  "safetySensorManagementEmpty": "暂无可管理的无线传感器。",
+  "safetySensorManagementDeleteLabel": "删除传感器",
+  "safetySensorManagementDeleteMessage": "确认删除{sensorName}？删除后设备将无法使用，且所有配置将被清除。是否确认？",
+  "@safetySensorManagementDeleteMessage": {
+    "placeholders": {
+      "sensorName": {
+        "type": "String",
+        "example": "无线小门传感器"
+      }
+    }
+  },
+  "safetySensorManagementCancel": "取消",
+  "safetySensorManagementConfirm": "确认",
   "safetySensorsWirelessWicketDoor": "无线小门传感器",
   "safetySensorsWirelessSafetyEdge": "无线安全边",
   "safetySensorsWirelessSlackRope": "无线松绳传感器",

@@ -55,6 +55,8 @@ import '../../features/notification/presentation/pages/notification_list_page.da
 import '../../features/security_center/presentation/pages/full_report_page.dart';
 import '../../features/security_center/presentation/pages/general_evaluation_page.dart';
 import '../../features/security_center/presentation/pages/safety_sensor_battery_solution_page.dart';
+import '../../features/security_center/presentation/pages/safety_sensor_management_page.dart';
+import '../../features/security_center/presentation/pages/safety_sensor_pairing_pages.dart';
 import '../../features/security_center/presentation/pages/safety_sensors_evaluation_page.dart';
 import '../../platform_bridge/hardware_models.dart';
 import '../../shared/webview/app_web_view_page.dart';
@@ -455,6 +457,38 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           doorId: state.uri.queryParameters['doorId'] ?? '',
           deviceId: state.uri.queryParameters['deviceId'] ?? '',
           sensorId: state.uri.queryParameters['sensorId'] ?? '',
+        ),
+      ),
+      GoRoute(
+        path: SafetySensorManagementPage.routePath,
+        name: SafetySensorManagementPage.routeName,
+        builder: (context, state) => SafetySensorManagementPage(
+          doorId: state.uri.queryParameters['doorId'] ?? '',
+          deviceId: state.uri.queryParameters['deviceId'] ?? '',
+        ),
+      ),
+      GoRoute(
+        path: SafetySensorPairingGuidePage.routePath,
+        name: SafetySensorPairingGuidePage.routeName,
+        builder: (context, state) => SafetySensorPairingGuidePage(
+          doorId: state.uri.queryParameters['doorId'] ?? '',
+          deviceId: state.uri.queryParameters['deviceId'] ?? '',
+        ),
+      ),
+      GoRoute(
+        path: SafetySensorPairingMatchingPage.routePath,
+        name: SafetySensorPairingMatchingPage.routeName,
+        builder: (context, state) => SafetySensorPairingMatchingPage(
+          doorId: state.uri.queryParameters['doorId'] ?? '',
+          deviceId: state.uri.queryParameters['deviceId'] ?? '',
+        ),
+      ),
+      GoRoute(
+        path: SafetySensorPairingSuccessPage.routePath,
+        name: SafetySensorPairingSuccessPage.routeName,
+        builder: (context, state) => SafetySensorPairingSuccessPage(
+          doorId: state.uri.queryParameters['doorId'] ?? '',
+          deviceId: state.uri.queryParameters['deviceId'] ?? '',
         ),
       ),
       GoRoute(

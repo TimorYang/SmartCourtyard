@@ -19,6 +19,8 @@ import 'package:flinx/features/security_center/presentation/pages/full_report_pa
 import 'package:flinx/features/security_center/presentation/pages/general_evaluation_page.dart';
 import 'package:flinx/features/security_center/presentation/pages/security_center_page.dart';
 import 'package:flinx/features/security_center/presentation/pages/safety_sensor_battery_solution_page.dart';
+import 'package:flinx/features/security_center/presentation/pages/safety_sensor_management_page.dart';
+import 'package:flinx/features/security_center/presentation/pages/safety_sensor_pairing_pages.dart';
 import 'package:flinx/features/security_center/presentation/pages/safety_sensors_evaluation_page.dart';
 import 'package:flinx/features/security_center/presentation/widgets/security_report_widgets.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
@@ -985,6 +987,158 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('sensor pairing simulates success then returns to evaluation', (
+    tester,
+  ) async {
+    final router = _buildRouter();
+    await _pumpRouter(tester, router);
+
+    final safetyCard = find.byKey(
+      const ValueKey<String>('safety-sensors-evaluation-card'),
+    );
+    await tester.ensureVisible(safetyCard);
+    await tester.tap(safetyCard);
+    await tester.pumpAndSettle();
+
+    final match = find.byKey(const ValueKey<String>('safety-sensors-match'));
+    await tester.drag(
+      _scrollableInside('safety-sensors-scroll-mock-device'),
+      const Offset(0, -600),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(match);
+    await tester.pumpAndSettle();
+    expect(find.text('Sensor pairing'), findsOneWidget);
+    expect(find.text('Keep Bluetooth enabled'), findsOneWidget);
+    expect(
+      find.byKey(
+        ValueKey<String>(
+          'safety-sensor-pairing-placeholder-'
+          '${SafetySensorPairingGuidePage.guideAsset}',
+        ),
+      ),
+      findsOneWidget,
+    );
+
+    await tester.tap(
+      find.byKey(const ValueKey<String>('safety-sensor-pairing-start')),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Pairing in progress...'), findsOneWidget);
+    expect(find.text('Cancel'), findsOneWidget);
+
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Wireless safety sensor pairing successful'),
+      findsOneWidget,
+    );
+
+    await tester.tap(
+      find.byKey(const ValueKey<String>('safety-sensor-pairing-complete')),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Safety Sensors Evaluation'), findsOneWidget);
+  });
+
+  testWidgets('cancelling pairing returns to evaluation and stops timer', (
+    tester,
+  ) async {
+    final router = _buildRouter();
+    await _pumpRouter(tester, router);
+
+    final safetyCard = find.byKey(
+      const ValueKey<String>('safety-sensors-evaluation-card'),
+    );
+    await tester.ensureVisible(safetyCard);
+    await tester.tap(safetyCard);
+    await tester.pumpAndSettle();
+    final match = find.byKey(const ValueKey<String>('safety-sensors-match'));
+    await tester.drag(
+      _scrollableInside('safety-sensors-scroll-mock-device'),
+      const Offset(0, -600),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(match);
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey<String>('safety-sensor-pairing-start')),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.byKey(const ValueKey<String>('safety-sensor-pairing-cancel')),
+    );
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 4));
+
+    expect(find.text('Safety Sensors Evaluation'), findsOneWidget);
+    expect(
+      find.text('Wireless safety sensor pairing successful'),
+      findsNothing,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('sensor management deletes a wireless sensor locally', (
+    tester,
+  ) async {
+    final router = _buildRouter();
+    await _pumpRouter(tester, router);
+
+    final safetyCard = find.byKey(
+      const ValueKey<String>('safety-sensors-evaluation-card'),
+    );
+    await tester.ensureVisible(safetyCard);
+    await tester.tap(safetyCard);
+    await tester.pumpAndSettle();
+    await tester.drag(
+      _scrollableInside('safety-sensors-scroll-mock-device'),
+      const Offset(0, -600),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Manage'));
+    await tester.pumpAndSettle();
+    expect(find.text('Sensor management'), findsOneWidget);
+    expect(find.text('Wireless wicket door'), findsOneWidget);
+    expect(find.text('Wireless E-lock'), findsOneWidget);
+
+    final deleteAction = find.byKey(
+      const ValueKey<String>(
+        'safety-sensor-management-delete-WIRELESS_WICKET_DOOR',
+      ),
+    );
+    await tester.ensureVisible(deleteAction);
+    await tester.tap(deleteAction);
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(
+        const ValueKey<String>('safety-sensor-management-delete-dialog'),
+      ),
+      findsOneWidget,
+    );
+
+    await tester.tap(
+      find.byKey(
+        const ValueKey<String>('safety-sensor-management-delete-cancel'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Wireless wicket door'), findsOneWidget);
+
+    await tester.tap(deleteAction);
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(
+        const ValueKey<String>('safety-sensor-management-delete-confirm'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Wireless wicket door'), findsNothing);
+    expect(find.text('Wireless E-lock'), findsOneWidget);
+  });
+
   testWidgets('wireless sensors expand and collapse operation charts', (
     tester,
   ) async {
@@ -1372,6 +1526,34 @@ GoRouter _buildRouter() {
           doorId: state.uri.queryParameters['doorId'] ?? '',
           deviceId: state.uri.queryParameters['deviceId'] ?? '',
           sensorId: state.uri.queryParameters['sensorId'] ?? '',
+        ),
+      ),
+      GoRoute(
+        path: SafetySensorManagementPage.routePath,
+        builder: (context, state) => SafetySensorManagementPage(
+          doorId: state.uri.queryParameters['doorId'] ?? '',
+          deviceId: state.uri.queryParameters['deviceId'] ?? '',
+        ),
+      ),
+      GoRoute(
+        path: SafetySensorPairingGuidePage.routePath,
+        builder: (context, state) => SafetySensorPairingGuidePage(
+          doorId: state.uri.queryParameters['doorId'] ?? '',
+          deviceId: state.uri.queryParameters['deviceId'] ?? '',
+        ),
+      ),
+      GoRoute(
+        path: SafetySensorPairingMatchingPage.routePath,
+        builder: (context, state) => SafetySensorPairingMatchingPage(
+          doorId: state.uri.queryParameters['doorId'] ?? '',
+          deviceId: state.uri.queryParameters['deviceId'] ?? '',
+        ),
+      ),
+      GoRoute(
+        path: SafetySensorPairingSuccessPage.routePath,
+        builder: (context, state) => SafetySensorPairingSuccessPage(
+          doorId: state.uri.queryParameters['doorId'] ?? '',
+          deviceId: state.uri.queryParameters['deviceId'] ?? '',
         ),
       ),
     ],

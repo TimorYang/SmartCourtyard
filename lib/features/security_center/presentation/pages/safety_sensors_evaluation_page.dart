@@ -8,6 +8,8 @@ import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/safety_sensors_evaluation_controller.dart';
 import '../../domain/entities/safety_sensors_evaluation.dart';
 import 'safety_sensor_battery_solution_page.dart';
+import 'safety_sensor_management_page.dart';
+import 'safety_sensor_pairing_pages.dart';
 
 class SafetySensorsEvaluationPage extends ConsumerStatefulWidget {
   const SafetySensorsEvaluationPage({
@@ -347,8 +349,15 @@ class _SensorGroupCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _SensorActionButton(
+                      key: const ValueKey<String>('safety-sensors-match'),
                       icon: Icons.link,
                       label: AppLocalizations.of(context).safetySensorsMatch,
+                      onPressed: () => context.push(
+                        safetySensorPairingGuideLocation(
+                          doorId: doorId,
+                          deviceId: deviceId,
+                        ),
+                      ),
                     ),
                   ),
                   SizedBox(width: 16),
@@ -356,6 +365,11 @@ class _SensorGroupCard extends StatelessWidget {
                     child: _SensorActionButton(
                       icon: Icons.tune,
                       label: AppLocalizations.of(context).safetySensorsManage,
+                      onPressed: () => context.push(
+                        '${SafetySensorManagementPage.routePath}'
+                        '?doorId=${Uri.encodeQueryComponent(doorId)}'
+                        '&deviceId=${Uri.encodeQueryComponent(deviceId)}',
+                      ),
                     ),
                   ),
                 ],
@@ -525,38 +539,48 @@ class _GroupStatusIcon extends StatelessWidget {
 }
 
 class _SensorActionButton extends StatelessWidget {
-  const _SensorActionButton({required this.icon, required this.label});
+  const _SensorActionButton({
+    required this.icon,
+    required this.label,
+    this.onPressed,
+    super.key,
+  });
 
   final IconData icon;
   final String label;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      button: true,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: AppColors.safetySensorAction,
-          borderRadius: BorderRadius.circular(28),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 18, color: Colors.white),
-              const SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextTokens.safetySensorAction(
-                    Theme.of(context).textTheme,
+      button: onPressed != null,
+      child: GestureDetector(
+        onTap: onPressed,
+        behavior: HitTestBehavior.opaque,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: AppColors.safetySensorAction,
+            borderRadius: BorderRadius.circular(28),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 18, color: Colors.white),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextTokens.safetySensorAction(
+                      Theme.of(context).textTheme,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
