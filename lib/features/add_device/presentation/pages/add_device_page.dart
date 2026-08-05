@@ -87,7 +87,12 @@ class _AddDevicePageState extends ConsumerState<AddDevicePage> {
             onTap: () => context.push(SmartOpenerScanGuidePage.routePath),
           ),
           const SizedBox(height: 14),
-          _DeviceOptionCard(label: l10n.addDeviceSolarEnergySystem, assetPath: AddDeviceAssetPaths.solarEnergySystem, fallbackIcon: Icons.solar_power_outlined),
+          _DeviceOptionCard(
+            label: l10n.addDeviceSolarEnergySystem,
+            assetPath: AddDeviceAssetPaths.solarEnergySystem,
+            fallbackIcon: Icons.solar_power_outlined,
+            onTap: () => context.push(SmartOpenerScanGuidePage.routePath),
+          ),
           const SizedBox(height: 26),
           _DeviceSectionTitle(label: l10n.addDeviceSmartAccessorySection),
           const SizedBox(height: 14),

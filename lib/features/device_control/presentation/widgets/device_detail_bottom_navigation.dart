@@ -82,6 +82,7 @@ class _NavigationItem extends StatelessWidget {
         button: true,
         child: Tooltip(
           message: tooltip,
+          triggerMode: TooltipTriggerMode.manual,
           child: InkWell(
             onTap: onTap,
             splashColor: Colors.transparent,
