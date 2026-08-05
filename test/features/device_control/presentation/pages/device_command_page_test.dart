@@ -274,7 +274,7 @@ void main() {
       'assets/icons/device_control/device_command_video_inactive.png',
     );
     expect(
-      _connectionDeviceAsset(tester, 'evo'),
+      _connectionDeviceAsset(tester, 'evolution'),
       'assets/icons/device_control/device_command_evo_inactive.png',
     );
     expect(_connectionGroupAssets(tester, 'opener'), [

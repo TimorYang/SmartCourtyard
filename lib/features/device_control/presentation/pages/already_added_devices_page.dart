@@ -10,7 +10,11 @@ import '../../application/already_added_devices_controller.dart';
 import '../../domain/entities/door_device.dart';
 
 class AlreadyAddedDevicesPage extends ConsumerStatefulWidget {
-  const AlreadyAddedDevicesPage({required this.doorId, this.deviceId = '', super.key});
+  const AlreadyAddedDevicesPage({
+    required this.doorId,
+    this.deviceId = '',
+    super.key,
+  });
 
   static const routeName = 'already-added-devices';
   static const routePath = '/device-control/already-added-devices';
@@ -18,15 +22,19 @@ class AlreadyAddedDevicesPage extends ConsumerStatefulWidget {
   final String doorId;
   final String deviceId;
 
-  static const _smartOpenerPlaceholderAsset = 'assets/icons/device_control/device_command_dongle_active.png';
+  static const _smartOpenerPlaceholderAsset =
+      'assets/icons/device_control/device_command_dongle_active.png';
 
-  static const _alreadyAddedDeleted = 'assets/icons/device_control/device_command_already_deleted.png';
+  static const _alreadyAddedDeleted =
+      'assets/icons/device_control/device_command_already_deleted.png';
 
   @override
-  ConsumerState<AlreadyAddedDevicesPage> createState() => _AlreadyAddedDevicesPageState();
+  ConsumerState<AlreadyAddedDevicesPage> createState() =>
+      _AlreadyAddedDevicesPageState();
 }
 
-class _AlreadyAddedDevicesPageState extends ConsumerState<AlreadyAddedDevicesPage> {
+class _AlreadyAddedDevicesPageState
+    extends ConsumerState<AlreadyAddedDevicesPage> {
   static const _loadMoreThreshold = 160.0;
   late final ScrollController _scrollController;
 
@@ -54,11 +62,14 @@ class _AlreadyAddedDevicesPageState extends ConsumerState<AlreadyAddedDevicesPag
   }
 
   void _loadInitial() {
-    ref.read(alreadyAddedDevicesControllerProvider.notifier).loadInitial(doorId: widget.doorId);
+    ref
+        .read(alreadyAddedDevicesControllerProvider.notifier)
+        .loadInitial(doorId: widget.doorId);
   }
 
   void _onScroll() {
-    if (!_scrollController.hasClients || _scrollController.position.extentAfter > _loadMoreThreshold) {
+    if (!_scrollController.hasClients ||
+        _scrollController.position.extentAfter > _loadMoreThreshold) {
       return;
     }
     ref.read(alreadyAddedDevicesControllerProvider.notifier).loadMore();
@@ -94,7 +105,12 @@ class _AlreadyAddedDevicesPageState extends ConsumerState<AlreadyAddedDevicesPag
           IconButton(
             key: const ValueKey<String>('already-added-add-action'),
             tooltip: l10n.smartOpenerAddedAddTooltip,
-            onPressed: () => context.pushNamed(AddDevicePage.routeName, queryParameters: {AddDevicePage.doorIdQueryParameter: widget.doorId}),
+            onPressed: () => context.pushNamed(
+              AddDevicePage.routeName,
+              queryParameters: {
+                AddDevicePage.doorIdQueryParameter: widget.doorId,
+              },
+            ),
             icon: const Icon(Icons.add, size: 26),
           ),
           const SizedBox(width: 8),
@@ -118,9 +134,17 @@ class _AlreadyAddedDevicesPageState extends ConsumerState<AlreadyAddedDevicesPag
                 ),
                 sliver: SliverList.list(
                   children: [
-                    Text(l10n.smartOpenerAddedDevicesTitle, style: AppTextTokens.smartOpenerAddedTitle(textTheme)),
+                    Text(
+                      l10n.smartOpenerAddedDevicesTitle,
+                      style: AppTextTokens.smartOpenerAddedTitle(textTheme),
+                    ),
                     const SizedBox(height: 4),
-                    Text(l10n.smartOpenerAddedDevicesDescription, style: AppTextTokens.smartOpenerAddedDescription(textTheme)),
+                    Text(
+                      l10n.smartOpenerAddedDevicesDescription,
+                      style: AppTextTokens.smartOpenerAddedDescription(
+                        textTheme,
+                      ),
+                    ),
                     const SizedBox(height: 30),
                   ],
                 ),
@@ -129,22 +153,34 @@ class _AlreadyAddedDevicesPageState extends ConsumerState<AlreadyAddedDevicesPag
                 SliverFillRemaining(
                   hasScrollBody: false,
                   child: Center(
-                    child: Semantics(label: l10n.smartOpenerAddedLoading, child: const CircularProgressIndicator()),
+                    child: Semantics(
+                      label: l10n.smartOpenerAddedLoading,
+                      child: const CircularProgressIndicator(),
+                    ),
                   ),
                 )
               else if (state.initialLoadFailed)
                 SliverFillRemaining(
                   hasScrollBody: false,
-                  child: _LoadFailure(message: l10n.smartOpenerAddedLoadFailed, retryLabel: l10n.smartOpenerAddedRetryAction, onRetry: _loadInitial),
+                  child: _LoadFailure(
+                    message: l10n.smartOpenerAddedLoadFailed,
+                    retryLabel: l10n.smartOpenerAddedRetryAction,
+                    onRetry: _loadInitial,
+                  ),
                 )
               else if (state.devices.isEmpty)
                 SliverFillRemaining(
                   hasScrollBody: false,
-                  child: _EmptyDevices(title: l10n.smartOpenerAddedEmptyTitle, description: l10n.smartOpenerAddedEmptyDescription),
+                  child: _EmptyDevices(
+                    title: l10n.smartOpenerAddedEmptyTitle,
+                    description: l10n.smartOpenerAddedEmptyDescription,
+                  ),
                 )
               else ...[
                 SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacingTokens.smartOpenerAddedPageHorizontal),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacingTokens.smartOpenerAddedPageHorizontal,
+                  ),
                   sliver: SliverList.separated(
                     itemCount: state.devices.length,
                     itemBuilder: (context, index) => _AddedDeviceCard(
@@ -152,7 +188,8 @@ class _AlreadyAddedDevicesPageState extends ConsumerState<AlreadyAddedDevicesPag
                       smartOpenerName: l10n.smartOpenerAddedDeviceName,
                       deleteTooltip: l10n.smartOpenerAddedDeleteTooltip,
                       onDelete:
-                          state.pendingUnbindDeviceId == state.devices[index].deviceId
+                          state.pendingUnbindDeviceId ==
+                              state.devices[index].deviceId
                           ? null
                           : () => _showDisconnectConfirmation(
                               context,
@@ -160,13 +197,21 @@ class _AlreadyAddedDevicesPageState extends ConsumerState<AlreadyAddedDevicesPag
                               device: state.devices[index],
                             ),
                     ),
-                    separatorBuilder: (context, index) => const SizedBox(height: 12),
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 12),
                   ),
                 ),
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 20),
-                    child: Center(child: Text(l10n.smartOpenerAddedNoMore, style: AppTextTokens.smartOpenerAddedDeviceIdentifier(textTheme))),
+                    child: Center(
+                      child: Text(
+                        l10n.smartOpenerAddedNoMore,
+                        style: AppTextTokens.smartOpenerAddedDeviceIdentifier(
+                          textTheme,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -198,7 +243,12 @@ class _AlreadyAddedDevicesPageState extends ConsumerState<AlreadyAddedDevicesPag
 }
 
 class _AddedDeviceCard extends StatelessWidget {
-  const _AddedDeviceCard({required this.device, required this.smartOpenerName, required this.deleteTooltip, required this.onDelete});
+  const _AddedDeviceCard({
+    required this.device,
+    required this.smartOpenerName,
+    required this.deleteTooltip,
+    required this.onDelete,
+  });
 
   final DoorDevice device;
   final String smartOpenerName;
@@ -210,7 +260,9 @@ class _AddedDeviceCard extends StatelessWidget {
     if (label != null && label.isNotEmpty) {
       return label;
     }
-    return device.deviceType.trim().toLowerCase() == 'opener' ? smartOpenerName : device.deviceType;
+    return device.deviceType.trim().toLowerCase() == 'opener'
+        ? smartOpenerName
+        : device.deviceType;
   }
 
   String get _identifier {
@@ -228,7 +280,7 @@ class _AddedDeviceCard extends StatelessWidget {
         return 'assets/icons/add_device/add_device_smart_opener.png';
       case 'video':
         return 'assets/icons/add_device/add_device_camera.png';
-      case 'evo':
+      case 'evolution':
         return 'assets/icons/add_device/add_device_solar_energy_system.png';
     }
     return "assets/icons/add_device/add_device_usb_wifi_module.png";
@@ -244,19 +296,40 @@ class _AddedDeviceCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
       decoration: const BoxDecoration(
         color: AppColors.smartOpenerAddedDeviceCardSurface,
-        borderRadius: BorderRadius.all(Radius.circular(AppShapeTokens.smartOpenerAddedDeviceCardRadius)),
+        borderRadius: BorderRadius.all(
+          Radius.circular(AppShapeTokens.smartOpenerAddedDeviceCardRadius),
+        ),
       ),
       child: Row(
         children: [
-          Image.asset(_img, width: 64, height: 64, key: ValueKey<String>('already-added-device-image-placeholder-$_identifier')),
+          Image.asset(
+            _img,
+            width: 64,
+            height: 64,
+            key: ValueKey<String>(
+              'already-added-device-image-placeholder-$_identifier',
+            ),
+          ),
           const SizedBox(width: AppSpacingTokens.smartOpenerAddedCardGap),
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(_title, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextTokens.smartOpenerAddedDeviceTitle(textTheme)),
-                Text(_identifier, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextTokens.smartOpenerAddedDeviceIdentifier(textTheme)),
+                Text(
+                  _title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextTokens.smartOpenerAddedDeviceTitle(textTheme),
+                ),
+                Text(
+                  _identifier,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextTokens.smartOpenerAddedDeviceIdentifier(
+                    textTheme,
+                  ),
+                ),
               ],
             ),
           ),
@@ -264,7 +337,10 @@ class _AddedDeviceCard extends StatelessWidget {
             key: ValueKey<String>('already-added-delete-action-$_identifier'),
             tooltip: deleteTooltip,
             onPressed: onDelete,
-            icon: Image.asset(AlreadyAddedDevicesPage._alreadyAddedDeleted, fit: BoxFit.contain),
+            icon: Image.asset(
+              AlreadyAddedDevicesPage._alreadyAddedDeleted,
+              fit: BoxFit.contain,
+            ),
           ),
         ],
       ),
@@ -291,7 +367,11 @@ class _DisconnectDeviceConfirmationSheet extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(l10n.smartOpenerAddedDisconnectConfirmMessage, textAlign: TextAlign.center, style: AppTextTokens.deviceDeleteConfirmMessage(textTheme)),
+              Text(
+                l10n.smartOpenerAddedDisconnectConfirmMessage,
+                textAlign: TextAlign.center,
+                style: AppTextTokens.deviceDeleteConfirmMessage(textTheme),
+              ),
               const SizedBox(height: 28),
               Row(
                 children: [
@@ -299,7 +379,9 @@ class _DisconnectDeviceConfirmationSheet extends StatelessWidget {
                     child: SizedBox(
                       height: 52,
                       child: FilledButton(
-                        key: const ValueKey<String>('already-added-disconnect-cancel-action'),
+                        key: const ValueKey<String>(
+                          'already-added-disconnect-cancel-action',
+                        ),
                         onPressed: () => Navigator.pop(context, false),
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.sceneDialogCancelButton,
@@ -316,7 +398,9 @@ class _DisconnectDeviceConfirmationSheet extends StatelessWidget {
                     child: SizedBox(
                       height: 50,
                       child: FilledButton(
-                        key: const ValueKey<String>('already-added-disconnect-confirm-action'),
+                        key: const ValueKey<String>(
+                          'already-added-disconnect-confirm-action',
+                        ),
                         onPressed: () => Navigator.pop(context, true),
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.brandPrimary,
@@ -353,9 +437,16 @@ class _EmptyDevices extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(title, style: AppTextTokens.smartOpenerAddedDeviceTitle(textTheme)),
+            Text(
+              title,
+              style: AppTextTokens.smartOpenerAddedDeviceTitle(textTheme),
+            ),
             const SizedBox(height: 8),
-            Text(description, textAlign: TextAlign.center, style: AppTextTokens.smartOpenerAddedDescription(textTheme)),
+            Text(
+              description,
+              textAlign: TextAlign.center,
+              style: AppTextTokens.smartOpenerAddedDescription(textTheme),
+            ),
           ],
         ),
       ),
@@ -364,7 +455,11 @@ class _EmptyDevices extends StatelessWidget {
 }
 
 class _LoadFailure extends StatelessWidget {
-  const _LoadFailure({required this.message, required this.retryLabel, required this.onRetry});
+  const _LoadFailure({
+    required this.message,
+    required this.retryLabel,
+    required this.onRetry,
+  });
 
   final String message;
   final String retryLabel;

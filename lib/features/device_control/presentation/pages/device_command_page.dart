@@ -589,7 +589,7 @@ class _DeviceConnectionStrip extends StatelessWidget {
               _DeviceCommandAssetPaths.videoInactive,
             ),
             _group(
-              'evo',
+              'evolution',
               _DeviceCommandAssetPaths.evoActive,
               _DeviceCommandAssetPaths.evoInactive,
             ),
