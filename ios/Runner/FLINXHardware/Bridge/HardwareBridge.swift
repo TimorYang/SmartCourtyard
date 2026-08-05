@@ -608,6 +608,25 @@ final class HardwareBridge: HardwareHostApi {
         completion: @escaping (Result<RemotePairingResultDto, Error>) -> Void
     ) {
         let control = action.remotePairingControlCode
+        if action == .cancel,
+           let pending = pendingProvisioningRequests[deviceId],
+           pending.command == .remotePairing {
+            pending.timeout.cancel()
+            pendingProvisioningRequests.removeValue(forKey: deviceId)
+            pending.failure(
+                PigeonError(
+                    code: "remote_pairing_cancelled",
+                    message: "Remote pairing was cancelled by the user.",
+                    details: nil
+                )
+            )
+            logger.info(
+                "remote_pairing",
+                requestId: pending.requestId,
+                deviceId: deviceId,
+                state: "cancelled"
+            )
+        }
         logger.info(
             "remote_pairing",
             requestId: requestId,
@@ -626,7 +645,8 @@ final class HardwareBridge: HardwareHostApi {
                     requestId: requestId,
                     deviceId: deviceId,
                     command: .remotePairing,
-                    payload: Data(Self.bigEndianBytes(control))
+                    payload: Data(Self.bigEndianBytes(control)),
+                    responseTimeout: 20
                 ) { response in
                     guard response.data.count >= 1 else {
                         completion(
@@ -1065,6 +1085,7 @@ private extension HardwareBridge {
         deviceId: String,
         command: BleProvisioningCommand,
         payload: Data,
+        responseTimeout: TimeInterval = 15,
         success: @escaping (BleProtocolFrame) -> Void,
         failure: @escaping (Error) -> Void
     ) {
@@ -1129,7 +1150,10 @@ private extension HardwareBridge {
             success: success,
             failure: failure
         )
-        DispatchQueue.main.asyncAfter(deadline: .now() + 15, execute: timeout)
+        DispatchQueue.main.asyncAfter(
+            deadline: .now() + responseTimeout,
+            execute: timeout
+        )
         
         logger.info(
             "provisioning_request",

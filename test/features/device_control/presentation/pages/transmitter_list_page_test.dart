@@ -1,7 +1,10 @@
+import 'package:flinx/features/device_control/application/device_command_controller.dart';
 import 'package:flinx/features/device_control/presentation/pages/transmitter_list_page.dart';
 import 'package:flinx/features/device_control/presentation/pages/transmitter_learning_page.dart';
+import 'package:flinx/platform_bridge/mock_hardware_gateway.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
@@ -101,10 +104,17 @@ void main() {
     addTearDown(router.dispose);
 
     await tester.pumpWidget(
-      MaterialApp.router(
-        routerConfig: router,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
+      ProviderScope(
+        overrides: [
+          deviceCommandHardwareGatewayProvider.overrideWithValue(
+            MockHardwareGateway(),
+          ),
+        ],
+        child: MaterialApp.router(
+          routerConfig: router,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -113,7 +123,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(TransmitterLearningPage), findsOneWidget);
-    expect(router.routeInformationProvider.value.uri.queryParameters['deviceId'], 'mock-device');
+    expect(
+      router.routeInformationProvider.value.uri.queryParameters['deviceId'],
+      'mock-device',
+    );
   });
 }
 

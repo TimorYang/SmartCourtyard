@@ -378,6 +378,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
   var _bleSessionId = 0;
   var _remoteCommandGeneration = 0;
   var _doorDetailPollGeneration = 0;
+  var _remotePairingGeneration = 0;
   int _requestCounter = 0;
 
   @override
@@ -1503,13 +1504,28 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
     _doorDetailPollGeneration += 1;
   }
 
-  Future<void> runRemotePairingAction({
+  Future<bool> startRemotePairing({required String deviceId}) {
+    return _runRemotePairingAction(
+      deviceId: deviceId,
+      action: RemotePairingAction.start,
+    );
+  }
+
+  Future<bool> cancelRemotePairing({required String deviceId}) {
+    return _runRemotePairingAction(
+      deviceId: deviceId,
+      action: RemotePairingAction.cancel,
+    );
+  }
+
+  Future<bool> _runRemotePairingAction({
     required String deviceId,
     required RemotePairingAction action,
   }) async {
+    final generation = ++_remotePairingGeneration;
     final targetDeviceId = _resolveSelectedHardwareDeviceId(deviceId);
     if (_deviceIdMissing(targetDeviceId)) {
-      return;
+      return false;
     }
 
     state = state.copyWith(
@@ -1526,6 +1542,9 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
         deviceId: targetDeviceId,
         action: action,
       );
+      if (!ref.mounted || generation != _remotePairingGeneration) {
+        return false;
+      }
       state = state.copyWith(
         clearPendingRemotePairingAction: true,
         infoMessage: _remotePairingInfoMessage(action, result),
@@ -1534,12 +1553,17 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
             : _remotePairingErrorMessage(result),
         clearErrorMessage: result.successful,
       );
+      return result.successful;
     } catch (error) {
+      if (!ref.mounted || generation != _remotePairingGeneration) {
+        return false;
+      }
       state = state.copyWith(
         clearPendingRemotePairingAction: true,
         errorMessage: error.toString(),
         clearInfoMessage: true,
       );
+      return false;
     }
   }
 
