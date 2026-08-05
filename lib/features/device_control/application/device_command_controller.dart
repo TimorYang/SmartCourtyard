@@ -357,6 +357,13 @@ class DeviceCommandState {
 }
 
 class DeviceCommandController extends Notifier<DeviceCommandState> {
+  static const _defaultDeviceTypePriority = <String>[
+    'opener',
+    'evolution',
+    'dongle',
+    'fbox',
+  ];
+
   late final HardwareGateway _gateway;
   late final FetchDoorDetailUseCase _fetchDoorDetailUseCase;
   late final FetchDoorDevicesUseCase _fetchDoorDevicesUseCase;
@@ -565,7 +572,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
         previousSelectedDeviceId != null &&
             retainedDeviceIds.contains(previousSelectedDeviceId)
         ? previousSelectedDeviceId
-        : doorDevices.firstOrNull?.deviceId;
+        : _defaultDevice(doorDevices)?.deviceId;
     state = state.copyWith(
       doorDevices: doorDevices,
       bleConnectionStatuses: retainedStatuses,
@@ -658,18 +665,31 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
     DoorDevice? selected;
     for (final device in devices) {
       if (preferred.isNotEmpty &&
-          (device.deviceId == preferred ||
-              device.sn == preferred ||
-              device.bleUuid == preferred ||
-              device.bleMac == preferred)) {
+          (device.deviceId.trim() == preferred ||
+              device.sn.trim() == preferred ||
+              device.bleUuid?.trim() == preferred ||
+              device.bleMac?.trim() == preferred)) {
         selected = device;
         break;
       }
     }
-    selected ??= devices.firstOrNull;
+    selected ??= _defaultDevice(devices);
     if (selected != null) {
       selectDevice(selected.deviceId);
+    } else {
+      state = state.copyWith(clearSelectedDeviceId: true);
     }
+  }
+
+  DoorDevice? _defaultDevice(List<DoorDevice> devices) {
+    for (final deviceType in _defaultDeviceTypePriority) {
+      for (final device in devices) {
+        if (device.deviceType.trim().toLowerCase() == deviceType) {
+          return device;
+        }
+      }
+    }
+    return devices.firstOrNull;
   }
 
   void selectDevice(String deviceId) {

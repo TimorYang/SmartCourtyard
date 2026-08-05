@@ -22,9 +22,6 @@ class AlreadyAddedDevicesPage extends ConsumerStatefulWidget {
   final String doorId;
   final String deviceId;
 
-  static const _smartOpenerPlaceholderAsset =
-      'assets/icons/device_control/device_command_dongle_active.png';
-
   static const _alreadyAddedDeleted =
       'assets/icons/device_control/device_command_already_deleted.png';
 
@@ -187,6 +184,8 @@ class _AlreadyAddedDevicesPageState
                       device: state.devices[index],
                       smartOpenerName: l10n.smartOpenerAddedDeviceName,
                       deleteTooltip: l10n.smartOpenerAddedDeleteTooltip,
+                      onSelect: () =>
+                          context.pop(state.devices[index].deviceId),
                       onDelete:
                           state.pendingUnbindDeviceId ==
                               state.devices[index].deviceId
@@ -247,12 +246,14 @@ class _AddedDeviceCard extends StatelessWidget {
     required this.device,
     required this.smartOpenerName,
     required this.deleteTooltip,
+    required this.onSelect,
     required this.onDelete,
   });
 
   final DoorDevice device;
   final String smartOpenerName;
   final String deleteTooltip;
+  final VoidCallback onSelect;
   final VoidCallback? onDelete;
 
   String get _title {
@@ -290,59 +291,63 @@ class _AddedDeviceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return Container(
-      key: ValueKey<String>('already-added-device-card-$_identifier'),
-      constraints: const BoxConstraints(minHeight: 100),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-      decoration: const BoxDecoration(
-        color: AppColors.smartOpenerAddedDeviceCardSurface,
-        borderRadius: BorderRadius.all(
-          Radius.circular(AppShapeTokens.smartOpenerAddedDeviceCardRadius),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onSelect,
+      child: Container(
+        key: ValueKey<String>('already-added-device-card-$_identifier'),
+        constraints: const BoxConstraints(minHeight: 100),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+        decoration: const BoxDecoration(
+          color: AppColors.smartOpenerAddedDeviceCardSurface,
+          borderRadius: BorderRadius.all(
+            Radius.circular(AppShapeTokens.smartOpenerAddedDeviceCardRadius),
+          ),
         ),
-      ),
-      child: Row(
-        children: [
-          Image.asset(
-            _img,
-            width: 64,
-            height: 64,
-            key: ValueKey<String>(
-              'already-added-device-image-placeholder-$_identifier',
+        child: Row(
+          children: [
+            Image.asset(
+              _img,
+              width: 64,
+              height: 64,
+              key: ValueKey<String>(
+                'already-added-device-image-placeholder-$_identifier',
+              ),
             ),
-          ),
-          const SizedBox(width: AppSpacingTokens.smartOpenerAddedCardGap),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextTokens.smartOpenerAddedDeviceTitle(textTheme),
-                ),
-                Text(
-                  _identifier,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextTokens.smartOpenerAddedDeviceIdentifier(
-                    textTheme,
+            const SizedBox(width: AppSpacingTokens.smartOpenerAddedCardGap),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextTokens.smartOpenerAddedDeviceTitle(textTheme),
                   ),
-                ),
-              ],
+                  Text(
+                    _identifier,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextTokens.smartOpenerAddedDeviceIdentifier(
+                      textTheme,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          IconButton(
-            key: ValueKey<String>('already-added-delete-action-$_identifier'),
-            tooltip: deleteTooltip,
-            onPressed: onDelete,
-            icon: Image.asset(
-              AlreadyAddedDevicesPage._alreadyAddedDeleted,
-              fit: BoxFit.contain,
+            IconButton(
+              key: ValueKey<String>('already-added-delete-action-$_identifier'),
+              tooltip: deleteTooltip,
+              onPressed: onDelete,
+              icon: Image.asset(
+                AlreadyAddedDevicesPage._alreadyAddedDeleted,
+                fit: BoxFit.contain,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

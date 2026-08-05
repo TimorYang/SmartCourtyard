@@ -124,6 +124,176 @@ void main() {
     );
   });
 
+  test('selects the initial device by type priority', () async {
+    final cases = <({List<DoorDevice> devices, String? expectedDeviceId})>[
+      (
+        devices: const [
+          DoorDevice(deviceId: 'fbox', sn: 'fbox', deviceType: 'fbox'),
+          DoorDevice(deviceId: 'dongle', sn: 'dongle', deviceType: 'dongle'),
+          DoorDevice(
+            deviceId: 'evolution',
+            sn: 'evolution',
+            deviceType: 'evolution',
+          ),
+          DoorDevice(deviceId: 'opener', sn: 'opener', deviceType: ' OpEnEr '),
+        ],
+        expectedDeviceId: 'opener',
+      ),
+      (
+        devices: const [
+          DoorDevice(deviceId: 'fbox', sn: 'fbox', deviceType: 'fbox'),
+          DoorDevice(deviceId: 'dongle', sn: 'dongle', deviceType: 'dongle'),
+          DoorDevice(
+            deviceId: 'evolution',
+            sn: 'evolution',
+            deviceType: 'evolution',
+          ),
+        ],
+        expectedDeviceId: 'evolution',
+      ),
+      (
+        devices: const [
+          DoorDevice(deviceId: 'fbox', sn: 'fbox', deviceType: 'fbox'),
+          DoorDevice(deviceId: 'dongle', sn: 'dongle', deviceType: 'dongle'),
+        ],
+        expectedDeviceId: 'dongle',
+      ),
+      (
+        devices: const [
+          DoorDevice(deviceId: 'fbox', sn: 'fbox', deviceType: 'fbox'),
+        ],
+        expectedDeviceId: 'fbox',
+      ),
+      (
+        devices: const [
+          DoorDevice(deviceId: 'other', sn: 'other', deviceType: 'video'),
+          DoorDevice(deviceId: 'unknown', sn: 'unknown', deviceType: 'other'),
+        ],
+        expectedDeviceId: 'other',
+      ),
+      (devices: const <DoorDevice>[], expectedDeviceId: null),
+    ];
+
+    for (final testCase in cases) {
+      final container = _createContainer(
+        gateway: _BleSessionGateway(),
+        repository: _DoorDetailRepository(
+          _doorDetail(),
+          devices: testCase.devices,
+        ),
+      );
+      addTearDown(container.dispose);
+
+      await container
+          .read(deviceCommandControllerProvider.notifier)
+          .loadDoorDetail(doorId: '12');
+
+      expect(
+        container.read(deviceCommandControllerProvider).selectedDeviceId,
+        testCase.expectedDeviceId,
+      );
+    }
+  });
+
+  test('preferred device overrides the default type priority', () async {
+    final container = _createContainer(
+      gateway: _BleSessionGateway(),
+      repository: _DoorDetailRepository(
+        _doorDetail(),
+        devices: const [
+          DoorDevice(deviceId: 'opener', sn: 'opener', deviceType: 'opener'),
+          DoorDevice(deviceId: 'fbox', sn: 'fbox', deviceType: 'fbox'),
+        ],
+      ),
+    );
+    addTearDown(container.dispose);
+
+    await container
+        .read(deviceCommandControllerProvider.notifier)
+        .loadDoorDetail(doorId: '12', preferredDeviceId: ' fbox ');
+
+    expect(
+      container.read(deviceCommandControllerProvider).selectedDeviceId,
+      'fbox',
+    );
+  });
+
+  test(
+    'clears a stale selection when the reloaded device list is empty',
+    () async {
+      final repository = _DoorDetailRepository(
+        _doorDetail(),
+        devices: const [
+          DoorDevice(deviceId: 'opener', sn: 'opener', deviceType: 'opener'),
+        ],
+      );
+      final container = _createContainer(
+        gateway: _BleSessionGateway(),
+        repository: repository,
+      );
+      addTearDown(container.dispose);
+      final controller = container.read(
+        deviceCommandControllerProvider.notifier,
+      );
+
+      await controller.loadDoorDetail(doorId: '12');
+      expect(
+        container.read(deviceCommandControllerProvider).selectedDeviceId,
+        'opener',
+      );
+
+      repository.devices = const <DoorDevice>[];
+      await controller.loadDoorDetail(doorId: '13');
+
+      expect(
+        container.read(deviceCommandControllerProvider).selectedDeviceId,
+        isNull,
+      );
+    },
+  );
+
+  test(
+    'refresh falls back to type priority when selection is removed',
+    () async {
+      final repository = _DoorDetailRepository(
+        _doorDetail(),
+        devices: const [
+          DoorDevice(deviceId: 'fbox', sn: 'fbox', deviceType: 'fbox'),
+        ],
+      );
+      final container = _createContainer(
+        gateway: _BleSessionGateway(),
+        repository: repository,
+      );
+      addTearDown(container.dispose);
+      final controller = container.read(
+        deviceCommandControllerProvider.notifier,
+      );
+
+      await controller.loadDoorDetail(doorId: '12');
+      expect(
+        container.read(deviceCommandControllerProvider).selectedDeviceId,
+        'fbox',
+      );
+
+      repository.devices = const [
+        DoorDevice(deviceId: 'other', sn: 'other', deviceType: 'video'),
+        DoorDevice(deviceId: 'dongle', sn: 'dongle', deviceType: 'dongle'),
+        DoorDevice(
+          deviceId: 'evolution',
+          sn: 'evolution',
+          deviceType: 'evolution',
+        ),
+      ];
+      await controller.refreshDoorDevices(doorId: '12');
+
+      expect(
+        container.read(deviceCommandControllerProvider).selectedDeviceId,
+        'evolution',
+      );
+    },
+  );
+
   test(
     'refreshes door devices when an already-added device is removed',
     () async {

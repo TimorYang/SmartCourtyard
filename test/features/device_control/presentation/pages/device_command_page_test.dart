@@ -293,6 +293,45 @@ void main() {
     expect(_connectionTap(tester, 'video'), isNull);
   });
 
+  testWidgets(
+    'uses type priority on entry and preserves an already-added selection',
+    (tester) async {
+      const repository = _DeviceListDoorDetailRepository([
+        DoorDevice(
+          deviceId: 'mock-device',
+          sn: 'Fbox SN',
+          deviceType: 'fbox',
+          capabilities: ['DOOR_CONTROL'],
+        ),
+        DoorDevice(
+          deviceId: 'opener-device',
+          sn: 'Opener SN',
+          deviceType: 'opener',
+          capabilities: ['DOOR_CONTROL'],
+        ),
+      ]);
+      await _pumpDevicePage(
+        tester,
+        _RecordingHardwareGateway(),
+        repository: repository,
+      );
+
+      expect(_hasConnectionBorder(tester, 'opener'), isTrue);
+      expect(_hasConnectionBorder(tester, 'fbox'), isFalse);
+
+      await tester.tap(find.byTooltip('More'));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const ValueKey<String>('already-added-device-card-Fbox SN')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DeviceCommandPage), findsOneWidget);
+      expect(_hasConnectionBorder(tester, 'opener'), isFalse);
+      expect(_hasConnectionBorder(tester, 'fbox'), isTrue);
+    },
+  );
+
   testWidgets('opens the already added devices page from the more action', (
     tester,
   ) async {
@@ -942,6 +981,18 @@ class _FakeDoorDetailRepository implements DoorDetailRepository {
     required String deviceId,
     required String requestId,
   }) => throw UnimplementedError();
+}
+
+class _DeviceListDoorDetailRepository extends _FakeDoorDetailRepository {
+  const _DeviceListDoorDetailRepository(this.devices);
+
+  final List<DoorDevice> devices;
+
+  @override
+  Future<List<DoorDevice>> fetchDoorDevices({
+    required String doorId,
+    required String requestId,
+  }) async => devices;
 }
 
 class _UnbindDoorDetailRepository extends _FakeDoorDetailRepository {

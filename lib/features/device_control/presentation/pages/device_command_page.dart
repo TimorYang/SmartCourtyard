@@ -130,7 +130,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
   void _loadDoorDetail({String? preferredDeviceId}) {
     _controller.loadDoorDetail(
       doorId: widget.doorId,
-      preferredDeviceId: preferredDeviceId ?? widget.deviceId,
+      preferredDeviceId: preferredDeviceId ?? '',
     );
   }
 
