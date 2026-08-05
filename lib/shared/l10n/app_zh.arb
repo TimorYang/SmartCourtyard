@@ -397,6 +397,18 @@
   "smartOpenerAddedRetryAction": "重试",
   "smartOpenerAddedNoMore": "没有更多设备了",
   "deviceCommandMoreTooltip": "更多",
+  "deviceCommandLoading": "正在加载设备控制…",
+  "@deviceCommandLoading": {
+    "description": "设备控制数据加载期间的无障碍提示"
+  },
+  "deviceCommandLoadFailed": "无法加载设备控制，请重试。",
+  "@deviceCommandLoadFailed": {
+    "description": "设备控制页面加载失败时显示的错误提示"
+  },
+  "deviceCommandRetry": "重试",
+  "@deviceCommandRetry": {
+    "description": "重新加载设备控制页面的操作"
+  },
   "deviceCommandDoorStateRunning": "运行中",
   "deviceCommandDoorStateWithPercent": "{state} · {percent}%",
   "smartOpenerDefaultDeviceSubtitle": "默认编码门|54-89",

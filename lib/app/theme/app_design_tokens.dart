@@ -961,6 +961,14 @@ class AppTextTokens {
     );
   }
 
+  static TextStyle deviceControlLoadError(TextTheme textTheme) {
+    return (textTheme.bodyLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontWeight: FontWeight.w500,
+      height: 1.4,
+    );
+  }
+
   static TextStyle deviceControlCardTitle(TextTheme textTheme) {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
       color: AppColors.textSecondary,

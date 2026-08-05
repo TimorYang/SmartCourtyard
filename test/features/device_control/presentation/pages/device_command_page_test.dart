@@ -33,6 +33,79 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 void main() {
+  testWidgets('shows only loading until door detail requests complete', (
+    tester,
+  ) async {
+    final repository = _DelayedDoorDetailRepository();
+
+    await tester.pumpWidget(
+      _buildPage(_RecordingHardwareGateway(), repository: repository),
+    );
+
+    expect(
+      find.byKey(const ValueKey<String>('device-command-loading')),
+      findsOneWidget,
+    );
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.text('Garage door'), findsNothing);
+    expect(find.text('Operated cycles'), findsNothing);
+    expect(find.byTooltip('More'), findsNothing);
+    expect(find.byTooltip('Operation records'), findsNothing);
+
+    repository.completeSuccess();
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey<String>('device-command-loading')),
+      findsNothing,
+    );
+    expect(find.text('Garage door'), findsOneWidget);
+    expect(find.text('123'), findsOneWidget);
+  });
+
+  testWidgets('shows a standalone retry state when initial loading fails', (
+    tester,
+  ) async {
+    final repository = _FailThenDelayedDoorDetailRepository();
+
+    await _pumpDevicePage(
+      tester,
+      _RecordingHardwareGateway(),
+      repository: repository,
+    );
+
+    expect(
+      find.byKey(const ValueKey<String>('device-command-load-failure')),
+      findsOneWidget,
+    );
+    expect(
+      find.text('Unable to load device controls. Please try again.'),
+      findsOneWidget,
+    );
+    expect(find.text('Garage door'), findsNothing);
+    expect(find.text('Operated cycles'), findsNothing);
+    expect(find.byTooltip('More'), findsNothing);
+
+    repository.shouldFail = false;
+    await tester.tap(find.text('Retry'));
+    await tester.pump();
+
+    expect(
+      find.byKey(const ValueKey<String>('device-command-loading')),
+      findsOneWidget,
+    );
+    expect(
+      find.text('Unable to load device controls. Please try again.'),
+      findsNothing,
+    );
+
+    repository.completeSuccess();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Garage door'), findsOneWidget);
+    expect(find.text('Closed'), findsOneWidget);
+  });
+
   testWidgets('renders garage door controls and sends primary commands', (
     tester,
   ) async {
@@ -981,6 +1054,91 @@ class _FakeDoorDetailRepository implements DoorDetailRepository {
     required String deviceId,
     required String requestId,
   }) => throw UnimplementedError();
+}
+
+class _DelayedDoorDetailRepository extends _FakeDoorDetailRepository {
+  final Completer<DoorDetail> _detailCompleter = Completer<DoorDetail>();
+  final Completer<List<DoorDevice>> _devicesCompleter =
+      Completer<List<DoorDevice>>();
+
+  @override
+  Future<DoorDetail> fetchDoorDetail({
+    required String doorId,
+    required String requestId,
+  }) => _detailCompleter.future;
+
+  @override
+  Future<List<DoorDevice>> fetchDoorDevices({
+    required String doorId,
+    required String requestId,
+  }) => _devicesCompleter.future;
+
+  void completeSuccess() {
+    _detailCompleter.complete(_testDoorDetail());
+    _devicesCompleter.complete(_testDoorDevices());
+  }
+}
+
+class _FailThenDelayedDoorDetailRepository
+    extends _DelayedDoorDetailRepository {
+  bool shouldFail = true;
+
+  @override
+  Future<DoorDetail> fetchDoorDetail({
+    required String doorId,
+    required String requestId,
+  }) {
+    if (shouldFail) {
+      return Future<DoorDetail>.error(StateError('detail failure'));
+    }
+    return super.fetchDoorDetail(doorId: doorId, requestId: requestId);
+  }
+
+  @override
+  Future<List<DoorDevice>> fetchDoorDevices({
+    required String doorId,
+    required String requestId,
+  }) {
+    if (shouldFail) {
+      return Future<List<DoorDevice>>.error(StateError('devices failure'));
+    }
+    return super.fetchDoorDevices(doorId: doorId, requestId: requestId);
+  }
+}
+
+DoorDetail _testDoorDetail() {
+  return const DoorDetail(
+    id: '12',
+    name: 'Garage door',
+    doorState: DoorState.closed,
+    doorStateLabel: 'Closed',
+    operatedCycles: 123,
+    remainingCycles: 4567,
+    ledStatus: 1,
+    autoCloseEnabled: true,
+    openReminderEnabled: true,
+    partialOpenValue: 60,
+  );
+}
+
+List<DoorDevice> _testDoorDevices() {
+  return const [
+    DoorDevice(
+      deviceId: '3',
+      sn: 'opener_B8F86211A9DC',
+      deviceType: 'opener',
+      bleName: 'Garage door',
+      bleConnectionStatus: 1,
+      wifiConnectionStatus: 1,
+      capabilities: [
+        'DOOR_CONTROL',
+        'PARTIAL_OPEN',
+        'LED_CONTROL',
+        'AUTO_CLOSE',
+        'DOOR_OPEN_REMINDER',
+      ],
+    ),
+  ];
 }
 
 class _DeviceListDoorDetailRepository extends _FakeDoorDetailRepository {

@@ -2330,6 +2330,24 @@ abstract class AppLocalizations {
   /// **'More'**
   String get deviceCommandMoreTooltip;
 
+  /// Accessibility announcement while device control data is loading
+  ///
+  /// In en, this message translates to:
+  /// **'Loading device controls…'**
+  String get deviceCommandLoading;
+
+  /// Error shown when the device control page cannot load
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load device controls. Please try again.'**
+  String get deviceCommandLoadFailed;
+
+  /// Retry action for loading the device control page
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get deviceCommandRetry;
+
   /// Door state shown while the device reports generic movement without a direction
   ///
   /// In en, this message translates to:

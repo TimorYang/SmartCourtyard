@@ -1272,6 +1272,18 @@
   "smartOpenerAddedRetryAction": "Retry",
   "smartOpenerAddedNoMore": "No more devices",
   "deviceCommandMoreTooltip": "More",
+  "deviceCommandLoading": "Loading device controls…",
+  "@deviceCommandLoading": {
+    "description": "Accessibility announcement while device control data is loading"
+  },
+  "deviceCommandLoadFailed": "Unable to load device controls. Please try again.",
+  "@deviceCommandLoadFailed": {
+    "description": "Error shown when the device control page cannot load"
+  },
+  "deviceCommandRetry": "Retry",
+  "@deviceCommandRetry": {
+    "description": "Retry action for loading the device control page"
+  },
   "deviceCommandDoorStateRunning": "Running",
   "@deviceCommandDoorStateRunning": {
     "description": "Door state shown while the device reports generic movement without a direction"

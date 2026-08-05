@@ -43,6 +43,8 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
   bool? _ledEnabledOverride;
   bool? _autoCloseEnabledOverride;
   bool? _openReminderEnabledOverride;
+  bool _isAwaitingDoorDetail = true;
+  int _doorDetailLoadSequence = 0;
   DeviceDetailTab _selectedTab = DeviceDetailTab.command;
   late final DeviceCommandController _controller;
 
@@ -76,6 +78,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
       _ledEnabledOverride = null;
       _autoCloseEnabledOverride = null;
       _openReminderEnabledOverride = null;
+      _isAwaitingDoorDetail = true;
       Future.microtask(_loadDoorDetail);
     }
   }
@@ -89,6 +92,15 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
   @override
   Widget build(BuildContext context) {
     final commandState = ref.watch(deviceCommandControllerProvider);
+    if (_isAwaitingDoorDetail || commandState.isLoadingDoorDetail) {
+      return _DeviceCommandLoadingPage(
+        semanticsLabel: AppLocalizations.of(context).deviceCommandLoading,
+      );
+    }
+    if (commandState.doorDetailErrorMessage != null ||
+        commandState.doorDetail == null) {
+      return _DeviceCommandLoadFailurePage(onRetry: _loadDoorDetail);
+    }
     final controller = _controller;
     final isBusy =
         commandState.pendingAction != null ||
@@ -127,11 +139,19 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     setState(() => _selectedTab = tab);
   }
 
-  void _loadDoorDetail({String? preferredDeviceId}) {
-    _controller.loadDoorDetail(
+  Future<void> _loadDoorDetail({String? preferredDeviceId}) async {
+    final loadSequence = ++_doorDetailLoadSequence;
+    if (!_isAwaitingDoorDetail && mounted) {
+      setState(() => _isAwaitingDoorDetail = true);
+    }
+    await _controller.loadDoorDetail(
       doorId: widget.doorId,
       preferredDeviceId: preferredDeviceId ?? '',
     );
+    if (!mounted || loadSequence != _doorDetailLoadSequence) {
+      return;
+    }
+    setState(() => _isAwaitingDoorDetail = false);
   }
 
   String _hardwareDeviceId(DeviceCommandState commandState) {
@@ -494,6 +514,68 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
       DeviceCommandFeedbackKind.networkFailure =>
         l10n.deviceCommandNetworkFailure(action),
     };
+  }
+}
+
+class _DeviceCommandLoadingPage extends StatelessWidget {
+  const _DeviceCommandLoadingPage({required this.semanticsLabel});
+
+  final String semanticsLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      key: const ValueKey<String>('device-command-loading'),
+      backgroundColor: AppColors.backgroundPrimary,
+      body: Center(
+        child: Semantics(
+          label: semanticsLabel,
+          child: const CircularProgressIndicator(),
+        ),
+      ),
+    );
+  }
+}
+
+class _DeviceCommandLoadFailurePage extends StatelessWidget {
+  const _DeviceCommandLoadFailurePage({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Scaffold(
+      key: const ValueKey<String>('device-command-load-failure'),
+      backgroundColor: AppColors.backgroundPrimary,
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Semantics(
+              liveRegion: true,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    l10n.deviceCommandLoadFailed,
+                    textAlign: TextAlign.center,
+                    style: AppTextTokens.deviceControlLoadError(
+                      Theme.of(context).textTheme,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  FilledButton(
+                    onPressed: onRetry,
+                    child: Text(l10n.deviceCommandRetry),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

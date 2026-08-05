@@ -1217,6 +1217,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deviceCommandMoreTooltip => 'More';
 
   @override
+  String get deviceCommandLoading => 'Loading device controls…';
+
+  @override
+  String get deviceCommandLoadFailed =>
+      'Unable to load device controls. Please try again.';
+
+  @override
+  String get deviceCommandRetry => 'Retry';
+
+  @override
   String get deviceCommandDoorStateRunning => 'Running';
 
   @override

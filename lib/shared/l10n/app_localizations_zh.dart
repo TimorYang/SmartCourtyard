@@ -1159,6 +1159,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get deviceCommandMoreTooltip => '更多';
 
   @override
+  String get deviceCommandLoading => '正在加载设备控制…';
+
+  @override
+  String get deviceCommandLoadFailed => '无法加载设备控制，请重试。';
+
+  @override
+  String get deviceCommandRetry => '重试';
+
+  @override
   String get deviceCommandDoorStateRunning => '运行中';
 
   @override

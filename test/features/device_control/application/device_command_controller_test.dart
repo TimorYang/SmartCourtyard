@@ -21,6 +21,44 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test(
+    'ignores an older door detail response after the door changes',
+    () async {
+      final repository = _DelayedByDoorDetailRepository();
+      final container = _createContainer(
+        gateway: _BleSessionGateway(emitTargetDevice: false),
+        repository: repository,
+      );
+      addTearDown(container.dispose);
+      final controller = container.read(
+        deviceCommandControllerProvider.notifier,
+      );
+
+      final firstLoad = controller.loadDoorDetail(doorId: '12');
+      await _settleBleSession();
+      final secondLoad = controller.loadDoorDetail(doorId: '13');
+      await _settleBleSession();
+
+      repository.complete('13');
+      await secondLoad;
+      expect(
+        container.read(deviceCommandControllerProvider).doorDetail?.id,
+        '13',
+      );
+
+      repository.complete('12');
+      await firstLoad;
+      expect(
+        container.read(deviceCommandControllerProvider).doorDetail?.id,
+        '13',
+      );
+      expect(
+        container.read(deviceCommandControllerProvider).isLoadingDoorDetail,
+        isFalse,
+      );
+    },
+  );
+
+  test(
     'connects and authenticates the BLE device named by the door detail',
     () async {
       final gateway = _BleSessionGateway();
@@ -867,7 +905,7 @@ void main() {
 ProviderContainer _createContainer({
   required _BleSessionGateway gateway,
   DoorDetail? doorDetail,
-  _DoorDetailRepository? repository,
+  DoorDetailRepository? repository,
   _DeviceKeyRepository? deviceKeyRepository,
   RemoteDoorCommandRepository? remoteRepository,
   AppLogger? logger,
@@ -957,6 +995,52 @@ class _DoorDetailRepository implements DoorDetailRepository {
     required String deviceId,
     required String requestId,
   }) => throw UnimplementedError();
+}
+
+class _DelayedByDoorDetailRepository implements DoorDetailRepository {
+  final Map<String, Completer<DoorDetail>> _detailCompleters = {};
+  final Map<String, Completer<List<DoorDevice>>> _deviceCompleters = {};
+
+  @override
+  Future<DoorDetail> fetchDoorDetail({
+    required String doorId,
+    required String requestId,
+  }) {
+    return _detailCompleters
+        .putIfAbsent(doorId, Completer<DoorDetail>.new)
+        .future;
+  }
+
+  @override
+  Future<List<DoorDevice>> fetchDoorDevices({
+    required String doorId,
+    required String requestId,
+  }) {
+    return _deviceCompleters
+        .putIfAbsent(doorId, Completer<List<DoorDevice>>.new)
+        .future;
+  }
+
+  @override
+  Future<void> unbindDoorDevice({
+    required String doorId,
+    required String deviceId,
+    required String requestId,
+  }) => throw UnimplementedError();
+
+  void complete(String doorId) {
+    _detailCompleters[doorId]!.complete(
+      DoorDetail(
+        id: doorId,
+        name: 'Door $doorId',
+        doorState: DoorState.closed,
+        doorStateLabel: 'Closed',
+        operatedCycles: 0,
+        remainingCycles: 0,
+      ),
+    );
+    _deviceCompleters[doorId]!.complete(const <DoorDevice>[]);
+  }
 }
 
 RemoteDoorCommand _remoteCommand(RemoteDoorCommandStatus status) {

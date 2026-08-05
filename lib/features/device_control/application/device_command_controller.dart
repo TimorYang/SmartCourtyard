@@ -385,6 +385,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
   var _bleSessionId = 0;
   var _remoteCommandGeneration = 0;
   var _doorDetailPollGeneration = 0;
+  var _doorDetailLoadGeneration = 0;
   var _remotePairingGeneration = 0;
   int _requestCounter = 0;
 
@@ -436,6 +437,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
     required String doorId,
     String preferredDeviceId = '',
   }) async {
+    final loadGeneration = ++_doorDetailLoadGeneration;
     _cancelRemoteWork();
     await _resetBleSessionTracking();
     final trimmedDoorId = doorId.trim();
@@ -466,6 +468,9 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
       ]);
       final detail = results[0] as DoorDetail;
       final doorDevices = results[1] as List<DoorDevice>;
+      if (loadGeneration != _doorDetailLoadGeneration) {
+        return;
+      }
       state = state.copyWith(
         doorDetail: detail,
         doorDevices: doorDevices,
@@ -476,11 +481,17 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
       _restartDoorDetailPollingIfNeeded();
       unawaited(_startBlePool(doorDevices));
     } on AppError catch (error) {
+      if (loadGeneration != _doorDetailLoadGeneration) {
+        return;
+      }
       state = state.copyWith(
         isLoadingDoorDetail: false,
         doorDetailErrorMessage: _doorDetailErrorMessage(error),
       );
     } catch (error) {
+      if (loadGeneration != _doorDetailLoadGeneration) {
+        return;
+      }
       state = state.copyWith(
         isLoadingDoorDetail: false,
         doorDetailErrorMessage: error.toString(),
