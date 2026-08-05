@@ -8,7 +8,7 @@ import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
 import 'f_box_connection_guide_page.dart';
-import 'smart_opener_qr_scan_page.dart';
+import 'smart_opener_scan_guide_page.dart';
 import 'usb_dongle_guide_page.dart';
 
 class AddDeviceAssetPaths {
@@ -84,7 +84,7 @@ class _AddDevicePageState extends ConsumerState<AddDevicePage> {
             label: l10n.addDeviceSmartOpener,
             assetPath: AddDeviceAssetPaths.smartOpener,
             fallbackIcon: Icons.wifi_tethering_outlined,
-            onTap: () => context.push(SmartOpenerQrScanPage.routePath),
+            onTap: () => context.push(SmartOpenerScanGuidePage.routePath),
           ),
           const SizedBox(height: 14),
           _DeviceOptionCard(label: l10n.addDeviceSolarEnergySystem, assetPath: AddDeviceAssetPaths.solarEnergySystem, fallbackIcon: Icons.solar_power_outlined),

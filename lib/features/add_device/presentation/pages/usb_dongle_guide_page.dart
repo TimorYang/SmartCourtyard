@@ -5,7 +5,7 @@ import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../platform_bridge/hardware_models.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
-import 'smart_opener_qr_scan_page.dart';
+import 'smart_opener_scan_guide_page.dart';
 
 class UsbDongleGuideAssetPaths {
   const UsbDongleGuideAssetPaths._();
@@ -79,7 +79,7 @@ class UsbDongleGuidePage extends StatelessWidget {
                 height: 52,
                 child: FilledButton(
                   onPressed: () =>
-                      context.push(SmartOpenerQrScanPage.routePath),
+                      context.push(SmartOpenerScanGuidePage.routePath),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.brandPrimary,
                     foregroundColor: Colors.white,

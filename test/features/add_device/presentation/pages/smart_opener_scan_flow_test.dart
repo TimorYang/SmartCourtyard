@@ -7,6 +7,7 @@ import 'package:flinx/features/add_device/domain/entities/onboarding_device_key.
 import 'package:flinx/features/add_device/domain/repositories/add_device_onboarding_repository.dart';
 import 'package:flinx/features/add_device/presentation/pages/add_device_page.dart';
 import 'package:flinx/features/add_device/presentation/pages/add_new_doors_page.dart';
+import 'package:flinx/features/add_device/presentation/pages/f_box_connection_guide_page.dart';
 import 'package:flinx/features/add_device/presentation/pages/smart_opener_ble_scan_page.dart';
 import 'package:flinx/features/add_device/presentation/pages/smart_opener_choose_wifi_page.dart';
 import 'package:flinx/features/add_device/presentation/pages/smart_opener_connecting_page.dart';
@@ -15,6 +16,7 @@ import 'package:flinx/features/add_device/presentation/pages/smart_opener_device
 import 'package:flinx/features/add_device/presentation/pages/smart_opener_qr_scan_page.dart';
 import 'package:flinx/features/add_device/presentation/pages/smart_opener_scan_guide_page.dart';
 import 'package:flinx/features/add_device/presentation/pages/smart_opener_scan_results_page.dart';
+import 'package:flinx/features/add_device/presentation/pages/usb_dongle_guide_page.dart';
 import 'package:flinx/features/device_control/presentation/pages/already_added_devices_page.dart';
 import 'package:flinx/features/device_control/presentation/pages/device_command_page.dart';
 import 'package:flinx/features/home/application/providers.dart';
@@ -56,6 +58,34 @@ void main() {
 
     expect(find.text('Gallery'), findsOneWidget);
     expect(find.text('Flashlight'), findsOneWidget);
+  });
+
+  testWidgets('opens Smart Opener scan guide from F-Box guide', (tester) async {
+    await _pumpScanFlowTestApp(tester, FBoxConnectionGuidePage.routePath);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(FilledButton));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Scan the QR code inside the package with your smart phone.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('opens Smart Opener scan guide from USB dongle guide', (
+    tester,
+  ) async {
+    await _pumpScanFlowTestApp(tester, UsbDongleGuidePage.routePath);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(FilledButton));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Scan the QR code inside the package with your smart phone.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('opens Bluetooth scanning page from QR scanner shortcut', (
@@ -356,6 +386,8 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Smart Opener (Built-in Wi-Fi)'));
       await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Scan'));
+      await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Scan Bluetooth devices'));
       await tester.pump();
       await tester.pump(scanDuration);
@@ -421,6 +453,8 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Smart Opener (Built-in Wi-Fi)'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Scan'));
       await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Scan Bluetooth devices'));
       await tester.pump();
@@ -626,6 +660,15 @@ Widget _scanFlowTestApp(
         name: AddDevicePage.routeName,
         builder: (context, state) =>
             const AddDevicePage(doorType: DoorType.garage, doorId: '1'),
+      ),
+      GoRoute(
+        path: FBoxConnectionGuidePage.routePath,
+        builder: (context, state) => const FBoxConnectionGuidePage(),
+      ),
+      GoRoute(
+        path: UsbDongleGuidePage.routePath,
+        builder: (context, state) =>
+            const UsbDongleGuidePage(doorType: DoorType.garage),
       ),
       GoRoute(
         path: SmartOpenerScanGuidePage.routePath,
