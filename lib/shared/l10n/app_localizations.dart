@@ -4058,6 +4058,18 @@ abstract class AppLocalizations {
   /// **'Partial open'**
   String get deviceCommandPartialOpenTitle;
 
+  /// No description provided for @deviceCommandPartialOpenSettingUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Partial-open positions are temporarily unavailable. Please try again.'**
+  String get deviceCommandPartialOpenSettingUnavailable;
+
+  /// No description provided for @deviceCommandPartialOpenSettingFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to save the partial-open position. Please try again.'**
+  String get deviceCommandPartialOpenSettingFailed;
+
   /// No description provided for @deviceCommandMoreSettingsTitle.
   ///
   /// In en, this message translates to:

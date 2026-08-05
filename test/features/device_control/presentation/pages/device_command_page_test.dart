@@ -260,6 +260,154 @@ void main() {
     );
   });
 
+  testWidgets(
+    'partial-open position badge saves a level without sending a command',
+    (tester) async {
+      final gateway = _RecordingHardwareGateway();
+      await _pumpDevicePage(tester, gateway);
+
+      final positionAction = find.byKey(
+        const ValueKey<String>('partial-open-position-action'),
+      );
+      await tester.ensureVisible(positionAction);
+      await tester.tap(positionAction);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Partial open height'), findsOneWidget);
+      expect(find.text('80 cm'), findsOneWidget);
+      final wheel = tester.widget<ListWheelScrollView>(
+        find.byType(ListWheelScrollView),
+      );
+      expect(
+        (wheel.controller! as FixedExtentScrollController).selectedItem,
+        0,
+      );
+
+      await tester.drag(find.byType(ListWheelScrollView), const Offset(0, -50));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Confirm'));
+      await tester.pumpAndSettle();
+
+      expect(gateway.attributeWriteCount, 1);
+      expect(gateway.writtenAttributes.single.id, 0x2711);
+      expect(gateway.writtenAttributes.single.unsignedValue, 2);
+      expect(gateway.commands, isEmpty);
+      expect(find.text('80 cm'), findsOneWidget);
+    },
+  );
+
+  testWidgets('partial-open position badge blocks duplicate writes', (
+    tester,
+  ) async {
+    final gateway = _DelayedAttributeWriteHardwareGateway();
+    addTearDown(gateway.completeWrite);
+    await _pumpDevicePage(tester, gateway);
+
+    final positionAction = find.byKey(
+      const ValueKey<String>('partial-open-position-action'),
+    );
+    await tester.ensureVisible(positionAction);
+    await tester.tap(positionAction);
+    await tester.pumpAndSettle();
+    await tester.drag(find.byType(ListWheelScrollView), const Offset(0, -50));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Confirm'));
+    await tester.pumpAndSettle();
+
+    expect(gateway.attributeWriteCount, 1);
+    await tester.tap(positionAction);
+    await tester.pump();
+    expect(gateway.attributeWriteCount, 1);
+    expect(find.byType(ListWheelScrollView), findsNothing);
+
+    gateway.completeWrite();
+    await tester.pumpAndSettle();
+    expect(find.text('80 cm'), findsOneWidget);
+    expect(gateway.commands, isEmpty);
+  });
+
+  testWidgets('partial-open position badge is inert without level options', (
+    tester,
+  ) async {
+    final gateway = _RecordingHardwareGateway();
+    await _pumpDevicePage(
+      tester,
+      gateway,
+      capabilityRepository: const _SettingsDeviceCapabilityRepository(
+        partialOpenOptions: [],
+      ),
+    );
+
+    final positionAction = find.byKey(
+      const ValueKey<String>('partial-open-position-action'),
+    );
+    await tester.ensureVisible(positionAction);
+    await tester.tap(positionAction);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ListWheelScrollView), findsNothing);
+    expect(gateway.attributeWriteCount, 0);
+    expect(gateway.commands, isEmpty);
+  });
+
+  testWidgets('failed partial-open level writes keep the previous position', (
+    tester,
+  ) async {
+    final gateway = _FailingAttributeWriteHardwareGateway();
+    await _pumpDevicePage(tester, gateway);
+
+    final positionAction = find.byKey(
+      const ValueKey<String>('partial-open-position-action'),
+    );
+    await tester.ensureVisible(positionAction);
+    await tester.tap(positionAction);
+    await tester.pumpAndSettle();
+    await tester.drag(find.byType(ListWheelScrollView), const Offset(0, -50));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Confirm'));
+    await tester.pumpAndSettle();
+
+    expect(gateway.attributeWriteCount, 1);
+    expect(gateway.commands, isEmpty);
+    expect(find.text('60 cm'), findsOneWidget);
+    expect(
+      find.text('Unable to save the partial-open position. Please try again.'),
+      findsOneWidget,
+    );
+    toastification.dismissAll(delayForAnimation: false);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump();
+  });
+
+  testWidgets('partial-open position badge requires Bluetooth', (tester) async {
+    final gateway = _DisconnectedHardwareGateway();
+    await _pumpDevicePage(tester, gateway);
+
+    final positionAction = find.byKey(
+      const ValueKey<String>('partial-open-position-action'),
+    );
+    await tester.ensureVisible(positionAction);
+    await tester.tap(positionAction);
+    await tester.pump();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(
+      find.text(
+        'Connect the selected device via Bluetooth to use Partial open height.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.byType(ListWheelScrollView), findsNothing);
+    expect(gateway.attributeWriteCount, 0);
+    expect(gateway.commands, isEmpty);
+    toastification.dismissAll(delayForAnimation: false);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump();
+  });
+
   testWidgets('writes auto close and open reminder through BLE attributes', (
     tester,
   ) async {
@@ -737,6 +885,10 @@ void main() {
 Widget _buildPage(
   MockHardwareGateway gateway, {
   DoorDetailRepository repository = const _FakeDoorDetailRepository(),
+  DeviceCapabilityRepository capabilityRepository =
+      const _SettingsDeviceCapabilityRepository(),
+  DoorSettingsRepository doorSettingsRepository =
+      const _CommandDoorSettingsRepository(),
   RemoteDoorCommandRepository? remoteRepository,
   Duration remotePollInterval = const Duration(seconds: 1),
 }) {
@@ -757,11 +909,9 @@ Widget _buildPage(
         const _EmptyOperationRecordRepository(),
       ),
       deviceCapabilityRepositoryProvider.overrideWithValue(
-        const _SettingsDeviceCapabilityRepository(),
+        capabilityRepository,
       ),
-      doorSettingsRepositoryProvider.overrideWithValue(
-        const _EmptyDoorSettingsRepository(),
-      ),
+      doorSettingsRepositoryProvider.overrideWithValue(doorSettingsRepository),
     ],
     child: ToastificationWrapper(
       child: MaterialApp.router(
@@ -803,34 +953,60 @@ Widget _buildPage(
 
 class _SettingsDeviceCapabilityRepository
     implements DeviceCapabilityRepository {
-  const _SettingsDeviceCapabilityRepository();
+  const _SettingsDeviceCapabilityRepository({
+    this.partialOpenOptions = const [
+      DeviceCapabilityOption(value: 1, label: '60'),
+      DeviceCapabilityOption(value: 2, label: '80'),
+    ],
+  });
+
+  final List<DeviceCapabilityOption> partialOpenOptions;
 
   @override
   Future<List<DeviceCapability>> fetchCapabilities({
     required String deviceId,
     required String requestId,
-  }) async => const [
-    DeviceCapability(
+  }) async => [
+    const DeviceCapability(
       code: DeviceCapabilityCode.transmitterPairing,
       label: 'Transmitter management',
+    ),
+    DeviceCapability(
+      code: DeviceCapabilityCode.partialOpenLevel,
+      label: 'Partial open height',
+      unit: 'cm',
+      options: partialOpenOptions,
     ),
   ];
 }
 
-class _EmptyDoorSettingsRepository implements DoorSettingsRepository {
-  const _EmptyDoorSettingsRepository();
+class _CommandDoorSettingsRepository implements DoorSettingsRepository {
+  const _CommandDoorSettingsRepository();
 
   @override
   Future<List<DoorSettingSnapshot>> fetchSettings({
     required String doorId,
     required String requestId,
-  }) async => const [];
+  }) async => const [
+    DoorSettingSnapshot(
+      code: DeviceCapabilityCode.partialOpen,
+      label: 'Partial open',
+      supported: true,
+      configured: true,
+      currentValue: 1,
+      unit: 'cm',
+    ),
+  ];
 }
 
 Future<void> _pumpDevicePage(
   WidgetTester tester,
   MockHardwareGateway gateway, {
   DoorDetailRepository repository = const _FakeDoorDetailRepository(),
+  DeviceCapabilityRepository capabilityRepository =
+      const _SettingsDeviceCapabilityRepository(),
+  DoorSettingsRepository doorSettingsRepository =
+      const _CommandDoorSettingsRepository(),
   RemoteDoorCommandRepository? remoteRepository,
   Duration remotePollInterval = const Duration(seconds: 1),
 }) async {
@@ -843,6 +1019,8 @@ Future<void> _pumpDevicePage(
     _buildPage(
       gateway,
       repository: repository,
+      capabilityRepository: capabilityRepository,
+      doorSettingsRepository: doorSettingsRepository,
       remoteRepository: remoteRepository,
       remotePollInterval: remotePollInterval,
     ),
@@ -892,6 +1070,7 @@ GestureTapCallback? _connectionTap(WidgetTester tester, String deviceType) {
 class _RecordingHardwareGateway extends MockHardwareGateway {
   final List<DoorCommand> commands = <DoorCommand>[];
   final List<String> deviceIds = <String>[];
+  final List<DeviceAttribute> writtenAttributes = <DeviceAttribute>[];
   int queryCount = 0;
   final List<String> authenticatedDeviceIds = <String>[];
   int disconnectAllCount = 0;
@@ -904,6 +1083,7 @@ class _RecordingHardwareGateway extends MockHardwareGateway {
     required List<DeviceAttribute> attributes,
   }) async {
     attributeWriteCount += 1;
+    writtenAttributes.addAll(attributes);
     return super.setDeviceAttributes(
       requestId: requestId,
       deviceId: deviceId,
@@ -959,6 +1139,60 @@ class _RecordingHardwareGateway extends MockHardwareGateway {
   }) async {
     queryCount += 1;
     return super.queryRemotes(requestId: requestId, deviceId: deviceId);
+  }
+}
+
+class _FailingAttributeWriteHardwareGateway extends _RecordingHardwareGateway {
+  @override
+  Future<DeviceAttributeWriteResult> setDeviceAttributes({
+    required String requestId,
+    required String deviceId,
+    required List<DeviceAttribute> attributes,
+  }) async {
+    attributeWriteCount += 1;
+    writtenAttributes.addAll(attributes);
+    throw StateError('attribute write failed');
+  }
+}
+
+class _DelayedAttributeWriteHardwareGateway extends MockHardwareGateway {
+  final Completer<void> _writeGate = Completer<void>();
+  int attributeWriteCount = 0;
+  final List<DoorCommand> commands = <DoorCommand>[];
+
+  @override
+  Future<DeviceAttributeWriteResult> setDeviceAttributes({
+    required String requestId,
+    required String deviceId,
+    required List<DeviceAttribute> attributes,
+  }) async {
+    attributeWriteCount += 1;
+    await _writeGate.future;
+    return super.setDeviceAttributes(
+      requestId: requestId,
+      deviceId: deviceId,
+      attributes: attributes,
+    );
+  }
+
+  @override
+  Future<CommandResult> sendDoorCommand({
+    required String requestId,
+    required String deviceId,
+    required DoorCommand command,
+  }) async {
+    commands.add(command);
+    return super.sendDoorCommand(
+      requestId: requestId,
+      deviceId: deviceId,
+      command: command,
+    );
+  }
+
+  void completeWrite() {
+    if (!_writeGate.isCompleted) {
+      _writeGate.complete();
+    }
   }
 }
 

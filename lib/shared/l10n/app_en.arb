@@ -1794,6 +1794,8 @@
     }
   },
   "deviceCommandPartialOpenTitle": "Partial open",
+  "deviceCommandPartialOpenSettingUnavailable": "Partial-open positions are temporarily unavailable. Please try again.",
+  "deviceCommandPartialOpenSettingFailed": "Unable to save the partial-open position. Please try again.",
   "deviceCommandMoreSettingsTitle": "More settings",
   "deviceCommandActionOpen": "Open",
   "deviceCommandActionClose": "Close",

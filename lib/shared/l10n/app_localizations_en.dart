@@ -2191,6 +2191,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deviceCommandPartialOpenTitle => 'Partial open';
 
   @override
+  String get deviceCommandPartialOpenSettingUnavailable =>
+      'Partial-open positions are temporarily unavailable. Please try again.';
+
+  @override
+  String get deviceCommandPartialOpenSettingFailed =>
+      'Unable to save the partial-open position. Please try again.';
+
+  @override
   String get deviceCommandMoreSettingsTitle => 'More settings';
 
   @override

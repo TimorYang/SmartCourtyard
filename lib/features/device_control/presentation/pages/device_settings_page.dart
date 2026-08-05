@@ -13,6 +13,7 @@ import '../../../settings/application/door_settings_controller.dart';
 import '../../../settings/domain/entities/device_capability.dart';
 import '../../../settings/domain/entities/device_setting.dart';
 import '../../../settings/domain/entities/door_setting_snapshot.dart';
+import '../widgets/device_setting_options_sheet.dart';
 import 'transmitter_learning_page.dart';
 import 'transmitter_list_page.dart';
 
@@ -439,7 +440,7 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _CapabilityOptionsSheet(
+      builder: (context) => DeviceCapabilityOptionsSheet(
         title: title,
         options: capability.options,
         unit: capability.unit,
@@ -861,10 +862,7 @@ class _DeviceSettingsAssetIcon extends StatelessWidget {
 }
 
 String _optionLabel(DeviceCapabilityOption option, String? unit) {
-  final normalizedUnit = unit?.trim();
-  return normalizedUnit == null || normalizedUnit.isEmpty
-      ? option.label
-      : '${option.label} $normalizedUnit';
+  return formatDeviceCapabilityOption(option, unit);
 }
 
 String _valueWithUnit(int value, String? unit) {
@@ -872,63 +870,6 @@ String _valueWithUnit(int value, String? unit) {
   return normalizedUnit == null || normalizedUnit.isEmpty
       ? '$value'
       : '$value $normalizedUnit';
-}
-
-class _CapabilityOptionsSheet extends StatefulWidget {
-  const _CapabilityOptionsSheet({
-    required this.title,
-    required this.options,
-    required this.unit,
-    required this.initialValue,
-  });
-
-  final String title;
-  final List<DeviceCapabilityOption> options;
-  final String? unit;
-  final int initialValue;
-
-  @override
-  State<_CapabilityOptionsSheet> createState() =>
-      _CapabilityOptionsSheetState();
-}
-
-class _CapabilityOptionsSheetState extends State<_CapabilityOptionsSheet> {
-  late int _selectedValue = widget.initialValue;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return _SettingsSheetFrame(
-      heightFactor: 0.50,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            widget.title,
-            textAlign: TextAlign.center,
-            style: AppTextTokens.deviceSettingsSheetTitle(textTheme),
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: _FixedSelectionList<DeviceCapabilityOption>(
-              values: widget.options,
-              initialValue: widget.options.firstWhere(
-                (option) => option.value == _selectedValue,
-                orElse: () => widget.options.first,
-              ),
-              labelBuilder: (option) => _optionLabel(option, widget.unit),
-              onSelected: (option) =>
-                  setState(() => _selectedValue = option.value),
-            ),
-          ),
-          const SizedBox(height: 20),
-          _SheetActionRow(
-            onConfirm: () => Navigator.pop(context, _selectedValue),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _DoorOpenReminderSheet extends StatefulWidget {
@@ -948,7 +889,7 @@ class _DoorOpenReminderSheetState extends State<_DoorOpenReminderSheet> {
     final l10n = AppLocalizations.of(context);
     final textTheme = Theme.of(context).textTheme;
 
-    return _SettingsSheetFrame(
+    return DeviceSettingsSheetFrame(
       heightFactor: 0.50,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -965,7 +906,7 @@ class _DoorOpenReminderSheetState extends State<_DoorOpenReminderSheet> {
           ),
           const SizedBox(height: 12),
           Expanded(
-            child: _FixedSelectionList<String>(
+            child: DeviceSettingsFixedSelectionList<String>(
               values: _doorOpenReminderTimeOptions,
               initialValue: _selectedValue,
               labelBuilder: (value) => _formatDuration(l10n, value),
@@ -973,7 +914,7 @@ class _DoorOpenReminderSheetState extends State<_DoorOpenReminderSheet> {
             ),
           ),
           const SizedBox(height: 20),
-          _SheetActionRow(
+          DeviceSettingsSheetActionRow(
             onConfirm: () => Navigator.pop(context, _selectedValue),
           ),
         ],
@@ -1011,7 +952,7 @@ class _AutoCloseSheetState extends State<_AutoCloseSheet> {
     final textTheme = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context);
 
-    return _SettingsSheetFrame(
+    return DeviceSettingsSheetFrame(
       heightFactor: widget.heightFactor,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1054,7 +995,7 @@ class _AutoCloseSheetState extends State<_AutoCloseSheet> {
           ),
           const SizedBox(height: 18),
           Expanded(
-            child: _FixedSelectionList<String>(
+            child: DeviceSettingsFixedSelectionList<String>(
               values: _autoCloseTimeOptions,
               initialValue: _time,
               labelBuilder: (time) => _formatDuration(l10n, time),
@@ -1062,7 +1003,7 @@ class _AutoCloseSheetState extends State<_AutoCloseSheet> {
             ),
           ),
           const SizedBox(height: 20),
-          _SheetActionRow(
+          DeviceSettingsSheetActionRow(
             onConfirm: () => Navigator.pop(
               context,
               _AutoCloseSelection(position: _position, time: _time),
@@ -1111,7 +1052,7 @@ class _SpeedAdjustmentSheetState extends State<_SpeedAdjustmentSheet> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final textTheme = Theme.of(context).textTheme;
-    return _SettingsSheetFrame(
+    return DeviceSettingsSheetFrame(
       heightFactor: 0.61,
       child: Column(
         children: [
@@ -1148,8 +1089,16 @@ class _SpeedAdjustmentSheetState extends State<_SpeedAdjustmentSheet> {
                         index++
                       )
                         index == widget.speedConfig.allowedValues.length - 1
-                            ? AppLocalizations.of(context).deviceSettingsOpeningSpeedStandardGuide(widget.speedConfig.allowedValues[index])
-                            : AppLocalizations.of(context).deviceSettingsPercent(widget.speedConfig.allowedValues[index]),
+                            ? AppLocalizations.of(
+                                context,
+                              ).deviceSettingsOpeningSpeedStandardGuide(
+                                widget.speedConfig.allowedValues[index],
+                              )
+                            : AppLocalizations.of(
+                                context,
+                              ).deviceSettingsPercent(
+                                widget.speedConfig.allowedValues[index],
+                              ),
                     ],
                     guideKeyPrefix: 'openingSpeedSliderGuide',
                   ),
@@ -1158,7 +1107,7 @@ class _SpeedAdjustmentSheetState extends State<_SpeedAdjustmentSheet> {
             ),
           ),
           const SizedBox(height: 24),
-          _SheetActionRow(onConfirm: () => Navigator.pop(context)),
+          DeviceSettingsSheetActionRow(onConfirm: () => Navigator.pop(context)),
         ],
       ),
     );
@@ -1451,7 +1400,7 @@ class _ForceMarginAdjustmentSheetState
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    return _SettingsSheetFrame(
+    return DeviceSettingsSheetFrame(
       heightFactor: 0.72,
       child: Column(
         children: [
@@ -1484,8 +1433,12 @@ class _ForceMarginAdjustmentSheetState
                 Expanded(
                   child: _SliderScaleGuides(
                     labels: [
-                      AppLocalizations.of(context).deviceSettingsForceMarginMaximumGuide,
-                      AppLocalizations.of(context).deviceSettingsStandardAbbreviation,
+                      AppLocalizations.of(
+                        context,
+                      ).deviceSettingsForceMarginMaximumGuide,
+                      AppLocalizations.of(
+                        context,
+                      ).deviceSettingsStandardAbbreviation,
                     ],
                     guideKeyPrefix: 'forceMarginSliderGuide',
                   ),
@@ -1493,7 +1446,7 @@ class _ForceMarginAdjustmentSheetState
               ],
             ),
           ),
-          _SheetActionRow(onConfirm: () => Navigator.pop(context)),
+          DeviceSettingsSheetActionRow(onConfirm: () => Navigator.pop(context)),
         ],
       ),
     );
@@ -1546,7 +1499,7 @@ class _ForceMarginLevelSheetState extends State<_ForceMarginLevelSheet> {
       for (var level = 3; level <= 7; level++)
         l10n.deviceSettingsForceMarginLevel(level),
     ];
-    return _SettingsSheetFrame(
+    return DeviceSettingsSheetFrame(
       heightFactor: 0.5,
       child: Column(
         children: [
@@ -1565,7 +1518,7 @@ class _ForceMarginLevelSheetState extends State<_ForceMarginLevelSheet> {
           ),
           const SizedBox(height: 14),
           Expanded(
-            child: _FixedSelectionList<String>(
+            child: DeviceSettingsFixedSelectionList<String>(
               values: options,
               initialValue: l10n.deviceSettingsForceMarginLevel(_level),
               labelBuilder: (value) => value,
@@ -1573,7 +1526,7 @@ class _ForceMarginLevelSheetState extends State<_ForceMarginLevelSheet> {
                   setState(() => _level = options.indexOf(value) + 3),
             ),
           ),
-          _SheetActionRow(onConfirm: () => Navigator.pop(context)),
+          DeviceSettingsSheetActionRow(onConfirm: () => Navigator.pop(context)),
         ],
       ),
     );
@@ -1594,129 +1547,6 @@ class _CutAssetPlaceholder extends StatelessWidget {
     fit: BoxFit.contain,
     errorBuilder: (context, error, stackTrace) => SizedBox(height: height),
   );
-}
-
-class _SettingsSheetFrame extends StatelessWidget {
-  const _SettingsSheetFrame({required this.heightFactor, required this.child});
-
-  final double heightFactor;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return FractionallySizedBox(
-      heightFactor: heightFactor,
-      alignment: Alignment.bottomCenter,
-      child: DecoratedBox(
-        decoration: const BoxDecoration(
-          color: AppColors.backgroundPrimary,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
-            child: child,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _FixedSelectionList<T> extends StatefulWidget {
-  const _FixedSelectionList({
-    required this.values,
-    required this.initialValue,
-    required this.labelBuilder,
-    required this.onSelected,
-  });
-
-  static const itemExtent = 46.0;
-
-  final List<T> values;
-  final T initialValue;
-  final String Function(T value) labelBuilder;
-  final ValueChanged<T> onSelected;
-
-  @override
-  State<_FixedSelectionList<T>> createState() => _FixedSelectionListState<T>();
-}
-
-class _FixedSelectionListState<T> extends State<_FixedSelectionList<T>> {
-  late int _selectedIndex = _initialIndex;
-  late final FixedExtentScrollController _controller =
-      FixedExtentScrollController(initialItem: _selectedIndex);
-
-  int get _initialIndex {
-    final index = widget.values.indexOf(widget.initialValue);
-    return index < 0 ? 0 : index;
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final selectionTop =
-            (constraints.maxHeight - _FixedSelectionList.itemExtent) / 2;
-
-        return Stack(
-          children: [
-            ListWheelScrollView.useDelegate(
-              controller: _controller,
-              physics: const FixedExtentScrollPhysics(),
-              itemExtent: _FixedSelectionList.itemExtent,
-              onSelectedItemChanged: (index) {
-                setState(() => _selectedIndex = index);
-                widget.onSelected(widget.values[index]);
-              },
-              childDelegate: ListWheelChildBuilderDelegate(
-                childCount: widget.values.length,
-                builder: (context, index) {
-                  final selected = index == _selectedIndex;
-                  return Center(
-                    child: Text(
-                      widget.labelBuilder(widget.values[index]),
-                      style: selected
-                          ? AppTextTokens.deviceSettingsSheetSelectedOption(
-                              textTheme,
-                            )
-                          : AppTextTokens.deviceSettingsSheetOption(textTheme),
-                    ),
-                  );
-                },
-              ),
-            ),
-            Positioned(
-              top: selectionTop,
-              left: 0,
-              right: 0,
-              height: _FixedSelectionList.itemExtent,
-              child: IgnorePointer(
-                child: const DecoratedBox(
-                  decoration: BoxDecoration(
-                    border: Border.symmetric(
-                      horizontal: BorderSide(
-                        color: AppColors.deviceSettingsDivider,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
 }
 
 class _SegmentButton extends StatelessWidget {
@@ -1754,62 +1584,6 @@ class _SegmentButton extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _SheetActionRow extends StatelessWidget {
-  const _SheetActionRow({required this.onConfirm});
-
-  final VoidCallback onConfirm;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final l10n = AppLocalizations.of(context);
-
-    return Row(
-      children: [
-        Expanded(
-          child: SizedBox(
-            height: 45,
-            child: TextButton(
-              onPressed: () => Navigator.pop(context),
-              style: TextButton.styleFrom(
-                backgroundColor: AppColors.deviceSettingsSheetCancel,
-                foregroundColor: AppColors.textMuted,
-                shape: const StadiumBorder(),
-              ),
-              child: Text(
-                l10n.deviceSettingsCancelAction,
-                style: AppTextTokens.deviceSettingsSheetButton(
-                  textTheme,
-                ).copyWith(color: AppColors.textMuted),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 40),
-        Expanded(
-          child: SizedBox(
-            height: 45,
-            child: FilledButton(
-              onPressed: onConfirm,
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.brandPrimary,
-                foregroundColor: AppColors.backgroundPrimary,
-                shape: const StadiumBorder(),
-              ),
-              child: Text(
-                l10n.deviceSettingsConfirmAction,
-                style: AppTextTokens.deviceSettingsSheetButton(
-                  textTheme,
-                ).copyWith(color: AppColors.backgroundPrimary),
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

@@ -15,12 +15,15 @@ import '../../../../shared/widgets/flinx_switch.dart';
 import '../../../records/presentation/pages/operation_record_page.dart';
 import '../../../security_center/presentation/pages/security_center_page.dart';
 import '../../../settings/application/device_settings_controller.dart';
+import '../../../settings/application/device_capabilities_controller.dart';
 import '../../../settings/application/door_settings_controller.dart';
+import '../../../settings/domain/entities/device_capability.dart';
 import '../../../settings/domain/entities/device_setting.dart';
 import '../../application/device_command_controller.dart';
 import '../../domain/entities/door_device.dart';
 import '../../domain/entities/door_realtime_state.dart';
 import '../widgets/device_detail_bottom_navigation.dart';
+import '../widgets/device_setting_options_sheet.dart';
 import 'already_added_devices_page.dart';
 import 'device_settings_page.dart';
 
@@ -247,6 +250,35 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     final deviceSettingsState = ref.watch(
       deviceSettingsControllerProvider(connectedBleDeviceId),
     );
+    final deviceCapabilitiesState = ref.watch(
+      deviceCapabilitiesControllerProvider(selectedDeviceId),
+    );
+    final doorSettingsState = ref.watch(
+      doorSettingsControllerProvider(widget.doorId),
+    );
+    final partialOpenCapability = deviceCapabilitiesState.capabilityFor(
+      DeviceCapabilityCode.partialOpenLevel,
+    );
+    final partialOpenSetting = doorSettingsState.settingFor(
+      DeviceCapabilityCode.partialOpen,
+    );
+    final partialOpenLevel =
+        partialOpenSetting?.currentValue ??
+        deviceSettingsState.values[DeviceSettingKey.partialOpen]?.rawValue;
+    final partialOpenOption = _capabilityOptionForValue(
+      partialOpenCapability,
+      partialOpenLevel,
+    );
+    final partialOpenValueLabel = partialOpenOption == null
+        ? doorDetail?.partialOpenValue == null
+              ? null
+              : AppLocalizations.of(
+                  context,
+                ).deviceCommandCentimeters(doorDetail!.partialOpenValue!)
+        : formatDeviceCapabilityOption(
+            partialOpenOption,
+            partialOpenSetting?.unit ?? partialOpenCapability?.unit,
+          );
     final capabilities = _capabilitiesForCurrentDevice(commandState);
     final canControlDoor = capabilities.contains('DOOR_CONTROL');
     final canControlLed = capabilities.contains('LED_CONTROL');
@@ -403,13 +435,20 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                     ledEnabled: ledEnabled,
                     autoCloseEnabled: autoCloseEnabled,
                     openReminderEnabled: openReminderEnabled,
-                    partialOpenValue: doorDetail?.partialOpenValue,
+                    partialOpenValueLabel: partialOpenValueLabel,
                     ledAvailable: canControlLed,
                     autoCloseAvailable: canUseAutoClose,
                     partialOpenAvailable: canPartialOpen,
+                    partialOpenSettingAvailable:
+                        partialOpenCapability != null &&
+                        partialOpenCapability.options.isNotEmpty,
                     openReminderAvailable: canUseOpenReminder,
                     busy: isBusy,
                     settingsBusy: deviceSettingsState.pendingKey != null,
+                    partialOpenSettingBusy:
+                        deviceCapabilitiesState.loading ||
+                        doorSettingsState.loading ||
+                        deviceSettingsState.loading,
                     onLedChanged: (enabled) async {
                       setState(() => _ledEnabledOverride = enabled);
                       await controller.runAction(
@@ -448,6 +487,12 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                         action: DeviceCommandAction.partialOpenDoor,
                       );
                     },
+                    onPartialOpenSetting: () => _showPartialOpenLevelEditor(
+                      connected: selectedDeviceUsesBle,
+                      bleDeviceId: connectedBleDeviceId,
+                      capability: partialOpenCapability,
+                      currentLevel: partialOpenLevel,
+                    ),
                     onMoreSettings: () => context.push(
                       '${DeviceSettingsPage.routePath}'
                       '?doorId=${Uri.encodeComponent(widget.doorId)}'
@@ -478,6 +523,73 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
       AppLocalizations.of(context).deviceCommandBluetoothRequired(actionLabel),
     );
     return false;
+  }
+
+  DeviceCapabilityOption? _capabilityOptionForValue(
+    DeviceCapability? capability,
+    int? value,
+  ) {
+    if (capability == null || value == null) {
+      return null;
+    }
+    for (final option in capability.options) {
+      if (option.value == value) {
+        return option;
+      }
+    }
+    return null;
+  }
+
+  Future<void> _showPartialOpenLevelEditor({
+    required bool connected,
+    required String bleDeviceId,
+    required DeviceCapability? capability,
+    required int? currentLevel,
+  }) async {
+    final l10n = AppLocalizations.of(context);
+    if (!_requireBluetoothConnection(
+      connected: connected,
+      actionLabel: l10n.deviceSettingsPartialOpenHeight,
+    )) {
+      return;
+    }
+    if (capability == null || capability.options.isEmpty) {
+      AppToast.info(context, l10n.deviceCommandPartialOpenSettingUnavailable);
+      return;
+    }
+
+    final initialValue =
+        capability.options.any((option) => option.value == currentLevel)
+        ? currentLevel!
+        : capability.options.first.value;
+    final value = await showModalBottomSheet<int>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DeviceCapabilityOptionsSheet(
+        title: l10n.deviceSettingsPartialOpenHeight,
+        options: capability.options,
+        unit: capability.unit,
+        initialValue: initialValue,
+      ),
+    );
+    if (value == null || !mounted || value == currentLevel) {
+      return;
+    }
+
+    final saved = await ref
+        .read(deviceSettingsControllerProvider(bleDeviceId).notifier)
+        .setRawValue(DeviceSettingKey.partialOpen, value);
+    if (!mounted) {
+      return;
+    }
+    if (!saved) {
+      AppToast.error(context, l10n.deviceCommandPartialOpenSettingFailed);
+      return;
+    }
+    ref
+        .read(doorSettingsControllerProvider(widget.doorId).notifier)
+        .updateCurrentValue(DeviceCapabilityCode.partialOpen, value);
   }
 
   Future<void> _setBluetoothToggle({
@@ -1295,34 +1407,40 @@ class _QuickActionGrid extends StatelessWidget {
     required this.ledEnabled,
     required this.autoCloseEnabled,
     required this.openReminderEnabled,
-    required this.partialOpenValue,
+    required this.partialOpenValueLabel,
     required this.ledAvailable,
     required this.autoCloseAvailable,
     required this.partialOpenAvailable,
+    required this.partialOpenSettingAvailable,
     required this.openReminderAvailable,
     required this.busy,
     required this.settingsBusy,
+    required this.partialOpenSettingBusy,
     required this.onLedChanged,
     required this.onAutoCloseChanged,
     required this.onOpenReminderChanged,
     required this.onPartialOpen,
+    required this.onPartialOpenSetting,
     required this.onMoreSettings,
   });
 
   final bool ledEnabled;
   final bool autoCloseEnabled;
   final bool openReminderEnabled;
-  final int? partialOpenValue;
+  final String? partialOpenValueLabel;
   final bool ledAvailable;
   final bool autoCloseAvailable;
   final bool partialOpenAvailable;
+  final bool partialOpenSettingAvailable;
   final bool openReminderAvailable;
   final bool busy;
   final bool settingsBusy;
+  final bool partialOpenSettingBusy;
   final ValueChanged<bool> onLedChanged;
   final ValueChanged<bool> onAutoCloseChanged;
   final ValueChanged<bool> onOpenReminderChanged;
   final VoidCallback onPartialOpen;
+  final VoidCallback onPartialOpenSetting;
   final VoidCallback onMoreSettings;
 
   @override
@@ -1389,11 +1507,14 @@ class _QuickActionGrid extends StatelessWidget {
                 Expanded(
                   flex: 140,
                   child: _PartialOpenCard(
-                    value: partialOpenValue,
+                    valueLabel: partialOpenValueLabel,
                     available: partialOpenAvailable,
                     busy: busy,
+                    settingAvailable: partialOpenSettingAvailable,
+                    settingBusy: busy || settingsBusy || partialOpenSettingBusy,
                     textTheme: textTheme,
                     onPressed: onPartialOpen,
+                    onSettingPressed: onPartialOpenSetting,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -1537,75 +1658,111 @@ class _ToggleActionCard extends StatelessWidget {
 
 class _PartialOpenCard extends StatelessWidget {
   const _PartialOpenCard({
-    required this.value,
+    required this.valueLabel,
     required this.available,
     required this.busy,
+    required this.settingAvailable,
+    required this.settingBusy,
     required this.textTheme,
     required this.onPressed,
+    required this.onSettingPressed,
   });
 
   final bool busy;
-  final int? value;
+  final String? valueLabel;
   final bool available;
+  final bool settingAvailable;
+  final bool settingBusy;
   final TextTheme textTheme;
   final VoidCallback onPressed;
+  final VoidCallback onSettingPressed;
 
   @override
   Widget build(BuildContext context) {
     return _ControlCard(
       key: const ValueKey<String>('partial-open-action'),
-      onTap: available && !busy ? onPressed : null,
       child: Stack(
         children: [
-          if (value != null)
+          Positioned.fill(
+            child: Semantics(
+              button: true,
+              enabled: available && !busy,
+              label: AppLocalizations.of(context).deviceCommandPartialOpenTitle,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: available && !busy ? onPressed : () {},
+              ),
+            ),
+          ),
+          IgnorePointer(
+            child: Stack(
+              children: [
+                Center(
+                  child: Container(
+                    width: 82,
+                    height: 82,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        width: 1.4,
+                        color: AppColors.deviceControlPrimaryAction,
+                      ),
+                    ),
+                    child: const Center(
+                      child: _DeviceControlAssetIcon(
+                        assetPath: _DeviceCommandAssetPaths.partialOpen,
+                      ),
+                    ),
+                  ),
+                ),
+                Align(
+                  alignment: const Alignment(0, 1),
+                  child: Text(
+                    AppLocalizations.of(context).deviceCommandPartialOpenTitle,
+                    style: AppTextTokens.deviceControlQuickActionTitle(
+                      textTheme,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (valueLabel != null)
             Align(
               alignment: Alignment.topRight,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: AppColors.deviceControlInactive.withValues(
-                    alpha: 0.42,
-                  ),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 7,
-                    vertical: 4,
-                  ),
-                  child: Text(
-                    AppLocalizations.of(
-                      context,
-                    ).deviceCommandCentimeters(value!),
-                    style: AppTextTokens.deviceControlBadge(textTheme),
+              child: Semantics(
+                button: true,
+                enabled: settingAvailable && !settingBusy,
+                label: AppLocalizations.of(
+                  context,
+                ).deviceSettingsPartialOpenHeight,
+                child: GestureDetector(
+                  key: const ValueKey<String>('partial-open-position-action'),
+                  behavior: HitTestBehavior.opaque,
+                  onTap: settingAvailable && !settingBusy
+                      ? onSettingPressed
+                      : () {},
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: AppColors.deviceControlInactive.withValues(
+                        alpha: 0.42,
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 4,
+                      ),
+                      child: Text(
+                        valueLabel!,
+                        style: AppTextTokens.deviceControlBadge(textTheme),
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
-          Center(
-            child: Container(
-              width: 82,
-              height: 82,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  width: 1.4,
-                  color: AppColors.deviceControlPrimaryAction,
-                ),
-              ),
-              child: const Center(
-                child: _DeviceControlAssetIcon(
-                  assetPath: _DeviceCommandAssetPaths.partialOpen,
-                ),
-              ),
-            ),
-          ),
-          Align(
-            alignment: const Alignment(0, 1),
-            child: Text(
-              AppLocalizations.of(context).deviceCommandPartialOpenTitle,
-              style: AppTextTokens.deviceControlQuickActionTitle(textTheme),
-            ),
-          ),
         ],
       ),
     );

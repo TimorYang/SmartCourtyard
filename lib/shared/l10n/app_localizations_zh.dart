@@ -2067,6 +2067,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get deviceCommandPartialOpenTitle => '部分开门';
 
   @override
+  String get deviceCommandPartialOpenSettingUnavailable => '半开门档位暂不可用，请重试。';
+
+  @override
+  String get deviceCommandPartialOpenSettingFailed => '无法保存半开门位置，请重试。';
+
+  @override
   String get deviceCommandMoreSettingsTitle => '更多设置';
 
   @override
