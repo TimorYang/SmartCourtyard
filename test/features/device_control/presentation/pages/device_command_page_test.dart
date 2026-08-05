@@ -20,6 +20,7 @@ import 'package:flinx/features/records/domain/entities/operation_record_page_res
 import 'package:flinx/features/records/domain/repositories/operation_record_repository.dart';
 import 'package:flinx/features/settings/application/providers.dart';
 import 'package:flinx/features/settings/domain/entities/device_capability.dart';
+import 'package:flinx/features/settings/domain/entities/device_setting.dart';
 import 'package:flinx/features/settings/domain/entities/door_setting_snapshot.dart';
 import 'package:flinx/features/settings/domain/repositories/device_capability_repository.dart';
 import 'package:flinx/features/settings/domain/repositories/door_settings_repository.dart';
@@ -31,6 +32,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:toastification/toastification.dart';
 
 void main() {
   testWidgets('shows only loading until door detail requests complete', (
@@ -258,8 +260,19 @@ void main() {
     );
   });
 
-  testWidgets('toggles the open reminder quick action', (tester) async {
-    await _pumpDevicePage(tester, _RecordingHardwareGateway());
+  testWidgets('writes auto close and open reminder through BLE attributes', (
+    tester,
+  ) async {
+    final gateway = _RecordingHardwareGateway();
+    await _pumpDevicePage(tester, gateway);
+
+    final autoCloseSwitch = find.byKey(
+      const ValueKey<String>('auto-close-switch'),
+    );
+    await tester.tap(autoCloseSwitch);
+    await tester.pumpAndSettle();
+    await tester.tap(autoCloseSwitch);
+    await tester.pumpAndSettle();
 
     final reminderSwitch = find.byKey(
       const ValueKey<String>('open-reminder-switch'),
@@ -267,9 +280,91 @@ void main() {
     expect(tester.widget<FlinxSwitch>(reminderSwitch).value, isTrue);
 
     await tester.tap(reminderSwitch);
-    await tester.pump();
+    await tester.pumpAndSettle();
+    await tester.tap(reminderSwitch);
+    await tester.pumpAndSettle();
 
-    expect(tester.widget<FlinxSwitch>(reminderSwitch).value, isFalse);
+    final snapshot = await gateway.queryDeviceAttributes(
+      requestId: 'verify-toggle-attributes',
+      deviceId: 'mock-ble-device',
+    );
+    expect(
+      snapshot.attributes
+          .singleWhere(
+            (attribute) =>
+                attribute.id == DeviceSettingKey.autoCloseTime.attributeId,
+          )
+          .unsignedValue,
+      30,
+    );
+    expect(
+      snapshot.attributes
+          .singleWhere(
+            (attribute) =>
+                attribute.id == DeviceSettingKey.doorOpenReminder.attributeId,
+          )
+          .unsignedValue,
+      10,
+    );
+    expect(gateway.attributeWriteCount, 4);
+  });
+
+  testWidgets('prompts for Bluetooth for BLE-only quick actions', (
+    tester,
+  ) async {
+    final gateway = _DisconnectedHardwareGateway();
+    await _pumpDevicePage(tester, gateway);
+
+    await tester.tap(find.byKey(const ValueKey<String>('auto-close-switch')));
+    await tester.pump();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(
+      tester
+          .widget<FlinxSwitch>(
+            find.byKey(const ValueKey<String>('auto-close-switch')),
+          )
+          .value,
+      isTrue,
+    );
+    expect(
+      find.text('Connect the selected device via Bluetooth to use Auto close.'),
+      findsOneWidget,
+    );
+
+    await tester.tap(
+      find.byKey(const ValueKey<String>('open-reminder-switch')),
+    );
+    await tester.pump();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(
+      find.text(
+        'Connect the selected device via Bluetooth to use Open reminder.',
+      ),
+      findsOneWidget,
+    );
+
+    final partialOpenAction = find.byKey(
+      const ValueKey<String>('partial-open-action'),
+    );
+    await tester.ensureVisible(partialOpenAction);
+    await tester.tap(partialOpenAction);
+    await tester.pump();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(
+      find.text(
+        'Connect the selected device via Bluetooth to use Partial open.',
+      ),
+      findsOneWidget,
+    );
+    expect(gateway.commands, isEmpty);
+    expect(gateway.attributeWriteCount, 0);
+    toastification.dismissAll(delayForAnimation: false);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump();
   });
 
   testWidgets('disables controls whose capabilities are absent', (
@@ -648,6 +743,7 @@ Widget _buildPage(
   return ProviderScope(
     overrides: [
       deviceCommandHardwareGatewayProvider.overrideWithValue(gateway),
+      deviceSettingsHardwareGatewayProvider.overrideWithValue(gateway),
       doorDetailRepositoryProvider.overrideWithValue(repository),
       if (remoteRepository != null)
         remoteDoorCommandRepositoryProvider.overrideWithValue(remoteRepository),
@@ -667,37 +763,39 @@ Widget _buildPage(
         const _EmptyDoorSettingsRepository(),
       ),
     ],
-    child: MaterialApp.router(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      routerConfig: GoRouter(
-        initialLocation:
-            '${DeviceCommandPage.routePath}?doorId=12&deviceId=mock-device',
-        routes: [
-          GoRoute(
-            path: DeviceCommandPage.routePath,
-            builder: (context, state) => DeviceCommandPage(
-              doorId: state.uri.queryParameters['doorId'] ?? '',
-              deviceId: state.uri.queryParameters['deviceId'] ?? '',
+    child: ToastificationWrapper(
+      child: MaterialApp.router(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        routerConfig: GoRouter(
+          initialLocation:
+              '${DeviceCommandPage.routePath}?doorId=12&deviceId=mock-device',
+          routes: [
+            GoRoute(
+              path: DeviceCommandPage.routePath,
+              builder: (context, state) => DeviceCommandPage(
+                doorId: state.uri.queryParameters['doorId'] ?? '',
+                deviceId: state.uri.queryParameters['deviceId'] ?? '',
+              ),
             ),
-          ),
-          GoRoute(
-            path: DeviceSettingsPage.routePath,
-            builder: (context, state) => DeviceSettingsPage(
-              doorId: state.uri.queryParameters['doorId'] ?? '',
-              deviceId: state.uri.queryParameters['deviceId'] ?? '',
-              bleName: state.uri.queryParameters['bleName'] ?? '',
-              bleDeviceId: state.uri.queryParameters['bleDeviceId'] ?? '',
+            GoRoute(
+              path: DeviceSettingsPage.routePath,
+              builder: (context, state) => DeviceSettingsPage(
+                doorId: state.uri.queryParameters['doorId'] ?? '',
+                deviceId: state.uri.queryParameters['deviceId'] ?? '',
+                bleName: state.uri.queryParameters['bleName'] ?? '',
+                bleDeviceId: state.uri.queryParameters['bleDeviceId'] ?? '',
+              ),
             ),
-          ),
-          GoRoute(
-            path: AlreadyAddedDevicesPage.routePath,
-            builder: (context, state) => AlreadyAddedDevicesPage(
-              doorId: state.uri.queryParameters['doorId'] ?? '',
-              deviceId: state.uri.queryParameters['deviceId'] ?? '',
+            GoRoute(
+              path: AlreadyAddedDevicesPage.routePath,
+              builder: (context, state) => AlreadyAddedDevicesPage(
+                doorId: state.uri.queryParameters['doorId'] ?? '',
+                deviceId: state.uri.queryParameters['deviceId'] ?? '',
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     ),
   );
@@ -797,6 +895,21 @@ class _RecordingHardwareGateway extends MockHardwareGateway {
   int queryCount = 0;
   final List<String> authenticatedDeviceIds = <String>[];
   int disconnectAllCount = 0;
+  int attributeWriteCount = 0;
+
+  @override
+  Future<DeviceAttributeWriteResult> setDeviceAttributes({
+    required String requestId,
+    required String deviceId,
+    required List<DeviceAttribute> attributes,
+  }) async {
+    attributeWriteCount += 1;
+    return super.setDeviceAttributes(
+      requestId: requestId,
+      deviceId: deviceId,
+      attributes: attributes,
+    );
+  }
 
   @override
   Future<List<BleConnectionEvent>> disconnectAllManagedBleDevices({
@@ -867,7 +980,13 @@ class _FakeFetchOnboardingDeviceKeyUseCase
   }
 }
 
-class _DisconnectedHardwareGateway extends MockHardwareGateway {}
+class _DisconnectedHardwareGateway extends _RecordingHardwareGateway {
+  @override
+  Future<void> startBleScan({
+    required String requestId,
+    BleScanFilter filter = const BleScanFilter(),
+  }) async {}
+}
 
 class _SuccessfulRemoteDoorCommandRepository
     implements RemoteDoorCommandRepository {

@@ -130,6 +130,19 @@ class DeviceSettingsController extends Notifier<DeviceSettingsState> {
     }
   }
 
+  Future<bool> setEnabled(DeviceSettingKey key, {required bool enabled}) {
+    if (!key.supportsEnabledToggle) {
+      return Future<bool>.value(false);
+    }
+    final currentValue = state.values[key]?.rawValue;
+    final rawValue = enabled
+        ? currentValue != null && currentValue != 0
+              ? currentValue
+              : key.defaultEnabledValue
+        : 0;
+    return setRawValue(key, rawValue);
+  }
+
   void _applyValues(Map<DeviceSettingKey, DeviceSettingValue> values) {
     if (!ref.mounted) {
       return;

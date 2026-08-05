@@ -60,6 +60,97 @@ void main() {
     expect(second, isFalse);
     expect(await first, isTrue);
   });
+
+  test('enables toggle settings with protocol defaults', () async {
+    final container = ProviderContainer(
+      overrides: [
+        deviceSettingsHardwareGatewayProvider.overrideWithValue(
+          MockHardwareGateway(),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    final provider = deviceSettingsControllerProvider('device-1');
+    final subscription = container.listen(provider, (_, _) {});
+    addTearDown(subscription.close);
+    await _waitUntil(() => !container.read(provider).loading);
+
+    expect(
+      await container
+          .read(provider.notifier)
+          .setEnabled(DeviceSettingKey.autoCloseTime, enabled: true),
+      isTrue,
+    );
+    expect(
+      container.read(provider).values[DeviceSettingKey.autoCloseTime]?.rawValue,
+      30,
+    );
+    expect(
+      await container
+          .read(provider.notifier)
+          .setEnabled(DeviceSettingKey.doorOpenReminder, enabled: true),
+      isTrue,
+    );
+    expect(
+      container
+          .read(provider)
+          .values[DeviceSettingKey.doorOpenReminder]
+          ?.rawValue,
+      10,
+    );
+  });
+
+  test(
+    'disables toggle settings and restores an existing non-zero value',
+    () async {
+      final container = ProviderContainer(
+        overrides: [
+          deviceSettingsHardwareGatewayProvider.overrideWithValue(
+            MockHardwareGateway(),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      final provider = deviceSettingsControllerProvider('device-1');
+      final subscription = container.listen(provider, (_, _) {});
+      addTearDown(subscription.close);
+      await _waitUntil(() => !container.read(provider).loading);
+      final controller = container.read(provider.notifier);
+
+      expect(
+        await controller.setRawValue(DeviceSettingKey.doorOpenReminder, 15),
+        isTrue,
+      );
+      expect(
+        await controller.setEnabled(
+          DeviceSettingKey.doorOpenReminder,
+          enabled: true,
+        ),
+        isTrue,
+      );
+      expect(
+        container
+            .read(provider)
+            .values[DeviceSettingKey.doorOpenReminder]
+            ?.rawValue,
+        15,
+      );
+      expect(
+        await controller.setEnabled(
+          DeviceSettingKey.doorOpenReminder,
+          enabled: false,
+        ),
+        isTrue,
+      );
+      expect(
+        container
+            .read(provider)
+            .values[DeviceSettingKey.doorOpenReminder]
+            ?.rawValue,
+        0,
+      );
+    },
+  );
 }
 
 Future<void> _waitUntil(bool Function() condition) async {

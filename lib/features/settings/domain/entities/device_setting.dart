@@ -22,6 +22,16 @@ enum DeviceSettingKey {
     DeviceSettingKey.doorOpenReminder => 'DOOR_OPEN_REMINDER',
   };
 
+  bool get supportsEnabledToggle =>
+      this == DeviceSettingKey.autoCloseTime ||
+      this == DeviceSettingKey.doorOpenReminder;
+
+  int get defaultEnabledValue => switch (this) {
+    DeviceSettingKey.autoCloseTime => 30,
+    DeviceSettingKey.doorOpenReminder => 10,
+    _ => throw UnsupportedError('$name does not support enabled toggles.'),
+  };
+
   /// Range defined by the door BLE protocol's attribute table.
   ///
   /// The byte width is still used for serialization; this range prevents

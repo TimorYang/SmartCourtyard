@@ -9,10 +9,14 @@ import '../../../../core/logging/app_logger.dart';
 import '../../../../core/logging/providers.dart';
 import '../../../../platform_bridge/hardware_models.dart';
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../../../shared/widgets/flinx_switch.dart';
 import '../../../records/presentation/pages/operation_record_page.dart';
 import '../../../security_center/presentation/pages/security_center_page.dart';
+import '../../../settings/application/device_settings_controller.dart';
+import '../../../settings/application/door_settings_controller.dart';
+import '../../../settings/domain/entities/device_setting.dart';
 import '../../application/device_command_controller.dart';
 import '../../domain/entities/door_device.dart';
 import '../../domain/entities/door_realtime_state.dart';
@@ -240,6 +244,9 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
         commandState.selectedDeviceId != null &&
         commandState.bleConnectionStatuses[commandState.selectedDeviceId] ==
             DeviceBleConnectionStatus.connected;
+    final deviceSettingsState = ref.watch(
+      deviceSettingsControllerProvider(connectedBleDeviceId),
+    );
     final capabilities = _capabilitiesForCurrentDevice(commandState);
     final canControlDoor = capabilities.contains('DOOR_CONTROL');
     final canControlLed = capabilities.contains('LED_CONTROL');
@@ -402,6 +409,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                     partialOpenAvailable: canPartialOpen,
                     openReminderAvailable: canUseOpenReminder,
                     busy: isBusy,
+                    settingsBusy: deviceSettingsState.pendingKey != null,
                     onLedChanged: (enabled) async {
                       setState(() => _ledEnabledOverride = enabled);
                       await controller.runAction(
@@ -414,16 +422,32 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                         setState(() => _ledEnabledOverride = null);
                       }
                     },
-                    onAutoCloseChanged: (enabled) {
-                      setState(() => _autoCloseEnabledOverride = enabled);
-                    },
-                    onOpenReminderChanged: (enabled) {
-                      setState(() => _openReminderEnabledOverride = enabled);
-                    },
-                    onPartialOpen: () => controller.runAction(
-                      deviceId: hardwareDeviceId,
-                      action: DeviceCommandAction.partialOpenDoor,
+                    onAutoCloseChanged: (enabled) => _setBluetoothToggle(
+                      connected: selectedDeviceUsesBle,
+                      bleDeviceId: connectedBleDeviceId,
+                      key: DeviceSettingKey.autoCloseTime,
+                      enabled: enabled,
+                      actionLabel: l10n.deviceCommandAutoCloseTitle,
                     ),
+                    onOpenReminderChanged: (enabled) => _setBluetoothToggle(
+                      connected: selectedDeviceUsesBle,
+                      bleDeviceId: connectedBleDeviceId,
+                      key: DeviceSettingKey.doorOpenReminder,
+                      enabled: enabled,
+                      actionLabel: l10n.deviceCommandOpenReminderTitle,
+                    ),
+                    onPartialOpen: () {
+                      if (!_requireBluetoothConnection(
+                        connected: selectedDeviceUsesBle,
+                        actionLabel: l10n.deviceCommandActionPartialOpen,
+                      )) {
+                        return;
+                      }
+                      controller.runAction(
+                        deviceId: hardwareDeviceId,
+                        action: DeviceCommandAction.partialOpenDoor,
+                      );
+                    },
                     onMoreSettings: () => context.push(
                       '${DeviceSettingsPage.routePath}'
                       '?doorId=${Uri.encodeComponent(widget.doorId)}'
@@ -440,6 +464,69 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
         ),
       ),
     );
+  }
+
+  bool _requireBluetoothConnection({
+    required bool connected,
+    required String actionLabel,
+  }) {
+    if (connected) {
+      return true;
+    }
+    AppToast.info(
+      context,
+      AppLocalizations.of(context).deviceCommandBluetoothRequired(actionLabel),
+    );
+    return false;
+  }
+
+  Future<void> _setBluetoothToggle({
+    required bool connected,
+    required String bleDeviceId,
+    required DeviceSettingKey key,
+    required bool enabled,
+    required String actionLabel,
+  }) async {
+    if (!_requireBluetoothConnection(
+      connected: connected,
+      actionLabel: actionLabel,
+    )) {
+      return;
+    }
+
+    setState(() {
+      if (key == DeviceSettingKey.autoCloseTime) {
+        _autoCloseEnabledOverride = enabled;
+      } else {
+        _openReminderEnabledOverride = enabled;
+      }
+    });
+    final saved = await ref
+        .read(deviceSettingsControllerProvider(bleDeviceId).notifier)
+        .setEnabled(key, enabled: enabled);
+    if (!mounted) {
+      return;
+    }
+    if (!saved) {
+      setState(() {
+        if (key == DeviceSettingKey.autoCloseTime) {
+          _autoCloseEnabledOverride = null;
+        } else {
+          _openReminderEnabledOverride = null;
+        }
+      });
+      return;
+    }
+    final appliedValue = ref
+        .read(deviceSettingsControllerProvider(bleDeviceId))
+        .values[key]
+        ?.rawValue;
+    ref
+        .read(doorSettingsControllerProvider(widget.doorId).notifier)
+        .updateCurrentValue(
+          key.capabilityCode,
+          appliedValue ?? (enabled ? key.defaultEnabledValue : 0),
+        );
   }
 
   String _doorStateLabel(
@@ -1214,6 +1301,7 @@ class _QuickActionGrid extends StatelessWidget {
     required this.partialOpenAvailable,
     required this.openReminderAvailable,
     required this.busy,
+    required this.settingsBusy,
     required this.onLedChanged,
     required this.onAutoCloseChanged,
     required this.onOpenReminderChanged,
@@ -1230,6 +1318,7 @@ class _QuickActionGrid extends StatelessWidget {
   final bool partialOpenAvailable;
   final bool openReminderAvailable;
   final bool busy;
+  final bool settingsBusy;
   final ValueChanged<bool> onLedChanged;
   final ValueChanged<bool> onAutoCloseChanged;
   final ValueChanged<bool> onOpenReminderChanged;
@@ -1266,7 +1355,7 @@ class _QuickActionGrid extends StatelessWidget {
                     ).deviceCommandAutoCloseTitle,
                     enabled: autoCloseEnabled,
                     available: autoCloseAvailable,
-                    busy: busy,
+                    busy: busy || settingsBusy,
                     textTheme: textTheme,
                     onChanged: onAutoCloseChanged,
                   ),
@@ -1285,7 +1374,7 @@ class _QuickActionGrid extends StatelessWidget {
                     ).deviceCommandMinutes(10),
                     enabled: openReminderEnabled,
                     available: openReminderAvailable,
-                    busy: busy,
+                    busy: busy || settingsBusy,
                     textTheme: textTheme,
                     onChanged: onOpenReminderChanged,
                   ),
