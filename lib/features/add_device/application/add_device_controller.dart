@@ -35,6 +35,8 @@ class AddDeviceState {
     this.errorMessage,
     this.infoMessage,
     this.onboardingFlowId,
+    this.onboardingDoorId,
+    this.onboardingSceneId,
   });
 
   factory AddDeviceState.initial() {
@@ -69,6 +71,8 @@ class AddDeviceState {
   final String? errorMessage;
   final String? infoMessage;
   final String? onboardingFlowId;
+  final String? onboardingDoorId;
+  final int? onboardingSceneId;
 
   List<BleDevice> sortedDevices() {
     final items = devices.values.toList();
@@ -104,6 +108,10 @@ class AddDeviceState {
     bool clearInfoMessage = false,
     String? onboardingFlowId,
     bool clearOnboardingFlowId = false,
+    String? onboardingDoorId,
+    bool clearOnboardingDoorId = false,
+    int? onboardingSceneId,
+    bool clearOnboardingSceneId = false,
   }) {
     return AddDeviceState(
       devices: devices ?? this.devices,
@@ -133,6 +141,12 @@ class AddDeviceState {
       onboardingFlowId: clearOnboardingFlowId
           ? null
           : onboardingFlowId ?? this.onboardingFlowId,
+      onboardingDoorId: clearOnboardingDoorId
+          ? null
+          : onboardingDoorId ?? this.onboardingDoorId,
+      onboardingSceneId: clearOnboardingSceneId
+          ? null
+          : onboardingSceneId ?? this.onboardingSceneId,
     );
   }
 }
@@ -148,6 +162,7 @@ class AddDeviceController extends Notifier<AddDeviceState> {
   int _requestCounter = 0;
   String? _onboardingFlowId;
   String? _doorId;
+  int? _sceneId;
   String? _targetBleName;
   var _disposeHookRegistered = false;
 
@@ -747,11 +762,17 @@ class AddDeviceController extends Notifier<AddDeviceState> {
         deviceId: device.id,
         stage: 'cloud_binding',
         result: 'started',
-        context: {'sn': sn, 'doorId': doorId, 'doorType': doorType.wireValue},
+        context: {
+          'sn': sn,
+          'doorId': doorId,
+          'sceneId': _sceneId,
+          'doorType': doorType.wireValue,
+        },
       );
       final onboardedDoor = await _addForceDoorUseCase(
         sn: sn,
         doorId: doorId,
+        sceneId: _sceneId,
         doorType: doorType.wireValue,
         requestId: bindRequestId,
       );
@@ -833,6 +854,7 @@ class AddDeviceController extends Notifier<AddDeviceState> {
 
   void beginOnboardingFlow({
     String? doorId,
+    int? sceneId,
     DoorType doorType = DoorType.garage,
   }) {
     if (_onboardingFlowId != null) {
@@ -840,17 +862,21 @@ class AddDeviceController extends Notifier<AddDeviceState> {
     }
     _onboardingFlowId = null;
     _doorId = doorId;
+    _sceneId = sceneId;
     _requestCounter = 0;
     final flowId = _ensureFlow();
-    state = state.copyWith(doorType: doorType);
+    state = state.copyWith(
+      doorType: doorType,
+      onboardingDoorId: doorId,
+      clearOnboardingDoorId: doorId == null,
+      onboardingSceneId: sceneId,
+      clearOnboardingSceneId: sceneId == null,
+    );
     _log(
       'add_device_flow_entered',
       stage: 'add_device',
       result: 'entered',
-      context: {
-        'onboardingFlowId': flowId,
-        'doorType': doorType.wireValue,
-      },
+      context: {'onboardingFlowId': flowId, 'doorType': doorType.wireValue},
     );
   }
 

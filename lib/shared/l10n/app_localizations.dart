@@ -2528,6 +2528,18 @@ abstract class AppLocalizations {
   /// **'Select scene'**
   String get smartOpenerSelectScenePlaceholder;
 
+  /// No description provided for @smartOpenerRenameFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to update the name. Please try again.'**
+  String get smartOpenerRenameFailed;
+
+  /// No description provided for @smartOpenerRenameNetworkUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Network unavailable. Please try again.'**
+  String get smartOpenerRenameNetworkUnavailable;
+
   /// No description provided for @smartOpenerInviteFamilyTip.
   ///
   /// In en, this message translates to:

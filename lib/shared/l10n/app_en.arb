@@ -1328,6 +1328,8 @@
   "smartOpenerConnectionSuccessDescription": "configure the device information",
   "smartOpenerDeviceNamePlaceholder": "Device Name",
   "smartOpenerSelectScenePlaceholder": "Select scene",
+  "smartOpenerRenameFailed": "Unable to update the name. Please try again.",
+  "smartOpenerRenameNetworkUnavailable": "Network unavailable. Please try again.",
   "smartOpenerInviteFamilyTip": "Invite the family to use it",
   "smartOpenerShareAction": "To share",
   "smartOpenerTryAction": "Try it",

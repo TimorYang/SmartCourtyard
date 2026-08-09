@@ -22,6 +22,7 @@ abstract interface class AddDeviceOnboardingRemoteDataSource {
   Future<ForceDoorResponseDto> addForceDoor({
     required String sn,
     String? doorId,
+    int? sceneId,
     required int doorType,
     required String requestId,
   });
@@ -99,12 +100,18 @@ class AddDeviceOnboardingRemoteDataSourceImpl
   Future<ForceDoorResponseDto> addForceDoor({
     required String sn,
     String? doorId,
+    int? sceneId,
     required int doorType,
     required String requestId,
   }) async {
     try {
       final response = await api.addForceDoor(
-        AddForceDoorRequestDto(sn: sn, doorId: doorId, doorType: doorType),
+        AddForceDoorRequestDto(
+          sn: sn,
+          doorId: doorId,
+          sceneId: sceneId,
+          doorType: doorType,
+        ),
         Options(extra: _bindingRequestExtras(requestId)),
       );
       final data = response.data;

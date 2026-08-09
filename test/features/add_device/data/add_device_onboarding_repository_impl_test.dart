@@ -55,6 +55,7 @@ class _ThrowingRemoteDataSource implements AddDeviceOnboardingRemoteDataSource {
   Future<ForceDoorResponseDto> addForceDoor({
     required String sn,
     String? doorId,
+    int? sceneId,
     required int doorType,
     required String requestId,
   }) async {

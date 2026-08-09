@@ -1263,6 +1263,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get smartOpenerSelectScenePlaceholder => '选择场景';
 
   @override
+  String get smartOpenerRenameFailed => '名称修改失败，请重试。';
+
+  @override
+  String get smartOpenerRenameNetworkUnavailable => '网络不可用，请重试。';
+
+  @override
   String get smartOpenerInviteFamilyTip => '邀请家人使用';
 
   @override

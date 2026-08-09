@@ -532,7 +532,13 @@ void main() {
 
       expect(find.text('SHARE DEVICE'), findsOneWidget);
       expect(find.byType(Dialog), findsOneWidget);
-      expect(find.byType(TextField), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(Dialog),
+          matching: find.byType(TextField),
+        ),
+        findsOneWidget,
+      );
       final dialogCenter = tester.getCenter(find.byType(Dialog));
       expect(dialogCenter.dy, closeTo(tester.view.physicalSize.height / 2, 80));
 
@@ -839,6 +845,7 @@ class _FakeAddDeviceOnboardingRepository
   Future<OnboardedForceDoor> addForceDoor({
     required String sn,
     String? doorId,
+    int? sceneId,
     required int doorType,
     required String requestId,
   }) async {

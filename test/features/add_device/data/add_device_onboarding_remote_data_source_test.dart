@@ -174,6 +174,46 @@ void main() {
   });
 
   test(
+    'addForceDoor sends sceneId when assigning a new door to a scene',
+    () async {
+      final api = _FakeAddDeviceOnboardingApi();
+      final dataSource = AddDeviceOnboardingRemoteDataSourceImpl(api: api);
+
+      await dataSource.addForceDoor(
+        sn: 'SN-001',
+        sceneId: 12,
+        doorType: 4,
+        requestId: 'request-2',
+      );
+
+      expect(api.lastAddForceDoorRequest?.toJson(), {
+        'sn': 'SN-001',
+        'sceneId': 12,
+        'doorType': 4,
+      });
+    },
+  );
+
+  test('addForceDoor preserves both parent door and scene context', () async {
+    final api = _FakeAddDeviceOnboardingApi();
+    final dataSource = AddDeviceOnboardingRemoteDataSourceImpl(api: api);
+
+    await dataSource.addForceDoor(
+      sn: 'SN-001',
+      doorId: '7',
+      sceneId: 12,
+      doorType: 4,
+      requestId: 'request-2',
+    );
+
+    expect(api.lastAddForceDoorRequest?.toJson(), {
+      'sn': 'SN-001',
+      'doorId': '7',
+      'sceneId': 12,
+    });
+  });
+
+  test(
     'addForceDoor accepts code 200 regardless of envelope success flag',
     () async {
       final dataSource = AddDeviceOnboardingRemoteDataSourceImpl(

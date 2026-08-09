@@ -104,6 +104,7 @@ void main() {
       final controller = container.read(addDeviceControllerProvider.notifier);
       controller.beginOnboardingFlow(
         doorId: '1',
+        sceneId: 12,
         doorType: DoorType.industrial,
       );
 
@@ -133,6 +134,7 @@ void main() {
       );
       expect(logger.tags, everyElement(AppLogTag.binding));
       expect(_FakeAddDeviceOnboardingRepository.lastDoorTypeWireValue, 2);
+      expect(_FakeAddDeviceOnboardingRepository.lastSceneId, 12);
     },
   );
 }
@@ -277,6 +279,7 @@ class _FakeAddDeviceOnboardingRepository
   const _FakeAddDeviceOnboardingRepository();
 
   static int? lastDoorTypeWireValue;
+  static int? lastSceneId;
 
   @override
   Future<void> validateBindingStatus({
@@ -288,10 +291,12 @@ class _FakeAddDeviceOnboardingRepository
   Future<OnboardedForceDoor> addForceDoor({
     required String sn,
     String? doorId,
+    int? sceneId,
     required int doorType,
     required String requestId,
   }) async {
     lastDoorTypeWireValue = doorType;
+    lastSceneId = sceneId;
     return OnboardedForceDoor(id: 1, sn: sn);
   }
 

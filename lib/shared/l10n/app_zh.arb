@@ -439,6 +439,8 @@
   "smartOpenerConnectionSuccessDescription": "配置设备信息",
   "smartOpenerDeviceNamePlaceholder": "设备名称",
   "smartOpenerSelectScenePlaceholder": "选择场景",
+  "smartOpenerRenameFailed": "名称修改失败，请重试。",
+  "smartOpenerRenameNetworkUnavailable": "网络不可用，请重试。",
   "smartOpenerInviteFamilyTip": "邀请家人使用",
   "smartOpenerShareAction": "去分享",
   "smartOpenerTryAction": "试一下",

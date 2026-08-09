@@ -15,6 +15,7 @@ abstract interface class AddDeviceOnboardingRepository {
   Future<OnboardedForceDoor> addForceDoor({
     required String sn,
     String? doorId,
+    int? sceneId,
     required int doorType,
     required String requestId,
   });

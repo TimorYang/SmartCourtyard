@@ -1328,6 +1328,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get smartOpenerSelectScenePlaceholder => 'Select scene';
 
   @override
+  String get smartOpenerRenameFailed =>
+      'Unable to update the name. Please try again.';
+
+  @override
+  String get smartOpenerRenameNetworkUnavailable =>
+      'Network unavailable. Please try again.';
+
+  @override
   String get smartOpenerInviteFamilyTip => 'Invite the family to use it';
 
   @override

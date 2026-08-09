@@ -1,11 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
+import '../../../../core/errors/app_error.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
+import '../../../home/application/providers.dart';
+import '../../../home/domain/entities/home_scene.dart';
 import '../../../device_control/presentation/pages/already_added_devices_page.dart';
 import '../../../device_control/presentation/pages/device_command_page.dart';
 import 'add_new_doors_page.dart';
@@ -23,14 +28,148 @@ class SmartOpenerConnectionSuccessPage extends ConsumerStatefulWidget {
 
 class _SmartOpenerConnectionSuccessPageState
     extends ConsumerState<SmartOpenerConnectionSuccessPage> {
+  late final TextEditingController _nameController;
+  late final FocusNode _nameFocusNode;
+  String _savedName = '';
+  String? _renameError;
+  HomeScene? _selectedScene;
+  var _isRenaming = false;
+  var _isMovingScene = false;
+
   @override
   void initState() {
     super.initState();
+    final initialName =
+        ref.read(addDeviceControllerProvider).onboardedDoor?.name?.trim() ?? '';
+    _savedName = initialName;
+    _nameController = TextEditingController(text: initialName);
+    _nameFocusNode = FocusNode()..addListener(_onNameFocusChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         ref.read(addDeviceControllerProvider.notifier).logSuccessPageEntered();
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _nameFocusNode
+      ..removeListener(_onNameFocusChanged)
+      ..dispose();
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  void _onNameFocusChanged() {
+    if (!_nameFocusNode.hasFocus) {
+      unawaited(_saveName());
+    }
+  }
+
+  Future<void> _saveName() async {
+    if (_isRenaming) {
+      return;
+    }
+    final doorId = ref.read(addDeviceControllerProvider).onboardedDoor?.id;
+    final name = _nameController.text.trim();
+    if (doorId == null || name.isEmpty || name == _savedName) {
+      return;
+    }
+
+    setState(() {
+      _isRenaming = true;
+      _renameError = null;
+    });
+    final requestId =
+        'onboarding-rename-door-$doorId-${DateTime.now().toUtc().microsecondsSinceEpoch}';
+    try {
+      await ref.read(renameHomeDoorUseCaseProvider)(
+        doorId: doorId,
+        name: name,
+        requestId: requestId,
+      );
+      _savedName = name;
+      ref.invalidate(homeDevicesProvider);
+      if (mounted) {
+        setState(() {
+          _renameError = null;
+        });
+      }
+    } catch (error) {
+      if (mounted) {
+        final l10n = AppLocalizations.of(context);
+        setState(() {
+          _renameError =
+              error is AppError && error.code == AppErrorCode.networkUnavailable
+              ? l10n.smartOpenerRenameNetworkUnavailable
+              : l10n.smartOpenerRenameFailed;
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isRenaming = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _showSceneSheet() async {
+    final scene = await showModalBottomSheet<HomeScene>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      barrierColor: AppColors.overlaySoft,
+      isScrollControlled: true,
+      builder: (context) =>
+          _SceneSelectionSheet(selectedSceneId: _selectedScene?.id),
+    );
+    if (!mounted || scene == null) {
+      return;
+    }
+    await _moveToScene(scene);
+  }
+
+  Future<void> _moveToScene(HomeScene scene) async {
+    if (_isMovingScene) {
+      return;
+    }
+    final doorId = ref.read(addDeviceControllerProvider).onboardedDoor?.id;
+    if (doorId == null) {
+      return;
+    }
+
+    setState(() {
+      _isMovingScene = true;
+    });
+    final requestId =
+        'onboarding-move-door-$doorId-to-${scene.id}-${DateTime.now().toUtc().microsecondsSinceEpoch}';
+    try {
+      await ref.read(moveHomeDoorToSceneUseCaseProvider)(
+        doorId: doorId,
+        sceneId: scene.id,
+        requestId: requestId,
+      );
+      _selectedScene = scene;
+      ref.invalidate(homeScenesProvider);
+      ref.invalidate(homeDevicesProvider);
+    } catch (error) {
+      if (mounted) {
+        final l10n = AppLocalizations.of(context);
+        final message =
+            error is AppError && error.code == AppErrorCode.networkUnavailable
+            ? l10n.chooseSceneMoveNetworkUnavailable
+            : l10n.chooseSceneMoveFailed;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isMovingScene = false;
+        });
+      }
+    }
   }
 
   @override
@@ -40,6 +179,10 @@ class _SmartOpenerConnectionSuccessPageState
     final addDeviceState = ref.watch(addDeviceControllerProvider);
     final onboardedDoor = addDeviceState.onboardedDoor;
     final deviceId = addDeviceState.selectedDevice?.id ?? '';
+    final isAddingChildDevice =
+        addDeviceState.onboardingDoorId?.trim().isNotEmpty == true;
+    final showName = !isAddingChildDevice;
+    final showScene = showName && addDeviceState.onboardingSceneId == null;
 
     return Scaffold(
       backgroundColor: AppColors.backgroundPrimary,
@@ -67,21 +210,37 @@ class _SmartOpenerConnectionSuccessPageState
                   style: AppTextTokens.smartOpenerBodyCenter(textTheme),
                 ),
                 SizedBox(height: 80),
-                Padding(
-                  padding: EdgeInsetsGeometry.only(left: 10, right: 10),
-                  child: _SuccessFormRow(
-                    icon: Icons.door_front_door_outlined,
-                    label: l10n.smartOpenerDeviceNamePlaceholder,
+                if (showName) ...[
+                  Padding(
+                    padding: const EdgeInsets.only(left: 10, right: 10),
+                    child: _SuccessNameField(
+                      controller: _nameController,
+                      focusNode: _nameFocusNode,
+                      enabled: !_isRenaming,
+                      hintText: l10n.smartOpenerDeviceNamePlaceholder,
+                    ),
                   ),
-                ),
-                Padding(
-                  padding: EdgeInsetsGeometry.only(left: 10, right: 10),
-                  child: _SuccessFormRow(
-                    icon: Icons.view_in_ar_outlined,
-                    label: l10n.smartOpenerSelectScenePlaceholder,
-                    trailing: Icons.chevron_right,
+                  if (_renameError != null)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(10, 8, 10, 0),
+                      child: Text(
+                        _renameError!,
+                        style: TextStyle(color: AppColors.toastError),
+                      ),
+                    ),
+                ],
+                if (showScene)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 10, right: 10),
+                    child: _SuccessFormRow(
+                      icon: Icons.view_in_ar_outlined,
+                      label: _selectedScene?.name.trim().isNotEmpty == true
+                          ? _selectedScene!.name
+                          : l10n.smartOpenerSelectScenePlaceholder,
+                      trailing: Icons.chevron_right,
+                      onTap: _isMovingScene ? null : _showSceneSheet,
+                    ),
                   ),
-                ),
                 SizedBox(height: 80),
                 Text(
                   l10n.smartOpenerInviteFamilyTip,
@@ -188,16 +347,64 @@ class _SuccessFormRow extends StatelessWidget {
     required this.icon,
     required this.label,
     this.trailing,
+    this.onTap,
   });
 
   final IconData icon;
   final String label;
   final IconData? trailing;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        height: 66,
+        decoration: const BoxDecoration(
+          border: Border(
+            bottom: BorderSide(color: AppColors.smartOpenerDivider),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 24, color: AppColors.textIcon),
+            const SizedBox(width: 9),
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextTokens.smartOpenerFormText(textTheme),
+              ),
+            ),
+            if (trailing != null)
+              Icon(trailing, size: 24, color: AppColors.textPrimary),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SuccessNameField extends StatelessWidget {
+  const _SuccessNameField({
+    required this.controller,
+    required this.focusNode,
+    required this.enabled,
+    required this.hintText,
+  });
+
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final bool enabled;
+  final String hintText;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
     return Container(
       height: 66,
       decoration: const BoxDecoration(
@@ -205,19 +412,90 @@ class _SuccessFormRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, size: 24, color: AppColors.textIcon),
+          const Icon(
+            Icons.door_front_door_outlined,
+            size: 24,
+            color: AppColors.textIcon,
+          ),
           const SizedBox(width: 9),
           Expanded(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            child: TextField(
+              controller: controller,
+              focusNode: focusNode,
+              enabled: enabled,
+              textInputAction: TextInputAction.done,
               style: AppTextTokens.smartOpenerFormText(textTheme),
+              decoration: InputDecoration.collapsed(
+                hintText: hintText,
+                hintStyle: AppTextTokens.smartOpenerFormText(textTheme),
+              ),
+              onEditingComplete: focusNode.unfocus,
             ),
           ),
-          if (trailing != null)
-            Icon(trailing, size: 24, color: AppColors.textPrimary),
         ],
+      ),
+    );
+  }
+}
+
+class _SceneSelectionSheet extends ConsumerWidget {
+  const _SceneSelectionSheet({required this.selectedSceneId});
+
+  final int? selectedSceneId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final scenesState = ref.watch(homeScenesProvider);
+    return Material(
+      color: AppColors.backgroundPrimary,
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+      clipBehavior: Clip.antiAlias,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+          child: scenesState.when(
+            loading: () => const SizedBox(
+              height: 180,
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (_, _) => SizedBox(
+              height: 180,
+              child: Center(
+                child: TextButton.icon(
+                  onPressed: () => ref.invalidate(homeScenesProvider),
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: Text(l10n.addDoorSceneLoadFailed),
+                ),
+              ),
+            ),
+            data: (scenes) => scenes.isEmpty
+                ? SizedBox(
+                    height: 180,
+                    child: Center(child: Text(l10n.addDoorSceneEmpty)),
+                  )
+                : ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: scenes.length,
+                    separatorBuilder: (_, _) => const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final scene = scenes[index];
+                      return ListTile(
+                        title: Text(
+                          scene.name.trim().isEmpty
+                              ? l10n.addDoorSceneDefault
+                              : scene.name,
+                        ),
+                        trailing: scene.id == selectedSceneId
+                            ? const Icon(Icons.check)
+                            : null,
+                        onTap: () => Navigator.of(context).pop(scene),
+                      );
+                    },
+                  ),
+          ),
+        ),
       ),
     );
   }
