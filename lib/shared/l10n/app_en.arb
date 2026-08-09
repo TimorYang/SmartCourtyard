@@ -1315,6 +1315,7 @@
   "smartOpenerSkipAction": "Skip",
   "smartOpenerSkipTip": "Only use Bluetooth mode to operate, skip Wifi distribution network",
   "smartOpenerSelectWifiTitle": "Select Wi-Fi",
+  "smartOpenerRefreshWifiTooltip": "Refresh Wi-Fi list",
   "smartOpenerConnectingTitle": "Connecting",
   "smartOpenerConnectingTip": "Keep your phone as close to the device as possible",
   "smartOpenerConnectionFailedMessage": "Connection failed. Please check Wi-Fi password and try again.",

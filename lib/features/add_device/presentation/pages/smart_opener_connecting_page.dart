@@ -9,7 +9,6 @@ import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
 import '../../../home/application/providers.dart';
-import 'smart_opener_choose_wifi_page.dart';
 import 'smart_opener_scan_results_page.dart';
 import 'smart_opener_connection_success_page.dart';
 
@@ -83,7 +82,7 @@ class _SmartOpenerConnectingPageState
       ),
     );
     if (mounted) {
-      context.go(SmartOpenerChooseWifiPage.routePath);
+      context.pop();
     }
   }
 

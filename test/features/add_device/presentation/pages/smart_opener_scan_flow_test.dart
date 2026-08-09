@@ -215,6 +215,35 @@ void main() {
     expect(find.text('FLINX Office'), findsOneWidget);
   });
 
+  testWidgets('refreshes Wi-Fi list in the open Wi-Fi sheet', (tester) async {
+    final gateway = _RefreshingWifiHardwareGateway();
+    await _openChooseWifi(tester, gateway: gateway, scanDuration: scanDuration);
+
+    expect(gateway.wifiScanCalls, 1);
+    final refreshButton = find.byWidgetPredicate(
+      (widget) =>
+          widget is IconButton && widget.tooltip == 'Refresh Wi-Fi list',
+    );
+    expect(refreshButton, findsOneWidget);
+
+    await tester.tap(refreshButton);
+    await tester.pump();
+    expect(tester.widget<IconButton>(refreshButton).onPressed, isNull);
+    expect(gateway.wifiScanCalls, 2);
+
+    gateway.refreshCompleter.complete(
+      WifiScanResult(
+        requestId: 'refresh-result',
+        deviceId: 'mock-ble-device',
+        networks: const <WifiNetwork>[WifiNetwork(ssid: 'FLINX Home')],
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('FLINX Home'), findsOneWidget);
+    expect(find.text('FLINX Office'), findsNothing);
+  });
+
   testWidgets('selecting Wi-Fi fills SSID and Next reaches connecting flow', (
     tester,
   ) async {
@@ -279,11 +308,8 @@ void main() {
   testWidgets('configure failure shows dialog and OK returns to Choose Wi-Fi', (
     tester,
   ) async {
-    await _openChooseWifi(
-      tester,
-      gateway: _FailingWifiHardwareGateway(),
-      scanDuration: scanDuration,
-    );
+    final gateway = _FailingWifiHardwareGateway();
+    await _openChooseWifi(tester, gateway: gateway, scanDuration: scanDuration);
 
     await tester.tap(find.text('FLINX Office'));
     await tester.pumpAndSettle();
@@ -312,6 +338,12 @@ void main() {
     await tester.tap(find.text('OK'));
     await tester.pumpAndSettle();
     expect(find.text('CHOOSE WIFI'), findsOneWidget);
+    expect(gateway.wifiScanCalls, 1);
+    expect(find.byIcon(Icons.arrow_back), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.arrow_back));
+    await tester.pumpAndSettle();
+    expect(find.text('SCAN RESULTS'), findsOneWidget);
   });
 
   testWidgets('connecting back sheet can cancel or return to scan results', (
@@ -823,6 +855,17 @@ class _NoDeviceHardwareGateway extends MockHardwareGateway {
 }
 
 class _FailingWifiHardwareGateway extends MockHardwareGateway {
+  var wifiScanCalls = 0;
+
+  @override
+  Future<WifiScanResult> scanWifiNetworks({
+    required String requestId,
+    required String deviceId,
+  }) async {
+    wifiScanCalls += 1;
+    return super.scanWifiNetworks(requestId: requestId, deviceId: deviceId);
+  }
+
   @override
   Future<WifiProvisionResult> configureWifi({
     required String requestId,
@@ -837,6 +880,24 @@ class _FailingWifiHardwareGateway extends MockHardwareGateway {
       success: false,
       nativeCode: 'test_wifi_failure',
     );
+  }
+}
+
+class _RefreshingWifiHardwareGateway extends MockHardwareGateway {
+  var wifiScanCalls = 0;
+  final Completer<WifiScanResult> refreshCompleter =
+      Completer<WifiScanResult>();
+
+  @override
+  Future<WifiScanResult> scanWifiNetworks({
+    required String requestId,
+    required String deviceId,
+  }) {
+    wifiScanCalls += 1;
+    if (wifiScanCalls == 1) {
+      return super.scanWifiNetworks(requestId: requestId, deviceId: deviceId);
+    }
+    return refreshCompleter.future;
   }
 }
 

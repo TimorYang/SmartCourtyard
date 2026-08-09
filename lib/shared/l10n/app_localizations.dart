@@ -2450,6 +2450,12 @@ abstract class AppLocalizations {
   /// **'Select Wi-Fi'**
   String get smartOpenerSelectWifiTitle;
 
+  /// No description provided for @smartOpenerRefreshWifiTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh Wi-Fi list'**
+  String get smartOpenerRefreshWifiTooltip;
+
   /// No description provided for @smartOpenerConnectingTitle.
   ///
   /// In en, this message translates to:

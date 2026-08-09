@@ -67,18 +67,32 @@ class _SmartOpenerChooseWifiPageState
 
   Future<void> _showWifiSheet(List<WifiNetwork> networks) async {
     final selectedSsid = ref.read(addDeviceControllerProvider).wifiSsid;
+    final l10n = AppLocalizations.of(context);
     final selected = await showModalBottomSheet<String>(
       context: context,
       backgroundColor: Colors.transparent,
       barrierColor: AppColors.overlaySoft,
       isScrollControlled: true,
-      builder: (context) =>
-          _WifiNetworkSheet(networks: networks, selectedSsid: selectedSsid),
+      builder: (context) => _WifiNetworkSheet(
+        networks: networks,
+        selectedSsid: selectedSsid,
+        refreshTooltip: l10n.smartOpenerRefreshWifiTooltip,
+        onRefresh: _refreshWifiNetworks,
+      ),
     );
     if (!mounted || selected == null) {
       return;
     }
     ref.read(addDeviceControllerProvider.notifier).selectWifiNetwork(selected);
+  }
+
+  Future<List<WifiNetwork>?> _refreshWifiNetworks() async {
+    await ref.read(addDeviceControllerProvider.notifier).scanWifiNetworks();
+    if (!mounted) {
+      return null;
+    }
+    final state = ref.read(addDeviceControllerProvider);
+    return state.errorMessage == null ? state.wifiNetworks : null;
   }
 
   void _goConnecting({required bool skipWifi}) {
@@ -328,11 +342,55 @@ class _SmartOpenerChooseWifiIcon extends StatelessWidget {
   }
 }
 
-class _WifiNetworkSheet extends StatelessWidget {
-  const _WifiNetworkSheet({required this.networks, required this.selectedSsid});
+class _WifiNetworkSheet extends StatefulWidget {
+  const _WifiNetworkSheet({
+    required this.networks,
+    required this.selectedSsid,
+    required this.refreshTooltip,
+    required this.onRefresh,
+  });
 
   final List<WifiNetwork> networks;
   final String selectedSsid;
+  final String refreshTooltip;
+  final Future<List<WifiNetwork>?> Function() onRefresh;
+
+  @override
+  State<_WifiNetworkSheet> createState() => _WifiNetworkSheetState();
+}
+
+class _WifiNetworkSheetState extends State<_WifiNetworkSheet> {
+  late List<WifiNetwork> _networks;
+  var _isRefreshing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _networks = List<WifiNetwork>.of(widget.networks);
+  }
+
+  Future<void> _refresh() async {
+    if (_isRefreshing) {
+      return;
+    }
+    setState(() {
+      _isRefreshing = true;
+    });
+
+    List<WifiNetwork>? refreshedNetworks;
+    try {
+      refreshedNetworks = await widget.onRefresh();
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isRefreshing = false;
+          if (refreshedNetworks != null) {
+            _networks = List<WifiNetwork>.of(refreshedNetworks);
+          }
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -353,21 +411,47 @@ class _WifiNetworkSheet extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  l10n.smartOpenerSelectWifiTitle,
-                  style: AppTextTokens.smartOpenerSheetTitle(textTheme),
+                SizedBox(
+                  height: 48,
+                  width: double.infinity,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Text(
+                        l10n.smartOpenerSelectWifiTitle,
+                        textAlign: TextAlign.center,
+                        style: AppTextTokens.smartOpenerSheetTitle(textTheme),
+                      ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: IconButton(
+                          tooltip: widget.refreshTooltip,
+                          onPressed: _isRefreshing ? null : _refresh,
+                          icon: _isRefreshing
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.refresh),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 21),
                 Flexible(
                   child: ListView.builder(
                     padding: EdgeInsets.zero,
                     shrinkWrap: true,
-                    itemCount: networks.length,
+                    itemCount: _networks.length,
                     itemBuilder: (context, index) {
-                      final network = networks[index];
+                      final network = _networks[index];
                       return _WifiNetworkTile(
                         network: network,
-                        isSelected: network.ssid == selectedSsid,
+                        isSelected: network.ssid == widget.selectedSsid,
                       );
                     },
                   ),

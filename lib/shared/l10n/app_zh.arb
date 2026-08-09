@@ -426,6 +426,7 @@
   "smartOpenerSkipAction": "跳过",
   "smartOpenerSkipTip": "仅使用蓝牙模式操作，跳过 Wi-Fi 配网",
   "smartOpenerSelectWifiTitle": "选择 Wi-Fi",
+  "smartOpenerRefreshWifiTooltip": "刷新 Wi-Fi 列表",
   "smartOpenerConnectingTitle": "连接中",
   "smartOpenerConnectingTip": "请尽量让手机靠近设备",
   "smartOpenerConnectionFailedMessage": "连接失败。请检查 Wi-Fi 密码后重试。",

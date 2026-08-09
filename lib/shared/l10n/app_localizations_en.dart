@@ -1285,6 +1285,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get smartOpenerSelectWifiTitle => 'Select Wi-Fi';
 
   @override
+  String get smartOpenerRefreshWifiTooltip => 'Refresh Wi-Fi list';
+
+  @override
   String get smartOpenerConnectingTitle => 'Connecting';
 
   @override

@@ -1223,6 +1223,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get smartOpenerSelectWifiTitle => '选择 Wi-Fi';
 
   @override
+  String get smartOpenerRefreshWifiTooltip => '刷新 Wi-Fi 列表';
+
+  @override
   String get smartOpenerConnectingTitle => '连接中';
 
   @override
