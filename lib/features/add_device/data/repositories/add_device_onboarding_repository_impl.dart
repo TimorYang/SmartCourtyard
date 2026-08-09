@@ -84,12 +84,14 @@ class AddDeviceOnboardingRepositoryImpl
   Future<OnboardedForceDoor> addForceDoor({
     required String sn,
     String? doorId,
+    required int doorType,
     required String requestId,
   }) async {
     try {
       final data = await remoteDataSource.addForceDoor(
         sn: sn,
         doorId: doorId,
+        doorType: doorType,
         requestId: requestId,
       );
       logger.info(
@@ -97,7 +99,7 @@ class AddDeviceOnboardingRepositoryImpl
         tag: AppLogTag.binding,
         flowId: _flowId(requestId),
         requestId: requestId,
-        context: {'sn': sn, 'doorId': data.id},
+        context: {'sn': sn, 'doorId': data.id, 'doorType': doorType},
       );
       return data.toDomain(sn: sn);
     } on AddDeviceOnboardingRemoteException catch (error, stackTrace) {

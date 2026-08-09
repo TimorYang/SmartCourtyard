@@ -102,7 +102,10 @@ void main() {
       );
       addTearDown(container.dispose);
       final controller = container.read(addDeviceControllerProvider.notifier);
-      controller.beginOnboardingFlow(doorId: '1');
+      controller.beginOnboardingFlow(
+        doorId: '1',
+        doorType: DoorType.industrial,
+      );
 
       await controller.startScan();
       expect(await controller.connectAndAuthenticate(device), isTrue);
@@ -129,6 +132,7 @@ void main() {
         ]),
       );
       expect(logger.tags, everyElement(AppLogTag.binding));
+      expect(_FakeAddDeviceOnboardingRepository.lastDoorTypeWireValue, 2);
     },
   );
 }
@@ -272,6 +276,8 @@ class _FakeAddDeviceOnboardingRepository
     implements AddDeviceOnboardingRepository {
   const _FakeAddDeviceOnboardingRepository();
 
+  static int? lastDoorTypeWireValue;
+
   @override
   Future<void> validateBindingStatus({
     required String sn,
@@ -282,8 +288,10 @@ class _FakeAddDeviceOnboardingRepository
   Future<OnboardedForceDoor> addForceDoor({
     required String sn,
     String? doorId,
+    required int doorType,
     required String requestId,
   }) async {
+    lastDoorTypeWireValue = doorType;
     return OnboardedForceDoor(id: 1, sn: sn);
   }
 

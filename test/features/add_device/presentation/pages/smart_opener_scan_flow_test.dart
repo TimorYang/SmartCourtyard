@@ -807,6 +807,7 @@ class _FakeAddDeviceOnboardingRepository
   Future<OnboardedForceDoor> addForceDoor({
     required String sn,
     String? doorId,
+    required int doorType,
     required String requestId,
   }) async {
     return OnboardedForceDoor(id: 1, sn: sn, name: 'Test Door');

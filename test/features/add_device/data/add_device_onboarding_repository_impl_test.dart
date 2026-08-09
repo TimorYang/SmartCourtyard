@@ -22,6 +22,7 @@ void main() {
       () => repository.addForceDoor(
         sn: 'SN-001',
         doorId: '7',
+        doorType: 0,
         requestId: 'request-1',
       ),
       throwsA(
@@ -54,6 +55,7 @@ class _ThrowingRemoteDataSource implements AddDeviceOnboardingRemoteDataSource {
   Future<ForceDoorResponseDto> addForceDoor({
     required String sn,
     String? doorId,
+    required int doorType,
     required String requestId,
   }) async {
     throw exception;

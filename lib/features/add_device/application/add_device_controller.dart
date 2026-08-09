@@ -31,6 +31,7 @@ class AddDeviceState {
     this.selectedDevice,
     this.onboardedDoor,
     this.pendingDoorDraft,
+    this.doorType,
     this.errorMessage,
     this.infoMessage,
     this.onboardingFlowId,
@@ -64,6 +65,7 @@ class AddDeviceState {
   final BleDevice? selectedDevice;
   final OnboardedForceDoor? onboardedDoor;
   final AddDoorDraft? pendingDoorDraft;
+  final DoorType? doorType;
   final String? errorMessage;
   final String? infoMessage;
   final String? onboardingFlowId;
@@ -95,6 +97,7 @@ class AddDeviceState {
     bool clearOnboardedDoor = false,
     AddDoorDraft? pendingDoorDraft,
     bool clearPendingDoorDraft = false,
+    DoorType? doorType,
     String? errorMessage,
     bool clearErrorMessage = false,
     String? infoMessage,
@@ -122,6 +125,7 @@ class AddDeviceState {
       pendingDoorDraft: clearPendingDoorDraft
           ? null
           : pendingDoorDraft ?? this.pendingDoorDraft,
+      doorType: doorType ?? this.doorType,
       errorMessage: clearErrorMessage
           ? null
           : errorMessage ?? this.errorMessage,
@@ -732,6 +736,7 @@ class AddDeviceController extends Notifier<AddDeviceState> {
 
       final candidateDoorId = _doorId?.trim();
       final doorId = candidateDoorId?.isEmpty ?? true ? null : candidateDoorId;
+      final doorType = state.doorType ?? DoorType.garage;
 
       state = state.copyWith(infoMessage: '设备配网成功，正在绑定账号...');
       final bindRequestId = _nextRequestId('bind-door');
@@ -742,11 +747,12 @@ class AddDeviceController extends Notifier<AddDeviceState> {
         deviceId: device.id,
         stage: 'cloud_binding',
         result: 'started',
-        context: {'sn': sn, 'doorId': doorId},
+        context: {'sn': sn, 'doorId': doorId, 'doorType': doorType.wireValue},
       );
       final onboardedDoor = await _addForceDoorUseCase(
         sn: sn,
         doorId: doorId,
+        doorType: doorType.wireValue,
         requestId: bindRequestId,
       );
       _log(
@@ -825,7 +831,10 @@ class AddDeviceController extends Notifier<AddDeviceState> {
     return flowId;
   }
 
-  void beginOnboardingFlow({String? doorId}) {
+  void beginOnboardingFlow({
+    String? doorId,
+    DoorType doorType = DoorType.garage,
+  }) {
     if (_onboardingFlowId != null) {
       _log('onboarding_flow_superseded', stage: 'add_device', result: 'ended');
     }
@@ -833,11 +842,15 @@ class AddDeviceController extends Notifier<AddDeviceState> {
     _doorId = doorId;
     _requestCounter = 0;
     final flowId = _ensureFlow();
+    state = state.copyWith(doorType: doorType);
     _log(
       'add_device_flow_entered',
       stage: 'add_device',
       result: 'entered',
-      context: {'onboardingFlowId': flowId},
+      context: {
+        'onboardingFlowId': flowId,
+        'doorType': doorType.wireValue,
+      },
     );
   }
 

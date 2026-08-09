@@ -1127,6 +1127,7 @@ class _DeviceKeyRepository implements AddDeviceOnboardingRepository {
   Future<OnboardedForceDoor> addForceDoor({
     required String sn,
     String? doorId,
+    required int doorType,
     required String requestId,
   }) {
     throw UnimplementedError();

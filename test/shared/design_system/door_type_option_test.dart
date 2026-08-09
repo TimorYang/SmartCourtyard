@@ -23,6 +23,13 @@ void main() {
       expect(option.doorType, doorType);
       expect(option.assetPath, assetPath);
     });
+    expect(DoorType.values.map((doorType) => doorType.wireValue), [
+      0,
+      1,
+      2,
+      3,
+      4,
+    ]);
   });
 
   test('returns localized names for each door type', () {

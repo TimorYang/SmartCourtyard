@@ -42,7 +42,10 @@ class _AddDevicePageState extends ConsumerState<AddDevicePage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      ref.read(addDeviceControllerProvider.notifier).beginOnboardingFlow(doorId: widget.doorId);
+      ref.read(addDeviceControllerProvider.notifier).beginOnboardingFlow(
+        doorId: widget.doorId,
+        doorType: widget.doorType,
+      );
     });
   }
 

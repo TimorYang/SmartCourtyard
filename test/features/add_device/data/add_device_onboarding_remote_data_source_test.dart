@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flinx/core/network/api_envelope_dto.dart';
+import 'package:flinx/core/network/dio_factory.dart';
 import 'package:flinx/features/add_device/data/data_sources/add_device_onboarding_api.dart';
 import 'package:flinx/features/add_device/data/data_sources/add_device_onboarding_remote_data_source.dart';
 import 'package:flinx/features/add_device/data/dto/add_force_door_request_dto.dart';
@@ -140,6 +141,7 @@ void main() {
     final result = await dataSource.addForceDoor(
       sn: 'SN-001',
       doorId: '7',
+      doorType: 2,
       requestId: 'request-2',
     );
 
@@ -149,15 +151,26 @@ void main() {
       'sn': 'SN-001',
       'doorId': '7',
     });
+    expect(
+      api.lastAddForceDoorOptions?.extra?[NetworkRequestExtras.requestId],
+      'request-2',
+    );
   });
 
-  test('addForceDoor omits doorId when it is not provided', () async {
+  test('addForceDoor sends doorType when creating a new door', () async {
     final api = _FakeAddDeviceOnboardingApi();
     final dataSource = AddDeviceOnboardingRemoteDataSourceImpl(api: api);
 
-    await dataSource.addForceDoor(sn: 'SN-001', requestId: 'request-2');
+    await dataSource.addForceDoor(
+      sn: 'SN-001',
+      doorType: 4,
+      requestId: 'request-2',
+    );
 
-    expect(api.lastAddForceDoorRequest?.toJson(), {'sn': 'SN-001'});
+    expect(api.lastAddForceDoorRequest?.toJson(), {
+      'sn': 'SN-001',
+      'doorType': 4,
+    });
   });
 
   test(
@@ -176,6 +189,7 @@ void main() {
       final result = await dataSource.addForceDoor(
         sn: 'SN-001',
         doorId: '7',
+        doorType: 0,
         requestId: 'request-2',
       );
 
@@ -230,6 +244,7 @@ void main() {
       () => dataSource.addForceDoor(
         sn: 'SN-001',
         doorId: '7',
+        doorType: 0,
         requestId: 'request-2',
       ),
       throwsA(isA<AddDeviceOnboardingRemoteException>()),
@@ -252,6 +267,7 @@ void main() {
       () => dataSource.addForceDoor(
         sn: 'SN-001',
         doorId: '7',
+        doorType: 0,
         requestId: 'request-2',
       ),
       throwsA(
@@ -278,6 +294,7 @@ class _FakeAddDeviceOnboardingApi implements AddDeviceOnboardingApi {
   final ApiEnvelopeDto<ForceDoorResponseDto>? addDoorResponse;
   final ApiEnvelopeDto<BindingStatusResponseDto>? bindingStatusResponse;
   AddForceDoorRequestDto? lastAddForceDoorRequest;
+  Options? lastAddForceDoorOptions;
 
   @override
   Future<ApiEnvelopeDto<BindingStatusResponseDto>> validateBindingStatus(
@@ -320,6 +337,7 @@ class _FakeAddDeviceOnboardingApi implements AddDeviceOnboardingApi {
     Options options,
   ) async {
     lastAddForceDoorRequest = request;
+    lastAddForceDoorOptions = options;
     return addDoorResponse ??
         const ApiEnvelopeDto(
           code: 200,
