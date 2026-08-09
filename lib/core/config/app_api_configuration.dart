@@ -7,7 +7,7 @@ class AppApiConfiguration {
   factory AppApiConfiguration.fromEnvironment() {
     const apiOrigin = String.fromEnvironment(
       'FLINX_API_ORIGIN',
-      defaultValue: 'http://221.224.213.226:15421',
+      defaultValue: 'https://forcedoor.feizhoukeji.com:15429',
     );
     const apiPathPrefix = String.fromEnvironment(
       'FLINX_API_PATH_PREFIX',
