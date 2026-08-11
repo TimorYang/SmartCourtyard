@@ -8,6 +8,10 @@ enum RemotePairingAction { start, cancel }
 
 enum RemotePairingStatus { success, failure, timeout, unknown }
 
+enum SafetyAccessoryPairingAction { start, cancel }
+
+enum SafetyAccessoryPairingStatus { success, failure, timeout, unknown }
+
 enum RemoteOperationStatus { success, failure, unknown }
 
 enum DoorState { open, opening, stopped, closing, closed, unknown }
@@ -191,6 +195,26 @@ class RemotePairingResult {
   final String? nativeCode;
 
   bool get successful => status == RemotePairingStatus.success;
+}
+
+class SafetyAccessoryPairingResult {
+  const SafetyAccessoryPairingResult({
+    required this.requestId,
+    required this.deviceId,
+    required this.action,
+    required this.status,
+    this.reasonCode,
+    this.nativeCode,
+  });
+
+  final String requestId;
+  final String deviceId;
+  final SafetyAccessoryPairingAction action;
+  final SafetyAccessoryPairingStatus status;
+  final int? reasonCode;
+  final String? nativeCode;
+
+  bool get successful => status == SafetyAccessoryPairingStatus.success;
 }
 
 class RemoteControl {

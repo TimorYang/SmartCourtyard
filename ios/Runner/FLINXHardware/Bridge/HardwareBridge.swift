@@ -696,6 +696,100 @@ final class HardwareBridge: HardwareHostApi {
         }
     }
 
+    func pairSafetyAccessory(
+        requestId: String,
+        deviceId: String,
+        action: SafetyAccessoryPairingActionDto,
+        completion: @escaping (Result<SafetyAccessoryPairingResultDto, Error>) -> Void
+    ) {
+        let control = action.safetyAccessoryPairingControlCode
+        if action == .cancel,
+           let pending = pendingProvisioningRequests[deviceId],
+           pending.command == .safetyAccessoryPairing {
+            pending.timeout.cancel()
+            pendingProvisioningRequests.removeValue(forKey: deviceId)
+            pending.failure(
+                PigeonError(
+                    code: "safety_accessory_pairing_cancelled",
+                    message: "Safety accessory pairing was cancelled by the user.",
+                    details: nil
+                )
+            )
+            logger.info(
+                "safety_accessory_pairing",
+                requestId: pending.requestId,
+                deviceId: deviceId,
+                state: "cancelled"
+            )
+        }
+
+        logger.info(
+            "safety_accessory_pairing",
+            requestId: requestId,
+            deviceId: deviceId,
+            state: "started",
+            details: "command=\(BleProvisioningCommand.safetyAccessoryPairing.hexCode) control=\(DoorControlCommand.hex(control))"
+        )
+
+        ensureProvisioningChannel(requestId: requestId, deviceId: deviceId) { [weak self] result in
+            guard let self else { return }
+            switch result {
+            case .failure(let error):
+                completion(.failure(Self.toPigeonError(error)))
+            case .success:
+                self.sendProvisioningRequest(
+                    requestId: requestId,
+                    deviceId: deviceId,
+                    command: .safetyAccessoryPairing,
+                    payload: Data(Self.bigEndianBytes(control)),
+                    responseTimeout: 30
+                ) { response in
+                    guard response.data.count >= 5 else {
+                        completion(
+                            .failure(
+                                PigeonError(
+                                    code: "invalid_safety_accessory_pairing_response",
+                                    message: "Safety accessory pairing response is incomplete.",
+                                    details: nil
+                                )
+                            )
+                        )
+                        return
+                    }
+
+                    let resultCode = response.data[0]
+                    let reasonCode = Self.parseUInt32(
+                        response.data.dropFirst().prefix(4).asData
+                    )
+                    let status = SafetyAccessoryPairingStatusDto(resultCode: resultCode)
+                    self.logger.info(
+                        "safety_accessory_pairing",
+                        requestId: requestId,
+                        deviceId: deviceId,
+                        state: status.logState,
+                        nativeCode: status == .success ? nil : "safety_accessory_pairing_result_\(resultCode)",
+                        payloadBytes: response.data.count,
+                        details: "control=\(DoorControlCommand.hex(control)) result=0x\(String(format: "%02X", resultCode)) reason=\(DoorControlCommand.hex(reasonCode))"
+                    )
+                    completion(
+                        .success(
+                            SafetyAccessoryPairingResultDto(
+                                requestId: requestId,
+                                deviceId: deviceId,
+                                status: status,
+                                reasonCode: Int64(reasonCode),
+                                nativeCode: "command=\(BleProvisioningCommand.safetyAccessoryPairing.hexCode),control=\(DoorControlCommand.hex(control)),result=0x\(String(format: "%02X", resultCode)),reason=\(DoorControlCommand.hex(reasonCode))",
+                                domainCode: status == .success ? nil : "pairing_failed"
+                            )
+                        )
+                    )
+                } failure: { error in
+                    completion(.failure(Self.toPigeonError(error)))
+                }
+            }
+        }
+    }
+
     func queryRemotes(
         requestId: String,
         deviceId: String,
@@ -2397,6 +2491,7 @@ private enum BleProvisioningCommand: UInt16 {
     case remoteQuery = 0x0008
     case remoteDelete = 0x0009
     case remoteRename = 0x000A
+    case safetyAccessoryPairing = 0x000B
     case scanWifi = 0x0E01
     case configureWifi = 0x0E02
     case authenticate = 0x0E03
@@ -2416,6 +2511,7 @@ private enum BleProvisioningCommand: UInt16 {
         case .remoteQuery: return "Query Remotes"
         case .remoteDelete: return "Delete Remote"
         case .remoteRename: return "Rename Remote"
+        case .safetyAccessoryPairing: return "Safety Accessory Pairing"
         case .scanWifi: return "Scan Wi-Fi"
         case .configureWifi: return "Configure Wi-Fi"
         case .authenticate: return "Authenticate Device"
@@ -2424,7 +2520,7 @@ private enum BleProvisioningCommand: UInt16 {
     
     var requiresEncryptedRequest: Bool {
         switch self {
-        case .setAttributes, .authenticate, .scanWifi, .remotePairing, .remoteQuery, .remoteDelete, .remoteRename:
+        case .setAttributes, .authenticate, .scanWifi, .remotePairing, .remoteQuery, .remoteDelete, .remoteRename, .safetyAccessoryPairing:
             return true
         case .configureWifi:
             return false
@@ -2512,6 +2608,41 @@ private extension RemotePairingActionDto {
             return 0x1008
         case .cancel:
             return 0x1009
+        }
+    }
+}
+
+private extension SafetyAccessoryPairingActionDto {
+    var safetyAccessoryPairingControlCode: UInt16 {
+        switch self {
+        case .start:
+            return 0x100A
+        case .cancel:
+            return 0x100B
+        }
+    }
+}
+
+private extension SafetyAccessoryPairingStatusDto {
+    init(resultCode: UInt8) {
+        switch resultCode {
+        case 0x01:
+            self = .success
+        case 0x02:
+            self = .failure
+        case 0x03:
+            self = .timeout
+        default:
+            self = .unknown
+        }
+    }
+
+    var logState: String {
+        switch self {
+        case .success: return "success"
+        case .failure: return "failure"
+        case .timeout: return "timeout"
+        case .unknown: return "unknown"
         }
     }
 }

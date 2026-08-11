@@ -496,6 +496,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
+        path: SafetySensorPairingFailurePage.routePath,
+        name: SafetySensorPairingFailurePage.routeName,
+        builder: (context, state) => SafetySensorPairingFailurePage(
+          doorId: state.uri.queryParameters['doorId'] ?? '',
+          deviceId: state.uri.queryParameters['deviceId'] ?? '',
+        ),
+      ),
+      GoRoute(
         path: BleDebugPage.routePath,
         name: BleDebugPage.routeName,
         builder: (context, state) => const BleDebugPage(),

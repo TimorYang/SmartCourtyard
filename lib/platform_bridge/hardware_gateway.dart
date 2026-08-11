@@ -128,6 +128,12 @@ abstract interface class HardwareGateway {
     required RemotePairingAction action,
   });
 
+  Future<SafetyAccessoryPairingResult> pairSafetyAccessory({
+    required String requestId,
+    required String deviceId,
+    required SafetyAccessoryPairingAction action,
+  });
+
   Future<RemoteControlListResult> queryRemotes({
     required String requestId,
     required String deviceId,

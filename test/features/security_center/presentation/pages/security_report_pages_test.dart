@@ -14,6 +14,9 @@ import 'package:flinx/features/security_center/domain/entities/safety_sensors_ev
 import 'package:flinx/features/security_center/domain/entities/security_center_overview.dart';
 import 'package:flinx/features/security_center/domain/repositories/security_balance_refresh_repository.dart';
 import 'package:flinx/features/security_center/domain/entities/security_balance_refresh_result.dart';
+import 'package:flinx/features/security_center/domain/entities/safety_sensor_pairing.dart';
+import 'package:flinx/features/security_center/domain/repositories/safety_sensor_pairing_repository.dart';
+import 'package:flinx/platform_bridge/hardware_models.dart';
 import 'package:flinx/features/device_control/presentation/widgets/device_detail_bottom_navigation.dart';
 import 'package:flinx/features/security_center/presentation/pages/full_report_page.dart';
 import 'package:flinx/features/security_center/presentation/pages/general_evaluation_page.dart';
@@ -987,11 +990,18 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('sensor pairing simulates success then returns to evaluation', (
+  testWidgets('sensor pairing succeeds then returns to evaluation', (
     tester,
   ) async {
+    final evaluationRepository = _CountingSafetySensorsEvaluationRepository(
+      _testSafetyEvaluation,
+    );
     final router = _buildRouter();
-    await _pumpRouter(tester, router);
+    await _pumpRouter(
+      tester,
+      router,
+      evaluationRepository: evaluationRepository,
+    );
 
     final safetyCard = find.byKey(
       const ValueKey<String>('safety-sensors-evaluation-card'),
@@ -1008,12 +1018,12 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(match);
     await tester.pumpAndSettle();
-    expect(find.text('Sensor pairing'), findsOneWidget);
-    expect(find.text('Keep Bluetooth enabled'), findsOneWidget);
+    expect(find.text('Sensor match'), findsOneWidget);
+    expect(find.text('Keep Bluetooth on'), findsOneWidget);
     expect(
       find.byKey(
         ValueKey<String>(
-          'safety-sensor-pairing-placeholder-'
+          'safety-sensor-pairing-asset-'
           '${SafetySensorPairingGuidePage.guideAsset}',
         ),
       ),
@@ -1024,13 +1034,8 @@ void main() {
       find.byKey(const ValueKey<String>('safety-sensor-pairing-start')),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Pairing in progress...'), findsOneWidget);
-    expect(find.text('Cancel'), findsOneWidget);
-
-    await tester.pump(const Duration(seconds: 3));
-    await tester.pumpAndSettle();
     expect(
-      find.text('Wireless safety sensor pairing successful'),
+      find.text('Wireless safety sensor learning successful'),
       findsOneWidget,
     );
 
@@ -1039,13 +1044,64 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('Safety Sensors Evaluation'), findsOneWidget);
+    expect(evaluationRepository.fetchCount, greaterThan(1));
   });
 
-  testWidgets('cancelling pairing returns to evaluation and stops timer', (
-    tester,
-  ) async {
+  testWidgets(
+    'sensor match and management require a connected Bluetooth device',
+    (tester) async {
+      final router = _buildRouter();
+      await _pumpRouter(
+        tester,
+        router,
+        pairingRepository: const _DisconnectedSafetySensorPairingRepository(),
+      );
+
+      final safetyCard = find.byKey(
+        const ValueKey<String>('safety-sensors-evaluation-card'),
+      );
+      await tester.ensureVisible(safetyCard);
+      await tester.tap(safetyCard);
+      await tester.pumpAndSettle();
+      await tester.drag(
+        _scrollableInside('safety-sensors-scroll-mock-device'),
+        const Offset(0, -600),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(
+        find.byKey(const ValueKey<String>('safety-sensors-match')),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        router.state.matchedLocation,
+        SafetySensorsEvaluationPage.routePath,
+      );
+      expect(
+        find.text('Connect the selected device via Bluetooth to use Match.'),
+        findsOneWidget,
+      );
+
+      await tester.tap(
+        find.byKey(const ValueKey<String>('safety-sensors-manage')),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        router.state.matchedLocation,
+        SafetySensorsEvaluationPage.routePath,
+      );
+      expect(
+        find.text('Connect the selected device via Bluetooth to use Manage.'),
+        findsOneWidget,
+      );
+      await tester.pump(const Duration(seconds: 3));
+    },
+  );
+
+  testWidgets('cancelling pairing returns to evaluation', (tester) async {
     final router = _buildRouter();
-    await _pumpRouter(tester, router);
+    final pairingRepository = _PendingSafetySensorPairingRepository();
+    await _pumpRouter(tester, router, pairingRepository: pairingRepository);
 
     final safetyCard = find.byKey(
       const ValueKey<String>('safety-sensors-evaluation-card'),
@@ -1073,11 +1129,99 @@ void main() {
     await tester.pump(const Duration(seconds: 4));
 
     expect(find.text('Safety Sensors Evaluation'), findsOneWidget);
+    expect(pairingRepository.actions, [
+      SafetyAccessoryPairingAction.start,
+      SafetyAccessoryPairingAction.cancel,
+    ]);
     expect(
-      find.text('Wireless safety sensor pairing successful'),
+      find.text('Wireless safety sensor learning successful'),
       findsNothing,
     );
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('pairing failure shows the result state and complete action', (
+    tester,
+  ) async {
+    final router = _buildRouter();
+    await _pumpRouter(
+      tester,
+      router,
+      pairingRepository: const _FakeSafetySensorPairingRepository(
+        status: SafetyAccessoryPairingStatus.failure,
+        reasonCode: 0x01020004,
+      ),
+    );
+
+    final safetyCard = find.byKey(
+      const ValueKey<String>('safety-sensors-evaluation-card'),
+    );
+    await tester.ensureVisible(safetyCard);
+    await tester.tap(safetyCard);
+    await tester.pumpAndSettle();
+    await tester.drag(
+      _scrollableInside('safety-sensors-scroll-mock-device'),
+      const Offset(0, -600),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey<String>('safety-sensors-match')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey<String>('safety-sensor-pairing-start')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Wireless safety sensor learning failed'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('safety-sensor-pairing-complete')),
+      findsOneWidget,
+    );
+    expect(find.text('Complete'), findsOneWidget);
+    expect(find.textContaining('Fault code:'), findsNothing);
+    expect(find.text('Cancel'), findsNothing);
+  });
+
+  testWidgets('pairing timeout shows the failure result state', (tester) async {
+    final router = _buildRouter();
+    await _pumpRouter(
+      tester,
+      router,
+      pairingRepository: const _FakeSafetySensorPairingRepository(
+        status: SafetyAccessoryPairingStatus.timeout,
+        reasonCode: 0x00000030,
+      ),
+    );
+
+    final safetyCard = find.byKey(
+      const ValueKey<String>('safety-sensors-evaluation-card'),
+    );
+    await tester.ensureVisible(safetyCard);
+    await tester.tap(safetyCard);
+    await tester.pumpAndSettle();
+    await tester.drag(
+      _scrollableInside('safety-sensors-scroll-mock-device'),
+      const Offset(0, -600),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey<String>('safety-sensors-match')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey<String>('safety-sensor-pairing-start')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Wireless safety sensor learning failed'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('safety-sensor-pairing-complete')),
+      findsOneWidget,
+    );
+    expect(find.text('Complete'), findsOneWidget);
+    expect(find.textContaining('Fault code:'), findsNothing);
+    expect(find.text('Cancel'), findsNothing);
   });
 
   testWidgets('sensor management deletes a wireless sensor locally', (
@@ -1556,11 +1700,23 @@ GoRouter _buildRouter() {
           deviceId: state.uri.queryParameters['deviceId'] ?? '',
         ),
       ),
+      GoRoute(
+        path: SafetySensorPairingFailurePage.routePath,
+        builder: (context, state) => SafetySensorPairingFailurePage(
+          doorId: state.uri.queryParameters['doorId'] ?? '',
+          deviceId: state.uri.queryParameters['deviceId'] ?? '',
+        ),
+      ),
     ],
   );
 }
 
-Future<void> _pumpRouter(WidgetTester tester, GoRouter router) async {
+Future<void> _pumpRouter(
+  WidgetTester tester,
+  GoRouter router, {
+  SafetySensorPairingRepository? pairingRepository,
+  SafetySensorsEvaluationRepository? evaluationRepository,
+}) async {
   tester.view.physicalSize = const Size(393, 852);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
@@ -1580,10 +1736,13 @@ Future<void> _pumpRouter(WidgetTester tester, GoRouter router) async {
         ),
         fetchSafetySensorsEvaluationUseCaseProvider.overrideWithValue(
           FetchSafetySensorsEvaluationUseCase(
-            repository: _FakeSafetySensorsEvaluationRepository(
-              _testSafetyEvaluation,
-            ),
+            repository:
+                evaluationRepository ??
+                _FakeSafetySensorsEvaluationRepository(_testSafetyEvaluation),
           ),
+        ),
+        safetySensorPairingRepositoryProvider.overrideWithValue(
+          pairingRepository ?? const _FakeSafetySensorPairingRepository(),
         ),
       ],
       child: MaterialApp.router(
@@ -1627,6 +1786,9 @@ Future<void> _pumpPage(
             ),
           ),
         ),
+        safetySensorPairingRepositoryProvider.overrideWithValue(
+          const _FakeSafetySensorPairingRepository(),
+        ),
       ],
       child: MaterialApp(
         locale: locale,
@@ -1653,6 +1815,70 @@ class _FakeSecurityBalanceRefreshRepository
   );
 }
 
+class _FakeSafetySensorPairingRepository
+    implements SafetySensorPairingRepository {
+  const _FakeSafetySensorPairingRepository({
+    this.status = SafetyAccessoryPairingStatus.success,
+    this.reasonCode = 0,
+    this.connected = true,
+  });
+
+  final SafetyAccessoryPairingStatus status;
+  final int? reasonCode;
+  final bool connected;
+
+  @override
+  Future<bool> isDeviceConnected({
+    required String deviceId,
+    required String requestId,
+  }) async => connected;
+
+  @override
+  Future<SafetySensorPairingResult> pair(
+    SafetySensorPairingRequest request,
+  ) async => SafetySensorPairingResult(
+    request: request,
+    status: request.action == SafetyAccessoryPairingAction.cancel
+        ? SafetyAccessoryPairingStatus.success
+        : status,
+    reasonCode: reasonCode,
+  );
+}
+
+class _DisconnectedSafetySensorPairingRepository
+    extends _FakeSafetySensorPairingRepository {
+  const _DisconnectedSafetySensorPairingRepository() : super(connected: false);
+}
+
+class _PendingSafetySensorPairingRepository
+    implements SafetySensorPairingRepository {
+  final Completer<SafetySensorPairingResult> startCompleter =
+      Completer<SafetySensorPairingResult>();
+  final List<SafetyAccessoryPairingAction> actions =
+      <SafetyAccessoryPairingAction>[];
+
+  @override
+  Future<bool> isDeviceConnected({
+    required String deviceId,
+    required String requestId,
+  }) async => true;
+
+  @override
+  Future<SafetySensorPairingResult> pair(SafetySensorPairingRequest request) {
+    actions.add(request.action);
+    if (request.action == SafetyAccessoryPairingAction.start) {
+      return startCompleter.future;
+    }
+    return Future<SafetySensorPairingResult>.value(
+      SafetySensorPairingResult(
+        request: request,
+        status: SafetyAccessoryPairingStatus.success,
+        reasonCode: 0,
+      ),
+    );
+  }
+}
+
 class _FakeGeneralEvaluationRepository implements GeneralEvaluationRepository {
   const _FakeGeneralEvaluationRepository({this.report = _testGeneralReport});
 
@@ -1677,6 +1903,23 @@ class _FakeSafetySensorsEvaluationRepository
     required String doorId,
     required String requestId,
   }) async => evaluation;
+}
+
+class _CountingSafetySensorsEvaluationRepository
+    implements SafetySensorsEvaluationRepository {
+  _CountingSafetySensorsEvaluationRepository(this.evaluation);
+
+  final SafetySensorsEvaluation evaluation;
+  var fetchCount = 0;
+
+  @override
+  Future<SafetySensorsEvaluation> fetchEvaluation({
+    required String doorId,
+    required String requestId,
+  }) async {
+    fetchCount += 1;
+    return evaluation;
+  }
 }
 
 final _testSafetyEvaluation = SafetySensorsEvaluation(

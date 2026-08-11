@@ -325,6 +325,15 @@ class HardwareHostApiImpl(
     callback(Result.failure(notImplemented("pairRemote", requestId, deviceId)))
   }
 
+  override fun pairSafetyAccessory(
+    requestId: String,
+    deviceId: String,
+    action: SafetyAccessoryPairingActionDto,
+    callback: (Result<SafetyAccessoryPairingResultDto>) -> Unit,
+  ) {
+    callback(Result.failure(notImplemented("pairSafetyAccessory", requestId, deviceId)))
+  }
+
   override fun queryRemotes(
     requestId: String,
     deviceId: String,

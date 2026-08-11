@@ -30,6 +30,10 @@ enum RemotePairingActionDto { start, cancel }
 
 enum RemotePairingStatusDto { success, failure, timeout, unknown }
 
+enum SafetyAccessoryPairingActionDto { start, cancel }
+
+enum SafetyAccessoryPairingStatusDto { success, failure, timeout, unknown }
+
 enum RemoteOperationStatusDto { success, failure, unknown }
 
 enum BleConnectionStateDto { disconnected, connecting, connected }
@@ -392,6 +396,24 @@ class RemotePairingResultDto {
   final String? domainCode;
 }
 
+class SafetyAccessoryPairingResultDto {
+  SafetyAccessoryPairingResultDto({
+    required this.requestId,
+    required this.deviceId,
+    required this.status,
+    this.reasonCode,
+    this.nativeCode,
+    this.domainCode,
+  });
+
+  final String requestId;
+  final String deviceId;
+  final SafetyAccessoryPairingStatusDto status;
+  final int? reasonCode;
+  final String? nativeCode;
+  final String? domainCode;
+}
+
 class RemoteControlDto {
   RemoteControlDto({required this.name, required this.serialNumber});
 
@@ -544,6 +566,13 @@ abstract class HardwareHostApi {
     String requestId,
     String deviceId,
     RemotePairingActionDto action,
+  );
+
+  @async
+  SafetyAccessoryPairingResultDto pairSafetyAccessory(
+    String requestId,
+    String deviceId,
+    SafetyAccessoryPairingActionDto action,
   );
 
   @async

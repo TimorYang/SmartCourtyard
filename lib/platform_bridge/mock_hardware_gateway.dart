@@ -35,6 +35,12 @@ class MockHardwareGateway implements HardwareGateway {
   };
   bool flutterConsoleLoggingEnabled = false;
   bool nativeConsoleLoggingEnabled = false;
+  SafetyAccessoryPairingStatus safetyAccessoryPairingStatus =
+      SafetyAccessoryPairingStatus.success;
+  int? safetyAccessoryPairingReasonCode = 0;
+  Duration safetyAccessoryPairingDelay = Duration.zero;
+  final List<SafetyAccessoryPairingAction> safetyAccessoryPairingActions =
+      <SafetyAccessoryPairingAction>[];
   final Map<String, ConnectedBleDevice> connectedBleDevices =
       <String, ConnectedBleDevice>{};
 
@@ -413,6 +419,28 @@ class MockHardwareGateway implements HardwareGateway {
       nativeCode: action == RemotePairingAction.start
           ? 'command=0x0007,control=0x1008'
           : 'command=0x0007,control=0x1009',
+    );
+  }
+
+  @override
+  Future<SafetyAccessoryPairingResult> pairSafetyAccessory({
+    required String requestId,
+    required String deviceId,
+    required SafetyAccessoryPairingAction action,
+  }) async {
+    safetyAccessoryPairingActions.add(action);
+    if (safetyAccessoryPairingDelay > Duration.zero) {
+      await Future<void>.delayed(safetyAccessoryPairingDelay);
+    }
+    return SafetyAccessoryPairingResult(
+      requestId: requestId,
+      deviceId: deviceId,
+      action: action,
+      status: safetyAccessoryPairingStatus,
+      reasonCode: safetyAccessoryPairingReasonCode,
+      nativeCode: action == SafetyAccessoryPairingAction.start
+          ? 'command=0x000B,control=0x100A'
+          : 'command=0x000B,control=0x100B',
     );
   }
 

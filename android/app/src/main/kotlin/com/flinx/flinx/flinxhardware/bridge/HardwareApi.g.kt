@@ -263,6 +263,30 @@ enum class RemotePairingStatusDto(val raw: Int) {
   }
 }
 
+enum class SafetyAccessoryPairingActionDto(val raw: Int) {
+  START(0),
+  CANCEL(1);
+
+  companion object {
+    fun ofRaw(raw: Int): SafetyAccessoryPairingActionDto? {
+      return values().firstOrNull { it.raw == raw }
+    }
+  }
+}
+
+enum class SafetyAccessoryPairingStatusDto(val raw: Int) {
+  SUCCESS(0),
+  FAILURE(1),
+  TIMEOUT(2),
+  UNKNOWN(3);
+
+  companion object {
+    fun ofRaw(raw: Int): SafetyAccessoryPairingStatusDto? {
+      return values().firstOrNull { it.raw == raw }
+    }
+  }
+}
+
 enum class RemoteOperationStatusDto(val raw: Int) {
   SUCCESS(0),
   FAILURE(1),
@@ -1415,6 +1439,60 @@ data class RemotePairingResultDto (
 }
 
 /** Generated class from Pigeon that represents data sent in messages. */
+data class SafetyAccessoryPairingResultDto (
+  val requestId: String,
+  val deviceId: String,
+  val status: SafetyAccessoryPairingStatusDto,
+  val reasonCode: Long? = null,
+  val nativeCode: String? = null,
+  val domainCode: String? = null
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): SafetyAccessoryPairingResultDto {
+      val requestId = pigeonVar_list[0] as String
+      val deviceId = pigeonVar_list[1] as String
+      val status = pigeonVar_list[2] as SafetyAccessoryPairingStatusDto
+      val reasonCode = pigeonVar_list[3] as Long?
+      val nativeCode = pigeonVar_list[4] as String?
+      val domainCode = pigeonVar_list[5] as String?
+      return SafetyAccessoryPairingResultDto(requestId, deviceId, status, reasonCode, nativeCode, domainCode)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      requestId,
+      deviceId,
+      status,
+      reasonCode,
+      nativeCode,
+      domainCode,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as SafetyAccessoryPairingResultDto
+    return HardwareApiPigeonUtils.deepEquals(this.requestId, other.requestId) && HardwareApiPigeonUtils.deepEquals(this.deviceId, other.deviceId) && HardwareApiPigeonUtils.deepEquals(this.status, other.status) && HardwareApiPigeonUtils.deepEquals(this.reasonCode, other.reasonCode) && HardwareApiPigeonUtils.deepEquals(this.nativeCode, other.nativeCode) && HardwareApiPigeonUtils.deepEquals(this.domainCode, other.domainCode)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.requestId)
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.deviceId)
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.status)
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.reasonCode)
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.nativeCode)
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.domainCode)
+    return result
+  }
+}
+
+/** Generated class from Pigeon that represents data sent in messages. */
 data class RemoteControlDto (
   val name: String,
   val serialNumber: Long
@@ -1593,145 +1671,160 @@ private open class HardwareApiPigeonCodec : StandardMessageCodec() {
       }
       134.toByte() -> {
         return (readValue(buffer) as Long?)?.let {
-          RemoteOperationStatusDto.ofRaw(it.toInt())
+          SafetyAccessoryPairingActionDto.ofRaw(it.toInt())
         }
       }
       135.toByte() -> {
         return (readValue(buffer) as Long?)?.let {
-          BleConnectionStateDto.ofRaw(it.toInt())
+          SafetyAccessoryPairingStatusDto.ofRaw(it.toInt())
         }
       }
       136.toByte() -> {
         return (readValue(buffer) as Long?)?.let {
-          BleWriteTypeDto.ofRaw(it.toInt())
+          RemoteOperationStatusDto.ofRaw(it.toInt())
         }
       }
       137.toByte() -> {
         return (readValue(buffer) as Long?)?.let {
-          BleDiagnosticDirectionDto.ofRaw(it.toInt())
+          BleConnectionStateDto.ofRaw(it.toInt())
         }
       }
       138.toByte() -> {
         return (readValue(buffer) as Long?)?.let {
-          DeviceAttributeReportOriginDto.ofRaw(it.toInt())
+          BleWriteTypeDto.ofRaw(it.toInt())
         }
       }
       139.toByte() -> {
-        return (readValue(buffer) as? List<Any?>)?.let {
-          PermissionSnapshotDto.fromList(it)
+        return (readValue(buffer) as Long?)?.let {
+          BleDiagnosticDirectionDto.ofRaw(it.toInt())
         }
       }
       140.toByte() -> {
-        return (readValue(buffer) as? List<Any?>)?.let {
-          BleScanFilterDto.fromList(it)
+        return (readValue(buffer) as Long?)?.let {
+          DeviceAttributeReportOriginDto.ofRaw(it.toInt())
         }
       }
       141.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          BleDeviceDto.fromList(it)
+          PermissionSnapshotDto.fromList(it)
         }
       }
       142.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          BleConnectionEventDto.fromList(it)
+          BleScanFilterDto.fromList(it)
         }
       }
       143.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          ConnectedBleDeviceDto.fromList(it)
+          BleDeviceDto.fromList(it)
         }
       }
       144.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          BleAuthenticationResultDto.fromList(it)
+          BleConnectionEventDto.fromList(it)
         }
       }
       145.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          WifiScanResultDto.fromList(it)
+          ConnectedBleDeviceDto.fromList(it)
         }
       }
       146.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          WifiProvisionResultDto.fromList(it)
+          BleAuthenticationResultDto.fromList(it)
         }
       }
       147.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          BleCharacteristicDto.fromList(it)
+          WifiScanResultDto.fromList(it)
         }
       }
       148.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          BleServiceDto.fromList(it)
+          WifiProvisionResultDto.fromList(it)
         }
       }
       149.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          BleServicesDto.fromList(it)
+          BleCharacteristicDto.fromList(it)
         }
       }
       150.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          BleReadResultDto.fromList(it)
+          BleServiceDto.fromList(it)
         }
       }
       151.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          BleWriteResultDto.fromList(it)
+          BleServicesDto.fromList(it)
         }
       }
       152.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          BleNotificationDto.fromList(it)
+          BleReadResultDto.fromList(it)
         }
       }
       153.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          NativeErrorDto.fromList(it)
+          BleWriteResultDto.fromList(it)
         }
       }
       154.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          BleDiagnosticEventDto.fromList(it)
+          BleNotificationDto.fromList(it)
         }
       }
       155.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          CommandResultDto.fromList(it)
+          NativeErrorDto.fromList(it)
         }
       }
       156.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          DeviceAttributeDto.fromList(it)
+          BleDiagnosticEventDto.fromList(it)
         }
       }
       157.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          DeviceAttributeSnapshotDto.fromList(it)
+          CommandResultDto.fromList(it)
         }
       }
       158.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          DeviceAttributeWriteResultDto.fromList(it)
+          DeviceAttributeDto.fromList(it)
         }
       }
       159.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          RemotePairingResultDto.fromList(it)
+          DeviceAttributeSnapshotDto.fromList(it)
         }
       }
       160.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          RemoteControlDto.fromList(it)
+          DeviceAttributeWriteResultDto.fromList(it)
         }
       }
       161.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          RemoteControlListResultDto.fromList(it)
+          RemotePairingResultDto.fromList(it)
         }
       }
       162.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          SafetyAccessoryPairingResultDto.fromList(it)
+        }
+      }
+      163.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          RemoteControlDto.fromList(it)
+        }
+      }
+      164.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          RemoteControlListResultDto.fromList(it)
+        }
+      }
+      165.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
           RemoteOperationResultDto.fromList(it)
         }
@@ -1761,120 +1854,132 @@ private open class HardwareApiPigeonCodec : StandardMessageCodec() {
         stream.write(133)
         writeValue(stream, value.raw.toLong())
       }
-      is RemoteOperationStatusDto -> {
+      is SafetyAccessoryPairingActionDto -> {
         stream.write(134)
         writeValue(stream, value.raw.toLong())
       }
-      is BleConnectionStateDto -> {
+      is SafetyAccessoryPairingStatusDto -> {
         stream.write(135)
         writeValue(stream, value.raw.toLong())
       }
-      is BleWriteTypeDto -> {
+      is RemoteOperationStatusDto -> {
         stream.write(136)
         writeValue(stream, value.raw.toLong())
       }
-      is BleDiagnosticDirectionDto -> {
+      is BleConnectionStateDto -> {
         stream.write(137)
         writeValue(stream, value.raw.toLong())
       }
-      is DeviceAttributeReportOriginDto -> {
+      is BleWriteTypeDto -> {
         stream.write(138)
         writeValue(stream, value.raw.toLong())
       }
-      is PermissionSnapshotDto -> {
+      is BleDiagnosticDirectionDto -> {
         stream.write(139)
-        writeValue(stream, value.toList())
+        writeValue(stream, value.raw.toLong())
       }
-      is BleScanFilterDto -> {
+      is DeviceAttributeReportOriginDto -> {
         stream.write(140)
-        writeValue(stream, value.toList())
+        writeValue(stream, value.raw.toLong())
       }
-      is BleDeviceDto -> {
+      is PermissionSnapshotDto -> {
         stream.write(141)
         writeValue(stream, value.toList())
       }
-      is BleConnectionEventDto -> {
+      is BleScanFilterDto -> {
         stream.write(142)
         writeValue(stream, value.toList())
       }
-      is ConnectedBleDeviceDto -> {
+      is BleDeviceDto -> {
         stream.write(143)
         writeValue(stream, value.toList())
       }
-      is BleAuthenticationResultDto -> {
+      is BleConnectionEventDto -> {
         stream.write(144)
         writeValue(stream, value.toList())
       }
-      is WifiScanResultDto -> {
+      is ConnectedBleDeviceDto -> {
         stream.write(145)
         writeValue(stream, value.toList())
       }
-      is WifiProvisionResultDto -> {
+      is BleAuthenticationResultDto -> {
         stream.write(146)
         writeValue(stream, value.toList())
       }
-      is BleCharacteristicDto -> {
+      is WifiScanResultDto -> {
         stream.write(147)
         writeValue(stream, value.toList())
       }
-      is BleServiceDto -> {
+      is WifiProvisionResultDto -> {
         stream.write(148)
         writeValue(stream, value.toList())
       }
-      is BleServicesDto -> {
+      is BleCharacteristicDto -> {
         stream.write(149)
         writeValue(stream, value.toList())
       }
-      is BleReadResultDto -> {
+      is BleServiceDto -> {
         stream.write(150)
         writeValue(stream, value.toList())
       }
-      is BleWriteResultDto -> {
+      is BleServicesDto -> {
         stream.write(151)
         writeValue(stream, value.toList())
       }
-      is BleNotificationDto -> {
+      is BleReadResultDto -> {
         stream.write(152)
         writeValue(stream, value.toList())
       }
-      is NativeErrorDto -> {
+      is BleWriteResultDto -> {
         stream.write(153)
         writeValue(stream, value.toList())
       }
-      is BleDiagnosticEventDto -> {
+      is BleNotificationDto -> {
         stream.write(154)
         writeValue(stream, value.toList())
       }
-      is CommandResultDto -> {
+      is NativeErrorDto -> {
         stream.write(155)
         writeValue(stream, value.toList())
       }
-      is DeviceAttributeDto -> {
+      is BleDiagnosticEventDto -> {
         stream.write(156)
         writeValue(stream, value.toList())
       }
-      is DeviceAttributeSnapshotDto -> {
+      is CommandResultDto -> {
         stream.write(157)
         writeValue(stream, value.toList())
       }
-      is DeviceAttributeWriteResultDto -> {
+      is DeviceAttributeDto -> {
         stream.write(158)
         writeValue(stream, value.toList())
       }
-      is RemotePairingResultDto -> {
+      is DeviceAttributeSnapshotDto -> {
         stream.write(159)
         writeValue(stream, value.toList())
       }
-      is RemoteControlDto -> {
+      is DeviceAttributeWriteResultDto -> {
         stream.write(160)
         writeValue(stream, value.toList())
       }
-      is RemoteControlListResultDto -> {
+      is RemotePairingResultDto -> {
         stream.write(161)
         writeValue(stream, value.toList())
       }
-      is RemoteOperationResultDto -> {
+      is SafetyAccessoryPairingResultDto -> {
         stream.write(162)
+        writeValue(stream, value.toList())
+      }
+      is RemoteControlDto -> {
+        stream.write(163)
+        writeValue(stream, value.toList())
+      }
+      is RemoteControlListResultDto -> {
+        stream.write(164)
+        writeValue(stream, value.toList())
+      }
+      is RemoteOperationResultDto -> {
+        stream.write(165)
         writeValue(stream, value.toList())
       }
       else -> super.writeValue(stream, value)
@@ -1906,6 +2011,7 @@ interface HardwareHostApi {
   fun queryDeviceAttributes(requestId: String, deviceId: String, callback: (Result<DeviceAttributeSnapshotDto>) -> Unit)
   fun setDeviceAttributes(requestId: String, deviceId: String, attributes: List<DeviceAttributeDto>, callback: (Result<DeviceAttributeWriteResultDto>) -> Unit)
   fun pairRemote(requestId: String, deviceId: String, action: RemotePairingActionDto, callback: (Result<RemotePairingResultDto>) -> Unit)
+  fun pairSafetyAccessory(requestId: String, deviceId: String, action: SafetyAccessoryPairingActionDto, callback: (Result<SafetyAccessoryPairingResultDto>) -> Unit)
   fun queryRemotes(requestId: String, deviceId: String, callback: (Result<RemoteControlListResultDto>) -> Unit)
   fun deleteRemote(requestId: String, deviceId: String, serialNumber: Long?, callback: (Result<RemoteOperationResultDto>) -> Unit)
   fun renameRemote(requestId: String, deviceId: String, serialNumber: Long, name: String, callback: (Result<RemoteOperationResultDto>) -> Unit)
@@ -2345,6 +2451,28 @@ interface HardwareHostApi {
             val deviceIdArg = args[1] as String
             val actionArg = args[2] as RemotePairingActionDto
             api.pairRemote(requestIdArg, deviceIdArg, actionArg) { result: Result<RemotePairingResultDto> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(HardwareApiPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(HardwareApiPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flinx.HardwareHostApi.pairSafetyAccessory$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val requestIdArg = args[0] as String
+            val deviceIdArg = args[1] as String
+            val actionArg = args[2] as SafetyAccessoryPairingActionDto
+            api.pairSafetyAccessory(requestIdArg, deviceIdArg, actionArg) { result: Result<SafetyAccessoryPairingResultDto> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(HardwareApiPigeonUtils.wrapError(error))

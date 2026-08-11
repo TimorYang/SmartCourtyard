@@ -355,6 +355,20 @@ class PigeonHardwareGateway implements HardwareGateway {
   }
 
   @override
+  Future<SafetyAccessoryPairingResult> pairSafetyAccessory({
+    required String requestId,
+    required String deviceId,
+    required SafetyAccessoryPairingAction action,
+  }) async {
+    final dto = await _mapPigeonCall(
+      () => _hostApi.pairSafetyAccessory(requestId, deviceId, action.toDto()),
+      requestId: requestId,
+      deviceId: deviceId,
+    );
+    return dto.toModel(action);
+  }
+
+  @override
   Future<RemoteControlListResult> queryRemotes({
     required String requestId,
     required String deviceId,
@@ -642,6 +656,47 @@ extension _RemotePairingStatusMapper on pigeon.RemotePairingStatusDto {
       pigeon.RemotePairingStatusDto.failure => RemotePairingStatus.failure,
       pigeon.RemotePairingStatusDto.timeout => RemotePairingStatus.timeout,
       pigeon.RemotePairingStatusDto.unknown => RemotePairingStatus.unknown,
+    };
+  }
+}
+
+extension _SafetyAccessoryPairingActionMapper on SafetyAccessoryPairingAction {
+  pigeon.SafetyAccessoryPairingActionDto toDto() {
+    return switch (this) {
+      SafetyAccessoryPairingAction.start =>
+        pigeon.SafetyAccessoryPairingActionDto.start,
+      SafetyAccessoryPairingAction.cancel =>
+        pigeon.SafetyAccessoryPairingActionDto.cancel,
+    };
+  }
+}
+
+extension _SafetyAccessoryPairingResultMapper
+    on pigeon.SafetyAccessoryPairingResultDto {
+  SafetyAccessoryPairingResult toModel(SafetyAccessoryPairingAction action) {
+    return SafetyAccessoryPairingResult(
+      requestId: requestId,
+      deviceId: deviceId,
+      action: action,
+      status: status.toModel(),
+      reasonCode: reasonCode,
+      nativeCode: nativeCode,
+    );
+  }
+}
+
+extension _SafetyAccessoryPairingStatusMapper
+    on pigeon.SafetyAccessoryPairingStatusDto {
+  SafetyAccessoryPairingStatus toModel() {
+    return switch (this) {
+      pigeon.SafetyAccessoryPairingStatusDto.success =>
+        SafetyAccessoryPairingStatus.success,
+      pigeon.SafetyAccessoryPairingStatusDto.failure =>
+        SafetyAccessoryPairingStatus.failure,
+      pigeon.SafetyAccessoryPairingStatusDto.timeout =>
+        SafetyAccessoryPairingStatus.timeout,
+      pigeon.SafetyAccessoryPairingStatusDto.unknown =>
+        SafetyAccessoryPairingStatus.unknown,
     };
   }
 }
@@ -949,6 +1004,9 @@ AppError _platformExceptionToAppError(
     'command_timeout' => AppErrorCode.commandTimeout,
     'provisioning_response_timeout' => AppErrorCode.commandTimeout,
     'remote_pairing_response_timeout' => AppErrorCode.commandTimeout,
+    'safety_accessory_pairing_cancelled' => AppErrorCode.commandTimeout,
+    'safety_accessory_pairing_response_timeout' => AppErrorCode.commandTimeout,
+    'invalid_safety_accessory_pairing_response' => AppErrorCode.pairingFailed,
     'invalid_remote_pairing_response' => AppErrorCode.pairingFailed,
     'invalid_remote_query_response' => AppErrorCode.pairingFailed,
     'invalid_remote_operation_response' => AppErrorCode.pairingFailed,

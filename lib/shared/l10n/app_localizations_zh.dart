@@ -2015,17 +2015,26 @@ class AppLocalizationsZh extends AppLocalizations {
   String get safetySensorPairingTitle => '传感器对码';
 
   @override
+  String get safetySensorPairingGuideTitle => '传感器匹配';
+
+  @override
+  String get safetySensorPairingGuideStatus => '保持蓝牙开启';
+
+  @override
   String get safetySensorPairingBluetoothEnabled => '请保持蓝牙开启';
 
   @override
   String get safetySensorPairingGuideDescription =>
-      '1. 确保手机与电机的距离小于 5 米；\n2. 确保安全传感器与电机的距离小于 10 米；\n3. 如果 30 秒内未进行学习操作，对码将自动结束。';
+      '1.确保手机与电机的距离小于 5 米。\n2.确保安全传感器与电机的距离小于 10 米。\n3.如果 30 秒内未进行学习操作，学习将自动结束。';
+
+  @override
+  String get safetySensorPairingGuideAction => '开始学习';
 
   @override
   String get safetySensorPairingStart => '开始对码';
 
   @override
-  String get safetySensorPairingInProgress => '对码中…';
+  String get safetySensorPairingInProgress => '学习中…';
 
   @override
   String get safetySensorPairingMatchingDescription => '长按无线传感器上的配对按钮。';
@@ -2034,7 +2043,39 @@ class AppLocalizationsZh extends AppLocalizations {
   String get safetySensorPairingCancel => '取消';
 
   @override
+  String get safetySensorPairingCancelling => '取消对码中…';
+
+  @override
+  String get safetySensorPairingBack => '返回';
+
+  @override
+  String get safetySensorPairingFailed => '安全设备对码失败';
+
+  @override
+  String get safetySensorPairingTimeout => '安全设备对码超时';
+
+  @override
+  String get safetySensorPairingFailedDescription => '安全设备对码失败，请返回。';
+
+  @override
+  String get safetySensorPairingTimeoutDescription => '安全设备对码超时，请返回。';
+
+  @override
+  String get safetySensorPairingBluetoothDisconnected => '蓝牙连接已断开，无法进行安全设备对码。';
+
+  @override
+  String get safetySensorPairingCommunicationTimeout => '蓝牙通信超时，未收到设备响应。';
+
+  @override
+  String safetySensorPairingReasonCode(String code) {
+    return '故障码：$code';
+  }
+
+  @override
   String get safetySensorPairingSuccess => '无线安全传感器学习成功';
+
+  @override
+  String get safetySensorPairingLearningFailed => '无线安全传感器学习失败';
 
   @override
   String get safetySensorPairingComplete => '完成';

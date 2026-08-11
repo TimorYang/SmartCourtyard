@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/logging/providers.dart';
 import '../../../core/network/providers.dart';
+import '../../../platform_bridge/hardware_gateway.dart';
+import '../../../platform_bridge/providers.dart';
 import '../data/data_sources/security_balance_refresh_api.dart';
 import '../data/data_sources/security_balance_refresh_remote_data_source.dart';
 import '../data/repositories/security_balance_refresh_repository_impl.dart';
@@ -24,6 +26,10 @@ import '../domain/repositories/general_evaluation_repository.dart';
 import '../domain/use_cases/fetch_general_evaluation_use_case.dart';
 import '../domain/repositories/safety_sensors_evaluation_repository.dart';
 import '../domain/use_cases/fetch_safety_sensors_evaluation_use_case.dart';
+import '../domain/repositories/safety_sensor_pairing_repository.dart';
+import '../domain/use_cases/check_safety_sensor_device_connection_use_case.dart';
+import '../domain/use_cases/pair_safety_sensor_use_case.dart';
+import '../data/repositories/safety_sensor_pairing_repository_impl.dart';
 
 final securityBalanceRefreshApiProvider = Provider<SecurityBalanceRefreshApi>((
   ref,
@@ -217,3 +223,27 @@ final securityCenterOverviewProvider =
         ),
       );
     });
+
+final safetySensorPairingHardwareGatewayProvider = Provider<HardwareGateway>(
+  (ref) => ref.watch(nativeHardwareGatewayProvider),
+);
+
+final safetySensorPairingRepositoryProvider =
+    Provider<SafetySensorPairingRepository>(
+      (ref) => SafetySensorPairingRepositoryImpl(
+        gateway: ref.watch(safetySensorPairingHardwareGatewayProvider),
+      ),
+    );
+
+final pairSafetySensorUseCaseProvider = Provider<PairSafetySensorUseCase>(
+  (ref) => PairSafetySensorUseCase(
+    repository: ref.watch(safetySensorPairingRepositoryProvider),
+  ),
+);
+
+final checkSafetySensorDeviceConnectionUseCaseProvider =
+    Provider<CheckSafetySensorDeviceConnectionUseCase>(
+      (ref) => CheckSafetySensorDeviceConnectionUseCase(
+        repository: ref.watch(safetySensorPairingRepositoryProvider),
+      ),
+    );

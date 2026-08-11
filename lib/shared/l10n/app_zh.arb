@@ -710,13 +710,34 @@
   "safetySensorsMatch": "配对",
   "safetySensorsManage": "管理",
   "safetySensorPairingTitle": "传感器对码",
+  "safetySensorPairingGuideTitle": "传感器匹配",
+  "safetySensorPairingGuideStatus": "保持蓝牙开启",
   "safetySensorPairingBluetoothEnabled": "请保持蓝牙开启",
-  "safetySensorPairingGuideDescription": "1. 确保手机与电机的距离小于 5 米；\n2. 确保安全传感器与电机的距离小于 10 米；\n3. 如果 30 秒内未进行学习操作，对码将自动结束。",
+  "safetySensorPairingGuideDescription": "1.确保手机与电机的距离小于 5 米。\n2.确保安全传感器与电机的距离小于 10 米。\n3.如果 30 秒内未进行学习操作，学习将自动结束。",
+  "safetySensorPairingGuideAction": "开始学习",
   "safetySensorPairingStart": "开始对码",
-  "safetySensorPairingInProgress": "对码中…",
+  "safetySensorPairingInProgress": "学习中…",
   "safetySensorPairingMatchingDescription": "长按无线传感器上的配对按钮。",
   "safetySensorPairingCancel": "取消",
+  "safetySensorPairingCancelling": "取消对码中…",
+  "safetySensorPairingBack": "返回",
+  "safetySensorPairingFailed": "安全设备对码失败",
+  "safetySensorPairingTimeout": "安全设备对码超时",
+  "safetySensorPairingFailedDescription": "安全设备对码失败，请返回。",
+  "safetySensorPairingTimeoutDescription": "安全设备对码超时，请返回。",
+  "safetySensorPairingBluetoothDisconnected": "蓝牙连接已断开，无法进行安全设备对码。",
+  "safetySensorPairingCommunicationTimeout": "蓝牙通信超时，未收到设备响应。",
+  "safetySensorPairingReasonCode": "故障码：{code}",
+  "@safetySensorPairingReasonCode": {
+    "placeholders": {
+      "code": {
+        "type": "String",
+        "example": "0x00000000"
+      }
+    }
+  },
   "safetySensorPairingSuccess": "无线安全传感器学习成功",
+  "safetySensorPairingLearningFailed": "无线安全传感器学习失败",
   "safetySensorPairingComplete": "完成",
   "safetySensorPairingImagePlaceholder": "对码插图占位图",
   "safetySensorManagementTitle": "传感器管理",

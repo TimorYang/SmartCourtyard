@@ -1,10 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
+import '../../application/providers.dart';
 import '../../application/safety_sensors_evaluation_controller.dart';
 import '../../domain/entities/safety_sensors_evaluation.dart';
 import 'safety_sensor_battery_solution_page.dart';
@@ -156,10 +160,62 @@ class _SafetySensorsEvaluationPageState
             group: evaluation.wirelessSensorGroup,
             deviceId: widget.deviceId,
             doorId: widget.doorId,
+            onMatch: _openPairing,
+            onManage: _openManagement,
           ),
         ],
       ),
     );
+  }
+
+  void _openPairing() {
+    unawaited(
+      _openBluetoothAction(
+        action: AppLocalizations.of(context).safetySensorsMatch,
+        onConnected: () => context.push(
+          safetySensorPairingGuideLocation(
+            doorId: widget.doorId,
+            deviceId: widget.deviceId,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _openManagement() {
+    unawaited(
+      _openBluetoothAction(
+        action: AppLocalizations.of(context).safetySensorsManage,
+        onConnected: () => context.push(
+          '${SafetySensorManagementPage.routePath}'
+          '?doorId=${Uri.encodeQueryComponent(widget.doorId)}'
+          '&deviceId=${Uri.encodeQueryComponent(widget.deviceId)}',
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openBluetoothAction({
+    required String action,
+    required VoidCallback onConnected,
+  }) async {
+    bool connected = false;
+    try {
+      connected = await ref
+          .read(checkSafetySensorDeviceConnectionUseCaseProvider)
+          .call(deviceId: widget.deviceId);
+    } catch (_) {
+      // A failed connection lookup is handled as unavailable for this action.
+    }
+    if (!mounted) return;
+    if (!connected) {
+      AppToast.info(
+        context,
+        AppLocalizations.of(context).deviceCommandBluetoothRequired(action),
+      );
+      return;
+    }
+    onConnected();
   }
 }
 
@@ -294,6 +350,8 @@ class _SensorGroupCard extends StatelessWidget {
     required this.deviceId,
     required this.doorId,
     required this.height,
+    this.onMatch,
+    this.onManage,
     this.showActions = false,
   });
 
@@ -304,6 +362,8 @@ class _SensorGroupCard extends StatelessWidget {
   final String doorId;
   final bool showActions;
   final double height;
+  final VoidCallback? onMatch;
+  final VoidCallback? onManage;
 
   @override
   Widget build(BuildContext context) {
@@ -352,24 +412,16 @@ class _SensorGroupCard extends StatelessWidget {
                       key: const ValueKey<String>('safety-sensors-match'),
                       icon: Icons.link,
                       label: AppLocalizations.of(context).safetySensorsMatch,
-                      onPressed: () => context.push(
-                        safetySensorPairingGuideLocation(
-                          doorId: doorId,
-                          deviceId: deviceId,
-                        ),
-                      ),
+                      onPressed: onMatch,
                     ),
                   ),
                   SizedBox(width: 16),
                   Expanded(
                     child: _SensorActionButton(
+                      key: const ValueKey<String>('safety-sensors-manage'),
                       icon: Icons.tune,
                       label: AppLocalizations.of(context).safetySensorsManage,
-                      onPressed: () => context.push(
-                        '${SafetySensorManagementPage.routePath}'
-                        '?doorId=${Uri.encodeQueryComponent(doorId)}'
-                        '&deviceId=${Uri.encodeQueryComponent(deviceId)}',
-                      ),
+                      onPressed: onManage,
                     ),
                   ),
                 ],

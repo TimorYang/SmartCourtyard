@@ -2141,31 +2141,77 @@ class AppLocalizationsEn extends AppLocalizations {
   String get safetySensorPairingTitle => 'Sensor pairing';
 
   @override
+  String get safetySensorPairingGuideTitle => 'Sensor match';
+
+  @override
+  String get safetySensorPairingGuideStatus => 'Keep Bluetooth on';
+
+  @override
   String get safetySensorPairingBluetoothEnabled => 'Keep Bluetooth enabled';
 
   @override
   String get safetySensorPairingGuideDescription =>
-      '1. Keep your phone within 5 meters of the opener.\n2. Keep the safety sensor within 10 meters of the opener.\n3. Pairing ends automatically if no learning action is performed within 30 seconds.';
+      '1.Make sure the distance between the phone and the motor is less than 5 meters.\n2.Make sure the distance between the safety sensor and the motor is less than 10 meters.\n3.If no learning operation is performed within 30 seconds, the learning will end automatically.';
+
+  @override
+  String get safetySensorPairingGuideAction => 'Start Learning';
 
   @override
   String get safetySensorPairingStart => 'Start pairing';
 
   @override
-  String get safetySensorPairingInProgress => 'Pairing in progress...';
+  String get safetySensorPairingInProgress => 'Learning...';
 
   @override
   String get safetySensorPairingMatchingDescription =>
-      'Press and hold the pairing button on the wireless safety sensor.';
+      'Press and hold the pairing button on the wireless sensor.';
 
   @override
   String get safetySensorPairingCancel => 'Cancel';
 
   @override
-  String get safetySensorPairingSuccess =>
-      'Wireless safety sensor pairing successful';
+  String get safetySensorPairingCancelling => 'Cancelling pairing...';
 
   @override
-  String get safetySensorPairingComplete => 'Done';
+  String get safetySensorPairingBack => 'Back';
+
+  @override
+  String get safetySensorPairingFailed => 'Safety device pairing failed';
+
+  @override
+  String get safetySensorPairingTimeout => 'Safety device pairing timed out';
+
+  @override
+  String get safetySensorPairingFailedDescription =>
+      'Safety device pairing failed. Please go back.';
+
+  @override
+  String get safetySensorPairingTimeoutDescription =>
+      'Safety device pairing timed out. Please go back.';
+
+  @override
+  String get safetySensorPairingBluetoothDisconnected =>
+      'Bluetooth disconnected. Safety device pairing cannot continue.';
+
+  @override
+  String get safetySensorPairingCommunicationTimeout =>
+      'Bluetooth communication timed out without a device response.';
+
+  @override
+  String safetySensorPairingReasonCode(String code) {
+    return 'Fault code: $code';
+  }
+
+  @override
+  String get safetySensorPairingSuccess =>
+      'Wireless safety sensor learning successful';
+
+  @override
+  String get safetySensorPairingLearningFailed =>
+      'Wireless safety sensor learning failed';
+
+  @override
+  String get safetySensorPairingComplete => 'Complete';
 
   @override
   String get safetySensorPairingImagePlaceholder =>

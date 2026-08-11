@@ -3962,6 +3962,18 @@ abstract class AppLocalizations {
   /// **'Sensor pairing'**
   String get safetySensorPairingTitle;
 
+  /// No description provided for @safetySensorPairingGuideTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sensor match'**
+  String get safetySensorPairingGuideTitle;
+
+  /// No description provided for @safetySensorPairingGuideStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Bluetooth on'**
+  String get safetySensorPairingGuideStatus;
+
   /// No description provided for @safetySensorPairingBluetoothEnabled.
   ///
   /// In en, this message translates to:
@@ -3971,8 +3983,14 @@ abstract class AppLocalizations {
   /// No description provided for @safetySensorPairingGuideDescription.
   ///
   /// In en, this message translates to:
-  /// **'1. Keep your phone within 5 meters of the opener.\n2. Keep the safety sensor within 10 meters of the opener.\n3. Pairing ends automatically if no learning action is performed within 30 seconds.'**
+  /// **'1.Make sure the distance between the phone and the motor is less than 5 meters.\n2.Make sure the distance between the safety sensor and the motor is less than 10 meters.\n3.If no learning operation is performed within 30 seconds, the learning will end automatically.'**
   String get safetySensorPairingGuideDescription;
+
+  /// No description provided for @safetySensorPairingGuideAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Learning'**
+  String get safetySensorPairingGuideAction;
 
   /// No description provided for @safetySensorPairingStart.
   ///
@@ -3983,13 +4001,13 @@ abstract class AppLocalizations {
   /// No description provided for @safetySensorPairingInProgress.
   ///
   /// In en, this message translates to:
-  /// **'Pairing in progress...'**
+  /// **'Learning...'**
   String get safetySensorPairingInProgress;
 
   /// No description provided for @safetySensorPairingMatchingDescription.
   ///
   /// In en, this message translates to:
-  /// **'Press and hold the pairing button on the wireless safety sensor.'**
+  /// **'Press and hold the pairing button on the wireless sensor.'**
   String get safetySensorPairingMatchingDescription;
 
   /// No description provided for @safetySensorPairingCancel.
@@ -3998,16 +4016,76 @@ abstract class AppLocalizations {
   /// **'Cancel'**
   String get safetySensorPairingCancel;
 
+  /// No description provided for @safetySensorPairingCancelling.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelling pairing...'**
+  String get safetySensorPairingCancelling;
+
+  /// No description provided for @safetySensorPairingBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get safetySensorPairingBack;
+
+  /// No description provided for @safetySensorPairingFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety device pairing failed'**
+  String get safetySensorPairingFailed;
+
+  /// No description provided for @safetySensorPairingTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety device pairing timed out'**
+  String get safetySensorPairingTimeout;
+
+  /// No description provided for @safetySensorPairingFailedDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety device pairing failed. Please go back.'**
+  String get safetySensorPairingFailedDescription;
+
+  /// No description provided for @safetySensorPairingTimeoutDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety device pairing timed out. Please go back.'**
+  String get safetySensorPairingTimeoutDescription;
+
+  /// No description provided for @safetySensorPairingBluetoothDisconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Bluetooth disconnected. Safety device pairing cannot continue.'**
+  String get safetySensorPairingBluetoothDisconnected;
+
+  /// No description provided for @safetySensorPairingCommunicationTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Bluetooth communication timed out without a device response.'**
+  String get safetySensorPairingCommunicationTimeout;
+
+  /// No description provided for @safetySensorPairingReasonCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Fault code: {code}'**
+  String safetySensorPairingReasonCode(String code);
+
   /// No description provided for @safetySensorPairingSuccess.
   ///
   /// In en, this message translates to:
-  /// **'Wireless safety sensor pairing successful'**
+  /// **'Wireless safety sensor learning successful'**
   String get safetySensorPairingSuccess;
+
+  /// No description provided for @safetySensorPairingLearningFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Wireless safety sensor learning failed'**
+  String get safetySensorPairingLearningFailed;
 
   /// No description provided for @safetySensorPairingComplete.
   ///
   /// In en, this message translates to:
-  /// **'Done'**
+  /// **'Complete'**
   String get safetySensorPairingComplete;
 
   /// No description provided for @safetySensorPairingImagePlaceholder.
