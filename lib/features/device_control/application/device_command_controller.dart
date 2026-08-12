@@ -28,7 +28,6 @@ import '../domain/repositories/door_detail_repository.dart';
 import '../domain/repositories/remote_door_command_repository.dart';
 import '../domain/use_cases/fetch_door_detail_use_case.dart';
 import '../domain/use_cases/fetch_door_devices_use_case.dart';
-import '../domain/use_cases/fetch_remote_door_command_use_case.dart';
 import '../domain/use_cases/submit_remote_door_command_use_case.dart';
 import '../domain/use_cases/unbind_door_device_use_case.dart';
 
@@ -108,13 +107,6 @@ final remoteDoorCommandRepositoryProvider =
 final submitRemoteDoorCommandUseCaseProvider =
     Provider<SubmitRemoteDoorCommandUseCase>((ref) {
       return SubmitRemoteDoorCommandUseCase(
-        repository: ref.watch(remoteDoorCommandRepositoryProvider),
-      );
-    });
-
-final fetchRemoteDoorCommandUseCaseProvider =
-    Provider<FetchRemoteDoorCommandUseCase>((ref) {
-      return FetchRemoteDoorCommandUseCase(
         repository: ref.watch(remoteDoorCommandRepositoryProvider),
       );
     });
@@ -369,7 +361,6 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
   late final FetchDoorDevicesUseCase _fetchDoorDevicesUseCase;
   late final FetchOnboardingDeviceKeyUseCase _fetchDeviceKeyUseCase;
   late final SubmitRemoteDoorCommandUseCase _submitRemoteDoorCommandUseCase;
-  late final FetchRemoteDoorCommandUseCase _fetchRemoteDoorCommandUseCase;
   late final AppLogger _logger;
   late final Duration _bleScanDuration;
   late final Duration _remotePollInterval;
@@ -397,9 +388,6 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
     _fetchDeviceKeyUseCase = ref.watch(fetchOnboardingDeviceKeyUseCaseProvider);
     _submitRemoteDoorCommandUseCase = ref.watch(
       submitRemoteDoorCommandUseCaseProvider,
-    );
-    _fetchRemoteDoorCommandUseCase = ref.watch(
-      fetchRemoteDoorCommandUseCaseProvider,
     );
     _logger = ref.watch(appLoggerProvider);
     _bleScanDuration = ref.watch(deviceCommandBleScanDurationProvider);
@@ -1295,6 +1283,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
   }) async {
     final doorId = state.doorDetail?.id.trim() ?? '';
     final initialDoorState = state.doorDetail?.doorState;
+    final initialLedStatus = state.doorDetail?.ledStatus;
     if (doorId.isEmpty) {
       state = state.copyWith(
         commandFeedback: DeviceCommandFeedback(
@@ -1321,24 +1310,13 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
       clearErrorMessage: true,
     );
 
-    if (!_usesDoorStateRemotePolling(action)) {
-      await _runRemoteCommandStatusAction(
-        action: action,
-        remoteAction: remoteAction,
-        doorId: doorId,
-        requestId: requestId,
-        generation: generation,
-      );
-      return;
-    }
-
     try {
       final command = await _submitRemoteDoorCommandUseCase(
         doorId: doorId,
         action: remoteAction,
         requestId: requestId,
       );
-      var stateChanged = false;
+      var stateConfirmed = false;
       var pollAttempts = 0;
       DoorDetail? latestDetail;
 
@@ -1365,9 +1343,12 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
           );
         }
         latestDetail = detail;
-        stateChanged =
-            initialDoorState != null && detail.doorState != initialDoorState;
-        if (stateChanged) {
+        stateConfirmed = _isRemoteStateConfirmed(
+          action: action,
+          detail: detail,
+          initialDoorState: initialDoorState,
+        );
+        if (stateConfirmed) {
           break;
         }
       }
@@ -1375,7 +1356,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
         return;
       }
 
-      if (!stateChanged) {
+      if (!stateConfirmed) {
         final detail = await _fetchDoorDetailUseCase(
           doorId: doorId,
           requestId: requestId,
@@ -1390,6 +1371,11 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
           );
         }
         latestDetail = detail;
+        stateConfirmed = _isRemoteStateConfirmed(
+          action: action,
+          detail: detail,
+          initialDoorState: initialDoorState,
+        );
       }
 
       if (latestDetail != null) {
@@ -1397,14 +1383,20 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
       }
       state = state.copyWith(
         clearPendingAction: true,
-        commandFeedback: stateChanged
+        commandFeedback: stateConfirmed
             ? DeviceCommandFeedback(
                 kind: DeviceCommandFeedbackKind.succeeded,
                 action: action,
                 failureCategory: command.failureCategory,
               )
+            : _isLightAction(action)
+            ? DeviceCommandFeedback(
+                kind: DeviceCommandFeedbackKind.remoteTimeout,
+                action: action,
+                failureCategory: command.failureCategory,
+              )
             : null,
-        clearCommandFeedback: !stateChanged,
+        clearCommandFeedback: !stateConfirmed && !_isLightAction(action),
         clearInfoMessage: true,
         clearErrorMessage: true,
       );
@@ -1418,8 +1410,11 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
           'status': command.status.name,
           'initialDoorState': initialDoorState?.name,
           'finalDoorState': latestDetail?.doorState.name,
+          'initialLedStatus': initialLedStatus,
+          'targetLedStatus': _targetLedStatus(action),
+          'finalLedStatus': latestDetail?.ledStatus,
           'pollAttempts': pollAttempts,
-          'stateChanged': stateChanged,
+          'stateConfirmed': stateConfirmed,
           'failureCategory': command.failureCategory,
           'deviceResultCode': command.deviceResultCode,
         },
@@ -1447,101 +1442,30 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
     }
   }
 
-  Future<void> _runRemoteCommandStatusAction({
+  bool _isRemoteStateConfirmed({
     required DeviceCommandAction action,
-    required RemoteDoorCommandAction remoteAction,
-    required String doorId,
-    required String requestId,
-    required int generation,
-  }) async {
-    try {
-      var command = await _submitRemoteDoorCommandUseCase(
-        doorId: doorId,
-        action: remoteAction,
-        requestId: requestId,
-      );
-      var pollAttempts = 0;
-      while (_isCurrentRemoteCommand(generation) &&
-          !command.status.isTerminal &&
-          pollAttempts < _remotePollMaxAttempts) {
-        await Future<void>.delayed(_remotePollInterval);
-        if (!_isCurrentRemoteCommand(generation)) {
-          return;
-        }
-        command = await _fetchRemoteDoorCommandUseCase(
-          doorId: doorId,
-          commandId: command.commandId,
-          requestId: requestId,
-        );
-        pollAttempts += 1;
-      }
-      if (!_isCurrentRemoteCommand(generation)) {
-        return;
-      }
-
-      final feedbackKind = switch (command.status) {
-        RemoteDoorCommandStatus.succeeded =>
-          DeviceCommandFeedbackKind.succeeded,
-        RemoteDoorCommandStatus.unconfirmed =>
-          DeviceCommandFeedbackKind.remoteUnconfirmed,
-        RemoteDoorCommandStatus.failed =>
-          DeviceCommandFeedbackKind.remoteFailed,
-        RemoteDoorCommandStatus.processing || RemoteDoorCommandStatus.unknown =>
-          DeviceCommandFeedbackKind.remoteTimeout,
-      };
-      state = state.copyWith(
-        clearPendingAction: true,
-        commandFeedback: DeviceCommandFeedback(
-          kind: feedbackKind,
-          action: action,
-          failureCategory: command.failureCategory,
-        ),
-        clearInfoMessage: true,
-        clearErrorMessage: true,
-      );
-      _logger.info(
-        'Remote command status action completed',
-        requestId: requestId,
-        context: {
-          'doorId': doorId,
-          'commandId': command.commandId,
-          'action': command.action.wireValue,
-          'status': command.status.name,
-          'pollAttempts': pollAttempts,
-        },
-      );
-    } catch (error, stackTrace) {
-      if (!_isCurrentRemoteCommand(generation)) {
-        return;
-      }
-      state = state.copyWith(
-        clearPendingAction: true,
-        commandFeedback: DeviceCommandFeedback(
-          kind: DeviceCommandFeedbackKind.networkFailure,
-          action: action,
-        ),
-        clearInfoMessage: true,
-        clearErrorMessage: true,
-      );
-      _logger.error(
-        'Remote command status action failed',
-        requestId: requestId,
-        error: error,
-        stackTrace: stackTrace,
-        context: {'doorId': doorId, 'action': remoteAction.wireValue},
-      );
+    required DoorDetail detail,
+    required DoorState? initialDoorState,
+  }) {
+    final targetLedStatus = _targetLedStatus(action);
+    if (targetLedStatus != null) {
+      return detail.ledStatus == targetLedStatus;
     }
+    return initialDoorState != null && detail.doorState != initialDoorState;
   }
 
-  bool _usesDoorStateRemotePolling(DeviceCommandAction action) {
+  bool _isLightAction(DeviceCommandAction action) =>
+      _targetLedStatus(action) != null;
+
+  int? _targetLedStatus(DeviceCommandAction action) {
     return switch (action) {
+      DeviceCommandAction.turnLightOn => 2,
+      DeviceCommandAction.turnLightOff => 1,
       DeviceCommandAction.openDoor ||
       DeviceCommandAction.closeDoor ||
-      DeviceCommandAction.stopDoor => true,
+      DeviceCommandAction.stopDoor ||
       DeviceCommandAction.partialOpenDoor ||
-      DeviceCommandAction.turnLightOn ||
-      DeviceCommandAction.turnLightOff ||
-      DeviceCommandAction.pb => false,
+      DeviceCommandAction.pb => null,
     };
   }
 

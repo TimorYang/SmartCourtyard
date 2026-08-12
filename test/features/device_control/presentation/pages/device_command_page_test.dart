@@ -883,6 +883,58 @@ void main() {
       expect(_doorHeroAsset(tester), endsWith('garage_door_20.png'));
     },
   );
+
+  testWidgets('keeps optimistic LED switch on until detail confirms it', (
+    tester,
+  ) async {
+    final repository = _DelayedLightDoorDetailRepository();
+    await _pumpDevicePage(
+      tester,
+      _DisconnectedHardwareGateway(),
+      repository: repository,
+      remoteRepository: _SuccessfulRemoteDoorCommandRepository(),
+      remotePollInterval: Duration.zero,
+    );
+    final ledSwitch = find.byKey(const ValueKey<String>('led-switch'));
+
+    expect(tester.widget<FlinxSwitch>(ledSwitch).value, isFalse);
+    await tester.tap(ledSwitch);
+    await tester.pump();
+
+    expect(tester.widget<FlinxSwitch>(ledSwitch).value, isTrue);
+    expect(tester.widget<FlinxSwitch>(ledSwitch).enabled, isFalse);
+
+    repository.confirmLightOn();
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<FlinxSwitch>(ledSwitch).value, isTrue);
+    expect(tester.widget<FlinxSwitch>(ledSwitch).enabled, isTrue);
+    expect(find.text('Turn LED on command sent (0x1005).'), findsOneWidget);
+  });
+
+  testWidgets('restores LED switch when detail polling times out', (
+    tester,
+  ) async {
+    await _pumpDevicePage(
+      tester,
+      _DisconnectedHardwareGateway(),
+      repository: const _RemoteLightDoorDetailRepository(ledStatus: 1),
+      remoteRepository: _SuccessfulRemoteDoorCommandRepository(),
+      remotePollInterval: Duration.zero,
+      remotePollMaxAttempts: 1,
+    );
+    final ledSwitch = find.byKey(const ValueKey<String>('led-switch'));
+
+    await tester.tap(ledSwitch);
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<FlinxSwitch>(ledSwitch).value, isFalse);
+    expect(tester.widget<FlinxSwitch>(ledSwitch).enabled, isTrue);
+    expect(
+      find.text('Turn LED on timed out. Check the door state and try again.'),
+      findsOneWidget,
+    );
+  });
 }
 
 Widget _buildPage(
@@ -894,6 +946,7 @@ Widget _buildPage(
       const _CommandDoorSettingsRepository(),
   RemoteDoorCommandRepository? remoteRepository,
   Duration remotePollInterval = const Duration(seconds: 1),
+  int remotePollMaxAttempts = 6,
 }) {
   return ProviderScope(
     overrides: [
@@ -904,6 +957,9 @@ Widget _buildPage(
         remoteDoorCommandRepositoryProvider.overrideWithValue(remoteRepository),
       deviceCommandRemotePollIntervalProvider.overrideWithValue(
         remotePollInterval,
+      ),
+      deviceCommandRemotePollMaxAttemptsProvider.overrideWithValue(
+        remotePollMaxAttempts,
       ),
       fetchOnboardingDeviceKeyUseCaseProvider.overrideWithValue(
         const _FakeFetchOnboardingDeviceKeyUseCase(),
@@ -1012,6 +1068,7 @@ Future<void> _pumpDevicePage(
       const _CommandDoorSettingsRepository(),
   RemoteDoorCommandRepository? remoteRepository,
   Duration remotePollInterval = const Duration(seconds: 1),
+  int remotePollMaxAttempts = 6,
 }) async {
   tester.view.physicalSize = const Size(393, 852);
   tester.view.devicePixelRatio = 1;
@@ -1026,6 +1083,7 @@ Future<void> _pumpDevicePage(
       doorSettingsRepository: doorSettingsRepository,
       remoteRepository: remoteRepository,
       remotePollInterval: remotePollInterval,
+      remotePollMaxAttempts: remotePollMaxAttempts,
     ),
   );
   await tester.pumpAndSettle();
@@ -1243,15 +1301,74 @@ class _SuccessfulRemoteDoorCommandRepository
       status: RemoteDoorCommandStatus.succeeded,
     );
   }
+}
+
+class _RemoteLightDoorDetailRepository implements DoorDetailRepository {
+  const _RemoteLightDoorDetailRepository({required this.ledStatus});
+
+  final int? ledStatus;
 
   @override
-  Future<RemoteDoorCommand> fetchCommand({
+  Future<DoorDetail> fetchDoorDetail({
     required String doorId,
-    required String commandId,
+    required String requestId,
+  }) async => _lightDoorDetail(ledStatus);
+
+  @override
+  Future<List<DoorDevice>> fetchDoorDevices({
+    required String doorId,
+    required String requestId,
+  }) async => const [
+    DoorDevice(
+      deviceId: '3',
+      sn: 'remote-only',
+      deviceType: 'opener',
+      capabilities: ['LED_CONTROL'],
+    ),
+  ];
+
+  @override
+  Future<void> unbindDoorDevice({
+    required String doorId,
+    required String deviceId,
+    required String requestId,
+  }) => throw UnimplementedError();
+}
+
+class _DelayedLightDoorDetailRepository
+    extends _RemoteLightDoorDetailRepository {
+  _DelayedLightDoorDetailRepository() : super(ledStatus: 1);
+
+  final Completer<DoorDetail> _confirmation = Completer<DoorDetail>();
+  var _detailFetchCount = 0;
+
+  @override
+  Future<DoorDetail> fetchDoorDetail({
+    required String doorId,
     required String requestId,
   }) {
-    throw StateError('A terminal submit response must not be polled.');
+    _detailFetchCount += 1;
+    if (_detailFetchCount == 1) {
+      return Future<DoorDetail>.value(_lightDoorDetail(1));
+    }
+    return _confirmation.future;
   }
+
+  void confirmLightOn() {
+    _confirmation.complete(_lightDoorDetail(2));
+  }
+}
+
+DoorDetail _lightDoorDetail(int? ledStatus) {
+  return DoorDetail(
+    id: '12',
+    name: 'Garage door',
+    doorState: DoorState.closed,
+    doorStateLabel: 'Closed',
+    operatedCycles: 0,
+    remainingCycles: 0,
+    ledStatus: ledStatus,
+  );
 }
 
 class _SequencedDoorDetailRepository implements DoorDetailRepository {
