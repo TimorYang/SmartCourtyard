@@ -668,9 +668,13 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     if (positionPercent == null) {
       return stateLabel;
     }
+    final roundedPositionPercent = positionPercent.clamp(0, 100).round();
+    if (roundedPositionPercent == 0 || roundedPositionPercent == 100) {
+      return stateLabel;
+    }
     return l10n.deviceCommandDoorStateWithPercent(
       stateLabel,
-      positionPercent.clamp(0, 100).round(),
+      roundedPositionPercent,
     );
   }
 

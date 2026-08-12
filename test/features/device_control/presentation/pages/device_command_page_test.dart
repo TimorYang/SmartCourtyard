@@ -178,6 +178,8 @@ void main() {
     );
 
     expect(_doorHeroAsset(tester), endsWith('garage_door_01.png'));
+    expect(find.text('Closed'), findsOneWidget);
+    expect(find.text('Closed · 0%'), findsNothing);
 
     gateway.emitDeviceAttributeSnapshot(
       DeviceAttributeSnapshot(
@@ -876,7 +878,8 @@ void main() {
 
       expect(remoteRepository.actions, [RemoteDoorCommandAction.open]);
       expect(find.text('Open command sent (0x1001).'), findsOneWidget);
-      expect(find.text('Opened · 100%'), findsOneWidget);
+      expect(find.text('Opened'), findsOneWidget);
+      expect(find.text('Opened · 100%'), findsNothing);
       expect(_doorHeroAsset(tester), endsWith('garage_door_20.png'));
     },
   );
