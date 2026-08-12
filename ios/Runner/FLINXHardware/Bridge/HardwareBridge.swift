@@ -5,6 +5,8 @@ import CoreLocation
 import Photos
 import UIKit
 
+#warning("FLINX-SAFETY-DOOR-SENSOR-NAME: 0x01 暂命名为“无线门磁”，发布前请确认最终产品文案与切图。")
+
 final class HardwareBridge: HardwareHostApi {
     private let bleManager: BleManager
     private let logger: BleLogger
@@ -790,6 +792,113 @@ final class HardwareBridge: HardwareHostApi {
         }
     }
 
+    func querySafetyAccessories(
+        requestId: String,
+        deviceId: String,
+        completion: @escaping (Result<SafetyAccessoryListResultDto, Error>) -> Void
+    ) {
+        logger.info(
+            "safety_accessory_query",
+            requestId: requestId,
+            deviceId: deviceId,
+            state: "started",
+            details: "command=\(BleProvisioningCommand.safetyAccessoryQuery.hexCode)"
+        )
+        ensureProvisioningChannel(requestId: requestId, deviceId: deviceId) { [weak self] result in
+            guard let self else { return }
+            switch result {
+            case .failure(let error):
+                completion(.failure(Self.toPigeonError(error)))
+            case .success:
+                self.sendProvisioningRequest(
+                    requestId: requestId,
+                    deviceId: deviceId,
+                    command: .safetyAccessoryQuery,
+                    payload: Data()
+                ) { response in
+                    do {
+                        let parsed = try Self.parseSafetyAccessoryList(
+                            requestId: requestId,
+                            deviceId: deviceId,
+                            payload: response.data
+                        )
+                        let details = parsed.accessories.map { accessory in
+                            let serial = UInt32(truncatingIfNeeded: accessory.serialNumber)
+                            let type = UInt8((serial >> 24) & 0xFF)
+                            return "serial=\(DoorControlCommand.hex(serial)),type=0x\(String(format: "%02X", type)),status=0x\(String(format: "%02X", accessory.statusCode))"
+                        }.joined(separator: ";")
+                        self.logger.info(
+                            "safety_accessory_query",
+                            requestId: requestId,
+                            deviceId: deviceId,
+                            state: "success",
+                            payloadBytes: response.data.count,
+                            details: "count=\(parsed.totalCount) \(details)"
+                        )
+                        completion(.success(parsed))
+                    } catch {
+                        completion(.failure(Self.toPigeonError(error)))
+                    }
+                } failure: { error in
+                    completion(.failure(Self.toPigeonError(error)))
+                }
+            }
+        }
+    }
+
+    func deleteSafetyAccessory(
+        requestId: String,
+        deviceId: String,
+        serialNumber: Int64,
+        completion: @escaping (Result<SafetyAccessoryDeleteResultDto, Error>) -> Void
+    ) {
+        let serial = UInt32(truncatingIfNeeded: serialNumber)
+        let payload = Self.makeSafetyAccessoryDeletePayload(serialNumber: serial)
+        logger.info(
+            "safety_accessory_delete",
+            requestId: requestId,
+            deviceId: deviceId,
+            state: "started",
+            details: "command=\(BleProvisioningCommand.safetyAccessoryDelete.hexCode) type=0x01 serial=\(DoorControlCommand.hex(serial))"
+        )
+        ensureProvisioningChannel(requestId: requestId, deviceId: deviceId) { [weak self] result in
+            guard let self else { return }
+            switch result {
+            case .failure(let error):
+                completion(.failure(Self.toPigeonError(error)))
+            case .success:
+                self.sendProvisioningRequest(
+                    requestId: requestId,
+                    deviceId: deviceId,
+                    command: .safetyAccessoryDelete,
+                    payload: payload
+                ) { response in
+                    do {
+                        let parsed = try Self.parseSafetyAccessoryDeleteResult(
+                            requestId: requestId,
+                            deviceId: deviceId,
+                            payload: response.data
+                        )
+                        self.logger.info(
+                            "safety_accessory_delete",
+                            requestId: requestId,
+                            deviceId: deviceId,
+                            state: parsed.success ? "success" : "failure",
+                            nativeCode: parsed.success ? nil : parsed.nativeCode,
+                            payloadBytes: response.data.count,
+                            details: "serial=\(DoorControlCommand.hex(serial)) reason=\(DoorControlCommand.hex(UInt32(truncatingIfNeeded: parsed.reasonCode)))"
+                        )
+                        completion(.success(parsed))
+                    } catch {
+                        completion(.failure(Self.toPigeonError(error)))
+                    }
+                } failure: { error in
+                    completion(.failure(Self.toPigeonError(error)))
+                }
+            }
+        }
+    }
+
     func queryRemotes(
         requestId: String,
         deviceId: String,
@@ -1052,6 +1161,33 @@ extension HardwareBridge {
         password: String
     ) throws -> Data {
         try makeWifiProvisionPayload(ssid: ssid, password: password)
+    }
+
+    static func parseSafetyAccessoryListForTesting(
+        _ payload: Data
+    ) throws -> [(serialNumber: Int64, statusCode: Int64)] {
+        try parseSafetyAccessoryList(
+            requestId: "test-query",
+            deviceId: "test-device",
+            payload: payload
+        ).accessories.map { ($0.serialNumber, $0.statusCode) }
+    }
+
+    static func makeSafetyAccessoryDeletePayloadForTesting(
+        serialNumber: UInt32
+    ) -> Data {
+        makeSafetyAccessoryDeletePayload(serialNumber: serialNumber)
+    }
+
+    static func parseSafetyAccessoryDeleteResultForTesting(
+        _ payload: Data
+    ) throws -> (success: Bool, reasonCode: Int64) {
+        let result = try parseSafetyAccessoryDeleteResult(
+            requestId: "test-delete",
+            deviceId: "test-device",
+            payload: payload
+        )
+        return (result.success, result.reasonCode)
     }
 }
 
@@ -1901,6 +2037,81 @@ private extension HardwareBridge {
         )
     }
 
+    static func parseSafetyAccessoryList(
+        requestId: String,
+        deviceId: String,
+        payload: Data
+    ) throws -> SafetyAccessoryListResultDto {
+        guard payload.count >= 2 else {
+            throw PigeonError(
+                code: "invalid_safety_accessory_query_response",
+                message: "Safety accessory query response is missing its 2-byte count.",
+                details: nil
+            )
+        }
+        let totalCount = Int(UInt16(payload[0]) << 8 | UInt16(payload[1]))
+        let expectedBytes = 2 + totalCount * 5
+        guard payload.count == expectedBytes else {
+            throw PigeonError(
+                code: "invalid_safety_accessory_query_response",
+                message: "Safety accessory query response length does not match its count.",
+                details: nil
+            )
+        }
+        var accessories: [SafetyAccessoryDto] = []
+        accessories.reserveCapacity(totalCount)
+        var offset = 2
+        while offset < payload.count {
+            let serial = parseUInt32(payload.subdata(in: offset..<(offset + 4)))
+            let status = payload[offset + 4]
+            accessories.append(
+                SafetyAccessoryDto(
+                    serialNumber: Int64(serial),
+                    statusCode: Int64(status)
+                )
+            )
+            offset += 5
+        }
+        return SafetyAccessoryListResultDto(
+            requestId: requestId,
+            deviceId: deviceId,
+            totalCount: Int64(totalCount),
+            accessories: accessories
+        )
+    }
+
+    static func makeSafetyAccessoryDeletePayload(serialNumber: UInt32) -> Data {
+        var payload = Data([0x01])
+        payload.append(contentsOf: bigEndianBytes(serialNumber))
+        return payload
+    }
+
+    static func parseSafetyAccessoryDeleteResult(
+        requestId: String,
+        deviceId: String,
+        payload: Data
+    ) throws -> SafetyAccessoryDeleteResultDto {
+        guard let resultCode = payload.first else {
+            throw PigeonError(
+                code: "invalid_safety_accessory_delete_response",
+                message: "Safety accessory delete response is empty.",
+                details: nil
+            )
+        }
+        let reason = parseUInt32(
+            payload.count >= 5 ? payload.dropFirst().prefix(4).asData : Data()
+        )
+        let success = resultCode == 0x01
+        return SafetyAccessoryDeleteResultDto(
+            requestId: requestId,
+            deviceId: deviceId,
+            success: success,
+            reasonCode: Int64(reason),
+            nativeCode: "command=0x000D,result=0x\(String(format: "%02X", resultCode)),reason=\(DoorControlCommand.hex(reason))",
+            domainCode: success ? nil : "safety_accessory_delete_failed"
+        )
+    }
+
     static func parseDeviceAttributes(_ payload: Data) throws -> [DeviceAttributeDto] {
         var attributes: [DeviceAttributeDto] = []
         var offset = 0
@@ -2492,6 +2703,8 @@ private enum BleProvisioningCommand: UInt16 {
     case remoteDelete = 0x0009
     case remoteRename = 0x000A
     case safetyAccessoryPairing = 0x000B
+    case safetyAccessoryQuery = 0x000C
+    case safetyAccessoryDelete = 0x000D
     case scanWifi = 0x0E01
     case configureWifi = 0x0E02
     case authenticate = 0x0E03
@@ -2512,6 +2725,8 @@ private enum BleProvisioningCommand: UInt16 {
         case .remoteDelete: return "Delete Remote"
         case .remoteRename: return "Rename Remote"
         case .safetyAccessoryPairing: return "Safety Accessory Pairing"
+        case .safetyAccessoryQuery: return "Query Safety Accessories"
+        case .safetyAccessoryDelete: return "Delete Safety Accessory"
         case .scanWifi: return "Scan Wi-Fi"
         case .configureWifi: return "Configure Wi-Fi"
         case .authenticate: return "Authenticate Device"
@@ -2520,7 +2735,7 @@ private enum BleProvisioningCommand: UInt16 {
     
     var requiresEncryptedRequest: Bool {
         switch self {
-        case .setAttributes, .authenticate, .scanWifi, .remotePairing, .remoteQuery, .remoteDelete, .remoteRename, .safetyAccessoryPairing:
+        case .setAttributes, .authenticate, .scanWifi, .remotePairing, .remoteQuery, .remoteDelete, .remoteRename, .safetyAccessoryPairing, .safetyAccessoryQuery, .safetyAccessoryDelete:
             return true
         case .configureWifi:
             return false

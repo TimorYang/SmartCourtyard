@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flinx/app/theme/app_design_tokens.dart';
 import 'package:flinx/core/platform/gallery_image_saver.dart';
 import 'package:flinx/features/security_center/application/providers.dart';
+import 'package:flinx/features/security_center/application/safety_sensor_management_providers.dart';
 import 'package:flinx/features/security_center/domain/entities/general_evaluation_report.dart';
 import 'package:flinx/features/security_center/domain/entities/full_report.dart';
 import 'package:flinx/features/security_center/domain/repositories/general_evaluation_repository.dart';
@@ -17,6 +18,7 @@ import 'package:flinx/features/security_center/domain/entities/security_balance_
 import 'package:flinx/features/security_center/domain/entities/safety_sensor_pairing.dart';
 import 'package:flinx/features/security_center/domain/repositories/safety_sensor_pairing_repository.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
+import 'package:flinx/platform_bridge/mock_hardware_gateway.dart';
 import 'package:flinx/features/device_control/presentation/widgets/device_detail_bottom_navigation.dart';
 import 'package:flinx/features/security_center/presentation/pages/full_report_page.dart';
 import 'package:flinx/features/security_center/presentation/pages/general_evaluation_page.dart';
@@ -1224,7 +1226,7 @@ void main() {
     expect(find.text('Cancel'), findsNothing);
   });
 
-  testWidgets('sensor management deletes a wireless sensor locally', (
+  testWidgets('sensor management deletes a wireless sensor over BLE', (
     tester,
   ) async {
     final router = _buildRouter();
@@ -1249,9 +1251,7 @@ void main() {
     expect(find.text('Wireless E-lock'), findsOneWidget);
 
     final deleteAction = find.byKey(
-      const ValueKey<String>(
-        'safety-sensor-management-delete-WIRELESS_WICKET_DOOR',
-      ),
+      const ValueKey<String>('safety-sensor-management-delete-02000071'),
     );
     await tester.ensureVisible(deleteAction);
     await tester.tap(deleteAction);
@@ -1281,6 +1281,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Wireless wicket door'), findsNothing);
     expect(find.text('Wireless E-lock'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 3));
   });
 
   testWidgets('wireless sensors expand and collapse operation charts', (
@@ -1717,6 +1718,11 @@ Future<void> _pumpRouter(
   SafetySensorPairingRepository? pairingRepository,
   SafetySensorsEvaluationRepository? evaluationRepository,
 }) async {
+  final managementGateway = MockHardwareGateway()
+    ..connectedBleDevices['mock-device'] = const ConnectedBleDevice(
+      deviceId: 'mock-device',
+      state: BleConnectionState.connected,
+    );
   tester.view.physicalSize = const Size(393, 852);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
@@ -1743,6 +1749,9 @@ Future<void> _pumpRouter(
         ),
         safetySensorPairingRepositoryProvider.overrideWithValue(
           pairingRepository ?? const _FakeSafetySensorPairingRepository(),
+        ),
+        safetySensorManagementHardwareGatewayProvider.overrideWithValue(
+          managementGateway,
         ),
       ],
       child: MaterialApp.router(

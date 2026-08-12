@@ -2238,6 +2238,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get safetySensorManagementConfirm => 'Confirm';
 
   @override
+  String get safetySensorManagementDeleteSuccess => 'Safety sensor deleted.';
+
+  @override
+  String get safetySensorManagementDeleteFailed =>
+      'Unable to delete the safety sensor. Please try again.';
+
+  @override
+  String get safetySensorManagementBluetoothDisconnected =>
+      'Connect the current device via Bluetooth first.';
+
+  @override
+  String get safetySensorManagementWirelessDoorSensor => 'Wireless door sensor';
+
+  @override
+  String get safetySensorManagementUnknownType => 'Unknown safety sensor';
+
+  @override
   String get safetySensorsWirelessWicketDoor => 'Wireless wicket door';
 
   @override

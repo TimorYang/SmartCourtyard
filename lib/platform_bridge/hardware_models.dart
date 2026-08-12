@@ -217,6 +217,43 @@ class SafetyAccessoryPairingResult {
   bool get successful => status == SafetyAccessoryPairingStatus.success;
 }
 
+class SafetyAccessory {
+  const SafetyAccessory({required this.serialNumber, required this.statusCode});
+
+  final int serialNumber;
+  final int statusCode;
+}
+
+class SafetyAccessoryListResult {
+  const SafetyAccessoryListResult({
+    required this.requestId,
+    required this.deviceId,
+    required this.totalCount,
+    required this.accessories,
+  });
+
+  final String requestId;
+  final String deviceId;
+  final int totalCount;
+  final List<SafetyAccessory> accessories;
+}
+
+class SafetyAccessoryDeleteResult {
+  const SafetyAccessoryDeleteResult({
+    required this.requestId,
+    required this.deviceId,
+    required this.success,
+    required this.reasonCode,
+    this.nativeCode,
+  });
+
+  final String requestId;
+  final String deviceId;
+  final bool success;
+  final int reasonCode;
+  final String? nativeCode;
+}
+
 class RemoteControl {
   const RemoteControl({required this.name, required this.serialNumber});
 

@@ -41,6 +41,14 @@ class MockHardwareGateway implements HardwareGateway {
   Duration safetyAccessoryPairingDelay = Duration.zero;
   final List<SafetyAccessoryPairingAction> safetyAccessoryPairingActions =
       <SafetyAccessoryPairingAction>[];
+  final List<SafetyAccessory> safetyAccessories = <SafetyAccessory>[
+    const SafetyAccessory(serialNumber: 0x02000071, statusCode: 0x01),
+    const SafetyAccessory(serialNumber: 0x06000072, statusCode: 0x11),
+  ];
+  bool safetyAccessoryDeleteSucceeds = true;
+  int safetyAccessoryDeleteReasonCode = 0;
+  Duration safetyAccessoryDeleteDelay = Duration.zero;
+  final List<int> deletedSafetyAccessorySerialNumbers = <int>[];
   final Map<String, ConnectedBleDevice> connectedBleDevices =
       <String, ConnectedBleDevice>{};
 
@@ -441,6 +449,41 @@ class MockHardwareGateway implements HardwareGateway {
       nativeCode: action == SafetyAccessoryPairingAction.start
           ? 'command=0x000B,control=0x100A'
           : 'command=0x000B,control=0x100B',
+    );
+  }
+
+  @override
+  Future<SafetyAccessoryListResult> querySafetyAccessories({
+    required String requestId,
+    required String deviceId,
+  }) async => SafetyAccessoryListResult(
+    requestId: requestId,
+    deviceId: deviceId,
+    totalCount: safetyAccessories.length,
+    accessories: List<SafetyAccessory>.unmodifiable(safetyAccessories),
+  );
+
+  @override
+  Future<SafetyAccessoryDeleteResult> deleteSafetyAccessory({
+    required String requestId,
+    required String deviceId,
+    required int serialNumber,
+  }) async {
+    if (safetyAccessoryDeleteDelay > Duration.zero) {
+      await Future<void>.delayed(safetyAccessoryDeleteDelay);
+    }
+    if (safetyAccessoryDeleteSucceeds) {
+      deletedSafetyAccessorySerialNumbers.add(serialNumber);
+      safetyAccessories.removeWhere(
+        (accessory) => accessory.serialNumber == serialNumber,
+      );
+    }
+    return SafetyAccessoryDeleteResult(
+      requestId: requestId,
+      deviceId: deviceId,
+      success: safetyAccessoryDeleteSucceeds,
+      reasonCode: safetyAccessoryDeleteReasonCode,
+      nativeCode: 'command=0x000D',
     );
   }
 

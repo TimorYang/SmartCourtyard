@@ -1564,6 +1564,171 @@ class SafetyAccessoryPairingResultDto {
   int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
 }
 
+class SafetyAccessoryDto {
+  SafetyAccessoryDto({
+    required this.serialNumber,
+    required this.statusCode,
+  });
+
+  int serialNumber;
+
+  int statusCode;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      serialNumber,
+      statusCode,
+    ];
+  }
+
+  Object encode() {
+    return _toList();  }
+
+  static SafetyAccessoryDto decode(Object result) {
+    result as List<Object?>;
+    return SafetyAccessoryDto(
+      serialNumber: result[0]! as int,
+      statusCode: result[1]! as int,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! SafetyAccessoryDto || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(serialNumber, other.serialNumber) && _deepEquals(statusCode, other.statusCode);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+}
+
+class SafetyAccessoryListResultDto {
+  SafetyAccessoryListResultDto({
+    required this.requestId,
+    required this.deviceId,
+    required this.totalCount,
+    required this.accessories,
+  });
+
+  String requestId;
+
+  String deviceId;
+
+  int totalCount;
+
+  List<SafetyAccessoryDto> accessories;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      requestId,
+      deviceId,
+      totalCount,
+      accessories,
+    ];
+  }
+
+  Object encode() {
+    return _toList();  }
+
+  static SafetyAccessoryListResultDto decode(Object result) {
+    result as List<Object?>;
+    return SafetyAccessoryListResultDto(
+      requestId: result[0]! as String,
+      deviceId: result[1]! as String,
+      totalCount: result[2]! as int,
+      accessories: (result[3]! as List<Object?>).cast<SafetyAccessoryDto>(),
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! SafetyAccessoryListResultDto || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(requestId, other.requestId) && _deepEquals(deviceId, other.deviceId) && _deepEquals(totalCount, other.totalCount) && _deepEquals(accessories, other.accessories);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+}
+
+class SafetyAccessoryDeleteResultDto {
+  SafetyAccessoryDeleteResultDto({
+    required this.requestId,
+    required this.deviceId,
+    required this.success,
+    required this.reasonCode,
+    this.nativeCode,
+    this.domainCode,
+  });
+
+  String requestId;
+
+  String deviceId;
+
+  bool success;
+
+  int reasonCode;
+
+  String? nativeCode;
+
+  String? domainCode;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      requestId,
+      deviceId,
+      success,
+      reasonCode,
+      nativeCode,
+      domainCode,
+    ];
+  }
+
+  Object encode() {
+    return _toList();  }
+
+  static SafetyAccessoryDeleteResultDto decode(Object result) {
+    result as List<Object?>;
+    return SafetyAccessoryDeleteResultDto(
+      requestId: result[0]! as String,
+      deviceId: result[1]! as String,
+      success: result[2]! as bool,
+      reasonCode: result[3]! as int,
+      nativeCode: result[4] as String?,
+      domainCode: result[5] as String?,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! SafetyAccessoryDeleteResultDto || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(requestId, other.requestId) && _deepEquals(deviceId, other.deviceId) && _deepEquals(success, other.success) && _deepEquals(reasonCode, other.reasonCode) && _deepEquals(nativeCode, other.nativeCode) && _deepEquals(domainCode, other.domainCode);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+}
+
 class RemoteControlDto {
   RemoteControlDto({
     required this.name,
@@ -1854,14 +2019,23 @@ class _PigeonCodec extends StandardMessageCodec {
     }    else if (value is SafetyAccessoryPairingResultDto) {
       buffer.putUint8(162);
       writeValue(buffer, value.encode());
-    }    else if (value is RemoteControlDto) {
+    }    else if (value is SafetyAccessoryDto) {
       buffer.putUint8(163);
       writeValue(buffer, value.encode());
-    }    else if (value is RemoteControlListResultDto) {
+    }    else if (value is SafetyAccessoryListResultDto) {
       buffer.putUint8(164);
       writeValue(buffer, value.encode());
-    }    else if (value is RemoteOperationResultDto) {
+    }    else if (value is SafetyAccessoryDeleteResultDto) {
       buffer.putUint8(165);
+      writeValue(buffer, value.encode());
+    }    else if (value is RemoteControlDto) {
+      buffer.putUint8(166);
+      writeValue(buffer, value.encode());
+    }    else if (value is RemoteControlListResultDto) {
+      buffer.putUint8(167);
+      writeValue(buffer, value.encode());
+    }    else if (value is RemoteOperationResultDto) {
+      buffer.putUint8(168);
       writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
@@ -1952,10 +2126,16 @@ class _PigeonCodec extends StandardMessageCodec {
       case 162:
         return SafetyAccessoryPairingResultDto.decode(readValue(buffer)!);
       case 163:
-        return RemoteControlDto.decode(readValue(buffer)!);
+        return SafetyAccessoryDto.decode(readValue(buffer)!);
       case 164:
-        return RemoteControlListResultDto.decode(readValue(buffer)!);
+        return SafetyAccessoryListResultDto.decode(readValue(buffer)!);
       case 165:
+        return SafetyAccessoryDeleteResultDto.decode(readValue(buffer)!);
+      case 166:
+        return RemoteControlDto.decode(readValue(buffer)!);
+      case 167:
+        return RemoteControlListResultDto.decode(readValue(buffer)!);
+      case 168:
         return RemoteOperationResultDto.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
@@ -2388,6 +2568,44 @@ class HardwareHostApi {
     )
     ;
     return pigeonVar_replyValue! as SafetyAccessoryPairingResultDto;
+  }
+
+  Future<SafetyAccessoryListResultDto> querySafetyAccessories(String requestId, String deviceId) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.querySafetyAccessories$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[requestId, deviceId]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
+    return pigeonVar_replyValue! as SafetyAccessoryListResultDto;
+  }
+
+  Future<SafetyAccessoryDeleteResultDto> deleteSafetyAccessory(String requestId, String deviceId, int serialNumber) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.deleteSafetyAccessory$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[requestId, deviceId, serialNumber]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
+    return pigeonVar_replyValue! as SafetyAccessoryDeleteResultDto;
   }
 
   Future<RemoteControlListResultDto> queryRemotes(String requestId, String deviceId) async {

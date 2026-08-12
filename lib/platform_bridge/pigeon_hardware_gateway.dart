@@ -369,6 +369,33 @@ class PigeonHardwareGateway implements HardwareGateway {
   }
 
   @override
+  Future<SafetyAccessoryListResult> querySafetyAccessories({
+    required String requestId,
+    required String deviceId,
+  }) async {
+    final dto = await _mapPigeonCall(
+      () => _hostApi.querySafetyAccessories(requestId, deviceId),
+      requestId: requestId,
+      deviceId: deviceId,
+    );
+    return dto.toModel();
+  }
+
+  @override
+  Future<SafetyAccessoryDeleteResult> deleteSafetyAccessory({
+    required String requestId,
+    required String deviceId,
+    required int serialNumber,
+  }) async {
+    final dto = await _mapPigeonCall(
+      () => _hostApi.deleteSafetyAccessory(requestId, deviceId, serialNumber),
+      requestId: requestId,
+      deviceId: deviceId,
+    );
+    return dto.toModel();
+  }
+
+  @override
   Future<RemoteControlListResult> queryRemotes({
     required String requestId,
     required String deviceId,
@@ -699,6 +726,34 @@ extension _SafetyAccessoryPairingStatusMapper
         SafetyAccessoryPairingStatus.unknown,
     };
   }
+}
+
+extension _SafetyAccessoryListResultDtoMapper
+    on pigeon.SafetyAccessoryListResultDto {
+  SafetyAccessoryListResult toModel() => SafetyAccessoryListResult(
+    requestId: requestId,
+    deviceId: deviceId,
+    totalCount: totalCount,
+    accessories: accessories
+        .map(
+          (accessory) => SafetyAccessory(
+            serialNumber: accessory.serialNumber,
+            statusCode: accessory.statusCode,
+          ),
+        )
+        .toList(growable: false),
+  );
+}
+
+extension _SafetyAccessoryDeleteResultDtoMapper
+    on pigeon.SafetyAccessoryDeleteResultDto {
+  SafetyAccessoryDeleteResult toModel() => SafetyAccessoryDeleteResult(
+    requestId: requestId,
+    deviceId: deviceId,
+    success: success,
+    reasonCode: reasonCode,
+    nativeCode: nativeCode,
+  );
 }
 
 extension _RemoteControlListResultMapper on pigeon.RemoteControlListResultDto {

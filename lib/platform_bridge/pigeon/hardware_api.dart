@@ -414,6 +414,45 @@ class SafetyAccessoryPairingResultDto {
   final String? domainCode;
 }
 
+class SafetyAccessoryDto {
+  SafetyAccessoryDto({required this.serialNumber, required this.statusCode});
+
+  final int serialNumber;
+  final int statusCode;
+}
+
+class SafetyAccessoryListResultDto {
+  SafetyAccessoryListResultDto({
+    required this.requestId,
+    required this.deviceId,
+    required this.totalCount,
+    required this.accessories,
+  });
+
+  final String requestId;
+  final String deviceId;
+  final int totalCount;
+  final List<SafetyAccessoryDto> accessories;
+}
+
+class SafetyAccessoryDeleteResultDto {
+  SafetyAccessoryDeleteResultDto({
+    required this.requestId,
+    required this.deviceId,
+    required this.success,
+    required this.reasonCode,
+    this.nativeCode,
+    this.domainCode,
+  });
+
+  final String requestId;
+  final String deviceId;
+  final bool success;
+  final int reasonCode;
+  final String? nativeCode;
+  final String? domainCode;
+}
+
 class RemoteControlDto {
   RemoteControlDto({required this.name, required this.serialNumber});
 
@@ -573,6 +612,19 @@ abstract class HardwareHostApi {
     String requestId,
     String deviceId,
     SafetyAccessoryPairingActionDto action,
+  );
+
+  @async
+  SafetyAccessoryListResultDto querySafetyAccessories(
+    String requestId,
+    String deviceId,
+  );
+
+  @async
+  SafetyAccessoryDeleteResultDto deleteSafetyAccessory(
+    String requestId,
+    String deviceId,
+    int serialNumber,
   );
 
   @async
