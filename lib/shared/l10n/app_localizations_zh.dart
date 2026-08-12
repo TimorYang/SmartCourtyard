@@ -57,6 +57,39 @@ class AppLocalizationsZh extends AppLocalizations {
   String get operationRecordActionUnknown => '未知操作';
 
   @override
+  String get refreshControlPullToRefresh => '下拉刷新';
+
+  @override
+  String get refreshControlReleaseToRefresh => '松开刷新';
+
+  @override
+  String get refreshControlRefreshing => '正在刷新...';
+
+  @override
+  String get refreshControlRefreshSucceeded => '刷新成功';
+
+  @override
+  String get refreshControlRefreshFailed => '刷新失败';
+
+  @override
+  String get refreshControlPullToLoad => '上拉加载更多';
+
+  @override
+  String get refreshControlReleaseToLoad => '松开加载更多';
+
+  @override
+  String get refreshControlLoading => '正在加载...';
+
+  @override
+  String get refreshControlLoadSucceeded => '加载成功';
+
+  @override
+  String get refreshControlLoadFailed => '加载失败';
+
+  @override
+  String get refreshControlNoMoreData => '没有更多数据了';
+
+  @override
   String get welcomeHeadline => '开启您的\n智慧生活';
 
   @override

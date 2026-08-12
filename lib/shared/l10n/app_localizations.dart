@@ -194,6 +194,72 @@ abstract class AppLocalizations {
   /// **'Unknown action'**
   String get operationRecordActionUnknown;
 
+  /// No description provided for @refreshControlPullToRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Pull to refresh'**
+  String get refreshControlPullToRefresh;
+
+  /// No description provided for @refreshControlReleaseToRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Release to refresh'**
+  String get refreshControlReleaseToRefresh;
+
+  /// No description provided for @refreshControlRefreshing.
+  ///
+  /// In en, this message translates to:
+  /// **'Refreshing...'**
+  String get refreshControlRefreshing;
+
+  /// No description provided for @refreshControlRefreshSucceeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh succeeded'**
+  String get refreshControlRefreshSucceeded;
+
+  /// No description provided for @refreshControlRefreshFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh failed'**
+  String get refreshControlRefreshFailed;
+
+  /// No description provided for @refreshControlPullToLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Pull to load more'**
+  String get refreshControlPullToLoad;
+
+  /// No description provided for @refreshControlReleaseToLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Release to load more'**
+  String get refreshControlReleaseToLoad;
+
+  /// No description provided for @refreshControlLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading...'**
+  String get refreshControlLoading;
+
+  /// No description provided for @refreshControlLoadSucceeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Load succeeded'**
+  String get refreshControlLoadSucceeded;
+
+  /// No description provided for @refreshControlLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Load failed'**
+  String get refreshControlLoadFailed;
+
+  /// No description provided for @refreshControlNoMoreData.
+  ///
+  /// In en, this message translates to:
+  /// **'No more data'**
+  String get refreshControlNoMoreData;
+
   /// Headline shown on the unauthenticated welcome page
   ///
   /// In en, this message translates to:

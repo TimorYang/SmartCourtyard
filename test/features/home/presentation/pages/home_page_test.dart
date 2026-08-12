@@ -11,6 +11,7 @@ import 'package:flinx/features/auth/domain/entities/auth_session.dart';
 import 'package:flinx/features/home/application/providers.dart';
 import 'package:flinx/features/home/domain/entities/home_scene.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -133,10 +134,11 @@ void main() {
 
     expect(sceneRequestCount, 1);
     expect(deviceRequestCount, 1);
-    expect(find.byType(RefreshIndicator), findsOneWidget);
+    expect(find.byType(EasyRefresh), findsOneWidget);
 
     await tester.drag(find.byType(CustomScrollView), const Offset(0, 320));
     await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 1));
 
     expect(sceneRequestCount, 1);
     expect(deviceRequestCount, 2);

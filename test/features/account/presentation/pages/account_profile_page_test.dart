@@ -69,8 +69,9 @@ void main() {
     await tester.scrollUntilVisible(
       find.byKey(AccountProfileKeys.logoutButton),
       250,
-      scrollable: find.byType(ListView),
+      scrollable: find.byType(Scrollable).first,
     );
+    await tester.pumpAndSettle();
     expect(find.text('Log out'), findsOneWidget);
   });
 

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -631,12 +632,14 @@ class _HomeDevicePanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RefreshIndicator(
+    final l10n = AppLocalizations.of(context);
+    return EasyRefresh.builder(
+      header: _classicRefreshHeader(l10n),
       onRefresh: onRefresh,
-      child: home.devices.isEmpty
-          ? _EmptyHomeState(doorCount: home.doorCount)
+      childBuilder: (context, physics) => home.devices.isEmpty
+          ? _EmptyHomeState(doorCount: home.doorCount, physics: physics)
           : ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
+              physics: physics,
               padding: const EdgeInsets.fromLTRB(18, 10, 18, 24),
               children: [
                 _DoorCount(count: home.doorCount),
@@ -683,9 +686,10 @@ class _DoorCount extends StatelessWidget {
 }
 
 class _EmptyHomeState extends StatelessWidget {
-  const _EmptyHomeState({required this.doorCount});
+  const _EmptyHomeState({required this.doorCount, required this.physics});
 
   final int doorCount;
+  final ScrollPhysics physics;
 
   @override
   Widget build(BuildContext context) {
@@ -693,7 +697,7 @@ class _EmptyHomeState extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
 
     return CustomScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
+      physics: physics,
       slivers: [
         SliverFillRemaining(
           hasScrollBody: false,
@@ -760,14 +764,27 @@ class _HomeRefreshableState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RefreshIndicator(
+    return EasyRefresh.builder(
+      header: _classicRefreshHeader(AppLocalizations.of(context)),
       onRefresh: onRefresh,
-      child: CustomScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
+      childBuilder: (context, physics) => CustomScrollView(
+        physics: physics,
         slivers: [SliverFillRemaining(hasScrollBody: false, child: child)],
       ),
     );
   }
+}
+
+ClassicHeader _classicRefreshHeader(AppLocalizations l10n) {
+  return ClassicHeader(
+    dragText: l10n.refreshControlPullToRefresh,
+    armedText: l10n.refreshControlReleaseToRefresh,
+    readyText: l10n.refreshControlRefreshing,
+    processingText: l10n.refreshControlRefreshing,
+    processedText: l10n.refreshControlRefreshSucceeded,
+    failedText: l10n.refreshControlRefreshFailed,
+    showMessage: false,
+  );
 }
 
 class _HomeErrorState extends StatelessWidget {

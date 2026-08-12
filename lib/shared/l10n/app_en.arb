@@ -22,6 +22,17 @@
   "operationRecordActionLedOn": "LED on",
   "operationRecordActionLedOff": "LED off",
   "operationRecordActionUnknown": "Unknown action",
+  "refreshControlPullToRefresh": "Pull to refresh",
+  "refreshControlReleaseToRefresh": "Release to refresh",
+  "refreshControlRefreshing": "Refreshing...",
+  "refreshControlRefreshSucceeded": "Refresh succeeded",
+  "refreshControlRefreshFailed": "Refresh failed",
+  "refreshControlPullToLoad": "Pull to load more",
+  "refreshControlReleaseToLoad": "Release to load more",
+  "refreshControlLoading": "Loading...",
+  "refreshControlLoadSucceeded": "Load succeeded",
+  "refreshControlLoadFailed": "Load failed",
+  "refreshControlNoMoreData": "No more data",
   "welcomeHeadline": "Start your\nsmart life",
   "@welcomeHeadline": {
     "description": "Headline shown on the unauthenticated welcome page"
