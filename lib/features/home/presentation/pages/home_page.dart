@@ -345,12 +345,12 @@ class _HomeAddMenuOverlay extends StatelessWidget {
                         context.push(AddNewDoorsPage.routePath);
                       },
                     ),
-                    _HomeAddMenuItemData(
-                      label: l10n.homeSmartDeviceMenuAction,
-                      assetPath: HomeAssetPaths.smartDevicePlaceholder,
-                      fallbackIcon: Icons.wifi_tethering_outlined,
-                      onPressed: onDismissed,
-                    ),
+                    // _HomeAddMenuItemData(
+                    //   label: l10n.homeSmartDeviceMenuAction,
+                    //   assetPath: HomeAssetPaths.smartDevicePlaceholder,
+                    //   fallbackIcon: Icons.wifi_tethering_outlined,
+                    //   onPressed: onDismissed,
+                    // ),
                   ],
                 ),
               ),
