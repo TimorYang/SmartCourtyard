@@ -1493,6 +1493,144 @@ data class SafetyAccessoryPairingResultDto (
 }
 
 /** Generated class from Pigeon that represents data sent in messages. */
+data class SafetyAccessoryDto (
+  val serialNumber: Long,
+  val statusCode: Long
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): SafetyAccessoryDto {
+      val serialNumber = pigeonVar_list[0] as Long
+      val statusCode = pigeonVar_list[1] as Long
+      return SafetyAccessoryDto(serialNumber, statusCode)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      serialNumber,
+      statusCode,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as SafetyAccessoryDto
+    return HardwareApiPigeonUtils.deepEquals(this.serialNumber, other.serialNumber) && HardwareApiPigeonUtils.deepEquals(this.statusCode, other.statusCode)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.serialNumber)
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.statusCode)
+    return result
+  }
+}
+
+/** Generated class from Pigeon that represents data sent in messages. */
+data class SafetyAccessoryListResultDto (
+  val requestId: String,
+  val deviceId: String,
+  val totalCount: Long,
+  val accessories: List<SafetyAccessoryDto>
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): SafetyAccessoryListResultDto {
+      val requestId = pigeonVar_list[0] as String
+      val deviceId = pigeonVar_list[1] as String
+      val totalCount = pigeonVar_list[2] as Long
+      val accessories = pigeonVar_list[3] as List<SafetyAccessoryDto>
+      return SafetyAccessoryListResultDto(requestId, deviceId, totalCount, accessories)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      requestId,
+      deviceId,
+      totalCount,
+      accessories,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as SafetyAccessoryListResultDto
+    return HardwareApiPigeonUtils.deepEquals(this.requestId, other.requestId) && HardwareApiPigeonUtils.deepEquals(this.deviceId, other.deviceId) && HardwareApiPigeonUtils.deepEquals(this.totalCount, other.totalCount) && HardwareApiPigeonUtils.deepEquals(this.accessories, other.accessories)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.requestId)
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.deviceId)
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.totalCount)
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.accessories)
+    return result
+  }
+}
+
+/** Generated class from Pigeon that represents data sent in messages. */
+data class SafetyAccessoryDeleteResultDto (
+  val requestId: String,
+  val deviceId: String,
+  val success: Boolean,
+  val reasonCode: Long,
+  val nativeCode: String? = null,
+  val domainCode: String? = null
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): SafetyAccessoryDeleteResultDto {
+      val requestId = pigeonVar_list[0] as String
+      val deviceId = pigeonVar_list[1] as String
+      val success = pigeonVar_list[2] as Boolean
+      val reasonCode = pigeonVar_list[3] as Long
+      val nativeCode = pigeonVar_list[4] as String?
+      val domainCode = pigeonVar_list[5] as String?
+      return SafetyAccessoryDeleteResultDto(requestId, deviceId, success, reasonCode, nativeCode, domainCode)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      requestId,
+      deviceId,
+      success,
+      reasonCode,
+      nativeCode,
+      domainCode,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as SafetyAccessoryDeleteResultDto
+    return HardwareApiPigeonUtils.deepEquals(this.requestId, other.requestId) && HardwareApiPigeonUtils.deepEquals(this.deviceId, other.deviceId) && HardwareApiPigeonUtils.deepEquals(this.success, other.success) && HardwareApiPigeonUtils.deepEquals(this.reasonCode, other.reasonCode) && HardwareApiPigeonUtils.deepEquals(this.nativeCode, other.nativeCode) && HardwareApiPigeonUtils.deepEquals(this.domainCode, other.domainCode)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.requestId)
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.deviceId)
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.success)
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.reasonCode)
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.nativeCode)
+    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.domainCode)
+    return result
+  }
+}
+
+/** Generated class from Pigeon that represents data sent in messages. */
 data class RemoteControlDto (
   val name: String,
   val serialNumber: Long
@@ -1816,15 +1954,30 @@ private open class HardwareApiPigeonCodec : StandardMessageCodec() {
       }
       163.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          RemoteControlDto.fromList(it)
+          SafetyAccessoryDto.fromList(it)
         }
       }
       164.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          RemoteControlListResultDto.fromList(it)
+          SafetyAccessoryListResultDto.fromList(it)
         }
       }
       165.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          SafetyAccessoryDeleteResultDto.fromList(it)
+        }
+      }
+      166.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          RemoteControlDto.fromList(it)
+        }
+      }
+      167.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          RemoteControlListResultDto.fromList(it)
+        }
+      }
+      168.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
           RemoteOperationResultDto.fromList(it)
         }
@@ -1970,16 +2123,28 @@ private open class HardwareApiPigeonCodec : StandardMessageCodec() {
         stream.write(162)
         writeValue(stream, value.toList())
       }
-      is RemoteControlDto -> {
+      is SafetyAccessoryDto -> {
         stream.write(163)
         writeValue(stream, value.toList())
       }
-      is RemoteControlListResultDto -> {
+      is SafetyAccessoryListResultDto -> {
         stream.write(164)
         writeValue(stream, value.toList())
       }
-      is RemoteOperationResultDto -> {
+      is SafetyAccessoryDeleteResultDto -> {
         stream.write(165)
+        writeValue(stream, value.toList())
+      }
+      is RemoteControlDto -> {
+        stream.write(166)
+        writeValue(stream, value.toList())
+      }
+      is RemoteControlListResultDto -> {
+        stream.write(167)
+        writeValue(stream, value.toList())
+      }
+      is RemoteOperationResultDto -> {
+        stream.write(168)
         writeValue(stream, value.toList())
       }
       else -> super.writeValue(stream, value)
@@ -2012,6 +2177,8 @@ interface HardwareHostApi {
   fun setDeviceAttributes(requestId: String, deviceId: String, attributes: List<DeviceAttributeDto>, callback: (Result<DeviceAttributeWriteResultDto>) -> Unit)
   fun pairRemote(requestId: String, deviceId: String, action: RemotePairingActionDto, callback: (Result<RemotePairingResultDto>) -> Unit)
   fun pairSafetyAccessory(requestId: String, deviceId: String, action: SafetyAccessoryPairingActionDto, callback: (Result<SafetyAccessoryPairingResultDto>) -> Unit)
+  fun querySafetyAccessories(requestId: String, deviceId: String, callback: (Result<SafetyAccessoryListResultDto>) -> Unit)
+  fun deleteSafetyAccessory(requestId: String, deviceId: String, serialNumber: Long, callback: (Result<SafetyAccessoryDeleteResultDto>) -> Unit)
   fun queryRemotes(requestId: String, deviceId: String, callback: (Result<RemoteControlListResultDto>) -> Unit)
   fun deleteRemote(requestId: String, deviceId: String, serialNumber: Long?, callback: (Result<RemoteOperationResultDto>) -> Unit)
   fun renameRemote(requestId: String, deviceId: String, serialNumber: Long, name: String, callback: (Result<RemoteOperationResultDto>) -> Unit)
@@ -2473,6 +2640,49 @@ interface HardwareHostApi {
             val deviceIdArg = args[1] as String
             val actionArg = args[2] as SafetyAccessoryPairingActionDto
             api.pairSafetyAccessory(requestIdArg, deviceIdArg, actionArg) { result: Result<SafetyAccessoryPairingResultDto> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(HardwareApiPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(HardwareApiPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flinx.HardwareHostApi.querySafetyAccessories$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val requestIdArg = args[0] as String
+            val deviceIdArg = args[1] as String
+            api.querySafetyAccessories(requestIdArg, deviceIdArg) { result: Result<SafetyAccessoryListResultDto> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(HardwareApiPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(HardwareApiPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flinx.HardwareHostApi.deleteSafetyAccessory$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val requestIdArg = args[0] as String
+            val deviceIdArg = args[1] as String
+            val serialNumberArg = args[2] as Long
+            api.deleteSafetyAccessory(requestIdArg, deviceIdArg, serialNumberArg) { result: Result<SafetyAccessoryDeleteResultDto> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(HardwareApiPigeonUtils.wrapError(error))

@@ -4196,6 +4196,36 @@ abstract class AppLocalizations {
   /// **'Confirm'**
   String get safetySensorManagementConfirm;
 
+  /// No description provided for @safetySensorManagementDeleteSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety sensor deleted.'**
+  String get safetySensorManagementDeleteSuccess;
+
+  /// No description provided for @safetySensorManagementDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to delete the safety sensor. Please try again.'**
+  String get safetySensorManagementDeleteFailed;
+
+  /// No description provided for @safetySensorManagementBluetoothDisconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect the current device via Bluetooth first.'**
+  String get safetySensorManagementBluetoothDisconnected;
+
+  /// No description provided for @safetySensorManagementWirelessDoorSensor.
+  ///
+  /// In en, this message translates to:
+  /// **'Wireless door sensor'**
+  String get safetySensorManagementWirelessDoorSensor;
+
+  /// No description provided for @safetySensorManagementUnknownType.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown safety sensor'**
+  String get safetySensorManagementUnknownType;
+
   /// No description provided for @safetySensorsWirelessWicketDoor.
   ///
   /// In en, this message translates to:

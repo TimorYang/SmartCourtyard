@@ -134,6 +134,17 @@ abstract interface class HardwareGateway {
     required SafetyAccessoryPairingAction action,
   });
 
+  Future<SafetyAccessoryListResult> querySafetyAccessories({
+    required String requestId,
+    required String deviceId,
+  });
+
+  Future<SafetyAccessoryDeleteResult> deleteSafetyAccessory({
+    required String requestId,
+    required String deviceId,
+    required int serialNumber,
+  });
+
   Future<RemoteControlListResult> queryRemotes({
     required String requestId,
     required String deviceId,

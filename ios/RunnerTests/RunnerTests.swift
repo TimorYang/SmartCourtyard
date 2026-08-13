@@ -114,6 +114,66 @@ class RunnerTests: XCTestCase {
     )
   }
 
+  func testParsesSafetyAccessoryListAndPreservesProtocolValues() throws {
+    let accessories = try HardwareBridge.parseSafetyAccessoryListForTesting(
+      Data([
+        0x00, 0x07,
+        0x01, 0x00, 0x00, 0x71, 0x01,
+        0x02, 0x00, 0x00, 0x72, 0x0F,
+        0x03, 0x00, 0x00, 0x73, 0x02,
+        0x04, 0x00, 0x00, 0x74, 0x11,
+        0x05, 0x00, 0x00, 0x75, 0x12,
+        0x06, 0x00, 0x00, 0x76, 0x00,
+        0x7F, 0x00, 0x00, 0x77, 0x55,
+      ])
+    )
+
+    XCTAssertEqual(accessories.count, 7)
+    XCTAssertEqual(accessories[0].serialNumber, 0x01000071)
+    XCTAssertEqual(accessories[0].statusCode, 0x01)
+    XCTAssertEqual(accessories[5].serialNumber, 0x06000076)
+    XCTAssertEqual(accessories[5].statusCode, 0x00)
+    XCTAssertEqual(accessories[6].serialNumber, 0x7F000077)
+    XCTAssertEqual(accessories[6].statusCode, 0x55)
+  }
+
+  func testParsesEmptySafetyAccessoryList() throws {
+    let accessories = try HardwareBridge.parseSafetyAccessoryListForTesting(
+      Data([0x00, 0x00])
+    )
+    XCTAssertTrue(accessories.isEmpty)
+  }
+
+  func testRejectsTruncatedOrCountMismatchedSafetyAccessoryList() {
+    XCTAssertThrowsError(
+      try HardwareBridge.parseSafetyAccessoryListForTesting(Data([0x00]))
+    )
+    XCTAssertThrowsError(
+      try HardwareBridge.parseSafetyAccessoryListForTesting(
+        Data([0x00, 0x02, 0x01, 0x00, 0x00, 0x71, 0x01])
+      )
+    )
+  }
+
+  func testBuildsAndParsesSafetyAccessoryDeleteProtocol() throws {
+    XCTAssertEqual(
+      HardwareBridge.makeSafetyAccessoryDeletePayloadForTesting(
+        serialNumber: 0x05000071
+      ),
+      Data([0x01, 0x05, 0x00, 0x00, 0x71])
+    )
+    let success = try HardwareBridge.parseSafetyAccessoryDeleteResultForTesting(
+      Data([0x01, 0x00, 0x00, 0x00, 0x00])
+    )
+    XCTAssertTrue(success.success)
+    XCTAssertEqual(success.reasonCode, 0)
+    let failure = try HardwareBridge.parseSafetyAccessoryDeleteResultForTesting(
+      Data([0xFF, 0x01, 0x02, 0x00, 0x04])
+    )
+    XCTAssertFalse(failure.success)
+    XCTAssertEqual(failure.reasonCode, 0x01020004)
+  }
+
   private func data(_ hex: String) -> Data? {
     guard hex.count.isMultiple(of: 2) else { return nil }
     var result = Data()

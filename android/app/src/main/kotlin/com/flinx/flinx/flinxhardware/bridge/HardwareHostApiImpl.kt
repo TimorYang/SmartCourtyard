@@ -358,6 +358,23 @@ class HardwareHostApiImpl(
     }
   }
 
+  override fun querySafetyAccessories(
+    requestId: String,
+    deviceId: String,
+    callback: (Result<SafetyAccessoryListResultDto>) -> Unit,
+  ) {
+    callback(Result.failure(notImplemented("querySafetyAccessories", requestId, deviceId)))
+  }
+
+  override fun deleteSafetyAccessory(
+    requestId: String,
+    deviceId: String,
+    serialNumber: Long,
+    callback: (Result<SafetyAccessoryDeleteResultDto>) -> Unit,
+  ) {
+    callback(Result.failure(notImplemented("deleteSafetyAccessory", requestId, deviceId)))
+  }
+
   override fun queryRemotes(
     requestId: String,
     deviceId: String,

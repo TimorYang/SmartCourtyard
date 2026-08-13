@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
-import '../../application/safety_sensors_evaluation_controller.dart';
+import '../../application/safety_sensor_management_controller.dart';
 import '../../domain/entities/safety_sensor_management.dart';
-import '../../domain/entities/safety_sensors_evaluation.dart';
 
 class SafetySensorManagementPage extends ConsumerStatefulWidget {
   const SafetySensorManagementPage({
@@ -28,17 +28,15 @@ class SafetySensorManagementPage extends ConsumerStatefulWidget {
 
 class _SafetySensorManagementPageState
     extends ConsumerState<SafetySensorManagementPage> {
-  final Set<String> _removedSensorIds = <String>{};
-
   @override
   void initState() {
     super.initState();
     Future.microtask(
       () => ref
           .read(
-            safetySensorsEvaluationControllerProvider(widget.doorId).notifier,
+            safetySensorManagementControllerProvider(widget.deviceId).notifier,
           )
-          .load(doorId: widget.doorId),
+          .load(),
     );
   }
 
@@ -47,7 +45,7 @@ class _SafetySensorManagementPageState
     final l10n = AppLocalizations.of(context);
     final textTheme = Theme.of(context).textTheme;
     final state = ref.watch(
-      safetySensorsEvaluationControllerProvider(widget.doorId),
+      safetySensorManagementControllerProvider(widget.deviceId),
     );
 
     return Scaffold(
@@ -67,22 +65,22 @@ class _SafetySensorManagementPageState
             ),
             const SizedBox(height: 27),
             Expanded(
-              child: state.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (_, _) => Center(
-                  child: TextButton(
-                    onPressed: () => ref
-                        .read(
-                          safetySensorsEvaluationControllerProvider(
-                            widget.doorId,
-                          ).notifier,
-                        )
-                        .load(doorId: widget.doorId),
-                    child: Text(l10n.safetySensorsLoadFailed),
-                  ),
-                ),
-                data: _buildSensorList,
-              ),
+              child: state.loading && state.sensors.isEmpty
+                  ? const Center(child: CircularProgressIndicator())
+                  : state.error != null && state.sensors.isEmpty
+                  ? Center(
+                      child: TextButton(
+                        onPressed: () => ref
+                            .read(
+                              safetySensorManagementControllerProvider(
+                                widget.deviceId,
+                              ).notifier,
+                            )
+                            .load(),
+                        child: Text(l10n.safetySensorsLoadFailed),
+                      ),
+                    )
+                  : _buildSensorList(state),
             ),
           ],
         ),
@@ -90,33 +88,23 @@ class _SafetySensorManagementPageState
     );
   }
 
-  Widget _buildSensorList(SafetySensorsEvaluation evaluation) {
+  Widget _buildSensorList(SafetySensorManagementState state) {
     final l10n = AppLocalizations.of(context);
-    final management = SafetySensorManagement(
-      sensors: evaluation.wirelessSensorGroup.sensors
-          .map(
-            (sensor) => SafetySensorManagementItem(
-              id: sensor.id,
-              sensorCode: sensor.sensorCode,
-              canDelete: true,
-            ),
-          )
-          .where((sensor) => !_removedSensorIds.contains(sensor.id))
-          .toList(growable: false),
-    );
-    if (management.sensors.isEmpty) {
+    if (state.sensors.isEmpty) {
       return Center(child: Text(l10n.safetySensorManagementEmpty));
     }
     return ListView.separated(
       key: const ValueKey<String>('safety-sensor-management-list'),
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
-      itemCount: management.sensors.length,
+      itemCount: state.sensors.length,
       separatorBuilder: (_, _) => const SizedBox(height: 18),
       itemBuilder: (context, index) {
-        final sensor = management.sensors[index];
+        final sensor = state.sensors[index];
         return _ManagementSensorCard(
           key: ValueKey<String>('safety-sensor-management-card-${sensor.id}'),
           sensor: sensor,
+          deleting: state.deletingSerialNumber == sensor.serialNumber,
+          actionsEnabled: state.deletingSerialNumber == null,
           onDelete: () => _showDeleteDialog(sensor),
         );
       },
@@ -133,7 +121,23 @@ class _SafetySensorManagementPageState
     if (confirmed != true || !mounted) {
       return;
     }
-    setState(() => _removedSensorIds.add(sensor.id));
+    final deleted = await ref
+        .read(
+          safetySensorManagementControllerProvider(widget.deviceId).notifier,
+        )
+        .deleteSensor(sensor);
+    if (!mounted) return;
+    if (deleted) {
+      AppToast.success(
+        context,
+        AppLocalizations.of(context).safetySensorManagementDeleteSuccess,
+      );
+    } else {
+      AppToast.error(
+        context,
+        AppLocalizations.of(context).safetySensorManagementDeleteFailed,
+      );
+    }
   }
 }
 
@@ -141,11 +145,15 @@ class _ManagementSensorCard extends StatelessWidget {
   const _ManagementSensorCard({
     required this.sensor,
     required this.onDelete,
+    required this.deleting,
+    required this.actionsEnabled,
     super.key,
   });
 
   final SafetySensorManagementItem sensor;
   final VoidCallback onDelete;
+  final bool deleting;
+  final bool actionsEnabled;
 
   @override
   Widget build(BuildContext context) {
@@ -166,10 +174,10 @@ class _ManagementSensorCard extends StatelessWidget {
             width: 36,
             height: 36,
             child: Image.asset(
-              _sensorAssetPath(sensor.sensorCode),
+              _sensorAssetPath(sensor.type),
               fit: BoxFit.contain,
               errorBuilder: (_, _, _) => Icon(
-                _sensorFallbackIcon(sensor.sensorCode),
+                _sensorFallbackIcon(sensor.type),
                 color: AppColors.safetySensorManagementIcon,
                 size: 32,
               ),
@@ -178,31 +186,35 @@ class _ManagementSensorCard extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              _sensorName(l10n, sensor.sensorCode),
+              _sensorName(l10n, sensor.type),
               style: AppTextTokens.safetySensorManagementItem(textTheme),
             ),
           ),
-          if (sensor.canDelete)
-            Semantics(
-              button: true,
-              label: l10n.safetySensorManagementDeleteLabel,
-              child: GestureDetector(
-                key: ValueKey<String>(
-                  'safety-sensor-management-delete-${sensor.id}',
-                ),
-                behavior: HitTestBehavior.opaque,
-                onTap: onDelete,
-                child: const SizedBox(
-                  width: 44,
-                  height: 44,
-                  child: Icon(
-                    Icons.delete,
-                    color: AppColors.safetySensorManagementDelete,
-                    size: 28,
-                  ),
-                ),
+          Semantics(
+            button: true,
+            label: l10n.safetySensorManagementDeleteLabel,
+            child: GestureDetector(
+              key: ValueKey<String>(
+                'safety-sensor-management-delete-${sensor.id}',
+              ),
+              behavior: HitTestBehavior.opaque,
+              onTap: actionsEnabled ? onDelete : null,
+              child: SizedBox(
+                width: 44,
+                height: 44,
+                child: deleting
+                    ? const Padding(
+                        padding: EdgeInsets.all(12),
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(
+                        Icons.delete,
+                        color: AppColors.safetySensorManagementDelete,
+                        size: 28,
+                      ),
               ),
             ),
+          ),
         ],
       ),
     );
@@ -251,7 +263,7 @@ class _SafetySensorDeleteDialog extends StatelessWidget {
             const SizedBox(height: 34),
             Text(
               l10n.safetySensorManagementDeleteMessage(
-                _sensorName(l10n, sensor.sensorCode),
+                _sensorName(l10n, sensor.type),
               ),
               textAlign: TextAlign.center,
               style: AppTextTokens.safetySensorManagementDeleteMessage(
@@ -334,30 +346,42 @@ class _DialogAction extends StatelessWidget {
   }
 }
 
-String _sensorAssetPath(String sensorCode) {
-  final assetName = switch (sensorCode) {
-    'WIRELESS_PHOTO_BEAM' => 'security_report_motor_wired_photo_beam_icon',
-    'WIRELESS_ELECTRONIC_LOCK' => 'security_report_motor_wired_e_lock',
-    'WIRELESS_WICKET_DOOR' => 'security_report_wireless_wicket_door',
-    'WIRELESS_SAFETY_EDGE' => 'security_report_wireless_safety_edge',
+String _sensorAssetPath(SafetySensorManagementType type) {
+  final assetName = switch (type) {
+    SafetySensorManagementType.wirelessElectronicLock =>
+      'security_report_motor_wired_e_lock',
+    SafetySensorManagementType.wirelessWicketDoor =>
+      'security_report_wireless_wicket_door',
+    SafetySensorManagementType.wirelessSafetyEdge =>
+      'security_report_wireless_safety_edge',
     _ => 'security_report_motor_wired_photo_beam_icon',
   };
   return 'assets/icons/security_center/$assetName.png';
 }
 
-IconData _sensorFallbackIcon(String sensorCode) => switch (sensorCode) {
-  'WIRELESS_ELECTRONIC_LOCK' => Icons.lock_outline,
-  'WIRELESS_WICKET_DOOR' => Icons.door_sliding_outlined,
-  'WIRELESS_SAFETY_EDGE' || 'WIRELESS_SLACK_ROPE' => Icons.radar,
+IconData _sensorFallbackIcon(SafetySensorManagementType type) => switch (type) {
+  SafetySensorManagementType.wirelessElectronicLock => Icons.lock_outline,
+  SafetySensorManagementType.wirelessDoorSensor ||
+  SafetySensorManagementType.wirelessWicketDoor => Icons.door_sliding_outlined,
+  SafetySensorManagementType.wirelessSafetyEdge ||
+  SafetySensorManagementType.wirelessSlackRope => Icons.radar,
   _ => Icons.sensors,
 };
 
-String _sensorName(AppLocalizations l10n, String sensorCode) =>
-    switch (sensorCode) {
-      'WIRELESS_PHOTO_BEAM' => l10n.securityCenterWirelessPhotoBeam,
-      'WIRELESS_WICKET_DOOR' => l10n.safetySensorsWirelessWicketDoor,
-      'WIRELESS_ELECTRONIC_LOCK' => l10n.securityCenterWirelessELock,
-      'WIRELESS_SAFETY_EDGE' => l10n.safetySensorsWirelessSafetyEdge,
-      'WIRELESS_SLACK_ROPE' => l10n.safetySensorsWirelessSlackRope,
-      _ => l10n.safetySensorDefaultName,
+String _sensorName(AppLocalizations l10n, SafetySensorManagementType type) =>
+    switch (type) {
+      SafetySensorManagementType.wirelessDoorSensor =>
+        l10n.safetySensorManagementWirelessDoorSensor,
+      SafetySensorManagementType.wirelessPhotoBeam =>
+        l10n.securityCenterWirelessPhotoBeam,
+      SafetySensorManagementType.wirelessWicketDoor =>
+        l10n.safetySensorsWirelessWicketDoor,
+      SafetySensorManagementType.wirelessElectronicLock =>
+        l10n.securityCenterWirelessELock,
+      SafetySensorManagementType.wirelessSafetyEdge =>
+        l10n.safetySensorsWirelessSafetyEdge,
+      SafetySensorManagementType.wirelessSlackRope =>
+        l10n.safetySensorsWirelessSlackRope,
+      SafetySensorManagementType.unknown =>
+        l10n.safetySensorManagementUnknownType,
     };

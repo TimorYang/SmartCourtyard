@@ -1438,6 +1438,144 @@ struct SafetyAccessoryPairingResultDto: Hashable {
 }
 
 /// Generated class from Pigeon that represents data sent in messages.
+struct SafetyAccessoryDto: Hashable {
+  var serialNumber: Int64
+  var statusCode: Int64
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> SafetyAccessoryDto? {
+    let serialNumber = pigeonVar_list[0] as! Int64
+    let statusCode = pigeonVar_list[1] as! Int64
+
+    return SafetyAccessoryDto(
+      serialNumber: serialNumber,
+      statusCode: statusCode
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      serialNumber,
+      statusCode,
+    ]
+  }
+  static func == (lhs: SafetyAccessoryDto, rhs: SafetyAccessoryDto) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return deepEqualsHardwareApi(lhs.serialNumber, rhs.serialNumber) && deepEqualsHardwareApi(lhs.statusCode, rhs.statusCode)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("SafetyAccessoryDto")
+    deepHashHardwareApi(value: serialNumber, hasher: &hasher)
+    deepHashHardwareApi(value: statusCode, hasher: &hasher)
+  }
+}
+
+/// Generated class from Pigeon that represents data sent in messages.
+struct SafetyAccessoryListResultDto: Hashable {
+  var requestId: String
+  var deviceId: String
+  var totalCount: Int64
+  var accessories: [SafetyAccessoryDto]
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> SafetyAccessoryListResultDto? {
+    let requestId = pigeonVar_list[0] as! String
+    let deviceId = pigeonVar_list[1] as! String
+    let totalCount = pigeonVar_list[2] as! Int64
+    let accessories = pigeonVar_list[3] as! [SafetyAccessoryDto]
+
+    return SafetyAccessoryListResultDto(
+      requestId: requestId,
+      deviceId: deviceId,
+      totalCount: totalCount,
+      accessories: accessories
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      requestId,
+      deviceId,
+      totalCount,
+      accessories,
+    ]
+  }
+  static func == (lhs: SafetyAccessoryListResultDto, rhs: SafetyAccessoryListResultDto) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return deepEqualsHardwareApi(lhs.requestId, rhs.requestId) && deepEqualsHardwareApi(lhs.deviceId, rhs.deviceId) && deepEqualsHardwareApi(lhs.totalCount, rhs.totalCount) && deepEqualsHardwareApi(lhs.accessories, rhs.accessories)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("SafetyAccessoryListResultDto")
+    deepHashHardwareApi(value: requestId, hasher: &hasher)
+    deepHashHardwareApi(value: deviceId, hasher: &hasher)
+    deepHashHardwareApi(value: totalCount, hasher: &hasher)
+    deepHashHardwareApi(value: accessories, hasher: &hasher)
+  }
+}
+
+/// Generated class from Pigeon that represents data sent in messages.
+struct SafetyAccessoryDeleteResultDto: Hashable {
+  var requestId: String
+  var deviceId: String
+  var success: Bool
+  var reasonCode: Int64
+  var nativeCode: String? = nil
+  var domainCode: String? = nil
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> SafetyAccessoryDeleteResultDto? {
+    let requestId = pigeonVar_list[0] as! String
+    let deviceId = pigeonVar_list[1] as! String
+    let success = pigeonVar_list[2] as! Bool
+    let reasonCode = pigeonVar_list[3] as! Int64
+    let nativeCode: String? = nilOrValue(pigeonVar_list[4])
+    let domainCode: String? = nilOrValue(pigeonVar_list[5])
+
+    return SafetyAccessoryDeleteResultDto(
+      requestId: requestId,
+      deviceId: deviceId,
+      success: success,
+      reasonCode: reasonCode,
+      nativeCode: nativeCode,
+      domainCode: domainCode
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      requestId,
+      deviceId,
+      success,
+      reasonCode,
+      nativeCode,
+      domainCode,
+    ]
+  }
+  static func == (lhs: SafetyAccessoryDeleteResultDto, rhs: SafetyAccessoryDeleteResultDto) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return deepEqualsHardwareApi(lhs.requestId, rhs.requestId) && deepEqualsHardwareApi(lhs.deviceId, rhs.deviceId) && deepEqualsHardwareApi(lhs.success, rhs.success) && deepEqualsHardwareApi(lhs.reasonCode, rhs.reasonCode) && deepEqualsHardwareApi(lhs.nativeCode, rhs.nativeCode) && deepEqualsHardwareApi(lhs.domainCode, rhs.domainCode)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("SafetyAccessoryDeleteResultDto")
+    deepHashHardwareApi(value: requestId, hasher: &hasher)
+    deepHashHardwareApi(value: deviceId, hasher: &hasher)
+    deepHashHardwareApi(value: success, hasher: &hasher)
+    deepHashHardwareApi(value: reasonCode, hasher: &hasher)
+    deepHashHardwareApi(value: nativeCode, hasher: &hasher)
+    deepHashHardwareApi(value: domainCode, hasher: &hasher)
+  }
+}
+
+/// Generated class from Pigeon that represents data sent in messages.
 struct RemoteControlDto: Hashable {
   var name: String
   var serialNumber: Int64
@@ -1710,10 +1848,16 @@ private class HardwareApiPigeonCodecReader: FlutterStandardReader {
     case 162:
       return SafetyAccessoryPairingResultDto.fromList(self.readValue() as! [Any?])
     case 163:
-      return RemoteControlDto.fromList(self.readValue() as! [Any?])
+      return SafetyAccessoryDto.fromList(self.readValue() as! [Any?])
     case 164:
-      return RemoteControlListResultDto.fromList(self.readValue() as! [Any?])
+      return SafetyAccessoryListResultDto.fromList(self.readValue() as! [Any?])
     case 165:
+      return SafetyAccessoryDeleteResultDto.fromList(self.readValue() as! [Any?])
+    case 166:
+      return RemoteControlDto.fromList(self.readValue() as! [Any?])
+    case 167:
+      return RemoteControlListResultDto.fromList(self.readValue() as! [Any?])
+    case 168:
       return RemoteOperationResultDto.fromList(self.readValue() as! [Any?])
     default:
       return super.readValue(ofType: type)
@@ -1825,14 +1969,23 @@ private class HardwareApiPigeonCodecWriter: FlutterStandardWriter {
     } else if let value = value as? SafetyAccessoryPairingResultDto {
       super.writeByte(162)
       super.writeValue(value.toList())
-    } else if let value = value as? RemoteControlDto {
+    } else if let value = value as? SafetyAccessoryDto {
       super.writeByte(163)
       super.writeValue(value.toList())
-    } else if let value = value as? RemoteControlListResultDto {
+    } else if let value = value as? SafetyAccessoryListResultDto {
       super.writeByte(164)
       super.writeValue(value.toList())
-    } else if let value = value as? RemoteOperationResultDto {
+    } else if let value = value as? SafetyAccessoryDeleteResultDto {
       super.writeByte(165)
+      super.writeValue(value.toList())
+    } else if let value = value as? RemoteControlDto {
+      super.writeByte(166)
+      super.writeValue(value.toList())
+    } else if let value = value as? RemoteControlListResultDto {
+      super.writeByte(167)
+      super.writeValue(value.toList())
+    } else if let value = value as? RemoteOperationResultDto {
+      super.writeByte(168)
       super.writeValue(value.toList())
     } else {
       super.writeValue(value)
@@ -1879,6 +2032,8 @@ protocol HardwareHostApi {
   func setDeviceAttributes(requestId: String, deviceId: String, attributes: [DeviceAttributeDto], completion: @escaping (Result<DeviceAttributeWriteResultDto, Error>) -> Void)
   func pairRemote(requestId: String, deviceId: String, action: RemotePairingActionDto, completion: @escaping (Result<RemotePairingResultDto, Error>) -> Void)
   func pairSafetyAccessory(requestId: String, deviceId: String, action: SafetyAccessoryPairingActionDto, completion: @escaping (Result<SafetyAccessoryPairingResultDto, Error>) -> Void)
+  func querySafetyAccessories(requestId: String, deviceId: String, completion: @escaping (Result<SafetyAccessoryListResultDto, Error>) -> Void)
+  func deleteSafetyAccessory(requestId: String, deviceId: String, serialNumber: Int64, completion: @escaping (Result<SafetyAccessoryDeleteResultDto, Error>) -> Void)
   func queryRemotes(requestId: String, deviceId: String, completion: @escaping (Result<RemoteControlListResultDto, Error>) -> Void)
   func deleteRemote(requestId: String, deviceId: String, serialNumber: Int64?, completion: @escaping (Result<RemoteOperationResultDto, Error>) -> Void)
   func renameRemote(requestId: String, deviceId: String, serialNumber: Int64, name: String, completion: @escaping (Result<RemoteOperationResultDto, Error>) -> Void)
@@ -2286,6 +2441,43 @@ class HardwareHostApiSetup {
       }
     } else {
       pairSafetyAccessoryChannel.setMessageHandler(nil)
+    }
+    let querySafetyAccessoriesChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flinx.HardwareHostApi.querySafetyAccessories\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      querySafetyAccessoriesChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let requestIdArg = args[0] as! String
+        let deviceIdArg = args[1] as! String
+        api.querySafetyAccessories(requestId: requestIdArg, deviceId: deviceIdArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      querySafetyAccessoriesChannel.setMessageHandler(nil)
+    }
+    let deleteSafetyAccessoryChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flinx.HardwareHostApi.deleteSafetyAccessory\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      deleteSafetyAccessoryChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let requestIdArg = args[0] as! String
+        let deviceIdArg = args[1] as! String
+        let serialNumberArg = args[2] as! Int64
+        api.deleteSafetyAccessory(requestId: requestIdArg, deviceId: deviceIdArg, serialNumber: serialNumberArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      deleteSafetyAccessoryChannel.setMessageHandler(nil)
     }
     let queryRemotesChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flinx.HardwareHostApi.queryRemotes\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {

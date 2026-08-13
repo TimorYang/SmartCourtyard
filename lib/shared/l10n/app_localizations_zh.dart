@@ -2137,6 +2137,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get safetySensorManagementConfirm => '确认';
 
   @override
+  String get safetySensorManagementDeleteSuccess => '安全传感器删除成功。';
+
+  @override
+  String get safetySensorManagementDeleteFailed => '安全传感器删除失败，请重试。';
+
+  @override
+  String get safetySensorManagementBluetoothDisconnected => '请先通过蓝牙连接当前设备。';
+
+  @override
+  String get safetySensorManagementWirelessDoorSensor => '无线门磁';
+
+  @override
+  String get safetySensorManagementUnknownType => '未知安全传感器';
+
+  @override
   String get safetySensorsWirelessWicketDoor => '无线小门传感器';
 
   @override
