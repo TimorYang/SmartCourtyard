@@ -1185,9 +1185,9 @@ class _DoorHeroImageState extends State<_DoorHeroImage> {
         child: KeyedSubtree(
           key: const ValueKey<String>('door-hero-frame'),
           child: Image.asset(
-            key: ValueKey<String>(assetPath),
             assetPath,
             fit: BoxFit.contain,
+            gaplessPlayback: true,
             errorBuilder: (context, error, stackTrace) {
               return DecoratedBox(
                 decoration: const BoxDecoration(

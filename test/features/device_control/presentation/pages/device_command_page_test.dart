@@ -180,6 +180,14 @@ void main() {
     expect(_doorHeroAsset(tester), endsWith('garage_door_01.png'));
     expect(find.text('Closed'), findsOneWidget);
     expect(find.text('Closed · 0%'), findsNothing);
+    final initialDoorHeroImage = _doorHeroImage(tester);
+    final initialDoorHeroElement = tester.element(
+      find.descendant(
+        of: find.byKey(const ValueKey<String>('door-hero-frame')),
+        matching: find.byType(Image),
+      ),
+    );
+    expect(initialDoorHeroImage.gaplessPlayback, isTrue);
 
     gateway.emitDeviceAttributeSnapshot(
       DeviceAttributeSnapshot(
@@ -199,6 +207,13 @@ void main() {
     expect(find.text('Opening · 50%'), findsOneWidget);
 
     expect(_doorHeroAsset(tester), endsWith('garage_door_11.png'));
+    final updatedDoorHeroElement = tester.element(
+      find.descendant(
+        of: find.byKey(const ValueKey<String>('door-hero-frame')),
+        matching: find.byType(Image),
+      ),
+    );
+    expect(updatedDoorHeroElement, same(initialDoorHeroElement));
   });
 
   testWidgets('uses swing gate frames for the reported position', (
@@ -1104,11 +1119,15 @@ List<String> _connectionGroupAssets(WidgetTester tester, String deviceType) {
 }
 
 String _doorHeroAsset(WidgetTester tester) {
+  final image = _doorHeroImage(tester);
+  return (image.image as AssetImage).assetName;
+}
+
+Image _doorHeroImage(WidgetTester tester) {
   final frame = find.byKey(const ValueKey<String>('door-hero-frame'));
-  final image = tester.widget<Image>(
+  return tester.widget<Image>(
     find.descendant(of: frame, matching: find.byType(Image)),
   );
-  return (image.image as AssetImage).assetName;
 }
 
 bool _hasConnectionBorder(WidgetTester tester, String deviceType) {
