@@ -5,6 +5,8 @@ import android.os.Looper
 import com.flinx.flinx.flinxhardware.bluetooth.BleManager
 import com.flinx.flinx.flinxhardware.permissions.PermissionManager
 import com.flinx.flinx.flinxhardware.protocol.DeviceBleProtocolConfig
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 /** Pigeon HostApi 实现：承接 Flutter 调用并编排权限与 BLE 能力。 */
 class HardwareHostApiImpl(
@@ -27,6 +29,7 @@ class HardwareHostApiImpl(
   init {
     bleManager.onNotification = ::emitNotification
     bleManager.onDiagnosticEvent = ::emitDiagnosticEvent
+    bleManager.onProtocolFrame = ::handleProtocolFrame
   }
 
   private fun emitDiagnosticEvent(event: BleDiagnosticEventDto) {
@@ -304,7 +307,11 @@ class HardwareHostApiImpl(
     deviceId: String,
     callback: (Result<DeviceAttributeSnapshotDto>) -> Unit,
   ) {
-    callback(Result.failure(notImplemented("queryDeviceAttributes", requestId, deviceId)))
+    executeProtocol(requestId, deviceId, DeviceBleProtocolConfig.commandQueryAttributes, DeviceBleProtocolConfig.commandAttributeReport, callback = callback) { frame ->
+      attributesSnapshot(requestId, deviceId, frame, DeviceAttributeReportOriginDto.QUERY_RESULT).also { snapshot ->
+        runOnMainThread { hardwareFlutterApi.onDeviceAttributesChanged(snapshot) {} }
+      }
+    }
   }
 
   override fun setDeviceAttributes(
@@ -313,7 +320,12 @@ class HardwareHostApiImpl(
     attributes: List<DeviceAttributeDto>,
     callback: (Result<DeviceAttributeWriteResultDto>) -> Unit,
   ) {
-    callback(Result.failure(notImplemented("setDeviceAttributes", requestId, deviceId)))
+    val payload = runCatching { encodeAttributes(attributes) }.getOrElse { callback(Result.failure(it)); return }
+    executeProtocol(requestId, deviceId, DeviceBleProtocolConfig.commandSetAttributes, data = payload, callback = callback) { frame ->
+      val result = frame.data.firstOrNull()?.toInt()?.and(0xFF)
+        ?: throw FlutterError("invalid_attribute_write_response", "Attribute write response is empty.")
+      DeviceAttributeWriteResultDto(requestId, deviceId, result == 0x01, frame.sequence.toLong(), frame.data.reasonCode())
+    }
   }
 
   override fun pairRemote(
@@ -322,7 +334,13 @@ class HardwareHostApiImpl(
     action: RemotePairingActionDto,
     callback: (Result<RemotePairingResultDto>) -> Unit,
   ) {
-    callback(Result.failure(notImplemented("pairRemote", requestId, deviceId)))
+    val control = if (action == RemotePairingActionDto.START) 0x1008 else 0x1009
+    if (action == RemotePairingActionDto.CANCEL) {
+      bleManager.cancelProtocolCommand(deviceId, "remote_pairing_cancelled")
+    }
+    executePairing(requestId, deviceId, DeviceBleProtocolConfig.commandRemotePairing, control, 20_000L, callback = callback) { result, reason ->
+      RemotePairingResultDto(requestId, deviceId, remotePairingStatus(result), reason, "result=0x%02X".format(result), if (result == 1) null else "pairing_failed")
+    }
   }
 
   override fun pairSafetyAccessory(
@@ -331,7 +349,13 @@ class HardwareHostApiImpl(
     action: SafetyAccessoryPairingActionDto,
     callback: (Result<SafetyAccessoryPairingResultDto>) -> Unit,
   ) {
-    callback(Result.failure(notImplemented("pairSafetyAccessory", requestId, deviceId)))
+    val control = if (action == SafetyAccessoryPairingActionDto.START) 0x100A else 0x100B
+    if (action == SafetyAccessoryPairingActionDto.CANCEL) {
+      bleManager.cancelProtocolCommand(deviceId, "safety_accessory_pairing_cancelled")
+    }
+    executePairing(requestId, deviceId, DeviceBleProtocolConfig.commandSafetyAccessoryPairing, control, 30_000L, callback = callback) { result, reason ->
+      SafetyAccessoryPairingResultDto(requestId, deviceId, safetyPairingStatus(result), reason, "result=0x%02X".format(result), if (result == 1) null else "pairing_failed")
+    }
   }
 
   override fun querySafetyAccessories(
@@ -356,7 +380,7 @@ class HardwareHostApiImpl(
     deviceId: String,
     callback: (Result<RemoteControlListResultDto>) -> Unit,
   ) {
-    callback(Result.failure(notImplemented("queryRemotes", requestId, deviceId)))
+    executeProtocol(requestId, deviceId, DeviceBleProtocolConfig.commandRemoteQuery, callback = callback) { frame -> remoteList(requestId, deviceId, frame.data) }
   }
 
   override fun deleteRemote(
@@ -365,7 +389,8 @@ class HardwareHostApiImpl(
     serialNumber: Long?,
     callback: (Result<RemoteOperationResultDto>) -> Unit,
   ) {
-    callback(Result.failure(notImplemented("deleteRemote", requestId, deviceId)))
+    val payload = byteArrayOf(if (serialNumber == null) 0xFF.toByte() else 0x01) + intBytes((serialNumber ?: 0).toInt())
+    executeProtocol(requestId, deviceId, DeviceBleProtocolConfig.commandRemoteDelete, data = payload, callback = callback) { frame -> remoteOperation(requestId, deviceId, frame.data) }
   }
 
   override fun renameRemote(
@@ -375,8 +400,74 @@ class HardwareHostApiImpl(
     name: String,
     callback: (Result<RemoteOperationResultDto>) -> Unit,
   ) {
-    callback(Result.failure(notImplemented("renameRemote", requestId, deviceId)))
+    val nameBytes = name.toByteArray(Charsets.UTF_8).copyOf(8)
+    executeProtocol(requestId, deviceId, DeviceBleProtocolConfig.commandRemoteRename, data = nameBytes + intBytes(serialNumber.toInt()), callback = callback) { frame -> remoteOperation(requestId, deviceId, frame.data) }
   }
+
+  private fun <T> executeProtocol(
+    requestId: String, deviceId: String, command: Int, responseCommand: Int = command,
+    data: ByteArray = ByteArray(0), timeoutMillis: Long = 15_000L, callback: (Result<T>) -> Unit, transform: (com.flinx.flinx.flinxhardware.protocol.DeviceBleFrame) -> T,
+  ) {
+    permissionManager.ensureBleConnectPreconditions()
+    bleManager.executeProtocolCommand(requestId, deviceId, command, responseCommand, data, timeoutMillis, callback = { result ->
+      callback(result.mapCatching(transform))
+    })
+  }
+
+  private fun <T> executePairing(
+    requestId: String, deviceId: String, command: Int, control: Int, timeout: Long,
+    callback: (Result<T>) -> Unit, transform: (Int, Long) -> T,
+  ) = executeProtocol(requestId, deviceId, command, data = shortBytes(control), timeoutMillis = timeout, callback = callback) { frame ->
+    val result = frame.data.firstOrNull()?.toInt()?.and(0xFF) ?: throw FlutterError("invalid_pairing_response", "Pairing response is empty.")
+    transform(result, frame.data.reasonCode())
+  }
+
+  private fun handleProtocolFrame(deviceId: String, frame: com.flinx.flinx.flinxhardware.protocol.DeviceBleFrame) {
+    if (frame.command != DeviceBleProtocolConfig.commandAttributeReport) return
+    runCatching { attributesSnapshot(null, deviceId, frame, DeviceAttributeReportOriginDto.ACTIVE_REPORT) }
+      .onSuccess { snapshot -> runOnMainThread { hardwareFlutterApi.onDeviceAttributesChanged(snapshot) {} } }
+  }
+
+  private fun attributesSnapshot(requestId: String?, deviceId: String, frame: com.flinx.flinx.flinxhardware.protocol.DeviceBleFrame, origin: DeviceAttributeReportOriginDto): DeviceAttributeSnapshotDto =
+    DeviceAttributeSnapshotDto(requestId, deviceId, frame.sequence.toLong(), System.currentTimeMillis(), origin, parseAttributes(frame.data))
+
+  private fun parseAttributes(data: ByteArray): List<DeviceAttributeDto> {
+    val widths = mapOf(0x2702 to 2,0x2703 to 2,0x2709 to 1,0x2710 to 1,0x2711 to 1,0x2713 to 1,0x2714 to 1,0x2715 to 1,0x2716 to 2,0x2717 to 1,0x2718 to 1,0x2719 to 1,0x271A to 2,0x271B to 1,0x271C to 1,0x271D to 1,0x271F to 1,0x2720 to 1,0x2721 to 1,0x2722 to 1,0x2723 to 1,0x2725 to 2,0x2726 to 1,0x2727 to 1,0x2728 to 1,0x2729 to 1,0x272B to 1,0x2735 to 1,0x273B to 1,0x273C to 1,0x273D to 1)
+    val out = mutableListOf<DeviceAttributeDto>(); var offset = 0
+    while (offset + 2 <= data.size) {
+      val id = ((data[offset].toInt() and 255) shl 8) or (data[offset + 1].toInt() and 255); offset += 2
+      val width = if (id == 0x2700) {
+        val terminator = data.indices.firstOrNull { it >= offset && data[it] == 0.toByte() }
+          ?: throw FlutterError("invalid_attribute_payload", "Unterminated string attribute.")
+        terminator - offset + 1
+      } else widths[id] ?: throw FlutterError("unsupported_attribute_schema", "Unsupported attribute 0x${id.toString(16)}")
+      if (offset + width > data.size) throw FlutterError("invalid_attribute_payload", "Truncated attribute payload.")
+      out += DeviceAttributeDto(id.toLong(), data.copyOfRange(offset, offset + width)); offset += width
+    }
+    return out
+  }
+
+  private fun encodeAttributes(attributes: List<DeviceAttributeDto>): ByteArray {
+    require(attributes.isNotEmpty()) { "At least one attribute is required." }
+    val writable = setOf(0x2711,0x2713,0x2714,0x2725,0x2726,0x2727,0x2728)
+    return attributes.fold(ByteArray(0)) { bytes, attr ->
+      val id = attr.id.toInt(); require(id in writable) { "Unsupported attribute write." }; bytes + shortBytes(id) + attr.value
+    }
+  }
+
+  private fun remoteList(requestId: String, deviceId: String, data: ByteArray): RemoteControlListResultDto {
+    if (data.size < 4) throw FlutterError("invalid_remote_query_response", "Remote list response is incomplete.")
+    val remotes = mutableListOf<RemoteControlDto>(); var offset = 4
+    while (offset + 12 <= data.size) { val name = data.copyOfRange(offset, offset + 8).toString(Charsets.UTF_8).trimEnd('\u0000'); val serial = ByteBuffer.wrap(data, offset + 8, 4).order(ByteOrder.BIG_ENDIAN).int.toLong() and 0xffffffffL; remotes += RemoteControlDto(name, serial); offset += 12 }
+    return RemoteControlListResultDto(requestId, deviceId, (data[0].toInt() and 255).toLong(), (data[1].toInt() and 255).toLong(), (data[2].toInt() and 255).toLong(), data[3].toInt() != 0, remotes)
+  }
+
+  private fun remoteOperation(requestId: String, deviceId: String, data: ByteArray): RemoteOperationResultDto { val result = data.firstOrNull()?.toInt()?.and(255) ?: throw FlutterError("invalid_remote_operation_response", "Remote operation response is empty."); return RemoteOperationResultDto(requestId, deviceId, if (result == 1) RemoteOperationStatusDto.SUCCESS else if (result == 255) RemoteOperationStatusDto.FAILURE else RemoteOperationStatusDto.UNKNOWN, data.reasonCode(), "result=0x%02X".format(result), if (result == 1) null else "remote_operation_failed") }
+  private fun remotePairingStatus(result: Int) = when (result) { 1 -> RemotePairingStatusDto.SUCCESS; 2 -> RemotePairingStatusDto.FAILURE; 3 -> RemotePairingStatusDto.TIMEOUT; else -> RemotePairingStatusDto.UNKNOWN }
+  private fun safetyPairingStatus(result: Int) = when (result) { 1 -> SafetyAccessoryPairingStatusDto.SUCCESS; 2 -> SafetyAccessoryPairingStatusDto.FAILURE; 3 -> SafetyAccessoryPairingStatusDto.TIMEOUT; else -> SafetyAccessoryPairingStatusDto.UNKNOWN }
+  private fun shortBytes(value: Int) = byteArrayOf((value shr 8).toByte(), value.toByte())
+  private fun intBytes(value: Int) = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(value).array()
+  private fun ByteArray.reasonCode(): Long = if (size >= 5) ByteBuffer.wrap(this, 1, 4).order(ByteOrder.BIG_ENDIAN).int.toLong() and 0xffffffffL else 0L
 
   /** 生成统一的“未实现”错误，附带方法与请求上下文信息。 */
   private fun notImplemented(method: String, requestId: String, deviceId: String? = null): FlutterError {

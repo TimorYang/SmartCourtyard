@@ -60,6 +60,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get operationRecordActionUnknown => 'Unknown action';
 
   @override
+  String get refreshControlPullToRefresh => 'Pull to refresh';
+
+  @override
+  String get refreshControlReleaseToRefresh => 'Release to refresh';
+
+  @override
+  String get refreshControlRefreshing => 'Refreshing...';
+
+  @override
+  String get refreshControlRefreshSucceeded => 'Refresh succeeded';
+
+  @override
+  String get refreshControlRefreshFailed => 'Refresh failed';
+
+  @override
+  String get refreshControlPullToLoad => 'Pull to load more';
+
+  @override
+  String get refreshControlReleaseToLoad => 'Release to load more';
+
+  @override
+  String get refreshControlLoading => 'Loading...';
+
+  @override
+  String get refreshControlLoadSucceeded => 'Load succeeded';
+
+  @override
+  String get refreshControlLoadFailed => 'Load failed';
+
+  @override
+  String get refreshControlNoMoreData => 'No more data';
+
+  @override
   String get welcomeHeadline => 'Start your\nsmart life';
 
   @override
@@ -1470,6 +1503,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationNotFound => 'Notification not found';
+
+  @override
+  String get notificationEmpty => 'No notifications yet';
+
+  @override
+  String get notificationLoadFailed =>
+      'Unable to load notifications. Please try again.';
 
   @override
   String get notificationViewDetails => 'View details';

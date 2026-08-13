@@ -37,7 +37,14 @@ object DeviceBleProtocolConfig {
   const val commandConfigureWifi: Int = 0x0E02
   const val commandAuthenticate: Int = 0x0E03
   const val commandQueryAttributes: Int = 0x0002
+  const val commandSetAttributes: Int = 0x0001
+  const val commandAttributeReport: Int = 0x0202
   const val commandControlDoor: Int = 0x0005
+  const val commandRemotePairing: Int = 0x0007
+  const val commandRemoteQuery: Int = 0x0008
+  const val commandRemoteDelete: Int = 0x0009
+  const val commandRemoteRename: Int = 0x000A
+  const val commandSafetyAccessoryPairing: Int = 0x000B
   const val controlOpenDoor: Int = 0x1001
   const val controlCloseDoor: Int = 0x1002
   const val controlStopDoor: Int = 0x1003

@@ -1,3 +1,4 @@
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -375,10 +376,11 @@ class _AccountProfileContent extends StatelessWidget {
       top: false,
       child: SizedBox(
         height: maxHeight,
-        child: RefreshIndicator(
+        child: EasyRefresh.builder(
+          header: _classicRefreshHeader(l10n),
           onRefresh: onRefresh,
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
+          childBuilder: (context, physics) => ListView(
+            physics: physics,
             padding: EdgeInsets.zero,
             children: [
               _AccountHeader(
@@ -395,6 +397,18 @@ class _AccountProfileContent extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  ClassicHeader _classicRefreshHeader(AppLocalizations l10n) {
+    return ClassicHeader(
+      dragText: l10n.refreshControlPullToRefresh,
+      armedText: l10n.refreshControlReleaseToRefresh,
+      readyText: l10n.refreshControlRefreshing,
+      processingText: l10n.refreshControlRefreshing,
+      processedText: l10n.refreshControlRefreshSucceeded,
+      failedText: l10n.refreshControlRefreshFailed,
+      showMessage: false,
     );
   }
 

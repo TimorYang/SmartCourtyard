@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
-import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
-import '../../data/notification_fixtures.dart';
+import '../../application/providers.dart';
 import '../../domain/entities/app_notification.dart';
-import 'after_sales_appointment_page.dart';
-import 'after_sales_detail_page.dart';
 
-class NotificationDetailPage extends StatelessWidget {
+class NotificationDetailPage extends ConsumerWidget {
   const NotificationDetailPage({super.key, required this.notificationId});
 
   static const routeName = 'notification-detail';
@@ -19,9 +16,9 @@ class NotificationDetailPage extends StatelessWidget {
   final String notificationId;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final item = NotificationFixtures.findById(notificationId);
+    final detail = ref.watch(notificationDetailProvider(notificationId));
 
     return Scaffold(
       backgroundColor: AppColors.notificationBackground,
@@ -32,49 +29,24 @@ class NotificationDetailPage extends StatelessWidget {
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 430),
-          child: item == null
-              ? Center(child: Text(l10n.notificationNotFound))
-              : ListView(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-                  children: [
-                    _DetailCard(notification: item),
-                    const SizedBox(height: 28),
-                    _NotificationActionButton(
-                      label: _actionLabel(l10n, item.action),
-                      onPressed: () => _handleAction(context, item),
-                    ),
-                  ],
-                ),
+          child: detail.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (_, _) => Center(child: Text(l10n.notificationNotFound)),
+            data: (item) => ListView(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+              children: [_DetailCard(notification: item)],
+            ),
+          ),
         ),
       ),
     );
-  }
-
-  String _actionLabel(AppLocalizations l10n, NotificationAction action) =>
-      switch (action) {
-        NotificationAction.viewDetails => l10n.notificationViewDetails,
-        NotificationAction.appointmentAfterSales =>
-          l10n.notificationAppointmentAfterSales,
-        NotificationAction.upgrade => l10n.notificationUpgrade,
-      };
-
-  void _handleAction(BuildContext context, AppNotification item) {
-    switch (item.action) {
-      case NotificationAction.viewDetails:
-        context.pushNamed(AfterSalesDetailPage.routeName);
-      case NotificationAction.appointmentAfterSales:
-        context.pushNamed(AfterSalesAppointmentPage.routeName);
-      case NotificationAction.upgrade:
-        final l10n = AppLocalizations.of(context);
-        AppToast.info(context, l10n.notificationUpgradeComingSoon);
-    }
   }
 }
 
 class _DetailCard extends StatelessWidget {
   const _DetailCard({required this.notification});
 
-  final AppNotification notification;
+  final AppNotificationDetail notification;
 
   @override
   Widget build(BuildContext context) {
@@ -96,54 +68,15 @@ class _DetailCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              '${AppLocalizations.of(context).notificationAppointmentTime}: '
-              '${_appointmentTime(notification)}',
+              notification.timestamp,
               style: AppTextTokens.notificationTimestamp(textTheme),
             ),
             const SizedBox(height: 18),
             Text(
-              notification.detail,
+              notification.content,
               style: AppTextTokens.notificationBody(textTheme),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  String _appointmentTime(AppNotification notification) {
-    return notification.kind == NotificationKind.appointmentReminder
-        ? '2026-07-01 09:30'
-        : notification.timestamp;
-  }
-}
-
-class _NotificationActionButton extends StatelessWidget {
-  const _NotificationActionButton({
-    required this.label,
-    required this.onPressed,
-  });
-
-  final String label;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 50,
-      child: FilledButton(
-        onPressed: onPressed,
-        style: FilledButton.styleFrom(
-          backgroundColor: AppColors.brandPrimary,
-          foregroundColor: Colors.white,
-          shape: const StadiumBorder(),
-        ),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          style: AppTextTokens.notificationPrimaryButton(
-            Theme.of(context).textTheme,
-          ),
         ),
       ),
     );

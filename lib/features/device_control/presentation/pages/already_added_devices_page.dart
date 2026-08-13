@@ -1,3 +1,4 @@
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -32,13 +33,9 @@ class AlreadyAddedDevicesPage extends ConsumerStatefulWidget {
 
 class _AlreadyAddedDevicesPageState
     extends ConsumerState<AlreadyAddedDevicesPage> {
-  static const _loadMoreThreshold = 160.0;
-  late final ScrollController _scrollController;
-
   @override
   void initState() {
     super.initState();
-    _scrollController = ScrollController()..addListener(_onScroll);
     Future<void>.microtask(_loadInitial);
   }
 
@@ -50,26 +47,35 @@ class _AlreadyAddedDevicesPageState
     }
   }
 
-  @override
-  void dispose() {
-    _scrollController
-      ..removeListener(_onScroll)
-      ..dispose();
-    super.dispose();
-  }
-
   void _loadInitial() {
     ref
         .read(alreadyAddedDevicesControllerProvider.notifier)
         .loadInitial(doorId: widget.doorId);
   }
 
-  void _onScroll() {
-    if (!_scrollController.hasClients ||
-        _scrollController.position.extentAfter > _loadMoreThreshold) {
-      return;
-    }
-    ref.read(alreadyAddedDevicesControllerProvider.notifier).loadMore();
+  ClassicHeader _classicHeader(AppLocalizations l10n) {
+    return ClassicHeader(
+      dragText: l10n.refreshControlPullToRefresh,
+      armedText: l10n.refreshControlReleaseToRefresh,
+      readyText: l10n.refreshControlRefreshing,
+      processingText: l10n.refreshControlRefreshing,
+      processedText: l10n.refreshControlRefreshSucceeded,
+      failedText: l10n.refreshControlRefreshFailed,
+      showMessage: false,
+    );
+  }
+
+  ClassicFooter _classicFooter(AppLocalizations l10n) {
+    return ClassicFooter(
+      dragText: l10n.refreshControlPullToLoad,
+      armedText: l10n.refreshControlReleaseToLoad,
+      readyText: l10n.refreshControlLoading,
+      processingText: l10n.refreshControlLoading,
+      processedText: l10n.refreshControlLoadSucceeded,
+      failedText: l10n.refreshControlLoadFailed,
+      noMoreText: l10n.refreshControlNoMoreData,
+      showMessage: false,
+    );
   }
 
   @override
@@ -115,12 +121,14 @@ class _AlreadyAddedDevicesPageState
       ),
       body: SafeArea(
         top: false,
-        child: RefreshIndicator(
+        child: EasyRefresh.builder(
+          header: _classicHeader(l10n),
+          footer: _classicFooter(l10n),
           onRefresh: () => controller.refresh(doorId: widget.doorId),
-          child: CustomScrollView(
+          onLoad: () async => IndicatorResult.noMore,
+          childBuilder: (context, physics) => CustomScrollView(
             key: const PageStorageKey<String>('already-added-devices-scroll'),
-            controller: _scrollController,
-            physics: const AlwaysScrollableScrollPhysics(),
+            physics: physics,
             slivers: [
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:dio/io.dart';
 
 void configureDebugNetworkProxy(
@@ -12,7 +13,14 @@ void configureDebugNetworkProxy(
     createHttpClient: () {
       final client = HttpClient();
       if (proxy.isNotEmpty) {
-        client.findProxy = (_) => proxy;
+        client.findProxy = (uri) {
+          if (kDebugMode) {
+            debugPrint(
+              '[FLINX][Network] Proxy route selected: ${uri.host} -> $proxy',
+            );
+          }
+          return proxy;
+        };
       }
       if (allowInvalidCertificates) {
         client.badCertificateCallback = (_, _, _) => true;

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 
 import '../core/logging/app_logger.dart';
+import '../core/network/debug_system_proxy.dart';
 import '../core/network/startup_network_access_probe.dart';
 import '../core/network/providers.dart';
 import '../core/storage/app_storage_paths.dart';
@@ -17,6 +18,7 @@ import 'flinx_app.dart';
 Future<void> bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  await DebugSystemProxy.initialize();
   AppStorageLocations? storageLocations;
   try {
     storageLocations = await AppStoragePaths.resolve();
