@@ -73,6 +73,7 @@ class BleManager(
 
   var onNotification: ((BleNotificationDto) -> Unit)? = null
   var onDiagnosticEvent: ((BleDiagnosticEventDto) -> Unit)? = null
+  var onProtocolFrame: ((String, DeviceBleFrame) -> Unit)? = null
 
   private val mainHandler = Handler(Looper.getMainLooper())
   private val notificationSequence = AtomicLong(0)
@@ -110,6 +111,7 @@ class BleManager(
     ConcurrentHashMap<String, PendingWifiScan>()
   private val wifiProvisionSessions =
     ConcurrentHashMap<String, PendingWifiProvision>()
+  private val protocolSessions = ConcurrentHashMap<String, PendingProtocolCommand>()
   private val notificationBuffers =
     ConcurrentHashMap<String, ByteArray>()
   private val requestIdsByDevice = ConcurrentHashMap<String, String>()
@@ -771,6 +773,50 @@ class BleManager(
     }
   }
 
+  /** Sends an encrypted protocol request and resolves its matching notification response. */
+  @SuppressLint("MissingPermission")
+  fun executeProtocolCommand(
+    requestId: String,
+    deviceId: String,
+    command: Int,
+    responseCommand: Int = command,
+    data: ByteArray = ByteArray(0),
+    timeoutMillis: Long = PROVISIONING_COMMAND_TIMEOUT_MS,
+    callback: (Result<DeviceBleFrame>) -> Unit,
+  ) {
+    if (protocolSessions.containsKey(deviceId)) {
+      callback(Result.failure(FlutterError("operation_in_progress", "A BLE protocol operation is already in progress.", "deviceId=$deviceId")))
+      return
+    }
+    val gatt = gattMap[deviceId]
+      ?: throw FlutterError("bluetooth_disconnected", "BLE device is not connected.")
+    val service = gatt.getService(DeviceBleProtocolConfig.communicationServiceUuid)
+      ?: throw FlutterError("service_not_found", "BLE provisioning service was not discovered.", "deviceId=$deviceId")
+    val write = service.getCharacteristic(DeviceBleProtocolConfig.writeCharacteristicUuid)
+      ?: throw FlutterError("characteristic_not_found", "BLE provisioning write characteristic was not found.", "deviceId=$deviceId")
+    val sequence = nextProtocolSequence()
+    val packet = DeviceBleProtocolConfig.buildEncryptedCommandFrame(sequence, command, requireDeviceAesKey(deviceId), data)
+    val pending = PendingProtocolCommand(requestId, deviceId, sequence, responseCommand, callback)
+    pending.timeoutRunnable = Runnable {
+      protocolSessions.remove(deviceId)?.callback(Result.failure(FlutterError("command_timeout", "BLE protocol command timed out.", "requestId=$requestId,deviceId=$deviceId,sequence=$sequence")))
+    }
+    protocolSessions[deviceId] = pending
+    mainHandler.postDelayed(pending.timeoutRunnable!!, timeoutMillis)
+    requestIdsByDevice[deviceId] = requestId
+    write.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+    write.value = packet
+    if (!gatt.writeCharacteristic(write)) {
+      removeProtocolSession(deviceId)
+      callback(Result.failure(FlutterError("write_characteristic_failed", "Failed to send BLE protocol frame.", "deviceId=$deviceId")))
+    }
+  }
+
+  fun cancelProtocolCommand(deviceId: String, code: String) {
+    removeProtocolSession(deviceId)?.callback(
+      Result.failure(FlutterError(code, "BLE protocol operation was cancelled.", "deviceId=$deviceId")),
+    )
+  }
+
   /** 发送门控命令。0x0005 Data 为 2 字节大端 Controls。 */
   @SuppressLint("MissingPermission")
   fun sendDoorCommand(
@@ -1210,6 +1256,7 @@ class BleManager(
             characteristicUuid = characteristicUuid,
             payload = framePayload,
           )
+          handleProtocolNotification(deviceId, framePayload)
           logEncryptedPayloadAnalysis(
             requestId = requestId,
             deviceId = deviceId,
@@ -1777,6 +1824,27 @@ class BleManager(
     val pending = wifiProvisionSessions.remove(deviceId) ?: return null
     pending.timeoutRunnable?.let(mainHandler::removeCallbacks)
     return pending
+  }
+
+  private fun removeProtocolSession(deviceId: String): PendingProtocolCommand? {
+    val pending = protocolSessions.remove(deviceId) ?: return null
+    pending.timeoutRunnable?.let(mainHandler::removeCallbacks)
+    return pending
+  }
+
+  private fun handleProtocolNotification(deviceId: String, payload: ByteArray) {
+    val frame = parseProvisioningFrame(deviceId, payload) ?: return
+    val pending = protocolSessions[deviceId]
+    if (pending == null) {
+      onProtocolFrame?.invoke(deviceId, frame)
+      return
+    }
+    if (frame.frameType == DeviceBleProtocolConfig.frameTypeResponse &&
+      frame.sequence == pending.sequence && frame.command == pending.responseCommand) {
+      removeProtocolSession(deviceId)?.callback(Result.success(frame))
+      return
+    }
+    onProtocolFrame?.invoke(deviceId, frame)
   }
 
   private fun handleWifiScanNotification(
@@ -2363,6 +2431,7 @@ class BleManager(
     removeAuthSession(deviceId)?.callback(Result.failure(disconnectError))
     removeWifiScanSession(deviceId)?.callback(Result.failure(disconnectError))
     removeWifiProvisionSession(deviceId)?.callback(Result.failure(disconnectError))
+    removeProtocolSession(deviceId)?.callback(Result.failure(disconnectError))
     readCallbacks.entries.removeIf { entry ->
       if (entry.value.deviceId != deviceId) return@removeIf false
       entry.value.callback(Result.failure(disconnectError))
@@ -2606,6 +2675,15 @@ private data class PendingWifiProvision(
   val notifyCharacteristicUuid: String,
   val writeCharacteristicUuid: String,
   val callback: (Result<WifiProvisionResultDto>) -> Unit,
+  var timeoutRunnable: Runnable? = null,
+)
+
+private data class PendingProtocolCommand(
+  val requestId: String,
+  val deviceId: String,
+  val sequence: Int,
+  val responseCommand: Int,
+  val callback: (Result<DeviceBleFrame>) -> Unit,
   var timeoutRunnable: Runnable? = null,
 )
 
