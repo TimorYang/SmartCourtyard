@@ -71,7 +71,7 @@ class NotificationMessageCardDto {
         label: json['label'] as String? ?? '',
         summary: json['summary'] as String? ?? '',
         read: json['read'] as bool? ?? false,
-        createTime: json['createTime'] as String? ?? '',
+        createTime: _numberAsString(json['createTime']),
       );
 
   Map<String, dynamic> toJson() => {
@@ -120,7 +120,7 @@ class NotificationMessageDetailDto {
         content: json['content'] as String? ?? '',
         mobileLink: json['mobileLink'] as String?,
         read: json['read'] as bool? ?? false,
-        createTime: json['createTime'] as String? ?? '',
+        createTime: _numberAsString(json['createTime']),
       );
 
   Map<String, dynamic> toJson() => {

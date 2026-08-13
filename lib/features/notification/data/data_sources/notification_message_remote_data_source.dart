@@ -7,7 +7,11 @@ import '../dto/notification_message_dto.dart';
 import 'notification_message_api.dart';
 
 abstract interface class NotificationMessageRemoteDataSource {
-  Future<NotificationMessagePageDto> fetchMessages({required String requestId});
+  Future<NotificationMessagePageDto> fetchMessages({
+    required int page,
+    required int pageSize,
+    required String requestId,
+  });
   Future<NotificationMessageDetailDto> fetchMessageDetail({
     required String messageId,
     required String requestId,
@@ -26,8 +30,26 @@ class NotificationMessageRemoteDataSourceImpl
 
   @override
   Future<NotificationMessagePageDto> fetchMessages({
+    required int page,
+    required int pageSize,
     required String requestId,
-  }) => _call(() => api.fetchMessages(1, 50, _options(requestId)));
+  }) async {
+    final result = await _call(
+      () => api.fetchMessages(page, pageSize, _options(requestId)),
+    );
+    final current = int.tryParse(result.current);
+    final size = int.tryParse(result.size);
+    final total = int.tryParse(result.total);
+    if (current == null ||
+        current < 1 ||
+        size == null ||
+        size < 1 ||
+        total == null ||
+        total < 0) {
+      throw const NotificationMessageRemoteException.invalidResponse();
+    }
+    return result;
+  }
 
   @override
   Future<NotificationMessageDetailDto> fetchMessageDetail({
@@ -37,10 +59,7 @@ class NotificationMessageRemoteDataSourceImpl
 
   @override
   Future<void> markAllRead({required String requestId}) async {
-    final result = await _call(() => api.markAllRead(_options(requestId)));
-    if (!result) {
-      throw const NotificationMessageRemoteException.invalidResponse();
-    }
+    await _call<dynamic>(() => api.markAllRead(_options(requestId)));
   }
 
   @override
@@ -55,9 +74,7 @@ class NotificationMessageRemoteDataSourceImpl
     try {
       final response = await request();
       final data = response.data;
-      if ((response.code != 0 && response.code != 200) ||
-          !response.success ||
-          data == null) {
+      if (response.code != 200 || !response.success || data == null) {
         throw const NotificationMessageRemoteException.invalidResponse();
       }
       return data;

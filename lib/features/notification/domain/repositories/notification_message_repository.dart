@@ -1,7 +1,12 @@
 import '../entities/app_notification.dart';
+import '../entities/notification_message_page_result.dart';
 
 abstract interface class NotificationMessageRepository {
-  Future<List<AppNotification>> fetchMessages({required String requestId});
+  Future<NotificationMessagePageResult> fetchMessages({
+    required int page,
+    required int pageSize,
+    required String requestId,
+  });
   Future<AppNotificationDetail> fetchMessageDetail({
     required String messageId,
     required String requestId,

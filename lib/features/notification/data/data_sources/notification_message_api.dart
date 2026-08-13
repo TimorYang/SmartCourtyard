@@ -25,7 +25,7 @@ abstract class NotificationMessageApi {
   );
 
   @PUT('app/messages/read-all')
-  Future<ApiEnvelopeDto<bool>> markAllRead(@DioOptions() Options options);
+  Future<ApiEnvelopeDto<dynamic>> markAllRead(@DioOptions() Options options);
 
   @GET('app/messages/unread-state')
   Future<ApiEnvelopeDto<NotificationUnreadStateDto>> fetchUnreadState(

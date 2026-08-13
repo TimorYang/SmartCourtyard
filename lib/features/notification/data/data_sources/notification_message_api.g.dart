@@ -90,7 +90,7 @@ class _NotificationMessageApi implements NotificationMessageApi {
   }
 
   @override
-  Future<ApiEnvelopeDto<bool>> markAllRead(Options options) async {
+  Future<ApiEnvelopeDto<dynamic>> markAllRead(Options options) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
@@ -106,11 +106,11 @@ class _NotificationMessageApi implements NotificationMessageApi {
       path: 'app/messages/read-all',
     )..data = _data;
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late ApiEnvelopeDto<bool> _value;
+    late ApiEnvelopeDto<dynamic> _value;
     try {
-      _value = ApiEnvelopeDto<bool>.fromJson(
+      _value = ApiEnvelopeDto<dynamic>.fromJson(
         _result.data!,
-        (json) => json as bool,
+        (json) => json as dynamic,
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, response: _result);

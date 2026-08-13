@@ -1,6 +1,7 @@
 import 'package:flinx/app/theme/app_theme.dart';
 import 'package:flinx/features/notification/application/providers.dart';
 import 'package:flinx/features/notification/domain/entities/app_notification.dart';
+import 'package:flinx/features/notification/domain/entities/notification_message_page_result.dart';
 import 'package:flinx/features/notification/domain/repositories/notification_message_repository.dart';
 import 'package:flinx/features/notification/presentation/pages/after_sales_appointment_page.dart';
 import 'package:flinx/features/notification/presentation/pages/after_sales_detail_page.dart';
@@ -98,21 +99,29 @@ Widget _routerApp(GoRouter router) {
 class _FakeNotificationMessageRepository
     implements NotificationMessageRepository {
   @override
-  Future<List<AppNotification>> fetchMessages({
+  Future<NotificationMessagePageResult> fetchMessages({
+    required int page,
+    required int pageSize,
     required String requestId,
-  }) async => const [
-    AppNotification(
-      id: '10001',
-      templateCode: 'DEVICE_ABNORMAL',
-      type: 'DEVICE',
-      kind: NotificationKind.lowBattery,
-      title: 'Garage door battery is low',
-      category: 'Device',
-      summary: 'Battery below 15%, please handle it in time.',
-      timestamp: '2026-07-01T09:00:00Z',
-      isRead: false,
-    ),
-  ];
+  }) async => const NotificationMessagePageResult(
+    messages: [
+      AppNotification(
+        id: '10001',
+        templateCode: 'DEVICE_ABNORMAL',
+        type: 'DEVICE',
+        kind: NotificationKind.lowBattery,
+        title: 'Garage door battery is low',
+        category: 'Device',
+        summary: 'Battery below 15%, please handle it in time.',
+        timestamp: '2026-07-01T09:00:00Z',
+        isRead: false,
+      ),
+    ],
+    currentPage: 1,
+    pageSize: 20,
+    total: 1,
+    hasMore: false,
+  );
 
   @override
   Future<AppNotificationDetail> fetchMessageDetail({

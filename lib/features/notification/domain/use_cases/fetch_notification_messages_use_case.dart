@@ -1,9 +1,16 @@
-import '../entities/app_notification.dart';
+import '../entities/notification_message_page_result.dart';
 import '../repositories/notification_message_repository.dart';
 
 class FetchNotificationMessagesUseCase {
   const FetchNotificationMessagesUseCase({required this.repository});
   final NotificationMessageRepository repository;
-  Future<List<AppNotification>> call({required String requestId}) =>
-      repository.fetchMessages(requestId: requestId);
+  Future<NotificationMessagePageResult> call({
+    required int page,
+    required int pageSize,
+    required String requestId,
+  }) => repository.fetchMessages(
+    page: page,
+    pageSize: pageSize,
+    requestId: requestId,
+  );
 }

@@ -1,6 +1,7 @@
 import '../../../../core/errors/app_error.dart';
 import '../../../../core/logging/app_logger.dart';
 import '../../domain/entities/app_notification.dart';
+import '../../domain/entities/notification_message_page_result.dart';
 import '../../domain/repositories/notification_message_repository.dart';
 import '../data_sources/notification_message_remote_data_source.dart';
 import '../dto/notification_message_dto.dart';
@@ -16,14 +17,29 @@ class NotificationMessageRepositoryImpl
   final AppLogger logger;
 
   @override
-  Future<List<AppNotification>> fetchMessages({
+  Future<NotificationMessagePageResult> fetchMessages({
+    required int page,
+    required int pageSize,
     required String requestId,
   }) async {
     try {
-      final page = await remoteDataSource.fetchMessages(requestId: requestId);
-      return page.records
-          .map((item) => item.toDomain())
-          .toList(growable: false);
+      final result = await remoteDataSource.fetchMessages(
+        page: page,
+        pageSize: pageSize,
+        requestId: requestId,
+      );
+      final currentPage = int.parse(result.current);
+      final responsePageSize = int.parse(result.size);
+      final total = int.parse(result.total);
+      return NotificationMessagePageResult(
+        messages: result.records
+            .map((item) => item.toDomain())
+            .toList(growable: false),
+        currentPage: currentPage,
+        pageSize: responsePageSize,
+        total: total,
+        hasMore: currentPage * responsePageSize < total,
+      );
     } on NotificationMessageRemoteException catch (error, stackTrace) {
       throw _mapError(error, requestId, stackTrace);
     }
@@ -113,7 +129,7 @@ extension NotificationMessageCardDtoMapper on NotificationMessageCardDto {
     title: title,
     category: label,
     summary: summary,
-    timestamp: createTime,
+    timestamp: _formatTimestamp(createTime),
     isRead: read,
   );
 }
@@ -128,7 +144,7 @@ extension NotificationMessageDetailDtoMapper on NotificationMessageDetailDto {
     content: content,
     mobileLink: mobileLink?.trim().isEmpty == true ? null : mobileLink?.trim(),
     isRead: read,
-    timestamp: createTime,
+    timestamp: _formatTimestamp(createTime),
   );
 }
 
@@ -153,4 +169,28 @@ NotificationKind _notificationKind(String templateCode, String type) {
     return NotificationKind.sensorAbnormality;
   }
   return NotificationKind.systemMaintenance;
+}
+
+String _formatTimestamp(String value) {
+  final normalized = value.trim();
+  if (normalized.isEmpty) return '';
+
+  DateTime? timestamp;
+  final milliseconds = int.tryParse(normalized);
+  if (milliseconds != null) {
+    try {
+      timestamp = DateTime.fromMillisecondsSinceEpoch(milliseconds);
+    } on ArgumentError {
+      return normalized;
+    }
+  } else {
+    timestamp = DateTime.tryParse(normalized);
+  }
+  if (timestamp == null) return normalized;
+
+  final local = timestamp.toLocal();
+  String twoDigits(int number) => number.toString().padLeft(2, '0');
+  return '${local.year}-${twoDigits(local.month)}-${twoDigits(local.day)} '
+      '${twoDigits(local.hour)}:${twoDigits(local.minute)}:'
+      '${twoDigits(local.second)}';
 }

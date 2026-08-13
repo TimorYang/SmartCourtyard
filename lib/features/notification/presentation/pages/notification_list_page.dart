@@ -1,3 +1,4 @@
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -25,17 +26,53 @@ class _NotificationListPageState extends ConsumerState<NotificationListPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        ref.read(notificationMessagesControllerProvider.notifier).refresh();
-      }
-    });
+    Future<void>.microtask(
+      ref.read(notificationMessagesControllerProvider.notifier).loadInitial,
+    );
+  }
+
+  Future<IndicatorResult> _loadMore() async {
+    final controller = ref.read(
+      notificationMessagesControllerProvider.notifier,
+    );
+    await controller.loadMore();
+    final state = ref.read(notificationMessagesControllerProvider);
+    if (state.loadMoreFailed) return IndicatorResult.fail;
+    return state.hasMore ? IndicatorResult.success : IndicatorResult.noMore;
+  }
+
+  ClassicHeader _classicHeader(AppLocalizations l10n) => ClassicHeader(
+    dragText: l10n.refreshControlPullToRefresh,
+    armedText: l10n.refreshControlReleaseToRefresh,
+    readyText: l10n.refreshControlRefreshing,
+    processingText: l10n.refreshControlRefreshing,
+    processedText: l10n.refreshControlRefreshSucceeded,
+    failedText: l10n.refreshControlRefreshFailed,
+    showMessage: false,
+  );
+
+  ClassicFooter _classicFooter(AppLocalizations l10n) => ClassicFooter(
+    dragText: l10n.refreshControlPullToLoad,
+    armedText: l10n.refreshControlReleaseToLoad,
+    readyText: l10n.refreshControlLoading,
+    processingText: l10n.refreshControlLoading,
+    processedText: l10n.refreshControlLoadSucceeded,
+    failedText: l10n.refreshControlLoadFailed,
+    noMoreText: l10n.refreshControlNoMoreData,
+    showMessage: false,
+  );
+
+  bool _isBusy(NotificationMessagesState state) {
+    return state.isInitialLoading || state.isRefreshing || state.isLoadingMore;
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final messages = ref.watch(notificationMessagesControllerProvider);
+    final messagesState = ref.watch(notificationMessagesControllerProvider);
+    final controller = ref.read(
+      notificationMessagesControllerProvider.notifier,
+    );
 
     return Scaffold(
       backgroundColor: AppColors.notificationBackground,
@@ -44,12 +81,10 @@ class _NotificationListPageState extends ConsumerState<NotificationListPage> {
         showBottomDivider: false,
         actions: [
           TextButton(
-            onPressed: messages.isLoading
+            onPressed: _isBusy(messagesState)
                 ? null
                 : () async {
-                    final succeeded = await ref
-                        .read(notificationMessagesControllerProvider.notifier)
-                        .markAllRead();
+                    final succeeded = await controller.markAllRead();
                     if (context.mounted) {
                       if (succeeded) {
                         AppToast.success(
@@ -75,26 +110,55 @@ class _NotificationListPageState extends ConsumerState<NotificationListPage> {
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 430),
-            child: messages.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (_, _) => Center(child: Text(l10n.notificationLoadFailed)),
-              data: (items) => items.isEmpty
-                  ? Center(child: Text(l10n.notificationEmpty))
-                  : ListView.separated(
+            child: EasyRefresh.builder(
+              header: _classicHeader(l10n),
+              footer: _classicFooter(l10n),
+              onRefresh: controller.refresh,
+              onLoad: _loadMore,
+              childBuilder: (context, physics) => CustomScrollView(
+                key: const PageStorageKey<String>('notification-list-scroll'),
+                physics: physics,
+                slivers: [
+                  if (messagesState.isInitialLoading)
+                    const SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  else if (messagesState.initialLoadFailed)
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
+                        child: TextButton(
+                          onPressed: controller.loadInitial,
+                          child: Text(l10n.notificationLoadFailed),
+                        ),
+                      ),
+                    )
+                  else if (messagesState.messages.isEmpty)
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(child: Text(l10n.notificationEmpty)),
+                    )
+                  else
+                    SliverPadding(
                       padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-                      itemCount: items.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 12),
-                      itemBuilder: (context, index) {
-                        final item = items[index];
-                        return _NotificationCard(
-                          notification: item,
-                          onTap: () => context.pushNamed(
-                            NotificationDetailPage.routeName,
-                            pathParameters: {'notificationId': item.id},
-                          ),
-                        );
-                      },
+                      sliver: SliverList.separated(
+                        itemCount: messagesState.messages.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final item = messagesState.messages[index];
+                          return _NotificationCard(
+                            notification: item,
+                            onTap: () => context.pushNamed(
+                              NotificationDetailPage.routeName,
+                              pathParameters: {'notificationId': item.id},
+                            ),
+                          );
+                        },
+                      ),
                     ),
+                ],
+              ),
             ),
           ),
         ),
