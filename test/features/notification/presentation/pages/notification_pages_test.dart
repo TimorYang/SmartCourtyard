@@ -1,76 +1,36 @@
 import 'package:flinx/app/theme/app_theme.dart';
+import 'package:flinx/features/notification/application/providers.dart';
+import 'package:flinx/features/notification/domain/entities/app_notification.dart';
+import 'package:flinx/features/notification/domain/repositories/notification_message_repository.dart';
 import 'package:flinx/features/notification/presentation/pages/after_sales_appointment_page.dart';
 import 'package:flinx/features/notification/presentation/pages/after_sales_detail_page.dart';
 import 'package:flinx/features/notification/presentation/pages/notification_detail_page.dart';
 import 'package:flinx/features/notification/presentation/pages/notification_list_page.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 void main() {
-  testWidgets('lists notifications and opens their detail pages', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      _app(initialLocation: NotificationListPage.routePath),
-    );
-    await tester.pumpAndSettle();
+  testWidgets(
+    'lists notifications from the repository and opens detail pages',
+    (tester) async {
+      await tester.pumpWidget(
+        _app(initialLocation: NotificationListPage.routePath),
+      );
+      await tester.pumpAndSettle();
 
-    expect(
-      find.text('The appointment for after-sales service has been confirmed'),
-      findsOneWidget,
-    );
-    expect(
-      find.text('Pre order after-sales service is about to begin'),
-      findsOneWidget,
-    );
-    expect(find.text('Upgrading to a new version prompt'), findsOneWidget);
-    await tester.tap(
-      find.byKey(const ValueKey('notification-card-appointment-reminder')),
-    );
-    await tester.pumpAndSettle();
+      expect(find.text('Garage door battery is low'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('notification-card-10001')));
+      await tester.pumpAndSettle();
 
-    expect(find.text('View details'), findsOneWidget);
-    await tester.tap(find.text('View details'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('After sales service details'), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey('after-sales-remark-field')),
-      findsOneWidget,
-    );
-    expect(find.byType(TextField), findsOneWidget);
-  });
-
-  testWidgets('shows upgrade placeholder and appointment action variants', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      _app(initialLocation: '/notifications/upgrade-prompt'),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.text('Upgrade'), findsOneWidget);
-    await tester.tap(find.text('Upgrade'));
-    await tester.pump();
-    expect(find.text('Device upgrade is coming soon'), findsOneWidget);
-
-    final router = GoRouter(
-      initialLocation: '/notifications/low-battery',
-      routes: _routes,
-    );
-    await tester.pumpWidget(_routerApp(router));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Appointment for after-sales service'), findsOneWidget);
-    await tester.tap(find.text('Appointment for after-sales service'));
-    await tester.pumpAndSettle();
-    expect(
-      find.byKey(const ValueKey('after-sales-problem-description-field')),
-      findsOneWidget,
-    );
-  });
+      expect(
+        find.text('Battery below 15%, please arrange service.'),
+        findsOneWidget,
+      );
+    },
+  );
 
   testWidgets('after-sales detail actions show local feedback', (tester) async {
     await tester.pumpWidget(
@@ -120,12 +80,61 @@ Widget _app({required String initialLocation}) {
 }
 
 Widget _routerApp(GoRouter router) {
-  return MaterialApp.router(
-    theme: AppTheme.light(),
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
-    supportedLocales: AppLocalizations.supportedLocales,
-    routerConfig: router,
+  return ProviderScope(
+    overrides: [
+      notificationMessageRepositoryProvider.overrideWithValue(
+        _FakeNotificationMessageRepository(),
+      ),
+    ],
+    child: MaterialApp.router(
+      theme: AppTheme.light(),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      routerConfig: router,
+    ),
   );
+}
+
+class _FakeNotificationMessageRepository
+    implements NotificationMessageRepository {
+  @override
+  Future<List<AppNotification>> fetchMessages({
+    required String requestId,
+  }) async => const [
+    AppNotification(
+      id: '10001',
+      templateCode: 'DEVICE_ABNORMAL',
+      type: 'DEVICE',
+      kind: NotificationKind.lowBattery,
+      title: 'Garage door battery is low',
+      category: 'Device',
+      summary: 'Battery below 15%, please handle it in time.',
+      timestamp: '2026-07-01T09:00:00Z',
+      isRead: false,
+    ),
+  ];
+
+  @override
+  Future<AppNotificationDetail> fetchMessageDetail({
+    required String messageId,
+    required String requestId,
+  }) async => const AppNotificationDetail(
+    id: '10001',
+    templateCode: 'DEVICE_ABNORMAL',
+    type: 'DEVICE',
+    title: 'Garage door battery is low',
+    category: 'Device',
+    content: 'Battery below 15%, please arrange service.',
+    mobileLink: null,
+    isRead: true,
+    timestamp: '2026-07-01T09:00:00Z',
+  );
+
+  @override
+  Future<bool> fetchUnreadState({required String requestId}) async => true;
+
+  @override
+  Future<void> markAllRead({required String requestId}) async {}
 }
 
 final _routes = [

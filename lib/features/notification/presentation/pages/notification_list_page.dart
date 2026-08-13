@@ -1,23 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
-import '../../data/notification_fixtures.dart';
+import '../../application/notification_messages_controller.dart';
 import '../../domain/entities/app_notification.dart';
 import 'notification_detail_page.dart';
 
-class NotificationListPage extends StatelessWidget {
+class NotificationListPage extends ConsumerStatefulWidget {
   const NotificationListPage({super.key});
 
   static const routeName = 'notifications';
   static const routePath = '/notifications';
 
   @override
+  ConsumerState<NotificationListPage> createState() =>
+      _NotificationListPageState();
+}
+
+class _NotificationListPageState extends ConsumerState<NotificationListPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(notificationMessagesControllerProvider.notifier).refresh();
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final messages = ref.watch(notificationMessagesControllerProvider);
 
     return Scaffold(
       backgroundColor: AppColors.notificationBackground,
@@ -26,9 +44,23 @@ class NotificationListPage extends StatelessWidget {
         showBottomDivider: false,
         actions: [
           TextButton(
-            onPressed: () {
-              AppToast.success(context, l10n.notificationAllReadMessage);
-            },
+            onPressed: messages.isLoading
+                ? null
+                : () async {
+                    final succeeded = await ref
+                        .read(notificationMessagesControllerProvider.notifier)
+                        .markAllRead();
+                    if (context.mounted) {
+                      if (succeeded) {
+                        AppToast.success(
+                          context,
+                          l10n.notificationAllReadMessage,
+                        );
+                      } else {
+                        AppToast.error(context, l10n.notificationLoadFailed);
+                      }
+                    }
+                  },
             child: Text(
               l10n.notificationAllRead,
               style: AppTextTokens.notificationHeaderAction(
@@ -43,20 +75,26 @@ class NotificationListPage extends StatelessWidget {
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 430),
-            child: ListView.separated(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-              itemCount: NotificationFixtures.items.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final item = NotificationFixtures.items[index];
-                return _NotificationCard(
-                  notification: item,
-                  onTap: () => context.pushNamed(
-                    NotificationDetailPage.routeName,
-                    pathParameters: {'notificationId': item.id},
-                  ),
-                );
-              },
+            child: messages.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (_, _) => Center(child: Text(l10n.notificationLoadFailed)),
+              data: (items) => items.isEmpty
+                  ? Center(child: Text(l10n.notificationEmpty))
+                  : ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+                      itemCount: items.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        final item = items[index];
+                        return _NotificationCard(
+                          notification: item,
+                          onTap: () => context.pushNamed(
+                            NotificationDetailPage.routeName,
+                            pathParameters: {'notificationId': item.id},
+                          ),
+                        );
+                      },
+                    ),
             ),
           ),
         ),
@@ -123,16 +161,17 @@ class _NotificationCard extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          const Padding(
-                            padding: EdgeInsets.only(top: 3),
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                color: AppColors.notificationUnread,
-                                shape: BoxShape.circle,
+                          if (!notification.isRead)
+                            const Padding(
+                              padding: EdgeInsets.only(top: 3),
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: AppColors.notificationUnread,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: SizedBox(width: 12, height: 12),
                               ),
-                              child: SizedBox(width: 12, height: 12),
                             ),
-                          ),
                         ],
                       ),
                       const SizedBox(height: 8),

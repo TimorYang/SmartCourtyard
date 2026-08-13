@@ -436,7 +436,11 @@ class HardwareHostApiImpl(
     val out = mutableListOf<DeviceAttributeDto>(); var offset = 0
     while (offset + 2 <= data.size) {
       val id = ((data[offset].toInt() and 255) shl 8) or (data[offset + 1].toInt() and 255); offset += 2
-      val width = if (id == 0x2700) data.indexOf(0, offset).let { if (it < 0) throw FlutterError("invalid_attribute_payload", "Unterminated string attribute.") else it - offset + 1 } else widths[id] ?: throw FlutterError("unsupported_attribute_schema", "Unsupported attribute 0x${id.toString(16)}")
+      val width = if (id == 0x2700) {
+        val terminator = data.indices.firstOrNull { it >= offset && data[it] == 0.toByte() }
+          ?: throw FlutterError("invalid_attribute_payload", "Unterminated string attribute.")
+        terminator - offset + 1
+      } else widths[id] ?: throw FlutterError("unsupported_attribute_schema", "Unsupported attribute 0x${id.toString(16)}")
       if (offset + width > data.size) throw FlutterError("invalid_attribute_payload", "Truncated attribute payload.")
       out += DeviceAttributeDto(id.toLong(), data.copyOfRange(offset, offset + width)); offset += width
     }

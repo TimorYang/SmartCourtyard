@@ -2810,6 +2810,18 @@ abstract class AppLocalizations {
   /// **'Notification not found'**
   String get notificationNotFound;
 
+  /// No description provided for @notificationEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No notifications yet'**
+  String get notificationEmpty;
+
+  /// No description provided for @notificationLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load notifications. Please try again.'**
+  String get notificationLoadFailed;
+
   /// Notification action that opens after-sales details
   ///
   /// In en, this message translates to:

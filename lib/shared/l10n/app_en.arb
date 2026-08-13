@@ -1471,6 +1471,8 @@
   "@notificationNotFound": {
     "description": "Message shown for an unknown notification identifier"
   },
+  "notificationEmpty": "No notifications yet",
+  "notificationLoadFailed": "Unable to load notifications. Please try again.",
   "notificationViewDetails": "View details",
   "@notificationViewDetails": {
     "description": "Notification action that opens after-sales details"

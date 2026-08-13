@@ -781,6 +781,8 @@
   "notificationAllRead": "全部已读",
   "notificationAllReadMessage": "所有通知已标记为已读",
   "notificationNotFound": "未找到该通知",
+  "notificationEmpty": "暂无消息通知",
+  "notificationLoadFailed": "消息加载失败，请重试",
   "notificationViewDetails": "查看详情",
   "notificationAppointmentAfterSales": "预约售后服务",
   "notificationUpgrade": "升级",

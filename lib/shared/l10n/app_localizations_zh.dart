@@ -1410,6 +1410,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notificationNotFound => '未找到该通知';
 
   @override
+  String get notificationEmpty => '暂无消息通知';
+
+  @override
+  String get notificationLoadFailed => '消息加载失败，请重试';
+
+  @override
   String get notificationViewDetails => '查看详情';
 
   @override

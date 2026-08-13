@@ -1,5 +1,3 @@
-enum NotificationAction { viewDetails, appointmentAfterSales, upgrade }
-
 enum NotificationKind {
   appointmentConfirmed, //预约已确认
   appointmentReminder, //预约提醒
@@ -13,21 +11,59 @@ enum NotificationKind {
 class AppNotification {
   const AppNotification({
     required this.id,
+    required this.templateCode,
+    required this.type,
     required this.kind,
     required this.title,
     required this.category,
     required this.summary,
     required this.timestamp,
-    required this.detail,
-    required this.action,
+    required this.isRead,
   });
 
   final String id;
+  final String templateCode;
+  final String type;
   final NotificationKind kind;
   final String title;
   final String category;
   final String summary;
   final String timestamp;
-  final String detail;
-  final NotificationAction action;
+  final bool isRead;
+
+  AppNotification copyWith({bool? isRead}) => AppNotification(
+    id: id,
+    templateCode: templateCode,
+    type: type,
+    kind: kind,
+    title: title,
+    category: category,
+    summary: summary,
+    timestamp: timestamp,
+    isRead: isRead ?? this.isRead,
+  );
+}
+
+class AppNotificationDetail {
+  const AppNotificationDetail({
+    required this.id,
+    required this.templateCode,
+    required this.type,
+    required this.title,
+    required this.category,
+    required this.content,
+    required this.mobileLink,
+    required this.isRead,
+    required this.timestamp,
+  });
+
+  final String id;
+  final String templateCode;
+  final String type;
+  final String title;
+  final String category;
+  final String content;
+  final String? mobileLink;
+  final bool isRead;
+  final String timestamp;
 }
