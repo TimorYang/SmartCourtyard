@@ -5,6 +5,7 @@ import android.os.Looper
 import com.flinx.flinx.flinxhardware.bluetooth.BleManager
 import com.flinx.flinx.flinxhardware.permissions.PermissionManager
 import com.flinx.flinx.flinxhardware.protocol.DeviceBleProtocolConfig
+import com.flinx.flinx.flinxhardware.protocol.DeviceRemotePairingResult
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -334,12 +335,34 @@ class HardwareHostApiImpl(
     action: RemotePairingActionDto,
     callback: (Result<RemotePairingResultDto>) -> Unit,
   ) {
-    val control = if (action == RemotePairingActionDto.START) 0x1008 else 0x1009
+    val control = if (action == RemotePairingActionDto.START) {
+      DeviceBleProtocolConfig.controlRemotePairingStart
+    } else {
+      DeviceBleProtocolConfig.controlRemotePairingCancel
+    }
     if (action == RemotePairingActionDto.CANCEL) {
       bleManager.cancelProtocolCommand(deviceId, "remote_pairing_cancelled")
     }
-    executePairing(requestId, deviceId, DeviceBleProtocolConfig.commandRemotePairing, control, 20_000L, callback = callback) { result, reason ->
-      RemotePairingResultDto(requestId, deviceId, remotePairingStatus(result), reason, "result=0x%02X".format(result), if (result == 1) null else "pairing_failed")
+    executePairing(
+      requestId = requestId,
+      deviceId = deviceId,
+      command = DeviceBleProtocolConfig.commandControlDoor,
+      responseCommand = DeviceBleProtocolConfig.commandRemotePairingResponse,
+      control = control,
+      timeout = DeviceBleProtocolConfig.remotePairingResponseTimeoutMillis,
+      operation = "Remote Pairing",
+      callback = callback,
+    ) { result, _ ->
+      val status = remotePairingStatus(result)
+      val reason = if (status == RemotePairingStatusDto.SUCCESS) 0L else result.toLong()
+      RemotePairingResultDto(
+        requestId,
+        deviceId,
+        status,
+        reason,
+        "command=0x0005,responseCommand=0x0104,control=0x%04X,result=0x%02X".format(control, result),
+        if (status == RemotePairingStatusDto.SUCCESS) null else "pairing_failed",
+      )
     }
   }
 
@@ -353,7 +376,15 @@ class HardwareHostApiImpl(
     if (action == SafetyAccessoryPairingActionDto.CANCEL) {
       bleManager.cancelProtocolCommand(deviceId, "safety_accessory_pairing_cancelled")
     }
-    executePairing(requestId, deviceId, DeviceBleProtocolConfig.commandSafetyAccessoryPairing, control, 30_000L, callback = callback) { result, reason ->
+    executePairing(
+      requestId = requestId,
+      deviceId = deviceId,
+      command = DeviceBleProtocolConfig.commandSafetyAccessoryPairing,
+      control = control,
+      timeout = 30_000L,
+      operation = "Safety Accessory Pairing",
+      callback = callback,
+    ) { result, reason ->
       SafetyAccessoryPairingResultDto(requestId, deviceId, safetyPairingStatus(result), reason, "result=0x%02X".format(result), if (result == 1) null else "pairing_failed")
     }
   }
@@ -406,18 +437,42 @@ class HardwareHostApiImpl(
 
   private fun <T> executeProtocol(
     requestId: String, deviceId: String, command: Int, responseCommand: Int = command,
-    data: ByteArray = ByteArray(0), timeoutMillis: Long = 15_000L, callback: (Result<T>) -> Unit, transform: (com.flinx.flinx.flinxhardware.protocol.DeviceBleFrame) -> T,
+    data: ByteArray = ByteArray(0), timeoutMillis: Long = 15_000L,
+    operation: String? = null, control: Int? = null,
+    callback: (Result<T>) -> Unit, transform: (com.flinx.flinx.flinxhardware.protocol.DeviceBleFrame) -> T,
   ) {
     permissionManager.ensureBleConnectPreconditions()
-    bleManager.executeProtocolCommand(requestId, deviceId, command, responseCommand, data, timeoutMillis, callback = { result ->
+    bleManager.executeProtocolCommand(
+      requestId = requestId,
+      deviceId = deviceId,
+      command = command,
+      responseCommand = responseCommand,
+      data = data,
+      timeoutMillis = timeoutMillis,
+      operation = operation,
+      control = control,
+      callback = { result ->
       callback(result.mapCatching(transform))
-    })
+      },
+    )
   }
 
   private fun <T> executePairing(
-    requestId: String, deviceId: String, command: Int, control: Int, timeout: Long,
+    requestId: String, deviceId: String, command: Int,
+    responseCommand: Int = command, control: Int, timeout: Long,
+    operation: String,
     callback: (Result<T>) -> Unit, transform: (Int, Long) -> T,
-  ) = executeProtocol(requestId, deviceId, command, data = shortBytes(control), timeoutMillis = timeout, callback = callback) { frame ->
+  ) = executeProtocol(
+    requestId = requestId,
+    deviceId = deviceId,
+    command = command,
+    responseCommand = responseCommand,
+    data = shortBytes(control),
+    timeoutMillis = timeout,
+    operation = operation,
+    control = control,
+    callback = callback,
+  ) { frame ->
     val result = frame.data.firstOrNull()?.toInt()?.and(0xFF) ?: throw FlutterError("invalid_pairing_response", "Pairing response is empty.")
     transform(result, frame.data.reasonCode())
   }
@@ -463,7 +518,13 @@ class HardwareHostApiImpl(
   }
 
   private fun remoteOperation(requestId: String, deviceId: String, data: ByteArray): RemoteOperationResultDto { val result = data.firstOrNull()?.toInt()?.and(255) ?: throw FlutterError("invalid_remote_operation_response", "Remote operation response is empty."); return RemoteOperationResultDto(requestId, deviceId, if (result == 1) RemoteOperationStatusDto.SUCCESS else if (result == 255) RemoteOperationStatusDto.FAILURE else RemoteOperationStatusDto.UNKNOWN, data.reasonCode(), "result=0x%02X".format(result), if (result == 1) null else "remote_operation_failed") }
-  private fun remotePairingStatus(result: Int) = when (result) { 1 -> RemotePairingStatusDto.SUCCESS; 2 -> RemotePairingStatusDto.FAILURE; 3 -> RemotePairingStatusDto.TIMEOUT; else -> RemotePairingStatusDto.UNKNOWN }
+  private fun remotePairingStatus(result: Int) = when (
+    DeviceBleProtocolConfig.remotePairingResult(result)
+  ) {
+    DeviceRemotePairingResult.SUCCESS -> RemotePairingStatusDto.SUCCESS
+    DeviceRemotePairingResult.FAILURE -> RemotePairingStatusDto.FAILURE
+    DeviceRemotePairingResult.UNKNOWN -> RemotePairingStatusDto.UNKNOWN
+  }
   private fun safetyPairingStatus(result: Int) = when (result) { 1 -> SafetyAccessoryPairingStatusDto.SUCCESS; 2 -> SafetyAccessoryPairingStatusDto.FAILURE; 3 -> SafetyAccessoryPairingStatusDto.TIMEOUT; else -> SafetyAccessoryPairingStatusDto.UNKNOWN }
   private fun shortBytes(value: Int) = byteArrayOf((value shr 8).toByte(), value.toByte())
   private fun intBytes(value: Int) = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(value).array()

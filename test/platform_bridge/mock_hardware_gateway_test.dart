@@ -168,4 +168,31 @@ void main() {
     expect(appError.retryable, isTrue);
     expect(appError.action, AppErrorAction.retry);
   });
+
+  test(
+    'uses the implemented remote pairing protocol in mock diagnostics',
+    () async {
+      final gateway = MockHardwareGateway();
+
+      final start = await gateway.pairRemote(
+        requestId: 'pair-start-1',
+        deviceId: 'mock-ble-device',
+        action: RemotePairingAction.start,
+      );
+      final cancel = await gateway.pairRemote(
+        requestId: 'pair-cancel-1',
+        deviceId: 'mock-ble-device',
+        action: RemotePairingAction.cancel,
+      );
+
+      expect(
+        start.nativeCode,
+        'command=0x0005,responseCommand=0x0104,control=0x1008,result=0x06',
+      );
+      expect(
+        cancel.nativeCode,
+        'command=0x0005,responseCommand=0x0104,control=0x1009,result=0x06',
+      );
+    },
+  );
 }

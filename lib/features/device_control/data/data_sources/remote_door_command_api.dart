@@ -18,11 +18,4 @@ abstract class RemoteDoorCommandApi {
     @Body() RemoteDoorCommandRequestDto body,
     @DioOptions() Options options,
   );
-
-  @GET('app/doors/{doorId}/commands/{commandId}')
-  Future<ApiEnvelopeDto<RemoteDoorCommandResponseDto>> fetchCommand(
-    @Path('doorId') int doorId,
-    @Path('commandId') String commandId,
-    @DioOptions() Options options,
-  );
 }

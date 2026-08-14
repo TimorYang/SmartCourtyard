@@ -51,7 +51,7 @@ void main() {
     expect(dto.deviceAckAt, isNull);
   });
 
-  test('preserves one request id for submit and status fetch', () async {
+  test('passes the request id when submitting a command', () async {
     final api = _FakeRemoteDoorCommandApi();
     final dataSource = RemoteDoorCommandRemoteDataSourceImpl(api: api);
 
@@ -62,13 +62,7 @@ void main() {
       ),
       requestId: 'remote-command-1',
     );
-    await dataSource.fetchCommand(
-      doorId: 12,
-      commandId: 'command-1',
-      requestId: 'remote-command-1',
-    );
-
-    expect(api.paths, ['submit:12:OPEN', 'fetch:12:command-1']);
+    expect(api.paths, ['submit:12:OPEN']);
     expect(
       api.options
           .map((options) => options.extra?[NetworkRequestExtras.requestId])
@@ -158,17 +152,6 @@ class _FakeRemoteDoorCommandApi implements RemoteDoorCommandApi {
     this.options.add(options);
     return response;
   }
-
-  @override
-  Future<ApiEnvelopeDto<RemoteDoorCommandResponseDto>> fetchCommand(
-    int doorId,
-    String commandId,
-    Options options,
-  ) async {
-    paths.add('fetch:$doorId:$commandId');
-    this.options.add(options);
-    return response;
-  }
 }
 
 class _FakeRemoteDoorCommandRemoteDataSource
@@ -181,13 +164,6 @@ class _FakeRemoteDoorCommandRemoteDataSource
   Future<RemoteDoorCommandResponseDto> submitCommand({
     required int doorId,
     required RemoteDoorCommandRequestDto body,
-    required String requestId,
-  }) async => response;
-
-  @override
-  Future<RemoteDoorCommandResponseDto> fetchCommand({
-    required int doorId,
-    required String commandId,
     required String requestId,
   }) async => response;
 }

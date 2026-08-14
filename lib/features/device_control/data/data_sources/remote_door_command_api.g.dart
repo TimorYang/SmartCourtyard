@@ -53,41 +53,6 @@ class _RemoteDoorCommandApi implements RemoteDoorCommandApi {
     return _value;
   }
 
-  @override
-  Future<ApiEnvelopeDto<RemoteDoorCommandResponseDto>> fetchCommand(
-    int doorId,
-    String commandId,
-    Options options,
-  ) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    const Map<String, dynamic>? _data = null;
-    final newOptions = newRequestOptions(options);
-    newOptions.extra.addAll(_extra);
-    newOptions.headers.addAll(_dio.options.headers);
-    newOptions.headers.addAll(_headers);
-    final _options = newOptions.copyWith(
-      method: 'GET',
-      baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl),
-      queryParameters: queryParameters,
-      path: 'app/doors/${doorId}/commands/${commandId}',
-    )..data = _data;
-    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late ApiEnvelopeDto<RemoteDoorCommandResponseDto> _value;
-    try {
-      _value = ApiEnvelopeDto<RemoteDoorCommandResponseDto>.fromJson(
-        _result.data!,
-        (json) =>
-            RemoteDoorCommandResponseDto.fromJson(json as Map<String, dynamic>),
-      );
-    } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, response: _result);
-      rethrow;
-    }
-    return _value;
-  }
-
   RequestOptions newRequestOptions(Object? options) {
     if (options is RequestOptions) {
       return options;

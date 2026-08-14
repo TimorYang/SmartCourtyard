@@ -34,28 +34,6 @@ class RemoteDoorCommandRepositoryImpl implements RemoteDoorCommandRepository {
     }
   }
 
-  @override
-  Future<RemoteDoorCommand> fetchCommand({
-    required String doorId,
-    required String commandId,
-    required String requestId,
-  }) async {
-    final parsedDoorId = _parseDoorId(doorId, requestId);
-    if (commandId.trim().isEmpty) {
-      throw _invalidResponse(doorId, requestId);
-    }
-    try {
-      final dto = await remoteDataSource.fetchCommand(
-        doorId: parsedDoorId,
-        commandId: commandId,
-        requestId: requestId,
-      );
-      return _mapAndValidate(dto, doorId, null, requestId);
-    } on RemoteDoorCommandRemoteException catch (error, stackTrace) {
-      throw _mapError(error, doorId, requestId, stackTrace);
-    }
-  }
-
   int _parseDoorId(String doorId, String requestId) {
     final parsed = int.tryParse(doorId.trim());
     if (parsed == null) {

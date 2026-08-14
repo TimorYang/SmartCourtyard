@@ -6,10 +6,4 @@ abstract interface class RemoteDoorCommandRepository {
     required RemoteDoorCommandAction action,
     required String requestId,
   });
-
-  Future<RemoteDoorCommand> fetchCommand({
-    required String doorId,
-    required String commandId,
-    required String requestId,
-  });
 }

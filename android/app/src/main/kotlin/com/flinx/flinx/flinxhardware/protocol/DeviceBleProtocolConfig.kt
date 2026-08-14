@@ -40,7 +40,7 @@ object DeviceBleProtocolConfig {
   const val commandSetAttributes: Int = 0x0001
   const val commandAttributeReport: Int = 0x0202
   const val commandControlDoor: Int = 0x0005
-  const val commandRemotePairing: Int = 0x0007
+  const val commandRemotePairingResponse: Int = 0x0104
   const val commandRemoteQuery: Int = 0x0008
   const val commandRemoteDelete: Int = 0x0009
   const val commandRemoteRename: Int = 0x000A
@@ -52,6 +52,11 @@ object DeviceBleProtocolConfig {
   const val controlLightOn: Int = 0x1005
   const val controlLightOff: Int = 0x1006
   const val controlPb: Int = 0x1007
+  const val controlRemotePairingStart: Int = 0x1008
+  const val controlRemotePairingCancel: Int = 0x1009
+  const val resultRemotePairingSuccess: Int = 0x06
+  const val resultRemotePairingFailure: Int = 0x05
+  const val remotePairingResponseTimeoutMillis: Long = 20_000L
 
   const val authTokenHexLength: Int = 32
   const val authTokenBinaryLengthBytes: Int = 16
@@ -84,6 +89,14 @@ object DeviceBleProtocolConfig {
       aesKeyHex = aesKeyHex,
       cryptoType = cryptoType,
     )
+  }
+
+  fun remotePairingResult(result: Int): DeviceRemotePairingResult {
+    return when (result) {
+      resultRemotePairingSuccess -> DeviceRemotePairingResult.SUCCESS
+      resultRemotePairingFailure -> DeviceRemotePairingResult.FAILURE
+      else -> DeviceRemotePairingResult.UNKNOWN
+    }
   }
 
   fun buildEncryptedCommandFrame(
@@ -390,6 +403,8 @@ data class DeviceBleAesKeyCandidate(
 )
 
 enum class DeviceBleDecodeStatus { MATCHED, DECRYPT_FAILED, INVALID_ENVELOPE }
+
+enum class DeviceRemotePairingResult { SUCCESS, FAILURE, UNKNOWN }
 
 data class DeviceBleDecodeResult(
   val status: DeviceBleDecodeStatus,

@@ -12,12 +12,6 @@ abstract interface class RemoteDoorCommandRemoteDataSource {
     required RemoteDoorCommandRequestDto body,
     required String requestId,
   });
-
-  Future<RemoteDoorCommandResponseDto> fetchCommand({
-    required int doorId,
-    required String commandId,
-    required String requestId,
-  });
 }
 
 class RemoteDoorCommandRemoteDataSourceImpl
@@ -36,28 +30,6 @@ class RemoteDoorCommandRemoteDataSourceImpl
       final response = await api.submitCommand(
         doorId,
         body,
-        Options(extra: {NetworkRequestExtras.requestId: requestId}),
-      );
-      return _validated(response.code, response.success, response.data);
-    } on DioException catch (error) {
-      throw RemoteDoorCommandRemoteException.fromNetwork(
-        NetworkException.fromDio(error),
-      );
-    } on RemoteDoorCommandRemoteException {
-      rethrow;
-    }
-  }
-
-  @override
-  Future<RemoteDoorCommandResponseDto> fetchCommand({
-    required int doorId,
-    required String commandId,
-    required String requestId,
-  }) async {
-    try {
-      final response = await api.fetchCommand(
-        doorId,
-        commandId,
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       return _validated(response.code, response.success, response.data);

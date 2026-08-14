@@ -425,8 +425,8 @@ class MockHardwareGateway implements HardwareGateway {
       status: RemotePairingStatus.success,
       reasonCode: 0x00000000,
       nativeCode: action == RemotePairingAction.start
-          ? 'command=0x0007,control=0x1008'
-          : 'command=0x0007,control=0x1009',
+          ? 'command=0x0005,responseCommand=0x0104,control=0x1008,result=0x06'
+          : 'command=0x0005,responseCommand=0x0104,control=0x1009,result=0x06',
     );
   }
 

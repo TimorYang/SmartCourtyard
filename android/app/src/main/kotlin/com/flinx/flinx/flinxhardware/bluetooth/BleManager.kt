@@ -782,6 +782,8 @@ class BleManager(
     responseCommand: Int = command,
     data: ByteArray = ByteArray(0),
     timeoutMillis: Long = PROVISIONING_COMMAND_TIMEOUT_MS,
+    operation: String? = null,
+    control: Int? = null,
     callback: (Result<DeviceBleFrame>) -> Unit,
   ) {
     if (protocolSessions.containsKey(deviceId)) {
@@ -796,6 +798,23 @@ class BleManager(
       ?: throw FlutterError("characteristic_not_found", "BLE provisioning write characteristic was not found.", "deviceId=$deviceId")
     val sequence = nextProtocolSequence()
     val packet = DeviceBleProtocolConfig.buildEncryptedCommandFrame(sequence, command, requireDeviceAesKey(deviceId), data)
+    emitTxDiagnostic(
+      requestId = requestId,
+      deviceId = deviceId,
+      operation = operation ?: "Protocol Command 0x%04X".format(command),
+      command = command,
+      control = control,
+      sequence = sequence,
+      originPayload = protocolPlainPayload(
+        DeviceBleProtocolConfig.frameTypeRequest,
+        sequence,
+        command,
+        data,
+      ),
+      packet = packet,
+      encrypted = true,
+      expectedResponseCommand = responseCommand,
+    )
     val pending = PendingProtocolCommand(requestId, deviceId, sequence, responseCommand, callback)
     pending.timeoutRunnable = Runnable {
       protocolSessions.remove(deviceId)?.callback(Result.failure(FlutterError("command_timeout", "BLE protocol command timed out.", "requestId=$requestId,deviceId=$deviceId,sequence=$sequence")))
@@ -805,6 +824,14 @@ class BleManager(
     requestIdsByDevice[deviceId] = requestId
     write.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
     write.value = packet
+    logBlePayload(
+      direction = "PROTOCOL_WRITE_REQUEST",
+      requestId = requestId,
+      deviceId = deviceId,
+      serviceUuid = service.uuid.toString(),
+      characteristicUuid = write.uuid.toString(),
+      payload = packet,
+    )
     if (!gatt.writeCharacteristic(write)) {
       removeProtocolSession(deviceId)
       callback(Result.failure(FlutterError("write_characteristic_failed", "Failed to send BLE protocol frame.", "deviceId=$deviceId")))
@@ -2200,14 +2227,18 @@ class BleManager(
     originPayload: ByteArray,
     packet: ByteArray,
     encrypted: Boolean,
+    expectedResponseCommand: Int = command,
   ) {
     if (!flutterConsoleLoggingEnabled) return
     val transactionId = diagnosticTransactionId(deviceId, command, sequence)
     val now = System.currentTimeMillis()
     val pending = PendingBleDiagnostic(
       requestId = requestId,
+      deviceId = deviceId,
       operation = operation,
       control = control,
+      sequence = sequence,
+      expectedResponseCommand = expectedResponseCommand,
       timestampMillis = now,
     )
     pendingDiagnostics[transactionId] = pending
@@ -2249,7 +2280,9 @@ class BleManager(
     var pending = pendingDiagnostics.remove(directId)
     if (pending == null) {
       val fallback = pendingDiagnostics.entries.firstOrNull {
-        it.key.startsWith("$deviceId:${frame.command}:")
+        it.value.deviceId == deviceId &&
+          it.value.expectedResponseCommand == frame.command &&
+          it.value.sequence == frame.sequence
       }
       if (fallback != null) {
         transactionId = fallback.key
@@ -2280,9 +2313,17 @@ class BleManager(
         ),
         packet = packet,
         elapsedMillis = pending?.let { now - it.timestampMillis },
-        result = frame.data.firstOrNull()
-          ?.takeIf { (it.toInt() and 0xFF) == 0 }
-          ?.let { "success" },
+        result = frame.data.firstOrNull()?.let { resultByte ->
+          val result = resultByte.toInt() and 0xFF
+          val successful = if (
+            frame.command == DeviceBleProtocolConfig.commandRemotePairingResponse
+          ) {
+            result == DeviceBleProtocolConfig.resultRemotePairingSuccess
+          } else {
+            result == 0
+          }
+          if (successful) "success" else null
+        },
       ),
     )
   }
@@ -2689,8 +2730,11 @@ private data class PendingProtocolCommand(
 
 private data class PendingBleDiagnostic(
   val requestId: String,
+  val deviceId: String,
   val operation: String,
   val control: Int?,
+  val sequence: Int,
+  val expectedResponseCommand: Int,
   val timestampMillis: Long,
 )
 

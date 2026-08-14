@@ -763,7 +763,6 @@ void main() {
     final state = container.read(deviceCommandControllerProvider);
     expect(gateway.commandDeviceIds, isEmpty);
     expect(remoteRepository.submittedActions, [RemoteDoorCommandAction.open]);
-    expect(remoteRepository.fetchCount, 0);
     expect(remoteRepository.requestIds.toSet(), hasLength(1));
     expect(state.pendingAction, isNull);
     expect(state.commandFeedback?.kind, DeviceCommandFeedbackKind.succeeded);
@@ -797,13 +796,19 @@ void main() {
     );
   });
 
-  test('keeps command status polling for remote light actions', () async {
+  test('confirms remote light on by polling door detail led status', () async {
+    final detailRepository = _DoorDetailRepository(_doorDetail(ledStatus: 1));
+    detailRepository.detailResponses.addAll([
+      _doorDetail(ledStatus: 1),
+      _doorDetail(ledStatus: 1),
+      _doorDetail(ledStatus: 2),
+    ]);
     final remoteRepository = _RemoteDoorCommandRepository([
       _remoteCommand(RemoteDoorCommandStatus.processing),
-      _remoteCommand(RemoteDoorCommandStatus.succeeded),
     ]);
     final container = _createContainer(
       gateway: _BleSessionGateway(emitTargetDevice: false),
+      repository: detailRepository,
       remoteRepository: remoteRepository,
       scanDuration: Duration.zero,
       remotePollInterval: Duration.zero,
@@ -819,10 +824,86 @@ void main() {
     );
 
     final state = container.read(deviceCommandControllerProvider);
-    expect(remoteRepository.fetchCount, 1);
+    expect(detailRepository.doorDetailRequestCount, 3);
     expect(state.pendingAction, isNull);
     expect(state.commandFeedback?.kind, DeviceCommandFeedbackKind.succeeded);
+    expect(state.doorDetail?.ledStatus, 2);
   });
+
+  test('confirms remote light off only when led status becomes one', () async {
+    final detailRepository = _DoorDetailRepository(_doorDetail(ledStatus: 2));
+    detailRepository.detailResponses.addAll([
+      _doorDetail(ledStatus: 2),
+      _doorDetail(ledStatus: 0),
+      _doorDetail(ledStatus: 1),
+    ]);
+    final container = _createContainer(
+      gateway: _BleSessionGateway(emitTargetDevice: false),
+      repository: detailRepository,
+      remoteRepository: _RemoteDoorCommandRepository([
+        _remoteCommand(RemoteDoorCommandStatus.processing),
+      ]),
+      scanDuration: Duration.zero,
+      remotePollInterval: Duration.zero,
+    );
+    addTearDown(container.dispose);
+    final controller = container.read(deviceCommandControllerProvider.notifier);
+
+    await controller.loadDoorDetail(doorId: '12');
+    await _settleBleSession();
+    await controller.runAction(
+      deviceId: 'ignored-without-ble',
+      action: DeviceCommandAction.turnLightOff,
+    );
+
+    final state = container.read(deviceCommandControllerProvider);
+    expect(detailRepository.doorDetailRequestCount, 3);
+    expect(state.commandFeedback?.kind, DeviceCommandFeedbackKind.succeeded);
+    expect(state.doorDetail?.ledStatus, 1);
+  });
+
+  test(
+    'times out remote light when detail never reaches target status',
+    () async {
+      final detailRepository = _DoorDetailRepository(_doorDetail(ledStatus: 1));
+      detailRepository.detailResponses.addAll([
+        _doorDetail(ledStatus: 1),
+        _doorDetail(ledStatus: 0),
+        _doorDetail(),
+        _doorDetail(ledStatus: 1),
+      ]);
+      final container = _createContainer(
+        gateway: _BleSessionGateway(emitTargetDevice: false),
+        repository: detailRepository,
+        remoteRepository: _RemoteDoorCommandRepository([
+          _remoteCommand(RemoteDoorCommandStatus.succeeded),
+        ]),
+        scanDuration: Duration.zero,
+        remotePollInterval: Duration.zero,
+        remotePollMaxAttempts: 2,
+      );
+      addTearDown(container.dispose);
+      final controller = container.read(
+        deviceCommandControllerProvider.notifier,
+      );
+
+      await controller.loadDoorDetail(doorId: '12');
+      await _settleBleSession();
+      await controller.runAction(
+        deviceId: 'ignored-without-ble',
+        action: DeviceCommandAction.turnLightOn,
+      );
+
+      final state = container.read(deviceCommandControllerProvider);
+      expect(detailRepository.doorDetailRequestCount, 4);
+      expect(state.pendingAction, isNull);
+      expect(
+        state.commandFeedback?.kind,
+        DeviceCommandFeedbackKind.remoteTimeout,
+      );
+      expect(state.doorDetail?.ledStatus, 1);
+    },
+  );
 
   test('clears pending state when a remote request fails', () async {
     final container = _createContainer(
@@ -879,7 +960,6 @@ void main() {
       );
 
       final state = container.read(deviceCommandControllerProvider);
-      expect(remoteRepository.fetchCount, 0);
       expect(detailRepository.doorDetailRequestCount, 8);
       expect(state.pendingAction, isNull);
       expect(state.commandFeedback, isNull);
@@ -907,7 +987,6 @@ void main() {
       action: DeviceCommandAction.openDoor,
     );
 
-    expect(remoteRepository.fetchCount, 0);
     expect(
       container.read(deviceCommandControllerProvider).commandFeedback,
       isNull,
@@ -955,7 +1034,7 @@ Future<void> _settleBleSession() async {
   await Future<void>.delayed(Duration.zero);
 }
 
-DoorDetail _doorDetail({String name = 'Test door'}) {
+DoorDetail _doorDetail({String name = 'Test door', int? ledStatus}) {
   return DoorDetail(
     id: '12',
     name: name,
@@ -963,6 +1042,7 @@ DoorDetail _doorDetail({String name = 'Test door'}) {
     doorStateLabel: 'Closed',
     operatedCycles: 0,
     remainingCycles: 0,
+    ledStatus: ledStatus,
   );
 }
 
@@ -1072,7 +1152,6 @@ class _RemoteDoorCommandRepository implements RemoteDoorCommandRepository {
   final List<RemoteDoorCommandAction> submittedActions =
       <RemoteDoorCommandAction>[];
   final List<String> requestIds = <String>[];
-  var fetchCount = 0;
 
   @override
   Future<RemoteDoorCommand> submitCommand({
@@ -1081,17 +1160,6 @@ class _RemoteDoorCommandRepository implements RemoteDoorCommandRepository {
     required String requestId,
   }) async {
     submittedActions.add(action);
-    requestIds.add(requestId);
-    return responses.removeAt(0);
-  }
-
-  @override
-  Future<RemoteDoorCommand> fetchCommand({
-    required String doorId,
-    required String commandId,
-    required String requestId,
-  }) async {
-    fetchCount += 1;
     requestIds.add(requestId);
     return responses.removeAt(0);
   }
@@ -1113,15 +1181,6 @@ class _FailingRemoteDoorCommandRepository
       requestId: requestId,
       retryable: true,
     );
-  }
-
-  @override
-  Future<RemoteDoorCommand> fetchCommand({
-    required String doorId,
-    required String commandId,
-    required String requestId,
-  }) {
-    throw UnimplementedError();
   }
 }
 

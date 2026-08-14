@@ -36,6 +36,81 @@ class RunnerTests: XCTestCase {
     )
   }
 
+  func testRemotePairingUsesControlCommandAndDedicatedResponse() throws {
+    let start = HardwareBridge.remotePairingProtocolForTesting(start: true)
+    let cancel = HardwareBridge.remotePairingProtocolForTesting(start: false)
+
+    XCTAssertEqual(start.requestCommand, 0x0005)
+    XCTAssertEqual(start.responseCommand, 0x0104)
+    XCTAssertEqual(start.control, 0x1008)
+    XCTAssertEqual(start.responseTimeout, 20)
+    XCTAssertEqual(cancel.requestCommand, 0x0005)
+    XCTAssertEqual(cancel.responseCommand, 0x0104)
+    XCTAssertEqual(cancel.control, 0x1009)
+
+    let key = Data((0..<16).map(UInt8.init))
+    let frame = try XCTUnwrap(
+      HardwareBridge.makeEncryptedFrameForTesting(
+        sequence: 9,
+        command: start.requestCommand,
+        payload: Data([0x10, 0x08]),
+        aesKey: key
+      )
+    )
+    let cipher = frame.subdata(in: 5..<(frame.count - 3))
+    let plaintext = try XCTUnwrap(
+      HardwareBridge.decryptEcbForTesting(cipher, aesKey: key)
+    )
+    let decoded = try XCTUnwrap(
+      HardwareBridge.parseDecryptedPayloadForTesting(plaintext)
+    )
+    XCTAssertEqual(decoded.sequence, 9)
+    XCTAssertEqual(decoded.command, 0x0005)
+    XCTAssertEqual(decoded.data, Data([0x10, 0x08]))
+  }
+
+  func testRemotePairingMatchesOnlyExpectedResponseAndSequence() {
+    XCTAssertTrue(
+      HardwareBridge.matchesProvisioningResponseForTesting(
+        expectedCommand: 0x0104,
+        pendingSequence: 9,
+        responseCommand: 0x0104,
+        responseSequence: 9
+      )
+    )
+    XCTAssertFalse(
+      HardwareBridge.matchesProvisioningResponseForTesting(
+        expectedCommand: 0x0104,
+        pendingSequence: 9,
+        responseCommand: 0x0005,
+        responseSequence: 9
+      )
+    )
+    XCTAssertFalse(
+      HardwareBridge.matchesProvisioningResponseForTesting(
+        expectedCommand: 0x0104,
+        pendingSequence: 9,
+        responseCommand: 0x0104,
+        responseSequence: 10
+      )
+    )
+  }
+
+  func testRemotePairingResultMapping() {
+    XCTAssertEqual(
+      HardwareBridge.remotePairingStatusForTesting(resultCode: 0x06),
+      .success
+    )
+    XCTAssertEqual(
+      HardwareBridge.remotePairingStatusForTesting(resultCode: 0x05),
+      .failure
+    )
+    XCTAssertEqual(
+      HardwareBridge.remotePairingStatusForTesting(resultCode: 0x7F),
+      .unknown
+    )
+  }
+
   func testDetailedBlePayloadLoggingDefaultsToDisabled() {
     let logger = BleLogger()
     XCTAssertEqual(logger.payloadHex(Data([0x55, 0xAA])), "<native console logging disabled>")

@@ -668,9 +668,13 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     if (positionPercent == null) {
       return stateLabel;
     }
+    final roundedPositionPercent = positionPercent.clamp(0, 100).round();
+    if (roundedPositionPercent == 0 || roundedPositionPercent == 100) {
+      return stateLabel;
+    }
     return l10n.deviceCommandDoorStateWithPercent(
       stateLabel,
-      positionPercent.clamp(0, 100).round(),
+      roundedPositionPercent,
     );
   }
 
@@ -1181,9 +1185,9 @@ class _DoorHeroImageState extends State<_DoorHeroImage> {
         child: KeyedSubtree(
           key: const ValueKey<String>('door-hero-frame'),
           child: Image.asset(
-            key: ValueKey<String>(assetPath),
             assetPath,
             fit: BoxFit.contain,
+            gaplessPlayback: true,
             errorBuilder: (context, error, stackTrace) {
               return DecoratedBox(
                 decoration: const BoxDecoration(
