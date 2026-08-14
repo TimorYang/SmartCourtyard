@@ -2086,6 +2086,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'The opening current of your opener exceeds the maximum value we set.';
 
   @override
+  String get securityReportSaveAction => 'Save';
+
+  @override
+  String get securityReportSavingAction => 'Saving';
+
+  @override
+  String get securityReportShareAction => 'Share';
+
+  @override
+  String get securityReportSharingAction => 'Sharing';
+
+  @override
   String get securityReportSaveSuccess => 'Report saved to album.';
 
   @override
@@ -2105,6 +2117,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityReportCaptureFailed => 'Unable to create report image.';
+
+  @override
+  String get securityReportShareFailed => 'Unable to share report image.';
 
   @override
   String get securityReportDoorOpeningForce => 'Door opening force';

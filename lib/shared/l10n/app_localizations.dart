@@ -3860,6 +3860,30 @@ abstract class AppLocalizations {
   /// **'The opening current of your opener exceeds the maximum value we set.'**
   String get securityReportSuggestionCurrent;
 
+  /// No description provided for @securityReportSaveAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get securityReportSaveAction;
+
+  /// No description provided for @securityReportSavingAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving'**
+  String get securityReportSavingAction;
+
+  /// No description provided for @securityReportShareAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get securityReportShareAction;
+
+  /// No description provided for @securityReportSharingAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing'**
+  String get securityReportSharingAction;
+
   /// No description provided for @securityReportSaveSuccess.
   ///
   /// In en, this message translates to:
@@ -3895,6 +3919,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unable to create report image.'**
   String get securityReportCaptureFailed;
+
+  /// No description provided for @securityReportShareFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to share report image.'**
+  String get securityReportShareFailed;
 
   /// No description provided for @securityReportDoorOpeningForce.
   ///

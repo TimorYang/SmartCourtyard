@@ -1964,6 +1964,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get securityReportSuggestionCurrent => '开门机开门电流超过了设定的最大值。';
 
   @override
+  String get securityReportSaveAction => '保存';
+
+  @override
+  String get securityReportSavingAction => '保存中';
+
+  @override
+  String get securityReportShareAction => '分享';
+
+  @override
+  String get securityReportSharingAction => '分享中';
+
+  @override
   String get securityReportSaveSuccess => '报告已保存至相册。';
 
   @override
@@ -1980,6 +1992,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get securityReportCaptureFailed => '无法生成报告图片。';
+
+  @override
+  String get securityReportShareFailed => '无法分享报告图片。';
 
   @override
   String get securityReportDoorOpeningForce => '开门力度';

@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../core/platform/gallery_image_saver.dart';
@@ -20,6 +21,7 @@ import '../widgets/security_report_widgets.dart';
 typedef ReportImageSaver = Future<void> Function(Uint8List bytes);
 typedef ReportImageCapture =
     Future<Uint8List> Function(GlobalKey boundaryKey, BuildContext context);
+typedef ReportImageSharer = Future<void> Function(Uint8List bytes);
 
 const _safetySuggestions = [
   FullReportSafetySuggestionCode.cycleMaintenance,
@@ -34,6 +36,7 @@ class FullReportPage extends ConsumerStatefulWidget {
     required this.doorId,
     this.captureReportImage = captureReportPngBytes,
     this.saveReportImage = GalleryImageSaver.savePngBytes,
+    this.shareReportImage = shareReportPngBytes,
     super.key,
   });
 
@@ -44,6 +47,7 @@ class FullReportPage extends ConsumerStatefulWidget {
   final String doorId;
   final ReportImageCapture captureReportImage;
   final ReportImageSaver saveReportImage;
+  final ReportImageSharer shareReportImage;
 
   @override
   ConsumerState<FullReportPage> createState() => _FullReportPageState();
@@ -52,6 +56,7 @@ class FullReportPage extends ConsumerStatefulWidget {
 class _FullReportPageState extends ConsumerState<FullReportPage> {
   final _reportBoundaryKey = GlobalKey();
   var _isSaving = false;
+  var _isSharing = false;
 
   @override
   void initState() {
@@ -69,7 +74,7 @@ class _FullReportPageState extends ConsumerState<FullReportPage> {
   }
 
   Future<void> _saveReportImage() async {
-    if (_isSaving) return;
+    if (_isSaving || _isSharing) return;
 
     _isSaving = true;
     try {
@@ -82,16 +87,45 @@ class _FullReportPageState extends ConsumerState<FullReportPage> {
       }
       await widget.saveReportImage(bytes);
       if (!mounted) return;
-      AppToast.success(context, 'Report saved to album.');
+      AppToast.success(
+        context,
+        AppLocalizations.of(context).securityReportSaveSuccess,
+      );
     } on GalleryImageSaveException catch (error) {
       if (!mounted) return;
-      AppToast.error(context, _saveErrorMessage(error));
+      AppToast.error(context, _saveErrorMessage(context, error));
     } catch (_) {
       if (!mounted) return;
-      AppToast.error(context, 'Unable to create report image.');
+      AppToast.error(
+        context,
+        AppLocalizations.of(context).securityReportCaptureFailed,
+      );
     } finally {
       if (mounted) {
         setState(() => _isSaving = false);
+      }
+    }
+  }
+
+  Future<void> _shareReportImage() async {
+    if (_isSaving || _isSharing) return;
+
+    setState(() => _isSharing = true);
+    try {
+      final bytes = await widget.captureReportImage(
+        _reportBoundaryKey,
+        context,
+      );
+      await widget.shareReportImage(bytes);
+    } catch (_) {
+      if (!mounted) return;
+      AppToast.error(
+        context,
+        AppLocalizations.of(context).securityReportShareFailed,
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSharing = false);
       }
     }
   }
@@ -211,7 +245,9 @@ class _FullReportPageState extends ConsumerState<FullReportPage> {
       ),
       bottomNavigationBar: SecurityReportActionBar(
         isSaving: _isSaving,
+        isSharing: _isSharing,
         onSave: _saveReportImage,
+        onShare: _shareReportImage,
       ),
     );
   }
@@ -225,15 +261,17 @@ class _FullReportPageState extends ConsumerState<FullReportPage> {
     body: body,
   );
 
-  String _saveErrorMessage(GalleryImageSaveException error) {
+  String _saveErrorMessage(
+    BuildContext context,
+    GalleryImageSaveException error,
+  ) {
+    final l10n = AppLocalizations.of(context);
     return switch (error.failure) {
       GalleryImageSaveFailure.accessDenied =>
-        'Photo library permission is required to save the report.',
-      GalleryImageSaveFailure.notEnoughSpace =>
-        'Not enough storage space to save the report.',
-      GalleryImageSaveFailure.unsupported =>
-        'Unable to save this image format.',
-      GalleryImageSaveFailure.failed => 'Unable to save report image.',
+        l10n.securityReportSaveAccessDenied,
+      GalleryImageSaveFailure.notEnoughSpace => l10n.securityReportSaveNoSpace,
+      GalleryImageSaveFailure.unsupported => l10n.securityReportSaveUnsupported,
+      GalleryImageSaveFailure.failed => l10n.securityReportSaveFailed,
     };
   }
 
@@ -311,6 +349,15 @@ Future<Uint8List> captureReportPngBytes(
   return byteData.buffer.asUint8List();
 }
 
+Future<void> shareReportPngBytes(Uint8List bytes) async {
+  await SharePlus.instance.share(
+    ShareParams(
+      files: [XFile.fromData(bytes, mimeType: 'image/png')],
+      fileNameOverrides: ['flinx-safety-report.png'],
+    ),
+  );
+}
+
 double _reportCapturePixelRatio(double devicePixelRatio, double contentHeight) {
   const maxLongImagePixels = 12000.0;
   final heightLimitedRatio = maxLongImagePixels / contentHeight;
@@ -322,14 +369,16 @@ double _reportCapturePixelRatio(double devicePixelRatio, double contentHeight) {
 class SecurityReportActionBar extends StatelessWidget {
   const SecurityReportActionBar({
     required this.isSaving,
+    required this.isSharing,
     required this.onSave,
-    this.onShare,
+    required this.onShare,
     super.key,
   });
 
   final bool isSaving;
+  final bool isSharing;
   final VoidCallback onSave;
-  final VoidCallback? onShare;
+  final VoidCallback onShare;
 
   @override
   Widget build(BuildContext context) {
@@ -350,8 +399,10 @@ class SecurityReportActionBar extends StatelessWidget {
                 child: SecurityReportActionButton(
                   key: const ValueKey<String>('full-report-save-action'),
                   icon: Icons.save_outlined,
-                  label: isSaving ? 'Saving' : 'Save',
-                  onTap: isSaving ? null : onSave,
+                  label: isSaving
+                      ? AppLocalizations.of(context).securityReportSavingAction
+                      : AppLocalizations.of(context).securityReportSaveAction,
+                  onTap: isSaving || isSharing ? null : onSave,
                 ),
               ),
               const SizedBox(width: 18),
@@ -359,8 +410,10 @@ class SecurityReportActionBar extends StatelessWidget {
                 child: SecurityReportActionButton(
                   key: const ValueKey<String>('full-report-share-action'),
                   icon: Icons.open_in_new,
-                  label: 'Share',
-                  onTap: onShare ?? () {},
+                  label: isSharing
+                      ? AppLocalizations.of(context).securityReportSharingAction
+                      : AppLocalizations.of(context).securityReportShareAction,
+                  onTap: isSaving || isSharing ? null : onShare,
                 ),
               ),
             ],

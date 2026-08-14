@@ -690,6 +690,36 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('full report share captures report image and invokes sharer', (
+    tester,
+  ) async {
+    var shareCalls = 0;
+    Uint8List? sharedBytes;
+
+    await _pumpPage(
+      tester,
+      FullReportPage(
+        deviceId: 'mock-device',
+        doorId: '12',
+        captureReportImage: (_, _) async => Uint8List.fromList([1, 2, 3]),
+        shareReportImage: (bytes) async {
+          shareCalls += 1;
+          sharedBytes = bytes;
+        },
+      ),
+    );
+
+    await tester.tap(
+      find.byKey(const ValueKey<String>('full-report-share-action')),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(shareCalls, 1);
+    expect(sharedBytes, equals(Uint8List.fromList([1, 2, 3])));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('full report save failure shows a readable error', (
     tester,
   ) async {

@@ -3,14 +3,6 @@ import java.util.Properties
 
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
-val requestedTargetPlatform = providers.gradleProperty("target-platform").orNull
-val requestedAbi = when (requestedTargetPlatform) {
-    "android-arm" -> "armeabi-v7a"
-    "android-arm64" -> "arm64-v8a"
-    "android-x64" -> "x86_64"
-    else -> null
-}
-
 if (keystorePropertiesFile.exists()) {
     FileInputStream(keystorePropertiesFile).use(keystoreProperties::load)
 }
@@ -41,11 +33,6 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
 
-        if (requestedAbi != null) {
-            ndk {
-                abiFilters += requestedAbi
-            }
-        }
     }
 
     signingConfigs {
