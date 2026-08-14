@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../../../../core/network/api_envelope_dto.dart';
 import '../../../../core/network/dio_factory.dart';
 import '../../../../core/network/network_exception.dart';
 import '../../domain/entities/account_avatar_code.dart';
@@ -30,6 +31,27 @@ abstract interface class AccountProfileRemoteDataSource {
     int? avatarFileId,
     String? regionCode,
     String? locale,
+    required String requestId,
+  });
+
+  Future<void> updateAvatar({
+    AccountAvatarCode? avatarCode,
+    int? avatarFileId,
+    required String requestId,
+  });
+
+  Future<void> updateNickname({
+    required String nickname,
+    required String requestId,
+  });
+
+  Future<void> updateRegion({
+    required String regionCode,
+    required String requestId,
+  });
+
+  Future<void> updateLanguage({
+    required String locale,
     required String requestId,
   });
 
@@ -160,17 +182,97 @@ class AccountProfileRemoteDataSourceImpl
     }
     try {
       final body = <String, dynamic>{
-        if (nickname != null) 'nickname': nickname,
-        if (avatarCode != null) 'avatarCode': avatarCode.wireValue,
-        if (avatarFileId != null) 'avatarFileId': avatarFileId,
-        if (regionCode != null) 'regionCode': regionCode,
-        if (locale != null) 'locale': locale,
+        'nickname': ?nickname,
+        'avatarCode': ?avatarCode?.wireValue,
+        'avatarFileId': ?avatarFileId,
+        'regionCode': ?regionCode,
+        'locale': ?locale,
       };
       final response = await api.updateProfile(
         body,
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       if (!_accountSuccess(response.code, response.success)) {
+        throw const AccountProfileRemoteException.invalidResponse();
+      }
+    } on DioException catch (error) {
+      throw AccountProfileRemoteException.fromNetwork(
+        NetworkException.fromDio(error),
+      );
+    }
+  }
+
+  @override
+  Future<void> updateAvatar({
+    AccountAvatarCode? avatarCode,
+    int? avatarFileId,
+    required String requestId,
+  }) async {
+    if (avatarCode != null && avatarFileId != null) {
+      throw ArgumentError(
+        'avatarCode and avatarFileId are mutually exclusive.',
+      );
+    }
+    try {
+      final response = await api.updateAvatar({
+        'avatarCode': ?avatarCode?.wireValue,
+        'avatarFileId': ?avatarFileId,
+      }, Options(extra: {NetworkRequestExtras.requestId: requestId}));
+      if (!_success(response.code, response.success)) {
+        throw const AccountProfileRemoteException.invalidResponse();
+      }
+    } on DioException catch (error) {
+      throw AccountProfileRemoteException.fromNetwork(
+        NetworkException.fromDio(error),
+      );
+    }
+  }
+
+  @override
+  Future<void> updateNickname({
+    required String nickname,
+    required String requestId,
+  }) => _updateSingleProfileField(
+    requestId: requestId,
+    body: {'nickname': nickname},
+    request: (body, options) => api.updateNickname(body, options),
+  );
+
+  @override
+  Future<void> updateRegion({
+    required String regionCode,
+    required String requestId,
+  }) => _updateSingleProfileField(
+    requestId: requestId,
+    body: {'regionCode': regionCode},
+    request: (body, options) => api.updateRegion(body, options),
+  );
+
+  @override
+  Future<void> updateLanguage({
+    required String locale,
+    required String requestId,
+  }) => _updateSingleProfileField(
+    requestId: requestId,
+    body: {'locale': locale},
+    request: (body, options) => api.updateLanguage(body, options),
+  );
+
+  Future<void> _updateSingleProfileField({
+    required String requestId,
+    required Map<String, dynamic> body,
+    required Future<ApiEnvelopeDto<dynamic>> Function(
+      Map<String, dynamic> body,
+      Options options,
+    )
+    request,
+  }) async {
+    try {
+      final response = await request(
+        body,
+        Options(extra: {NetworkRequestExtras.requestId: requestId}),
+      );
+      if (!_success(response.code, response.success)) {
         throw const AccountProfileRemoteException.invalidResponse();
       }
     } on DioException catch (error) {

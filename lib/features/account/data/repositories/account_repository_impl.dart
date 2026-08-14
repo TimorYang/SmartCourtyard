@@ -102,14 +102,33 @@ class AccountRepositoryImpl implements AccountRepository {
               fileName: avatarFileName ?? 'avatar.jpg',
               requestId: requestId,
             );
-      await source.updateProfile(
-        nickname: nickname,
-        avatarCode: avatarCode,
-        avatarFileId: uploadedFileId,
-        regionCode: regionCode,
-        locale: locale,
-        requestId: requestId,
-      );
+      final isAvatarOnlyUpdate =
+          nickname == null &&
+          regionCode == null &&
+          locale == null &&
+          (avatarCode != null || uploadedFileId != null);
+      if (isAvatarOnlyUpdate) {
+        await source.updateAvatar(
+          avatarCode: avatarCode,
+          avatarFileId: uploadedFileId,
+          requestId: requestId,
+        );
+      } else if (nickname != null && regionCode == null && locale == null) {
+        await source.updateNickname(nickname: nickname, requestId: requestId);
+      } else if (regionCode != null && nickname == null && locale == null) {
+        await source.updateRegion(regionCode: regionCode, requestId: requestId);
+      } else if (locale != null && nickname == null && regionCode == null) {
+        await source.updateLanguage(locale: locale, requestId: requestId);
+      } else {
+        await source.updateProfile(
+          nickname: nickname,
+          avatarCode: avatarCode,
+          avatarFileId: uploadedFileId,
+          regionCode: regionCode,
+          locale: locale,
+          requestId: requestId,
+        );
+      }
       await refreshProfile(requestId: requestId);
     } on AccountProfileRemoteException catch (error, stackTrace) {
       throw _mapRemoteError(error, requestId, stackTrace);

@@ -85,6 +85,142 @@ class _AccountProfileApi implements AccountProfileApi {
   }
 
   @override
+  Future<ApiEnvelopeDto<dynamic>> updateAvatar(
+    Map<String, dynamic> body,
+    Options options,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    _data.addAll(body);
+    final newOptions = newRequestOptions(options);
+    newOptions.extra.addAll(_extra);
+    newOptions.headers.addAll(_dio.options.headers);
+    newOptions.headers.addAll(_headers);
+    final _options = newOptions.copyWith(
+      method: 'PUT',
+      baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl),
+      queryParameters: queryParameters,
+      path: 'app/account/profile/avatar',
+    )..data = _data;
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late ApiEnvelopeDto<dynamic> _value;
+    try {
+      _value = ApiEnvelopeDto<dynamic>.fromJson(
+        _result.data!,
+        (json) => json as dynamic,
+      );
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, response: _result);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<ApiEnvelopeDto<dynamic>> updateNickname(
+    Map<String, dynamic> body,
+    Options options,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    _data.addAll(body);
+    final newOptions = newRequestOptions(options);
+    newOptions.extra.addAll(_extra);
+    newOptions.headers.addAll(_dio.options.headers);
+    newOptions.headers.addAll(_headers);
+    final _options = newOptions.copyWith(
+      method: 'PUT',
+      baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl),
+      queryParameters: queryParameters,
+      path: 'app/account/profile/nickname',
+    )..data = _data;
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late ApiEnvelopeDto<dynamic> _value;
+    try {
+      _value = ApiEnvelopeDto<dynamic>.fromJson(
+        _result.data!,
+        (json) => json as dynamic,
+      );
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, response: _result);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<ApiEnvelopeDto<dynamic>> updateRegion(
+    Map<String, dynamic> body,
+    Options options,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    _data.addAll(body);
+    final newOptions = newRequestOptions(options);
+    newOptions.extra.addAll(_extra);
+    newOptions.headers.addAll(_dio.options.headers);
+    newOptions.headers.addAll(_headers);
+    final _options = newOptions.copyWith(
+      method: 'PUT',
+      baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl),
+      queryParameters: queryParameters,
+      path: 'app/account/profile/region',
+    )..data = _data;
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late ApiEnvelopeDto<dynamic> _value;
+    try {
+      _value = ApiEnvelopeDto<dynamic>.fromJson(
+        _result.data!,
+        (json) => json as dynamic,
+      );
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, response: _result);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<ApiEnvelopeDto<dynamic>> updateLanguage(
+    Map<String, dynamic> body,
+    Options options,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    _data.addAll(body);
+    final newOptions = newRequestOptions(options);
+    newOptions.extra.addAll(_extra);
+    newOptions.headers.addAll(_dio.options.headers);
+    newOptions.headers.addAll(_headers);
+    final _options = newOptions.copyWith(
+      method: 'PUT',
+      baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl),
+      queryParameters: queryParameters,
+      path: 'app/account/profile/language',
+    )..data = _data;
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late ApiEnvelopeDto<dynamic> _value;
+    try {
+      _value = ApiEnvelopeDto<dynamic>.fromJson(
+        _result.data!,
+        (json) => json as dynamic,
+      );
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, response: _result);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
   Future<ApiEnvelopeDto<AccountProfileRemoteDto>> fetchProfile(
     Options options,
   ) async {

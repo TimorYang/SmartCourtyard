@@ -974,6 +974,34 @@ class _AvatarProfileRemoteDataSource implements AccountProfileRemoteDataSource {
   }
 
   @override
+  Future<void> updateAvatar({
+    AccountAvatarCode? avatarCode,
+    int? avatarFileId,
+    required String requestId,
+  }) async {
+    this.avatarCode = avatarCode;
+    this.avatarFileId = avatarFileId;
+  }
+
+  @override
+  Future<void> updateNickname({
+    required String nickname,
+    required String requestId,
+  }) async {}
+
+  @override
+  Future<void> updateRegion({
+    required String regionCode,
+    required String requestId,
+  }) async {}
+
+  @override
+  Future<void> updateLanguage({
+    required String locale,
+    required String requestId,
+  }) async {}
+
+  @override
   Future<void> confirmAccountDeletion({required String requestId}) async {
     confirmedDeletionRequestId = requestId;
   }

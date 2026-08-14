@@ -244,6 +244,7 @@ void main() {
 
     expect(remoteDataSource.avatarCode, AccountAvatarCode.avatar04);
     expect(remoteDataSource.avatarFileId, isNull);
+    expect(remoteDataSource.avatarUpdateCalled, isTrue);
     final profile = await repository.readCachedProfile();
     expect(profile?.avatarCode, AccountAvatarCode.avatar04);
     expect(profile?.avatarFileId, isNull);
@@ -277,6 +278,7 @@ void main() {
 
       expect(remoteDataSource.avatarCode, isNull);
       expect(remoteDataSource.avatarFileId, 302);
+      expect(remoteDataSource.avatarUpdateCalled, isTrue);
       final profile = await repository.readCachedProfile();
       expect(profile?.avatarCode, isNull);
       expect(profile?.avatarFileId, 302);
@@ -294,6 +296,35 @@ void main() {
     await repository.confirmAccountDeletion(requestId: 'delete-account-1');
 
     expect(remoteDataSource.confirmedDeletionRequestId, 'delete-account-1');
+  });
+
+  test('uses dedicated profile endpoints for single field updates', () async {
+    final remoteDataSource = _RecordingProfileRemoteDataSource();
+    final repository = AccountRepositoryImpl(
+      localDataSource: InMemoryAccountLocalDataSource(),
+      secureDataSource: InMemoryAccountSecureDataSource(),
+      remoteDataSource: remoteDataSource,
+    );
+
+    await repository.updateProfile(
+      nickname: 'Alice',
+      avatarBytes: null,
+      requestId: 'nickname-update',
+    );
+    await repository.updateProfile(
+      regionCode: 'US',
+      avatarBytes: null,
+      requestId: 'region-update',
+    );
+    await repository.updateProfile(
+      locale: 'en-US',
+      avatarBytes: null,
+      requestId: 'language-update',
+    );
+
+    expect(remoteDataSource.nicknameUpdate, 'Alice');
+    expect(remoteDataSource.regionUpdate, 'US');
+    expect(remoteDataSource.languageUpdate, 'en-US');
   });
 
   test('maps an account deletion response failure to an app error', () async {
@@ -316,6 +347,10 @@ class _RecordingProfileRemoteDataSource
     implements AccountProfileRemoteDataSource {
   AccountAvatarCode? avatarCode;
   int? avatarFileId;
+  var avatarUpdateCalled = false;
+  String? nicknameUpdate;
+  String? regionUpdate;
+  String? languageUpdate;
   String? confirmedDeletionRequestId;
   Object? deletionError;
 
@@ -359,6 +394,41 @@ class _RecordingProfileRemoteDataSource
   }) async {
     this.avatarCode = avatarCode;
     this.avatarFileId = avatarFileId;
+  }
+
+  @override
+  Future<void> updateAvatar({
+    AccountAvatarCode? avatarCode,
+    int? avatarFileId,
+    required String requestId,
+  }) async {
+    avatarUpdateCalled = true;
+    this.avatarCode = avatarCode;
+    this.avatarFileId = avatarFileId;
+  }
+
+  @override
+  Future<void> updateNickname({
+    required String nickname,
+    required String requestId,
+  }) async {
+    nicknameUpdate = nickname;
+  }
+
+  @override
+  Future<void> updateRegion({
+    required String regionCode,
+    required String requestId,
+  }) async {
+    regionUpdate = regionCode;
+  }
+
+  @override
+  Future<void> updateLanguage({
+    required String locale,
+    required String requestId,
+  }) async {
+    languageUpdate = locale;
   }
 
   @override

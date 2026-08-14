@@ -24,6 +24,30 @@ abstract class AccountProfileApi {
     @DioOptions() Options options,
   );
 
+  @PUT('app/account/profile/avatar')
+  Future<ApiEnvelopeDto<dynamic>> updateAvatar(
+    @Body() Map<String, dynamic> body,
+    @DioOptions() Options options,
+  );
+
+  @PUT('app/account/profile/nickname')
+  Future<ApiEnvelopeDto<dynamic>> updateNickname(
+    @Body() Map<String, dynamic> body,
+    @DioOptions() Options options,
+  );
+
+  @PUT('app/account/profile/region')
+  Future<ApiEnvelopeDto<dynamic>> updateRegion(
+    @Body() Map<String, dynamic> body,
+    @DioOptions() Options options,
+  );
+
+  @PUT('app/account/profile/language')
+  Future<ApiEnvelopeDto<dynamic>> updateLanguage(
+    @Body() Map<String, dynamic> body,
+    @DioOptions() Options options,
+  );
+
   @GET('app/account/profile')
   Future<ApiEnvelopeDto<AccountProfileRemoteDto>> fetchProfile(
     @DioOptions() Options options,
