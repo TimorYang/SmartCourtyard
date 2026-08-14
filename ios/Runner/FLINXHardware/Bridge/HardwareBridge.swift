@@ -648,7 +648,9 @@ final class HardwareBridge: HardwareHostApi {
                     deviceId: deviceId,
                     command: .remotePairing,
                     payload: Data(Self.bigEndianBytes(control)),
-                    responseTimeout: 20
+                    responseTimeout: RemotePairingProtocol.responseTimeout,
+                    expectedResponseCommand: RemotePairingProtocol.responseCommand,
+                    control: control
                 ) { response in
                     guard response.data.count >= 1 else {
                         completion(
@@ -664,12 +666,10 @@ final class HardwareBridge: HardwareHostApi {
                     }
 
                     let resultCode = response.data[0]
-                    let reasonCode = Self.parseUInt32(
-                        response.data.count >= 5
-                            ? response.data.dropFirst().prefix(4).asData
-                            : Data()
-                    )
                     let status = RemotePairingStatusDto(resultCode: resultCode)
+                    let reasonCode: UInt32 = status == .success
+                        ? 0
+                        : UInt32(resultCode)
                     self.logger.info(
                         "remote_pairing",
                         requestId: requestId,
@@ -677,7 +677,7 @@ final class HardwareBridge: HardwareHostApi {
                         state: status.logState,
                         nativeCode: status == .success ? nil : "remote_pairing_result_\(resultCode)",
                         payloadBytes: response.data.count,
-                        details: "control=\(DoorControlCommand.hex(control)) result=0x\(String(format: "%02X", resultCode)) reason=\(DoorControlCommand.hex(reasonCode))"
+                        details: "command=\(BleProvisioningCommand.remotePairing.hexCode) responseCommand=\(DoorControlCommand.hex(RemotePairingProtocol.responseCommand)) control=\(DoorControlCommand.hex(control)) result=0x\(String(format: "%02X", resultCode)) reason=\(DoorControlCommand.hex(reasonCode))"
                     )
                     completion(
                         .success(
@@ -686,7 +686,7 @@ final class HardwareBridge: HardwareHostApi {
                                 deviceId: deviceId,
                                 status: status,
                                 reasonCode: Int64(reasonCode),
-                                nativeCode: "command=\(BleProvisioningCommand.remotePairing.hexCode),control=\(DoorControlCommand.hex(control)),result=0x\(String(format: "%02X", resultCode)),reason=\(DoorControlCommand.hex(reasonCode))",
+                                nativeCode: "command=\(BleProvisioningCommand.remotePairing.hexCode),responseCommand=\(DoorControlCommand.hex(RemotePairingProtocol.responseCommand)),control=\(DoorControlCommand.hex(control)),result=0x\(String(format: "%02X", resultCode)),reason=\(DoorControlCommand.hex(reasonCode))",
                                 domainCode: status == .success ? nil : "pairing_failed"
                             )
                         )
@@ -1189,6 +1189,53 @@ extension HardwareBridge {
         )
         return (result.success, result.reasonCode)
     }
+
+    static func remotePairingProtocolForTesting(
+        start: Bool
+    ) -> (
+        requestCommand: UInt16,
+        responseCommand: UInt16,
+        control: UInt16,
+        responseTimeout: TimeInterval
+    ) {
+        (
+            BleProvisioningCommand.remotePairing.rawValue,
+            RemotePairingProtocol.responseCommand,
+            start
+                ? RemotePairingProtocol.startControl
+                : RemotePairingProtocol.cancelControl,
+            RemotePairingProtocol.responseTimeout
+        )
+    }
+
+    static func matchesProvisioningResponseForTesting(
+        expectedCommand: UInt16,
+        pendingSequence: UInt16,
+        responseCommand: UInt16,
+        responseSequence: UInt16
+    ) -> Bool {
+        matchesProvisioningResponse(
+            expectedCommand: expectedCommand,
+            pendingSequence: pendingSequence,
+            responseCommand: responseCommand,
+            responseSequence: responseSequence
+        )
+    }
+
+    static func remotePairingStatusForTesting(
+        resultCode: UInt8
+    ) -> RemotePairingStatusDto {
+        RemotePairingStatusDto(resultCode: resultCode)
+    }
+
+    private static func matchesProvisioningResponse(
+        expectedCommand: UInt16,
+        pendingSequence: UInt16,
+        responseCommand: UInt16,
+        responseSequence: UInt16
+    ) -> Bool {
+        expectedCommand == responseCommand && pendingSequence == responseSequence
+    }
 }
 
 extension HardwareBridge: BleManagerDelegate {
@@ -1316,6 +1363,8 @@ private extension HardwareBridge {
         command: BleProvisioningCommand,
         payload: Data,
         responseTimeout: TimeInterval = 15,
+        expectedResponseCommand: UInt16? = nil,
+        control: UInt16? = nil,
         success: @escaping (BleProtocolFrame) -> Void,
         failure: @escaping (Error) -> Void
     ) {
@@ -1371,10 +1420,12 @@ private extension HardwareBridge {
             )
         }
         
+        let responseCommand = expectedResponseCommand ?? command.rawValue
         pendingProvisioningRequests[deviceId] = PendingProvisioningRequest(
             requestId: requestId,
             deviceId: deviceId,
             command: command,
+            expectedResponseCommand: responseCommand,
             sequence: sequence,
             timeout: timeout,
             success: success,
@@ -1391,7 +1442,7 @@ private extension HardwareBridge {
             deviceId: deviceId,
             state: "sending",
             payloadBytes: frame.count,
-            details: "command=\(command.hexCode) commandDecimal=\(command.rawValue) sequence=\(sequence) crypto=\(encryptRequest ? 1 : 0) payloadBytes=\(payload.count) frame=\(logger.payloadHex(frame, sensitive: command == .configureWifi))"
+            details: "command=\(command.hexCode) commandDecimal=\(command.rawValue) expectedResponseCommand=\(DoorControlCommand.hex(responseCommand)) control=\(control.map { DoorControlCommand.hex($0) } ?? "-") sequence=\(sequence) crypto=\(encryptRequest ? 1 : 0) payloadBytes=\(payload.count) frame=\(logger.payloadHex(frame, sensitive: command == .configureWifi))"
         )
         emitTxDiagnostic(
             requestId: requestId,
@@ -1407,7 +1458,8 @@ private extension HardwareBridge {
             ),
             packet: frame,
             encrypted: encryptRequest,
-            sensitive: false
+            sensitive: false,
+            expectedResponseCommand: responseCommand
         )
         bleManager.writeCharacteristic(
             requestId: requestId,
@@ -1649,14 +1701,18 @@ private extension HardwareBridge {
         }
         
         guard frame.type == 0x04,
-              pending.command.rawValue == frame.command,
-              pending.command.matchesResponseSequence(frame.sequence, pendingSequence: pending.sequence) else {
+              Self.matchesProvisioningResponse(
+                  expectedCommand: pending.expectedResponseCommand,
+                  pendingSequence: pending.sequence,
+                  responseCommand: frame.command,
+                  responseSequence: frame.sequence
+              ) else {
             logger.warning(
                 "provisioning_response",
                 requestId: pending.requestId,
                 deviceId: deviceId,
                 state: "unmatched",
-                details: "type=\(frame.type) command=\(frame.command) sequence=\(frame.sequence) pendingCommand=\(pending.command.rawValue) pendingSequence=\(pending.sequence)"
+                details: "type=\(frame.type) command=\(frame.command) sequence=\(frame.sequence) pendingCommand=\(pending.command.rawValue) expectedResponseCommand=\(pending.expectedResponseCommand) pendingSequence=\(pending.sequence)"
             )
             return
         }
@@ -1669,7 +1725,7 @@ private extension HardwareBridge {
             deviceId: deviceId,
             state: "matched",
             payloadBytes: frame.data.count,
-            details: "command=\(frame.command) sequence=\(frame.sequence) pendingCommand=\(pending.command.rawValue) pendingSequence=\(pending.sequence)"
+            details: "command=\(frame.command) sequence=\(frame.sequence) pendingCommand=\(pending.command.rawValue) expectedResponseCommand=\(pending.expectedResponseCommand) pendingSequence=\(pending.sequence)"
         )
         pending.success(frame)
     }
@@ -1779,14 +1835,18 @@ private extension HardwareBridge {
                 return decryptedFrame
             }
             guard decryptedFrame.type == 0x04,
-                  decryptedFrame.command == pending.command.rawValue,
-                  decryptedFrame.sequence == pending.sequence else {
+                  Self.matchesProvisioningResponse(
+                      expectedCommand: pending.expectedResponseCommand,
+                      pendingSequence: pending.sequence,
+                      responseCommand: decryptedFrame.command,
+                      responseSequence: decryptedFrame.sequence
+                  ) else {
                 logger.warning(
                     "provisioning_decrypt",
                     requestId: pending.requestId,
                     deviceId: deviceId,
                     state: "candidate_unmatched",
-                    details: "mode=\(mode.name) type=\(decryptedFrame.type) sequence=\(decryptedFrame.sequence) command=\(decryptedFrame.command) pendingSequence=\(pending.sequence) pendingCommand=\(pending.command.rawValue)"
+                    details: "mode=\(mode.name) type=\(decryptedFrame.type) sequence=\(decryptedFrame.sequence) command=\(decryptedFrame.command) pendingSequence=\(pending.sequence) pendingCommand=\(pending.command.rawValue) expectedResponseCommand=\(pending.expectedResponseCommand)"
                 )
                 return decryptedFrame
             }
@@ -1819,7 +1879,8 @@ private extension HardwareBridge {
         originPayload: Data,
         packet: Data,
         encrypted: Bool,
-        sensitive: Bool
+        sensitive: Bool,
+        expectedResponseCommand: UInt16? = nil
     ) {
         guard flutterConsoleLoggingEnabled else { return }
         let transactionId = Self.diagnosticTransactionId(
@@ -1830,8 +1891,11 @@ private extension HardwareBridge {
         let now = Date()
         pendingDiagnostics[transactionId] = PendingBleDiagnostic(
             requestId: requestId,
+            deviceId: deviceId,
             operation: operation,
             control: control,
+            sequence: sequence,
+            expectedResponseCommand: expectedResponseCommand ?? command,
             startedAt: now
         )
         DispatchQueue.main.asyncAfter(deadline: .now() + 60) { [weak self] in
@@ -1883,7 +1947,9 @@ private extension HardwareBridge {
         let matchedEntry = pendingDiagnostics.removeValue(forKey: directId)
             .map { (directId, $0) }
             ?? pendingDiagnostics.first(where: {
-                $0.key.hasPrefix("\(deviceId):\(frame.command):")
+                $0.value.deviceId == deviceId &&
+                    $0.value.expectedResponseCommand == frame.command &&
+                    $0.value.sequence == frame.sequence
             }).map { key, value in
                 pendingDiagnostics.removeValue(forKey: key)
                 return (key, value)
@@ -1937,7 +2003,10 @@ private extension HardwareBridge {
 
     static func diagnosticResult(_ frame: BleProtocolFrame) -> String? {
         guard let code = frame.data.first else { return nil }
-        return code == 0x00 ? "success" : nil
+        let successCode: UInt8 = frame.command == RemotePairingProtocol.responseCommand
+            ? RemotePairingProtocol.successResult
+            : 0x00
+        return code == successCode ? "success" : nil
     }
     
     static func containsProvisioningCharacteristics(in services: BleServices) -> Bool {
@@ -2698,7 +2767,7 @@ private extension BleNativeError {
 
 private enum BleProvisioningCommand: UInt16 {
     case setAttributes = 0x0001
-    case remotePairing = 0x0007
+    case remotePairing = 0x0005
     case remoteQuery = 0x0008
     case remoteDelete = 0x0009
     case remoteRename = 0x000A
@@ -2820,11 +2889,20 @@ private extension RemotePairingActionDto {
     var remotePairingControlCode: UInt16 {
         switch self {
         case .start:
-            return 0x1008
+            return RemotePairingProtocol.startControl
         case .cancel:
-            return 0x1009
+            return RemotePairingProtocol.cancelControl
         }
     }
+}
+
+private enum RemotePairingProtocol {
+    static let responseCommand: UInt16 = 0x0104
+    static let startControl: UInt16 = 0x1008
+    static let cancelControl: UInt16 = 0x1009
+    static let successResult: UInt8 = 0x06
+    static let failureResult: UInt8 = 0x05
+    static let responseTimeout: TimeInterval = 20
 }
 
 private extension SafetyAccessoryPairingActionDto {
@@ -2865,12 +2943,10 @@ private extension SafetyAccessoryPairingStatusDto {
 private extension RemotePairingStatusDto {
     init(resultCode: UInt8) {
         switch resultCode {
-        case 0x01:
+        case RemotePairingProtocol.successResult:
             self = .success
-        case 0x02:
+        case RemotePairingProtocol.failureResult:
             self = .failure
-        case 0x03:
-            self = .timeout
         default:
             self = .unknown
         }
@@ -2924,6 +3000,7 @@ private struct PendingProvisioningRequest {
     let requestId: String
     let deviceId: String
     let command: BleProvisioningCommand
+    let expectedResponseCommand: UInt16
     let sequence: UInt16
     let timeout: DispatchWorkItem
     let success: (BleProtocolFrame) -> Void
@@ -2939,8 +3016,11 @@ private struct PendingAttributeQuery {
 
 private struct PendingBleDiagnostic {
     let requestId: String
+    let deviceId: String
     let operation: String
     let control: UInt16?
+    let sequence: UInt16
+    let expectedResponseCommand: UInt16
     let startedAt: Date
 }
 
