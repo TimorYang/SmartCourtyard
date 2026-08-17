@@ -1209,12 +1209,14 @@ extension HardwareBridge {
     }
 
     static func matchesProvisioningResponseForTesting(
+        requestCommand: UInt16,
         expectedCommand: UInt16,
         pendingSequence: UInt16,
         responseCommand: UInt16,
         responseSequence: UInt16
     ) -> Bool {
         matchesProvisioningResponse(
+            requestCommand: requestCommand,
             expectedCommand: expectedCommand,
             pendingSequence: pendingSequence,
             responseCommand: responseCommand,
@@ -1229,12 +1231,16 @@ extension HardwareBridge {
     }
 
     private static func matchesProvisioningResponse(
+        requestCommand: UInt16,
         expectedCommand: UInt16,
         pendingSequence: UInt16,
         responseCommand: UInt16,
         responseSequence: UInt16
     ) -> Bool {
-        expectedCommand == responseCommand && pendingSequence == responseSequence
+        guard expectedCommand == responseCommand else { return false }
+        return pendingSequence == responseSequence ||
+            (requestCommand == BleProvisioningCommand.scanWifi.rawValue &&
+                responseSequence == 0)
     }
 }
 
@@ -1702,6 +1708,7 @@ private extension HardwareBridge {
         
         guard frame.type == 0x04,
               Self.matchesProvisioningResponse(
+                  requestCommand: pending.command.rawValue,
                   expectedCommand: pending.expectedResponseCommand,
                   pendingSequence: pending.sequence,
                   responseCommand: frame.command,
@@ -1715,6 +1722,19 @@ private extension HardwareBridge {
                 details: "type=\(frame.type) command=\(frame.command) sequence=\(frame.sequence) pendingCommand=\(pending.command.rawValue) expectedResponseCommand=\(pending.expectedResponseCommand) pendingSequence=\(pending.sequence)"
             )
             return
+        }
+
+        if pending.command == .scanWifi,
+           pending.sequence != frame.sequence,
+           frame.sequence == 0 {
+            logger.warning(
+                "provisioning_sequence_compatibility",
+                requestId: pending.requestId,
+                deviceId: deviceId,
+                state: "accepted_legacy_wifi_sequence",
+                nativeCode: "wifi_scan_response_sequence_zero",
+                details: "requestCommand=\(pending.command.hexCode) expectedResponseCommand=\(DoorControlCommand.hex(pending.expectedResponseCommand)) requestSequence=\(pending.sequence) responseSequence=\(frame.sequence)"
+            )
         }
         
         pending.timeout.cancel()
@@ -1836,6 +1856,7 @@ private extension HardwareBridge {
             }
             guard decryptedFrame.type == 0x04,
                   Self.matchesProvisioningResponse(
+                      requestCommand: pending.command.rawValue,
                       expectedCommand: pending.expectedResponseCommand,
                       pendingSequence: pending.sequence,
                       responseCommand: decryptedFrame.command,
@@ -1894,6 +1915,7 @@ private extension HardwareBridge {
             deviceId: deviceId,
             operation: operation,
             control: control,
+            requestCommand: command,
             sequence: sequence,
             expectedResponseCommand: expectedResponseCommand ?? command,
             startedAt: now
@@ -1948,8 +1970,13 @@ private extension HardwareBridge {
             .map { (directId, $0) }
             ?? pendingDiagnostics.first(where: {
                 $0.value.deviceId == deviceId &&
-                    $0.value.expectedResponseCommand == frame.command &&
-                    $0.value.sequence == frame.sequence
+                    Self.matchesProvisioningResponse(
+                        requestCommand: $0.value.requestCommand,
+                        expectedCommand: $0.value.expectedResponseCommand,
+                        pendingSequence: $0.value.sequence,
+                        responseCommand: frame.command,
+                        responseSequence: frame.sequence
+                    )
             }).map { key, value in
                 pendingDiagnostics.removeValue(forKey: key)
                 return (key, value)
@@ -2810,10 +2837,6 @@ private enum BleProvisioningCommand: UInt16 {
             return false
         }
     }
-    
-    func matchesResponseSequence(_ responseSequence: UInt16, pendingSequence: UInt16) -> Bool {
-        responseSequence == pendingSequence || (self == .scanWifi && responseSequence == 0)
-    }
 }
 
 private enum DeviceAttributeProtocol {
@@ -3019,6 +3042,7 @@ private struct PendingBleDiagnostic {
     let deviceId: String
     let operation: String
     let control: UInt16?
+    let requestCommand: UInt16
     let sequence: UInt16
     let expectedResponseCommand: UInt16
     let startedAt: Date
