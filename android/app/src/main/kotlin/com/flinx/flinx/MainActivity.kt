@@ -1,5 +1,6 @@
 package com.flinx.flinx
 
+import android.content.Intent
 import android.net.Proxy
 import com.flinx.flinx.flinxhardware.bluetooth.BleManager
 import com.flinx.flinx.flinxhardware.bridge.HardwareHostApi
@@ -13,12 +14,16 @@ import io.flutter.plugin.common.MethodChannel
 class MainActivity : FlutterActivity() {
   companion object {
     private const val debugSystemProxyChannel = "com.flinx/debug_system_proxy"
+    private const val blePermissionChannel = "com.flinx/ble_permissions"
   }
+
+  private var permissionManager: PermissionManager? = null
 
   override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
     super.configureFlutterEngine(flutterEngine)
     val messenger = flutterEngine.dartExecutor.binaryMessenger
     val permissionManager = PermissionManager(applicationContext) { this }
+    this.permissionManager = permissionManager
     val bleManager = BleManager(applicationContext)
     val hardwareFlutterApi = HardwareFlutterApi(messenger)
     val hardwareHostApi = HardwareHostApiImpl(
@@ -34,6 +39,34 @@ class MainActivity : FlutterActivity() {
       } else {
         result.notImplemented()
       }
+    }
+    MethodChannel(messenger, blePermissionChannel).setMethodCallHandler {
+        call, result ->
+      if (call.method == "requestBleScanReady") {
+        permissionManager.requestBleScanReady { readiness ->
+          result.success(readiness.name)
+        }
+      } else {
+        result.notImplemented()
+      }
+    }
+  }
+
+  override fun onRequestPermissionsResult(
+    requestCode: Int,
+    permissions: Array<out String>,
+    grantResults: IntArray,
+  ) {
+    val handled = permissionManager?.onRequestPermissionsResult(requestCode) == true
+    if (!handled) {
+      super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+    }
+  }
+
+  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    val handled = permissionManager?.onActivityResult(requestCode) == true
+    if (!handled) {
+      super.onActivityResult(requestCode, resultCode, data)
     }
   }
 

@@ -8,6 +8,7 @@ import '../../../core/logging/app_logger.dart';
 import '../../../core/logging/providers.dart';
 import '../../../platform_bridge/hardware_gateway.dart';
 import '../../../platform_bridge/hardware_models.dart';
+import '../../../platform_bridge/android_ble_permission_gateway.dart';
 import '../domain/entities/add_door_draft.dart';
 import '../domain/entities/onboarded_force_door.dart';
 import '../domain/use_cases/add_force_door_use_case.dart';
@@ -298,13 +299,26 @@ class AddDeviceController extends Notifier<AddDeviceState> {
     );
   }
 
-  Future<void> startScan({String? targetSn}) async {
+  Future<bool> startScan({String? targetSn}) async {
     final flowId = _ensureFlow();
     final normalizedTargetSn = targetSn?.trim();
     _targetBleName = normalizedTargetSn?.isEmpty == true
         ? null
         : normalizedTargetSn;
     final requestId = _nextRequestId('ble-scan');
+    final bluetoothReadiness =
+        await AndroidBlePermissionGateway.requestBleScanReady();
+    if (bluetoothReadiness == AndroidBleScanReadiness.cancelled) {
+      return false;
+    }
+    if (bluetoothReadiness == AndroidBleScanReadiness.permissionDenied) {
+      state = state.copyWith(
+        isScanning: false,
+        errorMessage: '请授予蓝牙权限后重试',
+        clearInfoMessage: true,
+      );
+      return false;
+    }
     _log(
       'ble_scan_started',
       requestId: requestId,
@@ -326,6 +340,7 @@ class AddDeviceController extends Notifier<AddDeviceState> {
           allowDuplicates: false,
         ),
       );
+      return true;
     } catch (error) {
       _logError(
         'ble_scan_failed',
@@ -339,6 +354,7 @@ class AddDeviceController extends Notifier<AddDeviceState> {
         errorMessage: error.toString(),
         clearInfoMessage: true,
       );
+      return false;
     }
   }
 

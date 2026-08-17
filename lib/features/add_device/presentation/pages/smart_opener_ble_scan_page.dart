@@ -109,10 +109,13 @@ class _SmartOpenerBleScanPageState extends ConsumerState<SmartOpenerBleScanPage>
     if (clearResults) {
       _controller.clearScanResults();
     }
+    final didStartScan = await _controller.startScan(targetSn: _targetSn);
+    if (!didStartScan || !mounted) {
+      return;
+    }
     _scanTimer = Timer(widget.scanDuration, () {
       unawaited(_completeScan());
     });
-    await _controller.startScan(targetSn: _targetSn);
   }
 
   void _stopTimedScan() {
