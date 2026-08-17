@@ -23,6 +23,8 @@ flutter build appbundle --dart-define-from-file=config/env/prod.json
 
 Android Debug 构建会读取设备当前的系统 HTTP 代理，并让 Dio 使用该代理，因此配置 Charles、Proxyman 或 mitmproxy 后无需在项目中填写电脑局域网 IP。修改手机 Wi-Fi 代理后，重新启动 App 以刷新代理地址。
 
+iOS Debug 构建继续使用 `NetworkDebugSettings.proxy` 中的手动代理配置，格式为 Dart `HttpClient.findProxy` 使用的 `PROXY <电脑局域网 IP>:<端口>`。Android 不会读取该手动配置，两个平台的调试代理互不影响。
+
 `NetworkDebugSettings.allowInvalidProxyCertificates` 仅用于尚未在设备安装抓包根证书时接受代理签发的 HTTPS 证书。它只在 debug 模式生效；release/profile 构建会忽略代理与证书放行配置。
 
 优先在设备中安装并信任抓包工具根证书，然后仅设置代理，不要长期启用无效证书放行。

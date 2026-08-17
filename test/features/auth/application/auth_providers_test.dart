@@ -29,6 +29,9 @@ void main() {
 
 class _FakeAuthApi implements AuthApi {
   @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+
+  @override
   Future<ApiEnvelopeDto<AuthProfileResponseDto>> fetchAccountProfile(
     Options options,
   ) => throw UnimplementedError();

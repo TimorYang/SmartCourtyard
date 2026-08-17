@@ -23,6 +23,13 @@ abstract class AuthApi {
     @DioOptions() Options options,
   );
 
+  // Despite the route name, FLINX expects the Apple user identity JWS here.
+  @POST('app/auth/apple/notifications')
+  Future<ApiEnvelopeDto<AuthLoginResponseDto>> loginWithApple(
+    @Body() Map<String, dynamic> body,
+    @DioOptions() Options options,
+  );
+
   @POST('app/auth/refresh')
   Future<ApiEnvelopeDto<AuthLoginResponseDto>> refreshToken(
     @Body() Map<String, dynamic> body,

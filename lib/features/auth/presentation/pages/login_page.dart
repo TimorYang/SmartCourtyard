@@ -8,6 +8,7 @@ import '../../../../app/theme/app_design_tokens.dart';
 import '../../../account/application/providers.dart';
 import '../../../home/presentation/pages/home_page.dart';
 import '../../application/login_form_controller.dart';
+import '../../application/apple_login_controller.dart';
 import '../../application/providers.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/app_toast.dart';
@@ -44,12 +45,44 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     super.dispose();
   }
 
+  Future<void> _submitAppleLogin({required bool agreedToTerms}) async {
+    final submission = await ref
+        .read(appleLoginControllerProvider.notifier)
+        .submit(agreedToTerms: agreedToTerms);
+    if (!mounted) {
+      return;
+    }
+    final l10n = AppLocalizations.of(context);
+    switch (submission.type) {
+      case AppleLoginSubmissionType.success:
+        final result = submission.result!;
+        ref
+            .read(accountControllerProvider.notifier)
+            .setSessionProfile(result.profile);
+        ref
+            .read(activeAuthSessionProvider.notifier)
+            .markAuthenticated(userId: result.profile.userId);
+        context.go(HomePage.routePath);
+      case AppleLoginSubmissionType.agreementRequired:
+        AppToast.info(context, l10n.appleLoginAgreementRequired);
+      case AppleLoginSubmissionType.unavailable:
+        AppToast.info(context, l10n.appleLoginUnavailable);
+      case AppleLoginSubmissionType.failed:
+        AppToast.error(context, l10n.appleLoginFailed);
+      case AppleLoginSubmissionType.canceled:
+      case AppleLoginSubmissionType.busy:
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final state = ref.watch(loginFormControllerProvider);
     final controller = ref.read(loginFormControllerProvider.notifier);
+    final appleLoginState = ref.watch(appleLoginControllerProvider);
+    final showAppleLogin = ref.watch(appleLoginPlatformSupportedProvider);
 
     return Scaffold(
       appBar: FlinxNavigationBar(title: '', showBottomDivider: false),
@@ -187,7 +220,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         width: double.infinity,
                         height: 52,
                         child: FilledButton(
-                          onPressed: state.canSubmit && !_isSubmitting
+                          onPressed:
+                              state.canSubmit &&
+                                  !_isSubmitting &&
+                                  !appleLoginState.isSubmitting
                               ? () async {
                                   if (!controller.validateEmailForSubmit()) {
                                     await showAuthEmailInvalidDialog(context);
@@ -295,7 +331,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 left: 30,
                 right: 30,
                 bottom: 60,
-                child: const _ThirdPartyLoginSection(),
+                child: _ThirdPartyLoginSection(
+                  showAppleLogin: showAppleLogin,
+                  isAppleSubmitting: appleLoginState.isSubmitting,
+                  onAppleLogin: _isSubmitting
+                      ? null
+                      : () => _submitAppleLogin(
+                          agreedToTerms: state.agreedToTerms,
+                        ),
+                ),
               ),
             ],
           ),
@@ -318,7 +362,15 @@ class _LoginPageAssetPaths {
 }
 
 class _ThirdPartyLoginSection extends StatelessWidget {
-  const _ThirdPartyLoginSection();
+  const _ThirdPartyLoginSection({
+    required this.showAppleLogin,
+    required this.isAppleSubmitting,
+    required this.onAppleLogin,
+  });
+
+  final bool showAppleLogin;
+  final bool isAppleSubmitting;
+  final VoidCallback? onAppleLogin;
 
   @override
   Widget build(BuildContext context) {
@@ -339,16 +391,29 @@ class _ThirdPartyLoginSection extends StatelessWidget {
                 size: 36,
                 fallback: SizedBox.shrink(),
               ),
+              onTap: () => AppToast.info(context, l10n.continueWithGoogle),
             ),
-            const SizedBox(width: 18),
-            _CompactProviderButton(
-              label: l10n.continueWithApple,
-              icon: const _ProviderAssetIcon(
-                assetPath: _LoginPageAssetPaths.appleProviderMark,
-                size: 36,
-                fallback: SizedBox.shrink(),
+            if (showAppleLogin) ...[
+              const SizedBox(width: 18),
+              _CompactProviderButton(
+                key: const ValueKey('apple_login_button'),
+                label: l10n.continueWithApple,
+                icon: isAppleSubmitting
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.brandPrimaryLight,
+                        ),
+                      )
+                    : const _ProviderAssetIcon(
+                        assetPath: _LoginPageAssetPaths.appleProviderMark,
+                        size: 36,
+                        fallback: SizedBox.shrink(),
+                      ),
+                onTap: isAppleSubmitting ? null : onAppleLogin,
               ),
-            ),
+            ],
             const SizedBox(width: 18),
             _CompactProviderButton(
               label: l10n.continueWithFacebook,
@@ -357,6 +422,7 @@ class _ThirdPartyLoginSection extends StatelessWidget {
                 size: 36,
                 fallback: SizedBox.shrink(),
               ),
+              onTap: () => AppToast.info(context, l10n.continueWithFacebook),
             ),
           ],
         ),
@@ -456,10 +522,16 @@ class _ProviderDivider extends StatelessWidget {
 }
 
 class _CompactProviderButton extends StatelessWidget {
-  const _CompactProviderButton({required this.label, required this.icon});
+  const _CompactProviderButton({
+    super.key,
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
 
   final String label;
   final Widget icon;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -468,7 +540,7 @@ class _CompactProviderButton extends StatelessWidget {
       label: label,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: () => AppToast.info(context, label),
+        onTap: onTap,
         child: SizedBox.square(
           dimension: 48,
           child: Center(

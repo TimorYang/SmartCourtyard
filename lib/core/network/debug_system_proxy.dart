@@ -20,6 +20,36 @@ abstract final class DebugSystemProxy {
 
   static String get findProxyValue => 'PROXY $_host:$_port';
 
+  /// Android uses its detected system proxy, while iOS keeps the existing
+  /// local manual-proxy configuration. The two platform paths are intentionally
+  /// independent so Android discovery cannot override iOS debugging settings.
+  static String proxyForCurrentPlatform({required String iosProxy}) {
+    return selectProxy(
+      isAndroid: Platform.isAndroid,
+      isIOS: Platform.isIOS,
+      androidSystemProxyEnabled: isEnabled,
+      androidSystemProxy: findProxyValue,
+      iosProxy: iosProxy,
+    );
+  }
+
+  @visibleForTesting
+  static String selectProxy({
+    required bool isAndroid,
+    required bool isIOS,
+    required bool androidSystemProxyEnabled,
+    required String androidSystemProxy,
+    required String iosProxy,
+  }) {
+    if (isAndroid) {
+      return androidSystemProxyEnabled ? androidSystemProxy.trim() : '';
+    }
+    if (isIOS) {
+      return iosProxy.trim();
+    }
+    return '';
+  }
+
   static Future<void> initialize() async {
     if (!kDebugMode || !Platform.isAndroid) {
       return;

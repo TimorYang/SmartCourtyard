@@ -1,12 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 
 import '../../../core/logging/providers.dart';
 import '../../../core/network/providers.dart';
 import '../../../core/network/session_expired_handler.dart';
 import 'forgot_password_code_controller.dart';
+import 'apple_login_controller.dart';
 import 'forgot_password_controller.dart';
 import 'forgot_password_reset_controller.dart';
 import 'login_form_controller.dart';
@@ -27,6 +29,7 @@ import '../data/repositories/auth_password_reset_repository_impl.dart';
 import '../data/services/rsa_oaep_password_ciphertext_encryptor.dart';
 import '../data/services/platform_login_device_context_provider.dart';
 import '../data/services/auth_token_refresh_service.dart';
+import '../data/services/sign_in_with_apple_identity_provider.dart';
 import '../domain/entities/auth_session.dart';
 import '../domain/entities/registration_device_context.dart';
 import '../domain/repositories/auth_crypto_repository.dart';
@@ -35,9 +38,11 @@ import '../domain/repositories/auth_password_reset_repository.dart';
 import '../domain/repositories/auth_registration_repository.dart';
 import '../domain/services/password_ciphertext_encryptor.dart';
 import '../domain/services/login_device_context_provider.dart';
+import '../domain/services/apple_identity_provider.dart';
 import '../domain/use_cases/complete_registration_use_case.dart';
 import '../domain/use_cases/complete_password_reset_use_case.dart';
 import '../domain/use_cases/login_use_case.dart';
+import '../domain/use_cases/apple_login_use_case.dart';
 import '../domain/use_cases/send_registration_email_code_use_case.dart';
 import '../domain/use_cases/send_password_reset_email_code_use_case.dart';
 import '../domain/use_cases/verify_registration_email_code_use_case.dart';
@@ -258,6 +263,27 @@ final loginUseCaseProvider = Provider<LoginUseCase>((ref) {
     deviceContextProvider: ref.watch(loginDeviceContextProvider),
   );
 });
+
+final appleIdentityProvider = Provider<AppleIdentityProvider>((ref) {
+  return const SignInWithAppleIdentityProvider();
+});
+
+final appleLoginUseCaseProvider = Provider<AppleLoginUseCase>((ref) {
+  return AppleLoginUseCase(
+    identityProvider: ref.watch(appleIdentityProvider),
+    loginRepository: ref.watch(authLoginRepositoryProvider),
+    accountRepository: ref.watch(accountRepositoryProvider),
+  );
+});
+
+final appleLoginPlatformSupportedProvider = Provider<bool>((ref) {
+  return defaultTargetPlatform == TargetPlatform.iOS;
+});
+
+final appleLoginControllerProvider =
+    NotifierProvider.autoDispose<AppleLoginController, AppleLoginState>(
+      AppleLoginController.new,
+    );
 
 final loginFormControllerProvider =
     NotifierProvider.autoDispose<LoginFormController, LoginFormState>(() {

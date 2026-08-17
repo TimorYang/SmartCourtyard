@@ -312,6 +312,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginFailed => 'Login failed. Please try again.';
 
   @override
+  String get appleLoginAgreementRequired =>
+      'Please agree to the User Agreement and Privacy Policy first.';
+
+  @override
+  String get appleLoginUnavailable =>
+      'Sign in with Apple is unavailable on this device.';
+
+  @override
+  String get appleLoginFailed => 'Sign in with Apple failed. Please try again.';
+
+  @override
   String get homeShortcutAction => 'Home';
 
   @override

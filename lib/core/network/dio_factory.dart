@@ -43,21 +43,21 @@ class DioFactory {
         responseType: ResponseType.json,
       ),
     );
+    final debugProxy = DebugSystemProxy.proxyForCurrentPlatform(
+      iosProxy: NetworkDebugSettings.proxy,
+    );
     if (kDebugMode &&
-        (DebugSystemProxy.isEnabled ||
+        (debugProxy.isNotEmpty ||
             NetworkDebugSettings.allowInvalidProxyCertificates)) {
-      final proxy = DebugSystemProxy.isEnabled
-          ? DebugSystemProxy.findProxyValue
-          : '';
       configureDebugNetworkProxy(
         dio,
-        proxy: proxy,
+        proxy: debugProxy,
         allowInvalidCertificates:
             NetworkDebugSettings.allowInvalidProxyCertificates,
       );
       debugPrint(
         '[FLINX][Network] Dio debug proxy configured: '
-        '${proxy.isEmpty ? 'direct connection' : proxy}',
+        '${debugProxy.isEmpty ? 'direct connection' : debugProxy}',
       );
     }
     dio.interceptors.addAll([

@@ -52,6 +52,9 @@ void main() {
 }
 
 class _FakeAuthApi implements AuthApi {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+
   final options = <Options>[];
   Map<String, dynamic>? sentEmailBody;
   Map<String, dynamic>? verifyBody;

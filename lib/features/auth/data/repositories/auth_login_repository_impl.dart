@@ -43,29 +43,7 @@ class AuthLoginRepositoryImpl implements AuthLoginRepository {
         },
       );
       logger.info('Completed login.', requestId: requestId);
-      return AuthLoginResult(
-        tokenSet: AccountTokenSet(
-          accessToken: result.login.accessToken,
-          refreshToken: result.login.refreshToken,
-          tokenType: result.login.tokenType,
-          expiresAt: DateTime.now().toUtc().add(
-            Duration(seconds: result.login.expiresInSeconds),
-          ),
-          refreshExpiresAt: DateTime.now().toUtc().add(
-            Duration(seconds: result.login.refreshExpiresInSeconds),
-          ),
-        ),
-        profile: AccountProfile(
-          userId: result.profile.userId,
-          email: result.profile.email,
-          nickname: result.profile.nickname,
-          country: result.profile.regionCode,
-          avatarFileId: result.profile.avatarFileId,
-          avatarCode: AccountAvatarCode.fromWireValue(
-            result.profile.avatarCode,
-          ),
-        ),
-      );
+      return _mapResult(result);
     } on AuthLoginRemoteException catch (error, stackTrace) {
       logger.error(
         'Failed to login.',
@@ -76,6 +54,54 @@ class AuthLoginRepositoryImpl implements AuthLoginRepository {
       );
       throw _mapError(error, requestId);
     }
+  }
+
+  @override
+  Future<AuthLoginResult> loginWithApple({
+    required String identityToken,
+    required String requestId,
+  }) async {
+    try {
+      final result = await remoteDataSource.loginWithApple(
+        identityToken: identityToken,
+        requestId: requestId,
+      );
+      logger.info('Completed Apple login.', requestId: requestId);
+      return _mapResult(result);
+    } on AuthLoginRemoteException catch (error, stackTrace) {
+      logger.error(
+        'Failed Apple login.',
+        requestId: requestId,
+        error: error,
+        stackTrace: stackTrace,
+        context: {'statusCode': error.statusCode},
+      );
+      throw _mapError(error, requestId);
+    }
+  }
+
+  AuthLoginResult _mapResult(AuthLoginRemoteResult result) {
+    return AuthLoginResult(
+      tokenSet: AccountTokenSet(
+        accessToken: result.login.accessToken,
+        refreshToken: result.login.refreshToken,
+        tokenType: result.login.tokenType,
+        expiresAt: DateTime.now().toUtc().add(
+          Duration(seconds: result.login.expiresInSeconds),
+        ),
+        refreshExpiresAt: DateTime.now().toUtc().add(
+          Duration(seconds: result.login.refreshExpiresInSeconds),
+        ),
+      ),
+      profile: AccountProfile(
+        userId: result.profile.userId,
+        email: result.profile.email,
+        nickname: result.profile.nickname,
+        country: result.profile.regionCode,
+        avatarFileId: result.profile.avatarFileId,
+        avatarCode: AccountAvatarCode.fromWireValue(result.profile.avatarCode),
+      ),
+    );
   }
 
   AppError _mapError(AuthLoginRemoteException error, String requestId) {

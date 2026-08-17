@@ -110,6 +110,12 @@ class _FakeLoginRepository implements AuthLoginRepository {
       ),
     );
   }
+
+  @override
+  Future<AuthLoginResult> loginWithApple({
+    required String identityToken,
+    required String requestId,
+  }) => throw UnimplementedError();
 }
 
 class _FakeLoginDeviceContextProvider implements LoginDeviceContextProvider {

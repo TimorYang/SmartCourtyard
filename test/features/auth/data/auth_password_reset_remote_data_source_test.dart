@@ -100,6 +100,9 @@ void main() {
 }
 
 class _FakeAuthApi implements AuthApi {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+
   _FakeAuthApi({
     this.sendResponse = const ApiEnvelopeDto(code: 200, success: true),
     this.error,
