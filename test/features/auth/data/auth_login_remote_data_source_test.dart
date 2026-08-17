@@ -70,6 +70,44 @@ void main() {
     },
   );
 
+  test('submits the Apple identity token as the payload', () async {
+    final api = _FakeAuthApi(
+      const ApiEnvelopeDto(
+        code: 200,
+        success: true,
+        data: AuthLoginResponseDto(
+          accountId: '2',
+          accessToken: 'access-token',
+          refreshToken: 'refresh-token',
+          tokenType: 'bearer',
+          expiresInSeconds: 86400,
+          refreshExpiresInSeconds: 2592000,
+        ),
+      ),
+    );
+    final dataSource = AuthLoginRemoteDataSourceImpl(
+      api: api,
+      clientAuthorization: 'encoded-client-credentials',
+    );
+
+    final result = await dataSource.loginWithApple(
+      identityToken: 'header.payload.signature',
+      requestId: 'apple-login-123',
+    );
+
+    expect(api.body, {'payload': 'header.payload.signature'});
+    expect(
+      api.loginOptions.headers?['authorization'],
+      'Basic encoded-client-credentials',
+    );
+    expect(
+      api.loginOptions.extra?[NetworkRequestExtras.requestId],
+      'apple-login-123',
+    );
+    expect(result.login.accessToken, 'access-token');
+    expect(result.profile.userId, '2');
+  });
+
   test('rejects a non-200 business response code', () async {
     final dataSource = AuthLoginRemoteDataSourceImpl(
       api: _FakeAuthApi(
@@ -186,6 +224,16 @@ class _FakeAuthApi implements AuthApi {
 
   @override
   Future<ApiEnvelopeDto<AuthLoginResponseDto>> login(
+    Map<String, dynamic> requestBody,
+    Options requestOptions,
+  ) async {
+    body = requestBody;
+    loginOptions = requestOptions;
+    return response;
+  }
+
+  @override
+  Future<ApiEnvelopeDto<AuthLoginResponseDto>> loginWithApple(
     Map<String, dynamic> requestBody,
     Options requestOptions,
   ) async {

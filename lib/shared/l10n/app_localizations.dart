@@ -656,6 +656,24 @@ abstract class AppLocalizations {
   /// **'Login failed. Please try again.'**
   String get loginFailed;
 
+  /// Message shown when Apple sign-in is attempted before accepting the agreements
+  ///
+  /// In en, this message translates to:
+  /// **'Please agree to the User Agreement and Privacy Policy first.'**
+  String get appleLoginAgreementRequired;
+
+  /// Message shown when Apple sign-in is not supported or configured
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Apple is unavailable on this device.'**
+  String get appleLoginUnavailable;
+
+  /// Message shown when Apple sign-in fails
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Apple failed. Please try again.'**
+  String get appleLoginFailed;
+
   /// Temporary shortcut button from the welcome page to the home page
   ///
   /// In en, this message translates to:

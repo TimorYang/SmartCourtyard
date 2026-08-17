@@ -294,6 +294,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get loginFailed => '登录失败，请重试。';
 
   @override
+  String get appleLoginAgreementRequired => '请先同意用户协议和隐私政策。';
+
+  @override
+  String get appleLoginUnavailable => '当前设备无法使用 Apple 登录。';
+
+  @override
+  String get appleLoginFailed => 'Apple 登录失败，请重试。';
+
+  @override
   String get homeShortcutAction => '首页';
 
   @override

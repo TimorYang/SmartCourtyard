@@ -106,6 +106,9 @@ void main() {
 }
 
 class _FakeAuthApi implements AuthApi {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+
   _FakeAuthApi(this.response) : error = null;
   _FakeAuthApi.error(this.error) : response = null;
 

@@ -1,4 +1,6 @@
 import 'package:flinx/app/flinx_app.dart';
+import 'package:flinx/features/auth/application/login_form_controller.dart';
+import 'package:flinx/features/auth/application/providers.dart';
 import 'package:flinx/features/auth/presentation/widgets/auth_flow_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,8 +8,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  Future<void> openLoginPage(WidgetTester tester) async {
-    await tester.pumpWidget(const ProviderScope(child: FlinxApp()));
+  Future<void> openLoginPage(
+    WidgetTester tester, {
+    bool appleSupported = true,
+  }) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appleLoginPlatformSupportedProvider.overrideWithValue(appleSupported),
+        ],
+        child: const FlinxApp(),
+      ),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.text('Login'));
     await tester.pumpAndSettle();
@@ -21,9 +33,9 @@ void main() {
       final fields = tester
           .widgetList<TextField>(find.byType(TextField))
           .toList();
-      expect(fields[0].controller?.text, '19901462575@163.com');
-      expect(fields[1].controller?.text, '12345678');
-      expect(find.text('Login in'), findsOneWidget);
+      expect(fields[0].controller?.text, defaultLoginAccount);
+      expect(fields[1].controller?.text, defaultLoginPassword);
+      expect(find.text('Sign in'), findsOneWidget);
       expect(find.text('Other ways to login'), findsOneWidget);
       expect(
         find.bySemanticsLabel('Continue Sign in with Apple'),
@@ -39,6 +51,28 @@ void main() {
       );
     },
   );
+
+  testWidgets('requires agreement before starting Apple login', (tester) async {
+    await openLoginPage(tester);
+
+    await tester.tap(find.byKey(const ValueKey('apple_login_button')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Please agree to the User Agreement and Privacy Policy first.'),
+      findsOneWidget,
+    );
+    await tester.pump(const Duration(seconds: 3));
+  });
+
+  testWidgets('hides Apple login when the platform is unsupported', (
+    tester,
+  ) async {
+    await openLoginPage(tester, appleSupported: false);
+
+    expect(find.byKey(const ValueKey('apple_login_button')), findsNothing);
+    expect(find.bySemanticsLabel('Continue Sign in with Apple'), findsNothing);
+  });
 
   testWidgets('keeps third-party sign-in fixed when keyboard insets change', (
     tester,
@@ -84,7 +118,7 @@ void main() {
     await tester.pump();
     fields = tester.widgetList<TextField>(find.byType(TextField)).toList();
     expect(fields[1].obscureText, isFalse);
-    expect(fields[1].controller?.text, '12345678');
+    expect(fields[1].controller?.text, defaultLoginPassword);
     expect(find.bySemanticsLabel('Hide password'), findsOneWidget);
   });
 
@@ -121,7 +155,7 @@ void main() {
     expect(disabledButton.onPressed, isNotNull);
     expect(find.text('Enter a valid email address'), findsNothing);
 
-    await tester.tap(find.text('Login in'));
+    await tester.tap(find.text('Sign in'));
     await tester.pumpAndSettle();
 
     expect(alertCalls, hasLength(1));

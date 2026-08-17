@@ -12,4 +12,9 @@ abstract interface class AuthLoginRepository {
     required String appVersion,
     required String requestId,
   });
+
+  Future<AuthLoginResult> loginWithApple({
+    required String identityToken,
+    required String requestId,
+  });
 }

@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../../../../core/network/api_envelope_dto.dart';
 import '../../../../core/network/dio_factory.dart';
 import '../../../../core/network/network_exception.dart';
 import '../dto/auth_login_response_dto.dart';
@@ -9,6 +10,11 @@ import 'auth_api.dart';
 abstract interface class AuthLoginRemoteDataSource {
   Future<AuthLoginRemoteResult> login({
     required Map<String, dynamic> request,
+    required String requestId,
+  });
+
+  Future<AuthLoginRemoteResult> loginWithApple({
+    required String identityToken,
     required String requestId,
   });
 }
@@ -27,11 +33,39 @@ class AuthLoginRemoteDataSourceImpl implements AuthLoginRemoteDataSource {
     required Map<String, dynamic> request,
     required String requestId,
   }) async {
+    return _performLogin(
+      requestId: requestId,
+      request: request,
+      submit: api.login,
+    );
+  }
+
+  @override
+  Future<AuthLoginRemoteResult> loginWithApple({
+    required String identityToken,
+    required String requestId,
+  }) async {
+    return _performLogin(
+      requestId: requestId,
+      request: {'payload': identityToken},
+      submit: api.loginWithApple,
+    );
+  }
+
+  Future<AuthLoginRemoteResult> _performLogin({
+    required String requestId,
+    required Map<String, dynamic> request,
+    required Future<ApiEnvelopeDto<AuthLoginResponseDto>> Function(
+      Map<String, dynamic>,
+      Options,
+    )
+    submit,
+  }) async {
     if (clientAuthorization.trim().isEmpty) {
       throw const AuthLoginRemoteException.configuration();
     }
     try {
-      final response = await api.login(
+      final response = await submit(
         request,
         Options(
           headers: {'authorization': 'Basic ${clientAuthorization.trim()}'},
