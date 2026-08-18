@@ -8,7 +8,6 @@ import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
-import '../../../home/application/providers.dart';
 import 'smart_opener_scan_results_page.dart';
 import 'smart_opener_connection_success_page.dart';
 
@@ -61,7 +60,6 @@ class _SmartOpenerConnectingPageState
       return;
     }
     if (ok) {
-      ref.invalidate(homeDevicesProvider);
       context.pushReplacement(SmartOpenerConnectionSuccessPage.routePath);
       return;
     }

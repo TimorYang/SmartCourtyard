@@ -67,6 +67,35 @@ void main() {
 
     expect(doorRepository.fetchCountByScene, {1: 2, 2: 1});
   });
+
+  test('home device list invalidator refreshes every scene cache', () async {
+    final doorRepository = _CountingHomeDoorRepository();
+    final container = ProviderContainer(
+      overrides: [
+        homeScenesProvider.overrideWith(
+          (ref) async => const [
+            HomeScene(id: 1, name: 'Home', doorCount: 0, isDefault: true),
+            HomeScene(id: 2, name: 'Garage', doorCount: 0, isDefault: false),
+          ],
+        ),
+        fetchHomeDoorsUseCaseProvider.overrideWithValue(
+          FetchHomeDoorsUseCase(repository: doorRepository),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    container
+        .read(activeAuthSessionProvider.notifier)
+        .markAuthenticated(userId: 'user-a');
+
+    await container.read(homeDevicesProvider.future);
+    expect(doorRepository.fetchCountByScene, {1: 1, 2: 1});
+
+    container.read(homeDeviceListsInvalidatorProvider)();
+    await container.read(homeDevicesProvider.future);
+
+    expect(doorRepository.fetchCountByScene, {1: 2, 2: 2});
+  });
 }
 
 class _SequencedHomeSceneRepository implements HomeSceneRepository {

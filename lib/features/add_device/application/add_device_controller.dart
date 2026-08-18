@@ -8,6 +8,7 @@ import '../../../core/logging/app_logger.dart';
 import '../../../core/logging/providers.dart';
 import '../../../platform_bridge/hardware_gateway.dart';
 import '../../../platform_bridge/hardware_models.dart';
+import '../../home/application/providers.dart';
 import '../domain/entities/add_door_draft.dart';
 import '../domain/entities/onboarded_force_door.dart';
 import '../domain/use_cases/add_force_door_use_case.dart';
@@ -156,6 +157,7 @@ class AddDeviceController extends Notifier<AddDeviceState> {
   late FetchOnboardingDeviceKeyUseCase _fetchDeviceKeyUseCase;
   late ValidateBindingStatusUseCase _validateBindingStatusUseCase;
   late AddForceDoorUseCase _addForceDoorUseCase;
+  late HomeDeviceListsInvalidator _invalidateHomeDeviceLists;
   late AppLogger _logger;
   final List<StreamSubscription<Object?>> _subscriptions =
       <StreamSubscription<Object?>>[];
@@ -180,6 +182,7 @@ class AddDeviceController extends Notifier<AddDeviceState> {
       validateBindingStatusUseCaseProvider,
     );
     _addForceDoorUseCase = ref.watch(addForceDoorUseCaseProvider);
+    _invalidateHomeDeviceLists = ref.watch(homeDeviceListsInvalidatorProvider);
     _logger = ref.watch(appLoggerProvider);
     _subscriptions.addAll(<StreamSubscription<Object?>>[
       _gateway.bleScanResults.listen((device) {
@@ -790,6 +793,7 @@ class AddDeviceController extends Notifier<AddDeviceState> {
         onboardedDoor: onboardedDoor,
         infoMessage: '设备绑定成功',
       );
+      _invalidateHomeDeviceLists();
       return true;
     } on AppError catch (error) {
       _logError(

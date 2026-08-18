@@ -205,3 +205,17 @@ final homeDevicesProvider = FutureProvider<List<DeviceSummary>>((ref) async {
   ]);
   return [for (final doors in results) ...doors];
 });
+
+typedef HomeDeviceListsInvalidator = void Function();
+
+/// Invalidates every scene-specific door list and the aggregate home list.
+///
+/// Invalidating only [homeDevicesProvider] would rebuild the aggregate from
+/// cached [homeDoorsBySceneProvider] values and could leave a newly added door
+/// invisible in one or more scenes.
+final homeDeviceListsInvalidatorProvider = Provider<HomeDeviceListsInvalidator>(
+  (ref) => () {
+    ref.invalidate(homeDoorsBySceneProvider);
+    ref.invalidate(homeDevicesProvider);
+  },
+);

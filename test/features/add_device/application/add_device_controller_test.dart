@@ -5,6 +5,7 @@ import 'package:flinx/features/add_device/domain/entities/add_door_draft.dart';
 import 'package:flinx/features/add_device/domain/entities/onboarded_force_door.dart';
 import 'package:flinx/features/add_device/domain/entities/onboarding_device_key.dart';
 import 'package:flinx/features/add_device/domain/repositories/add_device_onboarding_repository.dart';
+import 'package:flinx/features/home/application/providers.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
 import 'package:flinx/platform_bridge/mock_hardware_gateway.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -137,6 +138,32 @@ void main() {
       expect(_FakeAddDeviceOnboardingRepository.lastSceneId, 12);
     },
   );
+
+  test('notifies home device lists after cloud binding succeeds', () async {
+    var invalidationCount = 0;
+    final container = ProviderContainer(
+      overrides: [
+        addDeviceHardwareGatewayProvider.overrideWithValue(
+          _FlowTrackingGateway(),
+        ),
+        addDeviceOnboardingRepositoryProvider.overrideWithValue(
+          const _FakeAddDeviceOnboardingRepository(),
+        ),
+        homeDeviceListsInvalidatorProvider.overrideWithValue(
+          () => invalidationCount++,
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    final controller = container.read(addDeviceControllerProvider.notifier);
+
+    expect(await controller.connectAndAuthenticate(device), isTrue);
+    controller.updateWifiSsid('test-network');
+    controller.updateWifiPassword('password');
+
+    expect(await controller.configureWifi(), isTrue);
+    expect(invalidationCount, 1);
+  });
 }
 
 ProviderContainer _createContainer(_DisconnectTrackingGateway gateway) {
