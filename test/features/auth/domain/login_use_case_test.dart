@@ -1,4 +1,5 @@
 import 'package:flinx/features/auth/domain/entities/password_encryption_material.dart';
+import 'package:flinx/features/auth/domain/entities/apple_login_nonce.dart';
 import 'package:flinx/features/auth/domain/entities/auth_login_result.dart';
 import 'package:flinx/features/account/domain/entities/account_profile.dart';
 import 'package:flinx/features/account/domain/entities/account_token_set.dart';
@@ -113,9 +114,21 @@ class _FakeLoginRepository implements AuthLoginRepository {
 
   @override
   Future<AuthLoginResult> loginWithApple({
+    required String nonceId,
     required String identityToken,
+    required String authorizationCode,
+    required String? givenName,
+    required String? familyName,
+    required String deviceId,
+    required String deviceModel,
+    required String platform,
+    required String appVersion,
     required String requestId,
   }) => throw UnimplementedError();
+
+  @override
+  Future<AppleLoginNonce> getAppleLoginNonce({required String requestId}) =>
+      throw UnimplementedError();
 }
 
 class _FakeLoginDeviceContextProvider implements LoginDeviceContextProvider {

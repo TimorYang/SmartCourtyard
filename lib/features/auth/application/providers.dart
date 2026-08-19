@@ -265,7 +265,7 @@ final loginUseCaseProvider = Provider<LoginUseCase>((ref) {
 });
 
 final appleIdentityProvider = Provider<AppleIdentityProvider>((ref) {
-  return const SignInWithAppleIdentityProvider();
+  return SignInWithAppleIdentityProvider();
 });
 
 final appleLoginUseCaseProvider = Provider<AppleLoginUseCase>((ref) {
@@ -273,6 +273,7 @@ final appleLoginUseCaseProvider = Provider<AppleLoginUseCase>((ref) {
     identityProvider: ref.watch(appleIdentityProvider),
     loginRepository: ref.watch(authLoginRepositoryProvider),
     accountRepository: ref.watch(accountRepositoryProvider),
+    deviceContextProvider: ref.watch(loginDeviceContextProvider),
   );
 });
 

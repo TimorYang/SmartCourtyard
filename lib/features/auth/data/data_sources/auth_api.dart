@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 
 import '../../../../core/network/api_envelope_dto.dart';
+import '../dto/apple_login_nonce_response_dto.dart';
 import '../dto/auth_login_response_dto.dart';
 import '../dto/auth_profile_response_dto.dart';
 import '../dto/auth_public_key_response_dto.dart';
@@ -23,8 +24,12 @@ abstract class AuthApi {
     @DioOptions() Options options,
   );
 
-  // Despite the route name, FLINX expects the Apple user identity JWS here.
-  @POST('app/auth/apple/notifications')
+  @POST('app/auth/apple/nonce')
+  Future<ApiEnvelopeDto<AppleLoginNonceResponseDto>> fetchAppleLoginNonce(
+    @DioOptions() Options options,
+  );
+
+  @POST('app/auth/apple/login')
   Future<ApiEnvelopeDto<AuthLoginResponseDto>> loginWithApple(
     @Body() Map<String, dynamic> body,
     @DioOptions() Options options,

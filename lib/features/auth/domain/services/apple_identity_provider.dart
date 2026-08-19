@@ -3,7 +3,7 @@ import '../entities/apple_identity_credential.dart';
 abstract interface class AppleIdentityProvider {
   Future<bool> isAvailable();
 
-  Future<AppleIdentityCredential> authorize();
+  Future<AppleIdentityCredential> authorize({required String hashedNonce});
 }
 
 enum AppleIdentityErrorCode { canceled, unavailable, invalidCredential, failed }

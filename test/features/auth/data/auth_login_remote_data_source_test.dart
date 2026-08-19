@@ -3,6 +3,7 @@ import 'package:flinx/core/network/api_envelope_dto.dart';
 import 'package:flinx/core/network/dio_factory.dart';
 import 'package:flinx/features/auth/data/data_sources/auth_api.dart';
 import 'package:flinx/features/auth/data/data_sources/auth_login_remote_data_source.dart';
+import 'package:flinx/features/auth/data/dto/apple_login_nonce_response_dto.dart';
 import 'package:flinx/features/auth/data/dto/auth_public_key_response_dto.dart';
 import 'package:flinx/features/auth/data/dto/auth_login_response_dto.dart';
 import 'package:flinx/features/auth/data/dto/auth_profile_response_dto.dart';
@@ -70,7 +71,71 @@ void main() {
     },
   );
 
-  test('submits the Apple identity token as the payload', () async {
+  test('fetches and validates the Apple login nonce', () async {
+    final api = _FakeAuthApi(
+      const ApiEnvelopeDto<AuthLoginResponseDto>(code: 500, success: false),
+      nonceResponse: const ApiEnvelopeDto(
+        code: 200,
+        success: true,
+        data: AppleLoginNonceResponseDto(
+          nonceId: 'nonce-id',
+          nonce: 'raw-nonce',
+          expiresInSeconds: 300,
+        ),
+      ),
+    );
+    final dataSource = AuthLoginRemoteDataSourceImpl(
+      api: api,
+      clientAuthorization: 'encoded-client-credentials',
+    );
+
+    final result = await dataSource.fetchAppleLoginNonce(
+      requestId: 'apple-login-123',
+    );
+
+    expect(result.nonceId, 'nonce-id');
+    expect(result.nonce, 'raw-nonce');
+    expect(result.expiresInSeconds, 300);
+    expect(
+      api.nonceOptions.headers?['authorization'],
+      'Basic encoded-client-credentials',
+    );
+    expect(
+      api.nonceOptions.extra?[NetworkRequestExtras.requestId],
+      'apple-login-123',
+    );
+  });
+
+  test('rejects an invalid Apple login nonce response', () async {
+    final dataSource = AuthLoginRemoteDataSourceImpl(
+      api: _FakeAuthApi(
+        const ApiEnvelopeDto<AuthLoginResponseDto>(code: 500, success: false),
+        nonceResponse: const ApiEnvelopeDto(
+          code: 200,
+          success: true,
+          data: AppleLoginNonceResponseDto(
+            nonceId: '',
+            nonce: 'raw-nonce',
+            expiresInSeconds: 300,
+          ),
+        ),
+      ),
+      clientAuthorization: 'encoded-client-credentials',
+    );
+
+    expect(
+      () => dataSource.fetchAppleLoginNonce(requestId: 'apple-login-123'),
+      throwsA(
+        isA<AuthLoginRemoteException>().having(
+          (error) => error.kind,
+          'kind',
+          AuthLoginRemoteErrorKind.invalidResponse,
+        ),
+      ),
+    );
+  });
+
+  test('submits the complete Apple login request', () async {
     final api = _FakeAuthApi(
       const ApiEnvelopeDto(
         code: 200,
@@ -91,11 +156,31 @@ void main() {
     );
 
     final result = await dataSource.loginWithApple(
-      identityToken: 'header.payload.signature',
+      request: const {
+        'nonceId': 'nonce-id',
+        'identityToken': 'header.payload.signature',
+        'authorizationCode': 'authorization-code',
+        'givenName': 'Alice',
+        'familyName': 'Smith',
+        'deviceId': 'installation-id',
+        'deviceModel': 'iPhone17,2',
+        'platform': 'IOS',
+        'appVersion': '1.0.0',
+      },
       requestId: 'apple-login-123',
     );
 
-    expect(api.body, {'payload': 'header.payload.signature'});
+    expect(api.body, {
+      'nonceId': 'nonce-id',
+      'identityToken': 'header.payload.signature',
+      'authorizationCode': 'authorization-code',
+      'givenName': 'Alice',
+      'familyName': 'Smith',
+      'deviceId': 'installation-id',
+      'deviceModel': 'iPhone17,2',
+      'platform': 'IOS',
+      'appVersion': '1.0.0',
+    });
     expect(
       api.loginOptions.headers?['authorization'],
       'Basic encoded-client-credentials',
@@ -201,6 +286,15 @@ void main() {
 class _FakeAuthApi implements AuthApi {
   _FakeAuthApi(
     this.response, {
+    this.nonceResponse = const ApiEnvelopeDto(
+      code: 200,
+      success: true,
+      data: AppleLoginNonceResponseDto(
+        nonceId: 'nonce-id',
+        nonce: 'raw-nonce',
+        expiresInSeconds: 300,
+      ),
+    ),
     this.profileResponse = const ApiEnvelopeDto(
       code: 200,
       success: true,
@@ -217,9 +311,11 @@ class _FakeAuthApi implements AuthApi {
   });
 
   final ApiEnvelopeDto<AuthLoginResponseDto> response;
+  final ApiEnvelopeDto<AppleLoginNonceResponseDto> nonceResponse;
   final ApiEnvelopeDto<AuthProfileResponseDto> profileResponse;
   late Map<String, dynamic> body;
   late Options loginOptions;
+  late Options nonceOptions;
   late Options profileOptions;
 
   @override
@@ -240,6 +336,14 @@ class _FakeAuthApi implements AuthApi {
     body = requestBody;
     loginOptions = requestOptions;
     return response;
+  }
+
+  @override
+  Future<ApiEnvelopeDto<AppleLoginNonceResponseDto>> fetchAppleLoginNonce(
+    Options requestOptions,
+  ) async {
+    nonceOptions = requestOptions;
+    return nonceResponse;
   }
 
   @override

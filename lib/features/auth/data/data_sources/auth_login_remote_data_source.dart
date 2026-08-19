@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../../../../core/network/api_envelope_dto.dart';
 import '../../../../core/network/dio_factory.dart';
 import '../../../../core/network/network_exception.dart';
+import '../dto/apple_login_nonce_response_dto.dart';
 import '../dto/auth_login_response_dto.dart';
 import '../dto/auth_profile_response_dto.dart';
 import 'auth_api.dart';
@@ -14,7 +15,11 @@ abstract interface class AuthLoginRemoteDataSource {
   });
 
   Future<AuthLoginRemoteResult> loginWithApple({
-    required String identityToken,
+    required Map<String, dynamic> request,
+    required String requestId,
+  });
+
+  Future<AppleLoginNonceResponseDto> fetchAppleLoginNonce({
     required String requestId,
   });
 }
@@ -42,14 +47,42 @@ class AuthLoginRemoteDataSourceImpl implements AuthLoginRemoteDataSource {
 
   @override
   Future<AuthLoginRemoteResult> loginWithApple({
-    required String identityToken,
+    required Map<String, dynamic> request,
     required String requestId,
   }) async {
     return _performLogin(
       requestId: requestId,
-      request: {'payload': identityToken},
+      request: request,
       submit: api.loginWithApple,
     );
+  }
+
+  @override
+  Future<AppleLoginNonceResponseDto> fetchAppleLoginNonce({
+    required String requestId,
+  }) async {
+    _validateConfiguration();
+    try {
+      final response = await api.fetchAppleLoginNonce(
+        _authorizationOptions(requestId),
+      );
+      final data = response.data;
+      if (response.code != 200 ||
+          !response.success ||
+          data == null ||
+          data.nonceId.trim().isEmpty ||
+          data.nonce.trim().isEmpty ||
+          data.expiresInSeconds <= 0) {
+        throw const AuthLoginRemoteException.invalidResponse();
+      }
+      return data;
+    } on DioException catch (error) {
+      throw AuthLoginRemoteException.fromNetwork(
+        NetworkException.fromDio(error),
+      );
+    } on AuthLoginRemoteException {
+      rethrow;
+    }
   }
 
   Future<AuthLoginRemoteResult> _performLogin({
@@ -61,17 +94,9 @@ class AuthLoginRemoteDataSourceImpl implements AuthLoginRemoteDataSource {
     )
     submit,
   }) async {
-    if (clientAuthorization.trim().isEmpty) {
-      throw const AuthLoginRemoteException.configuration();
-    }
+    _validateConfiguration();
     try {
-      final response = await submit(
-        request,
-        Options(
-          headers: {'authorization': 'Basic ${clientAuthorization.trim()}'},
-          extra: {NetworkRequestExtras.requestId: requestId},
-        ),
-      );
+      final response = await submit(request, _authorizationOptions(requestId));
       // The login endpoint's business contract defines code 200 as success.
       final data = response.data;
       if (response.code != 200 ||
@@ -117,6 +142,17 @@ class AuthLoginRemoteDataSourceImpl implements AuthLoginRemoteDataSource {
       profile.userId.trim().isNotEmpty &&
       profile.email.trim().isNotEmpty &&
       profile.nickname.trim().isNotEmpty;
+
+  void _validateConfiguration() {
+    if (clientAuthorization.trim().isEmpty) {
+      throw const AuthLoginRemoteException.configuration();
+    }
+  }
+
+  Options _authorizationOptions(String requestId) => Options(
+    headers: {'authorization': 'Basic ${clientAuthorization.trim()}'},
+    extra: {NetworkRequestExtras.requestId: requestId},
+  );
 }
 
 class AuthLoginRemoteResult {
