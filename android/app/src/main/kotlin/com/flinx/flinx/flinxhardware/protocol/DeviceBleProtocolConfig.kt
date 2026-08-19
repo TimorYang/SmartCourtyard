@@ -99,6 +99,18 @@ object DeviceBleProtocolConfig {
     }
   }
 
+  fun matchesProtocolResponse(
+    frameType: Int,
+    command: Int,
+    expectedCommand: Int,
+  ): Boolean {
+    if (command != expectedCommand) {
+      return false
+    }
+    return frameType == frameTypeResponse ||
+      (frameType == frameTypeRequest && command == commandRemotePairingResponse)
+  }
+
   fun buildEncryptedCommandFrame(
     sequence: Int,
     command: Int,

@@ -69,7 +69,7 @@ class RunnerTests: XCTestCase {
     XCTAssertEqual(decoded.data, Data([0x10, 0x08]))
   }
 
-  func testRemotePairingMatchesOnlyExpectedResponseAndSequence() {
+  func testRemotePairingMatchesExpectedResponseRegardlessOfSequence() {
     XCTAssertTrue(
       HardwareBridge.matchesProvisioningResponseForTesting(
         requestCommand: 0x0005,
@@ -88,7 +88,7 @@ class RunnerTests: XCTestCase {
         responseSequence: 9
       )
     )
-    XCTAssertFalse(
+    XCTAssertTrue(
       HardwareBridge.matchesProvisioningResponseForTesting(
         requestCommand: 0x0005,
         expectedCommand: 0x0104,
@@ -99,7 +99,30 @@ class RunnerTests: XCTestCase {
     )
   }
 
-  func testWifiScanAcceptsExactAndLegacyZeroResponseSequence() {
+  func testRequestTypeIsAcceptedOnlyForRemotePairingResult() {
+    XCTAssertTrue(
+      HardwareBridge.matchesProvisioningResponseForTesting(
+        requestCommand: 0x0005,
+        expectedCommand: 0x0104,
+        pendingSequence: 3,
+        responseCommand: 0x0104,
+        responseSequence: 0x0607,
+        responseType: 0x03
+      )
+    )
+    XCTAssertFalse(
+      HardwareBridge.matchesProvisioningResponseForTesting(
+        requestCommand: 0x0E01,
+        expectedCommand: 0x0E01,
+        pendingSequence: 3,
+        responseCommand: 0x0E01,
+        responseSequence: 0x0607,
+        responseType: 0x03
+      )
+    )
+  }
+
+  func testWifiScanAcceptsAnyResponseSequence() {
     XCTAssertTrue(
       HardwareBridge.matchesProvisioningResponseForTesting(
         requestCommand: 0x0E01,
@@ -120,7 +143,7 @@ class RunnerTests: XCTestCase {
     )
   }
 
-  func testWifiScanRejectsWrongCommandAndUnrelatedNonzeroSequence() {
+  func testWifiScanRejectsWrongCommandButAcceptsDifferentSequence() {
     XCTAssertFalse(
       HardwareBridge.matchesProvisioningResponseForTesting(
         requestCommand: 0x0E01,
@@ -130,7 +153,7 @@ class RunnerTests: XCTestCase {
         responseSequence: 0
       )
     )
-    XCTAssertFalse(
+    XCTAssertTrue(
       HardwareBridge.matchesProvisioningResponseForTesting(
         requestCommand: 0x0E01,
         expectedCommand: 0x0E01,
@@ -141,8 +164,29 @@ class RunnerTests: XCTestCase {
     )
   }
 
-  func testNonWifiCommandsDoNotAcceptZeroResponseSequence() {
+  func testSafetyAccessoryQueryIgnoresResponseSequence() {
+    XCTAssertTrue(
+      HardwareBridge.matchesProvisioningResponseForTesting(
+        requestCommand: 0x000C,
+        expectedCommand: 0x000C,
+        pendingSequence: 9,
+        responseCommand: 0x000C,
+        responseSequence: 10
+      )
+    )
     XCTAssertFalse(
+      HardwareBridge.matchesProvisioningResponseForTesting(
+        requestCommand: 0x000C,
+        expectedCommand: 0x000C,
+        pendingSequence: 9,
+        responseCommand: 0x000D,
+        responseSequence: 10
+      )
+    )
+  }
+
+  func testNonWifiCommandsAcceptZeroResponseSequence() {
+    XCTAssertTrue(
       HardwareBridge.matchesProvisioningResponseForTesting(
         requestCommand: 0x0E03,
         expectedCommand: 0x0E03,
@@ -151,7 +195,7 @@ class RunnerTests: XCTestCase {
         responseSequence: 0
       )
     )
-    XCTAssertFalse(
+    XCTAssertTrue(
       HardwareBridge.matchesProvisioningResponseForTesting(
         requestCommand: 0x0001,
         expectedCommand: 0x0001,

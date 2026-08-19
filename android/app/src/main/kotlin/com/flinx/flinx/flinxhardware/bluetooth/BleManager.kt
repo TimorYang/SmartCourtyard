@@ -1866,8 +1866,17 @@ class BleManager(
       onProtocolFrame?.invoke(deviceId, frame)
       return
     }
-    if (frame.frameType == DeviceBleProtocolConfig.frameTypeResponse &&
-      frame.sequence == pending.sequence && frame.command == pending.responseCommand) {
+    if (DeviceBleProtocolConfig.matchesProtocolResponse(
+        frameType = frame.frameType,
+        command = frame.command,
+        expectedCommand = pending.responseCommand,
+      )) {
+      if (frame.sequence != pending.sequence) {
+        BleNativeLog.w(
+          TAG,
+          "event=protocol_response_sequence_mismatch_accepted requestId=${pending.requestId} deviceId=$deviceId requestSequence=${pending.sequence} responseSequence=${frame.sequence} command=0x${frame.command.toString(16).padStart(4, '0')}",
+        )
+      }
       removeProtocolSession(deviceId)?.callback(Result.success(frame))
       return
     }
@@ -2281,8 +2290,11 @@ class BleManager(
     if (pending == null) {
       val fallback = pendingDiagnostics.entries.firstOrNull {
         it.value.deviceId == deviceId &&
-          it.value.expectedResponseCommand == frame.command &&
-          it.value.sequence == frame.sequence
+          DeviceBleProtocolConfig.matchesProtocolResponse(
+            frameType = frame.frameType,
+            command = frame.command,
+            expectedCommand = it.value.expectedResponseCommand,
+          )
       }
       if (fallback != null) {
         transactionId = fallback.key

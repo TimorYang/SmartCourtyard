@@ -2,6 +2,7 @@ package com.flinx.flinx.flinxhardware.protocol
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -105,6 +106,31 @@ class DeviceBleProtocolConfigTest {
     assertEquals(
       DeviceRemotePairingResult.UNKNOWN,
       DeviceBleProtocolConfig.remotePairingResult(0x7F),
+    )
+  }
+
+  @Test
+  fun `request frame type is accepted only for remote pairing result`() {
+    assertTrue(
+      DeviceBleProtocolConfig.matchesProtocolResponse(
+        frameType = DeviceBleProtocolConfig.frameTypeRequest,
+        command = DeviceBleProtocolConfig.commandRemotePairingResponse,
+        expectedCommand = DeviceBleProtocolConfig.commandRemotePairingResponse,
+      ),
+    )
+    assertFalse(
+      DeviceBleProtocolConfig.matchesProtocolResponse(
+        frameType = DeviceBleProtocolConfig.frameTypeRequest,
+        command = DeviceBleProtocolConfig.commandScanWifi,
+        expectedCommand = DeviceBleProtocolConfig.commandScanWifi,
+      ),
+    )
+    assertTrue(
+      DeviceBleProtocolConfig.matchesProtocolResponse(
+        frameType = DeviceBleProtocolConfig.frameTypeResponse,
+        command = DeviceBleProtocolConfig.commandScanWifi,
+        expectedCommand = DeviceBleProtocolConfig.commandScanWifi,
+      ),
     )
   }
 }

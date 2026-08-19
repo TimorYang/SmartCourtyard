@@ -282,6 +282,24 @@ Native may emit events for:
 
 Every control or hardware command must include or create a `requestId` so Flutter, native logs, and support diagnostics can correlate the operation.
 
+## Current BLE Protocol Scope
+
+Treat the command sections highlighted in yellow in
+`docs/设备与平台通讯协议.pdf` as not implemented and out of scope unless the
+user explicitly requests them. Do not proactively add handlers, bridge APIs,
+state, or tests for those commands.
+
+For device-to-app request frames (`Type 0x03`), the current implemented scope is
+limited to:
+
+- `0x0202`: device attribute report.
+- `0x0104`: remote-control pairing result. This is an explicit active-scope
+  exception even though its protocol section is highlighted in yellow.
+
+`0x000F` (ESP reset success report) is currently unused and must not be
+implemented until explicitly requested. Other yellow-highlighted commands are
+also deferred.
+
 ## Hardware Guard Rules
 
 Before any hardware-dependent action, check the required preconditions in application/domain use cases, not inside widgets.

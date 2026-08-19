@@ -1213,14 +1213,16 @@ extension HardwareBridge {
         expectedCommand: UInt16,
         pendingSequence: UInt16,
         responseCommand: UInt16,
-        responseSequence: UInt16
+        responseSequence: UInt16,
+        responseType: UInt8 = 0x04
     ) -> Bool {
         matchesProvisioningResponse(
             requestCommand: requestCommand,
             expectedCommand: expectedCommand,
             pendingSequence: pendingSequence,
             responseCommand: responseCommand,
-            responseSequence: responseSequence
+            responseSequence: responseSequence,
+            responseType: responseType
         )
     }
 
@@ -1235,12 +1237,19 @@ extension HardwareBridge {
         expectedCommand: UInt16,
         pendingSequence: UInt16,
         responseCommand: UInt16,
-        responseSequence: UInt16
+        responseSequence: UInt16,
+        responseType: UInt8
     ) -> Bool {
         guard expectedCommand == responseCommand else { return false }
-        return pendingSequence == responseSequence ||
-            (requestCommand == BleProvisioningCommand.scanWifi.rawValue &&
-                responseSequence == 0)
+        let isStandardResponse = responseType == 0x04
+        let isRemotePairingReport =
+            requestCommand == BleProvisioningCommand.remotePairing.rawValue &&
+            responseCommand == RemotePairingProtocol.responseCommand &&
+            responseType == 0x03
+        // Device responses do not reliably echo the request sequence. Keep both
+        // values for diagnostics, but correlate the single pending request by
+        // device and expected response command only.
+        return isStandardResponse || isRemotePairingReport
     }
 }
 
@@ -1706,13 +1715,13 @@ private extension HardwareBridge {
             return
         }
         
-        guard frame.type == 0x04,
-              Self.matchesProvisioningResponse(
+        guard Self.matchesProvisioningResponse(
                   requestCommand: pending.command.rawValue,
                   expectedCommand: pending.expectedResponseCommand,
                   pendingSequence: pending.sequence,
                   responseCommand: frame.command,
-                  responseSequence: frame.sequence
+                  responseSequence: frame.sequence,
+                  responseType: frame.type
               ) else {
             logger.warning(
                 "provisioning_response",
@@ -1724,15 +1733,13 @@ private extension HardwareBridge {
             return
         }
 
-        if pending.command == .scanWifi,
-           pending.sequence != frame.sequence,
-           frame.sequence == 0 {
+        if pending.sequence != frame.sequence {
             logger.warning(
                 "provisioning_sequence_compatibility",
                 requestId: pending.requestId,
                 deviceId: deviceId,
-                state: "accepted_legacy_wifi_sequence",
-                nativeCode: "wifi_scan_response_sequence_zero",
+                state: "accepted_response_sequence_mismatch",
+                nativeCode: "response_sequence_mismatch",
                 details: "requestCommand=\(pending.command.hexCode) expectedResponseCommand=\(DoorControlCommand.hex(pending.expectedResponseCommand)) requestSequence=\(pending.sequence) responseSequence=\(frame.sequence)"
             )
         }
@@ -1854,13 +1861,13 @@ private extension HardwareBridge {
                 )
                 return decryptedFrame
             }
-            guard decryptedFrame.type == 0x04,
-                  Self.matchesProvisioningResponse(
+            guard Self.matchesProvisioningResponse(
                       requestCommand: pending.command.rawValue,
                       expectedCommand: pending.expectedResponseCommand,
                       pendingSequence: pending.sequence,
                       responseCommand: decryptedFrame.command,
-                      responseSequence: decryptedFrame.sequence
+                      responseSequence: decryptedFrame.sequence,
+                      responseType: decryptedFrame.type
                   ) else {
                 logger.warning(
                     "provisioning_decrypt",
@@ -1975,7 +1982,8 @@ private extension HardwareBridge {
                         expectedCommand: $0.value.expectedResponseCommand,
                         pendingSequence: $0.value.sequence,
                         responseCommand: frame.command,
-                        responseSequence: frame.sequence
+                        responseSequence: frame.sequence,
+                        responseType: frame.type
                     )
             }).map { key, value in
                 pendingDiagnostics.removeValue(forKey: key)
