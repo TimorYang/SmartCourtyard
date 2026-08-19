@@ -1093,7 +1093,6 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
     final parseResult = DoorRealtimeStateMapper.parse(
       snapshot,
       previous: state.doorRealtimeState,
-      isDongle: selectedDevice?.deviceType.trim().toLowerCase() == 'dongle',
     );
     final logContext = <String, Object?>{
       ...parseResult.diagnosticContext,

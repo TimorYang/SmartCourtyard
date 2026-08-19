@@ -9,7 +9,6 @@ void main() {
   test('maps door status and percentage from a 0x0202 attribute snapshot', () {
     final result = DoorRealtimeStateMapper.parse(
       _snapshot([_attribute(0x2715, 0x03), _attribute(0x271C, 42)]),
-      isDongle: false,
     );
 
     expect(result.state?.status, DoorRealtimeStatus.opening);
@@ -19,7 +18,7 @@ void main() {
       'attributeIds': ['0x2715', '0x271C'],
       'relevantRaw': ['0x2715=[0x03]', '0x271C=[0x2A]'],
       'doorStatusRaw': '0x03',
-      'doorStatusMappingProfile': 'standard',
+      'doorStatusMappingProfile': 'unified',
       'doorStatusParsed': 'opening',
       'doorPositionRaw': '0x2A',
       'doorPositionParsedPercent': 42.0,
@@ -40,7 +39,6 @@ void main() {
     final result = DoorRealtimeStateMapper.parse(
       _snapshot([_attribute(0x2715, 0x04), _attribute(0x271C, 0xFF)]),
       previous: previous,
-      isDongle: false,
     );
 
     expect(result.state?.status, DoorRealtimeStatus.closing);
@@ -48,34 +46,62 @@ void main() {
     expect(result.issues, ['0x271C percentage out of range: 255']);
   });
 
-  test('keeps standard stopped and closed values distinct', () {
-    final closed = DoorRealtimeStateMapper.parse(
-      _snapshot([_attribute(0x2715, 0x01)]),
-      isDongle: false,
+  test('uses the unified open, stopped, and closed values', () {
+    final open = DoorRealtimeStateMapper.parse(
+      _snapshot([_attribute(0x2715, 0x00)]),
     );
     final stopped = DoorRealtimeStateMapper.parse(
+      _snapshot([_attribute(0x2715, 0x01)]),
+    );
+    final closed = DoorRealtimeStateMapper.parse(
       _snapshot([_attribute(0x2715, 0x02)]),
-      isDongle: false,
     );
 
-    expect(closed.state?.status, DoorRealtimeStatus.closed);
+    expect(open.state?.status, DoorRealtimeStatus.open);
     expect(stopped.state?.status, DoorRealtimeStatus.stopped);
-    expect(closed.statusMappingProfile, 'standard');
+    expect(closed.state?.status, DoorRealtimeStatus.closed);
+    expect(closed.statusMappingProfile, 'unified');
   });
 
-  test('uses reversed stopped and closed values for dongle', () {
-    final stopped = DoorRealtimeStateMapper.parse(
-      _snapshot([_attribute(0x2715, 0x01)]),
-      isDongle: true,
+  test('treats open and closed as moving between position endpoints', () {
+    final opening = DoorRealtimeStateMapper.parse(
+      _snapshot([_attribute(0x2715, 0x00), _attribute(0x271C, 42)]),
     );
-    final closed = DoorRealtimeStateMapper.parse(
-      _snapshot([_attribute(0x2715, 0x02)]),
-      isDongle: true,
+    final closing = DoorRealtimeStateMapper.parse(
+      _snapshot([_attribute(0x2715, 0x02), _attribute(0x271C, 42)]),
     );
 
-    expect(stopped.state?.status, DoorRealtimeStatus.stopped);
+    expect(opening.parsedStatus, DoorRealtimeStatus.open);
+    expect(opening.state?.status, DoorRealtimeStatus.opening);
+    expect(closing.parsedStatus, DoorRealtimeStatus.closed);
+    expect(closing.state?.status, DoorRealtimeStatus.closing);
+  });
+
+  test('keeps open and closed at position endpoints', () {
+    final open = DoorRealtimeStateMapper.parse(
+      _snapshot([_attribute(0x2715, 0x00), _attribute(0x271C, 100)]),
+    );
+    final closed = DoorRealtimeStateMapper.parse(
+      _snapshot([_attribute(0x2715, 0x02), _attribute(0x271C, 0)]),
+    );
+
+    expect(open.state?.status, DoorRealtimeStatus.open);
     expect(closed.state?.status, DoorRealtimeStatus.closed);
-    expect(closed.statusMappingProfile, 'dongle');
+  });
+
+  test('adjusts state when status and position arrive separately', () {
+    const previous = DoorRealtimeState(
+      status: DoorRealtimeStatus.open,
+      positionPercent: 100,
+    );
+
+    final result = DoorRealtimeStateMapper.parse(
+      _snapshot([_attribute(0x271C, 42)]),
+      previous: previous,
+    );
+
+    expect(result.state?.status, DoorRealtimeStatus.opening);
+    expect(result.state?.positionPercent, 42);
   });
 }
 

@@ -196,7 +196,7 @@ void main() {
         timestampMillis: 1,
         origin: DeviceAttributeReportOrigin.activeReport,
         attributes: [
-          DeviceAttribute(id: 0x2715, value: Uint8List.fromList([0x03])),
+          DeviceAttribute(id: 0x2715, value: Uint8List.fromList([0x00])),
           DeviceAttribute(id: 0x271C, value: Uint8List.fromList([50])),
         ],
       ),

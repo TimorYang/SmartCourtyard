@@ -10,7 +10,6 @@ class DoorRealtimeStateMapper {
   static DoorRealtimeStateParseResult parse(
     DeviceAttributeSnapshot snapshot, {
     DoorRealtimeState? previous,
-    required bool isDongle,
   }) {
     var status = previous?.status;
     var positionPercent = previous?.positionPercent;
@@ -34,7 +33,7 @@ class DoorRealtimeStateMapper {
             continue;
           }
           rawStatus = attribute.unsignedValue;
-          parsedStatus = _statusFromRawValue(rawStatus, isDongle: isDongle);
+          parsedStatus = _statusFromRawValue(rawStatus);
           status = parsedStatus;
           hasValidUpdate = true;
         case _doorPositionAttributeId:
@@ -56,6 +55,8 @@ class DoorRealtimeStateMapper {
       }
     }
 
+    status = _statusAdjustedForPosition(status, positionPercent);
+
     return DoorRealtimeStateParseResult(
       state: hasValidUpdate
           ? DoorRealtimeState(status: status, positionPercent: positionPercent)
@@ -67,7 +68,7 @@ class DoorRealtimeStateMapper {
       parsedStatus: parsedStatus,
       parsedPositionPercent: parsedPositionPercent,
       hasValidUpdate: hasValidUpdate,
-      statusMappingProfile: isDongle ? 'dongle' : 'standard',
+      statusMappingProfile: 'unified',
       issues: issues,
       attributeIds: snapshot.attributes
           .map((attribute) => _hex(attribute.id, width: 4))
@@ -83,26 +84,31 @@ class DoorRealtimeStateMapper {
     );
   }
 
-  static DoorRealtimeStatus _statusFromRawValue(
-    int value, {
-    required bool isDongle,
-  }) {
-    if (isDongle) {
-      return switch (value) {
-        0x00 => DoorRealtimeStatus.open,
-        0x02 => DoorRealtimeStatus.closed,
-        0x01 => DoorRealtimeStatus.stopped,
-        _ => DoorRealtimeStatus.unknown,
-      };
-    }
+  static DoorRealtimeStatus _statusFromRawValue(int value) {
     return switch (value) {
       0x00 => DoorRealtimeStatus.open,
-      0x01 => DoorRealtimeStatus.closed,
-      0x02 => DoorRealtimeStatus.stopped,
+      0x01 => DoorRealtimeStatus.stopped,
+      0x02 => DoorRealtimeStatus.closed,
       0x03 => DoorRealtimeStatus.opening,
       0x04 => DoorRealtimeStatus.closing,
       0x05 => DoorRealtimeStatus.running,
       _ => DoorRealtimeStatus.unknown,
+    };
+  }
+
+  static DoorRealtimeStatus? _statusAdjustedForPosition(
+    DoorRealtimeStatus? status,
+    double? positionPercent,
+  ) {
+    final isBetweenEndpoints =
+        positionPercent != null && positionPercent > 0 && positionPercent < 100;
+    if (!isBetweenEndpoints) {
+      return status;
+    }
+    return switch (status) {
+      DoorRealtimeStatus.open => DoorRealtimeStatus.opening,
+      DoorRealtimeStatus.closed => DoorRealtimeStatus.closing,
+      _ => status,
     };
   }
 
