@@ -2,7 +2,11 @@ package com.flinx.flinx.flinxhardware.permissions
 
 import android.Manifest
 import android.app.Activity
+import android.annotation.SuppressLint
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.provider.Settings
@@ -19,6 +23,7 @@ class PermissionManager(
   private val context: Context,
   private val activityProvider: () -> Activity?,
 ) {
+  private var pendingBleScanReadyCallback: ((BleScanReadiness) -> Unit)? = null
   /** 读取当前权限快照，供 Flutter 侧展示和前置校验使用。 */
   fun getPermissionSnapshot(): PermissionSnapshotDto {
     val bluetoothStatus = statusFor(PermissionKindDto.BLUETOOTH)
@@ -61,6 +66,83 @@ class PermissionManager(
       }
     }
     return getPermissionSnapshot()
+  }
+
+  /** 准备 BLE 扫描：先申请权限，再请求用户开启系统蓝牙。 */
+  @SuppressLint("MissingPermission")
+  fun requestBleScanReady(callback: (BleScanReadiness) -> Unit) {
+    if (pendingBleScanReadyCallback != null) {
+      callback(BleScanReadiness.CANCELLED)
+      return
+    }
+    pendingBleScanReadyCallback = callback
+    continueBleScanReadyRequest()
+  }
+
+  @SuppressLint("MissingPermission")
+  private fun continueBleScanReadyRequest() {
+    if (!hasBluetoothPermission()) {
+      val activity = activityProvider()
+      if (activity == null) {
+        finishBleScanReadyRequest(BleScanReadiness.PERMISSION_DENIED)
+        return
+      }
+      ActivityCompat.requestPermissions(
+        activity,
+        mapPermissionKind(PermissionKindDto.BLUETOOTH).toTypedArray(),
+        REQUEST_BLE_SCAN_PERMISSION,
+      )
+      return
+    }
+    val adapter = context.getSystemService(BluetoothManager::class.java)?.adapter
+    if (adapter == null) {
+      finishBleScanReadyRequest(BleScanReadiness.CANCELLED)
+      return
+    }
+    if (adapter.isEnabled) {
+      finishBleScanReadyRequest(BleScanReadiness.READY)
+      return
+    }
+    val activity = activityProvider()
+    if (activity == null) {
+      finishBleScanReadyRequest(BleScanReadiness.CANCELLED)
+      return
+    }
+    activity.startActivityForResult(
+      Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE),
+      REQUEST_ENABLE_BLUETOOTH,
+    )
+  }
+
+  fun onRequestPermissionsResult(requestCode: Int): Boolean {
+    if (requestCode != REQUEST_BLE_SCAN_PERMISSION) {
+      return false
+    }
+    if (pendingBleScanReadyCallback == null) return true
+    if (!hasBluetoothPermission()) {
+      finishBleScanReadyRequest(BleScanReadiness.PERMISSION_DENIED)
+      return true
+    }
+    continueBleScanReadyRequest()
+    return true
+  }
+
+  @SuppressLint("MissingPermission")
+  fun onActivityResult(requestCode: Int): Boolean {
+    if (requestCode != REQUEST_ENABLE_BLUETOOTH) return false
+    val enabled = context.getSystemService(BluetoothManager::class.java)
+      ?.adapter
+      ?.isEnabled == true
+    finishBleScanReadyRequest(
+      if (enabled) BleScanReadiness.READY else BleScanReadiness.CANCELLED,
+    )
+    return true
+  }
+
+  private fun finishBleScanReadyRequest(status: BleScanReadiness) {
+    val callback = pendingBleScanReadyCallback ?: return
+    pendingBleScanReadyCallback = null
+    callback(status)
   }
 
   fun openAppSettings() {
@@ -191,6 +273,10 @@ class PermissionManager(
 
   private companion object {
     const val REQUEST_CODE = 9001
+    const val REQUEST_BLE_SCAN_PERMISSION = 9002
+    const val REQUEST_ENABLE_BLUETOOTH = 9003
     const val PREFERENCES = "flinx_permission_requests"
   }
 }
+
+enum class BleScanReadiness { READY, PERMISSION_DENIED, CANCELLED }
