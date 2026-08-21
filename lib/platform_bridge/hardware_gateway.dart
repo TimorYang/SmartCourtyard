@@ -122,6 +122,12 @@ abstract interface class HardwareGateway {
     required List<DeviceAttribute> attributes,
   });
 
+  Future<CommandResult> setDoorOpenReminder({
+    required String requestId,
+    required String deviceId,
+    required int value,
+  });
+
   Future<RemotePairingResult> pairRemote({
     required String requestId,
     required String deviceId,

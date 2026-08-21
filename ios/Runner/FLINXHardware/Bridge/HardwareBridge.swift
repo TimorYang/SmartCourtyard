@@ -603,6 +603,72 @@ final class HardwareBridge: HardwareHostApi {
         }
     }
 
+    func setDoorOpenReminder(
+        requestId: String,
+        deviceId: String,
+        value: Int64,
+        completion: @escaping (Result<CommandResultDto, Error>) -> Void
+    ) {
+        guard let valueByte = UInt8(exactly: value),
+              DoorOpenReminderProtocol.supportedValues.contains(valueByte) else {
+            completion(
+                .failure(
+                    PigeonError(
+                        code: "invalid_door_open_reminder_value",
+                        message: "Door open reminder value is not supported.",
+                        details: nil
+                    )
+                )
+            )
+            return
+        }
+        ensureProvisioningChannel(requestId: requestId, deviceId: deviceId) { [weak self] result in
+            guard let self else { return }
+            switch result {
+            case .failure(let error):
+                completion(.failure(Self.toPigeonError(error)))
+            case .success:
+                self.sendProvisioningRequest(
+                    requestId: requestId,
+                    deviceId: deviceId,
+                    command: .doorOpenReminder,
+                    payload: Data([valueByte])
+                ) { frame in
+                    guard let resultCode = DoorOpenReminderProtocol.responseCode(frame.data) else {
+                        completion(
+                            .failure(
+                                PigeonError(
+                                    code: "invalid_door_open_reminder_response",
+                                    message: "Door open reminder response must contain one result byte.",
+                                    details: nil
+                                )
+                            )
+                        )
+                        return
+                    }
+                    let accepted = resultCode == DoorOpenReminderProtocol.successResult
+                    completion(
+                        .success(
+                            CommandResultDto(
+                                requestId: requestId,
+                                deviceId: deviceId,
+                                accepted: accepted,
+                                nativeCode: String(
+                                    format: "command=0x0E09,data=0x%02X,result=0x%02X",
+                                    valueByte,
+                                    resultCode
+                                ),
+                                domainCode: accepted ? nil : "door_open_reminder_rejected"
+                            )
+                        )
+                    )
+                } failure: { error in
+                    completion(.failure(Self.toPigeonError(error)))
+                }
+            }
+        }
+    }
+
     func pairRemote(
         requestId: String,
         deviceId: String,
@@ -1135,6 +1201,25 @@ extension HardwareBridge {
             return nil
         }
         return (frame.sequence, frame.command, frame.data)
+    }
+
+    static func doorOpenReminderProtocolForTesting() -> (
+        command: UInt16,
+        supportedValues: [UInt8],
+        successResult: UInt8
+    ) {
+        (
+            BleProvisioningCommand.doorOpenReminder.rawValue,
+            DoorOpenReminderProtocol.supportedValues.sorted(),
+            DoorOpenReminderProtocol.successResult
+        )
+    }
+
+    static func doorOpenReminderResponseForTesting(_ payload: Data) -> Bool? {
+        guard let code = DoorOpenReminderProtocol.responseCode(payload) else {
+            return nil
+        }
+        return code == DoorOpenReminderProtocol.successResult
     }
 
     static func parseDeviceAttributesForTesting(
@@ -2038,9 +2123,14 @@ private extension HardwareBridge {
 
     static func diagnosticResult(_ frame: BleProtocolFrame) -> String? {
         guard let code = frame.data.first else { return nil }
-        let successCode: UInt8 = frame.command == RemotePairingProtocol.responseCommand
-            ? RemotePairingProtocol.successResult
-            : 0x00
+        let successCode: UInt8
+        if frame.command == RemotePairingProtocol.responseCommand {
+            successCode = RemotePairingProtocol.successResult
+        } else if frame.command == BleProvisioningCommand.doorOpenReminder.rawValue {
+            successCode = DoorOpenReminderProtocol.successResult
+        } else {
+            successCode = 0x00
+        }
         return code == successCode ? "success" : nil
     }
     
@@ -2812,6 +2902,7 @@ private enum BleProvisioningCommand: UInt16 {
     case scanWifi = 0x0E01
     case configureWifi = 0x0E02
     case authenticate = 0x0E03
+    case doorOpenReminder = 0x0E09
     
     static let serviceUuid = "02362AF7-CF3A-11E1-EFDC-000215D5C51B"
     static let writeCharacteristicUuid = "02362A10-CF3A-11E1-EFDC-000215D5C51B"
@@ -2834,16 +2925,27 @@ private enum BleProvisioningCommand: UInt16 {
         case .scanWifi: return "Scan Wi-Fi"
         case .configureWifi: return "Configure Wi-Fi"
         case .authenticate: return "Authenticate Device"
+        case .doorOpenReminder: return "Door Open Reminder"
         }
     }
     
     var requiresEncryptedRequest: Bool {
         switch self {
-        case .setAttributes, .authenticate, .scanWifi, .remotePairing, .remoteQuery, .remoteDelete, .remoteRename, .safetyAccessoryPairing, .safetyAccessoryQuery, .safetyAccessoryDelete:
+        case .setAttributes, .authenticate, .scanWifi, .remotePairing, .remoteQuery, .remoteDelete, .remoteRename, .safetyAccessoryPairing, .safetyAccessoryQuery, .safetyAccessoryDelete, .doorOpenReminder:
             return true
         case .configureWifi:
             return false
         }
+    }
+}
+
+private enum DoorOpenReminderProtocol {
+    static let supportedValues: Set<UInt8> = [0x00, 0x05, 0x0A, 0x0F]
+    static let successResult: UInt8 = 0x01
+
+    static func responseCode(_ data: Data) -> UInt8? {
+        guard data.count == 1 else { return nil }
+        return data.first
     }
 }
 
@@ -2863,7 +2965,7 @@ private enum DeviceAttributeProtocol {
     ]
 
     static let writableAttributes: Set<UInt16> = [
-        0x2711, 0x2712, 0x2713, 0x2714, 0x2726, 0x2727, 0x2728,
+        0x2711, 0x2712, 0x2713, 0x2714, 0x2726, 0x2727,
     ]
 
     static func hex(_ value: UInt16) -> String {

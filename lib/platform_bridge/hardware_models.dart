@@ -167,14 +167,18 @@ class CommandResult {
   const CommandResult({
     required this.requestId,
     required this.deviceId,
-    required this.command,
+    this.command,
     required this.accepted,
+    this.nativeCode,
+    this.domainCode,
   });
 
   final String requestId;
   final String deviceId;
-  final DoorCommand command;
+  final DoorCommand? command;
   final bool accepted;
+  final String? nativeCode;
+  final String? domainCode;
 }
 
 class RemotePairingResult {

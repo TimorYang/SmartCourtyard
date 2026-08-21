@@ -37,6 +37,25 @@ class DeviceSettingsRepositoryImpl implements DeviceSettingsRepository {
     required String deviceId,
     required DeviceSettingValue value,
   }) async {
+    if (value.key == DeviceSettingKey.doorOpenReminder) {
+      final result = await _gateway.setDoorOpenReminder(
+        requestId: requestId,
+        deviceId: deviceId,
+        value: value.rawValue,
+      );
+      if (!result.accepted) {
+        throw StateError(
+          'Device rejected door open reminder command'
+          '${result.domainCode == null ? '' : ' code=${result.domainCode}'}',
+        );
+      }
+      return;
+    }
+
+    final attributeId = value.key.attributeId;
+    if (attributeId == null) {
+      throw StateError('Setting ${value.key.name} has no attribute protocol.');
+    }
     final bytes = Uint8List(value.key.byteWidth);
     var remaining = value.rawValue;
     for (var index = bytes.length - 1; index >= 0; index--) {
@@ -47,7 +66,7 @@ class DeviceSettingsRepositoryImpl implements DeviceSettingsRepository {
       requestId: requestId,
       deviceId: deviceId,
       attributes: <DeviceAttribute>[
-        DeviceAttribute(id: value.key.attributeId, value: bytes),
+        DeviceAttribute(id: attributeId, value: bytes),
       ],
     );
     if (!result.success) {
@@ -66,8 +85,12 @@ class DeviceSettingsRepositoryImpl implements DeviceSettingsRepository {
     };
     return <DeviceSettingKey, DeviceSettingValue>{
       for (final key in DeviceSettingKey.values)
-        if (byId[key.attributeId] case final attribute?)
-          key: DeviceSettingValue(key: key, rawValue: attribute.unsignedValue),
+        if (key.attributeId case final attributeId?)
+          if (byId[attributeId] case final attribute?)
+            key: DeviceSettingValue(
+              key: key,
+              rawValue: attribute.unsignedValue,
+            ),
     };
   }
 }

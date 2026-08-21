@@ -62,11 +62,10 @@ void main() {
   });
 
   test('enables toggle settings with protocol defaults', () async {
+    final gateway = MockHardwareGateway();
     final container = ProviderContainer(
       overrides: [
-        deviceSettingsHardwareGatewayProvider.overrideWithValue(
-          MockHardwareGateway(),
-        ),
+        deviceSettingsHardwareGatewayProvider.overrideWithValue(gateway),
       ],
     );
     addTearDown(container.dispose);
@@ -91,66 +90,47 @@ void main() {
           .setEnabled(DeviceSettingKey.doorOpenReminder, enabled: true),
       isTrue,
     );
+    expect(gateway.doorOpenReminderValues, <int>[10]);
     expect(
-      container
-          .read(provider)
-          .values[DeviceSettingKey.doorOpenReminder]
-          ?.rawValue,
-      10,
+      container.read(provider).values,
+      isNot(contains(DeviceSettingKey.doorOpenReminder)),
     );
   });
 
-  test(
-    'disables toggle settings and restores an existing non-zero value',
-    () async {
-      final container = ProviderContainer(
-        overrides: [
-          deviceSettingsHardwareGatewayProvider.overrideWithValue(
-            MockHardwareGateway(),
-          ),
-        ],
-      );
-      addTearDown(container.dispose);
-      final provider = deviceSettingsControllerProvider('device-1');
-      final subscription = container.listen(provider, (_, _) {});
-      addTearDown(subscription.close);
-      await _waitUntil(() => !container.read(provider).loading);
-      final controller = container.read(provider.notifier);
+  test('uses cmd 0x0E09 for door reminder enable and disable', () async {
+    final gateway = MockHardwareGateway();
+    final container = ProviderContainer(
+      overrides: [
+        deviceSettingsHardwareGatewayProvider.overrideWithValue(gateway),
+      ],
+    );
+    addTearDown(container.dispose);
+    final provider = deviceSettingsControllerProvider('device-1');
+    final subscription = container.listen(provider, (_, _) {});
+    addTearDown(subscription.close);
+    await _waitUntil(() => !container.read(provider).loading);
+    final controller = container.read(provider.notifier);
 
-      expect(
-        await controller.setRawValue(DeviceSettingKey.doorOpenReminder, 15),
-        isTrue,
-      );
-      expect(
-        await controller.setEnabled(
-          DeviceSettingKey.doorOpenReminder,
-          enabled: true,
-        ),
-        isTrue,
-      );
-      expect(
-        container
-            .read(provider)
-            .values[DeviceSettingKey.doorOpenReminder]
-            ?.rawValue,
-        15,
-      );
-      expect(
-        await controller.setEnabled(
-          DeviceSettingKey.doorOpenReminder,
-          enabled: false,
-        ),
-        isTrue,
-      );
-      expect(
-        container
-            .read(provider)
-            .values[DeviceSettingKey.doorOpenReminder]
-            ?.rawValue,
-        0,
-      );
-    },
-  );
+    expect(
+      await controller.setEnabled(
+        DeviceSettingKey.doorOpenReminder,
+        enabled: true,
+      ),
+      isTrue,
+    );
+    expect(
+      await controller.setEnabled(
+        DeviceSettingKey.doorOpenReminder,
+        enabled: false,
+      ),
+      isTrue,
+    );
+    expect(gateway.doorOpenReminderValues, <int>[10, 0]);
+    expect(
+      container.read(provider).values,
+      isNot(contains(DeviceSettingKey.doorOpenReminder)),
+    );
+  });
 }
 
 Future<void> _waitUntil(bool Function() condition) async {

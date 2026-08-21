@@ -2175,6 +2175,7 @@ interface HardwareHostApi {
   fun sendDoorCommand(requestId: String, deviceId: String, command: DoorCommandDto, callback: (Result<CommandResultDto>) -> Unit)
   fun queryDeviceAttributes(requestId: String, deviceId: String, callback: (Result<DeviceAttributeSnapshotDto>) -> Unit)
   fun setDeviceAttributes(requestId: String, deviceId: String, attributes: List<DeviceAttributeDto>, callback: (Result<DeviceAttributeWriteResultDto>) -> Unit)
+  fun setDoorOpenReminder(requestId: String, deviceId: String, value: Long, callback: (Result<CommandResultDto>) -> Unit)
   fun pairRemote(requestId: String, deviceId: String, action: RemotePairingActionDto, callback: (Result<RemotePairingResultDto>) -> Unit)
   fun pairSafetyAccessory(requestId: String, deviceId: String, action: SafetyAccessoryPairingActionDto, callback: (Result<SafetyAccessoryPairingResultDto>) -> Unit)
   fun querySafetyAccessories(requestId: String, deviceId: String, callback: (Result<SafetyAccessoryListResultDto>) -> Unit)
@@ -2596,6 +2597,28 @@ interface HardwareHostApi {
             val deviceIdArg = args[1] as String
             val attributesArg = args[2] as List<DeviceAttributeDto>
             api.setDeviceAttributes(requestIdArg, deviceIdArg, attributesArg) { result: Result<DeviceAttributeWriteResultDto> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(HardwareApiPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(HardwareApiPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flinx.HardwareHostApi.setDoorOpenReminder$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val requestIdArg = args[0] as String
+            val deviceIdArg = args[1] as String
+            val valueArg = args[2] as Long
+            api.setDoorOpenReminder(requestIdArg, deviceIdArg, valueArg) { result: Result<CommandResultDto> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(HardwareApiPigeonUtils.wrapError(error))

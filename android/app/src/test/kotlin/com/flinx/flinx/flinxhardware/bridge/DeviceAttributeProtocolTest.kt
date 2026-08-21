@@ -43,5 +43,10 @@ class DeviceAttributeProtocolTest {
         listOf(DeviceAttributeDto(0x2712, byteArrayOf(0x00, 0x09))),
       )
     }
+    assertThrows(IllegalArgumentException::class.java) {
+      DeviceAttributeProtocol.encode(
+        listOf(DeviceAttributeDto(0x2728, byteArrayOf(0x0A))),
+      )
+    }
   }
 }

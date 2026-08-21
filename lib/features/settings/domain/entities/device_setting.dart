@@ -1,16 +1,21 @@
 enum DeviceSettingKey {
-  partialOpen(0x2711, 1),
-  ledOffDelay(0x2713, 1),
-  autoCloseCondition(0x2714, 1),
-  autoCloseTime(0x2712, 1),
-  openingForce(0x2726, 1),
-  openingSpeed(0x2727, 1),
-  doorOpenReminder(0x2728, 1);
+  partialOpen(attributeId: 0x2711, byteWidth: 1),
+  ledOffDelay(attributeId: 0x2713, byteWidth: 1),
+  autoCloseCondition(attributeId: 0x2714, byteWidth: 1),
+  autoCloseTime(attributeId: 0x2712, byteWidth: 1),
+  openingForce(attributeId: 0x2726, byteWidth: 1),
+  openingSpeed(attributeId: 0x2727, byteWidth: 1),
+  doorOpenReminder(byteWidth: 1, commandCode: 0x0E09);
 
-  const DeviceSettingKey(this.attributeId, this.byteWidth);
+  const DeviceSettingKey({
+    this.attributeId,
+    required this.byteWidth,
+    this.commandCode,
+  });
 
-  final int attributeId;
+  final int? attributeId;
   final int byteWidth;
+  final int? commandCode;
 
   String get capabilityCode => switch (this) {
     DeviceSettingKey.partialOpen => 'PARTIAL_OPEN',

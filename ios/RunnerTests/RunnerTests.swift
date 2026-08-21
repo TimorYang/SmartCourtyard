@@ -69,6 +69,37 @@ class RunnerTests: XCTestCase {
     XCTAssertEqual(decoded.data, Data([0x10, 0x08]))
   }
 
+  func testDoorOpenReminderUsesDedicatedCommandAndOneByteDuration() throws {
+    let protocolInfo = HardwareBridge.doorOpenReminderProtocolForTesting()
+    XCTAssertEqual(protocolInfo.command, 0x0E09)
+    XCTAssertEqual(protocolInfo.supportedValues, [0x00, 0x05, 0x0A, 0x0F])
+    XCTAssertEqual(protocolInfo.successResult, 0x01)
+
+    let key = Data((0..<16).map(UInt8.init))
+    let frame = try XCTUnwrap(
+      HardwareBridge.makeEncryptedFrameForTesting(
+        sequence: 11,
+        command: protocolInfo.command,
+        payload: Data([0x0A]),
+        aesKey: key
+      )
+    )
+    let cipher = frame.subdata(in: 5..<(frame.count - 3))
+    let plaintext = try XCTUnwrap(
+      HardwareBridge.decryptEcbForTesting(cipher, aesKey: key)
+    )
+    let decoded = try XCTUnwrap(
+      HardwareBridge.parseDecryptedPayloadForTesting(plaintext)
+    )
+
+    XCTAssertEqual(decoded.command, 0x0E09)
+    XCTAssertEqual(decoded.data, Data([0x0A]))
+    XCTAssertEqual(HardwareBridge.doorOpenReminderResponseForTesting(Data([0x01])), true)
+    XCTAssertEqual(HardwareBridge.doorOpenReminderResponseForTesting(Data([0x00])), false)
+    XCTAssertNil(HardwareBridge.doorOpenReminderResponseForTesting(Data()))
+    XCTAssertNil(HardwareBridge.doorOpenReminderResponseForTesting(Data([0x01, 0x00])))
+  }
+
   func testRemotePairingMatchesExpectedResponseRegardlessOfSequence() {
     XCTAssertTrue(
       HardwareBridge.matchesProvisioningResponseForTesting(

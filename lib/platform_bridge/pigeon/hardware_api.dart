@@ -601,6 +601,13 @@ abstract class HardwareHostApi {
   );
 
   @async
+  CommandResultDto setDoorOpenReminder(
+    String requestId,
+    String deviceId,
+    int value,
+  );
+
+  @async
   RemotePairingResultDto pairRemote(
     String requestId,
     String deviceId,

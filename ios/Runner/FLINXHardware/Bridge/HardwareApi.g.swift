@@ -2030,6 +2030,7 @@ protocol HardwareHostApi {
   func sendDoorCommand(requestId: String, deviceId: String, command: DoorCommandDto, completion: @escaping (Result<CommandResultDto, Error>) -> Void)
   func queryDeviceAttributes(requestId: String, deviceId: String, completion: @escaping (Result<DeviceAttributeSnapshotDto, Error>) -> Void)
   func setDeviceAttributes(requestId: String, deviceId: String, attributes: [DeviceAttributeDto], completion: @escaping (Result<DeviceAttributeWriteResultDto, Error>) -> Void)
+  func setDoorOpenReminder(requestId: String, deviceId: String, value: Int64, completion: @escaping (Result<CommandResultDto, Error>) -> Void)
   func pairRemote(requestId: String, deviceId: String, action: RemotePairingActionDto, completion: @escaping (Result<RemotePairingResultDto, Error>) -> Void)
   func pairSafetyAccessory(requestId: String, deviceId: String, action: SafetyAccessoryPairingActionDto, completion: @escaping (Result<SafetyAccessoryPairingResultDto, Error>) -> Void)
   func querySafetyAccessories(requestId: String, deviceId: String, completion: @escaping (Result<SafetyAccessoryListResultDto, Error>) -> Void)
@@ -2403,6 +2404,25 @@ class HardwareHostApiSetup {
       }
     } else {
       setDeviceAttributesChannel.setMessageHandler(nil)
+    }
+    let setDoorOpenReminderChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flinx.HardwareHostApi.setDoorOpenReminder\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      setDoorOpenReminderChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let requestIdArg = args[0] as! String
+        let deviceIdArg = args[1] as! String
+        let valueArg = args[2] as! Int64
+        api.setDoorOpenReminder(requestId: requestIdArg, deviceId: deviceIdArg, value: valueArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      setDoorOpenReminderChannel.setMessageHandler(nil)
     }
     let pairRemoteChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flinx.HardwareHostApi.pairRemote\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {

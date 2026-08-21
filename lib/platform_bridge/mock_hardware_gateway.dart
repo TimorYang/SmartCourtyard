@@ -28,8 +28,8 @@ class MockHardwareGateway implements HardwareGateway {
     0x2712: DeviceAttribute(id: 0x2712, value: Uint8List.fromList([0x00])),
     0x2726: DeviceAttribute(id: 0x2726, value: Uint8List.fromList([0x05])),
     0x2727: DeviceAttribute(id: 0x2727, value: Uint8List.fromList([0x50])),
-    0x2728: DeviceAttribute(id: 0x2728, value: Uint8List.fromList([0x00])),
   };
+  final List<int> doorOpenReminderValues = <int>[];
   bool flutterConsoleLoggingEnabled = false;
   bool nativeConsoleLoggingEnabled = false;
   SafetyAccessoryPairingStatus safetyAccessoryPairingStatus =
@@ -406,6 +406,26 @@ class MockHardwareGateway implements HardwareGateway {
       deviceId: deviceId,
       success: true,
       sequence: 2,
+    );
+  }
+
+  @override
+  Future<CommandResult> setDoorOpenReminder({
+    required String requestId,
+    required String deviceId,
+    required int value,
+  }) async {
+    final accepted = value == 0 || value == 5 || value == 10 || value == 15;
+    if (accepted) {
+      doorOpenReminderValues.add(value);
+    }
+    return CommandResult(
+      requestId: requestId,
+      deviceId: deviceId,
+      accepted: accepted,
+      nativeCode:
+          'command=0x0E09,data=0x${value.toRadixString(16).padLeft(2, '0').toUpperCase()}',
+      domainCode: accepted ? null : 'invalid_door_open_reminder_value',
     );
   }
 
