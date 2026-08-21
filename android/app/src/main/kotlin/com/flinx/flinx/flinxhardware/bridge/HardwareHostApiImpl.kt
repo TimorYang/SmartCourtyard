@@ -321,7 +321,7 @@ class HardwareHostApiImpl(
     attributes: List<DeviceAttributeDto>,
     callback: (Result<DeviceAttributeWriteResultDto>) -> Unit,
   ) {
-    val payload = runCatching { encodeAttributes(attributes) }.getOrElse { callback(Result.failure(it)); return }
+    val payload = runCatching { DeviceAttributeProtocol.encode(attributes) }.getOrElse { callback(Result.failure(it)); return }
     executeProtocol(requestId, deviceId, DeviceBleProtocolConfig.commandSetAttributes, data = payload, callback = callback) { frame ->
       val result = frame.data.firstOrNull()?.toInt()?.and(0xFF)
         ?: throw FlutterError("invalid_attribute_write_response", "Attribute write response is empty.")
@@ -484,31 +484,7 @@ class HardwareHostApiImpl(
   }
 
   private fun attributesSnapshot(requestId: String?, deviceId: String, frame: com.flinx.flinx.flinxhardware.protocol.DeviceBleFrame, origin: DeviceAttributeReportOriginDto): DeviceAttributeSnapshotDto =
-    DeviceAttributeSnapshotDto(requestId, deviceId, frame.sequence.toLong(), System.currentTimeMillis(), origin, parseAttributes(frame.data))
-
-  private fun parseAttributes(data: ByteArray): List<DeviceAttributeDto> {
-    val widths = mapOf(0x2702 to 2,0x2703 to 2,0x2709 to 1,0x2710 to 1,0x2711 to 1,0x2713 to 1,0x2714 to 1,0x2715 to 1,0x2716 to 2,0x2717 to 1,0x2718 to 1,0x2719 to 1,0x271A to 2,0x271B to 1,0x271C to 1,0x271D to 1,0x271F to 1,0x2720 to 1,0x2721 to 1,0x2722 to 1,0x2723 to 1,0x2725 to 2,0x2726 to 1,0x2727 to 1,0x2728 to 1,0x2729 to 1,0x272B to 1,0x2735 to 1,0x273B to 1,0x273C to 1,0x273D to 1)
-    val out = mutableListOf<DeviceAttributeDto>(); var offset = 0
-    while (offset + 2 <= data.size) {
-      val id = ((data[offset].toInt() and 255) shl 8) or (data[offset + 1].toInt() and 255); offset += 2
-      val width = if (id == 0x2700) {
-        val terminator = data.indices.firstOrNull { it >= offset && data[it] == 0.toByte() }
-          ?: throw FlutterError("invalid_attribute_payload", "Unterminated string attribute.")
-        terminator - offset + 1
-      } else widths[id] ?: throw FlutterError("unsupported_attribute_schema", "Unsupported attribute 0x${id.toString(16)}")
-      if (offset + width > data.size) throw FlutterError("invalid_attribute_payload", "Truncated attribute payload.")
-      out += DeviceAttributeDto(id.toLong(), data.copyOfRange(offset, offset + width)); offset += width
-    }
-    return out
-  }
-
-  private fun encodeAttributes(attributes: List<DeviceAttributeDto>): ByteArray {
-    require(attributes.isNotEmpty()) { "At least one attribute is required." }
-    val writable = setOf(0x2711,0x2713,0x2714,0x2725,0x2726,0x2727,0x2728)
-    return attributes.fold(ByteArray(0)) { bytes, attr ->
-      val id = attr.id.toInt(); require(id in writable) { "Unsupported attribute write." }; bytes + shortBytes(id) + attr.value
-    }
-  }
+    DeviceAttributeSnapshotDto(requestId, deviceId, frame.sequence.toLong(), System.currentTimeMillis(), origin, DeviceAttributeProtocol.parse(frame.data))
 
   private fun remoteList(requestId: String, deviceId: String, data: ByteArray): RemoteControlListResultDto {
     if (data.size < 4) throw FlutterError("invalid_remote_query_response", "Remote list response is incomplete.")
@@ -591,6 +567,75 @@ class HardwareHostApiImpl(
       action()
     } else {
       mainHandler.post(action)
+    }
+  }
+}
+
+internal object DeviceAttributeProtocol {
+  private const val nullTerminatedStringAttribute = 0x2700
+
+  private val valueWidths = mapOf(
+    0x2702 to 2, 0x2703 to 2,
+    0x2709 to 1, 0x2710 to 1, 0x2711 to 1, 0x2712 to 1,
+    0x2713 to 1, 0x2714 to 1, 0x2715 to 1, 0x2716 to 2,
+    0x2717 to 1, 0x2718 to 1, 0x2719 to 1, 0x271A to 2,
+    0x271B to 1, 0x271C to 1, 0x271D to 1, 0x271F to 1,
+    0x2720 to 1, 0x2721 to 1, 0x2722 to 1, 0x2723 to 1,
+    0x2725 to 2, 0x2726 to 1, 0x2727 to 1, 0x2728 to 1,
+    0x2729 to 1, 0x272B to 1, 0x2735 to 1, 0x273B to 1,
+    0x273C to 1, 0x273D to 1,
+  )
+
+  private val writableAttributes = setOf(
+    0x2711, 0x2712, 0x2713, 0x2714, 0x2726, 0x2727, 0x2728,
+  )
+
+  fun parse(data: ByteArray): List<DeviceAttributeDto> {
+    val attributes = mutableListOf<DeviceAttributeDto>()
+    var offset = 0
+    while (offset + 2 <= data.size) {
+      val id = ((data[offset].toInt() and 0xFF) shl 8) or
+        (data[offset + 1].toInt() and 0xFF)
+      offset += 2
+      val width = if (id == nullTerminatedStringAttribute) {
+        val terminator = data.indices.firstOrNull {
+          it >= offset && data[it] == 0.toByte()
+        } ?: throw FlutterError(
+          "invalid_attribute_payload",
+          "Unterminated string attribute.",
+        )
+        terminator - offset + 1
+      } else {
+        valueWidths[id] ?: throw FlutterError(
+          "unsupported_attribute_schema",
+          "Unsupported attribute 0x${id.toString(16)}",
+        )
+      }
+      if (offset + width > data.size) {
+        throw FlutterError(
+          "invalid_attribute_payload",
+          "Truncated attribute payload.",
+        )
+      }
+      attributes += DeviceAttributeDto(
+        id.toLong(),
+        data.copyOfRange(offset, offset + width),
+      )
+      offset += width
+    }
+    return attributes
+  }
+
+  fun encode(attributes: List<DeviceAttributeDto>): ByteArray {
+    require(attributes.isNotEmpty()) { "At least one attribute is required." }
+    return attributes.fold(ByteArray(0)) { bytes, attribute ->
+      val id = attribute.id.toInt()
+      require(id in writableAttributes) { "Unsupported attribute write." }
+      val expectedWidth = valueWidths.getValue(id)
+      require(attribute.value.size == expectedWidth) {
+        "Attribute 0x${id.toString(16)} requires $expectedWidth value bytes."
+      }
+      bytes + byteArrayOf((id shr 8).toByte(), id.toByte()) + attribute.value
     }
   }
 }

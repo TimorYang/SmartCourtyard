@@ -460,7 +460,7 @@ void main() {
                 attribute.id == DeviceSettingKey.autoCloseTime.attributeId,
           )
           .unsignedValue,
-      30,
+      1,
     );
     expect(
       snapshot.attributes
@@ -471,6 +471,13 @@ void main() {
           .unsignedValue,
       10,
     );
+    final autoCloseWrites = gateway.writtenAttributes.where(
+      (attribute) => attribute.id == 0x2712,
+    );
+    expect(autoCloseWrites.map((attribute) => attribute.unsignedValue), <int>[
+      0,
+      1,
+    ]);
     expect(gateway.attributeWriteCount, 4);
   });
 

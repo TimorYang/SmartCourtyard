@@ -39,6 +39,40 @@ void main() {
       ),
       throwsRangeError,
     );
+    expect(
+      () => useCase(
+        requestId: 'request',
+        deviceId: 'device',
+        key: DeviceSettingKey.autoCloseTime,
+        rawValue: -1,
+      ),
+      throwsRangeError,
+    );
+    expect(
+      () => useCase(
+        requestId: 'request',
+        deviceId: 'device',
+        key: DeviceSettingKey.autoCloseTime,
+        rawValue: 10,
+      ),
+      throwsRangeError,
+    );
+  });
+
+  test('accepts auto-close values from 0 through 9', () async {
+    final useCase = SetDeviceSettingUseCase(_Repository());
+
+    for (final rawValue in <int>[0, 1, 9]) {
+      await expectLater(
+        useCase(
+          requestId: 'request-$rawValue',
+          deviceId: 'device',
+          key: DeviceSettingKey.autoCloseTime,
+          rawValue: rawValue,
+        ),
+        completes,
+      );
+    }
   });
 }
 

@@ -2,7 +2,7 @@ enum DeviceSettingKey {
   partialOpen(0x2711, 1),
   ledOffDelay(0x2713, 1),
   autoCloseCondition(0x2714, 1),
-  autoCloseTime(0x2725, 2),
+  autoCloseTime(0x2712, 1),
   openingForce(0x2726, 1),
   openingSpeed(0x2727, 1),
   doorOpenReminder(0x2728, 1);
@@ -27,7 +27,7 @@ enum DeviceSettingKey {
       this == DeviceSettingKey.doorOpenReminder;
 
   int get defaultEnabledValue => switch (this) {
-    DeviceSettingKey.autoCloseTime => 30,
+    DeviceSettingKey.autoCloseTime => 1,
     DeviceSettingKey.doorOpenReminder => 10,
     _ => throw UnsupportedError('$name does not support enabled toggles.'),
   };
@@ -41,7 +41,7 @@ enum DeviceSettingKey {
       DeviceSettingKey.partialOpen => value >= 0 && value <= 0x12,
       DeviceSettingKey.ledOffDelay => value >= 1 && value <= 9,
       DeviceSettingKey.autoCloseCondition => value >= 0 && value <= 0xFF,
-      DeviceSettingKey.autoCloseTime => value >= 0 && value <= 990,
+      DeviceSettingKey.autoCloseTime => value >= 0 && value <= 9,
       DeviceSettingKey.openingForce => value >= 1 && value <= 9,
       DeviceSettingKey.openingSpeed => value >= 60 && value <= 100,
       DeviceSettingKey.doorOpenReminder =>
