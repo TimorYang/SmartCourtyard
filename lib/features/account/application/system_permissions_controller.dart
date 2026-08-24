@@ -86,6 +86,33 @@ class SystemPermissionsController extends Notifier<SystemPermissionsViewState> {
     }
   }
 
+  Future<SystemPermissionStatus?> readStatus(
+    SystemPermission permission,
+  ) async {
+    try {
+      final permissions = await _readPermissions(
+        requestId: _nextRequestId('read'),
+      );
+      return _statusFor(permissions, permission);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> openSettings() {
+    return _openSettings(requestId: _nextRequestId('settings'));
+  }
+
+  SystemPermissionStatus? _statusFor(
+    List<SystemPermissionState> permissions,
+    SystemPermission permission,
+  ) {
+    for (final item in permissions) {
+      if (item.permission == permission) return item.status;
+    }
+    return null;
+  }
+
   String _nextRequestId(String action) {
     _requestCounter += 1;
     return 'system-permissions-$action-${DateTime.now().millisecondsSinceEpoch}-$_requestCounter';

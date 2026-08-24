@@ -111,6 +111,40 @@ void main() {
     expect(dto.operationCycles, '2');
   });
 
+  test(
+    'maps non-empty safety advice from the general evaluation response',
+    () async {
+      final repository = GeneralEvaluationRepositoryImpl(
+        remote: _FakeRemoteDataSource(
+          general: const GeneralEvaluationResponseDto(
+            safetyAdvice: [' Advice one ', '', 'Advice two'],
+          ),
+        ),
+        logger: const _NoopLogger(),
+      );
+
+      final report = await repository.fetch(
+        doorId: '10',
+        assessmentRequestId: 'assessment-id',
+        requestId: 'page-request-id',
+      );
+
+      expect(report.safetyAdvice, ['Advice one', 'Advice two']);
+    },
+  );
+
+  test('parses safety advice from the general evaluation response', () {
+    final dto = GeneralEvaluationResponseDto.fromJson(const {
+      'safetyAdvice': [
+        '1. The photo eye sensor battery is low. Replace the battery promptly.',
+      ],
+    });
+
+    expect(dto.safetyAdvice, [
+      '1. The photo eye sensor battery is low. Replace the battery promptly.',
+    ]);
+  });
+
   test('uses abnormal fields for frequent-operation status', () async {
     final repository = GeneralEvaluationRepositoryImpl(
       remote: _FakeRemoteDataSource(

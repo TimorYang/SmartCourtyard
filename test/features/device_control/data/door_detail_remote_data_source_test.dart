@@ -4,6 +4,7 @@ import 'package:flinx/core/network/dio_factory.dart';
 import 'package:flinx/features/device_control/data/data_sources/door_detail_api.dart';
 import 'package:flinx/features/device_control/data/data_sources/door_detail_remote_data_source.dart';
 import 'package:flinx/features/device_control/data/dto/door_detail_response_dto.dart';
+import 'package:flinx/features/device_control/data/dto/about_device_info_response_dto.dart';
 import 'package:flinx/features/device_control/data/dto/door_device_response_dto.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -26,6 +27,25 @@ void main() {
     expect(dto.bleConnectionStatus, 1);
     expect(dto.wifiConnectionStatus, 2);
     expect(dto.capabilities, ['DOOR_CONTROL']);
+  });
+
+  test('parses and serializes about-device response fields', () {
+    final dto = AboutDeviceInfoResponseDto.fromJson(const {
+      'deviceId': 10001,
+      'sn': 'opener_B8F86211A9DC',
+      'deviceType': 'opener',
+      'deviceTypeLabel': 'opener',
+      'bluetoothName': 'opener_B8F86211A9DC',
+      'hardwareVersion': '1.0.0',
+      'firmwareVersion': '2.0.0',
+      'updateAvailable': true,
+      'availableVersion': '2.1.0',
+    });
+
+    expect(dto.deviceId, '10001');
+    expect(dto.firmwareVersion, '2.0.0');
+    expect(dto.updateAvailable, isTrue);
+    expect(dto.toJson()['hardwareVersion'], '1.0.0');
   });
 
   test('parses the current door detail response fields', () {
@@ -148,6 +168,49 @@ void main() {
     );
   });
 
+  test(
+    'fetches about device information with both path IDs and request ID',
+    () async {
+      final api = _FakeDoorDetailApi(
+        response: const ApiEnvelopeDto(
+          code: 200,
+          success: true,
+          data: DoorDetailResponseDto(id: '12', name: 'Main Gate'),
+        ),
+        aboutDeviceInfoResponse: const ApiEnvelopeDto(
+          code: 200,
+          success: true,
+          data: AboutDeviceInfoResponseDto(
+            deviceId: '3',
+            sn: 'opener_B8F86211A9DC',
+            deviceType: 'opener',
+            deviceTypeLabel: 'Smart opener',
+            bluetoothName: 'opener_B8F86211A9DC',
+            hardwareVersion: '1.0.0',
+            firmwareVersion: '2.0.0',
+            updateAvailable: true,
+            availableVersion: '2.1.0',
+          ),
+        ),
+      );
+      final dataSource = DoorDetailRemoteDataSourceImpl(api: api);
+
+      final info = await dataSource.fetchAboutDeviceInfo(
+        doorId: 12,
+        deviceId: 3,
+        requestId: 'about-device-123',
+      );
+
+      expect(info.bluetoothName, 'opener_B8F86211A9DC');
+      expect(api.aboutDeviceDoorId, 12);
+      expect(api.aboutDeviceId, 3);
+      expect(
+        api.aboutDeviceOptions.extra?[NetworkRequestExtras.requestId],
+        'about-device-123',
+      );
+    },
+  );
+
   test('rejects unsuccessful business response', () async {
     final dataSource = DoorDetailRemoteDataSourceImpl(
       api: _FakeDoorDetailApi(
@@ -268,11 +331,13 @@ class _FakeDoorDetailApi implements DoorDetailApi {
   _FakeDoorDetailApi({
     required this.response,
     this.devicesResponse,
+    this.aboutDeviceInfoResponse,
     this.unbindResponse,
   });
 
   final ApiEnvelopeDto<DoorDetailResponseDto> response;
   final ApiEnvelopeDto<List<DoorDeviceResponseDto>>? devicesResponse;
+  final ApiEnvelopeDto<AboutDeviceInfoResponseDto>? aboutDeviceInfoResponse;
   final ApiEnvelopeDto<bool>? unbindResponse;
   late int doorId;
   late Options options;
@@ -281,6 +346,9 @@ class _FakeDoorDetailApi implements DoorDetailApi {
   late int unbindDoorId;
   late int unbindDeviceId;
   late Options unbindOptions;
+  late int aboutDeviceDoorId;
+  late int aboutDeviceId;
+  late Options aboutDeviceOptions;
 
   @override
   Future<ApiEnvelopeDto<DoorDetailResponseDto>> fetchDoorDetail(
@@ -300,6 +368,18 @@ class _FakeDoorDetailApi implements DoorDetailApi {
     devicesDoorId = doorId;
     devicesOptions = options;
     return devicesResponse!;
+  }
+
+  @override
+  Future<ApiEnvelopeDto<AboutDeviceInfoResponseDto>> fetchAboutDeviceInfo(
+    int doorId,
+    int deviceId,
+    Options options,
+  ) async {
+    aboutDeviceDoorId = doorId;
+    aboutDeviceId = deviceId;
+    aboutDeviceOptions = options;
+    return aboutDeviceInfoResponse!;
   }
 
   @override
@@ -335,6 +415,13 @@ class _ThrowingDoorDetailApi implements DoorDetailApi {
   ) {
     throw error;
   }
+
+  @override
+  Future<ApiEnvelopeDto<AboutDeviceInfoResponseDto>> fetchAboutDeviceInfo(
+    int doorId,
+    int deviceId,
+    Options options,
+  ) => throw error;
 
   @override
   Future<ApiEnvelopeDto<bool>> unbindDoorDevice(

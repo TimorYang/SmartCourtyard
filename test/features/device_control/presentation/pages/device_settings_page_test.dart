@@ -295,6 +295,7 @@ Future<void> _pumpSettingsRouter(
             GoRoute(
               path: AboutDevicePage.routePath,
               builder: (context, state) => AboutDevicePage(
+                doorId: state.uri.queryParameters['doorId'] ?? '',
                 deviceId: state.uri.queryParameters['deviceId'] ?? '',
               ),
             ),

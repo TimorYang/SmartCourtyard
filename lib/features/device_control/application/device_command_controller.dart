@@ -28,6 +28,7 @@ import '../domain/repositories/door_detail_repository.dart';
 import '../domain/repositories/remote_door_command_repository.dart';
 import '../domain/use_cases/fetch_door_detail_use_case.dart';
 import '../domain/use_cases/fetch_door_devices_use_case.dart';
+import '../domain/use_cases/fetch_about_device_info_use_case.dart';
 import '../domain/use_cases/submit_remote_door_command_use_case.dart';
 import '../domain/use_cases/unbind_door_device_use_case.dart';
 
@@ -76,6 +77,13 @@ final fetchDoorDevicesUseCaseProvider = Provider<FetchDoorDevicesUseCase>((
     repository: ref.watch(doorDetailRepositoryProvider),
   );
 });
+
+final fetchAboutDeviceInfoUseCaseProvider =
+    Provider<FetchAboutDeviceInfoUseCase>((ref) {
+      return FetchAboutDeviceInfoUseCase(
+        repository: ref.watch(doorDetailRepositoryProvider),
+      );
+    });
 
 final unbindDoorDeviceUseCaseProvider = Provider<UnbindDoorDeviceUseCase>((
   ref,

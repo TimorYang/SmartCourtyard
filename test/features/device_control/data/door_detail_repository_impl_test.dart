@@ -4,6 +4,7 @@ import 'package:flinx/core/logging/app_logger.dart';
 import 'package:flinx/core/network/network_exception.dart';
 import 'package:flinx/features/device_control/data/data_sources/door_detail_remote_data_source.dart';
 import 'package:flinx/features/device_control/data/dto/door_detail_response_dto.dart';
+import 'package:flinx/features/device_control/data/dto/about_device_info_response_dto.dart';
 import 'package:flinx/features/device_control/data/dto/door_device_response_dto.dart';
 import 'package:flinx/features/device_control/data/repositories/door_detail_repository_impl.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
@@ -79,6 +80,37 @@ void main() {
     );
   });
 
+  test('maps about-device dto to domain entity', () async {
+    final repository = DoorDetailRepositoryImpl(
+      remoteDataSource: const _FakeDoorDetailRemoteDataSource(
+        DoorDetailResponseDto(id: '12', name: 'Main Gate'),
+        aboutDeviceInfo: AboutDeviceInfoResponseDto(
+          deviceId: '3',
+          sn: 'opener_B8F86211A9DC',
+          deviceType: 'opener',
+          deviceTypeLabel: 'opener',
+          bluetoothName: 'opener_B8F86211A9DC',
+          hardwareVersion: '1.0.0',
+          firmwareVersion: '2.0.0',
+          updateAvailable: true,
+          availableVersion: '2.1.0',
+        ),
+      ),
+      logger: const _NoopLogger(),
+    );
+
+    final info = await repository.fetchAboutDeviceInfo(
+      doorId: '12',
+      deviceId: '3',
+      requestId: 'about-device-123',
+    );
+
+    expect(info.deviceId, '3');
+    expect(info.bluetoothName, 'opener_B8F86211A9DC');
+    expect(info.firmwareVersion, '2.0.0');
+    expect(info.hardwareVersion, '1.0.0');
+  });
+
   test('rejects invalid door id before requesting remote data', () async {
     final repository = DoorDetailRepositoryImpl(
       remoteDataSource: const _FakeDoorDetailRemoteDataSource(
@@ -143,9 +175,10 @@ class _RecordingDoorDetailRemoteDataSource
 }
 
 class _FakeDoorDetailRemoteDataSource implements DoorDetailRemoteDataSource {
-  const _FakeDoorDetailRemoteDataSource(this.detail);
+  const _FakeDoorDetailRemoteDataSource(this.detail, {this.aboutDeviceInfo});
 
   final DoorDetailResponseDto detail;
+  final AboutDeviceInfoResponseDto? aboutDeviceInfo;
 
   @override
   Future<DoorDetailResponseDto> fetchDoorDetail({
@@ -160,6 +193,13 @@ class _FakeDoorDetailRemoteDataSource implements DoorDetailRemoteDataSource {
     required int doorId,
     required String requestId,
   }) async => const [];
+
+  @override
+  Future<AboutDeviceInfoResponseDto> fetchAboutDeviceInfo({
+    required int doorId,
+    required int deviceId,
+    required String requestId,
+  }) async => aboutDeviceInfo!;
 
   @override
   Future<void> unbindDoorDevice({
@@ -189,6 +229,13 @@ class _FailingDoorDetailRemoteDataSource implements DoorDetailRemoteDataSource {
   }) {
     throw error;
   }
+
+  @override
+  Future<AboutDeviceInfoResponseDto> fetchAboutDeviceInfo({
+    required int doorId,
+    required int deviceId,
+    required String requestId,
+  }) => throw error;
 
   @override
   Future<void> unbindDoorDevice({

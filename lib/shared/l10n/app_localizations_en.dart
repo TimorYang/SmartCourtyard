@@ -580,6 +580,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountDetailsPhotographAction => 'Photograph';
 
   @override
+  String get accountDetailsCameraPermissionDeniedTitle =>
+      'Camera permission required';
+
+  @override
+  String get accountDetailsCameraPermissionDeniedMessage =>
+      'Camera access is turned off. Go to Settings to enable it.';
+
+  @override
+  String get accountDetailsCameraPermissionSettingsAction => 'Go to Settings';
+
+  @override
   String get accountDetailsCancelAction => 'Cancel';
 
   @override

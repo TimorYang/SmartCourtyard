@@ -548,6 +548,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get accountDetailsPhotographAction => '拍照';
 
   @override
+  String get accountDetailsCameraPermissionDeniedTitle => '需要相机权限';
+
+  @override
+  String get accountDetailsCameraPermissionDeniedMessage =>
+      '相机权限已关闭，请前往系统设置开启。';
+
+  @override
+  String get accountDetailsCameraPermissionSettingsAction => '去设置';
+
+  @override
   String get accountDetailsCancelAction => '取消';
 
   @override

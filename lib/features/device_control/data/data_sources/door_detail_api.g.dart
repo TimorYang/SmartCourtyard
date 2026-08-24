@@ -92,6 +92,41 @@ class _DoorDetailApi implements DoorDetailApi {
   }
 
   @override
+  Future<ApiEnvelopeDto<AboutDeviceInfoResponseDto>> fetchAboutDeviceInfo(
+    int doorId,
+    int deviceId,
+    Options options,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final newOptions = newRequestOptions(options);
+    newOptions.extra.addAll(_extra);
+    newOptions.headers.addAll(_dio.options.headers);
+    newOptions.headers.addAll(_headers);
+    final _options = newOptions.copyWith(
+      method: 'GET',
+      baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl),
+      queryParameters: queryParameters,
+      path: 'app/doors/${doorId}/devices/${deviceId}',
+    )..data = _data;
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late ApiEnvelopeDto<AboutDeviceInfoResponseDto> _value;
+    try {
+      _value = ApiEnvelopeDto<AboutDeviceInfoResponseDto>.fromJson(
+        _result.data!,
+        (json) =>
+            AboutDeviceInfoResponseDto.fromJson(json as Map<String, dynamic>),
+      );
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, response: _result);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
   Future<ApiEnvelopeDto<bool>> unbindDoorDevice(
     int doorId,
     int deviceId,

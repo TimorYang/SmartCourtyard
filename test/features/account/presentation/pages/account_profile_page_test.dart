@@ -25,6 +25,9 @@ import 'package:flinx/features/account/presentation/pages/shared_device_member_m
 import 'package:flinx/features/account/presentation/pages/system_permissions_page.dart';
 import 'package:flinx/features/auth/application/providers.dart';
 import 'package:flinx/features/auth/presentation/pages/login_page.dart';
+import 'package:flinx/platform_bridge/hardware_models.dart';
+import 'package:flinx/platform_bridge/mock_hardware_gateway.dart';
+import 'package:flinx/platform_bridge/providers.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -613,11 +616,73 @@ void main() {
     expect(find.text('Photograph'), findsOneWidget);
     expect(find.text('Cancel'), findsOneWidget);
 
+    for (final label in ['Photo album', 'Photograph']) {
+      final button = tester.widget<FilledButton>(
+        find.ancestor(
+          of: find.text(label),
+          matching: find.byType(FilledButton),
+        ),
+      );
+      final style = button.style!;
+      expect(
+        style.backgroundColor!.resolve(const {WidgetState.disabled}),
+        style.backgroundColor!.resolve(const {}),
+      );
+      expect(
+        style.foregroundColor!.resolve(const {WidgetState.disabled}),
+        style.foregroundColor!.resolve(const {}),
+      );
+      expect(
+        style.overlayColor!.resolve(const {WidgetState.pressed}),
+        Colors.transparent,
+      );
+    }
+
     await tester.tapAt(const Offset(10, 10));
     await tester.pumpAndSettle();
 
     expect(find.text('Photo album'), findsNothing);
   });
+
+  testWidgets(
+    'shows camera permission guidance and preserves the avatar sheet',
+    (tester) async {
+      final gateway = _CameraPermissionBlockedGateway();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [hardwareGatewayProvider.overrideWithValue(gateway)],
+          child: MaterialApp(
+            theme: AppTheme.light(),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const AccountDetailsPage(),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Head portrait'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Photograph'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Camera permission required'), findsOneWidget);
+      expect(find.text('Photo album'), findsOneWidget);
+      expect(find.text('Go to Settings'), findsOneWidget);
+
+      await tester.tap(find.text('Go to Settings'));
+      await tester.pumpAndSettle();
+
+      expect(gateway.openAppSettingsCalls, 1);
+      expect(find.text('Camera permission required'), findsNothing);
+      expect(find.text('Photo album'), findsOneWidget);
+
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Photo album'), findsNothing);
+    },
+  );
 
   testWidgets('updates a built-in avatar and closes the sheet on success', (
     tester,
@@ -915,6 +980,28 @@ void main() {
     expect(find.text('Welcome'), findsOneWidget);
     expect(container.read(activeAuthSessionProvider).isAuthenticated, isFalse);
   });
+}
+
+class _CameraPermissionBlockedGateway extends MockHardwareGateway {
+  var openAppSettingsCalls = 0;
+
+  @override
+  Future<PermissionSnapshot> getPermissionSnapshot({
+    required String requestId,
+  }) async => const PermissionSnapshot(
+    bluetoothStatus: PermissionStatus.granted,
+    cameraStatus: PermissionStatus.blocked,
+    locationStatus: PermissionStatus.granted,
+    microphoneStatus: PermissionStatus.denied,
+    storageStatus: PermissionStatus.granted,
+    localNetworkGranted: true,
+    notificationGranted: true,
+  );
+
+  @override
+  Future<void> openAppSettings({required String requestId}) async {
+    openAppSettingsCalls += 1;
+  }
 }
 
 class _AvatarProfileRemoteDataSource implements AccountProfileRemoteDataSource {

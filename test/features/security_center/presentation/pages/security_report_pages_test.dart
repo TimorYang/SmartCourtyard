@@ -347,6 +347,10 @@ void main() {
     expect(find.text('Wired sensors diagnosis'), findsOneWidget);
     expect(find.text('Wireless sensors diagnosis'), findsOneWidget);
     expect(find.text('Safety suggestion:'), findsOneWidget);
+    expect(
+      find.text('Inspect the safety edge\nContact your installer'),
+      findsOneWidget,
+    );
     expect(find.text('Save'), findsOneWidget);
     expect(find.text('Share'), findsOneWidget);
     expect(find.byType(SecurityReportActionBar), findsOneWidget);
@@ -366,6 +370,19 @@ void main() {
     expect(find.text('Safety suggestion:'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+    'full report hides safety suggestions when the API returns none',
+    (tester) async {
+      await _pumpPage(
+        tester,
+        const FullReportPage(deviceId: 'mock-device', doorId: '12'),
+        report: _testGeneralReportWithoutSafetyAdvice,
+      );
+
+      expect(find.text('Safety suggestion:'), findsNothing);
+    },
+  );
 
   testWidgets('full report renders live sensor battery and status details', (
     tester,
@@ -540,6 +557,7 @@ void main() {
                   last7DaysRecord: report.last7DaysRecord,
                   motorFunctionStatus: report.motorFunctionStatus,
                   balancePending: false,
+                  safetyAdvice: const [],
                 ),
               ),
             ),
@@ -1800,6 +1818,7 @@ Future<void> _pumpPage(
   bool setViewport = true,
   Locale? locale,
   SafetySensorsEvaluation? evaluation,
+  GeneralEvaluationReport? report,
 }) async {
   if (setViewport) {
     tester.view.physicalSize = const Size(393, 852);
@@ -1814,8 +1833,10 @@ Future<void> _pumpPage(
           const _FakeSecurityBalanceRefreshRepository(),
         ),
         fetchGeneralEvaluationUseCaseProvider.overrideWithValue(
-          const FetchGeneralEvaluationUseCase(
-            repository: _FakeGeneralEvaluationRepository(),
+          FetchGeneralEvaluationUseCase(
+            repository: _FakeGeneralEvaluationRepository(
+              report: report ?? _testGeneralReport,
+            ),
           ),
         ),
         fetchSafetySensorsEvaluationUseCaseProvider.overrideWithValue(
@@ -2167,4 +2188,39 @@ const _testGeneralReport = GeneralEvaluationReport(
     wiredELockEnabled: true,
   ),
   balancePending: false,
+  safetyAdvice: ['Inspect the safety edge', 'Contact your installer'],
+);
+
+const _testGeneralReportWithoutSafetyAdvice = GeneralEvaluationReport(
+  motorName: 'Garage door motor 01',
+  cycleSummary: FullReportCycleSummary(
+    doorName: 'Garage door 01',
+    operatedCycles: 860,
+    remainingCycles: 140,
+    needsMaintenance: true,
+  ),
+  openBalanceEvaluation: FullReportBalanceEvaluation(
+    indicatorPercentage: 62,
+    segments: [],
+  ),
+  closeBalanceEvaluation: FullReportBalanceEvaluation(
+    indicatorPercentage: 38,
+    segments: [],
+  ),
+  last24HoursRecord: FullReportOperationRecord(points: []),
+  last7DaysRecord: FullReportOperationRecord(points: []),
+  motorFunctionStatus: FullReportMotorFunctionStatus(
+    openingForceLevel: 1,
+    closingForceLevel: 1,
+    autoCloseSeconds: 25,
+    autoCloseCondition: FullReportAutoCloseCondition.anyPosition,
+    ledOffDelayMinutes: 3,
+    partialOpenCentimeters: 40,
+    ignoreObstructionHeightCentimeters: 3,
+    photoBeamEnabled: true,
+    communityModeEnabled: true,
+    wiredELockEnabled: true,
+  ),
+  balancePending: false,
+  safetyAdvice: [],
 );

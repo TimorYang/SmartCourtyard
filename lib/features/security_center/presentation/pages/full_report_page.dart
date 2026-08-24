@@ -23,13 +23,6 @@ typedef ReportImageCapture =
     Future<Uint8List> Function(GlobalKey boundaryKey, BuildContext context);
 typedef ReportImageSharer = Future<void> Function(Uint8List bytes);
 
-const _safetySuggestions = [
-  FullReportSafetySuggestionCode.cycleMaintenance,
-  FullReportSafetySuggestionCode.safetyEdgeLowBattery,
-  FullReportSafetySuggestionCode.contactInstaller,
-  FullReportSafetySuggestionCode.openingCurrentExceeded,
-];
-
 class FullReportPage extends ConsumerStatefulWidget {
   const FullReportPage({
     required this.deviceId,
@@ -230,8 +223,12 @@ class _FullReportPageState extends ConsumerState<FullReportPage> {
                               sensorEvaluation.wirelessSensorGroup,
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          SafetySuggestionCard(suggestions: _safetySuggestions),
+                          if (report.safetyAdvice.isNotEmpty) ...[
+                            const SizedBox(height: 16),
+                            SafetySuggestionCard(
+                              suggestions: report.safetyAdvice,
+                            ),
+                          ],
                           const SizedBox(height: 28),
                         ],
                       ),

@@ -1379,35 +1379,13 @@ class _ReportAssetPlaceholder extends StatelessWidget {
 }
 
 class SafetySuggestionCard extends StatelessWidget {
-  const SafetySuggestionCard({this.suggestions, super.key});
+  const SafetySuggestionCard({required this.suggestions, super.key});
 
-  final List<FullReportSafetySuggestionCode>? suggestions;
+  final List<String> suggestions;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final defaultSuggestions = [
-      l10n.securityReportSuggestionCycles,
-      l10n.securityReportSuggestionBattery,
-      l10n.securityReportSuggestionMaintenance,
-      l10n.securityReportSuggestionCurrent,
-    ];
-    final displaySuggestions =
-        suggestions
-            ?.map(
-              (suggestion) => switch (suggestion) {
-                FullReportSafetySuggestionCode.cycleMaintenance =>
-                  l10n.securityReportSuggestionCycles,
-                FullReportSafetySuggestionCode.safetyEdgeLowBattery =>
-                  l10n.securityReportSuggestionBattery,
-                FullReportSafetySuggestionCode.contactInstaller =>
-                  l10n.securityReportSuggestionMaintenance,
-                FullReportSafetySuggestionCode.openingCurrentExceeded =>
-                  l10n.securityReportSuggestionCurrent,
-              },
-            )
-            .toList() ??
-        defaultSuggestions;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10),
       child: Column(
@@ -1420,16 +1398,12 @@ class SafetySuggestionCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          for (var index = 0; index < displaySuggestions.length; index++)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Text(
-                '${index + 1}. ${displaySuggestions[index]}',
-                style: AppTextTokens.securityReportSuggestion(
-                  Theme.of(context).textTheme,
-                ),
-              ),
+          Text(
+            suggestions.join('\n'),
+            style: AppTextTokens.securityReportSuggestion(
+              Theme.of(context).textTheme,
             ),
+          ),
         ],
       ),
     );

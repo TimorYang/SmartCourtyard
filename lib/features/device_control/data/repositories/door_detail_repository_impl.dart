@@ -3,6 +3,7 @@ import '../../../../core/logging/app_logger.dart';
 import '../../../../platform_bridge/hardware_models.dart';
 import '../../domain/entities/door_detail.dart';
 import '../../domain/entities/door_device.dart';
+import '../../domain/entities/about_device_info.dart';
 import '../../domain/repositories/door_detail_repository.dart';
 import '../data_sources/door_detail_remote_data_source.dart';
 import '../dto/door_detail_response_dto.dart';
@@ -79,6 +80,56 @@ class DoorDetailRepositoryImpl implements DoorDetailRepository {
         error: error,
         stackTrace: stackTrace,
         context: {'doorId': doorId, 'errorKind': error.kind.name},
+      );
+      throw appError;
+    }
+  }
+
+  @override
+  Future<AboutDeviceInfo> fetchAboutDeviceInfo({
+    required String doorId,
+    required String deviceId,
+    required String requestId,
+  }) async {
+    final parsedDoorId = int.tryParse(doorId.trim());
+    final parsedDeviceId = int.tryParse(deviceId.trim());
+    if (parsedDoorId == null || parsedDeviceId == null) {
+      throw AppError(
+        code: AppErrorCode.unknown,
+        messageKey: 'door_device_invalid_id',
+        requestId: requestId,
+        deviceId: deviceId,
+      );
+    }
+    try {
+      final dto = await remoteDataSource.fetchAboutDeviceInfo(
+        doorId: parsedDoorId,
+        deviceId: parsedDeviceId,
+        requestId: requestId,
+      );
+      return AboutDeviceInfo(
+        deviceId: dto.deviceId,
+        sn: dto.sn,
+        deviceType: dto.deviceType,
+        deviceTypeLabel: dto.deviceTypeLabel,
+        bluetoothName: dto.bluetoothName,
+        hardwareVersion: dto.hardwareVersion,
+        firmwareVersion: dto.firmwareVersion,
+        updateAvailable: dto.updateAvailable,
+        availableVersion: dto.availableVersion,
+      );
+    } on DoorDetailRemoteException catch (error, stackTrace) {
+      final appError = _mapError(error, requestId, deviceId);
+      logger.error(
+        'Failed to fetch about device information',
+        requestId: requestId,
+        error: error,
+        stackTrace: stackTrace,
+        context: {
+          'doorId': doorId,
+          'deviceId': deviceId,
+          'errorKind': error.kind.name,
+        },
       );
       throw appError;
     }

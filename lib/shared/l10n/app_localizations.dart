@@ -1160,6 +1160,24 @@ abstract class AppLocalizations {
   /// **'Photograph'**
   String get accountDetailsPhotographAction;
 
+  /// Title shown when taking an account avatar photo requires a denied camera permission
+  ///
+  /// In en, this message translates to:
+  /// **'Camera permission required'**
+  String get accountDetailsCameraPermissionDeniedTitle;
+
+  /// Explanation shown when taking an account avatar photo requires a denied camera permission
+  ///
+  /// In en, this message translates to:
+  /// **'Camera access is turned off. Go to Settings to enable it.'**
+  String get accountDetailsCameraPermissionDeniedMessage;
+
+  /// Action that opens app settings to enable camera permission for taking an account avatar photo
+  ///
+  /// In en, this message translates to:
+  /// **'Go to Settings'**
+  String get accountDetailsCameraPermissionSettingsAction;
+
   /// Cancel action in account details modal sheets
   ///
   /// In en, this message translates to:
