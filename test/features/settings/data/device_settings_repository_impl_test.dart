@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flinx/features/settings/data/repositories/device_settings_repository_impl.dart';
 import 'package:flinx/features/settings/domain/entities/device_setting.dart';
 import 'package:flinx/platform_bridge/mock_hardware_gateway.dart';
+import 'package:flinx/platform_bridge/hardware_models.dart';
 
 void main() {
   test('maps queried attributes to semantic settings', () async {
@@ -16,10 +17,10 @@ void main() {
 
     expect(values[DeviceSettingKey.partialOpen]?.rawValue, 7);
     expect(values[DeviceSettingKey.ledOffDelay]?.displayValue, '0x05 (5)');
-    expect(values[DeviceSettingKey.autoCloseTime]?.displayValue, '0x0000 (0)');
+    expect(values[DeviceSettingKey.autoCloseTime]?.displayValue, '0x00 (0)');
   });
 
-  test('encodes big-endian values and refreshes mock snapshot', () async {
+  test('encodes auto-close time as one byte at attribute 0x2712', () async {
     final gateway = MockHardwareGateway();
     final repository = DeviceSettingsRepositoryImpl(gateway);
 
@@ -28,7 +29,7 @@ void main() {
       deviceId: 'device-1',
       value: const DeviceSettingValue(
         key: DeviceSettingKey.autoCloseTime,
-        rawValue: 0x0123,
+        rawValue: 9,
       ),
     );
     final snapshot = await gateway.queryDeviceAttributes(
@@ -39,7 +40,21 @@ void main() {
       (value) => value.id == DeviceSettingKey.autoCloseTime.attributeId,
     );
 
-    expect(attribute.value, Uint8List.fromList(<int>[0x01, 0x23]));
+    expect(attribute.id, 0x2712);
+    expect(attribute.value, Uint8List.fromList(<int>[0x09]));
+  });
+
+  test('does not map legacy attribute 0x2725 to auto-close time', () async {
+    final repository = DeviceSettingsRepositoryImpl(
+      _LegacyAutoCloseMockHardwareGateway(),
+    );
+
+    final values = await repository.querySettings(
+      requestId: 'query-legacy',
+      deviceId: 'device-1',
+    );
+
+    expect(values, isNot(contains(DeviceSettingKey.autoCloseTime)));
   });
 
   test('maps every settings-dialog value to its protocol attribute', () async {
@@ -48,7 +63,7 @@ void main() {
     const values = <DeviceSettingValue>[
       DeviceSettingValue(key: DeviceSettingKey.ledOffDelay, rawValue: 5),
       DeviceSettingValue(key: DeviceSettingKey.partialOpen, rawValue: 7),
-      DeviceSettingValue(key: DeviceSettingKey.autoCloseTime, rawValue: 60),
+      DeviceSettingValue(key: DeviceSettingKey.autoCloseTime, rawValue: 9),
       DeviceSettingValue(key: DeviceSettingKey.openingSpeed, rawValue: 80),
       DeviceSettingValue(key: DeviceSettingKey.doorOpenReminder, rawValue: 10),
       DeviceSettingValue(key: DeviceSettingKey.openingForce, rawValue: 5),
@@ -73,4 +88,32 @@ void main() {
       expect(attribute.unsignedValue, value.rawValue);
     }
   });
+}
+
+class _LegacyAutoCloseMockHardwareGateway extends MockHardwareGateway {
+  @override
+  Future<DeviceAttributeSnapshot> queryDeviceAttributes({
+    required String requestId,
+    required String deviceId,
+  }) async {
+    final snapshot = await super.queryDeviceAttributes(
+      requestId: requestId,
+      deviceId: deviceId,
+    );
+    return DeviceAttributeSnapshot(
+      requestId: snapshot.requestId,
+      deviceId: snapshot.deviceId,
+      sequence: snapshot.sequence,
+      timestampMillis: snapshot.timestampMillis,
+      origin: snapshot.origin,
+      attributes: <DeviceAttribute>[
+        for (final attribute in snapshot.attributes)
+          if (attribute.id != 0x2712) attribute,
+        DeviceAttribute(
+          id: 0x2725,
+          value: Uint8List.fromList(<int>[0x00, 0x09]),
+        ),
+      ],
+    );
+  }
 }

@@ -235,10 +235,10 @@ class RunnerTests: XCTestCase {
   func testParsesGoldenActiveAttributeReport() throws {
     let plaintext = try XCTUnwrap(
       data(
-        "030607020227006F70656E65725F42384638363231314139444300270200002703000027090127100027110727131E2714012715012716000F2717032718A1271901271AFFFF271B00271C0D271DF1271F0027200027210027220027230027250000272605272700272800272902272B03273500273B00273C00273D01"
+        "030607020227006F70656E65725F42384638363231314139444300270200002703000027090127100027110727120727131E2714012715012716000F2717032718A1271901271AFFFF271B00271C0D271DF1271F0027200027210027220027230027250000272605272700272800272902272B03273500273B00273C00273D01"
       )
     )
-    XCTAssertEqual(plaintext.count, 125)
+    XCTAssertEqual(plaintext.count, 128)
     XCTAssertEqual(plaintext[0], 0x03)
     let decoded = try XCTUnwrap(
       HardwareBridge.parseDecryptedPayloadForTesting(plaintext)
@@ -249,12 +249,13 @@ class RunnerTests: XCTestCase {
     let attributes = try HardwareBridge.parseDeviceAttributesForTesting(
       decoded.data
     )
-    XCTAssertEqual(attributes.count, 32)
+    XCTAssertEqual(attributes.count, 33)
     let values = Dictionary(uniqueKeysWithValues: attributes.map { ($0.id, $0.value) })
     XCTAssertEqual(
       values[0x2700],
       "opener_B8F86211A9DC".data(using: .utf8)
     )
+    XCTAssertEqual(values[0x2712], Data([0x07]))
     XCTAssertEqual(values[0x2713], Data([0x1E]))
     XCTAssertEqual(values[0x2716], Data([0x00, 0x0F]))
     XCTAssertEqual(values[0x2725], Data([0x00, 0x00]))
@@ -264,9 +265,17 @@ class RunnerTests: XCTestCase {
   func testBuildsSingleAndMultipleAttributeWritePayloads() throws {
     let payload = try HardwareBridge.makeAttributeWritePayloadForTesting([
       (id: 0x2713, value: Data([0x1E])),
-      (id: 0x2725, value: Data([0x00, 0x3C])),
+      (id: 0x2712, value: Data([0x09])),
     ])
-    XCTAssertEqual(payload, Data([0x27, 0x13, 0x1E, 0x27, 0x25, 0x00, 0x3C]))
+    XCTAssertEqual(payload, Data([0x27, 0x13, 0x1E, 0x27, 0x12, 0x09]))
+  }
+
+  func testRejectsLegacyAutoCloseAttributeWrite() {
+    XCTAssertThrowsError(
+      try HardwareBridge.makeAttributeWritePayloadForTesting([
+        (id: 0x2725, value: Data([0x00, 0x09])),
+      ])
+    )
   }
 
   func testWifiProvisionPayloadUsesProtocolFieldOrder() throws {

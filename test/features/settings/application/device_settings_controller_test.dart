@@ -83,7 +83,7 @@ void main() {
     );
     expect(
       container.read(provider).values[DeviceSettingKey.autoCloseTime]?.rawValue,
-      30,
+      1,
     );
     expect(
       await container

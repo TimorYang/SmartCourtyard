@@ -25,10 +25,7 @@ class MockHardwareGateway implements HardwareGateway {
     0x2711: DeviceAttribute(id: 0x2711, value: Uint8List.fromList([0x07])),
     0x2713: DeviceAttribute(id: 0x2713, value: Uint8List.fromList([0x05])),
     0x2714: DeviceAttribute(id: 0x2714, value: Uint8List.fromList([0x01])),
-    0x2725: DeviceAttribute(
-      id: 0x2725,
-      value: Uint8List.fromList([0x00, 0x00]),
-    ),
+    0x2712: DeviceAttribute(id: 0x2712, value: Uint8List.fromList([0x00])),
     0x2726: DeviceAttribute(id: 0x2726, value: Uint8List.fromList([0x05])),
     0x2727: DeviceAttribute(id: 0x2727, value: Uint8List.fromList([0x50])),
     0x2728: DeviceAttribute(id: 0x2728, value: Uint8List.fromList([0x00])),
