@@ -1370,6 +1370,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get smartOpenerConfirmAction => 'Confirm';
 
   @override
+  String get smartOpenerShareNowAction => 'Share now';
+
+  @override
   String get smartOpenerConnectionSuccessTitle => 'Connection successful';
 
   @override

@@ -2606,6 +2606,12 @@ abstract class AppLocalizations {
   /// **'Confirm'**
   String get smartOpenerConfirmAction;
 
+  /// No description provided for @smartOpenerShareNowAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Share now'**
+  String get smartOpenerShareNowAction;
+
   /// No description provided for @smartOpenerConnectionSuccessTitle.
   ///
   /// In en, this message translates to:

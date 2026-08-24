@@ -1359,6 +1359,7 @@
   "smartOpenerStopAdditionDescription": "The device is being added. The WIFI module needs to be reset before add it again after termination.",
   "smartOpenerCancelAction": "Cancel",
   "smartOpenerConfirmAction": "Confirm",
+  "smartOpenerShareNowAction": "Share now",
   "smartOpenerConnectionSuccessTitle": "Connection successful",
   "smartOpenerConnectionSuccessDescription": "configure the device information",
   "smartOpenerDeviceNamePlaceholder": "Device Name",

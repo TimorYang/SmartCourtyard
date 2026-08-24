@@ -11,6 +11,7 @@ import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
 import '../../../home/application/providers.dart';
 import '../../../home/domain/entities/home_scene.dart';
+import '../../../home/presentation/pages/device_share_page.dart';
 import '../../../device_control/presentation/pages/already_added_devices_page.dart';
 import '../../../device_control/presentation/pages/device_command_page.dart';
 import 'add_new_doors_page.dart';
@@ -253,7 +254,8 @@ class _SmartOpenerConnectionSuccessPageState
                   child: _SuccessActionButton(
                     label: l10n.smartOpenerShareAction,
                     isPrimary: false,
-                    onPressed: () => _showShareDialog(context),
+                    onPressed: () =>
+                        _showShareDialog(context, doorId: onboardedDoor?.id),
                   ),
                 ),
                 const SizedBox(height: 19),
@@ -316,12 +318,19 @@ class _SmartOpenerConnectionSuccessPageState
     router.pushReplacement(location);
   }
 
-  Future<void> _showShareDialog(BuildContext context) {
-    return showDialog<void>(
+  Future<void> _showShareDialog(
+    BuildContext context, {
+    required int? doorId,
+  }) async {
+    final shouldShare = await showDialog<bool>(
       context: context,
       barrierColor: AppColors.overlayStrong,
       builder: (context) => const _ShareDeviceDialog(),
     );
+    if (!mounted || shouldShare != true || doorId == null) {
+      return;
+    }
+    await context.pushNamed(DeviceSharePage.routeName, extra: doorId);
   }
 }
 
@@ -614,10 +623,10 @@ class _ShareDeviceDialog extends StatelessWidget {
                   const SizedBox(width: 30),
                   Expanded(
                     child: _ShareDialogActionButton(
-                      label: l10n.smartOpenerConfirmAction,
+                      label: l10n.smartOpenerShareNowAction,
                       backgroundColor: AppColors.brandPrimary,
                       foregroundColor: Colors.white,
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: () => Navigator.of(context).pop(true),
                     ),
                   ),
                 ],

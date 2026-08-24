@@ -1303,6 +1303,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get smartOpenerConfirmAction => '确认';
 
   @override
+  String get smartOpenerShareNowAction => '立即分享';
+
+  @override
   String get smartOpenerConnectionSuccessTitle => '连接成功';
 
   @override

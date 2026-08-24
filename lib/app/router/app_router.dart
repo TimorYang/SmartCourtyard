@@ -264,6 +264,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return DeviceSharePage(
             doorId:
                 editingData?.doorId ??
+                (extra is int ? extra : null) ??
                 (extra is DeviceSummary ? int.tryParse(extra.id) : null),
             editingMember: editingData?.member,
           );

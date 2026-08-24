@@ -3,15 +3,19 @@ import 'package:flinx/features/add_device/application/providers.dart';
 import 'package:flinx/features/add_device/domain/entities/onboarded_force_door.dart';
 import 'package:flinx/features/add_device/presentation/pages/smart_opener_connection_success_page.dart';
 import 'package:flinx/features/home/application/providers.dart';
+import 'package:flinx/features/home/application/door_share_controller.dart';
 import 'package:flinx/features/home/domain/entities/home_door_cover_image.dart';
 import 'package:flinx/features/home/domain/entities/home_scene.dart';
+import 'package:flinx/features/home/domain/entities/door_share.dart';
 import 'package:flinx/features/home/domain/repositories/home_door_repository.dart';
+import 'package:flinx/features/home/presentation/pages/device_share_page.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
 import 'package:flinx/app/theme/app_theme.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
 void main() {
   testWidgets('hides name and scene controls for a child device', (
@@ -76,6 +80,71 @@ void main() {
 
     expect(repository.movedDoorId, 42);
     expect(repository.movedSceneId, 3);
+  });
+
+  testWidgets('share now opens the share page for the onboarded door', (
+    tester,
+  ) async {
+    final state = AddDeviceState.initial().copyWith(
+      onboardedDoor: const OnboardedForceDoor(
+        id: 42,
+        sn: 'SN-001',
+        name: 'Original name',
+      ),
+    );
+    final router = GoRouter(
+      initialLocation: '/success',
+      routes: [
+        GoRoute(
+          path: '/success',
+          builder: (context, state) => const SmartOpenerConnectionSuccessPage(),
+        ),
+        GoRoute(
+          path: DeviceSharePage.routePath,
+          name: DeviceSharePage.routeName,
+          builder: (context, state) =>
+              DeviceSharePage(doorId: state.extra! as int),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          addDeviceControllerProvider.overrideWith(
+            () => _SuccessPageController(state),
+          ),
+          homeDoorRepositoryProvider.overrideWithValue(
+            _RecordingHomeDoorRepository(),
+          ),
+          homeScenesProvider.overrideWith((ref) async => const []),
+          homeDevicesProvider.overrideWith((ref) async => const []),
+          doorShareCapabilitiesProvider(
+            42,
+          ).overrideWith((ref) async => ShareCapability.values),
+        ],
+        child: MaterialApp.router(
+          theme: AppTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          routerConfig: router,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('To share'));
+    await tester.pumpAndSettle();
+    expect(find.text('Share now'), findsOneWidget);
+
+    await tester.tap(find.text('Share now'));
+    await tester.pumpAndSettle();
+
+    final sharePage = tester.widget<DeviceSharePage>(
+      find.byType(DeviceSharePage),
+    );
+    expect(sharePage.doorId, 42);
   });
 }
 

@@ -452,6 +452,7 @@
   "smartOpenerStopAdditionDescription": "设备正在添加中。终止后再次添加前，需要重置 WIFI 模块。",
   "smartOpenerCancelAction": "取消",
   "smartOpenerConfirmAction": "确认",
+  "smartOpenerShareNowAction": "立即分享",
   "smartOpenerConnectionSuccessTitle": "连接成功",
   "smartOpenerConnectionSuccessDescription": "配置设备信息",
   "smartOpenerDeviceNamePlaceholder": "设备名称",
