@@ -85,8 +85,7 @@ class HomePage extends ConsumerStatefulWidget {
   ConsumerState<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends ConsumerState<HomePage>
-    with WidgetsBindingObserver, RouteAware {
+class _HomePageState extends ConsumerState<HomePage> with RouteAware {
   var _isAddMenuVisible = false;
   var _isSingleColumnDeviceList = false;
   ModalRoute<dynamic>? _route;
@@ -95,7 +94,6 @@ class _HomePageState extends ConsumerState<HomePage>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(_disconnectConnectedBleDevices());
     });
@@ -123,15 +121,7 @@ class _HomePageState extends ConsumerState<HomePage>
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      unawaited(_disconnectConnectedBleDevices());
-    }
-  }
-
-  @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     appRouteObserver.unsubscribe(this);
     super.dispose();
   }
