@@ -31,6 +31,9 @@ class ManagedDevicesController extends AsyncNotifier<List<ManagedLoginDevice>> {
           'remove-login-device-$sessionId-${DateTime.now().toUtc().microsecondsSinceEpoch}',
     );
     final devices = state.asData?.value ?? const <ManagedLoginDevice>[];
+    if (!devices.any((device) => device.sessionId == sessionId)) {
+      return;
+    }
     state = AsyncData(
       devices
           .where((device) => device.sessionId != sessionId)
