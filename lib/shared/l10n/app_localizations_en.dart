@@ -2463,6 +2463,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get smartOpenerAlreadyBoundToCurrentUser =>
+      'This device is already bound to your account.';
+
+  @override
+  String get smartOpenerAlreadyBoundToAnotherUser =>
+      'This device is already bound to another user.';
+
+  @override
   String deviceCommandNetworkFailure(String action) {
     return 'Unable to send $action. Check your network and try again.';
   }

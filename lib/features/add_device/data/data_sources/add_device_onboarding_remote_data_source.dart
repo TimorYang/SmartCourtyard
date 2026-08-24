@@ -48,11 +48,21 @@ class AddDeviceOnboardingRemoteDataSourceImpl
       if (!_isSuccessCode(response.code) ||
           !response.success ||
           data == null ||
-          !data.isValid ||
-          !data.canBind) {
+          !data.isValid) {
         throw AddDeviceOnboardingRemoteException.invalidResponse(
           serverCode: response.code,
           serverMessage: response.success ? null : response.msg,
+          serverMessageKey: response.messageKey,
+        );
+      }
+      if (!data.canBind) {
+        if (data.bound) {
+          throw AddDeviceOnboardingRemoteException.alreadyBound(
+            ownedByCurrentUser: data.ownedByCurrentUser,
+          );
+        }
+        throw AddDeviceOnboardingRemoteException.invalidResponse(
+          serverCode: response.code,
           serverMessageKey: response.messageKey,
         );
       }
@@ -169,6 +179,14 @@ class AddDeviceOnboardingRemoteException implements Exception {
          serverMessageKey: serverMessageKey,
        );
 
+  const AddDeviceOnboardingRemoteException.alreadyBound({
+    required bool ownedByCurrentUser,
+  }) : this._(
+         ownedByCurrentUser
+             ? AddDeviceOnboardingRemoteErrorKind.alreadyBoundToCurrentUser
+             : AddDeviceOnboardingRemoteErrorKind.alreadyBoundToAnotherUser,
+       );
+
   final AddDeviceOnboardingRemoteErrorKind kind;
   final int? statusCode;
   final int? serverCode;
@@ -176,4 +194,9 @@ class AddDeviceOnboardingRemoteException implements Exception {
   final String? serverMessageKey;
 }
 
-enum AddDeviceOnboardingRemoteErrorKind { network, invalidResponse }
+enum AddDeviceOnboardingRemoteErrorKind {
+  network,
+  invalidResponse,
+  alreadyBoundToCurrentUser,
+  alreadyBoundToAnotherUser,
+}

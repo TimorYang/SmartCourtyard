@@ -128,6 +128,21 @@ class AddDeviceOnboardingRepositoryImpl
     String requestId,
     String messageKey,
   ) {
+    final bindingStatusError = switch (error.kind) {
+      AddDeviceOnboardingRemoteErrorKind.alreadyBoundToCurrentUser =>
+        'addDevice.deviceAlreadyBoundToCurrentUser',
+      AddDeviceOnboardingRemoteErrorKind.alreadyBoundToAnotherUser =>
+        'addDevice.deviceAlreadyBoundToAnotherUser',
+      _ => null,
+    };
+    if (bindingStatusError != null) {
+      return AppError(
+        code: AppErrorCode.accessDenied,
+        messageKey: bindingStatusError,
+        action: AppErrorAction.none,
+        requestId: requestId,
+      );
+    }
     final resolvedMessageKey =
         _messageKeyForServerMessageKey(error.serverMessageKey) ?? messageKey;
     if (error.kind == AddDeviceOnboardingRemoteErrorKind.network) {

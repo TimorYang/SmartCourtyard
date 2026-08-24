@@ -899,6 +899,8 @@
       "action": {"type": "String"}
     }
   },
+  "smartOpenerAlreadyBoundToCurrentUser": "该设备已绑定至当前账号。",
+  "smartOpenerAlreadyBoundToAnotherUser": "该设备已被其他用户绑定。",
   "deviceCommandNetworkFailure": "{action}发送失败，请检查网络后重试。",
   "@deviceCommandNetworkFailure": {
     "placeholders": {

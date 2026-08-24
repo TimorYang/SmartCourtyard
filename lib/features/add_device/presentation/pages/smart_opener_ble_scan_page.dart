@@ -13,6 +13,7 @@ import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/add_device_controller.dart';
 import '../../application/device_type_ble_filter.dart';
 import '../../application/providers.dart';
+import '../add_device_error_message.dart';
 import 'smart_opener_choose_wifi_page.dart';
 import 'smart_opener_device_not_found_page.dart';
 import 'smart_opener_scan_results_page.dart';
@@ -178,7 +179,11 @@ class _SmartOpenerBleScanPageState extends ConsumerState<SmartOpenerBleScanPage>
     }
 
     final state = ref.read(addDeviceControllerProvider);
-    final message = state.errorMessage ?? 'Unable to connect device.';
+    final message = localizedAddDeviceErrorMessage(
+      context,
+      state,
+      fallback: AppLocalizations.of(context).smartOpenerScannerConnectionFailed,
+    );
     AppToast.error(context, message);
   }
 
@@ -208,7 +213,16 @@ class _SmartOpenerBleScanPageState extends ConsumerState<SmartOpenerBleScanPage>
       return;
     }
     final state = ref.read(addDeviceControllerProvider);
-    AppToast.error(context, state.errorMessage ?? 'Unable to connect device.');
+    AppToast.error(
+      context,
+      localizedAddDeviceErrorMessage(
+        context,
+        state,
+        fallback: AppLocalizations.of(
+          context,
+        ).smartOpenerScannerConnectionFailed,
+      ),
+    );
   }
 
   String? get _targetSn {

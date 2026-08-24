@@ -1944,6 +1944,14 @@
       "action": {"type": "String"}
     }
   },
+  "smartOpenerAlreadyBoundToCurrentUser": "This device is already bound to your account.",
+  "@smartOpenerAlreadyBoundToCurrentUser": {
+    "description": "Shown when onboarding finds that the current user already owns the device"
+  },
+  "smartOpenerAlreadyBoundToAnotherUser": "This device is already bound to another user.",
+  "@smartOpenerAlreadyBoundToAnotherUser": {
+    "description": "Shown when onboarding finds that another user owns the device"
+  },
   "deviceCommandNetworkFailure": "Unable to send {action}. Check your network and try again.",
   "@deviceCommandNetworkFailure": {
     "placeholders": {

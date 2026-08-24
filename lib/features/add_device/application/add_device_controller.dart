@@ -36,6 +36,7 @@ class AddDeviceState {
     this.pendingDoorDraft,
     this.doorType,
     this.errorMessage,
+    this.errorMessageKey,
     this.infoMessage,
     this.onboardingFlowId,
     this.onboardingDoorId,
@@ -72,6 +73,7 @@ class AddDeviceState {
   final AddDoorDraft? pendingDoorDraft;
   final DoorType? doorType;
   final String? errorMessage;
+  final String? errorMessageKey;
   final String? infoMessage;
   final String? onboardingFlowId;
   final String? onboardingDoorId;
@@ -106,6 +108,7 @@ class AddDeviceState {
     bool clearPendingDoorDraft = false,
     DoorType? doorType,
     String? errorMessage,
+    String? errorMessageKey,
     bool clearErrorMessage = false,
     String? infoMessage,
     bool clearInfoMessage = false,
@@ -140,6 +143,10 @@ class AddDeviceState {
       errorMessage: clearErrorMessage
           ? null
           : errorMessage ?? this.errorMessage,
+      errorMessageKey: clearErrorMessage
+          ? errorMessageKey
+          : errorMessageKey ??
+                (errorMessage == null ? this.errorMessageKey : null),
       infoMessage: clearInfoMessage ? null : infoMessage ?? this.infoMessage,
       onboardingFlowId: clearOnboardingFlowId
           ? null
@@ -632,10 +639,15 @@ class AddDeviceController extends Notifier<AddDeviceState> {
           'domainCode': error.code.name,
         },
       );
+      final localizedMessageKey = _localizedMessageKeyForAppError(error);
       state = state.copyWith(
         isConnecting: false,
         isAuthenticating: false,
-        errorMessage: _messageForAppError(error),
+        errorMessage: localizedMessageKey == null
+            ? _messageForAppError(error)
+            : null,
+        errorMessageKey: localizedMessageKey,
+        clearErrorMessage: localizedMessageKey != null,
         clearInfoMessage: true,
       );
       return false;
@@ -995,7 +1007,8 @@ class AddDeviceController extends Notifier<AddDeviceState> {
       'addDevice.deviceKeyFailed' => '获取设备密钥失败，请重试',
       'addDevice.deviceNotExists' => '设备不存在，请确认设备后重试',
       'addDevice.bindDoorFailed' => '设备绑定失败，请重试',
-      'addDevice.bindingStatusFailed' =>
+      'addDevice.bindingStatusFailed' ||
+      'addDevice.deviceAlreadyBoundToAnotherUser' =>
         error.userMessage?.trim().isNotEmpty == true
             ? error.userMessage!.trim()
             : '设备已被其他用户绑定',
@@ -1004,6 +1017,14 @@ class AddDeviceController extends Notifier<AddDeviceState> {
         error.userMessage?.trim().isNotEmpty == true
             ? error.userMessage!.trim()
             : '设备添加失败，请重试',
+    };
+  }
+
+  String? _localizedMessageKeyForAppError(AppError error) {
+    return switch (error.messageKey) {
+      'addDevice.deviceAlreadyBoundToCurrentUser' ||
+      'addDevice.deviceAlreadyBoundToAnotherUser' => error.messageKey,
+      _ => null,
     };
   }
 }

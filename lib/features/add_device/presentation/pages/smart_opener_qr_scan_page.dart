@@ -15,6 +15,7 @@ import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/add_device_controller.dart';
 import '../../application/device_type_ble_filter.dart';
 import '../../application/providers.dart';
+import '../add_device_error_message.dart';
 import '../../application/smart_opener_qr_payload_parser.dart';
 import 'add_device_page.dart';
 import 'smart_opener_ble_scan_page.dart';
@@ -203,9 +204,15 @@ class _SmartOpenerQrScanPageState extends ConsumerState<SmartOpenerQrScanPage> {
       context.push(SmartOpenerChooseWifiPage.routePath);
       return;
     }
+    final state = ref.read(addDeviceControllerProvider);
     await _resumeQrScanning(
-      ref.read(addDeviceControllerProvider).errorMessage ??
-          AppLocalizations.of(context).smartOpenerScannerConnectionFailed,
+      localizedAddDeviceErrorMessage(
+        context,
+        state,
+        fallback: AppLocalizations.of(
+          context,
+        ).smartOpenerScannerConnectionFailed,
+      ),
     );
   }
 

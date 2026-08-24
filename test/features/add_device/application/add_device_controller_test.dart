@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flinx/core/errors/app_error.dart';
 import 'package:flinx/features/add_device/application/providers.dart';
 import 'package:flinx/core/logging/app_logger.dart';
 import 'package:flinx/core/logging/providers.dart';
@@ -40,6 +41,37 @@ void main() {
           .connectionStateFor('connected-device'),
       BleConnectionState.disconnected,
     );
+  });
+
+  test('exposes a localized message key when the user owns the device', () async {
+    final container = ProviderContainer(
+      overrides: [
+        addDeviceHardwareGatewayProvider.overrideWithValue(
+          _DisconnectTrackingGateway(),
+        ),
+        addDeviceOnboardingRepositoryProvider.overrideWithValue(
+          const _FakeAddDeviceOnboardingRepository(
+            validationError: AppError(
+              code: AppErrorCode.accessDenied,
+              messageKey: 'addDevice.deviceAlreadyBoundToCurrentUser',
+            ),
+          ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    final connected = await container
+        .read(addDeviceControllerProvider.notifier)
+        .connectAndAuthenticate(device);
+    final state = container.read(addDeviceControllerProvider);
+
+    expect(connected, isFalse);
+    expect(
+      state.errorMessageKey,
+      'addDevice.deviceAlreadyBoundToCurrentUser',
+    );
+    expect(state.errorMessage, isNull);
   });
 
   test('reports disconnect failure without preventing the next scan', () async {
@@ -366,7 +398,9 @@ class _RecordingLogger implements AppLogger {
 
 class _FakeAddDeviceOnboardingRepository
     implements AddDeviceOnboardingRepository {
-  const _FakeAddDeviceOnboardingRepository();
+  const _FakeAddDeviceOnboardingRepository({this.validationError});
+
+  final AppError? validationError;
 
   static int? lastDoorTypeWireValue;
   static int? lastSceneId;
@@ -375,7 +409,12 @@ class _FakeAddDeviceOnboardingRepository
   Future<void> validateBindingStatus({
     required String sn,
     required String requestId,
-  }) async {}
+  }) async {
+    final error = validationError;
+    if (error != null) {
+      throw error;
+    }
+  }
 
   @override
   Future<OnboardedForceDoor> addForceDoor({
