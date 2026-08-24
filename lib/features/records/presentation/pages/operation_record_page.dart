@@ -82,7 +82,6 @@ class _OperationRecordPageState extends ConsumerState<OperationRecordPage> {
       processingText: l10n.refreshControlLoading,
       processedText: l10n.refreshControlLoadSucceeded,
       failedText: l10n.refreshControlLoadFailed,
-      noMoreText: l10n.refreshControlNoMoreData,
       showMessage: false,
     );
   }
@@ -106,7 +105,7 @@ class _OperationRecordPageState extends ConsumerState<OperationRecordPage> {
           header: _classicHeader(l10n),
           footer: _classicFooter(l10n),
           onRefresh: controller.refresh,
-          onLoad: _loadMore,
+          onLoad: recordsState.hasMore ? _loadMore : null,
           childBuilder: (context, physics) => CustomScrollView(
             key: const PageStorageKey<String>('operation-record-scroll'),
             physics: physics,

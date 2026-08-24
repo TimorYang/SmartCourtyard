@@ -60,6 +60,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Loaded next page'), findsOneWidget);
+    expect(find.text('No more records'), findsOneWidget);
+    expect(find.text('No more data'), findsNothing);
   });
 
   testWidgets('uses the named avatar placeholder when the URL is empty', (
