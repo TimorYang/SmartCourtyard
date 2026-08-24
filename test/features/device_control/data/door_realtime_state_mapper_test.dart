@@ -67,30 +67,30 @@ void main() {
   });
 
   test('position endpoints override the reported motor state', () {
-    final open = DoorRealtimeStateMapper.parse(
+    final closed = DoorRealtimeStateMapper.parse(
       _snapshot([_attribute(0x2715, 0x02), _attribute(0x271C, 0)]),
     );
-    final closed = DoorRealtimeStateMapper.parse(
+    final open = DoorRealtimeStateMapper.parse(
       _snapshot([_attribute(0x2715, 0x00), _attribute(0x271C, 100)]),
     );
 
-    expect(open.state?.status, DoorRealtimeStatus.open);
-    expect(open.state?.motorState, DoorMotorState.closing);
     expect(closed.state?.status, DoorRealtimeStatus.closed);
-    expect(closed.state?.motorState, DoorMotorState.opening);
+    expect(closed.state?.motorState, DoorMotorState.closing);
+    expect(open.state?.status, DoorRealtimeStatus.open);
+    expect(open.state?.motorState, DoorMotorState.opening);
   });
 
   test('combines 0x2715 and 0x271C when they arrive separately', () {
     final motorOnly = DoorRealtimeStateMapper.parse(
       _snapshot([_attribute(0x2715, 0x02)]),
     );
-    final atOpenEndpoint = DoorRealtimeStateMapper.parse(
+    final atClosedEndpoint = DoorRealtimeStateMapper.parse(
       _snapshot([_attribute(0x271C, 0)]),
       previous: motorOnly.state,
     );
     final changedMotor = DoorRealtimeStateMapper.parse(
       _snapshot([_attribute(0x2715, 0x00)]),
-      previous: atOpenEndpoint.state,
+      previous: atClosedEndpoint.state,
     );
     final moving = DoorRealtimeStateMapper.parse(
       _snapshot([_attribute(0x271C, 42)]),
@@ -98,8 +98,8 @@ void main() {
     );
 
     expect(motorOnly.state?.status, DoorRealtimeStatus.closing);
-    expect(atOpenEndpoint.state?.status, DoorRealtimeStatus.open);
-    expect(changedMotor.state?.status, DoorRealtimeStatus.open);
+    expect(atClosedEndpoint.state?.status, DoorRealtimeStatus.closed);
+    expect(changedMotor.state?.status, DoorRealtimeStatus.closed);
     expect(moving.state?.status, DoorRealtimeStatus.opening);
     expect(moving.state?.motorState, DoorMotorState.opening);
     expect(moving.state?.positionPercent, 42);

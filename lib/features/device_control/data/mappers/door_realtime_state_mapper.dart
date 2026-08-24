@@ -105,10 +105,10 @@ class DoorRealtimeStateMapper {
     required double? positionPercent,
   }) {
     if (positionPercent == 0) {
-      return DoorRealtimeStatus.open;
+      return DoorRealtimeStatus.closed;
     }
     if (positionPercent == 100) {
-      return DoorRealtimeStatus.closed;
+      return DoorRealtimeStatus.open;
     }
     return switch (motorState) {
       DoorMotorState.opening => DoorRealtimeStatus.opening,

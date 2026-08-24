@@ -290,9 +290,6 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
         commandState.doorRealtimeState?.positionPercent;
     final doorPositionPercent =
         realtimePositionPercent ?? doorDetail?.positionPercent;
-    final doorVisualPositionPercent = realtimePositionPercent == null
-        ? doorDetail?.positionPercent
-        : 100 - realtimePositionPercent;
     return Scaffold(
       backgroundColor: AppColors.backgroundPrimary,
       appBar: FlinxNavigationBar(
@@ -361,7 +358,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                   _DoorHeroImage(
                     doorType: DoorType.fromWireValue(doorDetail?.doorType),
                     doorTypeWireValue: doorDetail?.doorType,
-                    positionPercent: doorVisualPositionPercent ?? 0,
+                    positionPercent: doorPositionPercent ?? 0,
                     logger: ref.read(appLoggerProvider),
                   ),
                   const SizedBox(height: 4),
