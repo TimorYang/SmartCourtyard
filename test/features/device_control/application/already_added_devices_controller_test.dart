@@ -1,6 +1,7 @@
 import 'package:flinx/features/device_control/application/already_added_devices_controller.dart';
 import 'package:flinx/features/device_control/application/device_command_controller.dart';
 import 'package:flinx/features/device_control/domain/entities/door_detail.dart';
+import 'package:flinx/features/device_control/domain/entities/about_device_info.dart';
 import 'package:flinx/features/device_control/domain/entities/door_device.dart';
 import 'package:flinx/features/device_control/domain/repositories/door_detail_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -140,6 +141,13 @@ class _RecordingDoorDetailRepository implements DoorDetailRepository {
     }
     return devices;
   }
+
+  @override
+  Future<AboutDeviceInfo> fetchAboutDeviceInfo({
+    required String doorId,
+    required String deviceId,
+    required String requestId,
+  }) => throw UnimplementedError();
 
   @override
   Future<void> unbindDoorDevice({

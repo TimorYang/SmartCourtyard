@@ -10,6 +10,7 @@ class GeneralEvaluationReport {
     required this.last7DaysRecord,
     required this.motorFunctionStatus,
     required this.balancePending,
+    required this.safetyAdvice,
   });
 
   final String motorName;
@@ -20,4 +21,5 @@ class GeneralEvaluationReport {
   final FullReportOperationRecord last7DaysRecord;
   final FullReportMotorFunctionStatus motorFunctionStatus;
   final bool balancePending;
+  final List<String> safetyAdvice;
 }

@@ -2,9 +2,11 @@ class GeneralEvaluationResponseDto {
   const GeneralEvaluationResponseDto({
     this.device,
     this.motorFunctions = const [],
+    this.safetyAdvice = const [],
   });
   final GeneralEvaluationDeviceDto? device;
   final List<MotorFunctionItemDto> motorFunctions;
+  final List<String> safetyAdvice;
   factory GeneralEvaluationResponseDto.fromJson(Map<String, dynamic> json) =>
       GeneralEvaluationResponseDto(
         device: json['device'] is Map<String, dynamic>
@@ -16,10 +18,14 @@ class GeneralEvaluationResponseDto {
             .whereType<Map<String, dynamic>>()
             .map(MotorFunctionItemDto.fromJson)
             .toList(),
+        safetyAdvice: (json['safetyAdvice'] as List? ?? const [])
+            .whereType<String>()
+            .toList(),
       );
   Map<String, dynamic> toJson() => {
     'device': device?.toJson(),
     'motorFunctions': motorFunctions.map((e) => e.toJson()).toList(),
+    'safetyAdvice': safetyAdvice,
   };
 }
 

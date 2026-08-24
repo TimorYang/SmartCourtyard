@@ -7,6 +7,7 @@ import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/device_command_controller.dart';
+import '../../application/about_device_controller.dart';
 import '../../../settings/application/device_settings_controller.dart';
 import '../../../settings/application/device_capabilities_controller.dart';
 import '../../../settings/application/door_settings_controller.dart';
@@ -281,7 +282,8 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
                       title: l10n.deviceSettingsAboutDevice,
                       onTap: () => context.push(
                         '${AboutDevicePage.routePath}'
-                        '?deviceId=${Uri.encodeComponent(widget.deviceId)}',
+                        '?doorId=${Uri.encodeComponent(widget.doorId)}'
+                        '&deviceId=${Uri.encodeComponent(widget.deviceId)}',
                       ),
                     ),
                     if (capabilitiesState.supports(
@@ -589,18 +591,44 @@ String _formatDuration(AppLocalizations l10n, String value) {
   return value;
 }
 
-class AboutDevicePage extends StatelessWidget {
-  const AboutDevicePage({required this.deviceId, super.key});
+class AboutDevicePage extends ConsumerStatefulWidget {
+  const AboutDevicePage({
+    required this.doorId,
+    required this.deviceId,
+    super.key,
+  });
 
   static const routeName = 'about-device';
   static const routePath = '/device-settings/about';
 
+  final String doorId;
   final String deviceId;
+
+  @override
+  ConsumerState<AboutDevicePage> createState() => _AboutDevicePageState();
+}
+
+class _AboutDevicePageState extends ConsumerState<AboutDevicePage> {
+  AboutDeviceRequest get _request =>
+      (doorId: widget.doorId, deviceId: widget.deviceId);
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(_load);
+  }
+
+  void _load() {
+    ref
+        .read(aboutDeviceControllerProvider(_request).notifier)
+        .load(doorId: widget.doorId, deviceId: widget.deviceId);
+  }
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context);
+    final state = ref.watch(aboutDeviceControllerProvider(_request));
 
     return Scaffold(
       appBar: const FlinxNavigationBar(title: '', showBottomDivider: false),
@@ -621,33 +649,54 @@ class AboutDevicePage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 28),
-                _SettingsRows(
-                  rows: [
-                    _SettingsRowData(
-                      assetPath:
-                          DeviceSettingsAssetPaths.aboutDeviceBluetoothName,
-                      fallbackIcon: Icons.bluetooth,
-                      title: l10n.deviceSettingsBluetoothName,
+                state.when(
+                  loading: () => const Padding(
+                    padding: EdgeInsets.only(top: 36),
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                  error: (_, _) => Padding(
+                    padding: const EdgeInsets.only(top: 36),
+                    child: Center(
+                      child: TextButton(
+                        onPressed: _load,
+                        child: Text(l10n.deviceSettingsLoadFailed),
+                      ),
                     ),
-                    _SettingsRowData(
-                      assetPath:
-                          DeviceSettingsAssetPaths.aboutDeviceFirmwareVersion,
-                      fallbackIcon: Icons.developer_board_outlined,
-                      title: l10n.deviceSettingsFirmwareVersion,
-                    ),
-                    _SettingsRowData(
-                      assetPath:
-                          DeviceSettingsAssetPaths.aboutDeviceHardwareVersion,
-                      fallbackIcon: Icons.memory_outlined,
-                      title: l10n.deviceSettingsHardwareVersion,
-                    ),
-                    _SettingsRowData(
-                      assetPath:
-                          DeviceSettingsAssetPaths.aboutDeviceCheckVersion,
-                      fallbackIcon: Icons.manage_search_outlined,
-                      title: l10n.deviceSettingsCheckVersion,
-                    ),
-                  ],
+                  ),
+                  data: (info) => _SettingsRows(
+                    rows: [
+                      _SettingsRowData(
+                        assetPath:
+                            DeviceSettingsAssetPaths.aboutDeviceBluetoothName,
+                        fallbackIcon: Icons.bluetooth,
+                        title: l10n.deviceSettingsBluetoothName,
+                        value: info.bluetoothName,
+                        showChevron: false,
+                      ),
+                      _SettingsRowData(
+                        assetPath:
+                            DeviceSettingsAssetPaths.aboutDeviceFirmwareVersion,
+                        fallbackIcon: Icons.developer_board_outlined,
+                        title: l10n.deviceSettingsFirmwareVersion,
+                        value: info.firmwareVersion,
+                        showChevron: false,
+                      ),
+                      _SettingsRowData(
+                        assetPath:
+                            DeviceSettingsAssetPaths.aboutDeviceHardwareVersion,
+                        fallbackIcon: Icons.memory_outlined,
+                        title: l10n.deviceSettingsHardwareVersion,
+                        value: info.hardwareVersion,
+                        showChevron: false,
+                      ),
+                      _SettingsRowData(
+                        assetPath:
+                            DeviceSettingsAssetPaths.aboutDeviceCheckVersion,
+                        fallbackIcon: Icons.manage_search_outlined,
+                        title: l10n.deviceSettingsCheckVersion,
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -743,6 +792,7 @@ class _SettingsRowData {
     required this.fallbackIcon,
     required this.title,
     this.value,
+    this.showChevron = true,
     this.onTap,
   });
 
@@ -750,6 +800,7 @@ class _SettingsRowData {
   final IconData fallbackIcon;
   final String title;
   final String? value;
+  final bool showChevron;
   final VoidCallback? onTap;
 }
 
@@ -814,17 +865,18 @@ class _SettingsRow extends StatelessWidget {
                       ),
                       const SizedBox(width: 12),
                     ],
-                    const SizedBox(
-                      width: 28,
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: Icon(
-                          Icons.chevron_right,
-                          size: 28,
-                          color: AppColors.textPrimary,
+                    if (data.showChevron)
+                      const SizedBox(
+                        width: 28,
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: Icon(
+                            Icons.chevron_right,
+                            size: 28,
+                            color: AppColors.textPrimary,
+                          ),
                         ),
                       ),
-                    ),
                   ],
                 ),
               ],

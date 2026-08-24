@@ -4,6 +4,7 @@ import '../../../../core/network/dio_factory.dart';
 import '../../../../core/network/network_exception.dart';
 import '../dto/door_detail_response_dto.dart';
 import '../dto/door_device_response_dto.dart';
+import '../dto/about_device_info_response_dto.dart';
 import 'door_detail_api.dart';
 
 abstract interface class DoorDetailRemoteDataSource {
@@ -14,6 +15,12 @@ abstract interface class DoorDetailRemoteDataSource {
 
   Future<List<DoorDeviceResponseDto>> fetchDoorDevices({
     required int doorId,
+    required String requestId,
+  });
+
+  Future<AboutDeviceInfoResponseDto> fetchAboutDeviceInfo({
+    required int doorId,
+    required int deviceId,
     required String requestId,
   });
 
@@ -61,6 +68,32 @@ class DoorDetailRemoteDataSourceImpl implements DoorDetailRemoteDataSource {
     try {
       final response = await api.fetchDoorDevices(
         doorId,
+        Options(extra: {NetworkRequestExtras.requestId: requestId}),
+      );
+      final data = response.data;
+      if (!_isSuccessCode(response.code) || !response.success || data == null) {
+        throw const DoorDetailRemoteException.invalidResponse();
+      }
+      return data;
+    } on DioException catch (error) {
+      throw DoorDetailRemoteException.fromNetwork(
+        NetworkException.fromDio(error),
+      );
+    } on DoorDetailRemoteException {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<AboutDeviceInfoResponseDto> fetchAboutDeviceInfo({
+    required int doorId,
+    required int deviceId,
+    required String requestId,
+  }) async {
+    try {
+      final response = await api.fetchAboutDeviceInfo(
+        doorId,
+        deviceId,
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       final data = response.data;

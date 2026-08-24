@@ -152,6 +152,10 @@ class GeneralEvaluationRepositoryImpl implements GeneralEvaluationRepository {
           ignoreObstructionHeightUnit: unitFor(8),
         ),
         balancePending: !hasBalanceRequestId,
+        safetyAdvice: g.safetyAdvice
+            .map((advice) => advice.trim())
+            .where((advice) => advice.isNotEmpty)
+            .toList(),
       );
     } on GeneralEvaluationRemoteException catch (e, s) {
       logger.error(

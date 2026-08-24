@@ -10,6 +10,7 @@ import 'package:flinx/features/add_device/domain/entities/onboarding_device_key.
 import 'package:flinx/features/add_device/domain/repositories/add_device_onboarding_repository.dart';
 import 'package:flinx/features/device_control/application/device_command_controller.dart';
 import 'package:flinx/features/device_control/domain/entities/door_detail.dart';
+import 'package:flinx/features/device_control/domain/entities/about_device_info.dart';
 import 'package:flinx/features/device_control/domain/entities/door_device.dart';
 import 'package:flinx/features/device_control/domain/entities/remote_door_command.dart';
 import 'package:flinx/features/device_control/domain/repositories/door_detail_repository.dart';
@@ -1084,6 +1085,13 @@ class _DoorDetailRepository implements DoorDetailRepository {
   }) async => devices;
 
   @override
+  Future<AboutDeviceInfo> fetchAboutDeviceInfo({
+    required String doorId,
+    required String deviceId,
+    required String requestId,
+  }) => throw UnimplementedError();
+
+  @override
   Future<void> unbindDoorDevice({
     required String doorId,
     required String deviceId,
@@ -1114,6 +1122,13 @@ class _DelayedByDoorDetailRepository implements DoorDetailRepository {
         .putIfAbsent(doorId, Completer<List<DoorDevice>>.new)
         .future;
   }
+
+  @override
+  Future<AboutDeviceInfo> fetchAboutDeviceInfo({
+    required String doorId,
+    required String deviceId,
+    required String requestId,
+  }) => throw UnimplementedError();
 
   @override
   Future<void> unbindDoorDevice({
