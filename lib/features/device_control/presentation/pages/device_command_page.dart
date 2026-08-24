@@ -286,9 +286,13 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     final canUseAutoClose = capabilities.contains('AUTO_CLOSE');
     final canUseOpenReminder = capabilities.contains('DOOR_OPEN_REMINDER');
     final l10n = AppLocalizations.of(context);
+    final realtimePositionPercent =
+        commandState.doorRealtimeState?.positionPercent;
     final doorPositionPercent =
-        commandState.doorRealtimeState?.positionPercent ??
-        doorDetail?.positionPercent;
+        realtimePositionPercent ?? doorDetail?.positionPercent;
+    final doorVisualPositionPercent = realtimePositionPercent == null
+        ? doorDetail?.positionPercent
+        : 100 - realtimePositionPercent;
     return Scaffold(
       backgroundColor: AppColors.backgroundPrimary,
       appBar: FlinxNavigationBar(
@@ -357,7 +361,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                   _DoorHeroImage(
                     doorType: DoorType.fromWireValue(doorDetail?.doorType),
                     doorTypeWireValue: doorDetail?.doorType,
-                    positionPercent: doorPositionPercent ?? 0,
+                    positionPercent: doorVisualPositionPercent ?? 0,
                     logger: ref.read(appLoggerProvider),
                   ),
                   const SizedBox(height: 4),

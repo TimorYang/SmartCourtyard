@@ -215,6 +215,78 @@ void main() {
       ),
     );
     expect(updatedDoorHeroElement, same(initialDoorHeroElement));
+
+    gateway.emitDeviceAttributeSnapshot(
+      DeviceAttributeSnapshot(
+        deviceId: 'mock-ble-device',
+        sequence: 2,
+        timestampMillis: 2,
+        origin: DeviceAttributeReportOrigin.activeReport,
+        attributes: [
+          DeviceAttribute(id: 0x2715, value: Uint8List.fromList([0x01])),
+          DeviceAttribute(id: 0x271C, value: Uint8List.fromList([50])),
+        ],
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('Stopped · 50%'), findsOneWidget);
+
+    gateway.emitDeviceAttributeSnapshot(
+      DeviceAttributeSnapshot(
+        deviceId: 'mock-ble-device',
+        sequence: 3,
+        timestampMillis: 3,
+        origin: DeviceAttributeReportOrigin.activeReport,
+        attributes: [
+          DeviceAttribute(id: 0x2715, value: Uint8List.fromList([0x02])),
+          DeviceAttribute(id: 0x271C, value: Uint8List.fromList([50])),
+        ],
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('Closing · 50%'), findsOneWidget);
+
+    gateway.emitDeviceAttributeSnapshot(
+      DeviceAttributeSnapshot(
+        deviceId: 'mock-ble-device',
+        sequence: 4,
+        timestampMillis: 4,
+        origin: DeviceAttributeReportOrigin.activeReport,
+        attributes: [
+          DeviceAttribute(id: 0x2715, value: Uint8List.fromList([0x02])),
+          DeviceAttribute(id: 0x271C, value: Uint8List.fromList([0])),
+        ],
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('Opened'), findsOneWidget);
+    expect(find.text('Opened · 0%'), findsNothing);
+    expect(_doorHeroAsset(tester), endsWith('garage_door_20.png'));
+
+    gateway.emitDeviceAttributeSnapshot(
+      DeviceAttributeSnapshot(
+        deviceId: 'mock-ble-device',
+        sequence: 5,
+        timestampMillis: 5,
+        origin: DeviceAttributeReportOrigin.activeReport,
+        attributes: [
+          DeviceAttribute(id: 0x2715, value: Uint8List.fromList([0x00])),
+          DeviceAttribute(id: 0x271C, value: Uint8List.fromList([100])),
+        ],
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('Closed'), findsOneWidget);
+    expect(find.text('Closed · 100%'), findsNothing);
+    expect(_doorHeroAsset(tester), endsWith('garage_door_01.png'));
   });
 
   testWidgets('uses swing gate frames for the reported position', (

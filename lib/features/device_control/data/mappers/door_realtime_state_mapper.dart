@@ -11,14 +11,14 @@ class DoorRealtimeStateMapper {
     DeviceAttributeSnapshot snapshot, {
     DoorRealtimeState? previous,
   }) {
-    var status = previous?.status;
+    var motorState = previous?.motorState;
     var positionPercent = previous?.positionPercent;
     var hasValidUpdate = false;
     var statusAttributeSeen = false;
     var positionAttributeSeen = false;
     int? rawStatus;
     int? rawPositionPercent;
-    DoorRealtimeStatus? parsedStatus;
+    DoorMotorState? parsedMotorState;
     double? parsedPositionPercent;
     final issues = <String>[];
 
@@ -33,8 +33,8 @@ class DoorRealtimeStateMapper {
             continue;
           }
           rawStatus = attribute.unsignedValue;
-          parsedStatus = _statusFromRawValue(rawStatus);
-          status = parsedStatus;
+          parsedMotorState = _motorStateFromRawValue(rawStatus);
+          motorState = parsedMotorState;
           hasValidUpdate = true;
         case _doorPositionAttributeId:
           positionAttributeSeen = true;
@@ -55,20 +55,27 @@ class DoorRealtimeStateMapper {
       }
     }
 
-    status = _statusAdjustedForPosition(status, positionPercent);
+    final status = _doorStatusFrom(
+      motorState: motorState,
+      positionPercent: positionPercent,
+    );
 
     return DoorRealtimeStateParseResult(
       state: hasValidUpdate
-          ? DoorRealtimeState(status: status, positionPercent: positionPercent)
+          ? DoorRealtimeState(
+              status: status,
+              motorState: motorState,
+              positionPercent: positionPercent,
+            )
           : previous,
       statusAttributeSeen: statusAttributeSeen,
       positionAttributeSeen: positionAttributeSeen,
       rawStatus: rawStatus,
       rawPositionPercent: rawPositionPercent,
-      parsedStatus: parsedStatus,
+      parsedMotorState: parsedMotorState,
       parsedPositionPercent: parsedPositionPercent,
       hasValidUpdate: hasValidUpdate,
-      statusMappingProfile: 'unified',
+      statusMappingProfile: 'motor_and_position',
       issues: issues,
       attributeIds: snapshot.attributes
           .map((attribute) => _hex(attribute.id, width: 4))
@@ -84,31 +91,31 @@ class DoorRealtimeStateMapper {
     );
   }
 
-  static DoorRealtimeStatus _statusFromRawValue(int value) {
+  static DoorMotorState _motorStateFromRawValue(int value) {
     return switch (value) {
-      0x00 => DoorRealtimeStatus.open,
-      0x01 => DoorRealtimeStatus.stopped,
-      0x02 => DoorRealtimeStatus.closed,
-      0x03 => DoorRealtimeStatus.opening,
-      0x04 => DoorRealtimeStatus.closing,
-      0x05 => DoorRealtimeStatus.running,
-      _ => DoorRealtimeStatus.unknown,
+      0x00 => DoorMotorState.opening,
+      0x01 => DoorMotorState.stopped,
+      0x02 => DoorMotorState.closing,
+      _ => DoorMotorState.unknown,
     };
   }
 
-  static DoorRealtimeStatus? _statusAdjustedForPosition(
-    DoorRealtimeStatus? status,
-    double? positionPercent,
-  ) {
-    final isBetweenEndpoints =
-        positionPercent != null && positionPercent > 0 && positionPercent < 100;
-    if (!isBetweenEndpoints) {
-      return status;
+  static DoorRealtimeStatus? _doorStatusFrom({
+    required DoorMotorState? motorState,
+    required double? positionPercent,
+  }) {
+    if (positionPercent == 0) {
+      return DoorRealtimeStatus.open;
     }
-    return switch (status) {
-      DoorRealtimeStatus.open => DoorRealtimeStatus.opening,
-      DoorRealtimeStatus.closed => DoorRealtimeStatus.closing,
-      _ => status,
+    if (positionPercent == 100) {
+      return DoorRealtimeStatus.closed;
+    }
+    return switch (motorState) {
+      DoorMotorState.opening => DoorRealtimeStatus.opening,
+      DoorMotorState.stopped => DoorRealtimeStatus.stopped,
+      DoorMotorState.closing => DoorRealtimeStatus.closing,
+      DoorMotorState.unknown => DoorRealtimeStatus.unknown,
+      null => positionPercent == null ? null : DoorRealtimeStatus.unknown,
     };
   }
 
@@ -129,7 +136,7 @@ class DoorRealtimeStateParseResult {
     required this.positionAttributeSeen,
     required this.rawStatus,
     required this.rawPositionPercent,
-    required this.parsedStatus,
+    required this.parsedMotorState,
     required this.parsedPositionPercent,
     required this.hasValidUpdate,
     required this.statusMappingProfile,
@@ -145,7 +152,7 @@ class DoorRealtimeStateParseResult {
   final bool positionAttributeSeen;
   final int? rawStatus;
   final int? rawPositionPercent;
-  final DoorRealtimeStatus? parsedStatus;
+  final DoorMotorState? parsedMotorState;
   final double? parsedPositionPercent;
   final bool hasValidUpdate;
   final String statusMappingProfile;
@@ -159,11 +166,11 @@ class DoorRealtimeStateParseResult {
     'command': '0x0202',
     'attributeIds': attributeIds,
     'relevantRaw': relevantRawAttributes,
-    'doorStatusRaw': rawStatus == null
+    'doorMotorRaw': rawStatus == null
         ? null
         : DoorRealtimeStateMapper._hex(rawStatus!, width: 2),
     'doorStatusMappingProfile': statusMappingProfile,
-    'doorStatusParsed': parsedStatus?.name,
+    'doorMotorParsed': parsedMotorState?.name,
     'doorPositionRaw': rawPositionPercent == null
         ? null
         : DoorRealtimeStateMapper._hex(rawPositionPercent!, width: 2),
