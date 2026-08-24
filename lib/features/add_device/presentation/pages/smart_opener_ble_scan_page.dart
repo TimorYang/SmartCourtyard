@@ -11,6 +11,7 @@ import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/add_device_controller.dart';
+import '../../application/device_type_ble_filter.dart';
 import '../../application/providers.dart';
 import 'smart_opener_choose_wifi_page.dart';
 import 'smart_opener_device_not_found_page.dart';
@@ -22,6 +23,7 @@ class SmartOpenerBleScanPage extends ConsumerStatefulWidget {
     super.key,
     this.scanDuration = const Duration(seconds: 30),
     this.targetSn,
+    this.deviceType = defaultDoorDeviceType,
   });
 
   static const routeName = 'smart-opener-ble-scan';
@@ -29,6 +31,7 @@ class SmartOpenerBleScanPage extends ConsumerStatefulWidget {
 
   final Duration scanDuration;
   final String? targetSn;
+  final String deviceType;
 
   @override
   ConsumerState<SmartOpenerBleScanPage> createState() =>
@@ -109,7 +112,10 @@ class _SmartOpenerBleScanPageState extends ConsumerState<SmartOpenerBleScanPage>
     if (clearResults) {
       _controller.clearScanResults();
     }
-    final didStartScan = await _controller.startScan(targetSn: _targetSn);
+    final didStartScan = await _controller.startScan(
+      deviceType: widget.deviceType,
+      targetSn: _targetSn,
+    );
     if (!didStartScan || !mounted) {
       return;
     }

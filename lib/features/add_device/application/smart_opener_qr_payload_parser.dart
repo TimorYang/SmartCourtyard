@@ -1,13 +1,8 @@
-const String smartOpenerQrPayloadSeparator = '#SPT#';
-const List<String> smartOpenerBleNamePrefixes = <String>[
-  'Noru_',
-  'opener_',
-  'Evo_',
-  'Fbox_',
-];
+import 'device_type_ble_filter.dart';
 
+const String smartOpenerQrPayloadSeparator = '#SPT#';
 bool isSupportedSmartOpenerBleName(String name) {
-  return smartOpenerBleNamePrefixes.any(name.startsWith);
+  return doorDeviceTypeBleNamePrefixes.values.any(name.startsWith);
 }
 
 String? parseSmartOpenerSerialNumber(String payload) {

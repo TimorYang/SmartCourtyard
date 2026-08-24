@@ -124,9 +124,11 @@ class MockHardwareGateway implements HardwareGateway {
     required String requestId,
     BleScanFilter filter = const BleScanFilter(),
   }) async {
-    final names = filter.exactName == null
-        ? const <String>['Garage door', 'Test door', 'opener_MOCK-SN-001']
-        : <String>[filter.exactName!];
+    final names = filter.exactName != null
+        ? <String>[filter.exactName!]
+        : filter.namePrefix != null
+        ? <String>['${filter.namePrefix}MOCK-SN-001']
+        : const <String>['Garage door', 'Test door', 'opener_MOCK-SN-001'];
     for (var index = 0; index < names.length; index += 1) {
       final name = names[index];
       _scanController.add(

@@ -35,6 +35,7 @@ class AddDevicePage extends ConsumerStatefulWidget {
   static const routeName = 'add-device';
   static const routePath = '/add-device';
   static const doorTypeQueryParameter = 'doorType';
+  static const deviceTypeQueryParameter = 'deviceType';
   static const doorIdQueryParameter = 'doorId';
   static const sceneIdQueryParameter = 'sceneId';
 
@@ -111,14 +112,24 @@ class _AddDevicePageState extends ConsumerState<AddDevicePage> {
             label: l10n.addDeviceSmartOpener,
             assetPath: AddDeviceAssetPaths.smartOpener,
             fallbackIcon: Icons.wifi_tethering_outlined,
-            onTap: () => context.push(SmartOpenerScanGuidePage.routePath),
+            onTap: () => context.pushNamed(
+              SmartOpenerScanGuidePage.routeName,
+              queryParameters: {
+                AddDevicePage.deviceTypeQueryParameter: 'opener',
+              },
+            ),
           ),
           const SizedBox(height: 14),
           _DeviceOptionCard(
             label: l10n.addDeviceSolarEnergySystem,
             assetPath: AddDeviceAssetPaths.solarEnergySystem,
             fallbackIcon: Icons.solar_power_outlined,
-            onTap: () => context.push(SmartOpenerScanGuidePage.routePath),
+            onTap: () => context.pushNamed(
+              SmartOpenerScanGuidePage.routeName,
+              queryParameters: {
+                AddDevicePage.deviceTypeQueryParameter: 'evolution',
+              },
+            ),
           ),
           const SizedBox(height: 26),
           _DeviceSectionTitle(label: l10n.addDeviceSmartAccessorySection),

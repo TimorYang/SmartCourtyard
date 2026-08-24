@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flinx/features/add_device/application/providers.dart';
 import 'package:flinx/core/logging/app_logger.dart';
 import 'package:flinx/core/logging/providers.dart';
@@ -67,9 +69,37 @@ void main() {
           .startScan(targetSn: 'opener_B8F86211A9DC');
 
       expect(gateway.lastScanFilter?.exactName, 'opener_B8F86211A9DC');
-      expect(gateway.lastScanFilter?.namePrefix, isNull);
+      expect(gateway.lastScanFilter?.namePrefix, 'opener_');
     },
   );
+
+  test('passes the selected DoorDevice.deviceType as a BLE prefix', () async {
+    final gateway = _DisconnectTrackingGateway();
+    final container = _createContainer(gateway);
+    addTearDown(container.dispose);
+
+    await container
+        .read(addDeviceControllerProvider.notifier)
+        .startScan(deviceType: 'evolution');
+
+    expect(gateway.lastScanFilter?.namePrefix, 'Evo_');
+    expect(gateway.lastScanFilter?.exactName, isNull);
+  });
+
+  test('ignores scan results that do not match the selected type', () async {
+    final gateway = _MixedDeviceScanGateway();
+    final container = _createContainer(gateway);
+    addTearDown(container.dispose);
+
+    await container
+        .read(addDeviceControllerProvider.notifier)
+        .startScan(deviceType: 'dongle');
+    await Future<void>.delayed(Duration.zero);
+
+    final devices = container.read(addDeviceControllerProvider).sortedDevices();
+    expect(devices, hasLength(1));
+    expect(devices.single.sn, 'Noru_MATCH');
+  });
 
   test('stores the pending door draft for the onboarding flow', () {
     final container = _createContainer(_DisconnectTrackingGateway());
@@ -204,6 +234,39 @@ class _DisconnectTrackingGateway extends MockHardwareGateway {
       throw StateError('disconnect failed');
     }
     return super.disconnectBleDevice(requestId: requestId, deviceId: deviceId);
+  }
+}
+
+class _MixedDeviceScanGateway extends _DisconnectTrackingGateway {
+  final StreamController<BleDevice> _mixedResults =
+      StreamController<BleDevice>.broadcast();
+
+  @override
+  Stream<BleDevice> get bleScanResults => _mixedResults.stream;
+
+  @override
+  Future<void> startBleScan({
+    required String requestId,
+    BleScanFilter filter = const BleScanFilter(),
+  }) async {
+    for (final entry in const <(String, String)>[
+      ('dongle', 'Noru_MATCH'),
+      ('opener', 'opener_OTHER'),
+      ('evolution', 'Evo_OTHER'),
+      ('fbox', 'Fbox_OTHER'),
+    ]) {
+      _mixedResults.add(
+        BleDevice(
+          requestId: requestId,
+          scanSessionId: requestId,
+          id: entry.$1,
+          name: entry.$2,
+          sn: entry.$2,
+          rssi: -40,
+          seenAtMillis: 0,
+        ),
+      );
+    }
   }
 }
 
