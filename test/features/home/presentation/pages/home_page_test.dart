@@ -113,9 +113,7 @@ void main() {
     expect(tracker.callCount, 2);
   });
 
-  testWidgets('pull to refresh reloads devices without reloading home scenes', (
-    tester,
-  ) async {
+  testWidgets('pull to refresh reloads all home data', (tester) async {
     var sceneRequestCount = 0;
     var deviceRequestCount = 0;
 
@@ -156,7 +154,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.pump(const Duration(seconds: 1));
 
-    expect(sceneRequestCount, 1);
+    expect(sceneRequestCount, 2);
     expect(deviceRequestCount, 2);
   });
 

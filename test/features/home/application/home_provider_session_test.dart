@@ -70,14 +70,16 @@ void main() {
 
   test('home device list invalidator refreshes every scene cache', () async {
     final doorRepository = _CountingHomeDoorRepository();
+    var sceneFetchCount = 0;
     final container = ProviderContainer(
       overrides: [
-        homeScenesProvider.overrideWith(
-          (ref) async => const [
+        homeScenesProvider.overrideWith((ref) async {
+          sceneFetchCount++;
+          return const [
             HomeScene(id: 1, name: 'Home', doorCount: 0, isDefault: true),
             HomeScene(id: 2, name: 'Garage', doorCount: 0, isDefault: false),
-          ],
-        ),
+          ];
+        }),
         fetchHomeDoorsUseCaseProvider.overrideWithValue(
           FetchHomeDoorsUseCase(repository: doorRepository),
         ),
@@ -90,11 +92,13 @@ void main() {
 
     await container.read(homeDevicesProvider.future);
     expect(doorRepository.fetchCountByScene, {1: 1, 2: 1});
+    expect(sceneFetchCount, 1);
 
     container.read(homeDeviceListsInvalidatorProvider)();
     await container.read(homeDevicesProvider.future);
 
     expect(doorRepository.fetchCountByScene, {1: 2, 2: 2});
+    expect(sceneFetchCount, 2);
   });
 }
 

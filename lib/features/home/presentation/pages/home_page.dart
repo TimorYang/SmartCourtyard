@@ -118,6 +118,7 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
   @override
   void didPopNext() {
     unawaited(_disconnectConnectedBleDevices());
+    unawaited(_refreshHome());
   }
 
   @override
@@ -147,11 +148,9 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
     }
   }
 
-  Future<void> _refreshHome([int? sceneId]) async {
-    if (sceneId == null) return;
+  Future<void> _refreshHome() async {
     try {
-      ref.invalidate(homeDoorsBySceneProvider(sceneId));
-      ref.invalidate(homeDevicesProvider);
+      ref.read(homeDeviceListsInvalidatorProvider)();
       await ref.read(homeDevicesProvider.future);
     } catch (_) {
       // Provider error states render the existing home error UI.
@@ -228,7 +227,7 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
                                 _HomeDevicePanel(
                                   home: home,
                                   isSingleColumn: _isSingleColumnDeviceList,
-                                  onRefresh: () => _refreshHome(home.sceneId),
+                                  onRefresh: _refreshHome,
                                 ),
                             ],
                           ),
@@ -1181,7 +1180,7 @@ class _DeviceEditingSheetState extends ConsumerState<_DeviceEditingSheet> {
         doorId: doorId,
         requestId: requestId,
       );
-      ref.invalidate(homeDevicesProvider);
+      ref.read(homeDeviceListsInvalidatorProvider)();
       if (mounted) {
         Navigator.of(context).pop();
       }

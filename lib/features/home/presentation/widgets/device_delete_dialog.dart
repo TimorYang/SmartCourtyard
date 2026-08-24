@@ -129,11 +129,7 @@ class _DeviceDeleteDialogState extends ConsumerState<DeviceDeleteDialog> {
         doorId: doorId,
         requestId: requestId,
       );
-      final sceneId = widget.device.sceneId;
-      if (sceneId != null) {
-        ref.invalidate(homeDoorsBySceneProvider(sceneId));
-      }
-      ref.invalidate(homeDevicesProvider);
+      ref.read(homeDeviceListsInvalidatorProvider)();
       if (mounted) {
         Navigator.pop(context);
       }
