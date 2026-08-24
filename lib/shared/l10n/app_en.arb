@@ -605,6 +605,18 @@
   "@accountDetailsPhotographAction": {
     "description": "Action for taking a new account avatar photo"
   },
+  "accountDetailsCameraPermissionDeniedTitle": "Camera permission required",
+  "@accountDetailsCameraPermissionDeniedTitle": {
+    "description": "Title shown when taking an account avatar photo requires a denied camera permission"
+  },
+  "accountDetailsCameraPermissionDeniedMessage": "Camera access is turned off. Go to Settings to enable it.",
+  "@accountDetailsCameraPermissionDeniedMessage": {
+    "description": "Explanation shown when taking an account avatar photo requires a denied camera permission"
+  },
+  "accountDetailsCameraPermissionSettingsAction": "Go to Settings",
+  "@accountDetailsCameraPermissionSettingsAction": {
+    "description": "Action that opens app settings to enable camera permission for taking an account avatar photo"
+  },
   "accountDetailsCancelAction": "Cancel",
   "@accountDetailsCancelAction": {
     "description": "Cancel action in account details modal sheets"

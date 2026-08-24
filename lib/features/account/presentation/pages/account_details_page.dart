@@ -16,6 +16,8 @@ import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
+import '../../application/system_permissions_controller.dart';
+import '../../domain/entities/system_permission.dart';
 import '../../domain/entities/account_profile.dart';
 import '../../domain/entities/account_avatar_code.dart';
 import '../widgets/account_avatar_code_assets.dart';
@@ -87,6 +89,12 @@ class AccountDetailsPage extends ConsumerWidget {
                 onAvatarCode: (avatarCode) => ref
                     .read(accountControllerProvider.notifier)
                     .updateAvatarCode(avatarCode),
+                cameraPermissionStatus: () => ref
+                    .read(systemPermissionsControllerProvider.notifier)
+                    .readStatus(SystemPermission.camera),
+                onOpenCameraPermissionSettings: () => ref
+                    .read(systemPermissionsControllerProvider.notifier)
+                    .openSettings(),
               ),
             ),
           );
@@ -105,6 +113,8 @@ class _AccountDetailsContent extends StatelessWidget {
     required this.onRename,
     required this.onAvatar,
     required this.onAvatarCode,
+    required this.cameraPermissionStatus,
+    required this.onOpenCameraPermissionSettings,
   });
 
   final AccountProfile? profile;
@@ -114,6 +124,8 @@ class _AccountDetailsContent extends StatelessWidget {
   final Future<bool> Function(String) onRename;
   final Future<bool> Function(ImageSource) onAvatar;
   final Future<bool> Function(AccountAvatarCode) onAvatarCode;
+  final Future<SystemPermissionStatus?> Function() cameraPermissionStatus;
+  final Future<void> Function() onOpenCameraPermissionSettings;
 
   @override
   Widget build(BuildContext context) {
@@ -160,6 +172,9 @@ class _AccountDetailsContent extends StatelessWidget {
                             initialAvatarCode: profile?.avatarCode,
                             onPick: onAvatar,
                             onPickAvatarCode: onAvatarCode,
+                            cameraPermissionStatus: cameraPermissionStatus,
+                            onOpenCameraPermissionSettings:
+                                onOpenCameraPermissionSettings,
                           ),
                         ),
                         _AccountDetailsRowData(
@@ -338,6 +353,8 @@ Future<void> _showAccountAvatarSheet(
   required AccountAvatarCode? initialAvatarCode,
   required Future<bool> Function(ImageSource) onPick,
   required Future<bool> Function(AccountAvatarCode) onPickAvatarCode,
+  required Future<SystemPermissionStatus?> Function() cameraPermissionStatus,
+  required Future<void> Function() onOpenCameraPermissionSettings,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -351,6 +368,8 @@ Future<void> _showAccountAvatarSheet(
       initialAvatarCode: initialAvatarCode,
       onPick: onPick,
       onPickAvatarCode: onPickAvatarCode,
+      cameraPermissionStatus: cameraPermissionStatus,
+      onOpenCameraPermissionSettings: onOpenCameraPermissionSettings,
     ),
   );
 }
@@ -555,10 +574,14 @@ class _AvatarBottomSheet extends StatefulWidget {
     required this.initialAvatarCode,
     required this.onPick,
     required this.onPickAvatarCode,
+    required this.cameraPermissionStatus,
+    required this.onOpenCameraPermissionSettings,
   });
   final AccountAvatarCode? initialAvatarCode;
   final Future<bool> Function(ImageSource) onPick;
   final Future<bool> Function(AccountAvatarCode) onPickAvatarCode;
+  final Future<SystemPermissionStatus?> Function() cameraPermissionStatus;
+  final Future<void> Function() onOpenCameraPermissionSettings;
 
   @override
   State<_AvatarBottomSheet> createState() => _AvatarBottomSheetState();
@@ -619,6 +642,8 @@ class _AvatarBottomSheetState extends State<_AvatarBottomSheet> {
                 foregroundColor: AppColors.textPrimary,
                 backgroundColor: AppColors.accountDetailsSheetActionSurface,
                 textTheme: textTheme,
+                preserveDisabledAppearance: true,
+                suppressPressEffect: true,
                 onPressed: _isSubmitting
                     ? null
                     : () => _pickImage(ImageSource.gallery),
@@ -629,6 +654,8 @@ class _AvatarBottomSheetState extends State<_AvatarBottomSheet> {
                 foregroundColor: AppColors.textPrimary,
                 backgroundColor: AppColors.accountDetailsSheetActionSurface,
                 textTheme: textTheme,
+                preserveDisabledAppearance: true,
+                suppressPressEffect: true,
                 onPressed: _isSubmitting
                     ? null
                     : () => _pickImage(ImageSource.camera),
@@ -639,7 +666,7 @@ class _AvatarBottomSheetState extends State<_AvatarBottomSheet> {
                 foregroundColor: AppColors.textPrimary,
                 backgroundColor: AppColors.accountDetailsSheetActionSurface,
                 textTheme: textTheme,
-                onPressed: _isSubmitting ? null : () => Navigator.pop(context),
+                onPressed: () => Navigator.pop(context),
               ),
             ],
           ),
@@ -649,15 +676,100 @@ class _AvatarBottomSheetState extends State<_AvatarBottomSheet> {
   }
 
   Future<void> _pickImage(ImageSource source) async {
+    if (source == ImageSource.camera) {
+      final cameraPermissionStatus = await widget.cameraPermissionStatus();
+      if (!mounted) return;
+      if (cameraPermissionStatus == SystemPermissionStatus.blocked) {
+        await _showCameraPermissionDeniedDialog(
+          context,
+          onOpenSettings: widget.onOpenCameraPermissionSettings,
+        );
+        return;
+      }
+    }
+
+    if (!mounted) return;
     final navigator = Navigator.of(context);
     setState(() => _isSubmitting = true);
-    final updated = await widget.onPick(source);
+    var updated = false;
+    var cameraPermissionDenied = false;
+    try {
+      updated = await widget.onPick(source);
+    } catch (_) {
+      final cameraPermissionStatus = await widget.cameraPermissionStatus();
+      cameraPermissionDenied =
+          source == ImageSource.camera &&
+          cameraPermissionStatus != null &&
+          cameraPermissionStatus != SystemPermissionStatus.granted;
+    }
     if (!mounted) return;
     if (updated) {
       navigator.pop();
     } else {
       setState(() => _isSubmitting = false);
+      if (cameraPermissionDenied) {
+        await _showCameraPermissionDeniedDialog(
+          context,
+          onOpenSettings: widget.onOpenCameraPermissionSettings,
+        );
+      }
     }
+  }
+}
+
+Future<void> _showCameraPermissionDeniedDialog(
+  BuildContext context, {
+  required Future<void> Function() onOpenSettings,
+}) {
+  return showDialog<void>(
+    context: context,
+    barrierColor: AppColors.overlaySoft,
+    builder: (context) =>
+        _CameraPermissionDeniedDialog(onOpenSettings: onOpenSettings),
+  );
+}
+
+class _CameraPermissionDeniedDialog extends StatelessWidget {
+  const _CameraPermissionDeniedDialog({required this.onOpenSettings});
+
+  final Future<void> Function() onOpenSettings;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final textTheme = Theme.of(context).textTheme;
+
+    return _AccountCenterDialogFrame(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 28, 24, 30),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              l10n.accountDetailsCameraPermissionDeniedTitle,
+              textAlign: TextAlign.center,
+              style: AppTextTokens.accountDetailsSheetTitle(textTheme),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              l10n.accountDetailsCameraPermissionDeniedMessage,
+              textAlign: TextAlign.center,
+              style: AppTextTokens.accountDetailsSheetInput(textTheme),
+            ),
+            const SizedBox(height: 30),
+            _AccountSheetButtonRow(
+              cancelLabel: l10n.accountDetailsCancelAction,
+              confirmLabel: l10n.accountDetailsCameraPermissionSettingsAction,
+              onCancel: () => Navigator.of(context).pop(),
+              onConfirm: () async {
+                Navigator.of(context).pop();
+                await onOpenSettings();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -1073,6 +1185,8 @@ class _AccountSheetActionButton extends StatelessWidget {
     required this.backgroundColor,
     required this.textTheme,
     required this.onPressed,
+    this.preserveDisabledAppearance = false,
+    this.suppressPressEffect = false,
   });
 
   final String label;
@@ -1080,6 +1194,8 @@ class _AccountSheetActionButton extends StatelessWidget {
   final Color backgroundColor;
   final TextTheme textTheme;
   final VoidCallback? onPressed;
+  final bool preserveDisabledAppearance;
+  final bool suppressPressEffect;
 
   @override
   Widget build(BuildContext context) {
@@ -1091,6 +1207,13 @@ class _AccountSheetActionButton extends StatelessWidget {
         style: FilledButton.styleFrom(
           backgroundColor: backgroundColor,
           foregroundColor: foregroundColor,
+          disabledBackgroundColor: preserveDisabledAppearance
+              ? backgroundColor
+              : null,
+          disabledForegroundColor: preserveDisabledAppearance
+              ? foregroundColor
+              : null,
+          overlayColor: suppressPressEffect ? Colors.transparent : null,
           elevation: 0,
           shape: const StadiumBorder(),
           textStyle: AppTextTokens.accountDetailsSheetButton(textTheme),
