@@ -85,8 +85,7 @@ class HomePage extends ConsumerStatefulWidget {
   ConsumerState<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends ConsumerState<HomePage>
-    with WidgetsBindingObserver, RouteAware {
+class _HomePageState extends ConsumerState<HomePage> with RouteAware {
   var _isAddMenuVisible = false;
   var _isSingleColumnDeviceList = false;
   ModalRoute<dynamic>? _route;
@@ -95,7 +94,6 @@ class _HomePageState extends ConsumerState<HomePage>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(_disconnectConnectedBleDevices());
     });
@@ -120,18 +118,11 @@ class _HomePageState extends ConsumerState<HomePage>
   @override
   void didPopNext() {
     unawaited(_disconnectConnectedBleDevices());
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      unawaited(_disconnectConnectedBleDevices());
-    }
+    unawaited(_refreshHome());
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     appRouteObserver.unsubscribe(this);
     super.dispose();
   }
@@ -157,11 +148,9 @@ class _HomePageState extends ConsumerState<HomePage>
     }
   }
 
-  Future<void> _refreshHome([int? sceneId]) async {
-    if (sceneId == null) return;
+  Future<void> _refreshHome() async {
     try {
-      ref.invalidate(homeDoorsBySceneProvider(sceneId));
-      ref.invalidate(homeDevicesProvider);
+      ref.read(homeDeviceListsInvalidatorProvider)();
       await ref.read(homeDevicesProvider.future);
     } catch (_) {
       // Provider error states render the existing home error UI.
@@ -238,7 +227,7 @@ class _HomePageState extends ConsumerState<HomePage>
                                 _HomeDevicePanel(
                                   home: home,
                                   isSingleColumn: _isSingleColumnDeviceList,
-                                  onRefresh: () => _refreshHome(home.sceneId),
+                                  onRefresh: _refreshHome,
                                 ),
                             ],
                           ),
@@ -1191,7 +1180,7 @@ class _DeviceEditingSheetState extends ConsumerState<_DeviceEditingSheet> {
         doorId: doorId,
         requestId: requestId,
       );
-      ref.invalidate(homeDevicesProvider);
+      ref.read(homeDeviceListsInvalidatorProvider)();
       if (mounted) {
         Navigator.of(context).pop();
       }

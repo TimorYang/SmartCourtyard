@@ -2532,6 +2532,25 @@ class HardwareHostApi {
     return pigeonVar_replyValue! as DeviceAttributeWriteResultDto;
   }
 
+  Future<CommandResultDto> setDoorOpenReminder(String requestId, String deviceId, int value) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.setDoorOpenReminder$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[requestId, deviceId, value]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
+    return pigeonVar_replyValue! as CommandResultDto;
+  }
+
   Future<RemotePairingResultDto> pairRemote(String requestId, String deviceId, RemotePairingActionDto action) async {
     final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.pairRemote$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(

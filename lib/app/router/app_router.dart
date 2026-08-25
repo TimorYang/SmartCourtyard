@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/add_device/presentation/pages/add_device_page.dart';
+import '../../features/add_device/application/device_type_ble_filter.dart';
 import '../../features/add_device/presentation/pages/add_new_doors_page.dart';
 import '../../features/add_device/presentation/pages/f_box_connection_guide_page.dart';
 import '../../features/add_device/presentation/pages/f_box_wiring_test_page.dart';
@@ -310,7 +311,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: SmartOpenerScanGuidePage.routePath,
         name: SmartOpenerScanGuidePage.routeName,
-        builder: (context, state) => const SmartOpenerScanGuidePage(),
+        builder: (context, state) => SmartOpenerScanGuidePage(
+          deviceType: normalizeDoorDeviceType(
+            state.uri.queryParameters[AddDevicePage.deviceTypeQueryParameter],
+          ),
+        ),
       ),
       GoRoute(
         path: UsbDongleGuidePage.routePath,
@@ -327,13 +332,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: SmartOpenerQrScanPage.routePath,
         name: SmartOpenerQrScanPage.routeName,
-        builder: (context, state) => const SmartOpenerQrScanPage(),
+        builder: (context, state) => SmartOpenerQrScanPage(
+          deviceType: normalizeDoorDeviceType(
+            state.uri.queryParameters[AddDevicePage.deviceTypeQueryParameter],
+          ),
+        ),
       ),
       GoRoute(
         path: SmartOpenerBleScanPage.routePath,
         name: SmartOpenerBleScanPage.routeName,
         builder: (context, state) => SmartOpenerBleScanPage(
           targetSn: state.uri.queryParameters['targetSn'],
+          deviceType: normalizeDoorDeviceType(
+            state.uri.queryParameters[AddDevicePage.deviceTypeQueryParameter],
+          ),
         ),
       ),
       GoRoute(

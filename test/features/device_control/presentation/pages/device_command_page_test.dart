@@ -215,6 +215,79 @@ void main() {
       ),
     );
     expect(updatedDoorHeroElement, same(initialDoorHeroElement));
+
+    gateway.emitDeviceAttributeSnapshot(
+      DeviceAttributeSnapshot(
+        deviceId: 'mock-ble-device',
+        sequence: 2,
+        timestampMillis: 2,
+        origin: DeviceAttributeReportOrigin.activeReport,
+        attributes: [
+          DeviceAttribute(id: 0x2715, value: Uint8List.fromList([0x00])),
+          DeviceAttribute(id: 0x271C, value: Uint8List.fromList([100])),
+        ],
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('Opened'), findsOneWidget);
+    expect(find.text('Opened · 100%'), findsNothing);
+    expect(_doorHeroAsset(tester), endsWith('garage_door_20.png'));
+
+    gateway.emitDeviceAttributeSnapshot(
+      DeviceAttributeSnapshot(
+        deviceId: 'mock-ble-device',
+        sequence: 3,
+        timestampMillis: 3,
+        origin: DeviceAttributeReportOrigin.activeReport,
+        attributes: [
+          DeviceAttribute(id: 0x2715, value: Uint8List.fromList([0x02])),
+          DeviceAttribute(id: 0x271C, value: Uint8List.fromList([50])),
+        ],
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('Closing · 50%'), findsOneWidget);
+    expect(_doorHeroAsset(tester), endsWith('garage_door_11.png'));
+
+    gateway.emitDeviceAttributeSnapshot(
+      DeviceAttributeSnapshot(
+        deviceId: 'mock-ble-device',
+        sequence: 4,
+        timestampMillis: 4,
+        origin: DeviceAttributeReportOrigin.activeReport,
+        attributes: [
+          DeviceAttribute(id: 0x2715, value: Uint8List.fromList([0x01])),
+          DeviceAttribute(id: 0x271C, value: Uint8List.fromList([50])),
+        ],
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('Stopped · 50%'), findsOneWidget);
+
+    gateway.emitDeviceAttributeSnapshot(
+      DeviceAttributeSnapshot(
+        deviceId: 'mock-ble-device',
+        sequence: 5,
+        timestampMillis: 5,
+        origin: DeviceAttributeReportOrigin.activeReport,
+        attributes: [
+          DeviceAttribute(id: 0x2715, value: Uint8List.fromList([0x02])),
+          DeviceAttribute(id: 0x271C, value: Uint8List.fromList([0])),
+        ],
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('Closed'), findsOneWidget);
+    expect(find.text('Closed · 0%'), findsNothing);
+    expect(_doorHeroAsset(tester), endsWith('garage_door_01.png'));
   });
 
   testWidgets('uses swing gate frames for the reported position', (
@@ -426,19 +499,64 @@ void main() {
     await tester.pump();
   });
 
-  testWidgets('writes auto close and open reminder through BLE attributes', (
+  testWidgets(
+    'writes auto close through attributes and reminder through cmd 0x0E09',
+    (tester) async {
+      final gateway = _RecordingHardwareGateway();
+      await _pumpDevicePage(tester, gateway);
+
+      final autoCloseSwitch = find.byKey(
+        const ValueKey<String>('auto-close-switch'),
+      );
+      await tester.tap(autoCloseSwitch);
+      await tester.pumpAndSettle();
+      await tester.tap(autoCloseSwitch);
+      await tester.pumpAndSettle();
+
+      final reminderSwitch = find.byKey(
+        const ValueKey<String>('open-reminder-switch'),
+      );
+      expect(tester.widget<FlinxSwitch>(reminderSwitch).value, isTrue);
+
+      await tester.tap(reminderSwitch);
+      await tester.pumpAndSettle();
+      await tester.tap(reminderSwitch);
+      await tester.pumpAndSettle();
+
+      final snapshot = await gateway.queryDeviceAttributes(
+        requestId: 'verify-toggle-attributes',
+        deviceId: 'mock-ble-device',
+      );
+      expect(
+        snapshot.attributes
+            .singleWhere(
+              (attribute) =>
+                  attribute.id == DeviceSettingKey.autoCloseTime.attributeId,
+            )
+            .unsignedValue,
+        1,
+      );
+      expect(
+        snapshot.attributes.any((attribute) => attribute.id == 0x2728),
+        isFalse,
+      );
+      expect(gateway.doorOpenReminderValues, <int>[0, 10]);
+      final autoCloseWrites = gateway.writtenAttributes.where(
+        (attribute) => attribute.id == 0x2712,
+      );
+      expect(autoCloseWrites.map((attribute) => attribute.unsignedValue), <int>[
+        0,
+        1,
+      ]);
+      expect(gateway.attributeWriteCount, 2);
+    },
+  );
+
+  testWidgets('restores reminder switch when cmd 0x0E09 is rejected', (
     tester,
   ) async {
-    final gateway = _RecordingHardwareGateway();
+    final gateway = _FailingDoorOpenReminderHardwareGateway();
     await _pumpDevicePage(tester, gateway);
-
-    final autoCloseSwitch = find.byKey(
-      const ValueKey<String>('auto-close-switch'),
-    );
-    await tester.tap(autoCloseSwitch);
-    await tester.pumpAndSettle();
-    await tester.tap(autoCloseSwitch);
-    await tester.pumpAndSettle();
 
     final reminderSwitch = find.byKey(
       const ValueKey<String>('open-reminder-switch'),
@@ -447,39 +565,9 @@ void main() {
 
     await tester.tap(reminderSwitch);
     await tester.pumpAndSettle();
-    await tester.tap(reminderSwitch);
-    await tester.pumpAndSettle();
 
-    final snapshot = await gateway.queryDeviceAttributes(
-      requestId: 'verify-toggle-attributes',
-      deviceId: 'mock-ble-device',
-    );
-    expect(
-      snapshot.attributes
-          .singleWhere(
-            (attribute) =>
-                attribute.id == DeviceSettingKey.autoCloseTime.attributeId,
-          )
-          .unsignedValue,
-      1,
-    );
-    expect(
-      snapshot.attributes
-          .singleWhere(
-            (attribute) =>
-                attribute.id == DeviceSettingKey.doorOpenReminder.attributeId,
-          )
-          .unsignedValue,
-      10,
-    );
-    final autoCloseWrites = gateway.writtenAttributes.where(
-      (attribute) => attribute.id == 0x2712,
-    );
-    expect(autoCloseWrites.map((attribute) => attribute.unsignedValue), <int>[
-      0,
-      1,
-    ]);
-    expect(gateway.attributeWriteCount, 4);
+    expect(tester.widget<FlinxSwitch>(reminderSwitch).value, isTrue);
+    expect(gateway.attributeWriteCount, 0);
   });
 
   testWidgets('prompts for Bluetooth for BLE-only quick actions', (
@@ -1240,6 +1328,23 @@ class _FailingAttributeWriteHardwareGateway extends _RecordingHardwareGateway {
     attributeWriteCount += 1;
     writtenAttributes.addAll(attributes);
     throw StateError('attribute write failed');
+  }
+}
+
+class _FailingDoorOpenReminderHardwareGateway
+    extends _RecordingHardwareGateway {
+  @override
+  Future<CommandResult> setDoorOpenReminder({
+    required String requestId,
+    required String deviceId,
+    required int value,
+  }) async {
+    return CommandResult(
+      requestId: requestId,
+      deviceId: deviceId,
+      accepted: false,
+      domainCode: 'door_open_reminder_rejected',
+    );
   }
 }
 

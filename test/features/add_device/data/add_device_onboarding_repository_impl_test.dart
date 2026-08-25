@@ -7,6 +7,58 @@ import 'package:flinx/features/add_device/data/repositories/add_device_onboardin
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('maps current-user ownership to a dedicated app error', () async {
+    final repository = AddDeviceOnboardingRepositoryImpl(
+      remoteDataSource: const _ThrowingRemoteDataSource(
+        AddDeviceOnboardingRemoteException.alreadyBound(
+          ownedByCurrentUser: true,
+        ),
+      ),
+      logger: const _NoopLogger(),
+    );
+
+    expect(
+      () => repository.validateBindingStatus(
+        sn: 'SN-001',
+        requestId: 'request-current-owner',
+      ),
+      throwsA(
+        isA<AppError>()
+            .having(
+              (error) => error.messageKey,
+              'messageKey',
+              'addDevice.deviceAlreadyBoundToCurrentUser',
+            )
+            .having((error) => error.retryable, 'retryable', isFalse),
+      ),
+    );
+  });
+
+  test('maps another-user ownership to a dedicated app error', () async {
+    final repository = AddDeviceOnboardingRepositoryImpl(
+      remoteDataSource: const _ThrowingRemoteDataSource(
+        AddDeviceOnboardingRemoteException.alreadyBound(
+          ownedByCurrentUser: false,
+        ),
+      ),
+      logger: const _NoopLogger(),
+    );
+
+    expect(
+      () => repository.validateBindingStatus(
+        sn: 'SN-001',
+        requestId: 'request-other-owner',
+      ),
+      throwsA(
+        isA<AppError>().having(
+          (error) => error.messageKey,
+          'messageKey',
+          'addDevice.deviceAlreadyBoundToAnotherUser',
+        ),
+      ),
+    );
+  });
+
   test('maps missing device server message key to add device app error', () {
     final repository = AddDeviceOnboardingRepositoryImpl(
       remoteDataSource: const _ThrowingRemoteDataSource(

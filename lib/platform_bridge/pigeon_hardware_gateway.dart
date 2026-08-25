@@ -306,6 +306,8 @@ class PigeonHardwareGateway implements HardwareGateway {
       deviceId: dto.deviceId,
       command: command,
       accepted: dto.accepted,
+      nativeCode: dto.nativeCode,
+      domainCode: dto.domainCode,
     );
   }
 
@@ -338,6 +340,26 @@ class PigeonHardwareGateway implements HardwareGateway {
       deviceId: deviceId,
     );
     return dto.toModel();
+  }
+
+  @override
+  Future<CommandResult> setDoorOpenReminder({
+    required String requestId,
+    required String deviceId,
+    required int value,
+  }) async {
+    final dto = await _mapPigeonCall(
+      () => _hostApi.setDoorOpenReminder(requestId, deviceId, value),
+      requestId: requestId,
+      deviceId: deviceId,
+    );
+    return CommandResult(
+      requestId: dto.requestId,
+      deviceId: dto.deviceId,
+      accepted: dto.accepted,
+      nativeCode: dto.nativeCode,
+      domainCode: dto.domainCode,
+    );
   }
 
   @override

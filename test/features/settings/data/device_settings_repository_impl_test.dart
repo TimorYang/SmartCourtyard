@@ -55,7 +55,37 @@ void main() {
     );
 
     expect(values, isNot(contains(DeviceSettingKey.autoCloseTime)));
+    expect(values, isNot(contains(DeviceSettingKey.doorOpenReminder)));
   });
+
+  test(
+    'sends door reminder through cmd 0x0E09 instead of an attribute write',
+    () async {
+      final gateway = MockHardwareGateway();
+      final repository = DeviceSettingsRepositoryImpl(gateway);
+
+      for (final rawValue in <int>[0, 5, 10, 15]) {
+        await repository.setSetting(
+          requestId: 'set-reminder-$rawValue',
+          deviceId: 'device-1',
+          value: DeviceSettingValue(
+            key: DeviceSettingKey.doorOpenReminder,
+            rawValue: rawValue,
+          ),
+        );
+      }
+
+      expect(gateway.doorOpenReminderValues, <int>[0, 5, 10, 15]);
+      final snapshot = await gateway.queryDeviceAttributes(
+        requestId: 'query-reminder',
+        deviceId: 'device-1',
+      );
+      expect(
+        snapshot.attributes.any((attribute) => attribute.id == 0x2728),
+        isFalse,
+      );
+    },
+  );
 
   test('maps every settings-dialog value to its protocol attribute', () async {
     final gateway = MockHardwareGateway();
@@ -65,7 +95,6 @@ void main() {
       DeviceSettingValue(key: DeviceSettingKey.partialOpen, rawValue: 7),
       DeviceSettingValue(key: DeviceSettingKey.autoCloseTime, rawValue: 9),
       DeviceSettingValue(key: DeviceSettingKey.openingSpeed, rawValue: 80),
-      DeviceSettingValue(key: DeviceSettingKey.doorOpenReminder, rawValue: 10),
       DeviceSettingValue(key: DeviceSettingKey.openingForce, rawValue: 5),
     ];
 
@@ -113,6 +142,7 @@ class _LegacyAutoCloseMockHardwareGateway extends MockHardwareGateway {
           id: 0x2725,
           value: Uint8List.fromList(<int>[0x00, 0x09]),
         ),
+        DeviceAttribute(id: 0x2728, value: Uint8List.fromList(<int>[0x0A])),
       ],
     );
   }

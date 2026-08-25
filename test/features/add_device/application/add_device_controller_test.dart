@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flinx/core/errors/app_error.dart';
 import 'package:flinx/features/add_device/application/providers.dart';
 import 'package:flinx/core/logging/app_logger.dart';
 import 'package:flinx/core/logging/providers.dart';
@@ -40,6 +43,37 @@ void main() {
     );
   });
 
+  test('exposes a localized message key when the user owns the device', () async {
+    final container = ProviderContainer(
+      overrides: [
+        addDeviceHardwareGatewayProvider.overrideWithValue(
+          _DisconnectTrackingGateway(),
+        ),
+        addDeviceOnboardingRepositoryProvider.overrideWithValue(
+          const _FakeAddDeviceOnboardingRepository(
+            validationError: AppError(
+              code: AppErrorCode.accessDenied,
+              messageKey: 'addDevice.deviceAlreadyBoundToCurrentUser',
+            ),
+          ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    final connected = await container
+        .read(addDeviceControllerProvider.notifier)
+        .connectAndAuthenticate(device);
+    final state = container.read(addDeviceControllerProvider);
+
+    expect(connected, isFalse);
+    expect(
+      state.errorMessageKey,
+      'addDevice.deviceAlreadyBoundToCurrentUser',
+    );
+    expect(state.errorMessage, isNull);
+  });
+
   test('reports disconnect failure without preventing the next scan', () async {
     final gateway = _DisconnectTrackingGateway(throwOnDisconnect: true);
     final container = _createContainer(gateway);
@@ -67,9 +101,37 @@ void main() {
           .startScan(targetSn: 'opener_B8F86211A9DC');
 
       expect(gateway.lastScanFilter?.exactName, 'opener_B8F86211A9DC');
-      expect(gateway.lastScanFilter?.namePrefix, isNull);
+      expect(gateway.lastScanFilter?.namePrefix, 'opener_');
     },
   );
+
+  test('passes the selected DoorDevice.deviceType as a BLE prefix', () async {
+    final gateway = _DisconnectTrackingGateway();
+    final container = _createContainer(gateway);
+    addTearDown(container.dispose);
+
+    await container
+        .read(addDeviceControllerProvider.notifier)
+        .startScan(deviceType: 'evolution');
+
+    expect(gateway.lastScanFilter?.namePrefix, 'Evo_');
+    expect(gateway.lastScanFilter?.exactName, isNull);
+  });
+
+  test('ignores scan results that do not match the selected type', () async {
+    final gateway = _MixedDeviceScanGateway();
+    final container = _createContainer(gateway);
+    addTearDown(container.dispose);
+
+    await container
+        .read(addDeviceControllerProvider.notifier)
+        .startScan(deviceType: 'dongle');
+    await Future<void>.delayed(Duration.zero);
+
+    final devices = container.read(addDeviceControllerProvider).sortedDevices();
+    expect(devices, hasLength(1));
+    expect(devices.single.sn, 'Noru_MATCH');
+  });
 
   test('stores the pending door draft for the onboarding flow', () {
     final container = _createContainer(_DisconnectTrackingGateway());
@@ -207,6 +269,39 @@ class _DisconnectTrackingGateway extends MockHardwareGateway {
   }
 }
 
+class _MixedDeviceScanGateway extends _DisconnectTrackingGateway {
+  final StreamController<BleDevice> _mixedResults =
+      StreamController<BleDevice>.broadcast();
+
+  @override
+  Stream<BleDevice> get bleScanResults => _mixedResults.stream;
+
+  @override
+  Future<void> startBleScan({
+    required String requestId,
+    BleScanFilter filter = const BleScanFilter(),
+  }) async {
+    for (final entry in const <(String, String)>[
+      ('dongle', 'Noru_MATCH'),
+      ('opener', 'opener_OTHER'),
+      ('evolution', 'Evo_OTHER'),
+      ('fbox', 'Fbox_OTHER'),
+    ]) {
+      _mixedResults.add(
+        BleDevice(
+          requestId: requestId,
+          scanSessionId: requestId,
+          id: entry.$1,
+          name: entry.$2,
+          sn: entry.$2,
+          rssi: -40,
+          seenAtMillis: 0,
+        ),
+      );
+    }
+  }
+}
+
 class _FlowTrackingGateway extends MockHardwareGateway {
   final List<String> requestIds = <String>[];
 
@@ -303,7 +398,9 @@ class _RecordingLogger implements AppLogger {
 
 class _FakeAddDeviceOnboardingRepository
     implements AddDeviceOnboardingRepository {
-  const _FakeAddDeviceOnboardingRepository();
+  const _FakeAddDeviceOnboardingRepository({this.validationError});
+
+  final AppError? validationError;
 
   static int? lastDoorTypeWireValue;
   static int? lastSceneId;
@@ -312,7 +409,12 @@ class _FakeAddDeviceOnboardingRepository
   Future<void> validateBindingStatus({
     required String sn,
     required String requestId,
-  }) async {}
+  }) async {
+    final error = validationError;
+    if (error != null) {
+      throw error;
+    }
+  }
 
   @override
   Future<OnboardedForceDoor> addForceDoor({

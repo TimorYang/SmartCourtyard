@@ -58,30 +58,75 @@ void main() {
     );
   });
 
-  test('validateBindingStatus rejects an unavailable serial number', () async {
-    final dataSource = AddDeviceOnboardingRemoteDataSourceImpl(
-      api: _FakeAddDeviceOnboardingApi(
-        bindingStatusResponse: const ApiEnvelopeDto(
-          code: 200,
-          success: true,
-          data: BindingStatusResponseDto(
-            sn: 'SN-001',
-            bound: true,
-            ownedByCurrentUser: false,
-            canBind: false,
+  test(
+    'validateBindingStatus identifies a device owned by another user',
+    () async {
+      final dataSource = AddDeviceOnboardingRemoteDataSourceImpl(
+        api: _FakeAddDeviceOnboardingApi(
+          bindingStatusResponse: const ApiEnvelopeDto(
+            code: 200,
+            success: true,
+            data: BindingStatusResponseDto(
+              sn: 'SN-001',
+              bound: true,
+              ownedByCurrentUser: false,
+              canBind: false,
+            ),
           ),
         ),
-      ),
-    );
+      );
 
-    expect(
-      () => dataSource.validateBindingStatus(
-        sn: 'SN-001',
-        requestId: 'request-0',
-      ),
-      throwsA(isA<AddDeviceOnboardingRemoteException>()),
-    );
-  });
+      expect(
+        () => dataSource.validateBindingStatus(
+          sn: 'SN-001',
+          requestId: 'request-0',
+        ),
+        throwsA(
+          isA<AddDeviceOnboardingRemoteException>().having(
+            (error) => error.kind,
+            'kind',
+            AddDeviceOnboardingRemoteErrorKind.alreadyBoundToAnotherUser,
+          ),
+        ),
+      );
+    },
+  );
+
+  test(
+    'validateBindingStatus identifies a device owned by the current user',
+    () async {
+      final dataSource = AddDeviceOnboardingRemoteDataSourceImpl(
+        api: _FakeAddDeviceOnboardingApi(
+          bindingStatusResponse: const ApiEnvelopeDto(
+            code: 200,
+            success: true,
+            data: BindingStatusResponseDto(
+              sn: 'opener_0892721F3F0C',
+              bound: true,
+              ownedByCurrentUser: true,
+              canBind: false,
+            ),
+            msg: 'Operation succeeded',
+            messageKey: 'result.success',
+          ),
+        ),
+      );
+
+      expect(
+        () => dataSource.validateBindingStatus(
+          sn: 'opener_0892721F3F0C',
+          requestId: 'request-current-owner',
+        ),
+        throwsA(
+          isA<AddDeviceOnboardingRemoteException>().having(
+            (error) => error.kind,
+            'kind',
+            AddDeviceOnboardingRemoteErrorKind.alreadyBoundToCurrentUser,
+          ),
+        ),
+      );
+    },
+  );
 
   test('fetchDeviceKey accepts code 0 and returns device key data', () async {
     final dataSource = AddDeviceOnboardingRemoteDataSourceImpl(

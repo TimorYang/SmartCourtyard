@@ -16,6 +16,7 @@ import '../domain/use_cases/add_force_door_use_case.dart';
 import '../domain/use_cases/fetch_onboarding_device_key_use_case.dart';
 import '../domain/use_cases/validate_binding_status_use_case.dart';
 import 'ble_auth_token.dart';
+import 'device_type_ble_filter.dart';
 import 'providers.dart';
 
 class AddDeviceState {
@@ -35,6 +36,7 @@ class AddDeviceState {
     this.pendingDoorDraft,
     this.doorType,
     this.errorMessage,
+    this.errorMessageKey,
     this.infoMessage,
     this.onboardingFlowId,
     this.onboardingDoorId,
@@ -71,6 +73,7 @@ class AddDeviceState {
   final AddDoorDraft? pendingDoorDraft;
   final DoorType? doorType;
   final String? errorMessage;
+  final String? errorMessageKey;
   final String? infoMessage;
   final String? onboardingFlowId;
   final String? onboardingDoorId;
@@ -105,6 +108,7 @@ class AddDeviceState {
     bool clearPendingDoorDraft = false,
     DoorType? doorType,
     String? errorMessage,
+    String? errorMessageKey,
     bool clearErrorMessage = false,
     String? infoMessage,
     bool clearInfoMessage = false,
@@ -139,6 +143,10 @@ class AddDeviceState {
       errorMessage: clearErrorMessage
           ? null
           : errorMessage ?? this.errorMessage,
+      errorMessageKey: clearErrorMessage
+          ? errorMessageKey
+          : errorMessageKey ??
+                (errorMessage == null ? this.errorMessageKey : null),
       infoMessage: clearInfoMessage ? null : infoMessage ?? this.infoMessage,
       onboardingFlowId: clearOnboardingFlowId
           ? null
@@ -167,6 +175,7 @@ class AddDeviceController extends Notifier<AddDeviceState> {
   String? _doorId;
   int? _sceneId;
   String? _targetBleName;
+  String _activeDeviceType = defaultDoorDeviceType;
   var _disposeHookRegistered = false;
 
   /// 保存用户在添加流程开始前选择的门名称和场景归属。
@@ -189,6 +198,18 @@ class AddDeviceController extends Notifier<AddDeviceState> {
       _gateway.bleScanResults.listen((device) {
         final targetBleName = _targetBleName;
         if (targetBleName != null && device.sn?.trim() != targetBleName) {
+          return;
+        }
+        final bleName = device.name ?? device.sn;
+        if (!bleNameMatchesDoorDeviceType(bleName, _activeDeviceType)) {
+          _log(
+            'ble_scan_result_ignored',
+            requestId: device.requestId,
+            deviceId: device.id,
+            stage: 'scan',
+            result: 'device_type_mismatch',
+            context: {'deviceType': _activeDeviceType},
+          );
           return;
         }
         _log(
@@ -274,6 +295,7 @@ class AddDeviceController extends Notifier<AddDeviceState> {
 
   void clearScanResults() {
     _targetBleName = null;
+    _activeDeviceType = defaultDoorDeviceType;
     _log('flow_reset', stage: 'scan', result: 'cleared');
     state = state.copyWith(
       devices: const <String, BleDevice>{},
@@ -302,8 +324,12 @@ class AddDeviceController extends Notifier<AddDeviceState> {
     );
   }
 
-  Future<bool> startScan({String? targetSn}) async {
+  Future<bool> startScan({
+    String deviceType = defaultDoorDeviceType,
+    String? targetSn,
+  }) async {
     final flowId = _ensureFlow();
+    _activeDeviceType = normalizeDoorDeviceType(deviceType);
     final normalizedTargetSn = targetSn?.trim();
     _targetBleName = normalizedTargetSn?.isEmpty == true
         ? null
@@ -327,7 +353,7 @@ class AddDeviceController extends Notifier<AddDeviceState> {
       requestId: requestId,
       stage: 'scan',
       result: 'started',
-      context: {'targetSn': _targetBleName},
+      context: {'targetSn': _targetBleName, 'deviceType': _activeDeviceType},
     );
     state = state.copyWith(
       onboardingFlowId: flowId,
@@ -339,6 +365,7 @@ class AddDeviceController extends Notifier<AddDeviceState> {
       await _gateway.startBleScan(
         requestId: requestId,
         filter: BleScanFilter(
+          namePrefix: bleNamePrefixForDoorDeviceType(_activeDeviceType),
           exactName: _targetBleName,
           allowDuplicates: false,
         ),
@@ -612,10 +639,15 @@ class AddDeviceController extends Notifier<AddDeviceState> {
           'domainCode': error.code.name,
         },
       );
+      final localizedMessageKey = _localizedMessageKeyForAppError(error);
       state = state.copyWith(
         isConnecting: false,
         isAuthenticating: false,
-        errorMessage: _messageForAppError(error),
+        errorMessage: localizedMessageKey == null
+            ? _messageForAppError(error)
+            : null,
+        errorMessageKey: localizedMessageKey,
+        clearErrorMessage: localizedMessageKey != null,
         clearInfoMessage: true,
       );
       return false;
@@ -975,7 +1007,8 @@ class AddDeviceController extends Notifier<AddDeviceState> {
       'addDevice.deviceKeyFailed' => '获取设备密钥失败，请重试',
       'addDevice.deviceNotExists' => '设备不存在，请确认设备后重试',
       'addDevice.bindDoorFailed' => '设备绑定失败，请重试',
-      'addDevice.bindingStatusFailed' =>
+      'addDevice.bindingStatusFailed' ||
+      'addDevice.deviceAlreadyBoundToAnotherUser' =>
         error.userMessage?.trim().isNotEmpty == true
             ? error.userMessage!.trim()
             : '设备已被其他用户绑定',
@@ -984,6 +1017,14 @@ class AddDeviceController extends Notifier<AddDeviceState> {
         error.userMessage?.trim().isNotEmpty == true
             ? error.userMessage!.trim()
             : '设备添加失败，请重试',
+    };
+  }
+
+  String? _localizedMessageKeyForAppError(AppError error) {
+    return switch (error.messageKey) {
+      'addDevice.deviceAlreadyBoundToCurrentUser' ||
+      'addDevice.deviceAlreadyBoundToAnotherUser' => error.messageKey,
+      _ => null,
     };
   }
 }

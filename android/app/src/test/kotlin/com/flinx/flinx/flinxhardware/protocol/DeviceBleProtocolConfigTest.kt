@@ -110,6 +110,41 @@ class DeviceBleProtocolConfigTest {
   }
 
   @Test
+  fun `door open reminder uses command 0x0E09 and one byte duration`() {
+    assertEquals(0x0E09, DeviceBleProtocolConfig.commandDoorOpenReminder)
+    assertTrue(DeviceBleProtocolConfig.isValidDoorOpenReminderValue(0L))
+    assertTrue(DeviceBleProtocolConfig.isValidDoorOpenReminderValue(5L))
+    assertTrue(DeviceBleProtocolConfig.isValidDoorOpenReminderValue(10L))
+    assertTrue(DeviceBleProtocolConfig.isValidDoorOpenReminderValue(15L))
+    assertFalse(DeviceBleProtocolConfig.isValidDoorOpenReminderValue(6L))
+
+    val packet = DeviceBleProtocolConfig.buildEncryptedCommandFrame(
+      sequence = 11,
+      command = DeviceBleProtocolConfig.commandDoorOpenReminder,
+      aesKeyHex = correctKey,
+      data = byteArrayOf(0x0A),
+    )
+    val encryptedPayload = packet.copyOfRange(5, packet.size - 3)
+    val plaintext = DeviceBleProtocolConfig.tryDecryptAesEcbPkcs7(
+      encryptedPayload,
+      DeviceBleProtocolConfig.candidateAesKeys(correctKey).single().keyBytes,
+    )
+    val decoded = requireNotNull(
+      DeviceBleProtocolConfig.parseDecryptedPayload(
+        requireNotNull(plaintext),
+        DeviceBleProtocolConfig.cryptoAes128,
+      ),
+    )
+
+    assertEquals(DeviceBleProtocolConfig.commandDoorOpenReminder, decoded.command)
+    assertArrayEquals(byteArrayOf(0x0A), decoded.data)
+    assertEquals(0x01, DeviceBleProtocolConfig.doorOpenReminderResponseCode(byteArrayOf(0x01)))
+    assertEquals(0x00, DeviceBleProtocolConfig.doorOpenReminderResponseCode(byteArrayOf(0x00)))
+    assertEquals(null, DeviceBleProtocolConfig.doorOpenReminderResponseCode(byteArrayOf()))
+    assertEquals(null, DeviceBleProtocolConfig.doorOpenReminderResponseCode(byteArrayOf(0x01, 0x00)))
+  }
+
+  @Test
   fun `request frame type is accepted only for remote pairing result`() {
     assertTrue(
       DeviceBleProtocolConfig.matchesProtocolResponse(

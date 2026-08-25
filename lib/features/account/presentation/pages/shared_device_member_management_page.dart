@@ -202,7 +202,10 @@ class _SharedDeviceMemberCard extends ConsumerWidget {
               final error = await ref
                   .read(sharedDoorMemberActionsControllerProvider.notifier)
                   .delete(shareId: member.shareId);
-              if (error == null) ref.invalidate(sharedDoorMembersProvider);
+              if (error == null) {
+                ref.read(homeDeviceListsInvalidatorProvider)();
+                ref.invalidate(sharedDoorMembersProvider);
+              }
             },
           ),
         ],

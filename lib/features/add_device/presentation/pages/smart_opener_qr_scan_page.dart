@@ -13,8 +13,11 @@ import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/add_device_controller.dart';
+import '../../application/device_type_ble_filter.dart';
 import '../../application/providers.dart';
+import '../add_device_error_message.dart';
 import '../../application/smart_opener_qr_payload_parser.dart';
+import 'add_device_page.dart';
 import 'smart_opener_ble_scan_page.dart';
 import 'smart_opener_choose_wifi_page.dart';
 
@@ -30,12 +33,17 @@ class SmartOpenerQrScanAssetPaths {
 }
 
 class SmartOpenerQrScanPage extends ConsumerStatefulWidget {
-  const SmartOpenerQrScanPage({super.key, this.enableCamera = true});
+  const SmartOpenerQrScanPage({
+    super.key,
+    this.enableCamera = true,
+    this.deviceType = defaultDoorDeviceType,
+  });
 
   static const routeName = 'smart-opener-qr-scan';
   static const routePath = '/add-device/smart-opener/qr-scan';
 
   final bool enableCamera;
+  final String deviceType;
 
   @override
   ConsumerState<SmartOpenerQrScanPage> createState() =>
@@ -128,9 +136,10 @@ class _SmartOpenerQrScanPageState extends ConsumerState<SmartOpenerQrScanPage> {
     if (_isProcessing || !mounted) {
       return;
     }
+    final l10n = AppLocalizations.of(context);
     final serialNumber = parseSmartOpenerSerialNumber(rawValue);
     if (serialNumber == null) {
-      _showMessage(AppLocalizations.of(context).smartOpenerScannerInvalidCode);
+      _showMessage(l10n.smartOpenerScannerInvalidCode);
       return;
     }
     unawaited(HapticFeedback.mediumImpact());
@@ -141,9 +150,7 @@ class _SmartOpenerQrScanPageState extends ConsumerState<SmartOpenerQrScanPage> {
     try {
       await _scannerController.stop();
     } catch (_) {
-      await _resumeQrScanning(
-        AppLocalizations.of(context).smartOpenerScannerUnknownError,
-      );
+      await _resumeQrScanning(l10n.smartOpenerScannerUnknownError);
       return;
     }
     if (!mounted) {
@@ -168,7 +175,10 @@ class _SmartOpenerQrScanPageState extends ConsumerState<SmartOpenerQrScanPage> {
     _targetScanTimer = Timer(_targetScanTimeout, () {
       unawaited(_handleTargetScanTimeout());
     });
-    await _addDeviceController.startScan(targetSn: serialNumber);
+    await _addDeviceController.startScan(
+      deviceType: widget.deviceType,
+      targetSn: serialNumber,
+    );
     if (!mounted || !_isProcessing) {
       return;
     }
@@ -194,9 +204,15 @@ class _SmartOpenerQrScanPageState extends ConsumerState<SmartOpenerQrScanPage> {
       context.push(SmartOpenerChooseWifiPage.routePath);
       return;
     }
+    final state = ref.read(addDeviceControllerProvider);
     await _resumeQrScanning(
-      ref.read(addDeviceControllerProvider).errorMessage ??
-          AppLocalizations.of(context).smartOpenerScannerConnectionFailed,
+      localizedAddDeviceErrorMessage(
+        context,
+        state,
+        fallback: AppLocalizations.of(
+          context,
+        ).smartOpenerScannerConnectionFailed,
+      ),
     );
   }
 
@@ -270,7 +286,13 @@ class _SmartOpenerQrScanPageState extends ConsumerState<SmartOpenerQrScanPage> {
             tooltip: l10n.smartOpenerScannerBluetoothTooltip,
             onPressed: _isProcessing
                 ? null
-                : () => context.push(SmartOpenerBleScanPage.routePath),
+                : () => context.pushNamed(
+                    SmartOpenerBleScanPage.routeName,
+                    queryParameters: {
+                      AddDevicePage.deviceTypeQueryParameter:
+                          normalizeDoorDeviceType(widget.deviceType),
+                    },
+                  ),
             icon: const Icon(Icons.bluetooth),
           ),
         ],

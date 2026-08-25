@@ -4532,6 +4532,18 @@ abstract class AppLocalizations {
   /// **'{action} timed out. Check the door state and try again.'**
   String deviceCommandRemoteTimeout(String action);
 
+  /// Shown when onboarding finds that the current user already owns the device
+  ///
+  /// In en, this message translates to:
+  /// **'This device is already bound to your account.'**
+  String get smartOpenerAlreadyBoundToCurrentUser;
+
+  /// Shown when onboarding finds that another user owns the device
+  ///
+  /// In en, this message translates to:
+  /// **'This device is already bound to another user.'**
+  String get smartOpenerAlreadyBoundToAnotherUser;
+
   /// No description provided for @deviceCommandNetworkFailure.
   ///
   /// In en, this message translates to:

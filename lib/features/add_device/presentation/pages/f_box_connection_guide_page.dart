@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
+import 'add_device_page.dart';
 import 'smart_opener_scan_guide_page.dart';
 
 class FBoxConnectionGuideAssetPaths {
@@ -73,8 +74,12 @@ class FBoxConnectionGuidePage extends StatelessWidget {
                 width: double.infinity,
                 height: 52,
                 child: FilledButton(
-                  onPressed: () =>
-                      context.push(SmartOpenerScanGuidePage.routePath),
+                  onPressed: () => context.pushNamed(
+                    SmartOpenerScanGuidePage.routeName,
+                    queryParameters: {
+                      AddDevicePage.deviceTypeQueryParameter: 'fbox',
+                    },
+                  ),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.brandPrimary,
                     foregroundColor: Colors.white,

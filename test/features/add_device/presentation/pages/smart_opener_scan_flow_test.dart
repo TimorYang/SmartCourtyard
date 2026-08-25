@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flinx/app/theme/app_theme.dart';
 import 'package:flinx/features/add_device/application/providers.dart';
+import 'package:flinx/features/add_device/application/device_type_ble_filter.dart';
 import 'package:flinx/features/add_device/domain/entities/onboarded_force_door.dart';
 import 'package:flinx/features/add_device/domain/entities/onboarding_device_key.dart';
 import 'package:flinx/features/add_device/domain/repositories/add_device_onboarding_repository.dart';
@@ -100,6 +101,56 @@ void main() {
 
     expect(find.text('Scanning'), findsOneWidget);
     expect(find.text('Scanning the device, please wait...'), findsOneWidget);
+  });
+
+  testWidgets('Evolution selection only shows EVO scan results', (
+    tester,
+  ) async {
+    await _pumpScanFlowTestApp(tester, AddDevicePage.routePath);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Evolution module'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Scan'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Scan Bluetooth devices'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(find.text('Evo_MOCK-SN-001'), findsOneWidget);
+    expect(find.text('opener_MOCK-SN-001'), findsNothing);
+  });
+
+  testWidgets('USB dongle flow only shows Dongle scan results', (tester) async {
+    await _pumpScanFlowTestApp(tester, UsbDongleGuidePage.routePath);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(FilledButton));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Scan'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Scan Bluetooth devices'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(find.text('Noru_MOCK-SN-001'), findsOneWidget);
+    expect(find.text('opener_MOCK-SN-001'), findsNothing);
+  });
+
+  testWidgets('F-Box flow only shows F-Box scan results', (tester) async {
+    await _pumpScanFlowTestApp(tester, FBoxConnectionGuidePage.routePath);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(FilledButton));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Scan'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Scan Bluetooth devices'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(find.text('Fbox_MOCK-SN-001'), findsOneWidget);
+    expect(find.text('opener_MOCK-SN-001'), findsNothing);
   });
 
   testWidgets('BLE scan opens scan results when devices are discovered', (
@@ -701,27 +752,43 @@ Widget _scanFlowTestApp(
       ),
       GoRoute(
         path: FBoxConnectionGuidePage.routePath,
+        name: FBoxConnectionGuidePage.routeName,
         builder: (context, state) => const FBoxConnectionGuidePage(),
       ),
       GoRoute(
         path: UsbDongleGuidePage.routePath,
+        name: UsbDongleGuidePage.routeName,
         builder: (context, state) =>
             const UsbDongleGuidePage(doorType: DoorType.garage),
       ),
       GoRoute(
         path: SmartOpenerScanGuidePage.routePath,
-        builder: (context, state) => const SmartOpenerScanGuidePage(),
+        name: SmartOpenerScanGuidePage.routeName,
+        builder: (context, state) => SmartOpenerScanGuidePage(
+          deviceType: normalizeDoorDeviceType(
+            state.uri.queryParameters[AddDevicePage.deviceTypeQueryParameter],
+          ),
+        ),
       ),
       GoRoute(
         path: SmartOpenerQrScanPage.routePath,
-        builder: (context, state) =>
-            const SmartOpenerQrScanPage(enableCamera: false),
+        name: SmartOpenerQrScanPage.routeName,
+        builder: (context, state) => SmartOpenerQrScanPage(
+          enableCamera: false,
+          deviceType: normalizeDoorDeviceType(
+            state.uri.queryParameters[AddDevicePage.deviceTypeQueryParameter],
+          ),
+        ),
       ),
       GoRoute(
         path: SmartOpenerBleScanPage.routePath,
+        name: SmartOpenerBleScanPage.routeName,
         builder: (context, state) => SmartOpenerBleScanPage(
           scanDuration: scanDuration,
           targetSn: state.uri.queryParameters['targetSn'],
+          deviceType: normalizeDoorDeviceType(
+            state.uri.queryParameters[AddDevicePage.deviceTypeQueryParameter],
+          ),
         ),
       ),
       GoRoute(

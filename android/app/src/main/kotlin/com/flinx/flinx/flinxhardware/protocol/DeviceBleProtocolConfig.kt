@@ -36,6 +36,7 @@ object DeviceBleProtocolConfig {
   const val commandScanWifi: Int = 0x0E01
   const val commandConfigureWifi: Int = 0x0E02
   const val commandAuthenticate: Int = 0x0E03
+  const val commandDoorOpenReminder: Int = 0x0E09
   const val commandQueryAttributes: Int = 0x0002
   const val commandSetAttributes: Int = 0x0001
   const val commandAttributeReport: Int = 0x0202
@@ -57,6 +58,14 @@ object DeviceBleProtocolConfig {
   const val resultRemotePairingSuccess: Int = 0x06
   const val resultRemotePairingFailure: Int = 0x05
   const val remotePairingResponseTimeoutMillis: Long = 20_000L
+
+  fun isValidDoorOpenReminderValue(value: Long): Boolean {
+    return value == 0L || value == 5L || value == 10L || value == 15L
+  }
+
+  fun doorOpenReminderResponseCode(data: ByteArray): Int? {
+    return if (data.size == 1) data[0].toInt() and 0xFF else null
+  }
 
   const val authTokenHexLength: Int = 32
   const val authTokenBinaryLengthBytes: Int = 16

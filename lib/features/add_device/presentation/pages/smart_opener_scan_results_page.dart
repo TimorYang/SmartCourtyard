@@ -8,6 +8,7 @@ import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
+import '../add_device_error_message.dart';
 import 'smart_opener_choose_wifi_page.dart';
 
 class SmartOpenerScanResultsPage extends ConsumerStatefulWidget {
@@ -43,7 +44,11 @@ class _SmartOpenerScanResultsPageState
     }
 
     final state = ref.read(addDeviceControllerProvider);
-    final message = state.errorMessage ?? 'Unable to connect device.';
+    final message = localizedAddDeviceErrorMessage(
+      context,
+      state,
+      fallback: AppLocalizations.of(context).smartOpenerScannerConnectionFailed,
+    );
     AppToast.error(context, message);
   }
 

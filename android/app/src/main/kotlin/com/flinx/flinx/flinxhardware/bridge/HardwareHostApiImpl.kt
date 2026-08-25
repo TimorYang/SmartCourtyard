@@ -329,6 +329,47 @@ class HardwareHostApiImpl(
     }
   }
 
+  override fun setDoorOpenReminder(
+    requestId: String,
+    deviceId: String,
+    value: Long,
+    callback: (Result<CommandResultDto>) -> Unit,
+  ) {
+    if (!DeviceBleProtocolConfig.isValidDoorOpenReminderValue(value)) {
+      callback(
+        Result.failure(
+          FlutterError(
+            "invalid_door_open_reminder_value",
+            "Door open reminder value is not supported.",
+          ),
+        ),
+      )
+      return
+    }
+    val valueByte = value.toInt()
+    executeProtocol(
+      requestId = requestId,
+      deviceId = deviceId,
+      command = DeviceBleProtocolConfig.commandDoorOpenReminder,
+      data = byteArrayOf(valueByte.toByte()),
+      operation = "Door Open Reminder",
+      callback = callback,
+    ) { frame ->
+      val result = DeviceBleProtocolConfig.doorOpenReminderResponseCode(frame.data)
+        ?: throw FlutterError(
+          "invalid_door_open_reminder_response",
+          "Door open reminder response must contain one result byte.",
+        )
+      CommandResultDto(
+        requestId = requestId,
+        deviceId = deviceId,
+        accepted = result == 0x01,
+        nativeCode = "command=0x0E09,data=0x%02X,result=0x%02X".format(valueByte, result),
+        domainCode = if (result == 0x01) null else "door_open_reminder_rejected",
+      )
+    }
+  }
+
   override fun pairRemote(
     requestId: String,
     deviceId: String,
@@ -587,7 +628,7 @@ internal object DeviceAttributeProtocol {
   )
 
   private val writableAttributes = setOf(
-    0x2711, 0x2712, 0x2713, 0x2714, 0x2726, 0x2727, 0x2728,
+    0x2711, 0x2712, 0x2713, 0x2714, 0x2726, 0x2727,
   )
 
   fun parse(data: ByteArray): List<DeviceAttributeDto> {

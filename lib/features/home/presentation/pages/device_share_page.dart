@@ -495,6 +495,7 @@ class _DeviceSharePageState extends ConsumerState<DeviceSharePage> {
             ),
           );
     if (success && mounted) {
+      ref.read(homeDeviceListsInvalidatorProvider)();
       if (_isEditing) ref.invalidate(sharedDoorMembersProvider(doorId));
       context.pop();
     }
@@ -508,6 +509,7 @@ class _DeviceSharePageState extends ConsumerState<DeviceSharePage> {
         .read(sharedDoorMemberActionsControllerProvider.notifier)
         .delete(shareId: member.shareId);
     if (error == null && mounted) {
+      ref.read(homeDeviceListsInvalidatorProvider)();
       ref.invalidate(sharedDoorMembersProvider(doorId));
       context.pop();
     }

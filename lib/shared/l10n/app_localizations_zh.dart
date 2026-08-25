@@ -2324,6 +2324,12 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get smartOpenerAlreadyBoundToCurrentUser => '该设备已绑定至当前账号。';
+
+  @override
+  String get smartOpenerAlreadyBoundToAnotherUser => '该设备已被其他用户绑定。';
+
+  @override
   String deviceCommandNetworkFailure(String action) {
     return '$action发送失败，请检查网络后重试。';
   }

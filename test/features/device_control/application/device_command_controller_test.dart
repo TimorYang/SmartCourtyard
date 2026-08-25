@@ -638,7 +638,7 @@ void main() {
         origin: DeviceAttributeReportOrigin.activeReport,
         attributes: [
           DeviceAttribute(id: 0x2715, value: Uint8List.fromList([0x00])),
-          DeviceAttribute(id: 0x271C, value: Uint8List.fromList([50])),
+          DeviceAttribute(id: 0x271C, value: Uint8List.fromList([100])),
         ],
       ),
     );
@@ -653,10 +653,10 @@ void main() {
     final parsed = logger.records.singleWhere(
       (record) => record.message == 'device_attribute_report_parsed',
     );
-    expect(parsed.context['relevantRaw'], ['0x2715=[0x00]', '0x271C=[0x32]']);
-    expect(parsed.context['doorStatusParsed'], 'open');
-    expect(parsed.context['doorPositionParsedPercent'], 50.0);
-    expect(parsed.context['uiDoorStatusAfter'], 'opening');
+    expect(parsed.context['relevantRaw'], ['0x2715=[0x00]', '0x271C=[0x64]']);
+    expect(parsed.context['doorMotorParsed'], 'opening');
+    expect(parsed.context['doorPositionParsedPercent'], 100.0);
+    expect(parsed.context['uiDoorStatusAfter'], 'open');
     expect(parsed.context['uiUpdate'], 'applied');
   });
 
@@ -683,7 +683,7 @@ void main() {
           timestampMillis: 1,
           origin: DeviceAttributeReportOrigin.activeReport,
           attributes: [
-            DeviceAttribute(id: 0x2715, value: Uint8List.fromList([0x03])),
+            DeviceAttribute(id: 0x2715, value: Uint8List.fromList([0x00])),
             DeviceAttribute(id: 0x271C, value: Uint8List.fromList([50])),
           ],
         ),

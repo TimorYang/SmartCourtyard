@@ -10,6 +10,7 @@ import 'package:flinx/features/auth/application/providers.dart';
 import 'package:flinx/features/auth/domain/entities/auth_session.dart';
 import 'package:flinx/features/home/application/providers.dart';
 import 'package:flinx/features/home/domain/entities/home_scene.dart';
+import 'package:flinx/features/home/presentation/pages/home_page.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
@@ -57,7 +58,7 @@ void main() {
     expect(find.text('Hi Alex'), findsOneWidget);
   });
 
-  testWidgets('checks and disconnects BLE whenever home becomes visible', (
+  testWidgets('disconnects when home returns, not after an app resume', (
     tester,
   ) async {
     final tracker = _HomeBleDisconnectTracker();
@@ -91,15 +92,28 @@ void main() {
 
     expect(tracker.callCount, 1);
 
+    final homeContext = tester.element(find.byType(HomePage));
+    unawaited(
+      Navigator.of(homeContext).push<void>(
+        MaterialPageRoute<void>(builder: (_) => const SizedBox.shrink()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    await tester.pump();
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     await tester.pump();
+
+    expect(tracker.callCount, 1);
+
+    Navigator.of(homeContext).pop();
+    await tester.pumpAndSettle();
 
     expect(tracker.callCount, 2);
   });
 
-  testWidgets('pull to refresh reloads devices without reloading home scenes', (
-    tester,
-  ) async {
+  testWidgets('pull to refresh reloads all home data', (tester) async {
     var sceneRequestCount = 0;
     var deviceRequestCount = 0;
 
@@ -140,7 +154,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.pump(const Duration(seconds: 1));
 
-    expect(sceneRequestCount, 1);
+    expect(sceneRequestCount, 2);
     expect(deviceRequestCount, 2);
   });
 
