@@ -26,16 +26,13 @@ void main() {
     );
   });
 
-  test('rejects an avatar response with code zero', () async {
+  test('accepts an avatar response with code zero', () async {
     final api = _FakeAccountProfileApi(code: 0);
     final dataSource = AccountProfileRemoteDataSourceImpl(api: api);
 
-    await expectLater(
-      dataSource.updateAvatar(
-        avatarCode: AccountAvatarCode.avatar02,
-        requestId: 'account-avatar-invalid-code',
-      ),
-      throwsA(isA<AccountProfileRemoteException>()),
+    await dataSource.updateAvatar(
+      avatarCode: AccountAvatarCode.avatar02,
+      requestId: 'account-avatar-code-zero',
     );
   });
 

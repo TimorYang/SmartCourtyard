@@ -35,7 +35,9 @@ class AuthCryptoRemoteDataSourceImpl implements AuthCryptoRemoteDataSource {
         ),
       );
       final data = response.data;
-      if (response.code != 200 || !response.success || data == null) {
+      if ((response.code != 0 && response.code != 200) ||
+          !response.success ||
+          data == null) {
         throw const AuthCryptoRemoteException.invalidResponse();
       }
       _validate(data);

@@ -57,13 +57,16 @@ void main() {
     expect(dto.toDomain().timestamp, _expectedTimestamp(1786100633000));
   });
 
-  test('accepts business code 200 and rejects the obsolete code 0', () async {
+  test('accepts business codes 0 and 200 and rejects other codes', () async {
     final successfulApi = _FakeNotificationMessageApi();
     final successfulSource = NotificationMessageRemoteDataSourceImpl(
       api: successfulApi,
     );
-    final invalidSource = NotificationMessageRemoteDataSourceImpl(
+    final zeroCodeSource = NotificationMessageRemoteDataSourceImpl(
       api: _FakeNotificationMessageApi(code: 0),
+    );
+    final invalidSource = NotificationMessageRemoteDataSourceImpl(
+      api: _FakeNotificationMessageApi(code: 100005),
     );
 
     final page = await successfulSource.fetchMessages(
@@ -75,10 +78,18 @@ void main() {
     expect(successfulApi.requestedCurrent, 1);
     expect(successfulApi.requestedSize, 20);
     await expectLater(
-      invalidSource.fetchMessages(
+      zeroCodeSource.fetchMessages(
         page: 1,
         pageSize: 20,
         requestId: 'request-2',
+      ),
+      completes,
+    );
+    await expectLater(
+      invalidSource.fetchMessages(
+        page: 1,
+        pageSize: 20,
+        requestId: 'request-3',
       ),
       throwsA(isA<NotificationMessageRemoteException>()),
     );

@@ -125,7 +125,7 @@ class AuthPasswordResetRemoteDataSourceImpl
   }
 
   void _validateEnvelope(int code, bool success) {
-    if (code != 200 || !success) {
+    if ((code != 0 && code != 200) || !success) {
       throw const AuthPasswordResetRemoteException.invalidResponse();
     }
   }

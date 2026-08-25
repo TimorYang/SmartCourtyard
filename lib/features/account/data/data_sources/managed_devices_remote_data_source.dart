@@ -66,7 +66,8 @@ class ManagedDevicesRemoteDataSourceImpl
     }
   }
 
-  bool _isSuccessful(int code, bool success) => code == 200 && success;
+  bool _isSuccessful(int code, bool success) =>
+      success && (code == 0 || code == 200);
 }
 
 class ManagedDevicesRemoteException implements Exception {

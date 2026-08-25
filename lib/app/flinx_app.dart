@@ -8,7 +8,9 @@ import 'package:go_router/go_router.dart';
 import 'package:toastification/toastification.dart';
 
 import '../shared/l10n/app_localizations.dart';
+import '../shared/widgets/app_toast.dart';
 import '../core/diagnostics/diagnostic_logging.dart';
+import '../core/network/server_business_message.dart';
 import '../features/account/application/providers.dart';
 import '../features/account/domain/entities/app_locale_preference.dart';
 import 'router/app_router.dart';
@@ -86,11 +88,33 @@ class _FlinxAppState extends ConsumerState<FlinxApp> {
             alignment: Alignment.topCenter,
             animationDuration: Duration(milliseconds: 220),
           ),
-          child: child!,
+          child: _ServerBusinessMessageListener(child: child!),
         ),
         showPerformanceOverlay: showPerformanceOverlay,
         debugShowCheckedModeBanner: false,
       ),
     );
+  }
+}
+
+class _ServerBusinessMessageListener extends ConsumerWidget {
+  const _ServerBusinessMessageListener({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen(serverBusinessMessageProvider, (previous, next) {
+      if (next == null || next.sequence == previous?.sequence) return;
+      AppToast.reserveServerError();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!context.mounted) {
+          AppToast.cancelServerErrorReservation();
+          return;
+        }
+        AppToast.serverError(context, next.message);
+      });
+    });
+    return child;
   }
 }

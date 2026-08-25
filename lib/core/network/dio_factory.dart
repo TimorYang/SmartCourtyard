@@ -24,6 +24,9 @@ abstract final class NetworkHeaders {
   static const bladeAuth = 'Blade-Auth';
 }
 
+typedef ServerBusinessMessageHandler =
+    void Function({required int code, required String message});
+
 class DioFactory {
   const DioFactory._();
 
@@ -32,6 +35,7 @@ class DioFactory {
     required AppLogger logger,
     SessionExpiredHandler onSessionExpired = ignoreSessionExpired,
     TokenRefreshHandler onTokenRefresh = noTokenRefreshAvailable,
+    ServerBusinessMessageHandler? onServerBusinessMessage,
   }) {
     final dio = Dio(
       BaseOptions(
@@ -67,10 +71,76 @@ class DioFactory {
         onTokenRefresh: onTokenRefresh,
       ),
       _BladeAuthInterceptor(),
+      _ServerBusinessMessageInterceptor(onServerBusinessMessage),
       _SafeNetworkLogInterceptor(logger),
     ]);
     return dio;
   }
+}
+
+class _ServerBusinessMessageInterceptor extends Interceptor {
+  const _ServerBusinessMessageInterceptor(this._onServerBusinessMessage);
+
+  final ServerBusinessMessageHandler? _onServerBusinessMessage;
+
+  @override
+  void onResponse(
+    Response<dynamic> response,
+    ResponseInterceptorHandler handler,
+  ) {
+    final failure = _businessFailure(response.data);
+    if (failure != null) _notify(failure);
+    handler.next(response);
+  }
+
+  @override
+  void onError(DioException error, ErrorInterceptorHandler handler) {
+    final response = error.response;
+    final failure = _businessFailure(response?.data);
+    if (failure == null) {
+      handler.next(error);
+      return;
+    }
+    _notify(failure);
+    if (response != null &&
+        response.statusCode != 401 &&
+        response.statusCode != 403) {
+      response.data = <String, dynamic>{
+        ...Map<String, dynamic>.from(response.data as Map),
+        'code': failure.code,
+        'success': false,
+        'data': null,
+      };
+      handler.resolve(response);
+      return;
+    }
+    handler.next(error);
+  }
+
+  void _notify(({int code, String? message}) failure) {
+    final callback = _onServerBusinessMessage;
+    final message = failure.message;
+    if (callback == null || message == null) return;
+    callback(code: failure.code, message: message);
+  }
+
+  ({int code, String? message})? _businessFailure(Object? responseData) {
+    if (responseData is! Map) return null;
+    final code = _parseCode(responseData['code']);
+    if (code == null || code == 0 || code == 200) return null;
+    final rawMessage = responseData['msg'];
+    final message = rawMessage is String && rawMessage.trim().isNotEmpty
+        ? rawMessage.trim()
+        : null;
+    return (code: code, message: message);
+  }
+
+  int? _parseCode(Object? value) => switch (value) {
+    final int value => value,
+    final num value => value.toInt(),
+    final String value => int.tryParse(value.trim()),
+    _ => null,
+  };
 }
 
 class _SessionExpiredInterceptor extends Interceptor {

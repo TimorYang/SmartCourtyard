@@ -54,6 +54,116 @@ void main() {
     expect(exception.statusCode, 503);
   });
 
+  test('reports the server msg for a failed business code', () async {
+    final messages = <({int code, String message})>[];
+    final dio =
+        DioFactory.create(
+            configuration: const AppApiConfiguration(
+              apiOrigin: 'https://api.flinx.example',
+              apiPathPrefix: '/api/force-door',
+            ),
+            logger: _FakeLogger(),
+            onServerBusinessMessage: ({required code, required message}) {
+              messages.add((code: code, message: message));
+            },
+          )
+          ..httpClientAdapter = _JsonResponseAdapter(
+            statusCode: 200,
+            body: {
+              'code': 100005,
+              'success': false,
+              'msg': 'Account already exists.',
+            },
+          );
+
+    await dio.get<void>('app/door-shares');
+
+    expect(messages, [(code: 100005, message: 'Account already exists.')]);
+  });
+
+  test(
+    'reports and resolves a non-2xx response with a failed business code',
+    () async {
+      final messages = <({int code, String message})>[];
+      final dio =
+          DioFactory.create(
+              configuration: const AppApiConfiguration(
+                apiOrigin: 'https://api.flinx.example',
+                apiPathPrefix: '/api/force-door',
+              ),
+              logger: _FakeLogger(),
+              onServerBusinessMessage: ({required code, required message}) {
+                messages.add((code: code, message: message));
+              },
+            )
+            ..httpClientAdapter = _JsonResponseAdapter(
+            statusCode: 400,
+              body: {
+                'code': '100005',
+                'success': false,
+                'msg': 'Account already exists.',
+              },
+            );
+
+      final response = await dio.get<Map<String, dynamic>>('app/door-shares');
+
+      expect(response.statusCode, 400);
+      expect(response.data?['code'], 100005);
+      expect(response.data?['success'], isFalse);
+      expect(response.data?['data'], isNull);
+      expect(messages, [(code: 100005, message: 'Account already exists.')]);
+    },
+  );
+
+  test('keeps a non-business HTTP 400 as a Dio exception', () async {
+    final dio =
+        DioFactory.create(
+            configuration: const AppApiConfiguration(
+              apiOrigin: 'https://api.flinx.example',
+              apiPathPrefix: '/api/force-door',
+            ),
+            logger: _FakeLogger(),
+          )
+          ..httpClientAdapter = _JsonResponseAdapter(
+            statusCode: 400,
+            body: {'error': 'Bad request'},
+          );
+
+    await expectLater(
+      dio.get<void>('app/door-shares'),
+      throwsA(isA<DioException>()),
+    );
+  });
+
+  test('does not report a server msg for business codes 0 or 200', () async {
+    final messages = <String>[];
+    for (final code in [0, 200]) {
+      final dio =
+          DioFactory.create(
+              configuration: const AppApiConfiguration(
+                apiOrigin: 'https://api.flinx.example',
+                apiPathPrefix: '/api/force-door',
+              ),
+              logger: _FakeLogger(),
+              onServerBusinessMessage: ({required code, required message}) {
+                messages.add(message);
+              },
+            )
+            ..httpClientAdapter = _JsonResponseAdapter(
+              statusCode: 200,
+              body: {
+                'code': code,
+                'success': true,
+                'msg': 'Do not show this message.',
+              },
+            );
+
+      await dio.get<void>('app/doors');
+    }
+
+    expect(messages, isEmpty);
+  });
+
   test('adds Blade-Auth for non-authentication endpoints', () async {
     addTearDown(AccessTokenCache.clear);
     AccessTokenCache.set('access-token');

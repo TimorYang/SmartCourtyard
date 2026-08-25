@@ -143,7 +143,10 @@ class HomeDoorRemoteDataSourceImpl implements HomeDoorRemoteDataSource {
     try {
       final uploadResponse = await api.uploadDoorCoverImage(
         FormData.fromMap({
-          'file': MultipartFile.fromBytes(image.bytes, filename: image.fileName),
+          'file': MultipartFile.fromBytes(
+            image.bytes,
+            filename: image.fileName,
+          ),
         }),
         Options(
           contentType: Headers.multipartFormDataContentType,
@@ -229,7 +232,7 @@ class HomeDoorRemoteDataSourceImpl implements HomeDoorRemoteDataSource {
     }
   }
 
-  bool _isSuccessCode(int code) => code == 200;
+  bool _isSuccessCode(int code) => code == 0 || code == 200;
 }
 
 class HomeDoorRemoteException implements Exception {

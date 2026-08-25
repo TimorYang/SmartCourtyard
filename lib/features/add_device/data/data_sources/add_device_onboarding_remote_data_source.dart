@@ -125,7 +125,7 @@ class AddDeviceOnboardingRemoteDataSourceImpl
         Options(extra: _bindingRequestExtras(requestId)),
       );
       final data = response.data;
-      if (response.code != 200 || data == null) {
+      if (!_isSuccessCode(response.code) || data == null) {
         throw AddDeviceOnboardingRemoteException.invalidResponse(
           serverCode: response.code,
           serverMessage: response.msg,

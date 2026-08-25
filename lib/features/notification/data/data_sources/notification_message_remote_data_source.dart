@@ -74,7 +74,9 @@ class NotificationMessageRemoteDataSourceImpl
     try {
       final response = await request();
       final data = response.data;
-      if (response.code != 200 || !response.success || data == null) {
+      if ((response.code != 0 && response.code != 200) ||
+          !response.success ||
+          data == null) {
         throw const NotificationMessageRemoteException.invalidResponse();
       }
       return data;
