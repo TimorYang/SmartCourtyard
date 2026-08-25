@@ -30,17 +30,34 @@ class ChooseSceneAssetPaths {
 }
 
 class DeviceSharePage extends ConsumerStatefulWidget {
-  const DeviceSharePage({super.key, this.doorId, this.editingMember});
+  const DeviceSharePage({
+    super.key,
+    this.doorId,
+    this.initialAddress,
+    this.editingMember,
+  });
 
   static const routeName = 'device-share';
   static const routePath = '/device-share';
 
   /// When provided, the page renders the member-editing variant.
   final int? doorId;
+  final String? initialAddress;
   final SharedDoorMember? editingMember;
 
   @override
   ConsumerState<DeviceSharePage> createState() => _DeviceSharePageState();
+}
+
+/// Route context required to create an outgoing door share.
+class DeviceShareCreateRouteData {
+  const DeviceShareCreateRouteData({
+    required this.doorId,
+    required this.initialAddress,
+  });
+
+  final int doorId;
+  final String initialAddress;
 }
 
 /// Complete route context required to edit an outgoing door share.
@@ -77,8 +94,8 @@ class _DeviceSharePageState extends ConsumerState<DeviceSharePage> {
   void initState() {
     super.initState();
     final member = widget.editingMember;
+    _emailController.text = member?.email ?? widget.initialAddress ?? '';
     if (member != null) {
-      _emailController.text = member.email;
       _permission = member.role == SharedDoorMemberRole.administrator
           ? _SharePermission.administrator
           : _SharePermission.guest;

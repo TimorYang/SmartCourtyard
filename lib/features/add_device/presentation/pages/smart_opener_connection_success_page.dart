@@ -322,15 +322,21 @@ class _SmartOpenerConnectionSuccessPageState
     BuildContext context, {
     required int? doorId,
   }) async {
-    final shouldShare = await showDialog<bool>(
+    final address = await showDialog<String>(
       context: context,
       barrierColor: AppColors.overlayStrong,
       builder: (context) => const _ShareDeviceDialog(),
     );
-    if (!mounted || shouldShare != true || doorId == null) {
+    if (!context.mounted || address == null || doorId == null) {
       return;
     }
-    await context.pushNamed(DeviceSharePage.routeName, extra: doorId);
+    await context.pushNamed(
+      DeviceSharePage.routeName,
+      extra: DeviceShareCreateRouteData(
+        doorId: doorId,
+        initialAddress: address,
+      ),
+    );
   }
 }
 
@@ -549,8 +555,21 @@ class _SuccessActionButton extends StatelessWidget {
   }
 }
 
-class _ShareDeviceDialog extends StatelessWidget {
+class _ShareDeviceDialog extends StatefulWidget {
   const _ShareDeviceDialog();
+
+  @override
+  State<_ShareDeviceDialog> createState() => _ShareDeviceDialogState();
+}
+
+class _ShareDeviceDialogState extends State<_ShareDeviceDialog> {
+  final _addressController = TextEditingController();
+
+  @override
+  void dispose() {
+    _addressController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -584,6 +603,7 @@ class _ShareDeviceDialog extends StatelessWidget {
               SizedBox(
                 height: 38,
                 child: TextField(
+                  controller: _addressController,
                   keyboardType: TextInputType.emailAddress,
                   style: AppTextTokens.smartOpenerShareDialogAccountHint(
                     textTheme,
@@ -626,7 +646,9 @@ class _ShareDeviceDialog extends StatelessWidget {
                       label: l10n.smartOpenerShareNowAction,
                       backgroundColor: AppColors.brandPrimary,
                       foregroundColor: Colors.white,
-                      onPressed: () => Navigator.of(context).pop(true),
+                      onPressed: () => Navigator.of(
+                        context,
+                      ).pop(_addressController.text.trim()),
                     ),
                   ),
                 ],

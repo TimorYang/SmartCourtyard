@@ -102,8 +102,13 @@ void main() {
         GoRoute(
           path: DeviceSharePage.routePath,
           name: DeviceSharePage.routeName,
-          builder: (context, state) =>
-              DeviceSharePage(doorId: state.extra! as int),
+          builder: (context, state) {
+            final routeData = state.extra! as DeviceShareCreateRouteData;
+            return DeviceSharePage(
+              doorId: routeData.doorId,
+              initialAddress: routeData.initialAddress,
+            );
+          },
         ),
       ],
     );
@@ -138,6 +143,14 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Share now'), findsOneWidget);
 
+    const address = 'shared.user@example.com';
+    await tester.enterText(
+      find.descendant(
+        of: find.byType(Dialog),
+        matching: find.byType(TextField),
+      ),
+      address,
+    );
     await tester.tap(find.text('Share now'));
     await tester.pumpAndSettle();
 
@@ -145,6 +158,10 @@ void main() {
       find.byType(DeviceSharePage),
     );
     expect(sharePage.doorId, 42);
+    expect(
+      tester.widget<TextField>(find.byType(TextField)).controller?.text,
+      address,
+    );
   });
 }
 

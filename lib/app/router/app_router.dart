@@ -261,12 +261,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: DeviceSharePage.routeName,
         builder: (context, state) {
           final extra = state.extra;
+          final createData = extra is DeviceShareCreateRouteData ? extra : null;
           final editingData = extra is DeviceShareEditRouteData ? extra : null;
           return DeviceSharePage(
             doorId:
+                createData?.doorId ??
                 editingData?.doorId ??
                 (extra is int ? extra : null) ??
                 (extra is DeviceSummary ? int.tryParse(extra.id) : null),
+            initialAddress: createData?.initialAddress,
             editingMember: editingData?.member,
           );
         },
