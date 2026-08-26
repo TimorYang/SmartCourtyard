@@ -121,6 +121,56 @@ void main() {
     expect(_confirmTap(tester), isNull);
   });
 
+  testWidgets('customize access end allows editing minutes', (tester) async {
+    await tester.pumpWidget(_DeviceShareTestApp());
+
+    await _selectPeriod(tester, 'Customize');
+
+    final minuteBox = find.byKey(DeviceSharePageKeys.customTimeMinute);
+    final displayedMinute = int.parse(
+      tester
+          .widget<Text>(
+            find.descendant(of: minuteBox, matching: find.byType(Text)),
+          )
+          .data!,
+    );
+    final selectedMinute = displayedMinute == 0 ? 1 : displayedMinute - 1;
+
+    await tester.tap(minuteBox);
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(ValueKey('device-share-minute-option-$selectedMinute')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.descendant(
+        of: minuteBox,
+        matching: find.text(selectedMinute.toString().padLeft(2, '0')),
+      ),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('Confirm').last);
+    await tester.pumpAndSettle();
+
+    final expiryText = tester
+        .widget<Text>(
+          find.byWidgetPredicate(
+            (widget) =>
+                widget is Text &&
+                RegExp(
+                  r'^\d{2}:\d{2} \d{2}-\d{2}-\d{4}$',
+                ).hasMatch(widget.data ?? ''),
+          ),
+        )
+        .data!;
+    expect(
+      DateFormat('HH:mm dd-MM-yyyy').parse(expiryText).minute,
+      selectedMinute,
+    );
+  });
+
   testWidgets('access end locks time for never expired and two hours', (
     tester,
   ) async {

@@ -77,6 +77,8 @@ class DeviceSharePageKeys {
 
   static const editMemberSummary = ValueKey('device-share-edit-member-summary');
   static const editDeleteAction = ValueKey('device-share-edit-delete-action');
+  static const customTimeHour = ValueKey('device-share-custom-time-hour');
+  static const customTimeMinute = ValueKey('device-share-custom-time-minute');
 }
 
 class _DeviceSharePageState extends ConsumerState<DeviceSharePage> {
@@ -1108,6 +1110,7 @@ class _CustomizeTimeDialogState extends State<_CustomizeTimeDialog> {
   late DateTime _today;
   late DateTime _selectedDate;
   late int _selectedHour;
+  late int _selectedMinute;
 
   @override
   void initState() {
@@ -1123,6 +1126,7 @@ class _CustomizeTimeDialogState extends State<_CustomizeTimeDialog> {
     _selectedHour = _selectedDate == _today && initial.hour <= now.hour
         ? now.hour + 1
         : initial.hour;
+    _selectedMinute = initial.minute;
   }
 
   @override
@@ -1170,6 +1174,7 @@ class _CustomizeTimeDialogState extends State<_CustomizeTimeDialog> {
               children: [
                 Expanded(
                   child: _TimeTextBox(
+                    key: DeviceSharePageKeys.customTimeHour,
                     value: _selectedHour.toString().padLeft(2, '0'),
                     onTap: _selectHour,
                   ),
@@ -1181,7 +1186,14 @@ class _CustomizeTimeDialogState extends State<_CustomizeTimeDialog> {
                     style: AppTextTokens.deviceShareTimeSeparator(textTheme),
                   ),
                 ),
-                SizedBox(width: 64, child: _TimeTextBox(value: '00')),
+                SizedBox(
+                  width: 64,
+                  child: _TimeTextBox(
+                    key: DeviceSharePageKeys.customTimeMinute,
+                    value: _selectedMinute.toString().padLeft(2, '0'),
+                    onTap: _selectMinute,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 24),
@@ -1270,9 +1282,14 @@ class _CustomizeTimeDialogState extends State<_CustomizeTimeDialog> {
     final selected = await showDialog<int>(
       context: context,
       barrierColor: Colors.transparent,
-      builder: (context) => _HourPickerDialog(
-        selectedHour: _selectedHour,
-        minimumHour: _selectedDate == _today ? DateTime.now().hour + 1 : 0,
+      builder: (context) => _TimeValuePickerDialog(
+        selectedValue: _selectedHour,
+        minimumValue: _selectedDate == _today ? DateTime.now().hour + 1 : 0,
+        itemCount: 24,
+        width: 234,
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.only(left: 38),
+        optionKeyPrefix: 'device-share-hour-option',
       ),
     );
     if (selected == null) {
@@ -1280,6 +1297,28 @@ class _CustomizeTimeDialogState extends State<_CustomizeTimeDialog> {
     }
     setState(() {
       _selectedHour = selected;
+    });
+  }
+
+  Future<void> _selectMinute() async {
+    final selected = await showDialog<int>(
+      context: context,
+      barrierColor: Colors.transparent,
+      builder: (context) => _TimeValuePickerDialog(
+        selectedValue: _selectedMinute,
+        minimumValue: 0,
+        itemCount: 60,
+        width: 64,
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 40),
+        optionKeyPrefix: 'device-share-minute-option',
+      ),
+    );
+    if (selected == null) {
+      return;
+    }
+    setState(() {
+      _selectedMinute = selected;
     });
   }
 
@@ -1292,11 +1331,12 @@ class _CustomizeTimeDialogState extends State<_CustomizeTimeDialog> {
     _selectedDate.month,
     _selectedDate.day,
     _selectedHour,
+    _selectedMinute,
   );
 }
 
 class _TimeTextBox extends StatelessWidget {
-  const _TimeTextBox({required this.value, this.onTap});
+  const _TimeTextBox({super.key, required this.value, this.onTap});
 
   final String value;
   final VoidCallback? onTap;
@@ -1332,27 +1372,37 @@ class _TimeTextBox extends StatelessWidget {
   }
 }
 
-class _HourPickerDialog extends StatefulWidget {
-  const _HourPickerDialog({
-    required this.selectedHour,
-    required this.minimumHour,
+class _TimeValuePickerDialog extends StatefulWidget {
+  const _TimeValuePickerDialog({
+    required this.selectedValue,
+    required this.minimumValue,
+    required this.itemCount,
+    required this.width,
+    required this.alignment,
+    required this.padding,
+    required this.optionKeyPrefix,
   });
 
-  final int selectedHour;
-  final int minimumHour;
+  final int selectedValue;
+  final int minimumValue;
+  final int itemCount;
+  final double width;
+  final AlignmentGeometry alignment;
+  final EdgeInsetsGeometry padding;
+  final String optionKeyPrefix;
 
   @override
-  State<_HourPickerDialog> createState() => _HourPickerDialogState();
+  State<_TimeValuePickerDialog> createState() => _TimeValuePickerDialogState();
 }
 
-class _HourPickerDialogState extends State<_HourPickerDialog> {
+class _TimeValuePickerDialogState extends State<_TimeValuePickerDialog> {
   late final ScrollController _scrollController;
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController(
-      initialScrollOffset: math.max(0, widget.selectedHour * 48.0 - 520),
+      initialScrollOffset: math.max(0, widget.selectedValue * 48.0 - 520),
     );
   }
 
@@ -1368,14 +1418,14 @@ class _HourPickerDialogState extends State<_HourPickerDialog> {
     final availableHeight = MediaQuery.sizeOf(context).height - 80;
 
     return Align(
-      alignment: Alignment.centerLeft,
+      alignment: widget.alignment,
       child: Padding(
-        padding: const EdgeInsets.only(left: 38),
+        padding: widget.padding,
         child: Material(
           color: AppColors.backgroundPrimary,
           elevation: 4,
           child: SizedBox(
-            width: 234,
+            width: widget.width,
             height: math.min(748, availableHeight),
             child: Scrollbar(
               controller: _scrollController,
@@ -1383,11 +1433,12 @@ class _HourPickerDialogState extends State<_HourPickerDialog> {
               child: ListView.builder(
                 controller: _scrollController,
                 padding: EdgeInsets.zero,
-                itemCount: 24,
+                itemCount: widget.itemCount,
                 itemBuilder: (context, index) {
-                  final isSelected = index == widget.selectedHour;
-                  final isEnabled = index >= widget.minimumHour;
+                  final isSelected = index == widget.selectedValue;
+                  final isEnabled = index >= widget.minimumValue;
                   return GestureDetector(
+                    key: ValueKey('${widget.optionKeyPrefix}-$index'),
                     behavior: HitTestBehavior.opaque,
                     onTap: isEnabled
                         ? () => Navigator.of(context).pop(index)
