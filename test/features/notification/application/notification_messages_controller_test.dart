@@ -94,6 +94,26 @@ void main() {
     pendingPage.complete(_page(<AppNotification>[_message('2')], page: 2));
     await Future.wait<void>(<Future<void>>[firstRequest, duplicateRequest]);
   });
+
+  test('synchronizes a read detail into the loaded message list', () async {
+    final repository = _RecordingRepository(
+      <int, NotificationMessagePageResult>{
+        1: _page(<AppNotification>[_message('1'), _message('2')]),
+      },
+    );
+    final container = _container(repository);
+    addTearDown(container.dispose);
+    final controller = container.read(
+      notificationMessagesControllerProvider.notifier,
+    );
+
+    await controller.loadInitial();
+    controller.synchronizeMessageReadState(messageId: '1', isRead: true);
+
+    final messages = container.read(notificationMessagesControllerProvider).messages;
+    expect(messages.first.isRead, isTrue);
+    expect(messages.last.isRead, isFalse);
+  });
 }
 
 ProviderContainer _container(NotificationMessageRepository repository) =>

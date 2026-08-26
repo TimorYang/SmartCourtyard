@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
+import '../../application/notification_messages_controller.dart';
 import '../../application/providers.dart';
 import '../../domain/entities/app_notification.dart';
 
@@ -19,6 +20,16 @@ class NotificationDetailPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final detail = ref.watch(notificationDetailProvider(notificationId));
+    ref.listen(notificationDetailProvider(notificationId), (_, next) {
+      next.whenData((item) {
+        ref
+            .read(notificationMessagesControllerProvider.notifier)
+            .synchronizeMessageReadState(
+              messageId: item.id,
+              isRead: item.isRead,
+            );
+      });
+    });
 
     return Scaffold(
       backgroundColor: AppColors.notificationBackground,

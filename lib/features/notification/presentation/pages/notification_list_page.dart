@@ -176,7 +176,7 @@ class _NotificationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final categoryColors = _categoryColors(notification.kind);
+    final categoryColors = _categoryColors(notification.type);
 
     return Semantics(
       button: true,
@@ -226,20 +226,29 @@ class _NotificationCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
                           if (!notification.isRead)
-                            const Padding(
-                              padding: EdgeInsets.only(top: 3),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 3),
                               child: DecoratedBox(
-                                decoration: BoxDecoration(
+                                decoration: const BoxDecoration(
                                   color: AppColors.notificationUnread,
                                   shape: BoxShape.circle,
                                 ),
-                                child: SizedBox(width: 12, height: 12),
+                                child: SizedBox(
+                                  key: ValueKey(
+                                    'notification-unread-${notification.id}',
+                                  ),
+                                  width: 12,
+                                  height: 12,
+                                ),
                               ),
                             ),
                         ],
                       ),
                       const SizedBox(height: 8),
                       DecoratedBox(
+                        key: ValueKey(
+                          'notification-category-${notification.id}',
+                        ),
                         decoration: BoxDecoration(
                           color: categoryColors.$1,
                           borderRadius: BorderRadius.circular(4),
@@ -295,14 +304,14 @@ class _NotificationCard extends StatelessWidget {
       'assets/icons/notification/notification_system_maintenance_placeholder.png',
   };
 
-  (Color, Color) _categoryColors(NotificationKind kind) => switch (kind) {
-    NotificationKind.upgrade => (
+  (Color, Color) _categoryColors(String type) => switch (type
+      .trim()
+      .toUpperCase()) {
+    'FIRMWARE' => (
       AppColors.notificationUpgradeTag,
       AppColors.notificationUpgradeText,
     ),
-    NotificationKind.lowBattery ||
-    NotificationKind.motorResetWarning ||
-    NotificationKind.sensorAbnormality => (
+    'DEVICE' || 'SECURITY' => (
       AppColors.notificationEquipmentTag,
       AppColors.notificationEquipmentText,
     ),

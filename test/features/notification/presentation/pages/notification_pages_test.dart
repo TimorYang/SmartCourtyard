@@ -1,3 +1,4 @@
+import 'package:flinx/app/theme/app_design_tokens.dart';
 import 'package:flinx/app/theme/app_theme.dart';
 import 'package:flinx/features/notification/application/providers.dart';
 import 'package:flinx/features/notification/domain/entities/app_notification.dart';
@@ -23,6 +24,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Garage door battery is low'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('notification-unread-10001')),
+        findsOneWidget,
+      );
       await tester.tap(find.byKey(const ValueKey('notification-card-10001')));
       await tester.pumpAndSettle();
 
@@ -30,8 +35,52 @@ void main() {
         find.text('Battery below 15%, please arrange service.'),
         findsOneWidget,
       );
+
+      await tester.tap(find.byType(BackButtonIcon));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('notification-unread-10001')),
+        findsNothing,
+      );
     },
   );
+
+  testWidgets('uses API message type for notification category colors', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _app(
+        initialLocation: NotificationListPage.routePath,
+        repository: _TypeColorNotificationMessageRepository(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    _expectCategoryColors(
+      tester,
+      id: 'device',
+      background: AppColors.notificationEquipmentTag,
+      foreground: AppColors.notificationEquipmentText,
+    );
+    _expectCategoryColors(
+      tester,
+      id: 'security',
+      background: AppColors.notificationEquipmentTag,
+      foreground: AppColors.notificationEquipmentText,
+    );
+    _expectCategoryColors(
+      tester,
+      id: 'firmware',
+      background: AppColors.notificationUpgradeTag,
+      foreground: AppColors.notificationUpgradeText,
+    );
+    _expectCategoryColors(
+      tester,
+      id: 'other',
+      background: AppColors.notificationServiceTag,
+      foreground: AppColors.notificationServiceText,
+    );
+  });
 
   testWidgets('after-sales detail actions show local feedback', (tester) async {
     await tester.pumpWidget(
@@ -74,17 +123,24 @@ void main() {
   });
 }
 
-Widget _app({required String initialLocation}) {
+Widget _app({
+  required String initialLocation,
+  NotificationMessageRepository? repository,
+}) {
   return _routerApp(
     GoRouter(initialLocation: initialLocation, routes: _routes),
+    repository: repository,
   );
 }
 
-Widget _routerApp(GoRouter router) {
+Widget _routerApp(
+  GoRouter router, {
+  NotificationMessageRepository? repository,
+}) {
   return ProviderScope(
     overrides: [
       notificationMessageRepositoryProvider.overrideWithValue(
-        _FakeNotificationMessageRepository(),
+        repository ?? _FakeNotificationMessageRepository(),
       ),
     ],
     child: MaterialApp.router(
@@ -94,6 +150,22 @@ Widget _routerApp(GoRouter router) {
       routerConfig: router,
     ),
   );
+}
+
+void _expectCategoryColors(
+  WidgetTester tester, {
+  required String id,
+  required Color background,
+  required Color foreground,
+}) {
+  final tag = find.byKey(ValueKey('notification-category-$id'));
+  final decoration =
+      tester.widget<DecoratedBox>(tag).decoration as BoxDecoration;
+  final text = tester.widget<Text>(
+    find.descendant(of: tag, matching: find.byType(Text)),
+  );
+  expect(decoration.color, background);
+  expect(text.style?.color, foreground);
 }
 
 class _FakeNotificationMessageRepository
@@ -144,6 +216,42 @@ class _FakeNotificationMessageRepository
 
   @override
   Future<void> markAllRead({required String requestId}) async {}
+}
+
+class _TypeColorNotificationMessageRepository
+    extends _FakeNotificationMessageRepository {
+  @override
+  Future<NotificationMessagePageResult> fetchMessages({
+    required int page,
+    required int pageSize,
+    required String requestId,
+  }) async => NotificationMessagePageResult(
+    messages:
+        const [
+              ('device', 'DEVICE'),
+              ('security', ' security '),
+              ('firmware', 'FIRMWARE'),
+              ('other', 'SYSTEM'),
+            ]
+            .map(
+              (item) => AppNotification(
+                id: item.$1,
+                templateCode: 'TEST',
+                type: item.$2,
+                kind: NotificationKind.systemMaintenance,
+                title: item.$1,
+                category: item.$1,
+                summary: item.$1,
+                timestamp: '2026-07-01T09:00:00Z',
+                isRead: true,
+              ),
+            )
+            .toList(growable: false),
+    currentPage: 1,
+    pageSize: 20,
+    total: 4,
+    hasMore: false,
+  );
 }
 
 final _routes = [

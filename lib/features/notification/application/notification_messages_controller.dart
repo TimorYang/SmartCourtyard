@@ -151,6 +151,25 @@ class NotificationMessagesController
     }
   }
 
+  void synchronizeMessageReadState({
+    required String messageId,
+    required bool isRead,
+  }) {
+    if (!isRead) return;
+
+    var changed = false;
+    final messages = state.messages.map((message) {
+      if (message.id != messageId || message.isRead) return message;
+      changed = true;
+      return message.copyWith(isRead: true);
+    }).toList(growable: false);
+
+    if (changed) {
+      state = state.copyWith(messages: messages);
+    }
+    ref.invalidate(notificationUnreadStateProvider);
+  }
+
   Future<NotificationMessagePageResult> _fetchPage(
     int page,
     String operation,
