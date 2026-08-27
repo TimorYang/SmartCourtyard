@@ -689,12 +689,12 @@ class _AboutDevicePageState extends ConsumerState<AboutDevicePage> {
                         value: info.hardwareVersion,
                         showChevron: false,
                       ),
-                      _SettingsRowData(
-                        assetPath:
-                            DeviceSettingsAssetPaths.aboutDeviceCheckVersion,
-                        fallbackIcon: Icons.manage_search_outlined,
-                        title: l10n.deviceSettingsCheckVersion,
-                      ),
+                      // _SettingsRowData(
+                      //   assetPath:
+                      //       DeviceSettingsAssetPaths.aboutDeviceCheckVersion,
+                      //   fallbackIcon: Icons.manage_search_outlined,
+                      //   title: l10n.deviceSettingsCheckVersion,
+                      // ),
                     ],
                   ),
                 ),
