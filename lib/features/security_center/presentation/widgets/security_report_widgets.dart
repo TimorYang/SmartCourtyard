@@ -479,6 +479,24 @@ class _DashedStatusRowPainter extends CustomPainter {
 
 enum RecordRange { last24Hours, last7Days }
 
+@visibleForTesting
+List<int> operationChartYAxisLabels(
+  List<FullReportOperationCyclePoint> points,
+) {
+  final maximum = points.fold<int>(
+    0,
+    (value, point) => point.cycles > value ? point.cycles : value,
+  );
+  if (maximum == 0) return List<int>.filled(6, 0, growable: false);
+
+  final chartMaximum = (maximum * 1.2).ceilToDouble();
+  return List<int>.generate(
+    6,
+    (index) => (chartMaximum * index / 5).round(),
+    growable: false,
+  );
+}
+
 class OperationChartCard extends StatelessWidget {
   const OperationChartCard({
     required this.range,
@@ -684,16 +702,19 @@ class _OperationChartPainter extends CustomPainter {
     final normalBar = Paint()..color = AppColors.securityReportSegmentSelected;
     final warningBar = Paint()..color = AppColors.securityReportChartBar;
     if (points.isEmpty) {
-      _paintLabels(canvas, chart, maxValue: 0);
+      _paintLabels(
+        canvas,
+        chart,
+        yAxisLabels: operationChartYAxisLabels(points),
+      );
       return;
     }
-    final maxValue = _OperationChartLayout.yAxisMaximum(points);
     final bars = _OperationChartLayout.bars(size, points);
     for (var index = 0; index < bars.length; index++) {
       final isWarning = points[index].isFrequentOperation;
       canvas.drawRect(bars[index], isWarning ? warningBar : normalBar);
     }
-    _paintLabels(canvas, chart, maxValue: maxValue);
+    _paintLabels(canvas, chart, yAxisLabels: operationChartYAxisLabels(points));
     if (selectedIndex case final index? when index < points.length) {
       _paintTooltip(
         canvas,
@@ -705,12 +726,16 @@ class _OperationChartPainter extends CustomPainter {
     }
   }
 
-  void _paintLabels(Canvas canvas, Rect chart, {required double maxValue}) {
+  void _paintLabels(
+    Canvas canvas,
+    Rect chart, {
+    required List<int> yAxisLabels,
+  }) {
     for (var index = 0; index <= 5; index++) {
       final y = chart.bottom - chart.height * index / 5 - 8;
       final painter = TextPainter(
         text: TextSpan(
-          text: (maxValue * index / 5).round().toString(),
+          text: yAxisLabels[index].toString(),
           style: const TextStyle(color: AppColors.textPrimary, fontSize: 11),
         ),
         textDirection: TextDirection.ltr,

@@ -5,6 +5,30 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('shows only zero y-axis values when every operation bucket is zero', () {
+    final points = List<FullReportOperationCyclePoint>.generate(
+      24,
+      (hour) => FullReportOperationCyclePoint(
+        occurredAt: DateTime(1970, 1, 1, hour),
+        axisLabel: hour.toString().padLeft(2, '0'),
+        cycles: 0,
+      ),
+    );
+
+    expect(operationChartYAxisLabels(points), [0, 0, 0, 0, 0, 0]);
+  });
+
+  test('keeps dynamic y-axis values when operation data is non-zero', () {
+    final points = [
+      FullReportOperationCyclePoint(
+        occurredAt: DateTime(2026, 7, 22),
+        cycles: 10,
+      ),
+    ];
+
+    expect(operationChartYAxisLabels(points), [0, 2, 5, 7, 10, 12]);
+  });
+
   testWidgets('uses the record abnormal status for both chart ranges', (
     tester,
   ) async {
