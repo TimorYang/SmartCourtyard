@@ -885,6 +885,7 @@
   "accountAbout": "About",
   "upgradeCheckTitle": "Check the upgraded version",
   "upgradeCheckAppSection": "APP",
+  "upgradeCheckAppUpdateName": "App version update",
   "upgradeCheckFirmwareSection": "firmware",
   "upgradeCheckStartAction": "Start upgrading",
   "upgradeCheckUpgrading": "Upgrading",
@@ -900,6 +901,38 @@
   "upgradeCheckCurrentVersion": "Current Version : {version}",
   "@upgradeCheckCurrentVersion": {
     "placeholders": {"version": {"type": "String"}}
+  },
+  "upgradeCheckAvailableVersion": "Available Version : {version}",
+  "@upgradeCheckAvailableVersion": {
+    "placeholders": {"version": {"type": "String"}}
+  },
+  "upgradeCheckScheduledFor": "Scheduled for: {dateTime}",
+  "@upgradeCheckScheduledFor": {
+    "placeholders": {"dateTime": {"type": "String"}}
+  },
+  "upgradeCheckExpandDoor": "Expand {name}",
+  "@upgradeCheckExpandDoor": {
+    "placeholders": {"name": {"type": "String"}}
+  },
+  "upgradeCheckCollapseDoor": "Collapse {name}",
+  "@upgradeCheckCollapseDoor": {
+    "placeholders": {"name": {"type": "String"}}
+  },
+  "upgradeCheckSelectionLimit": "You can select up to 10 upgrade items at a time.",
+  "upgradeCheckPartialNotAccepted": "Some upgrade tasks were not accepted.",
+  "upgradeCheckSubmitFailed": "Unable to submit the upgrade. Try again.",
+  "upgradeCheckSubmitting": "Submitting",
+  "upgradeCheckSizeBytes": "{value} B",
+  "@upgradeCheckSizeBytes": {
+    "placeholders": {"value": {"type": "String"}}
+  },
+  "upgradeCheckSizeKilobytes": "{value} KB",
+  "@upgradeCheckSizeKilobytes": {
+    "placeholders": {"value": {"type": "String"}}
+  },
+  "upgradeCheckSizeMegabytes": "{value} MB",
+  "@upgradeCheckSizeMegabytes": {
+    "placeholders": {"value": {"type": "String"}}
   },
   "upgradeCheckSelectTimeTitle": "Select upgrade time",
   "upgradeCheckStatus": "Status",

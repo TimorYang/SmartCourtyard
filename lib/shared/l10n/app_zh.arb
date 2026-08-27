@@ -259,6 +259,7 @@
   "accountAbout": "关于",
   "upgradeCheckTitle": "检查升级版本",
   "upgradeCheckAppSection": "应用",
+  "upgradeCheckAppUpdateName": "应用版本更新",
   "upgradeCheckFirmwareSection": "固件",
   "upgradeCheckStartAction": "开始升级",
   "upgradeCheckUpgrading": "正在升级",
@@ -274,6 +275,38 @@
   "upgradeCheckCurrentVersion": "当前版本：{version}",
   "@upgradeCheckCurrentVersion": {
     "placeholders": {"version": {"type": "String"}}
+  },
+  "upgradeCheckAvailableVersion": "可用版本：{version}",
+  "@upgradeCheckAvailableVersion": {
+    "placeholders": {"version": {"type": "String"}}
+  },
+  "upgradeCheckScheduledFor": "预约时间：{dateTime}",
+  "@upgradeCheckScheduledFor": {
+    "placeholders": {"dateTime": {"type": "String"}}
+  },
+  "upgradeCheckExpandDoor": "展开{name}",
+  "@upgradeCheckExpandDoor": {
+    "placeholders": {"name": {"type": "String"}}
+  },
+  "upgradeCheckCollapseDoor": "收起{name}",
+  "@upgradeCheckCollapseDoor": {
+    "placeholders": {"name": {"type": "String"}}
+  },
+  "upgradeCheckSelectionLimit": "每次最多选择 10 个升级项目。",
+  "upgradeCheckPartialNotAccepted": "部分升级任务未受理。",
+  "upgradeCheckSubmitFailed": "无法提交升级任务，请重试。",
+  "upgradeCheckSubmitting": "提交中",
+  "upgradeCheckSizeBytes": "{value} B",
+  "@upgradeCheckSizeBytes": {
+    "placeholders": {"value": {"type": "String"}}
+  },
+  "upgradeCheckSizeKilobytes": "{value} KB",
+  "@upgradeCheckSizeKilobytes": {
+    "placeholders": {"value": {"type": "String"}}
+  },
+  "upgradeCheckSizeMegabytes": "{value} MB",
+  "@upgradeCheckSizeMegabytes": {
+    "placeholders": {"value": {"type": "String"}}
   },
   "upgradeCheckSelectTimeTitle": "选择升级时间",
   "upgradeCheckStatus": "状态",

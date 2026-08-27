@@ -1616,6 +1616,12 @@ abstract class AppLocalizations {
   /// **'APP'**
   String get upgradeCheckAppSection;
 
+  /// No description provided for @upgradeCheckAppUpdateName.
+  ///
+  /// In en, this message translates to:
+  /// **'App version update'**
+  String get upgradeCheckAppUpdateName;
+
   /// No description provided for @upgradeCheckFirmwareSection.
   ///
   /// In en, this message translates to:
@@ -1657,6 +1663,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Current Version : {version}'**
   String upgradeCheckCurrentVersion(String version);
+
+  /// No description provided for @upgradeCheckAvailableVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Available Version : {version}'**
+  String upgradeCheckAvailableVersion(String version);
+
+  /// No description provided for @upgradeCheckScheduledFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled for: {dateTime}'**
+  String upgradeCheckScheduledFor(String dateTime);
+
+  /// No description provided for @upgradeCheckExpandDoor.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand {name}'**
+  String upgradeCheckExpandDoor(String name);
+
+  /// No description provided for @upgradeCheckCollapseDoor.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse {name}'**
+  String upgradeCheckCollapseDoor(String name);
+
+  /// No description provided for @upgradeCheckSelectionLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'You can select up to 10 upgrade items at a time.'**
+  String get upgradeCheckSelectionLimit;
+
+  /// No description provided for @upgradeCheckPartialNotAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Some upgrade tasks were not accepted.'**
+  String get upgradeCheckPartialNotAccepted;
+
+  /// No description provided for @upgradeCheckSubmitFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to submit the upgrade. Try again.'**
+  String get upgradeCheckSubmitFailed;
+
+  /// No description provided for @upgradeCheckSubmitting.
+  ///
+  /// In en, this message translates to:
+  /// **'Submitting'**
+  String get upgradeCheckSubmitting;
+
+  /// No description provided for @upgradeCheckSizeBytes.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} B'**
+  String upgradeCheckSizeBytes(String value);
+
+  /// No description provided for @upgradeCheckSizeKilobytes.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} KB'**
+  String upgradeCheckSizeKilobytes(String value);
+
+  /// No description provided for @upgradeCheckSizeMegabytes.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} MB'**
+  String upgradeCheckSizeMegabytes(String value);
 
   /// No description provided for @upgradeCheckSelectTimeTitle.
   ///

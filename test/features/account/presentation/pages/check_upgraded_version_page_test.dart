@@ -1,161 +1,279 @@
 import 'package:flinx/app/theme/app_theme.dart';
-import 'package:flinx/features/account/presentation/pages/account_profile_page.dart';
+import 'package:flinx/features/account/application/providers.dart';
+import 'package:flinx/features/account/domain/entities/account_profile.dart';
+import 'package:flinx/features/account/domain/entities/upgrade_check.dart';
+import 'package:flinx/features/account/domain/repositories/upgrade_repository.dart';
 import 'package:flinx/features/account/presentation/pages/check_upgraded_version_page.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
 
 void main() {
-  testWidgets('opens the upgrade check page from account profile', (
+  testWidgets('renders API-backed app and door-grouped firmware data', (
     tester,
   ) async {
-    await tester.binding.setSurfaceSize(const Size(800, 1000));
+    await tester.binding.setSurfaceSize(const Size(800, 1200));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    final router = GoRouter(
-      initialLocation: AccountProfilePage.routePath,
-      routes: [
-        GoRoute(
-          path: AccountProfilePage.routePath,
-          name: AccountProfilePage.routeName,
-          builder: (context, state) => const AccountProfilePage(),
-        ),
-        GoRoute(
-          path: CheckUpgradedVersionPage.routePath,
-          name: CheckUpgradedVersionPage.routeName,
-          builder: (context, state) => const CheckUpgradedVersionPage(),
-        ),
+    final repository = _FakeUpgradeRepository(
+      application: const AppReleaseUpdate(
+        action: AppReleaseAction.optional,
+        targetVersion: '1.2.5',
+        targetBuildNumber: '125',
+        publishedAt: null,
+        updateUrl: null,
+      ),
+      doors: [
+        _door([_target()]),
       ],
     );
 
-    await tester.pumpWidget(_TestApp(router: router));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(AccountProfileKeys.checkForUpdatesMenuItem));
+    await tester.pumpWidget(_TestApp(repository: repository));
     await tester.pumpAndSettle();
 
-    expect(find.text('Check the upgraded version'), findsOneWidget);
+    expect(find.text('App version update'), findsOneWidget);
+    expect(find.text('1.2.5'), findsOneWidget);
+    expect(find.text('Available Version : 1.2.5'), findsOneWidget);
+    expect(find.text('South Gate'), findsOneWidget);
+    expect(find.text('Opener'), findsOneWidget);
+    expect(find.text('serial number : SN-101'), findsOneWidget);
+    expect(find.text('Current Version : --'), findsOneWidget);
+    expect(find.text('18.3 MB'), findsOneWidget);
   });
 
-  testWidgets(
-    'selects updates, opens the schedule dialog and completes progress',
-    (tester) async {
-      await tester.pumpWidget(_TestApp(home: const CheckUpgradedVersionPage()));
-      await tester.pumpAndSettle();
-
-      final start = tester.widget<FilledButton>(
-        find.byKey(CheckUpgradedVersionKeys.startButton),
-      );
-      expect(start.onPressed, isNull);
-
-      await tester.tap(
-        find.byKey(CheckUpgradedVersionKeys.packageCheckbox('gdo-1', 'motor')),
-      );
-      await tester.pump();
-      expect(
-        tester
-            .widget<FilledButton>(
-              find.byKey(CheckUpgradedVersionKeys.startButton),
-            )
-            .onPressed,
-        isNotNull,
-      );
-
-      await tester.tap(find.byKey(CheckUpgradedVersionKeys.startButton));
-      await tester.pumpAndSettle();
-      expect(
-        find.byKey(CheckUpgradedVersionKeys.scheduleDialog),
-        findsOneWidget,
-      );
-      expect(find.text('Select upgrade time'), findsOneWidget);
-
-      await tester.tap(find.byKey(CheckUpgradedVersionKeys.scheduleConfirm));
-      await tester.pump();
-      expect(
-        find.byKey(CheckUpgradedVersionKeys.progressCard('gdo-1')),
-        findsOneWidget,
-      );
-      expect(find.text('Upgrading'), findsOneWidget);
-
-      await tester.pump(const Duration(seconds: 6));
-      expect(find.text('Completed'), findsOneWidget);
-    },
-  );
-
-  testWidgets('synchronizes parent selection and collapses device details', (
+  testWidgets('does nothing when only the app update is selected', (
     tester,
   ) async {
-    await tester.pumpWidget(_TestApp(home: const CheckUpgradedVersionPage()));
+    final repository = _FakeUpgradeRepository(
+      application: const AppReleaseUpdate(
+        action: AppReleaseAction.force,
+        targetVersion: '1.2.5',
+        targetBuildNumber: '125',
+        publishedAt: null,
+        updateUrl: null,
+      ),
+    );
+
+    await tester.pumpWidget(_TestApp(repository: repository));
     await tester.pumpAndSettle();
-
-    await tester.scrollUntilVisible(
-      find.byKey(CheckUpgradedVersionKeys.deviceCheckbox('rdo-1')),
-      200,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.tap(
-      find.byKey(CheckUpgradedVersionKeys.deviceCheckbox('rdo-1')),
-    );
-    await tester.pump();
-    expect(find.byIcon(Icons.check_rounded), findsAtLeastNWidgets(3));
-
-    await tester.tap(
-      find.byKey(CheckUpgradedVersionKeys.deviceExpansion('rdo-1')),
-    );
-    await tester.pump();
-    expect(
-      find.byKey(CheckUpgradedVersionKeys.packageCheckbox('rdo-1', 'motor')),
-      findsNothing,
-    );
-  });
-
-  testWidgets('switches scheduling modes and dismisses the dialog', (
-    tester,
-  ) async {
-    await tester.pumpWidget(_TestApp(home: const CheckUpgradedVersionPage()));
-    await tester.pumpAndSettle();
-
     await tester.tap(find.byKey(CheckUpgradedVersionKeys.applicationCheckbox));
+    await tester.pump();
+
+    final startButton = tester.widget<FilledButton>(
+      find.byKey(CheckUpgradedVersionKeys.startButton),
+    );
+    expect(startButton.onPressed, isNotNull);
+    await tester.tap(find.byKey(CheckUpgradedVersionKeys.startButton));
+    await tester.pump();
+
+    expect(find.byKey(CheckUpgradedVersionKeys.scheduleDialog), findsNothing);
+    expect(repository.submitCount, 0);
+  });
+
+  testWidgets('submits only firmware and advances accepted fake progress', (
+    tester,
+  ) async {
+    final target = _target();
+    final repository = _FakeUpgradeRepository(
+      application: const AppReleaseUpdate(
+        action: AppReleaseAction.optional,
+        targetVersion: '1.2.5',
+        targetBuildNumber: '125',
+        publishedAt: null,
+        updateUrl: null,
+      ),
+      doors: [
+        _door([target]),
+      ],
+      submitResults: [_submission(target)],
+    );
+
+    await tester.pumpWidget(_TestApp(repository: repository));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(CheckUpgradedVersionKeys.applicationCheckbox));
+    await tester.pump();
+    await tester.tap(
+      find.byKey(
+        CheckUpgradedVersionKeys.packageCheckbox('door-1', target.key),
+      ),
+    );
     await tester.pump();
     await tester.tap(find.byKey(CheckUpgradedVersionKeys.startButton));
     await tester.pumpAndSettle();
-    expect(find.byKey(CheckUpgradedVersionKeys.scheduleDialog), findsOneWidget);
 
+    expect(find.text('South Gate · Opener'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(CheckUpgradedVersionKeys.scheduleDialog),
+        matching: find.text('serial number : SN-101'),
+      ),
+      findsOneWidget,
+    );
     await tester.tap(find.text('postpone'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('immediate').last);
     await tester.pumpAndSettle();
-    expect(find.text('immediate'), findsOneWidget);
-
-    await tester.tap(find.byKey(CheckUpgradedVersionKeys.scheduleCancel));
+    await tester.tap(find.byKey(CheckUpgradedVersionKeys.scheduleConfirm));
     await tester.pumpAndSettle();
-    expect(find.byKey(CheckUpgradedVersionKeys.scheduleDialog), findsNothing);
+
+    expect(repository.submittedTargetKeys, [target.key]);
+    expect(
+      find.byKey(CheckUpgradedVersionKeys.progressCard(target.key)),
+      findsOneWidget,
+    );
+    expect(find.text('1%'), findsOneWidget);
+
+    await tester.pump(const Duration(seconds: 3));
+
+    expect(find.text('2%'), findsOneWidget);
+    expect(find.text('Completed'), findsNothing);
+
+    await tester.pump(const Duration(minutes: 10));
+
+    expect(find.text('99%'), findsOneWidget);
+    expect(find.text('100%'), findsNothing);
+    expect(repository.progresses, {target.key: 99});
+  });
+
+  testWidgets('keeps the middle area blank when neither API has content', (
+    tester,
+  ) async {
+    final repository = _FakeUpgradeRepository();
+
+    await tester.pumpWidget(_TestApp(repository: repository));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Check the upgraded version'), findsOneWidget);
+    expect(find.text('APP'), findsNothing);
+    expect(find.text('firmware'), findsNothing);
+    expect(
+      tester
+          .widget<FilledButton>(
+            find.byKey(CheckUpgradedVersionKeys.startButton),
+          )
+          .onPressed,
+      isNull,
+    );
   });
 }
 
 class _TestApp extends StatelessWidget {
-  const _TestApp({this.home, this.router});
+  const _TestApp({required this.repository});
 
-  final Widget? home;
-  final GoRouter? router;
+  final UpgradeRepository repository;
 
   @override
   Widget build(BuildContext context) {
-    final app = MaterialApp(
-      theme: AppTheme.light(),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: home,
-    );
     return ProviderScope(
-      child: router == null
-          ? app
-          : MaterialApp.router(
-              theme: AppTheme.light(),
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
-              routerConfig: router,
-            ),
+      overrides: [
+        upgradeRepositoryProvider.overrideWithValue(repository),
+        cachedAccountProfileProvider.overrideWith(
+          (ref) async => AccountProfile(
+            userId: 'user-7',
+            email: 'user@example.com',
+            nickname: 'User',
+          ),
+        ),
+      ],
+      child: MaterialApp(
+        theme: AppTheme.light(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const CheckUpgradedVersionPage(),
+      ),
     );
+  }
+}
+
+FirmwareUpgradeDoor _door(List<FirmwareUpgradeTarget> targets) {
+  return FirmwareUpgradeDoor(
+    doorId: 'door-1',
+    doorName: 'South Gate',
+    upgrades: targets,
+  );
+}
+
+FirmwareUpgradeTarget _target() {
+  return const FirmwareUpgradeTarget(
+    deviceId: '101',
+    firmwareReleaseId: '1001',
+    serialNumber: 'SN-101',
+    currentVersion: null,
+    deviceType: 'opener',
+    deviceTypeLabel: 'Opener',
+    packageSizeBytes: 19188941,
+    availableVersion: '1.2.5',
+    lastFirmwareUpgradedAt: null,
+    status: FirmwareUpgradeStatus.available,
+    scheduledAt: null,
+    upgradeExpireAt: null,
+  );
+}
+
+FirmwareUpgradeSubmissionResult _submission(FirmwareUpgradeTarget target) {
+  return FirmwareUpgradeSubmissionResult(
+    deviceId: target.deviceId,
+    firmwareReleaseId: target.firmwareReleaseId,
+    accepted: true,
+    scheduledAt: null,
+    upgradeExpireAt: null,
+    failureMessage: null,
+  );
+}
+
+class _FakeUpgradeRepository implements UpgradeRepository {
+  _FakeUpgradeRepository({
+    this.application = const AppReleaseUpdate(
+      action: AppReleaseAction.none,
+      targetVersion: null,
+      targetBuildNumber: null,
+      publishedAt: null,
+      updateUrl: null,
+    ),
+    this.doors = const [],
+    this.submitResults = const [],
+  });
+
+  final AppReleaseUpdate application;
+  final List<FirmwareUpgradeDoor> doors;
+  final List<FirmwareUpgradeSubmissionResult> submitResults;
+  var submitCount = 0;
+  List<String> submittedTargetKeys = const [];
+  Map<String, int> progresses = const {};
+
+  @override
+  Future<AppReleaseUpdate> checkAppRelease({required String requestId}) async {
+    return application;
+  }
+
+  @override
+  Future<List<FirmwareUpgradeDoor>> fetchFirmwareUpgrades({
+    required String requestId,
+  }) async {
+    return doors;
+  }
+
+  @override
+  Future<Map<String, int>> readProgresses({required String userId}) async {
+    return progresses;
+  }
+
+  @override
+  Future<void> replaceProgresses({
+    required String userId,
+    required Map<String, int> progresses,
+  }) async {
+    this.progresses = Map<String, int>.from(progresses);
+  }
+
+  @override
+  Future<List<FirmwareUpgradeSubmissionResult>> submitFirmwareUpgrades({
+    required UpgradeSchedule schedule,
+    required List<FirmwareUpgradeTarget> targets,
+    required String requestId,
+  }) async {
+    submitCount += 1;
+    submittedTargetKeys = targets.map((target) => target.key).toList();
+    return submitResults;
   }
 }

@@ -22,6 +22,9 @@ import '../data/data_sources/receiving_devices_api.dart';
 import '../data/data_sources/receiving_devices_remote_data_source.dart';
 import '../data/data_sources/shared_devices_api.dart';
 import '../data/data_sources/shared_devices_remote_data_source.dart';
+import '../data/data_sources/upgrade_api.dart';
+import '../data/data_sources/upgrade_progress_local_data_source.dart';
+import '../data/data_sources/upgrade_remote_data_source.dart';
 import '../data/repositories/app_locale_repository_impl.dart';
 import '../data/repositories/app_language_options_repository_impl.dart';
 import '../data/repositories/managed_devices_repository_impl.dart';
@@ -30,6 +33,8 @@ import '../data/repositories/account_overview_repository_impl.dart';
 import '../data/repositories/receiving_devices_repository_impl.dart';
 import '../data/repositories/shared_devices_repository_impl.dart';
 import '../data/repositories/system_permissions_repository_impl.dart';
+import '../data/repositories/upgrade_repository_impl.dart';
+import '../data/services/platform_app_release_context_provider.dart';
 import '../domain/entities/account_profile.dart';
 import '../domain/entities/account_overview.dart';
 import '../domain/entities/app_locale_preference.dart';
@@ -45,6 +50,7 @@ import '../domain/repositories/managed_devices_repository.dart';
 import '../domain/repositories/receiving_devices_repository.dart';
 import '../domain/repositories/system_permissions_repository.dart';
 import '../domain/repositories/shared_devices_repository.dart';
+import '../domain/repositories/upgrade_repository.dart';
 import '../domain/use_cases/fetch_shared_doors_use_case.dart';
 import '../domain/use_cases/fetch_managed_login_devices_use_case.dart';
 import '../domain/use_cases/delete_shared_door_member_use_case.dart';
@@ -57,6 +63,10 @@ import '../domain/use_cases/read_app_locale_preference_use_case.dart';
 import '../domain/use_cases/save_app_locale_preference_use_case.dart';
 import '../domain/use_cases/fetch_app_language_options_use_case.dart';
 import '../domain/use_cases/confirm_account_deletion_use_case.dart';
+import '../domain/use_cases/check_app_release_use_case.dart';
+import '../domain/use_cases/fetch_firmware_upgrades_use_case.dart';
+import '../domain/use_cases/manage_upgrade_progress_use_case.dart';
+import '../domain/use_cases/submit_firmware_upgrades_use_case.dart';
 import 'account_controller.dart';
 import 'account_deletion_controller.dart';
 import 'account_overview_controller.dart';
@@ -159,6 +169,76 @@ final appLocaleLocalDataSourceProvider = Provider<AppLocaleLocalDataSource>((
         .toList(growable: false),
   );
 });
+
+final upgradeApiProvider = Provider<UpgradeApi>((ref) {
+  return UpgradeApi(ref.watch(dioProvider));
+});
+
+final platformAppReleaseContextProvider =
+    Provider<PlatformAppReleaseContextProvider>((ref) {
+      return PlatformAppReleaseContextProvider();
+    });
+
+final upgradeRemoteDataSourceProvider = Provider<UpgradeRemoteDataSource>((
+  ref,
+) {
+  return UpgradeRemoteDataSourceImpl(
+    api: ref.watch(upgradeApiProvider),
+    appReleaseContextProvider: ref.watch(platformAppReleaseContextProvider),
+  );
+});
+
+final upgradeProgressLocalDataSourceProvider =
+    Provider<UpgradeProgressLocalDataSource>((ref) {
+      if (AppStoragePaths.isFlutterTest) {
+        return InMemoryUpgradeProgressLocalDataSource();
+      }
+      final locations = ref.watch(appStorageLocationsProvider);
+      if (locations == null) {
+        return InMemoryUpgradeProgressLocalDataSource();
+      }
+      return JsonFileUpgradeProgressLocalDataSource(
+        progressFile: File(
+          '${locations.persistentDirectory.path}/firmware_upgrade_progress.json',
+        ),
+      );
+    });
+
+final upgradeRepositoryProvider = Provider<UpgradeRepository>((ref) {
+  return UpgradeRepositoryImpl(
+    remoteDataSource: ref.watch(upgradeRemoteDataSourceProvider),
+    localDataSource: ref.watch(upgradeProgressLocalDataSourceProvider),
+    logger: ref.watch(appLoggerProvider),
+  );
+});
+
+final checkAppReleaseUseCaseProvider = Provider<CheckAppReleaseUseCase>((ref) {
+  return CheckAppReleaseUseCase(ref.watch(upgradeRepositoryProvider));
+});
+
+final fetchFirmwareUpgradesUseCaseProvider =
+    Provider<FetchFirmwareUpgradesUseCase>((ref) {
+      return FetchFirmwareUpgradesUseCase(ref.watch(upgradeRepositoryProvider));
+    });
+
+final submitFirmwareUpgradesUseCaseProvider =
+    Provider<SubmitFirmwareUpgradesUseCase>((ref) {
+      return SubmitFirmwareUpgradesUseCase(
+        ref.watch(upgradeRepositoryProvider),
+      );
+    });
+
+final readUpgradeProgressesUseCaseProvider =
+    Provider<ReadUpgradeProgressesUseCase>((ref) {
+      return ReadUpgradeProgressesUseCase(ref.watch(upgradeRepositoryProvider));
+    });
+
+final replaceUpgradeProgressesUseCaseProvider =
+    Provider<ReplaceUpgradeProgressesUseCase>((ref) {
+      return ReplaceUpgradeProgressesUseCase(
+        ref.watch(upgradeRepositoryProvider),
+      );
+    });
 
 final appLocaleRepositoryProvider = Provider<AppLocaleRepository>((ref) {
   return AppLocaleRepositoryImpl(ref.watch(appLocaleLocalDataSourceProvider));

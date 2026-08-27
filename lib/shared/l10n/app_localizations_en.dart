@@ -827,6 +827,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get upgradeCheckAppSection => 'APP';
 
   @override
+  String get upgradeCheckAppUpdateName => 'App version update';
+
+  @override
   String get upgradeCheckFirmwareSection => 'firmware';
 
   @override
@@ -851,6 +854,56 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String upgradeCheckCurrentVersion(String version) {
     return 'Current Version : $version';
+  }
+
+  @override
+  String upgradeCheckAvailableVersion(String version) {
+    return 'Available Version : $version';
+  }
+
+  @override
+  String upgradeCheckScheduledFor(String dateTime) {
+    return 'Scheduled for: $dateTime';
+  }
+
+  @override
+  String upgradeCheckExpandDoor(String name) {
+    return 'Expand $name';
+  }
+
+  @override
+  String upgradeCheckCollapseDoor(String name) {
+    return 'Collapse $name';
+  }
+
+  @override
+  String get upgradeCheckSelectionLimit =>
+      'You can select up to 10 upgrade items at a time.';
+
+  @override
+  String get upgradeCheckPartialNotAccepted =>
+      'Some upgrade tasks were not accepted.';
+
+  @override
+  String get upgradeCheckSubmitFailed =>
+      'Unable to submit the upgrade. Try again.';
+
+  @override
+  String get upgradeCheckSubmitting => 'Submitting';
+
+  @override
+  String upgradeCheckSizeBytes(String value) {
+    return '$value B';
+  }
+
+  @override
+  String upgradeCheckSizeKilobytes(String value) {
+    return '$value KB';
+  }
+
+  @override
+  String upgradeCheckSizeMegabytes(String value) {
+    return '$value MB';
   }
 
   @override

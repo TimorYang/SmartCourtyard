@@ -788,6 +788,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get upgradeCheckAppSection => '应用';
 
   @override
+  String get upgradeCheckAppUpdateName => '应用版本更新';
+
+  @override
   String get upgradeCheckFirmwareSection => '固件';
 
   @override
@@ -812,6 +815,53 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String upgradeCheckCurrentVersion(String version) {
     return '当前版本：$version';
+  }
+
+  @override
+  String upgradeCheckAvailableVersion(String version) {
+    return '可用版本：$version';
+  }
+
+  @override
+  String upgradeCheckScheduledFor(String dateTime) {
+    return '预约时间：$dateTime';
+  }
+
+  @override
+  String upgradeCheckExpandDoor(String name) {
+    return '展开$name';
+  }
+
+  @override
+  String upgradeCheckCollapseDoor(String name) {
+    return '收起$name';
+  }
+
+  @override
+  String get upgradeCheckSelectionLimit => '每次最多选择 10 个升级项目。';
+
+  @override
+  String get upgradeCheckPartialNotAccepted => '部分升级任务未受理。';
+
+  @override
+  String get upgradeCheckSubmitFailed => '无法提交升级任务，请重试。';
+
+  @override
+  String get upgradeCheckSubmitting => '提交中';
+
+  @override
+  String upgradeCheckSizeBytes(String value) {
+    return '$value B';
+  }
+
+  @override
+  String upgradeCheckSizeKilobytes(String value) {
+    return '$value KB';
+  }
+
+  @override
+  String upgradeCheckSizeMegabytes(String value) {
+    return '$value MB';
   }
 
   @override
