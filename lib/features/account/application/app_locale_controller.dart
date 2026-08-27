@@ -6,11 +6,12 @@ import 'providers.dart';
 class AppLocaleController extends AsyncNotifier<AppLocalePreference> {
   @override
   Future<AppLocalePreference> build() async {
+    final systemLocale = ref.read(systemAppLocaleProvider);
     try {
       return await ref.read(readAppLocalePreferenceUseCaseProvider)() ??
-          AppLocalePreference.english;
+          systemLocale;
     } on Object {
-      return AppLocalePreference.english;
+      return systemLocale;
     }
   }
 

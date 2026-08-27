@@ -5,9 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('uses English when no preference has been saved', () async {
+  test('uses the system locale when no preference has been saved', () async {
     final container = ProviderContainer(
       overrides: [
+        systemAppLocaleProvider.overrideWithValue(
+          AppLocalePreference.simplifiedChinese,
+        ),
         appLocaleRepositoryProvider.overrideWithValue(
           _FakeAppLocaleRepository(),
         ),
@@ -17,7 +20,7 @@ void main() {
 
     expect(
       await container.read(appLocaleControllerProvider.future),
-      AppLocalePreference.english,
+      AppLocalePreference.simplifiedChinese,
     );
   });
 
@@ -58,30 +61,36 @@ void main() {
     );
   });
 
-  test('falls back to English when preference storage fails', () async {
-    final container = ProviderContainer(
-      overrides: [
-        appLocaleRepositoryProvider.overrideWithValue(
-          _FakeAppLocaleRepository(throwsOnRead: true, throwsOnSave: true),
-        ),
-      ],
-    );
-    addTearDown(container.dispose);
+  test(
+    'falls back to the system locale when preference storage fails',
+    () async {
+      final container = ProviderContainer(
+        overrides: [
+          systemAppLocaleProvider.overrideWithValue(
+            AppLocalePreference.simplifiedChinese,
+          ),
+          appLocaleRepositoryProvider.overrideWithValue(
+            _FakeAppLocaleRepository(throwsOnRead: true, throwsOnSave: true),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
 
-    expect(
-      await container.read(appLocaleControllerProvider.future),
-      AppLocalePreference.english,
-    );
+      expect(
+        await container.read(appLocaleControllerProvider.future),
+        AppLocalePreference.simplifiedChinese,
+      );
 
-    await container
-        .read(appLocaleControllerProvider.notifier)
-        .selectLocale(AppLocalePreference.simplifiedChinese);
+      await container
+          .read(appLocaleControllerProvider.notifier)
+          .selectLocale(AppLocalePreference.simplifiedChinese);
 
-    expect(
-      _localeFrom(container.read(appLocaleControllerProvider)),
-      AppLocalePreference.english,
-    );
-  });
+      expect(
+        _localeFrom(container.read(appLocaleControllerProvider)),
+        AppLocalePreference.english,
+      );
+    },
+  );
 }
 
 AppLocalePreference _localeFrom(AsyncValue<AppLocalePreference> state) {

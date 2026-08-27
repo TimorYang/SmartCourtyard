@@ -319,6 +319,45 @@ void main() {
     },
   );
 
+  testWidgets('uses the current app locale when the profile locale differs', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appLocaleLocalDataSourceProvider.overrideWithValue(
+            InMemoryAppLocaleLocalDataSource(initialLanguageCode: 'en'),
+          ),
+          appLanguageOptionsProvider.overrideWith(
+            (ref) async => const [
+              AppLanguageOption(locale: 'en-US', nativeName: 'English'),
+              AppLanguageOption(locale: 'zh-CN', nativeName: '中文(简体)'),
+            ],
+          ),
+          accountProfileRemoteDataSourceProvider.overrideWithValue(
+            _AvatarProfileRemoteDataSource(serverLocale: 'zh-CN'),
+          ),
+        ],
+        child: const _LocaleTestHarness(),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    expect(find.text('English'), findsOneWidget);
+
+    await tester.tap(find.byKey(AccountProfileKeys.languageMenuItem));
+    await tester.pumpAndSettle();
+
+    final dialog = find.byKey(AccountProfileKeys.languageDialog);
+    final english = find.descendant(of: dialog, matching: find.text('English'));
+    final chinese = find.descendant(of: dialog, matching: find.text('中文(简体)'));
+    final englishStyle = tester.widget<Text>(english).style;
+    final chineseStyle = tester.widget<Text>(chinese).style;
+
+    expect(englishStyle?.fontWeight, FontWeight.w500);
+    expect(chineseStyle?.fontWeight, FontWeight.w400);
+  });
+
   testWidgets('opens account details page when tapping the avatar', (
     tester,
   ) async {
@@ -1005,6 +1044,9 @@ class _CameraPermissionBlockedGateway extends MockHardwareGateway {
 }
 
 class _AvatarProfileRemoteDataSource implements AccountProfileRemoteDataSource {
+  _AvatarProfileRemoteDataSource({this.serverLocale});
+
+  final String? serverLocale;
   AccountAvatarCode? avatarCode;
   int? avatarFileId;
   String? confirmedDeletionRequestId;
@@ -1019,6 +1061,7 @@ class _AvatarProfileRemoteDataSource implements AccountProfileRemoteDataSource {
     nickname: 'Alex',
     avatarCode: avatarCode?.wireValue,
     avatarFileId: avatarFileId,
+    locale: serverLocale,
   );
 
   @override

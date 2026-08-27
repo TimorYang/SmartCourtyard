@@ -41,7 +41,7 @@ class _FlinxAppState extends ConsumerState<FlinxApp> {
         .watch(appLocaleControllerProvider)
         .maybeWhen(
           data: (value) => value,
-          orElse: () => AppLocalePreference.english,
+          orElse: () => ref.watch(systemAppLocaleProvider),
         );
 
     if (!kDebugMode) {

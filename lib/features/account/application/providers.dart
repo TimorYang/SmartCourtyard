@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -199,6 +200,13 @@ final saveAppLocalePreferenceUseCaseProvider =
         ref.watch(appLocaleRepositoryProvider),
       );
     });
+
+final systemAppLocaleProvider = Provider<AppLocalePreference>((ref) {
+  return AppLocalePreference.fromLanguageCode(
+        PlatformDispatcher.instance.locale.languageCode,
+      ) ??
+      AppLocalePreference.english;
+});
 
 final appLocaleControllerProvider =
     AsyncNotifierProvider<AppLocaleController, AppLocalePreference>(

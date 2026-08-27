@@ -148,7 +148,7 @@ class _AccountProfilePageState extends ConsumerState<AccountProfilePage> {
         .watch(appLocaleControllerProvider)
         .maybeWhen(
           data: (value) => value,
-          orElse: () => AppLocalePreference.english,
+          orElse: () => ref.watch(systemAppLocaleProvider),
         );
 
     return Scaffold(
@@ -317,14 +317,12 @@ class _AccountProfileContent extends StatelessWidget {
                 loading: () => _LanguageDialog(
                   key: const ValueKey('default-language-options'),
                   initialLocale: localePreference,
-                  initialServerLocale: profile?.locale,
                   languages: fallbackOptions,
                   onConfirm: onLocaleConfirmed,
                 ),
                 error: (_, _) => _LanguageDialog(
                   key: const ValueKey('default-language-options'),
                   initialLocale: localePreference,
-                  initialServerLocale: profile?.locale,
                   languages: fallbackOptions,
                   onConfirm: onLocaleConfirmed,
                 ),
@@ -335,7 +333,6 @@ class _AccountProfileContent extends StatelessWidget {
                       remoteOptions.map((option) => option.serverLocale).join(),
                     ),
                     initialLocale: localePreference,
-                    initialServerLocale: profile?.locale,
                     languages: remoteOptions.isEmpty
                         ? fallbackOptions
                         : remoteOptions,
@@ -477,13 +474,11 @@ class _LanguageDialog extends StatefulWidget {
   const _LanguageDialog({
     super.key,
     required this.initialLocale,
-    this.initialServerLocale,
     required this.languages,
     required this.onConfirm,
   });
 
   final AppLocalePreference initialLocale;
-  final String? initialServerLocale;
   final List<_LanguageOptionData> languages;
   final Future<bool> Function(AppLocalePreference locale, String serverLocale)
   onConfirm;
@@ -500,16 +495,9 @@ class _LanguageDialogState extends State<_LanguageDialog> {
   @override
   void initState() {
     super.initState();
-    final selectedLanguageIndex = widget.languages.indexWhere(
-      (language) =>
-          language.serverLocale.toLowerCase() ==
-          widget.initialServerLocale?.toLowerCase(),
+    final initialIndex = widget.languages.indexWhere(
+      (language) => language.locale == widget.initialLocale,
     );
-    final initialIndex = selectedLanguageIndex >= 0
-        ? selectedLanguageIndex
-        : widget.languages.indexWhere(
-            (language) => language.locale == widget.initialLocale,
-          );
     final resolvedIndex = initialIndex < 0 ? 0 : initialIndex;
     _selectedServerLocale = widget.languages[resolvedIndex].serverLocale;
     _languagePickerController = FixedExtentScrollController(
