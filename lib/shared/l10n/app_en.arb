@@ -731,6 +731,10 @@
   "@receivingDevicesTitle": {
     "description": "Title for the receiving devices page"
   },
+  "receivingDevicesEditingTitle": "RECEIVING DEVICES EDITING",
+  "@receivingDevicesEditingTitle": {
+    "description": "Title for the receiving devices page while editing"
+  },
   "receivingDevicesOwnerEmail": "Shared by: {ownerEmail}",
   "@receivingDevicesOwnerEmail": {
     "description": "Owner email shown below a receiving device name",
@@ -755,7 +759,19 @@
   },
   "receivingDevicesEditLabel": "Edit receiving devices",
   "@receivingDevicesEditLabel": {
-    "description": "Accessibility label for the decorative edit action on the receiving devices page"
+    "description": "Accessibility label for entering receiving devices edit mode"
+  },
+  "receivingDevicesDoneEditingLabel": "Done editing",
+  "@receivingDevicesDoneEditingLabel": {
+    "description": "Accessibility label for leaving receiving devices edit mode"
+  },
+  "receivingDevicesDeleteLabel": "Delete receiving device",
+  "@receivingDevicesDeleteLabel": {
+    "description": "Accessibility label for deleting a receiving device"
+  },
+  "receivingDevicesDeleteFailed": "Failed to delete the receiving device. Please try again.",
+  "@receivingDevicesDeleteFailed": {
+    "description": "Error shown when deleting a receiving device fails"
   },
   "accountManageDevices": "manage devices",
   "@accountManageDevices": {

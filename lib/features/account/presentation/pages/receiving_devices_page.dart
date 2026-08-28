@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -5,11 +7,20 @@ import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../platform_bridge/hardware_models.dart';
 import '../../../../shared/design_system/door_type_option.dart';
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../../home/application/home_door_cover_image_source.dart';
 import '../../../home/application/providers.dart';
 import '../../application/providers.dart';
 import '../../domain/entities/receiving_door.dart';
+
+class ReceivingDevicesAssetPaths {
+  const ReceivingDevicesAssetPaths._();
+
+  static const edit =
+      'assets/icons/account/shared_device_member_edit_placeholder.png';
+  static const editDone = 'assets/icons/home/scene_edit_done_placeholder.png';
+}
 
 class ReceivingDevicesPage extends ConsumerStatefulWidget {
   const ReceivingDevicesPage({super.key});
@@ -23,6 +34,9 @@ class ReceivingDevicesPage extends ConsumerStatefulWidget {
 }
 
 class _ReceivingDevicesPageState extends ConsumerState<ReceivingDevicesPage> {
+  var _isEditing = false;
+  final _deletingShareIds = <int>{};
+
   @override
   void initState() {
     super.initState();
@@ -44,17 +58,30 @@ class _ReceivingDevicesPageState extends ConsumerState<ReceivingDevicesPage> {
         title: '',
         showBottomDivider: false,
         actions: [
-          Semantics(
+          IconButton(
             key: ReceivingDevicesKeys.editButton,
-            button: true,
-            enabled: false,
-            label: l10n.receivingDevicesEditLabel,
-            child: Padding(
-              padding: const EdgeInsets.only(right: 20),
-              child: Image.asset(
-                'assets/icons/account/shared_device_member_edit_placeholder.png',
-              ),
+            tooltip: _isEditing
+                ? l10n.receivingDevicesDoneEditingLabel
+                : l10n.receivingDevicesEditLabel,
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints.tightFor(
+              width: AppSpacingTokens.receivingDevicesEditActionSize,
+              height: AppSpacingTokens.receivingDevicesEditActionSize,
             ),
+            onPressed: () {
+              setState(() {
+                _isEditing = !_isEditing;
+              });
+            },
+            icon: _ReceivingDevicesEditActionIcon(
+              assetPath: _isEditing
+                  ? ReceivingDevicesAssetPaths.editDone
+                  : ReceivingDevicesAssetPaths.edit,
+            ),
+          ),
+          const SizedBox(
+            width: AppSpacingTokens.receivingDevicesEditActionRight,
           ),
         ],
       ),
@@ -74,7 +101,9 @@ class _ReceivingDevicesPageState extends ConsumerState<ReceivingDevicesPage> {
                     0,
                   ),
                   child: Text(
-                    l10n.receivingDevicesTitle,
+                    _isEditing
+                        ? l10n.receivingDevicesEditingTitle
+                        : l10n.receivingDevicesTitle,
                     style: AppTextTokens.receivingDevicesTitle(
                       Theme.of(context).textTheme,
                     ),
@@ -110,6 +139,12 @@ class _ReceivingDevicesPageState extends ConsumerState<ReceivingDevicesPage> {
                         itemBuilder: (context, index) => _ReceivingDeviceCard(
                           key: ReceivingDevicesKeys.deviceCard(index),
                           device: devices[index],
+                          showDeleteAction: _isEditing,
+                          isDeleting: _deletingShareIds.contains(
+                            devices[index].shareId,
+                          ),
+                          onDelete: () =>
+                              unawaited(_deleteReceivingDevice(devices[index])),
                         ),
                       );
                     },
@@ -122,6 +157,36 @@ class _ReceivingDevicesPageState extends ConsumerState<ReceivingDevicesPage> {
       ),
     );
   }
+
+  Future<void> _deleteReceivingDevice(ReceivingDoor device) async {
+    if (_deletingShareIds.contains(device.shareId)) return;
+
+    setState(() {
+      _deletingShareIds.add(device.shareId);
+    });
+    try {
+      final error = await ref
+          .read(receivingDevicesControllerProvider.notifier)
+          .deleteShare(shareId: device.shareId);
+      if (!mounted) return;
+
+      if (error == null) {
+        ref.read(homeDeviceListsInvalidatorProvider)();
+        ref.invalidate(receivingDevicesControllerProvider);
+      } else {
+        AppToast.error(
+          context,
+          AppLocalizations.of(context).receivingDevicesDeleteFailed,
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _deletingShareIds.remove(device.shareId);
+        });
+      }
+    }
+  }
 }
 
 class ReceivingDevicesKeys {
@@ -132,12 +197,24 @@ class ReceivingDevicesKeys {
 
   static ValueKey<String> deviceCard(int index) =>
       ValueKey('receiving-devices-card-$index');
+
+  static ValueKey<String> deleteButton(int shareId) =>
+      ValueKey('receiving-devices-delete-$shareId');
 }
 
 class _ReceivingDeviceCard extends ConsumerWidget {
-  const _ReceivingDeviceCard({super.key, required this.device});
+  const _ReceivingDeviceCard({
+    super.key,
+    required this.device,
+    required this.showDeleteAction,
+    required this.isDeleting,
+    required this.onDelete,
+  });
 
   final ReceivingDoor device;
+  final bool showDeleteAction;
+  final bool isDeleting;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -163,6 +240,17 @@ class _ReceivingDeviceCard extends ConsumerWidget {
       ),
       child: Row(
         children: [
+          if (showDeleteAction) ...[
+            _DeleteReceivingDeviceButton(
+              key: ReceivingDevicesKeys.deleteButton(device.shareId),
+              label: l10n.receivingDevicesDeleteLabel,
+              isDeleting: isDeleting,
+              onPressed: onDelete,
+            ),
+            const SizedBox(
+              width: AppSpacingTokens.receivingDevicesDeleteActionGap,
+            ),
+          ],
           _ReceivingDeviceCoverImage(
             coverImage: coverImage,
             visual: visual,
@@ -193,6 +281,71 @@ class _ReceivingDeviceCard extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ReceivingDevicesEditActionIcon extends StatelessWidget {
+  const _ReceivingDevicesEditActionIcon({required this.assetPath});
+
+  final String assetPath;
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.asset(
+      assetPath,
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+    );
+  }
+}
+
+class _DeleteReceivingDeviceButton extends StatelessWidget {
+  const _DeleteReceivingDeviceButton({
+    required super.key,
+    required this.label,
+    required this.isDeleting,
+    required this.onPressed,
+  });
+
+  final String label;
+  final bool isDeleting;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      enabled: !isDeleting,
+      label: label,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: isDeleting ? null : onPressed,
+        child: Container(
+          width: AppSpacingTokens.receivingDevicesDeleteActionSize,
+          height: AppSpacingTokens.receivingDevicesDeleteActionSize,
+          decoration: const BoxDecoration(
+            color: AppColors.receivingDevicesDeleteAction,
+            shape: BoxShape.circle,
+          ),
+          child: isDeleting
+              ? const Padding(
+                  padding: EdgeInsets.all(
+                    AppSpacingTokens.receivingDevicesDeleteProgressInset,
+                  ),
+                  child: CircularProgressIndicator(
+                    strokeWidth: AppSpacingTokens
+                        .receivingDevicesDeleteProgressStrokeWidth,
+                    color: AppColors.backgroundPrimary,
+                  ),
+                )
+              : const Icon(
+                  Icons.remove_rounded,
+                  color: AppColors.backgroundPrimary,
+                  size: AppSpacingTokens.receivingDevicesDeleteActionSize,
+                ),
+        ),
       ),
     );
   }

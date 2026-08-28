@@ -643,6 +643,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get receivingDevicesTitle => '接收设备';
 
   @override
+  String get receivingDevicesEditingTitle => '编辑接收设备';
+
+  @override
   String receivingDevicesOwnerEmail(String ownerEmail) {
     return '共享用户名:$ownerEmail';
   }
@@ -658,6 +661,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get receivingDevicesEditLabel => '编辑接收设备';
+
+  @override
+  String get receivingDevicesDoneEditingLabel => '完成编辑';
+
+  @override
+  String get receivingDevicesDeleteLabel => '删除接收设备';
+
+  @override
+  String get receivingDevicesDeleteFailed => '删除接收设备失败，请重试。';
 
   @override
   String get accountManageDevices => '管理设备';

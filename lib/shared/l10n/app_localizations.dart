@@ -1340,6 +1340,12 @@ abstract class AppLocalizations {
   /// **'RECEIVING DEVICES'**
   String get receivingDevicesTitle;
 
+  /// Title for the receiving devices page while editing
+  ///
+  /// In en, this message translates to:
+  /// **'RECEIVING DEVICES EDITING'**
+  String get receivingDevicesEditingTitle;
+
   /// Owner email shown below a receiving device name
   ///
   /// In en, this message translates to:
@@ -1364,11 +1370,29 @@ abstract class AppLocalizations {
   /// **'Retry'**
   String get receivingDevicesRetry;
 
-  /// Accessibility label for the decorative edit action on the receiving devices page
+  /// Accessibility label for entering receiving devices edit mode
   ///
   /// In en, this message translates to:
   /// **'Edit receiving devices'**
   String get receivingDevicesEditLabel;
+
+  /// Accessibility label for leaving receiving devices edit mode
+  ///
+  /// In en, this message translates to:
+  /// **'Done editing'**
+  String get receivingDevicesDoneEditingLabel;
+
+  /// Accessibility label for deleting a receiving device
+  ///
+  /// In en, this message translates to:
+  /// **'Delete receiving device'**
+  String get receivingDevicesDeleteLabel;
+
+  /// Error shown when deleting a receiving device fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to delete the receiving device. Please try again.'**
+  String get receivingDevicesDeleteFailed;
 
   /// Account menu item for managing devices; lowercase matches the provided design
   ///

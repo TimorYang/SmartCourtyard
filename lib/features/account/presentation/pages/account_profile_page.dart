@@ -181,6 +181,12 @@ class _AccountProfilePageState extends ConsumerState<AccountProfilePage> {
                 regionOptions: regionOptions,
                 maxHeight: constraints.maxHeight,
                 onRefresh: _refreshOverview,
+                onReceivingDevicesPressed: () async {
+                  await context.pushNamed(ReceivingDevicesPage.routeName);
+                  if (mounted) {
+                    await _refreshOverview();
+                  }
+                },
                 onLocaleConfirmed: (locale, serverLocale) async {
                   final updated = await ref
                       .read(accountControllerProvider.notifier)
@@ -273,6 +279,7 @@ class _AccountProfileContent extends StatelessWidget {
     required this.regionOptions,
     required this.maxHeight,
     required this.onRefresh,
+    required this.onReceivingDevicesPressed,
     required this.onLocaleConfirmed,
     required this.onLogout,
   });
@@ -283,6 +290,7 @@ class _AccountProfileContent extends StatelessWidget {
   final List<RegionOption> regionOptions;
   final double maxHeight;
   final Future<void> Function() onRefresh;
+  final Future<void> Function() onReceivingDevicesPressed;
   final Future<bool> Function(AppLocalePreference locale, String serverLocale)
   onLocaleConfirmed;
   final Future<void> Function() onLogout;
@@ -306,7 +314,7 @@ class _AccountProfileContent extends StatelessWidget {
         label: l10n.accountReceivingDevices,
         trailingText: overview?.receivingDoorCount.toString() ?? '0',
         iconAssetPath: AccountProfileAssetPaths.menuReceivingDevices,
-        onTap: () => context.pushNamed(ReceivingDevicesPage.routeName),
+        onTap: onReceivingDevicesPressed,
         key: AccountProfileKeys.receivingDevicesMenuItem,
       ),
       _AccountMenuItem(

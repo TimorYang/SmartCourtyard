@@ -679,6 +679,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get receivingDevicesTitle => 'RECEIVING DEVICES';
 
   @override
+  String get receivingDevicesEditingTitle => 'RECEIVING DEVICES EDITING';
+
+  @override
   String receivingDevicesOwnerEmail(String ownerEmail) {
     return 'Shared by: $ownerEmail';
   }
@@ -694,6 +697,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get receivingDevicesEditLabel => 'Edit receiving devices';
+
+  @override
+  String get receivingDevicesDoneEditingLabel => 'Done editing';
+
+  @override
+  String get receivingDevicesDeleteLabel => 'Delete receiving device';
+
+  @override
+  String get receivingDevicesDeleteFailed =>
+      'Failed to delete the receiving device. Please try again.';
 
   @override
   String get accountManageDevices => 'manage devices';

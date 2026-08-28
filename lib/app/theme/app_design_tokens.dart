@@ -207,6 +207,7 @@ class AppColors {
   static const sharedDeviceMemberAvatarPlaceholderIcon = Color(0xFF737880);
   static const sharedDeviceMemberActionIcon = Color(0xFF4B5057);
   static const receivingDevicesCard = Color(0xFFF5F6F7);
+  static const receivingDevicesDeleteAction = Color(0xFFFF1010);
   static const regionSelection = Color(0xFF176CFF);
   static const manageDevicesCard = Color(0xFFF3F4F6);
   static const manageDevicesIcon = Color(0xFF444950);
@@ -405,6 +406,12 @@ class AppSpacingTokens {
   static const receivingDevicesIconSize = 48.0;
   static const receivingDevicesIconToText = 20.0;
   static const receivingDevicesCardTitleToSubtitle = 12.0;
+  static const receivingDevicesEditActionSize = 34.0;
+  static const receivingDevicesEditActionRight = 16.0;
+  static const receivingDevicesDeleteActionSize = 24.0;
+  static const receivingDevicesDeleteActionGap = 15.0;
+  static const receivingDevicesDeleteProgressInset = 5.0;
+  static const receivingDevicesDeleteProgressStrokeWidth = 2.0;
   static const manageDevicesPageHorizontal = 31.0;
   static const manageDevicesTitleTop = 27.0;
   static const manageDevicesTitleToSubtitle = 5.0;

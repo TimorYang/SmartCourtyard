@@ -85,6 +85,22 @@ void main() {
     expect(api.options.extra?[NetworkRequestExtras.requestId], 'shared-123');
   });
 
+  test('deletes a share by share ID with the same request ID', () async {
+    final api = _FakeDeletingSharedDevicesApi();
+    final dataSource = SharedDevicesRemoteDataSourceImpl(api: api);
+
+    await dataSource.deleteDoorMember(
+      shareId: 9,
+      requestId: 'receiving-device-delete-9',
+    );
+
+    expect(api.shareId, 9);
+    expect(
+      api.options.extra?[NetworkRequestExtras.requestId],
+      'receiving-device-delete-9',
+    );
+  });
+
   test('maps an unauthorized remote failure to access denied', () async {
     final repository = SharedDevicesRepositoryImpl(
       remoteDataSource: _FailingSharedDevicesRemoteDataSource(
@@ -166,4 +182,30 @@ class _FailingSharedDevicesRemoteDataSource
     required int shareId,
     required String requestId,
   }) => Future.error(error);
+}
+
+class _FakeDeletingSharedDevicesApi implements SharedDevicesApi {
+  late int shareId;
+  late Options options;
+
+  @override
+  Future<ApiEnvelopeDto<dynamic>> deleteDoorMember(
+    int shareId,
+    Options options,
+  ) async {
+    this.shareId = shareId;
+    this.options = options;
+    return const ApiEnvelopeDto<dynamic>(code: 200, success: true);
+  }
+
+  @override
+  Future<ApiEnvelopeDto<SharedDoorMembersResponseDto>> fetchDoorMembers(
+    int doorId,
+    Options options,
+  ) => throw UnimplementedError();
+
+  @override
+  Future<ApiEnvelopeDto<List<SharedDoorResponseDto>>> fetchSharedDoors(
+    Options options,
+  ) => throw UnimplementedError();
 }

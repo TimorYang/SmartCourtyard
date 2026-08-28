@@ -8,6 +8,7 @@ import 'package:flinx/features/account/data/dto/account_profile_dto.dart';
 import 'package:flinx/features/account/data/dto/app_language_option_dto.dart';
 import 'package:flinx/features/account/data/dto/app_region_option_dto.dart';
 import 'package:flinx/features/account/data/dto/account_profile_remote_dto.dart';
+import 'package:flinx/features/account/domain/entities/account_overview.dart';
 import 'package:flinx/features/account/domain/entities/receiving_door.dart';
 import 'package:flinx/features/account/domain/entities/account_avatar_code.dart';
 import 'package:flinx/features/account/domain/entities/app_language_option.dart';
@@ -15,6 +16,7 @@ import 'package:flinx/features/account/domain/entities/system_permission.dart';
 import 'package:flinx/features/account/domain/entities/shared_door.dart';
 import 'package:flinx/features/account/domain/entities/shared_door_members.dart';
 import 'package:flinx/features/account/domain/repositories/receiving_devices_repository.dart';
+import 'package:flinx/features/account/domain/repositories/account_overview_repository.dart';
 import 'package:flinx/features/account/domain/repositories/shared_devices_repository.dart';
 import 'package:flinx/features/account/presentation/pages/account_details_page.dart';
 import 'package:flinx/features/account/presentation/pages/account_profile_page.dart';
@@ -615,6 +617,7 @@ void main() {
   testWidgets('opens receiving devices and returns to the account profile', (
     tester,
   ) async {
+    final overviewRepository = _ReturningAccountOverviewRepository();
     final router = GoRouter(
       initialLocation: AccountProfilePage.routePath,
       routes: [
@@ -634,6 +637,10 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          accountOverviewAutoRefreshProvider.overrideWithValue(false),
+          accountOverviewRepositoryProvider.overrideWithValue(
+            overviewRepository,
+          ),
           receivingDevicesRepositoryProvider.overrideWithValue(
             _StaticReceivingDevicesRepository(),
           ),
@@ -648,6 +655,13 @@ void main() {
     );
 
     await tester.pumpAndSettle();
+    expect(
+      find.descendant(
+        of: find.byKey(AccountProfileKeys.receivingDevicesMenuItem),
+        matching: find.text('2'),
+      ),
+      findsOneWidget,
+    );
     await tester.tap(find.byKey(AccountProfileKeys.receivingDevicesMenuItem));
     await tester.pumpAndSettle();
 
@@ -662,6 +676,14 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('739059568@qq.com'), findsOneWidget);
+    expect(overviewRepository.refreshCount, 1);
+    expect(
+      find.descendant(
+        of: find.byKey(AccountProfileKeys.receivingDevicesMenuItem),
+        matching: find.text('1'),
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('opens manage devices from the account profile', (tester) async {
@@ -1179,9 +1201,7 @@ class _AvatarProfileRemoteDataSource implements AccountProfileRemoteDataSource {
         for (final option in regionOptions)
           AppRegionOptionDto(
             regionCode: option.regionCode,
-            displayName: option.regionCode == 'CN'
-                ? '中国'
-                : option.displayName,
+            displayName: option.regionCode == 'CN' ? '中国' : option.displayName,
           ),
       ];
     }
@@ -1291,6 +1311,34 @@ class _StaticReceivingDevicesRepository implements ReceivingDevicesRepository {
       expiresAt: null,
     ),
   ];
+}
+
+class _ReturningAccountOverviewRepository implements AccountOverviewRepository {
+  var refreshCount = 0;
+
+  @override
+  Future<void> clearCachedOverview() async {}
+
+  @override
+  Future<AccountOverview?> readCachedOverview() async => AccountOverview(
+    nickname: '739059568@qq.com',
+    ownedDoorCount: 0,
+    sharedDoorCount: 0,
+    receivingDoorCount: 2,
+    refreshedAt: DateTime(2026, 8, 28),
+  );
+
+  @override
+  Future<AccountOverview> refreshOverview({required String requestId}) async {
+    refreshCount += 1;
+    return AccountOverview(
+      nickname: '739059568@qq.com',
+      ownedDoorCount: 0,
+      sharedDoorCount: 0,
+      receivingDoorCount: 1,
+      refreshedAt: DateTime(2026, 8, 28, 1),
+    );
+  }
 }
 
 class _LocaleTestHarness extends ConsumerWidget {
