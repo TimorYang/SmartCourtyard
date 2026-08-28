@@ -921,6 +921,7 @@
   "upgradeCheckSelectionLimit": "You can select up to 10 upgrade items at a time.",
   "upgradeCheckPartialNotAccepted": "Some upgrade tasks were not accepted.",
   "upgradeCheckSubmitFailed": "Unable to submit the upgrade. Try again.",
+  "upgradeCheckOpenStoreFailed": "Unable to open the app store.",
   "upgradeCheckSubmitting": "Submitting",
   "upgradeCheckSizeBytes": "{value} B",
   "@upgradeCheckSizeBytes": {

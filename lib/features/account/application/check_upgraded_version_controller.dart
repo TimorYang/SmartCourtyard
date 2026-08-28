@@ -89,14 +89,14 @@ class CheckUpgradedVersionController
     return result;
   }
 
-  void toggleApplication() {
+  Future<bool> openApplicationUpdate() {
     final current = state.value;
-    if (current == null || current.isSubmitting || current.isShowingProgress) {
-      return;
+    if (current == null || current.isShowingProgress) {
+      return Future.value(false);
     }
-    state = AsyncData(
-      current.copyWith(isApplicationSelected: !current.isApplicationSelected),
-    );
+    final updateUrl = current.application?.updateUrl;
+    if (updateUrl == null) return Future.value(false);
+    return ref.read(appUpdateUrlLauncherProvider).open(updateUrl);
   }
 
   UpgradeSelectionResult toggleDoor(String doorId) {
@@ -336,7 +336,6 @@ class CheckUpgradedVersionState {
   const CheckUpgradedVersionState({
     required this.application,
     required this.doors,
-    this.isApplicationSelected = false,
     this.selectedTargetKeys = const {},
     this.expandedDoorIds = const {},
     this.progressByTarget = const {},
@@ -347,7 +346,6 @@ class CheckUpgradedVersionState {
 
   final AppReleaseUpdate? application;
   final List<FirmwareUpgradeDoor> doors;
-  final bool isApplicationSelected;
   final Set<String> selectedTargetKeys;
   final Set<String> expandedDoorIds;
   final Map<String, int> progressByTarget;
@@ -375,8 +373,7 @@ class CheckUpgradedVersionState {
 
   bool get isShowingProgress => upgradingEntries.isNotEmpty;
 
-  bool get hasAnySelection =>
-      isApplicationSelected || selectedTargetKeys.isNotEmpty;
+  bool get hasFirmwareSelection => selectedTargetKeys.isNotEmpty;
 
   FirmwareUpgradeTarget? targetForKey(String key) {
     for (final entry in entries) {
@@ -402,7 +399,6 @@ class CheckUpgradedVersionState {
   CheckUpgradedVersionState copyWith({
     Object? application = _unset,
     List<FirmwareUpgradeDoor>? doors,
-    bool? isApplicationSelected,
     Set<String>? selectedTargetKeys,
     Set<String>? expandedDoorIds,
     Map<String, int>? progressByTarget,
@@ -415,8 +411,6 @@ class CheckUpgradedVersionState {
           ? this.application
           : application as AppReleaseUpdate?,
       doors: doors ?? this.doors,
-      isApplicationSelected:
-          isApplicationSelected ?? this.isApplicationSelected,
       selectedTargetKeys: selectedTargetKeys ?? this.selectedTargetKeys,
       expandedDoorIds: expandedDoorIds ?? this.expandedDoorIds,
       progressByTarget: progressByTarget ?? this.progressByTarget,

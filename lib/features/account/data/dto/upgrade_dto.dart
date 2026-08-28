@@ -50,7 +50,7 @@ class AppReleaseCheckResponseDto {
       action: action,
       targetVersion: targetVersion,
       targetBuildNumber: _nullableNumericString(json['targetBuildNumber']),
-      publishedAt: _nullableString(json['publishedAt']),
+      publishedAt: _nullableTimestampString(json['publishedAt']),
       updateUrl: _nullableString(json['updateUrl']),
     );
   }
@@ -61,7 +61,7 @@ class AppReleaseCheckResponseDto {
     'targetBuildNumber': targetBuildNumber == null
         ? null
         : int.parse(targetBuildNumber!),
-    'publishedAt': publishedAt,
+    'publishedAt': publishedAt == null ? null : int.parse(publishedAt!),
     'updateUrl': updateUrl,
   };
 }
@@ -146,7 +146,9 @@ class FirmwareUpgradeTargetDto {
       deviceTypeLabel: _requiredString(json, 'deviceTypeLabel'),
       packageSize: _requiredNumericString(json, 'packageSize'),
       availableVersion: _requiredString(json, 'availableVersion'),
-      lastFirmwareUpgradedAt: _nullableString(json['lastFirmwareUpgradedAt']),
+      lastFirmwareUpgradedAt: _nullableNumericString(
+        json['lastFirmwareUpgradedAt'],
+      ),
       status: status,
       scheduledAt: _nullableNumericString(json['scheduledAt']),
       upgradeExpireAt: _nullableString(json['upgradeExpireAt']),
@@ -162,7 +164,9 @@ class FirmwareUpgradeTargetDto {
     'deviceTypeLabel': deviceTypeLabel,
     'packageSize': int.parse(packageSize),
     'availableVersion': availableVersion,
-    'lastFirmwareUpgradedAt': lastFirmwareUpgradedAt,
+    'lastFirmwareUpgradedAt': lastFirmwareUpgradedAt == null
+        ? null
+        : int.parse(lastFirmwareUpgradedAt!),
     'status': status,
     'scheduledAt': scheduledAt == null ? null : int.parse(scheduledAt!),
     'upgradeExpireAt': upgradeExpireAt,
@@ -293,6 +297,11 @@ String? _nullableNumericString(Object? value) {
   }
   if (value is String && int.tryParse(value) != null) return value;
   throw const FormatException('Expected an integer-compatible value.');
+}
+
+String? _nullableTimestampString(Object? value) {
+  if (value is String && value.trim().isEmpty) return null;
+  return _nullableNumericString(value);
 }
 
 String? _nullableString(Object? value) {

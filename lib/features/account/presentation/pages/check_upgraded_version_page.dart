@@ -11,9 +11,7 @@ import '../../domain/entities/upgrade_check.dart';
 class CheckUpgradedVersionKeys {
   const CheckUpgradedVersionKeys._();
 
-  static const applicationCheckbox = ValueKey(
-    'upgrade-check-application-checkbox',
-  );
+  static const applicationCard = ValueKey('upgrade-check-application-card');
   static const startButton = ValueKey('upgrade-check-start-button');
   static const scheduleDialog = ValueKey('upgrade-check-schedule-dialog');
   static const scheduleImmediate = ValueKey('upgrade-check-schedule-immediate');
@@ -68,7 +66,8 @@ class CheckUpgradedVersionPage extends ConsumerWidget {
               ? _UpgradeProgressList(state: state)
               : _UpgradeContentList(
                   state: state,
-                  onApplicationChanged: controller.toggleApplication,
+                  onApplicationTap: () =>
+                      _openApplicationUpdate(context, controller),
                   onDoorChanged: (doorId) => _handleSelectionResult(
                     context,
                     controller.toggleDoor(doorId),
@@ -91,7 +90,7 @@ class CheckUpgradedVersionPage extends ConsumerWidget {
               key: CheckUpgradedVersionKeys.startButton,
               onPressed:
                   current != null &&
-                      current.hasAnySelection &&
+                      current.hasFirmwareSelection &&
                       !current.isShowingProgress &&
                       !current.isSubmitting
                   ? () => _startUpgrade(context, current, controller)
@@ -131,6 +130,23 @@ class CheckUpgradedVersionPage extends ConsumerWidget {
       );
   }
 
+  Future<void> _openApplicationUpdate(
+    BuildContext context,
+    CheckUpgradedVersionController controller,
+  ) async {
+    final opened = await controller.openApplicationUpdate();
+    if (!context.mounted || opened) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).upgradeCheckOpenStoreFailed,
+          ),
+        ),
+      );
+  }
+
   Future<void> _startUpgrade(
     BuildContext context,
     CheckUpgradedVersionState state,
@@ -165,14 +181,14 @@ class CheckUpgradedVersionPage extends ConsumerWidget {
 class _UpgradeContentList extends StatelessWidget {
   const _UpgradeContentList({
     required this.state,
-    required this.onApplicationChanged,
+    required this.onApplicationTap,
     required this.onDoorChanged,
     required this.onDoorExpanded,
     required this.onTargetChanged,
   });
 
   final CheckUpgradedVersionState state;
-  final VoidCallback onApplicationChanged;
+  final VoidCallback onApplicationTap;
   final ValueChanged<String> onDoorChanged;
   final ValueChanged<String> onDoorExpanded;
   final ValueChanged<String> onTargetChanged;
@@ -196,9 +212,7 @@ class _UpgradeContentList extends StatelessWidget {
           const SizedBox(height: 12),
           _ApplicationCard(
             update: application,
-            selected: state.isApplicationSelected,
-            enabled: !state.isSubmitting,
-            onChanged: onApplicationChanged,
+            onTap: application.updateUrl == null ? null : onApplicationTap,
           ),
           if (state.doors.isNotEmpty) const SizedBox(height: 20),
         ],
@@ -231,69 +245,73 @@ class _UpgradeContentList extends StatelessWidget {
 }
 
 class _ApplicationCard extends StatelessWidget {
-  const _ApplicationCard({
-    required this.update,
-    required this.selected,
-    required this.enabled,
-    required this.onChanged,
-  });
+  const _ApplicationCard({required this.update, required this.onTap});
 
   final AppReleaseUpdate update;
-  final bool selected;
-  final bool enabled;
-  final VoidCallback onChanged;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final publishedAt = update.publishedAt;
-    return _UpdateCard(
-      child: Row(
-        children: [
-          _SelectionBox(
-            key: CheckUpgradedVersionKeys.applicationCheckbox,
-            selected: selected,
-            onTap: enabled ? onChanged : null,
-            label: l10n.upgradeCheckAppUpdateName,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.upgradeCheckAppUpdateName,
-                  style: AppTextTokens.upgradeCheckCardTitle(
-                    Theme.of(context).textTheme,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 22,
-                  runSpacing: 6,
+    return Semantics(
+      button: true,
+      enabled: onTap != null,
+      label: l10n.upgradeCheckAppUpdateName,
+      child: GestureDetector(
+        key: CheckUpgradedVersionKeys.applicationCard,
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: _UpdateCard(
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (update.targetVersion case final version?)
-                      Text(
-                        version,
-                        style: AppTextTokens.upgradeCheckMeta(
-                          Theme.of(context).textTheme,
-                        ),
+                    Text(
+                      l10n.upgradeCheckAppUpdateName,
+                      style: AppTextTokens.upgradeCheckCardTitle(
+                        Theme.of(context).textTheme,
                       ),
-                    if (publishedAt != null)
-                      Text(
-                        DateFormat.yMMMd(
-                          Localizations.localeOf(context).toLanguageTag(),
-                        ).format(publishedAt.toLocal()),
-                        style: AppTextTokens.upgradeCheckMeta(
-                          Theme.of(context).textTheme,
-                        ),
-                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 22,
+                      runSpacing: 6,
+                      children: [
+                        if (update.targetVersion case final version?)
+                          Text(
+                            version,
+                            style: AppTextTokens.upgradeCheckMeta(
+                              Theme.of(context).textTheme,
+                            ),
+                          ),
+                        if (publishedAt != null)
+                          Text(
+                            DateFormat.yMMMd(
+                              Localizations.localeOf(context).toLanguageTag(),
+                            ).format(publishedAt.toLocal()),
+                            style: AppTextTokens.upgradeCheckMeta(
+                              Theme.of(context).textTheme,
+                            ),
+                          ),
+                      ],
+                    ),
                   ],
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 12),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: onTap == null
+                    ? AppColors.upgradeCheckDisabledAction
+                    : AppColors.textPrimary,
+                size: 28,
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

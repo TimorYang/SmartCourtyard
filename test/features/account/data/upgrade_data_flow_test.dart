@@ -14,13 +14,52 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 void main() {
+  test('parses the app release published timestamp from the real response', () {
+    final dto = AppReleaseCheckResponseDto.fromJson({
+      'action': 'OPTIONAL',
+      'targetVersion': 'v1.0.0',
+      'targetBuildNumber': '110001',
+      'publishedAt': 1786348310000,
+      'updateUrl': 'https://play.google.com/store/search?q=F-linX&c=apps',
+    });
+
+    expect(dto.publishedAt, '1786348310000');
+    final update = dto.toDomain();
+    expect(update.hasUpdate, isTrue);
+    expect(update.targetVersion, 'v1.0.0');
+    expect(
+      update.publishedAt,
+      DateTime.fromMillisecondsSinceEpoch(1786348310000, isUtc: true),
+    );
+    expect(dto.toJson()['publishedAt'], 1786348310000);
+
+    final withoutDate = AppReleaseCheckResponseDto.fromJson({
+      'action': 'OPTIONAL',
+      'targetVersion': 'v1.0.0',
+      'targetBuildNumber': '110001',
+      'publishedAt': '',
+      'updateUrl': null,
+    });
+    expect(withoutDate.publishedAt, isNull);
+  });
+
   test('parses the door-grouped firmware response with numeric strings', () {
     final dto = FirmwareUpgradeDoorDto.fromJson(_firmwareDoorJson);
 
     expect(dto.doorId, '11');
     expect(dto.upgrades.single.deviceId, '101');
     expect(dto.upgrades.single.packageSize, '19188941');
-    expect(dto.toDomain().upgrades.single.packageSizeBytes, 19188941);
+    expect(dto.upgrades.single.lastFirmwareUpgradedAt, '1787796465000');
+    final target = dto.toDomain().upgrades.single;
+    expect(target.packageSizeBytes, 19188941);
+    expect(
+      target.lastFirmwareUpgradedAt,
+      DateTime.fromMillisecondsSinceEpoch(1787796465000, isUtc: true),
+    );
+    expect(
+      dto.upgrades.single.toJson()['lastFirmwareUpgradedAt'],
+      1787796465000,
+    );
   });
 
   test('rejects unknown firmware statuses', () {
@@ -140,7 +179,7 @@ const _firmwareDoorJson = <String, dynamic>{
       'deviceTypeLabel': 'Opener',
       'packageSize': 19188941,
       'availableVersion': '1.2.5',
-      'lastFirmwareUpgradedAt': null,
+      'lastFirmwareUpgradedAt': 1787796465000,
       'status': 'AVAILABLE',
       'scheduledAt': null,
       'upgradeExpireAt': null,

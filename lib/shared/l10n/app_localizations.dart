@@ -1706,6 +1706,12 @@ abstract class AppLocalizations {
   /// **'Unable to submit the upgrade. Try again.'**
   String get upgradeCheckSubmitFailed;
 
+  /// No description provided for @upgradeCheckOpenStoreFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to open the app store.'**
+  String get upgradeCheckOpenStoreFailed;
+
   /// No description provided for @upgradeCheckSubmitting.
   ///
   /// In en, this message translates to:

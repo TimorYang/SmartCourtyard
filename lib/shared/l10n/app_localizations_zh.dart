@@ -847,6 +847,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get upgradeCheckSubmitFailed => '无法提交升级任务，请重试。';
 
   @override
+  String get upgradeCheckOpenStoreFailed => '无法打开应用商店。';
+
+  @override
   String get upgradeCheckSubmitting => '提交中';
 
   @override

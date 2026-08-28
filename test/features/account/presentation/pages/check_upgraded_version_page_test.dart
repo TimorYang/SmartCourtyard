@@ -3,6 +3,7 @@ import 'package:flinx/features/account/application/providers.dart';
 import 'package:flinx/features/account/domain/entities/account_profile.dart';
 import 'package:flinx/features/account/domain/entities/upgrade_check.dart';
 import 'package:flinx/features/account/domain/repositories/upgrade_repository.dart';
+import 'package:flinx/features/account/data/services/app_update_url_launcher.dart';
 import 'package:flinx/features/account/presentation/pages/check_upgraded_version_page.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -16,12 +17,14 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(800, 1200));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     final repository = _FakeUpgradeRepository(
-      application: const AppReleaseUpdate(
+      application: AppReleaseUpdate(
         action: AppReleaseAction.optional,
         targetVersion: '1.2.5',
         targetBuildNumber: '125',
         publishedAt: null,
-        updateUrl: null,
+        updateUrl: Uri.parse(
+          'https://play.google.com/store/apps/details?id=flinx',
+        ),
       ),
       doors: [
         _door([_target()]),
@@ -32,6 +35,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('App version update'), findsOneWidget);
+    expect(
+      find.byKey(CheckUpgradedVersionKeys.applicationCard),
+      findsOneWidget,
+    );
+    expect(find.byIcon(Icons.chevron_right_rounded), findsOneWidget);
     expect(find.text('1.2.5'), findsOneWidget);
     expect(find.text('Available Version : 1.2.5'), findsOneWidget);
     expect(find.text('South Gate'), findsOneWidget);
@@ -41,32 +49,40 @@ void main() {
     expect(find.text('18.3 MB'), findsOneWidget);
   });
 
-  testWidgets('does nothing when only the app update is selected', (
+  testWidgets('opens the app update URL without enabling firmware submission', (
     tester,
   ) async {
+    final updateUrl = Uri.parse(
+      'https://play.google.com/store/search?q=F-linX&c=apps',
+    );
+    final launcher = _FakeAppUpdateUrlLauncher();
     final repository = _FakeUpgradeRepository(
-      application: const AppReleaseUpdate(
+      application: AppReleaseUpdate(
         action: AppReleaseAction.force,
         targetVersion: '1.2.5',
         targetBuildNumber: '125',
         publishedAt: null,
-        updateUrl: null,
+        updateUrl: updateUrl,
       ),
     );
 
-    await tester.pumpWidget(_TestApp(repository: repository));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(CheckUpgradedVersionKeys.applicationCheckbox));
-    await tester.pump();
-
-    final startButton = tester.widget<FilledButton>(
-      find.byKey(CheckUpgradedVersionKeys.startButton),
+    await tester.pumpWidget(
+      _TestApp(repository: repository, launcher: launcher),
     );
-    expect(startButton.onPressed, isNotNull);
-    await tester.tap(find.byKey(CheckUpgradedVersionKeys.startButton));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester
+          .widget<FilledButton>(
+            find.byKey(CheckUpgradedVersionKeys.startButton),
+          )
+          .onPressed,
+      isNull,
+    );
+    await tester.tap(find.byKey(CheckUpgradedVersionKeys.applicationCard));
     await tester.pump();
 
-    expect(find.byKey(CheckUpgradedVersionKeys.scheduleDialog), findsNothing);
+    expect(launcher.openedUrls, [updateUrl]);
     expect(repository.submitCount, 0);
   });
 
@@ -90,8 +106,6 @@ void main() {
 
     await tester.pumpWidget(_TestApp(repository: repository));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(CheckUpgradedVersionKeys.applicationCheckbox));
-    await tester.pump();
     await tester.tap(
       find.byKey(
         CheckUpgradedVersionKeys.packageCheckbox('door-1', target.key),
@@ -158,15 +172,18 @@ void main() {
 }
 
 class _TestApp extends StatelessWidget {
-  const _TestApp({required this.repository});
+  const _TestApp({required this.repository, this.launcher});
 
   final UpgradeRepository repository;
+  final AppUpdateUrlLauncher? launcher;
 
   @override
   Widget build(BuildContext context) {
     return ProviderScope(
       overrides: [
         upgradeRepositoryProvider.overrideWithValue(repository),
+        if (launcher case final launcher?)
+          appUpdateUrlLauncherProvider.overrideWithValue(launcher),
         cachedAccountProfileProvider.overrideWith(
           (ref) async => AccountProfile(
             userId: 'user-7',
@@ -275,5 +292,15 @@ class _FakeUpgradeRepository implements UpgradeRepository {
     submitCount += 1;
     submittedTargetKeys = targets.map((target) => target.key).toList();
     return submitResults;
+  }
+}
+
+class _FakeAppUpdateUrlLauncher implements AppUpdateUrlLauncher {
+  final List<Uri> openedUrls = [];
+
+  @override
+  Future<bool> open(Uri url) async {
+    openedUrls.add(url);
+    return true;
   }
 }

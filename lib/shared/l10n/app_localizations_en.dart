@@ -889,6 +889,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Unable to submit the upgrade. Try again.';
 
   @override
+  String get upgradeCheckOpenStoreFailed => 'Unable to open the app store.';
+
+  @override
   String get upgradeCheckSubmitting => 'Submitting';
 
   @override

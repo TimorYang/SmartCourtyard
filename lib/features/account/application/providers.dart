@@ -34,6 +34,7 @@ import '../data/repositories/receiving_devices_repository_impl.dart';
 import '../data/repositories/shared_devices_repository_impl.dart';
 import '../data/repositories/system_permissions_repository_impl.dart';
 import '../data/repositories/upgrade_repository_impl.dart';
+import '../data/services/app_update_url_launcher.dart';
 import '../data/services/platform_app_release_context_provider.dart';
 import '../domain/entities/account_profile.dart';
 import '../domain/entities/account_overview.dart';
@@ -178,6 +179,10 @@ final platformAppReleaseContextProvider =
     Provider<PlatformAppReleaseContextProvider>((ref) {
       return PlatformAppReleaseContextProvider();
     });
+
+final appUpdateUrlLauncherProvider = Provider<AppUpdateUrlLauncher>((ref) {
+  return const PlatformAppUpdateUrlLauncher();
+});
 
 final upgradeRemoteDataSourceProvider = Provider<UpgradeRemoteDataSource>((
   ref,

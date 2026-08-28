@@ -36,6 +36,7 @@ dependencies:
   sign_in_with_apple: ^8.1.0
   toastification: ^3.2.0
   pointycastle: ^4.0.0
+  url_launcher: ^6.3.2
   webview_flutter: 4.10.0
   webview_flutter_android: 4.0.0
   webview_flutter_platform_interface: 2.10.0

@@ -295,6 +295,7 @@
   "upgradeCheckSelectionLimit": "每次最多选择 10 个升级项目。",
   "upgradeCheckPartialNotAccepted": "部分升级任务未受理。",
   "upgradeCheckSubmitFailed": "无法提交升级任务，请重试。",
+  "upgradeCheckOpenStoreFailed": "无法打开应用商店。",
   "upgradeCheckSubmitting": "提交中",
   "upgradeCheckSizeBytes": "{value} B",
   "@upgradeCheckSizeBytes": {

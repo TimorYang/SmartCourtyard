@@ -210,7 +210,7 @@ extension AppReleaseCheckResponseDtoMapper on AppReleaseCheckResponseDto {
       },
       targetVersion: targetVersion,
       targetBuildNumber: targetBuildNumber,
-      publishedAt: _parseIsoDateTime(publishedAt),
+      publishedAt: _parseMilliseconds(publishedAt),
       updateUrl: updateUrl == null ? null : Uri.tryParse(updateUrl!),
     );
   }
@@ -239,7 +239,7 @@ extension FirmwareUpgradeTargetDtoMapper on FirmwareUpgradeTargetDto {
       deviceTypeLabel: deviceTypeLabel,
       packageSizeBytes: int.parse(packageSize),
       availableVersion: availableVersion,
-      lastFirmwareUpgradedAt: _parseIsoDateTime(lastFirmwareUpgradedAt),
+      lastFirmwareUpgradedAt: _parseMilliseconds(lastFirmwareUpgradedAt),
       status: switch (status) {
         'AVAILABLE' => FirmwareUpgradeStatus.available,
         'SCHEDULED' => FirmwareUpgradeStatus.scheduled,
