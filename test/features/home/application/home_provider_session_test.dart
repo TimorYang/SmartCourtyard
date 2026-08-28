@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flinx/features/auth/application/providers.dart';
 import 'package:flinx/features/home/application/providers.dart';
 import 'package:flinx/features/home/domain/entities/home_scene.dart';
@@ -37,6 +39,63 @@ void main() {
     expect(secondScenes.single.name, 'B Home');
     expect(repository.fetchCount, 2);
   });
+
+  test(
+    'disposes account A home data before account B starts loading',
+    () async {
+      final sceneRepository = _AccountSwitchHomeSceneRepository();
+      final doorRepository = _CountingHomeDoorRepository();
+      final container = ProviderContainer(
+        overrides: [
+          fetchHomeScenesUseCaseProvider.overrideWithValue(
+            FetchHomeScenesUseCase(repository: sceneRepository),
+          ),
+          fetchHomeDoorsUseCaseProvider.overrideWithValue(
+            FetchHomeDoorsUseCase(repository: doorRepository),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      final subscription = container.listen(
+        homeDevicesProvider,
+        (_, _) {},
+        fireImmediately: true,
+      );
+
+      container
+          .read(activeAuthSessionProvider.notifier)
+          .markAuthenticated(userId: 'user-a');
+      await container.read(homeDevicesProvider.future);
+      expect(doorRepository.fetchCountByScene, {33: 1, 35: 1});
+
+      container.read(activeAuthSessionProvider.notifier).clear();
+      container.read(homeDeviceListsInvalidatorProvider)();
+      subscription.close();
+      await container.pump();
+
+      expect(container.exists(homeScenesProvider), isFalse);
+      expect(container.exists(homeDevicesProvider), isFalse);
+      expect(container.exists(homeDoorsBySceneProvider(33)), isFalse);
+      expect(container.exists(homeDoorsBySceneProvider(35)), isFalse);
+
+      container
+          .read(activeAuthSessionProvider.notifier)
+          .markAuthenticated(userId: 'user-b');
+      final userBSubscription = container.listen(
+        homeDevicesProvider,
+        (_, _) {},
+        fireImmediately: true,
+      );
+      addTearDown(userBSubscription.close);
+      final userBDevices = container.read(homeDevicesProvider.future);
+      await container.pump();
+      expect(doorRepository.fetchCountByScene, {33: 1, 35: 1});
+
+      sceneRepository.completeUserBScenes();
+      await userBDevices;
+      expect(doorRepository.fetchCountByScene, {33: 1, 35: 1, 4: 1, 8: 1});
+    },
+  );
 
   test('refreshing one scene reuses other scene door caches', () async {
     final doorRepository = _CountingHomeDoorRepository();
@@ -116,6 +175,47 @@ class _SequencedHomeSceneRepository implements HomeSceneRepository {
         isDefault: true,
       ),
     ];
+  }
+
+  @override
+  Future<HomeScene> createScene({
+    required String name,
+    required String requestId,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<void> deleteScene({required int sceneId, required String requestId}) =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> renameScene({
+    required int sceneId,
+    required String name,
+    required String requestId,
+  }) => throw UnimplementedError();
+}
+
+class _AccountSwitchHomeSceneRepository implements HomeSceneRepository {
+  final _userBScenes = Completer<List<HomeScene>>();
+  var fetchCount = 0;
+
+  void completeUserBScenes() {
+    _userBScenes.complete(const [
+      HomeScene(id: 4, name: 'B Home', doorCount: 1, isDefault: true),
+      HomeScene(id: 8, name: 'B Garage', doorCount: 1, isDefault: false),
+    ]);
+  }
+
+  @override
+  Future<List<HomeScene>> fetchScenes({required String requestId}) {
+    fetchCount += 1;
+    if (fetchCount == 1) {
+      return Future.value(const [
+        HomeScene(id: 33, name: 'A Home', doorCount: 1, isDefault: true),
+        HomeScene(id: 35, name: 'A Garage', doorCount: 1, isDefault: false),
+      ]);
+    }
+    return _userBScenes.future;
   }
 
   @override

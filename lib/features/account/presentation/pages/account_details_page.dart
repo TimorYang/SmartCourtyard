@@ -40,17 +40,17 @@ class AccountDetailsPage extends ConsumerWidget {
         activeAuthSessionProvider.notifier,
       );
       final accountController = ref.read(accountControllerProvider.notifier);
-
-      ref.invalidate(homeScenesProvider);
-      ref.invalidate(homeDevicesProvider);
-      ref.invalidate(cachedAccountProfileProvider);
-      ref.invalidate(authSessionProvider);
+      final invalidateHomeDeviceLists = ref.read(
+        homeDeviceListsInvalidatorProvider,
+      );
 
       await accountController.clearAccount();
+      ref.invalidate(cachedAccountProfileProvider);
 
       // Clearing the active session redirects away from this page and disposes
       // its WidgetRef. Do it only after all ref work is done.
       authSessionController.clear();
+      invalidateHomeDeviceLists();
       if (context.mounted) {
         context.go(routePath);
       }

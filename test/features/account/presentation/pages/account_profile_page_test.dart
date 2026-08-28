@@ -25,6 +25,7 @@ import 'package:flinx/features/account/presentation/pages/shared_device_member_m
 import 'package:flinx/features/account/presentation/pages/system_permissions_page.dart';
 import 'package:flinx/features/auth/application/providers.dart';
 import 'package:flinx/features/auth/presentation/pages/login_page.dart';
+import 'package:flinx/features/home/application/providers.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
 import 'package:flinx/platform_bridge/mock_hardware_gateway.dart';
 import 'package:flinx/platform_bridge/providers.dart';
@@ -928,6 +929,8 @@ void main() {
   testWidgets('clears account data and returns to welcome on logout', (
     tester,
   ) async {
+    late ProviderContainer container;
+    bool? wasAuthenticatedWhenHomeDataWasInvalidated;
     final router = GoRouter(
       initialLocation: AccountDetailsPage.routePath,
       routes: [
@@ -945,6 +948,13 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
+        overrides: [
+          homeDeviceListsInvalidatorProvider.overrideWithValue(() {
+            wasAuthenticatedWhenHomeDataWasInvalidated = container
+                .read(activeAuthSessionProvider)
+                .isAuthenticated;
+          }),
+        ],
         child: MaterialApp.router(
           theme: AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -955,7 +965,7 @@ void main() {
     );
 
     await tester.pumpAndSettle();
-    final container = ProviderScope.containerOf(
+    container = ProviderScope.containerOf(
       tester.element(find.byType(AccountDetailsPage)),
     );
     container
@@ -969,11 +979,14 @@ void main() {
     expect(find.text('Welcome'), findsOneWidget);
     expect(find.text('ACCOUNT'), findsNothing);
     expect(container.read(activeAuthSessionProvider).isAuthenticated, isFalse);
+    expect(wasAuthenticatedWhenHomeDataWasInvalidated, isFalse);
   });
 
   testWidgets('clears account data from the profile logout button', (
     tester,
   ) async {
+    late ProviderContainer container;
+    bool? wasAuthenticatedWhenHomeDataWasInvalidated;
     final router = GoRouter(
       initialLocation: AccountProfilePage.routePath,
       routes: [
@@ -991,6 +1004,13 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
+        overrides: [
+          homeDeviceListsInvalidatorProvider.overrideWithValue(() {
+            wasAuthenticatedWhenHomeDataWasInvalidated = container
+                .read(activeAuthSessionProvider)
+                .isAuthenticated;
+          }),
+        ],
         child: MaterialApp.router(
           theme: AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -1001,7 +1021,7 @@ void main() {
     );
 
     await tester.pumpAndSettle();
-    final container = ProviderScope.containerOf(
+    container = ProviderScope.containerOf(
       tester.element(find.byType(AccountProfilePage)),
     );
     container
@@ -1018,6 +1038,7 @@ void main() {
 
     expect(find.text('Welcome'), findsOneWidget);
     expect(container.read(activeAuthSessionProvider).isAuthenticated, isFalse);
+    expect(wasAuthenticatedWhenHomeDataWasInvalidated, isFalse);
   });
 }
 

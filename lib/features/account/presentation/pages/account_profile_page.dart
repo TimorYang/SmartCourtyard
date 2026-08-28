@@ -190,14 +190,14 @@ class _AccountProfilePageState extends ConsumerState<AccountProfilePage> {
                   final accountController = ref.read(
                     accountControllerProvider.notifier,
                   );
-
-                  ref.invalidate(homeScenesProvider);
-                  ref.invalidate(homeDevicesProvider);
-                  ref.invalidate(cachedAccountProfileProvider);
-                  ref.invalidate(authSessionProvider);
+                  final invalidateHomeDeviceLists = ref.read(
+                    homeDeviceListsInvalidatorProvider,
+                  );
 
                   await accountController.clearAccount();
+                  ref.invalidate(cachedAccountProfileProvider);
                   authSessionController.clear();
+                  invalidateHomeDeviceLists();
                   if (context.mounted) {
                     context.go(WelcomePage.routePath);
                   }

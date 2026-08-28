@@ -43,14 +43,16 @@ Future<void> bootstrap() async {
               return;
             }
             isClearingSession = true;
+            final invalidateHomeDeviceLists = ref.read(
+              homeDeviceListsInvalidatorProvider,
+            );
             try {
-              ref.invalidate(homeScenesProvider);
-              ref.invalidate(homeDevicesProvider);
-              ref.invalidate(cachedAccountProfileProvider);
               await ref.read(accountControllerProvider.notifier).clearAccount();
             } finally {
               ref.read(activeAuthSessionProvider.notifier).clear();
               ref.invalidate(authSessionProvider);
+              ref.invalidate(cachedAccountProfileProvider);
+              invalidateHomeDeviceLists();
               isClearingSession = false;
             }
           };
