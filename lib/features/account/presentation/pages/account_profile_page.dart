@@ -11,10 +11,12 @@ import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
+import '../../application/region_selection_controller.dart';
 import '../../domain/entities/app_locale_preference.dart';
 import '../../domain/entities/app_language_option.dart';
 import '../../domain/entities/account_profile.dart';
 import '../../domain/entities/account_avatar_code.dart';
+import '../../domain/entities/region_option.dart';
 import '../widgets/account_avatar_code_assets.dart';
 import '../../domain/entities/account_overview.dart';
 import '../../../auth/application/providers.dart';
@@ -150,6 +152,12 @@ class _AccountProfilePageState extends ConsumerState<AccountProfilePage> {
           data: (value) => value,
           orElse: () => ref.watch(systemAppLocaleProvider),
         );
+    final regionOptions = ref
+        .watch(regionSelectionControllerProvider)
+        .maybeWhen(
+          data: (value) => value.regions,
+          orElse: () => const <RegionOption>[],
+        );
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -170,6 +178,7 @@ class _AccountProfilePageState extends ConsumerState<AccountProfilePage> {
                 profile: profile,
                 overview: overview,
                 localePreference: localePreference,
+                regionOptions: regionOptions,
                 maxHeight: constraints.maxHeight,
                 onRefresh: _refreshOverview,
                 onLocaleConfirmed: (locale, serverLocale) async {
@@ -180,6 +189,7 @@ class _AccountProfilePageState extends ConsumerState<AccountProfilePage> {
                     await ref
                         .read(appLocaleControllerProvider.notifier)
                         .selectLocale(locale);
+                    ref.invalidate(regionSelectionControllerProvider);
                   }
                   return updated;
                 },
@@ -209,6 +219,24 @@ class _AccountProfilePageState extends ConsumerState<AccountProfilePage> {
       ),
     );
   }
+}
+
+String _regionDisplayName({
+  required AccountProfile? profile,
+  required List<RegionOption> regions,
+  required String fallback,
+}) {
+  final regionCode = (profile?.regionCode ?? profile?.country)?.trim();
+  if (regionCode == null || regionCode.isEmpty) {
+    return fallback;
+  }
+  final normalizedCode = regionCode.toUpperCase();
+  for (final region in regions) {
+    if (region.code.trim().toUpperCase() == normalizedCode) {
+      return region.displayName;
+    }
+  }
+  return regionCode;
 }
 
 class _AccountProfileThemeIcon extends StatelessWidget {
@@ -242,6 +270,7 @@ class _AccountProfileContent extends StatelessWidget {
     required this.profile,
     required this.overview,
     required this.localePreference,
+    required this.regionOptions,
     required this.maxHeight,
     required this.onRefresh,
     required this.onLocaleConfirmed,
@@ -251,6 +280,7 @@ class _AccountProfileContent extends StatelessWidget {
   final AccountProfile? profile;
   final AccountOverview? overview;
   final AppLocalePreference localePreference;
+  final List<RegionOption> regionOptions;
   final double maxHeight;
   final Future<void> Function() onRefresh;
   final Future<bool> Function(AppLocalePreference locale, String serverLocale)
@@ -292,10 +322,11 @@ class _AccountProfileContent extends StatelessWidget {
       // ),
       _AccountMenuItem(
         label: l10n.accountRegion,
-        trailingText:
-            profile?.regionCode ??
-            profile?.country ??
-            l10n.accountDefaultRegion,
+        trailingText: _regionDisplayName(
+          profile: profile,
+          regions: regionOptions,
+          fallback: l10n.accountDefaultRegion,
+        ),
         iconAssetPath: AccountProfileAssetPaths.menuRegion,
         onTap: () => context.pushNamed(RegionPage.routeName),
         key: AccountProfileKeys.regionMenuItem,

@@ -1,5 +1,6 @@
 import 'package:flinx/app/theme/app_theme.dart';
 import 'package:flinx/features/account/application/providers.dart';
+import 'package:flinx/features/account/application/region_selection_controller.dart';
 import 'package:flinx/features/account/data/data_sources/account_local_data_source.dart';
 import 'package:flinx/features/account/data/data_sources/account_profile_remote_data_source.dart';
 import 'package:flinx/features/account/data/data_sources/app_locale_local_data_source.dart';
@@ -132,7 +133,54 @@ void main() {
     await tester.tap(find.byType(BackButtonIcon));
     await tester.pumpAndSettle();
     expect(find.text('Alex'), findsOneWidget);
+    expect(find.text('Canada'), findsOneWidget);
+    expect(find.text('CA'), findsNothing);
     semantics.dispose();
+  });
+
+  testWidgets('shows the localized region name instead of its code', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          accountOverviewAutoRefreshProvider.overrideWithValue(false),
+          accountLocalDataSourceProvider.overrideWithValue(
+            InMemoryAccountLocalDataSource(
+              initialProfile: const AccountProfileDto(
+                schemaVersion: AccountProfileDto.currentSchemaVersion,
+                userId: 'user-1',
+                email: 'alex@example.com',
+                nickname: 'Alex',
+                registeredAtIso8601: '',
+                country: 'CN',
+                regionCode: 'CN',
+              ),
+            ),
+          ),
+          accountProfileRemoteDataSourceProvider.overrideWithValue(
+            _AvatarProfileRemoteDataSource(
+              regionCode: 'CN',
+              regionOptions: const [
+                AppRegionOptionDto(regionCode: 'CN', displayName: '中国'),
+              ],
+            ),
+          ),
+        ],
+        child: MaterialApp(
+          locale: const Locale('zh'),
+          theme: AppTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const AccountProfilePage(),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('中国'), findsOneWidget);
+    expect(find.text('CN'), findsNothing);
   });
 
   testWidgets('opens system permissions from the account profile', (
@@ -234,6 +282,18 @@ void main() {
       );
 
       await tester.pumpAndSettle();
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(AccountProfilePage)),
+      );
+      expect(
+        container
+            .read(regionSelectionControllerProvider)
+            .requireValue
+            .regions
+            .first
+            .displayName,
+        'China',
+      );
       await tester.tap(find.byKey(AccountProfileKeys.languageMenuItem));
       await tester.pumpAndSettle();
 
@@ -287,6 +347,15 @@ void main() {
       expect(find.byKey(AccountProfileKeys.languageDialog), findsNothing);
       expect(find.text('语言'), findsOneWidget);
       expect(find.text('中文(简体)'), findsOneWidget);
+      expect(
+        container
+            .read(regionSelectionControllerProvider)
+            .requireValue
+            .regions
+            .first
+            .displayName,
+        '中国',
+      );
 
       await tester.tap(find.byKey(AccountProfileKeys.languageMenuItem));
       await tester.pumpAndSettle();
@@ -1065,9 +1134,24 @@ class _CameraPermissionBlockedGateway extends MockHardwareGateway {
 }
 
 class _AvatarProfileRemoteDataSource implements AccountProfileRemoteDataSource {
-  _AvatarProfileRemoteDataSource({this.serverLocale});
+  _AvatarProfileRemoteDataSource({
+    this.serverLocale,
+    this.regionCode,
+    this.regionOptions = const [
+      AppRegionOptionDto(regionCode: 'CN', displayName: 'China'),
+      AppRegionOptionDto(regionCode: 'US', displayName: 'America'),
+      AppRegionOptionDto(regionCode: 'GB', displayName: 'England'),
+      AppRegionOptionDto(
+        regionCode: 'FR',
+        displayName: 'La Republique francaise',
+      ),
+      AppRegionOptionDto(regionCode: 'CA', displayName: 'Canada'),
+    ],
+  });
 
-  final String? serverLocale;
+  String? serverLocale;
+  String? regionCode;
+  final List<AppRegionOptionDto> regionOptions;
   AccountAvatarCode? avatarCode;
   int? avatarFileId;
   String? confirmedDeletionRequestId;
@@ -1082,22 +1166,27 @@ class _AvatarProfileRemoteDataSource implements AccountProfileRemoteDataSource {
     nickname: 'Alex',
     avatarCode: avatarCode?.wireValue,
     avatarFileId: avatarFileId,
+    regionCode: regionCode,
     locale: serverLocale,
   );
 
   @override
   Future<List<AppRegionOptionDto>> fetchRegionOptions({
     required String requestId,
-  }) async => const [
-    AppRegionOptionDto(regionCode: 'CN', displayName: 'China'),
-    AppRegionOptionDto(regionCode: 'US', displayName: 'America'),
-    AppRegionOptionDto(regionCode: 'GB', displayName: 'England'),
-    AppRegionOptionDto(
-      regionCode: 'FR',
-      displayName: 'La Republique francaise',
-    ),
-    AppRegionOptionDto(regionCode: 'CA', displayName: 'Canada'),
-  ];
+  }) async {
+    if (serverLocale == 'zh-CN') {
+      return [
+        for (final option in regionOptions)
+          AppRegionOptionDto(
+            regionCode: option.regionCode,
+            displayName: option.regionCode == 'CN'
+                ? '中国'
+                : option.displayName,
+          ),
+      ];
+    }
+    return regionOptions;
+  }
 
   @override
   Future<List<AppLanguageOptionDto>> fetchLanguageOptions({
@@ -1144,13 +1233,17 @@ class _AvatarProfileRemoteDataSource implements AccountProfileRemoteDataSource {
   Future<void> updateRegion({
     required String regionCode,
     required String requestId,
-  }) async {}
+  }) async {
+    this.regionCode = regionCode;
+  }
 
   @override
   Future<void> updateLanguage({
     required String locale,
     required String requestId,
-  }) async {}
+  }) async {
+    serverLocale = locale;
+  }
 
   @override
   Future<void> confirmAccountDeletion({required String requestId}) async {
