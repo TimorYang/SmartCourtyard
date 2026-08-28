@@ -1,7 +1,10 @@
 import 'package:flinx/app/theme/app_theme.dart';
-import 'package:flinx/features/home/presentation/pages/device_share_page.dart';
 import 'package:flinx/features/home/application/door_share_controller.dart';
+import 'package:flinx/features/home/application/providers.dart';
 import 'package:flinx/features/home/domain/entities/door_share.dart';
+import 'package:flinx/features/home/domain/repositories/door_share_repository.dart';
+import 'package:flinx/features/home/domain/use_cases/create_door_share_use_case.dart';
+import 'package:flinx/features/home/presentation/pages/device_share_page.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -40,9 +43,12 @@ void main() {
         endsWith('garagePlaceholderCapabilitiesSelected.png'),
       );
 
-      await tester.tap(
-        find.byKey(const Key('device_share_capability_partialOpen')),
+      final partialOpen = find.byKey(
+        const Key('device_share_capability_partialOpen'),
       );
+      await tester.ensureVisible(partialOpen);
+      await tester.pumpAndSettle();
+      await tester.tap(partialOpen);
       await tester.pump();
       expect(
         _capabilityAsset(tester, 'partialOpen'),
@@ -63,9 +69,12 @@ void main() {
         endsWith('garagePlaceholderCapabilitiesNoSelected.png'),
       );
 
-      await tester.tap(
-        find.byKey(const Key('device_share_capability_doorControl')),
+      final doorControl = find.byKey(
+        const Key('device_share_capability_doorControl'),
       );
+      await tester.ensureVisible(doorControl);
+      await tester.pumpAndSettle();
+      await tester.tap(doorControl);
       await tester.pump();
       expect(
         _capabilityAsset(tester, 'doorControl'),
@@ -107,6 +116,34 @@ void main() {
     await tester.pump();
     expect(find.text('Enter a valid email address'), findsNothing);
     expect(_confirmTap(tester), isNotNull);
+  });
+
+  testWidgets('send email defaults off and submits the selected value', (
+    tester,
+  ) async {
+    CreateDoorShareCommand? submittedCommand;
+    await tester.pumpWidget(
+      _DeviceShareTestApp(
+        onCreateShare: (command) {
+          submittedCommand = command;
+        },
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(_sendEmailSemantics(tester).properties.checked, isFalse);
+
+    await tester.tap(find.byKey(DeviceSharePageKeys.sendEmailToggle));
+    await tester.pump();
+
+    expect(_sendEmailSemantics(tester).properties.checked, isTrue);
+
+    await tester.enterText(find.byType(TextField), 'alex@example.com');
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('device_share_confirm')));
+    await tester.pumpAndSettle();
+
+    expect(submittedCommand?.sendEmail, isTrue);
   });
 
   testWidgets('customize access end requires a confirmed time', (tester) async {
@@ -206,7 +243,14 @@ Future<void> _selectPermission(
   required String currentValue,
   required String nextValue,
 }) async {
-  await tester.tap(find.text(currentValue).first);
+  await tester.fling(
+    find.byType(ListView),
+    const Offset(0, 800),
+    1200,
+  );
+  await tester.pumpAndSettle();
+  final currentPermission = find.text(currentValue).first;
+  await tester.tap(currentPermission);
   await tester.pumpAndSettle();
   await tester.tap(find.text(nextValue).last);
   await tester.pumpAndSettle();
@@ -241,15 +285,30 @@ VoidCallback? _timeTap(WidgetTester tester) {
       .onTap;
 }
 
+Semantics _sendEmailSemantics(WidgetTester tester) {
+  return tester.widget<Semantics>(
+    find.byWidgetPredicate(
+      (widget) =>
+          widget is Semantics && widget.properties.label == 'Send email',
+    ),
+  );
+}
+
 class _DeviceShareTestApp extends StatelessWidget {
-  const _DeviceShareTestApp({this.onCapabilitiesLoad});
+  const _DeviceShareTestApp({this.onCapabilitiesLoad, this.onCreateShare});
 
   final VoidCallback? onCapabilitiesLoad;
+  final ValueChanged<CreateDoorShareCommand>? onCreateShare;
 
   @override
   Widget build(BuildContext context) {
     return ProviderScope(
       overrides: [
+        createDoorShareUseCaseProvider.overrideWithValue(
+          CreateDoorShareUseCase(
+            repository: _RecordingDoorShareRepository(onCreateShare),
+          ),
+        ),
         doorShareCapabilitiesProvider(1).overrideWith((ref) async {
           onCapabilitiesLoad?.call();
           return ShareCapability.values;
@@ -263,4 +322,35 @@ class _DeviceShareTestApp extends StatelessWidget {
       ),
     );
   }
+}
+
+class _RecordingDoorShareRepository implements DoorShareRepository {
+  const _RecordingDoorShareRepository(this.onCreateShare);
+
+  final ValueChanged<CreateDoorShareCommand>? onCreateShare;
+
+  @override
+  Future<void> createShare({
+    required int doorId,
+    required CreateDoorShareCommand command,
+    required String requestId,
+  }) async {
+    onCreateShare?.call(command);
+    if (onCreateShare != null) {
+      throw StateError('Captured the create command for the widget test.');
+    }
+  }
+
+  @override
+  Future<List<ShareCapability>> fetchCapabilities({
+    required int doorId,
+    required String requestId,
+  }) async => ShareCapability.values;
+
+  @override
+  Future<void> updateShare({
+    required int shareId,
+    required UpdateDoorShareCommand command,
+    required String requestId,
+  }) async {}
 }

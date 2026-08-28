@@ -17,12 +17,14 @@ class CreateDoorShareRequestDto {
     required this.role,
     required this.expiryType,
     required this.capabilities,
+    required this.sendEmail,
     this.expiresAt,
   });
   final String receiverEmail;
   final String role;
   final String expiryType;
   final List<String> capabilities;
+  final bool sendEmail;
   final int? expiresAt;
 
   factory CreateDoorShareRequestDto.fromJson(Map<String, dynamic> json) =>
@@ -33,6 +35,7 @@ class CreateDoorShareRequestDto {
         capabilities: (json['capabilities'] as List<Object?>? ?? const [])
             .whereType<String>()
             .toList(growable: false),
+        sendEmail: json['sendEmail'] as bool? ?? false,
         expiresAt: (json['expiresAt'] as num?)?.toInt(),
       );
   Map<String, dynamic> toJson() => {
@@ -40,6 +43,7 @@ class CreateDoorShareRequestDto {
     'role': role,
     'expiryType': expiryType,
     'capabilities': capabilities,
+    'sendEmail': sendEmail,
     if (expiresAt != null) 'expiresAt': expiresAt,
   };
 }

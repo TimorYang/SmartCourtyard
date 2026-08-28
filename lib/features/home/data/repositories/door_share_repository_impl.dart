@@ -63,6 +63,7 @@ class DoorShareRepositoryImpl implements DoorShareRepository {
           capabilities: command.capabilities
               .map((item) => item.wireValue)
               .toList(growable: false),
+          sendEmail: command.sendEmail,
         ),
       );
       logger.info(

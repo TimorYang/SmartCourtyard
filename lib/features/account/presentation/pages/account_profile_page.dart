@@ -285,11 +285,11 @@ class _AccountProfileContent extends StatelessWidget {
         onTap: () => context.pushNamed(ManageDevicesPage.routeName),
         key: AccountProfileKeys.manageDevicesMenuItem,
       ),
-      _AccountMenuItem(
-        label: l10n.accountAfterSalesService,
-        iconAssetPath: AccountProfileAssetPaths.menuAfterSalesService,
-        key: AccountProfileKeys.afterSalesMenuItem,
-      ),
+      // _AccountMenuItem(
+      //   label: l10n.accountAfterSalesService,
+      //   iconAssetPath: AccountProfileAssetPaths.menuAfterSalesService,
+      //   key: AccountProfileKeys.afterSalesMenuItem,
+      // ),
       _AccountMenuItem(
         label: l10n.accountRegion,
         trailingText:

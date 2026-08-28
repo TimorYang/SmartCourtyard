@@ -77,6 +77,7 @@ class DeviceSharePageKeys {
 
   static const editMemberSummary = ValueKey('device-share-edit-member-summary');
   static const editDeleteAction = ValueKey('device-share-edit-delete-action');
+  static const sendEmailToggle = ValueKey('device-share-send-email-toggle');
   static const customTimeHour = ValueKey('device-share-custom-time-hour');
   static const customTimeMinute = ValueKey('device-share-custom-time-minute');
 }
@@ -85,6 +86,7 @@ class _DeviceSharePageState extends ConsumerState<DeviceSharePage> {
   final _emailController = TextEditingController();
   var _permission = _SharePermission.administrator;
   var _period = _SharePeriod.neverExpired;
+  var _sendEmail = false;
   var _selectedCapabilities = <ShareCapability>{};
   DateTime? _periodEndsAt;
   var _showAddressFormatError = false;
@@ -236,6 +238,20 @@ class _DeviceSharePageState extends ConsumerState<DeviceSharePage> {
                             ? _selectCustomTimeFromSummary
                             : null,
                       ),
+                      if (!_isEditing) ...[
+                        const SizedBox(
+                          height: AppSpacingTokens.deviceShareSendEmailTop,
+                        ),
+                        _SendEmailToggle(
+                          label: l10n.deviceShareSendEmailLabel,
+                          value: _sendEmail,
+                          onChanged: (value) {
+                            setState(() {
+                              _sendEmail = value;
+                            });
+                          },
+                        ),
+                      ],
                       const SizedBox(height: 27),
                       Text(
                         l10n.deviceShareCapabilitiesTitle,
@@ -511,6 +527,7 @@ class _DeviceSharePageState extends ConsumerState<DeviceSharePage> {
               expiryType: expiryType,
               expiresAtUtcMillis: expiresAtUtcMillis,
               capabilities: _selectedCapabilities.toList(growable: false),
+              sendEmail: _sendEmail,
             ),
           );
     if (success && mounted) {
@@ -875,6 +892,72 @@ class _SharePeriodSummary extends StatelessWidget {
               size: 26,
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SendEmailToggle extends StatelessWidget {
+  const _SendEmailToggle({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String label;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      checked: value,
+      button: true,
+      label: label,
+      child: GestureDetector(
+        key: DeviceSharePageKeys.sendEmailToggle,
+        behavior: HitTestBehavior.opaque,
+        onTap: () => onChanged(!value),
+        child: SizedBox(
+          height: AppSpacingTokens.deviceShareSendEmailRowHeight,
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  style: AppTextTokens.deviceShareSectionTitle(
+                    Theme.of(context).textTheme,
+                  ),
+                ),
+              ),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 120),
+                width: AppSpacingTokens.deviceShareSendEmailCheckboxSize,
+                height: AppSpacingTokens.deviceShareSendEmailCheckboxSize,
+                decoration: BoxDecoration(
+                  color: value
+                      ? AppColors.deviceShareCheckbox
+                      : Colors.transparent,
+                  border: Border.all(
+                    color: value
+                        ? AppColors.deviceShareCheckbox
+                        : AppColors.deviceShareUnavailable,
+                  ),
+                  borderRadius: BorderRadius.circular(
+                    AppShapeTokens.deviceShareSendEmailCheckboxRadius,
+                  ),
+                ),
+                child: value
+                    ? const Icon(
+                        Icons.check_rounded,
+                        size: AppSpacingTokens.deviceShareSendEmailCheckSize,
+                        color: Colors.white,
+                      )
+                    : null,
+              ),
+            ],
+          ),
         ),
       ),
     );

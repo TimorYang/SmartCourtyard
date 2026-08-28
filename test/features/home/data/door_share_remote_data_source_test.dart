@@ -7,6 +7,32 @@ import 'package:flinx/features/home/data/dto/door_share_dto.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('creates a share with sendEmail and request ID', () async {
+    final api = _RecordingHomeApi();
+    final dataSource = DoorShareRemoteDataSourceImpl(api: api);
+    const request = CreateDoorShareRequestDto(
+      receiverEmail: 'alex@example.com',
+      role: '0',
+      expiryType: '0',
+      capabilities: ['DOOR_CONTROL'],
+      sendEmail: false,
+    );
+
+    await dataSource.createShare(
+      doorId: 12,
+      request: request,
+      requestId: 'door-share-create-12',
+    );
+
+    expect(api.createDoorId, 12);
+    expect(api.createRequest.toJson(), request.toJson());
+    expect(api.createRequest.toJson()['sendEmail'], isFalse);
+    expect(
+      api.createOptions.extra?[NetworkRequestExtras.requestId],
+      'door-share-create-12',
+    );
+  });
+
   test('updates share permissions with request ID and required body', () async {
     final api = _RecordingHomeApi();
     final dataSource = DoorShareRemoteDataSourceImpl(api: api);
@@ -55,9 +81,28 @@ class _RecordingHomeApi implements HomeApi {
   _RecordingHomeApi({this.success = true});
 
   final bool success;
+  late int createDoorId;
+  late CreateDoorShareRequestDto createRequest;
+  late Options createOptions;
   late int updateShareId;
   late UpdateDoorShareRequestDto updateRequest;
   late Options updateOptions;
+
+  @override
+  Future<ApiEnvelopeDto<DoorShareRecipientResponseDto>> createDoorShare(
+    int doorId,
+    CreateDoorShareRequestDto request,
+    Options options,
+  ) async {
+    createDoorId = doorId;
+    createRequest = request;
+    createOptions = options;
+    return ApiEnvelopeDto(
+      code: success ? 200 : 500,
+      success: success,
+      data: const DoorShareRecipientResponseDto(shareId: 7),
+    );
+  }
 
   @override
   Future<ApiEnvelopeDto<dynamic>> updateDoorShare(
@@ -72,5 +117,5 @@ class _RecordingHomeApi implements HomeApi {
   }
 
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

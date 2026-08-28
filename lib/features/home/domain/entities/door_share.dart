@@ -46,6 +46,7 @@ class CreateDoorShareCommand {
     required this.role,
     required this.expiryType,
     required this.capabilities,
+    required this.sendEmail,
     this.expiresAtUtcMillis,
   });
 
@@ -53,6 +54,7 @@ class CreateDoorShareCommand {
   final DoorShareRole role;
   final DoorShareExpiryType expiryType;
   final List<ShareCapability> capabilities;
+  final bool sendEmail;
   final int? expiresAtUtcMillis;
 }
 

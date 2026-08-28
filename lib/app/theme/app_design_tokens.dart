@@ -293,6 +293,7 @@ class AppShapeTokens {
   static const sharedDevicesCardRadius = 16.0;
   static const sharedDeviceMemberCardRadius = 16.0;
   static const deviceShareEditSummaryRadius = 12.0;
+  static const deviceShareSendEmailCheckboxRadius = 3.0;
   static const receivingDevicesCardRadius = 16.0;
   static const safetySensorMetricIconRadius = 8.0;
   static const safetySensorPositionMarkerSize = 21.0;
@@ -387,6 +388,10 @@ class AppSpacingTokens {
   static const deviceShareEditSummaryTextGap = 5.0;
   static const deviceShareEditSummaryToForm = 20.0;
   static const deviceShareEditActionSize = 24.0;
+  static const deviceShareSendEmailTop = 22.0;
+  static const deviceShareSendEmailRowHeight = 36.0;
+  static const deviceShareSendEmailCheckboxSize = 20.0;
+  static const deviceShareSendEmailCheckSize = 14.0;
   static const receivingDevicesPageHorizontal = 20.0;
   static const receivingDevicesTitleTop = 28.0;
   static const receivingDevicesTitleToList = 28.0;
