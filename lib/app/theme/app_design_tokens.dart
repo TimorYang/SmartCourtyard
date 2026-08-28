@@ -25,6 +25,7 @@ class AppColors {
   static const notificationIconSurface = Color(0xFFF5F6F7);
   static const notificationIcon = Color(0xFF30343A);
   static const notificationUnread = Color(0xFF0878ED);
+  static const homeNotificationUnreadBadge = Color(0xFFFF3D3D);
   static const notificationServiceTag = Color(0x1A0066FF);
   static const notificationServiceText = Color(0xFF0066FF);
   static const notificationUpgradeTag = Color(0x1A358F00);
@@ -322,6 +323,9 @@ class AppLayoutTokens {
 class AppSpacingTokens {
   const AppSpacingTokens._();
 
+  static const homeNotificationUnreadBadgeSize = 8.0;
+  static const homeNotificationUnreadBadgeTop = -2.0;
+  static const homeNotificationUnreadBadgeRight = -2.0;
   static const smartOpenerAddedPageHorizontal = 20.0;
   static const smartOpenerAddedPageTop = 10.0;
   static const smartOpenerAddedCardPadding = 22.0;

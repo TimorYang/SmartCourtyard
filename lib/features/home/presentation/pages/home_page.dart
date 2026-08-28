@@ -23,6 +23,7 @@ import '../../../add_device/presentation/pages/add_new_doors_page.dart';
 import '../../../add_device/application/providers.dart';
 import '../../../../platform_bridge/hardware_models.dart';
 import '../../../hardware_debug/presentation/pages/ble_debug_page.dart';
+import '../../../notification/application/providers.dart';
 import '../../../notification/presentation/pages/notification_list_page.dart';
 import '../../application/providers.dart';
 import '../../domain/entities/home_scene.dart';
@@ -150,8 +151,12 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
 
   Future<void> _refreshHome() async {
     try {
+      ref.invalidate(notificationUnreadStateProvider);
       ref.read(homeDeviceListsInvalidatorProvider)();
-      await ref.read(homeDevicesProvider.future);
+      await Future.wait<void>([
+        ref.read(homeDevicesProvider.future).then((_) {}),
+        ref.read(notificationUnreadStateProvider.future).then((_) {}),
+      ]);
     } catch (_) {
       // Provider error states render the existing home error UI.
     }
@@ -161,6 +166,13 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
   Widget build(BuildContext context) {
     final devices = ref.watch(homeDevicesProvider);
     final scenes = ref.watch(homeScenesProvider);
+    final hasUnreadNotifications = ref
+        .watch(notificationUnreadStateProvider)
+        .when(
+          data: (hasUnread) => hasUnread,
+          loading: () => false,
+          error: (error, stackTrace) => false,
+        );
     final accountProfile = ref.watch(accountControllerProvider).asData?.value;
     final homeDevices = devices.when(
       data: (items) => items,
@@ -201,6 +213,7 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
                 children: [
                   _HomeHeader(
                     profile: accountProfile,
+                    hasUnreadNotifications: hasUnreadNotifications,
                     isSingleColumnDeviceList: _isSingleColumnDeviceList,
                     onToggleDeviceLayout: () {
                       setState(() {
@@ -453,12 +466,14 @@ class _HomeAddMenuIcon extends StatelessWidget {
 class _HomeHeader extends StatelessWidget {
   const _HomeHeader({
     required this.profile,
+    required this.hasUnreadNotifications,
     required this.isSingleColumnDeviceList,
     required this.onToggleDeviceLayout,
     required this.onAddPressed,
   });
 
   final AccountProfile? profile;
+  final bool hasUnreadNotifications;
   final bool isSingleColumnDeviceList;
   final VoidCallback onToggleDeviceLayout;
   final VoidCallback onAddPressed;
@@ -487,9 +502,10 @@ class _HomeHeader extends StatelessWidget {
               ),
               const Spacer(),
               _HeaderIconButton(
-                tooltip: "",
+                tooltip: l10n.notificationTitle,
                 assetPath: HomeAssetPaths.headerMessageIcon,
                 fallbackIcon: Icons.message,
+                showUnreadBadge: hasUnreadNotifications,
                 onPressed: () => context.push(NotificationListPage.routePath),
               ),
               _HeaderIconButton(
@@ -554,12 +570,14 @@ class _HeaderIconButton extends StatelessWidget {
     required this.assetPath,
     required this.fallbackIcon,
     required this.onPressed,
+    this.showUnreadBadge = false,
   });
 
   final String tooltip;
   final String assetPath;
   final IconData fallbackIcon;
   final VoidCallback onPressed;
+  final bool showUnreadBadge;
 
   @override
   Widget build(BuildContext context) {
@@ -568,12 +586,32 @@ class _HeaderIconButton extends StatelessWidget {
       visualDensity: VisualDensity.compact,
       padding: EdgeInsets.zero,
       onPressed: onPressed,
-      icon: Image.asset(
-        assetPath,
-        fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) {
-          return Icon(fallbackIcon, color: AppColors.iconHomeAction);
-        },
+      icon: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Image.asset(
+            assetPath,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              return Icon(fallbackIcon, color: AppColors.iconHomeAction);
+            },
+          ),
+          if (showUnreadBadge)
+            Positioned(
+              top: AppSpacingTokens.homeNotificationUnreadBadgeTop,
+              right: AppSpacingTokens.homeNotificationUnreadBadgeRight,
+              child: const DecoratedBox(
+                key: ValueKey<String>('home-notification-unread-badge'),
+                decoration: BoxDecoration(
+                  color: AppColors.homeNotificationUnreadBadge,
+                  shape: BoxShape.circle,
+                ),
+                child: SizedBox.square(
+                  dimension: AppSpacingTokens.homeNotificationUnreadBadgeSize,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -1102,15 +1140,16 @@ class _DeviceEditingSheetState extends ConsumerState<_DeviceEditingSheet> {
           showDeviceNameDialog(widget.parentContext, device: widget.device);
         },
       ),
-      _DeviceEditingAction(
-        label: l10n.homeDeviceEditDeleteAction,
-        assetPath: HomeAssetPaths.deviceEditDeleteIcon,
-        fallbackIcon: Icons.delete_outline_rounded,
-        onPressed: () {
-          Navigator.of(context).pop();
-          showDeviceDeleteDialog(widget.parentContext, device: widget.device);
-        },
-      ),
+      if (widget.device.shareStatus != 2)
+        _DeviceEditingAction(
+          label: l10n.homeDeviceEditDeleteAction,
+          assetPath: HomeAssetPaths.deviceEditDeleteIcon,
+          fallbackIcon: Icons.delete_outline_rounded,
+          onPressed: () {
+            Navigator.of(context).pop();
+            showDeviceDeleteDialog(widget.parentContext, device: widget.device);
+          },
+        ),
     ];
 
     return Material(

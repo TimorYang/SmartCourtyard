@@ -11,6 +11,7 @@ import 'package:flinx/features/auth/domain/entities/auth_session.dart';
 import 'package:flinx/features/home/application/providers.dart';
 import 'package:flinx/features/home/domain/entities/home_scene.dart';
 import 'package:flinx/features/home/presentation/pages/home_page.dart';
+import 'package:flinx/features/notification/application/providers.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +19,41 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('shows a badge when unread messages are available', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authSessionProvider.overrideWith(
+            (ref) async =>
+                const AuthSession(isAuthenticated: true, userId: 'user-1'),
+          ),
+          accountLocalDataSourceProvider.overrideWithValue(
+            InMemoryAccountLocalDataSource(),
+          ),
+          homeScenesProvider.overrideWith(
+            (ref) async => const [
+              HomeScene(id: 1, name: 'Home', doorCount: 0, isDefault: true),
+            ],
+          ),
+          homeDevicesProvider.overrideWith(
+            (ref) async => const <DeviceSummary>[],
+          ),
+          notificationUnreadStateProvider.overrideWith((ref) async => true),
+        ],
+        child: const FlinxApp(),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('home-notification-unread-badge')),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('shows the cached account nickname in the home header', (
     tester,
   ) async {
@@ -48,6 +84,7 @@ void main() {
           homeDevicesProvider.overrideWith(
             (ref) async => const <DeviceSummary>[],
           ),
+          notificationUnreadStateProvider.overrideWith((ref) async => false),
         ],
         child: const FlinxApp(),
       ),
@@ -84,6 +121,10 @@ void main() {
           addDeviceControllerProvider.overrideWith(
             () => _HomeBleDisconnectController(tracker),
           ),
+          notificationUnreadStateProvider.overrideWith((ref) async {
+            tracker.unreadStateRequestCount += 1;
+            return false;
+          }),
         ],
         child: const FlinxApp(),
       ),
@@ -91,6 +132,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(tracker.callCount, 1);
+    expect(tracker.unreadStateRequestCount, 1);
 
     final homeContext = tester.element(find.byType(HomePage));
     unawaited(
@@ -111,6 +153,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(tracker.callCount, 2);
+    expect(tracker.unreadStateRequestCount, 2);
   });
 
   testWidgets('pull to refresh reloads all home data', (tester) async {
@@ -140,6 +183,7 @@ void main() {
           addDeviceControllerProvider.overrideWith(
             () => _HomeBleDisconnectController(_HomeBleDisconnectTracker()),
           ),
+          notificationUnreadStateProvider.overrideWith((ref) async => false),
         ],
         child: const FlinxApp(),
       ),
@@ -179,6 +223,7 @@ void main() {
           addDeviceControllerProvider.overrideWith(
             () => _HomeBleDisconnectController(_HomeBleDisconnectTracker()),
           ),
+          notificationUnreadStateProvider.overrideWith((ref) async => false),
         ],
         child: const FlinxApp(),
       ),
@@ -232,6 +277,7 @@ void main() {
           addDeviceControllerProvider.overrideWith(
             () => _HomeBleDisconnectController(_HomeBleDisconnectTracker()),
           ),
+          notificationUnreadStateProvider.overrideWith((ref) async => false),
         ],
         child: const FlinxApp(),
       ),
@@ -285,6 +331,7 @@ void main() {
           addDeviceControllerProvider.overrideWith(
             () => _HomeBleDisconnectController(_HomeBleDisconnectTracker()),
           ),
+          notificationUnreadStateProvider.overrideWith((ref) async => false),
         ],
         child: const FlinxApp(),
       ),
@@ -296,7 +343,7 @@ void main() {
 
     expect(find.text('Move Scene'), findsOneWidget);
     expect(find.text('Name'), findsOneWidget);
-    expect(find.text('Delete Device'), findsOneWidget);
+    expect(find.text('Delete Device'), findsNothing);
     expect(find.text('Top'), findsNothing);
     expect(find.text('Customize'), findsNothing);
     expect(find.text('Share'), findsNothing);
@@ -338,6 +385,7 @@ void main() {
           addDeviceControllerProvider.overrideWith(
             () => _HomeBleDisconnectController(_HomeBleDisconnectTracker()),
           ),
+          notificationUnreadStateProvider.overrideWith((ref) async => false),
         ],
         child: const FlinxApp(),
       ),
@@ -388,6 +436,7 @@ void main() {
           addDeviceControllerProvider.overrideWith(
             () => _HomeBleDisconnectController(_HomeBleDisconnectTracker()),
           ),
+          notificationUnreadStateProvider.overrideWith((ref) async => false),
         ],
         child: const FlinxApp(),
       ),
@@ -441,6 +490,7 @@ void main() {
           addDeviceControllerProvider.overrideWith(
             () => _HomeBleDisconnectController(_HomeBleDisconnectTracker()),
           ),
+          notificationUnreadStateProvider.overrideWith((ref) async => false),
         ],
         child: const FlinxApp(),
       ),
@@ -460,6 +510,7 @@ void main() {
 
 class _HomeBleDisconnectTracker {
   var callCount = 0;
+  var unreadStateRequestCount = 0;
 }
 
 class _HomeBleDisconnectController extends AddDeviceController {
