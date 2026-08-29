@@ -12,6 +12,8 @@ import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../../../shared/widgets/flinx_switch.dart';
+import '../../../records/application/providers.dart';
+import '../../../records/domain/entities/operation_report.dart';
 import '../../../records/presentation/pages/operation_record_page.dart';
 import '../../../security_center/presentation/pages/security_center_page.dart';
 import '../../../settings/application/device_settings_controller.dart';
@@ -386,18 +388,30 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                     enabled: canControlDoor,
                     busy: isBusy,
                     pendingAction: commandState.pendingAction,
-                    onClose: () => controller.runAction(
-                      deviceId: hardwareDeviceId,
-                      action: DeviceCommandAction.closeDoor,
-                    ),
-                    onStop: () => controller.runAction(
-                      deviceId: hardwareDeviceId,
-                      action: DeviceCommandAction.stopDoor,
-                    ),
-                    onOpen: () => controller.runAction(
-                      deviceId: hardwareDeviceId,
-                      action: DeviceCommandAction.openDoor,
-                    ),
+                    onClose: () {
+                      unawaited(
+                        _runCommandAndReport(
+                          deviceId: hardwareDeviceId,
+                          action: DeviceCommandAction.closeDoor,
+                        ),
+                      );
+                    },
+                    onStop: () {
+                      unawaited(
+                        _runCommandAndReport(
+                          deviceId: hardwareDeviceId,
+                          action: DeviceCommandAction.stopDoor,
+                        ),
+                      );
+                    },
+                    onOpen: () {
+                      unawaited(
+                        _runCommandAndReport(
+                          deviceId: hardwareDeviceId,
+                          action: DeviceCommandAction.openDoor,
+                        ),
+                      );
+                    },
                   ),
                   const SizedBox(height: 18),
                   if (commandState.commandFeedback != null) ...[
@@ -452,12 +466,14 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                         deviceSettingsState.loading,
                     onLedChanged: (enabled) async {
                       setState(() => _ledEnabledOverride = enabled);
-                      await controller.runAction(
+                      final action = enabled
+                          ? DeviceCommandAction.turnLightOn
+                          : DeviceCommandAction.turnLightOff;
+                      final result = await controller.runAction(
                         deviceId: hardwareDeviceId,
-                        action: enabled
-                            ? DeviceCommandAction.turnLightOn
-                            : DeviceCommandAction.turnLightOff,
+                        action: action,
                       );
+                      _reportSuccessfulCommand(action, result);
                       if (mounted && !selectedDeviceUsesBle) {
                         setState(() => _ledEnabledOverride = null);
                       }
@@ -483,9 +499,11 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                       )) {
                         return;
                       }
-                      controller.runAction(
-                        deviceId: hardwareDeviceId,
-                        action: DeviceCommandAction.partialOpenDoor,
+                      unawaited(
+                        _runCommandAndReport(
+                          deviceId: hardwareDeviceId,
+                          action: DeviceCommandAction.partialOpenDoor,
+                        ),
                       );
                     },
                     onPartialOpenSetting: () => _showPartialOpenLevelEditor(
@@ -591,6 +609,10 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     ref
         .read(doorSettingsControllerProvider(widget.doorId).notifier)
         .updateCurrentValue(DeviceCapabilityCode.partialOpen, value);
+    _reportSuccessfulOperation(
+      action: OperationReportAction.partialOpenChanged,
+      operationSource: OperationReportSource.bluetooth,
+    );
   }
 
   Future<void> _setBluetoothToggle({
@@ -640,6 +662,76 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
           key.capabilityCode,
           appliedValue ?? (enabled ? key.defaultEnabledValue : 0),
         );
+    final reportAction = switch (key) {
+      DeviceSettingKey.autoCloseTime => OperationReportAction.autoCloseToggle,
+      DeviceSettingKey.doorOpenReminder =>
+        OperationReportAction.doorOpenReminderToggle,
+      _ => null,
+    };
+    if (reportAction != null) {
+      _reportSuccessfulOperation(
+        action: reportAction,
+        operationSource: OperationReportSource.bluetooth,
+      );
+    }
+  }
+
+  Future<void> _runCommandAndReport({
+    required String deviceId,
+    required DeviceCommandAction action,
+  }) async {
+    final result = await _controller.runAction(
+      deviceId: deviceId,
+      action: action,
+    );
+    _reportSuccessfulCommand(action, result);
+  }
+
+  void _reportSuccessfulCommand(
+    DeviceCommandAction action,
+    DeviceCommandExecutionResult? result,
+  ) {
+    if (!mounted || result?.succeeded != true) {
+      return;
+    }
+    final reportAction = switch (action) {
+      DeviceCommandAction.openDoor => OperationReportAction.open,
+      DeviceCommandAction.closeDoor => OperationReportAction.close,
+      DeviceCommandAction.stopDoor => OperationReportAction.stop,
+      DeviceCommandAction.turnLightOn => OperationReportAction.ledOn,
+      DeviceCommandAction.turnLightOff => OperationReportAction.ledOff,
+      DeviceCommandAction.partialOpenDoor || DeviceCommandAction.pb => null,
+    };
+    final operationSource = switch (result!.transport) {
+      DeviceCommandTransport.bluetooth => OperationReportSource.bluetooth,
+      DeviceCommandTransport.app => OperationReportSource.app,
+      null => null,
+    };
+    if (reportAction == null || operationSource == null) {
+      return;
+    }
+    _reportSuccessfulOperation(
+      action: reportAction,
+      operationSource: operationSource,
+    );
+  }
+
+  void _reportSuccessfulOperation({
+    required OperationReportAction action,
+    required OperationReportSource operationSource,
+  }) {
+    if (!mounted) {
+      return;
+    }
+    unawaited(
+      ref
+          .read(operationReportControllerProvider)
+          .report(
+            doorId: widget.doorId,
+            action: action,
+            operationSource: operationSource,
+          ),
+    );
   }
 
   String _doorStateLabel(

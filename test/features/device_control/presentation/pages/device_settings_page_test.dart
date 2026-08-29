@@ -1,10 +1,14 @@
 import 'package:flinx/features/device_control/presentation/pages/device_settings_page.dart';
 import 'package:flinx/features/device_control/application/device_command_controller.dart';
+import 'package:flinx/features/records/application/providers.dart';
+import 'package:flinx/features/records/domain/entities/operation_record_page_result.dart';
+import 'package:flinx/features/records/domain/repositories/operation_record_repository.dart';
 import 'package:flinx/features/settings/application/providers.dart';
 import 'package:flinx/features/settings/domain/entities/device_capability.dart';
 import 'package:flinx/features/settings/domain/entities/door_setting_snapshot.dart';
 import 'package:flinx/features/settings/domain/repositories/device_capability_repository.dart';
 import 'package:flinx/features/settings/domain/repositories/door_settings_repository.dart';
+import 'package:flinx/platform_bridge/hardware_models.dart';
 import 'package:flinx/platform_bridge/mock_hardware_gateway.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -29,7 +33,11 @@ void main() {
   testWidgets('accepts a hexadecimal raw value and refreshes the page', (
     tester,
   ) async {
-    await _pumpSettingsRouter(tester);
+    final reports = <_ReportedOperation>[];
+    await _pumpSettingsRouter(
+      tester,
+      operationRecordRepository: _RecordingOperationRecordRepository(reports),
+    );
 
     await tester.tap(find.text('LED off delay'));
     await tester.pumpAndSettle();
@@ -40,6 +48,50 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('0x09 (9)'), findsOneWidget);
+    expect(reports.single.action, OperationReportAction.ledOffDelayChanged);
+    expect(reports.single.operationSource, OperationReportSource.bluetooth);
+  });
+
+  testWidgets('reports all four supported settings after successful writes', (
+    tester,
+  ) async {
+    final reports = <_ReportedOperation>[];
+    await _pumpSettingsRouter(
+      tester,
+      operationRecordRepository: _RecordingOperationRecordRepository(reports),
+    );
+
+    await _saveRawSetting(tester, 'LED off delay', '9');
+    await _saveRawSetting(tester, 'Partial open', '8');
+    await _saveRawSetting(tester, 'Auto close', '1');
+    await _saveRawSetting(tester, 'Door open reminder', '5');
+
+    expect(reports.map((report) => report.action), [
+      OperationReportAction.ledOffDelayChanged,
+      OperationReportAction.partialOpenChanged,
+      OperationReportAction.autoCloseDelayChanged,
+      OperationReportAction.doorOpenReminderDelayChanged,
+    ]);
+    expect(
+      reports.map((report) => report.operationSource),
+      everyElement(OperationReportSource.bluetooth),
+    );
+  });
+
+  testWidgets('does not report installer-only or failed settings writes', (
+    tester,
+  ) async {
+    final reports = <_ReportedOperation>[];
+    await _pumpSettingsRouter(
+      tester,
+      gateway: _FailingSettingsHardwareGateway(),
+      operationRecordRepository: _RecordingOperationRecordRepository(reports),
+    );
+
+    await _saveRawSetting(tester, 'Opening speed', '70');
+    await _saveRawSetting(tester, 'Force margin', '2');
+    await _saveRawSetting(tester, 'LED off delay', '9');
+    expect(reports, isEmpty);
   });
 
   testWidgets('validates raw values against their byte width', (tester) async {
@@ -238,6 +290,8 @@ Future<void> _pumpSettingsRouter(
   ],
   List<DeviceCapability>? capabilityDefinitions,
   List<DoorSettingSnapshot> settingSnapshots = const [],
+  OperationRecordRepository? operationRecordRepository,
+  MockHardwareGateway? gateway,
 }) async {
   if (setDefaultSize) {
     tester.view.physicalSize = const Size(393, 852);
@@ -245,7 +299,7 @@ Future<void> _pumpSettingsRouter(
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
   }
-  final gateway = MockHardwareGateway();
+  final hardwareGateway = gateway ?? MockHardwareGateway();
 
   await tester.pumpWidget(
     ProviderScope(
@@ -257,7 +311,9 @@ Future<void> _pumpSettingsRouter(
               ? _ConnectedDeviceCommandController.new
               : _OtherDeviceCommandController.new,
         ),
-        deviceSettingsHardwareGatewayProvider.overrideWithValue(gateway),
+        deviceSettingsHardwareGatewayProvider.overrideWithValue(
+          hardwareGateway,
+        ),
         deviceCapabilityRepositoryProvider.overrideWithValue(
           _FakeDeviceCapabilityRepository(
             capabilityDefinitions ??
@@ -272,6 +328,10 @@ Future<void> _pumpSettingsRouter(
         ),
         doorSettingsRepositoryProvider.overrideWithValue(
           _FakeDoorSettingsRepository(settingSnapshots),
+        ),
+        operationRecordRepositoryProvider.overrideWithValue(
+          operationRecordRepository ??
+              const _RecordingOperationRecordRepository(),
         ),
       ],
       child: MaterialApp.router(
@@ -310,6 +370,19 @@ Future<void> _pumpSettingsRouter(
       ),
     ),
   );
+  await tester.pumpAndSettle();
+}
+
+Future<void> _saveRawSetting(
+  WidgetTester tester,
+  String title,
+  String value,
+) async {
+  await tester.tap(find.text(title).first);
+  await tester.pumpAndSettle();
+  expect(find.text('Raw value'), findsOneWidget);
+  await tester.enterText(find.byType(TextField), value);
+  await tester.tap(find.text('Save'));
   await tester.pumpAndSettle();
 }
 
@@ -372,4 +445,71 @@ class _FakeDeviceCapabilityRepository implements DeviceCapabilityRepository {
     required String deviceId,
     required String requestId,
   }) async => capabilities;
+}
+
+class _ReportedOperation {
+  const _ReportedOperation({
+    required this.doorId,
+    required this.action,
+    required this.operationSource,
+    required this.requestId,
+  });
+
+  final String doorId;
+  final OperationReportAction action;
+  final OperationReportSource operationSource;
+  final String requestId;
+}
+
+class _RecordingOperationRecordRepository implements OperationRecordRepository {
+  const _RecordingOperationRecordRepository([this.reports]);
+
+  final List<_ReportedOperation>? reports;
+
+  @override
+  Future<void> reportOperation({
+    required String doorId,
+    required OperationReportAction action,
+    required OperationReportSource operationSource,
+    required String requestId,
+  }) async {
+    reports?.add(
+      _ReportedOperation(
+        doorId: doorId,
+        action: action,
+        operationSource: operationSource,
+        requestId: requestId,
+      ),
+    );
+  }
+
+  @override
+  Future<OperationRecordPageResult> fetchOperationRecords({
+    required String doorId,
+    required int page,
+    required int pageSize,
+    required String requestId,
+  }) async => OperationRecordPageResult(
+    records: const [],
+    currentPage: page,
+    pageSize: pageSize,
+    total: 0,
+    hasMore: false,
+  );
+}
+
+class _FailingSettingsHardwareGateway extends MockHardwareGateway {
+  @override
+  Future<DeviceAttributeWriteResult> setDeviceAttributes({
+    required String requestId,
+    required String deviceId,
+    required List<DeviceAttribute> attributes,
+  }) async {
+    return DeviceAttributeWriteResult(
+      requestId: requestId,
+      deviceId: deviceId,
+      success: false,
+      sequence: 1,
+    );
+  }
 }

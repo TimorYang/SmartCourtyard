@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +8,8 @@ import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
+import '../../../records/application/providers.dart';
+import '../../../records/domain/entities/operation_report.dart';
 import '../../application/device_command_controller.dart';
 import '../../application/about_device_controller.dart';
 import '../../../settings/application/device_settings_controller.dart';
@@ -547,6 +551,26 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
     ref
         .read(doorSettingsControllerProvider(widget.doorId).notifier)
         .updateCurrentValue(key.capabilityCode, value);
+    final reportAction = switch (key) {
+      DeviceSettingKey.ledOffDelay => OperationReportAction.ledOffDelayChanged,
+      DeviceSettingKey.partialOpen => OperationReportAction.partialOpenChanged,
+      DeviceSettingKey.autoCloseTime =>
+        OperationReportAction.autoCloseDelayChanged,
+      DeviceSettingKey.doorOpenReminder =>
+        OperationReportAction.doorOpenReminderDelayChanged,
+      _ => null,
+    };
+    if (reportAction != null) {
+      unawaited(
+        ref
+            .read(operationReportControllerProvider)
+            .report(
+              doorId: widget.doorId,
+              action: reportAction,
+              operationSource: OperationReportSource.bluetooth,
+            ),
+      );
+    }
   }
 
   bool _isCurrentBleDeviceConnected() {

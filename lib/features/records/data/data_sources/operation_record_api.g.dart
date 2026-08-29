@@ -18,6 +18,41 @@ class _OperationRecordApi implements OperationRecordApi {
   final ParseErrorLogger? errorLogger;
 
   @override
+  Future<ApiEnvelopeDto<bool>> reportOperation(
+    int doorId,
+    OperationReportRequestDto body,
+    Options options,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    _data.addAll(body.toJson());
+    final newOptions = newRequestOptions(options);
+    newOptions.extra.addAll(_extra);
+    newOptions.headers.addAll(_dio.options.headers);
+    newOptions.headers.addAll(_headers);
+    final _options = newOptions.copyWith(
+      method: 'POST',
+      baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl),
+      queryParameters: queryParameters,
+      path: 'app/doors/${doorId}/operation-records',
+    )..data = _data;
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late ApiEnvelopeDto<bool> _value;
+    try {
+      _value = ApiEnvelopeDto<bool>.fromJson(
+        _result.data!,
+        (json) => json as bool,
+      );
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, response: _result);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
   Future<ApiEnvelopeDto<OperationRecordPageResponseDto>> fetchOperationRecords(
     int doorId,
     int current,

@@ -159,6 +159,14 @@ class _FakeOperationRecordRepository implements OperationRecordRepository {
   final Map<int, OperationRecordPageResult> pages;
 
   @override
+  Future<void> reportOperation({
+    required String doorId,
+    required OperationReportAction action,
+    required OperationReportSource operationSource,
+    required String requestId,
+  }) async {}
+
+  @override
   Future<OperationRecordPageResult> fetchOperationRecords({
     required String doorId,
     required int page,

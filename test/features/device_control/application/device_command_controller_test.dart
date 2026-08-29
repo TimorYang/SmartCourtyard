@@ -609,13 +609,15 @@ void main() {
     await _settleBleSession();
     final connectCount = gateway.connectedDeviceIds.length;
     controller.selectDevice('fbox');
-    await controller.runAction(
+    final result = await controller.runAction(
       deviceId: 'stale-device',
       action: DeviceCommandAction.openDoor,
     );
 
     expect(gateway.connectedDeviceIds, hasLength(connectCount));
     expect(gateway.commandDeviceIds, ['native-fbox']);
+    expect(result?.succeeded, isTrue);
+    expect(result?.transport, DeviceCommandTransport.bluetooth);
   });
 
   test('logs how a 0x0202 report is aligned with the selected UI', () async {
@@ -756,7 +758,7 @@ void main() {
 
     await controller.loadDoorDetail(doorId: '12');
     await _settleBleSession();
-    await controller.runAction(
+    final result = await controller.runAction(
       deviceId: 'ignored-without-ble',
       action: DeviceCommandAction.openDoor,
     );
@@ -770,6 +772,8 @@ void main() {
     expect(state.commandFeedback?.kind, DeviceCommandFeedbackKind.succeeded);
     expect(state.doorDetail?.doorState, DoorState.open);
     expect(state.doorDetail?.positionPercent, 100);
+    expect(result?.succeeded, isTrue);
+    expect(result?.transport, DeviceCommandTransport.app);
   });
 
   test('does not remotely execute unsupported actions without BLE', () async {
@@ -891,7 +895,7 @@ void main() {
 
       await controller.loadDoorDetail(doorId: '12');
       await _settleBleSession();
-      await controller.runAction(
+      final result = await controller.runAction(
         deviceId: 'ignored-without-ble',
         action: DeviceCommandAction.turnLightOn,
       );
@@ -904,6 +908,8 @@ void main() {
         DeviceCommandFeedbackKind.remoteTimeout,
       );
       expect(state.doorDetail?.ledStatus, 1);
+      expect(result?.succeeded, isFalse);
+      expect(result?.transport, DeviceCommandTransport.app);
     },
   );
 

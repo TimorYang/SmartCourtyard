@@ -168,6 +168,15 @@ enum DeviceCommandAction {
       '0x${controlCode.toRadixString(16).padLeft(4, '0').toUpperCase()}';
 }
 
+enum DeviceCommandTransport { bluetooth, app }
+
+class DeviceCommandExecutionResult {
+  const DeviceCommandExecutionResult({required this.succeeded, this.transport});
+
+  final bool succeeded;
+  final DeviceCommandTransport? transport;
+}
+
 enum DeviceCommandFeedbackKind {
   sending,
   succeeded,
@@ -1202,12 +1211,12 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
   bool _isCurrentBleSession(int sessionId) =>
       ref.mounted && sessionId == _bleSessionId;
 
-  Future<void> runAction({
+  Future<DeviceCommandExecutionResult?> runAction({
     required String deviceId,
     required DeviceCommandAction action,
   }) async {
     if (state.pendingAction != null) {
-      return;
+      return null;
     }
     final selectedDeviceId = state.selectedDeviceId;
     final isBleConnected =
@@ -1225,10 +1234,9 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
           clearInfoMessage: true,
           clearErrorMessage: true,
         );
-        return;
+        return const DeviceCommandExecutionResult(succeeded: false);
       }
-      await _runRemoteAction(action: action, remoteAction: remoteAction);
-      return;
+      return _runRemoteAction(action: action, remoteAction: remoteAction);
     }
 
     final targetDeviceId = _resolveSelectedHardwareDeviceId(deviceId);
@@ -1241,7 +1249,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
         clearInfoMessage: true,
         clearErrorMessage: true,
       );
-      return;
+      return const DeviceCommandExecutionResult(succeeded: false);
     }
 
     state = state.copyWith(
@@ -1271,6 +1279,10 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
         clearInfoMessage: true,
         clearErrorMessage: result.accepted,
       );
+      return DeviceCommandExecutionResult(
+        succeeded: result.accepted,
+        transport: DeviceCommandTransport.bluetooth,
+      );
     } catch (error) {
       state = state.copyWith(
         clearPendingAction: true,
@@ -1281,10 +1293,14 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
         clearErrorMessage: true,
         clearInfoMessage: true,
       );
+      return const DeviceCommandExecutionResult(
+        succeeded: false,
+        transport: DeviceCommandTransport.bluetooth,
+      );
     }
   }
 
-  Future<void> _runRemoteAction({
+  Future<DeviceCommandExecutionResult?> _runRemoteAction({
     required DeviceCommandAction action,
     required RemoteDoorCommandAction remoteAction,
   }) async {
@@ -1300,7 +1316,10 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
         clearInfoMessage: true,
         clearErrorMessage: true,
       );
-      return;
+      return const DeviceCommandExecutionResult(
+        succeeded: false,
+        transport: DeviceCommandTransport.app,
+      );
     }
 
     _remoteCommandGeneration += 1;
@@ -1331,7 +1350,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
           pollAttempts < _remotePollMaxAttempts) {
         await Future<void>.delayed(_remotePollInterval);
         if (!_isCurrentRemoteCommand(generation)) {
-          return;
+          return null;
         }
 
         final detail = await _fetchDoorDetailUseCase(
@@ -1339,7 +1358,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
           requestId: requestId,
         );
         if (!_isCurrentRemoteCommand(generation)) {
-          return;
+          return null;
         }
 
         pollAttempts += 1;
@@ -1360,7 +1379,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
         }
       }
       if (!_isCurrentRemoteCommand(generation)) {
-        return;
+        return null;
       }
 
       if (!stateConfirmed) {
@@ -1369,7 +1388,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
           requestId: requestId,
         );
         if (!_isCurrentRemoteCommand(generation)) {
-          return;
+          return null;
         }
         if (state.doorDetail?.id == doorId && detail.id == doorId) {
           state = state.copyWith(
@@ -1426,9 +1445,13 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
           'deviceResultCode': command.deviceResultCode,
         },
       );
+      return DeviceCommandExecutionResult(
+        succeeded: stateConfirmed,
+        transport: DeviceCommandTransport.app,
+      );
     } catch (error, stackTrace) {
       if (!_isCurrentRemoteCommand(generation)) {
-        return;
+        return null;
       }
       state = state.copyWith(
         clearPendingAction: true,
@@ -1445,6 +1468,10 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
         error: error,
         stackTrace: stackTrace,
         context: {'doorId': doorId, 'action': remoteAction.wireValue},
+      );
+      return const DeviceCommandExecutionResult(
+        succeeded: false,
+        transport: DeviceCommandTransport.app,
       );
     }
   }

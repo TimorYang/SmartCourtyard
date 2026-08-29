@@ -7,6 +7,8 @@ import '../data/data_sources/operation_record_remote_data_source.dart';
 import '../data/repositories/operation_record_repository_impl.dart';
 import '../domain/repositories/operation_record_repository.dart';
 import '../domain/use_cases/fetch_operation_records_use_case.dart';
+import '../domain/use_cases/report_operation_use_case.dart';
+import 'operation_report_controller.dart';
 import 'operation_records_controller.dart';
 
 final operationRecordApiProvider = Provider<OperationRecordApi>((ref) {
@@ -33,6 +35,19 @@ final fetchOperationRecordsUseCaseProvider =
         repository: ref.watch(operationRecordRepositoryProvider),
       );
     });
+
+final reportOperationUseCaseProvider = Provider<ReportOperationUseCase>((ref) {
+  return ReportOperationUseCase(
+    repository: ref.watch(operationRecordRepositoryProvider),
+  );
+});
+
+final operationReportControllerProvider = Provider<OperationReportController>(
+  (ref) => OperationReportController(
+    ref.watch(reportOperationUseCaseProvider),
+    ref.watch(appLoggerProvider),
+  ),
+);
 
 final operationRecordsControllerProvider =
     NotifierProvider<OperationRecordsController, OperationRecordsState>(

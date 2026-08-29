@@ -6,6 +6,7 @@ import '../../domain/entities/operation_record.dart';
 import '../../domain/entities/operation_record_page_result.dart';
 import '../../domain/repositories/operation_record_repository.dart';
 import '../data_sources/operation_record_remote_data_source.dart';
+import '../dto/operation_report_request_dto.dart';
 import '../dto/operation_record_response_dto.dart';
 
 class OperationRecordRepositoryImpl implements OperationRecordRepository {
@@ -18,21 +19,60 @@ class OperationRecordRepositoryImpl implements OperationRecordRepository {
   final AppLogger logger;
 
   @override
+  Future<void> reportOperation({
+    required String doorId,
+    required OperationReportAction action,
+    required OperationReportSource operationSource,
+    required String requestId,
+  }) async {
+    final parsedDoorId = _parseDoorId(
+      doorId,
+      requestId,
+      messageKey: 'operation_report_invalid_door_id',
+    );
+    try {
+      await remoteDataSource.reportOperation(
+        doorId: parsedDoorId,
+        body: OperationReportRequestDto(
+          action: action,
+          operationSource: operationSource,
+        ),
+        requestId: requestId,
+      );
+    } on OperationRecordRemoteException catch (error, stackTrace) {
+      logger.error(
+        'Failed to report door operation',
+        requestId: requestId,
+        error: error,
+        stackTrace: stackTrace,
+        context: {
+          'doorId': doorId,
+          'action': action.wireValue,
+          'operationSource': operationSource.wireValue,
+          'errorKind': error.kind.name,
+        },
+      );
+      throw _mapError(
+        error,
+        requestId,
+        doorId,
+        messageKey: 'operation_report_invalid_response',
+      );
+    }
+  }
+
+  @override
   Future<OperationRecordPageResult> fetchOperationRecords({
     required String doorId,
     required int page,
     required int pageSize,
     required String requestId,
   }) async {
-    final parsedDoorId = int.tryParse(doorId.trim());
-    if (parsedDoorId == null) {
-      throw AppError(
-        code: AppErrorCode.unknown,
-        messageKey: 'operation_record_invalid_door_id',
-        requestId: requestId,
-        deviceId: doorId,
-      );
-    }
+    final parsedDoorId = _parseDoorId(
+      doorId,
+      requestId,
+      messageKey: 'operation_record_invalid_door_id',
+    );
     try {
       final dto = await remoteDataSource.fetchOperationRecords(
         doorId: parsedDoorId,
@@ -49,15 +89,38 @@ class OperationRecordRepositoryImpl implements OperationRecordRepository {
         stackTrace: stackTrace,
         context: {'doorId': doorId, 'page': page, 'errorKind': error.kind.name},
       );
-      throw _mapError(error, requestId, doorId);
+      throw _mapError(
+        error,
+        requestId,
+        doorId,
+        messageKey: 'operation_record_invalid_response',
+      );
     }
+  }
+
+  int _parseDoorId(
+    String doorId,
+    String requestId, {
+    required String messageKey,
+  }) {
+    final parsedDoorId = int.tryParse(doorId.trim());
+    if (parsedDoorId == null) {
+      throw AppError(
+        code: AppErrorCode.unknown,
+        messageKey: messageKey,
+        requestId: requestId,
+        deviceId: doorId,
+      );
+    }
+    return parsedDoorId;
   }
 
   AppError _mapError(
     OperationRecordRemoteException error,
     String requestId,
-    String doorId,
-  ) {
+    String doorId, {
+    required String messageKey,
+  }) {
     if (error.kind == OperationRecordRemoteErrorKind.network &&
         error.network != null) {
       return mapNetworkExceptionToAppError(
@@ -68,7 +131,7 @@ class OperationRecordRepositoryImpl implements OperationRecordRepository {
     }
     return AppError(
       code: AppErrorCode.serverError,
-      messageKey: 'operation_record_invalid_response',
+      messageKey: messageKey,
       businessCode: error.businessFailure?.code,
       businessMessageKey: error.businessFailure?.messageKey,
       userMessage: error.kind == OperationRecordRemoteErrorKind.businessFailure

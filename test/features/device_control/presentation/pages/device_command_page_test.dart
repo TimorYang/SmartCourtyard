@@ -113,8 +113,15 @@ void main() {
     tester,
   ) async {
     final gateway = _RecordingHardwareGateway();
+    final reports = <_ReportedOperation>[];
 
-    await _pumpDevicePage(tester, gateway);
+    await _pumpDevicePage(
+      tester,
+      gateway,
+      operationRecordRepository: _EmptyOperationRecordRepository(
+        reports: reports,
+      ),
+    );
 
     expect(find.text('Garage door'), findsOneWidget);
     expect(find.text('Operated cycles'), findsOneWidget);
@@ -151,18 +158,22 @@ void main() {
     expect(gateway.deviceIds.last, 'mock-ble-device');
     expect(gateway.authenticatedDeviceIds, ['mock-ble-device']);
     expect(find.text('Open command sent (0x1001).'), findsOneWidget);
+    expect(reports.single.action, OperationReportAction.open);
+    expect(reports.single.operationSource, OperationReportSource.bluetooth);
 
     await tester.tap(find.byTooltip('Stop'));
     await tester.pumpAndSettle();
 
     expect(gateway.commands.last, DoorCommand.stop);
     expect(find.text('Stop command sent (0x1003).'), findsOneWidget);
+    expect(reports.last.action, OperationReportAction.stop);
 
     await tester.tap(find.byTooltip('Close'));
     await tester.pumpAndSettle();
 
     expect(gateway.commands.last, DoorCommand.close);
     expect(find.text('Close command sent (0x1002).'), findsOneWidget);
+    expect(reports.last.action, OperationReportAction.close);
   });
 
   testWidgets('updates the door frame and state from attribute reports', (
@@ -311,14 +322,23 @@ void main() {
     tester,
   ) async {
     final gateway = _RecordingHardwareGateway();
+    final reports = <_ReportedOperation>[];
 
-    await _pumpDevicePage(tester, gateway);
+    await _pumpDevicePage(
+      tester,
+      gateway,
+      operationRecordRepository: _EmptyOperationRecordRepository(
+        reports: reports,
+      ),
+    );
 
     await tester.tap(find.byKey(const ValueKey<String>('led-switch')));
     await tester.pumpAndSettle();
 
     expect(gateway.commands.last, DoorCommand.lightOn);
     expect(find.text('Turn LED on command sent (0x1005).'), findsOneWidget);
+    expect(reports.single.action, OperationReportAction.ledOn);
+    expect(reports.single.operationSource, OperationReportSource.bluetooth);
 
     final partialOpenAction = find.byKey(
       const ValueKey<String>('partial-open-action'),
@@ -331,6 +351,7 @@ void main() {
 
     expect(gateway.commands.last, DoorCommand.partialOpen);
     expect(find.text('Partial open command sent (0x1004).'), findsOneWidget);
+    expect(reports, hasLength(1));
 
     final moreSettingsAction = find.byKey(
       const ValueKey<String>('more-settings-action'),
@@ -356,7 +377,14 @@ void main() {
     'partial-open position badge saves a level without sending a command',
     (tester) async {
       final gateway = _RecordingHardwareGateway();
-      await _pumpDevicePage(tester, gateway);
+      final reports = <_ReportedOperation>[];
+      await _pumpDevicePage(
+        tester,
+        gateway,
+        operationRecordRepository: _EmptyOperationRecordRepository(
+          reports: reports,
+        ),
+      );
 
       final positionAction = find.byKey(
         const ValueKey<String>('partial-open-position-action'),
@@ -385,6 +413,8 @@ void main() {
       expect(gateway.writtenAttributes.single.unsignedValue, 2);
       expect(gateway.commands, isEmpty);
       expect(find.text('80 cm'), findsOneWidget);
+      expect(reports.single.action, OperationReportAction.partialOpenChanged);
+      expect(reports.single.operationSource, OperationReportSource.bluetooth);
     },
   );
 
@@ -504,7 +534,14 @@ void main() {
     'writes auto close through attributes and reminder through cmd 0x0E09',
     (tester) async {
       final gateway = _RecordingHardwareGateway();
-      await _pumpDevicePage(tester, gateway);
+      final reports = <_ReportedOperation>[];
+      await _pumpDevicePage(
+        tester,
+        gateway,
+        operationRecordRepository: _EmptyOperationRecordRepository(
+          reports: reports,
+        ),
+      );
 
       final autoCloseSwitch = find.byKey(
         const ValueKey<String>('auto-close-switch'),
@@ -550,6 +587,12 @@ void main() {
         1,
       ]);
       expect(gateway.attributeWriteCount, 2);
+      expect(reports.map((report) => report.action), [
+        OperationReportAction.autoCloseToggle,
+        OperationReportAction.autoCloseToggle,
+        OperationReportAction.doorOpenReminderToggle,
+        OperationReportAction.doorOpenReminderToggle,
+      ]);
     },
   );
 
@@ -1027,6 +1070,7 @@ void main() {
   testWidgets('restores LED switch when detail polling times out', (
     tester,
   ) async {
+    final reports = <_ReportedOperation>[];
     await _pumpDevicePage(
       tester,
       _DisconnectedHardwareGateway(),
@@ -1034,6 +1078,9 @@ void main() {
       remoteRepository: _SuccessfulRemoteDoorCommandRepository(),
       remotePollInterval: Duration.zero,
       remotePollMaxAttempts: 1,
+      operationRecordRepository: _EmptyOperationRecordRepository(
+        reports: reports,
+      ),
     );
     final ledSwitch = find.byKey(const ValueKey<String>('led-switch'));
 
@@ -1046,6 +1093,7 @@ void main() {
       find.text('Turn LED on timed out. Check the door state and try again.'),
       findsOneWidget,
     );
+    expect(reports, isEmpty);
   });
 }
 
@@ -1057,6 +1105,7 @@ Widget _buildPage(
   DoorSettingsRepository doorSettingsRepository =
       const _CommandDoorSettingsRepository(),
   RemoteDoorCommandRepository? remoteRepository,
+  OperationRecordRepository? operationRecordRepository,
   Duration remotePollInterval = const Duration(seconds: 1),
   int remotePollMaxAttempts = 6,
 }) {
@@ -1077,7 +1126,7 @@ Widget _buildPage(
         const _FakeFetchOnboardingDeviceKeyUseCase(),
       ),
       operationRecordRepositoryProvider.overrideWithValue(
-        const _EmptyOperationRecordRepository(),
+        operationRecordRepository ?? const _EmptyOperationRecordRepository(),
       ),
       deviceCapabilityRepositoryProvider.overrideWithValue(
         capabilityRepository,
@@ -1179,6 +1228,7 @@ Future<void> _pumpDevicePage(
   DoorSettingsRepository doorSettingsRepository =
       const _CommandDoorSettingsRepository(),
   RemoteDoorCommandRepository? remoteRepository,
+  OperationRecordRepository? operationRecordRepository,
   Duration remotePollInterval = const Duration(seconds: 1),
   int remotePollMaxAttempts = 6,
 }) async {
@@ -1194,6 +1244,7 @@ Future<void> _pumpDevicePage(
       capabilityRepository: capabilityRepository,
       doorSettingsRepository: doorSettingsRepository,
       remoteRepository: remoteRepository,
+      operationRecordRepository: operationRecordRepository,
       remotePollInterval: remotePollInterval,
       remotePollMaxAttempts: remotePollMaxAttempts,
     ),
@@ -1817,7 +1868,26 @@ class _UnbindDoorDetailRepository extends _FakeDoorDetailRepository {
 }
 
 class _EmptyOperationRecordRepository implements OperationRecordRepository {
-  const _EmptyOperationRecordRepository();
+  const _EmptyOperationRecordRepository({this.reports});
+
+  final List<_ReportedOperation>? reports;
+
+  @override
+  Future<void> reportOperation({
+    required String doorId,
+    required OperationReportAction action,
+    required OperationReportSource operationSource,
+    required String requestId,
+  }) async {
+    reports?.add(
+      _ReportedOperation(
+        doorId: doorId,
+        action: action,
+        operationSource: operationSource,
+        requestId: requestId,
+      ),
+    );
+  }
 
   @override
   Future<OperationRecordPageResult> fetchOperationRecords({
@@ -1832,6 +1902,20 @@ class _EmptyOperationRecordRepository implements OperationRecordRepository {
     total: 0,
     hasMore: false,
   );
+}
+
+class _ReportedOperation {
+  const _ReportedOperation({
+    required this.doorId,
+    required this.action,
+    required this.operationSource,
+    required this.requestId,
+  });
+
+  final String doorId;
+  final OperationReportAction action;
+  final OperationReportSource operationSource;
+  final String requestId;
 }
 
 class _PendingCommandGateway extends MockHardwareGateway {
