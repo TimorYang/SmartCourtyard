@@ -2236,25 +2236,32 @@ private extension HardwareBridge {
         deviceId: String,
         payload: Data
     ) throws -> SafetyAccessoryListResultDto {
-        guard payload.count >= 2 else {
+        // The specification describes a two-byte count, but deployed devices
+        // also return a compact one-byte count (for example: 01 06 00 25 AC 01).
+        // Accept either complete wire shape and reject partial/mismatched frames.
+        let layouts: [(count: Int, entryOffset: Int)] = {
+            let compactCount = Int(payload.first ?? 0)
+            if payload.count == 1 + compactCount * 5 {
+                return [(count: compactCount, entryOffset: 1)]
+            }
+
+            guard payload.count >= 2 else { return [] }
+            let legacyCount = Int(UInt16(payload[0]) << 8 | UInt16(payload[1]))
+            guard payload.count == 2 + legacyCount * 5 else { return [] }
+            return [(count: legacyCount, entryOffset: 2)]
+        }()
+
+        guard let layout = layouts.first else {
             throw PigeonError(
                 code: "invalid_safety_accessory_query_response",
-                message: "Safety accessory query response is missing its 2-byte count.",
+                message: "Safety accessory query response length does not match a supported count layout.",
                 details: nil
             )
         }
-        let totalCount = Int(UInt16(payload[0]) << 8 | UInt16(payload[1]))
-        let expectedBytes = 2 + totalCount * 5
-        guard payload.count == expectedBytes else {
-            throw PigeonError(
-                code: "invalid_safety_accessory_query_response",
-                message: "Safety accessory query response length does not match its count.",
-                details: nil
-            )
-        }
+
         var accessories: [SafetyAccessoryDto] = []
-        accessories.reserveCapacity(totalCount)
-        var offset = 2
+        accessories.reserveCapacity(layout.count)
+        var offset = layout.entryOffset
         while offset < payload.count {
             let serial = parseUInt32(payload.subdata(in: offset..<(offset + 4)))
             let status = payload[offset + 4]
@@ -2269,7 +2276,7 @@ private extension HardwareBridge {
         return SafetyAccessoryListResultDto(
             requestId: requestId,
             deviceId: deviceId,
-            totalCount: Int64(totalCount),
+            totalCount: Int64(layout.count),
             accessories: accessories
         )
     }

@@ -1,4 +1,4 @@
-import 'package:test/test.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 import 'package:flinx/core/errors/app_error.dart';
 import 'package:flinx/features/security_center/data/repositories/safety_sensor_pairing_repository_impl.dart';

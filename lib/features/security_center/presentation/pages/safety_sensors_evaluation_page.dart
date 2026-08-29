@@ -676,26 +676,26 @@ class _SensorRowState extends State<_SensorRow> {
     return Semantics(
       button: isExpandable,
       expanded: isExpandable ? _isExpanded : null,
-      child: GestureDetector(
+      child: Container(
         key: ValueKey<String>(
-          'sensor-toggle-${_sensorName(l10n, widget.sensor.sensorCode)}',
+          'sensor-${_sensorName(l10n, widget.sensor.sensorCode)}',
         ),
-        behavior: HitTestBehavior.opaque,
-        onTap: isExpandable
-            ? () => setState(() => _isExpanded = !_isExpanded)
-            : null,
-        child: Container(
-          key: ValueKey<String>(
-            'sensor-${_sensorName(l10n, widget.sensor.sensorCode)}',
-          ),
-          decoration: BoxDecoration(
-            color: AppColors.safetySensorItemSurface,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _SensorRowHeader(
+        decoration: BoxDecoration(
+          color: AppColors.safetySensorItemSurface,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            GestureDetector(
+              key: ValueKey<String>(
+                'sensor-toggle-${_sensorName(l10n, widget.sensor.sensorCode)}',
+              ),
+              behavior: HitTestBehavior.opaque,
+              onTap: isExpandable
+                  ? () => setState(() => _isExpanded = !_isExpanded)
+                  : null,
+              child: _SensorRowHeader(
                 sensor: widget.sensor,
                 l10n: l10n,
                 textTheme: textTheme,
@@ -706,23 +706,23 @@ class _SensorRowState extends State<_SensorRow> {
                 deviceId: widget.deviceId,
                 doorId: widget.doorId,
               ),
-              AnimatedSize(
-                duration: const Duration(milliseconds: 180),
-                curve: Curves.easeInOut,
-                child: _isExpanded
-                    ? Padding(
-                        padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
-                        child: _SensorOperationChart(
-                          key: ValueKey<String>(
-                            'sensor-operation-chart-${_sensorName(l10n, widget.sensor.sensorCode)}',
-                          ),
-                          points: widget.sensor.operationPoints,
+            ),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeInOut,
+              child: _isExpanded
+                  ? Padding(
+                      padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+                      child: _SensorOperationChart(
+                        key: ValueKey<String>(
+                          'sensor-operation-chart-${_sensorName(l10n, widget.sensor.sensorCode)}',
                         ),
-                      )
-                    : const SizedBox.shrink(),
-              ),
-            ],
-          ),
+                        points: widget.sensor.operationPoints,
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+          ],
         ),
       ),
     );

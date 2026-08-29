@@ -362,16 +362,30 @@ class RunnerTests: XCTestCase {
     XCTAssertEqual(accessories[6].statusCode, 0x55)
   }
 
-  func testParsesEmptySafetyAccessoryList() throws {
+  func testParsesCompactSafetyAccessoryListReturnedByCurrentFirmware() throws {
     let accessories = try HardwareBridge.parseSafetyAccessoryListForTesting(
+      Data([0x01, 0x06, 0x00, 0x25, 0xAC, 0x01])
+    )
+
+    XCTAssertEqual(accessories.count, 1)
+    XCTAssertEqual(accessories[0].serialNumber, 0x060025AC)
+    XCTAssertEqual(accessories[0].statusCode, 0x01)
+  }
+
+  func testParsesEmptySafetyAccessoryList() throws {
+    let compactAccessories = try HardwareBridge.parseSafetyAccessoryListForTesting(
+      Data([0x00])
+    )
+    let legacyAccessories = try HardwareBridge.parseSafetyAccessoryListForTesting(
       Data([0x00, 0x00])
     )
-    XCTAssertTrue(accessories.isEmpty)
+    XCTAssertTrue(compactAccessories.isEmpty)
+    XCTAssertTrue(legacyAccessories.isEmpty)
   }
 
   func testRejectsTruncatedOrCountMismatchedSafetyAccessoryList() {
     XCTAssertThrowsError(
-      try HardwareBridge.parseSafetyAccessoryListForTesting(Data([0x00]))
+      try HardwareBridge.parseSafetyAccessoryListForTesting(Data([0x01]))
     )
     XCTAssertThrowsError(
       try HardwareBridge.parseSafetyAccessoryListForTesting(

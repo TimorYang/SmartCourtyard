@@ -13,7 +13,9 @@ import 'package:flinx/features/security_center/domain/use_cases/fetch_general_ev
 import 'package:flinx/features/security_center/domain/use_cases/fetch_safety_sensors_evaluation_use_case.dart';
 import 'package:flinx/features/security_center/domain/entities/safety_sensors_evaluation.dart';
 import 'package:flinx/features/security_center/domain/entities/security_center_overview.dart';
+import 'package:flinx/features/security_center/domain/entities/security_center_connection_status.dart';
 import 'package:flinx/features/security_center/domain/repositories/security_balance_refresh_repository.dart';
+import 'package:flinx/features/security_center/domain/repositories/security_center_connection_status_repository.dart';
 import 'package:flinx/features/security_center/domain/entities/security_balance_refresh_result.dart';
 import 'package:flinx/features/security_center/domain/entities/safety_sensor_pairing.dart';
 import 'package:flinx/features/security_center/domain/repositories/safety_sensor_pairing_repository.dart';
@@ -97,14 +99,22 @@ void main() {
       ),
     );
 
-    for (final type in SecuritySensorType.values) {
+    for (final type in const [
+      SecuritySensorType.photoBeam,
+      SecuritySensorType.doorSensor,
+      SecuritySensorType.eLock,
+      SecuritySensorType.radar,
+      SecuritySensorType.safetyEdge,
+      SecuritySensorType.wiredPhotoBeam,
+      SecuritySensorType.wiredELock,
+    ]) {
       expect(_assetImage(type.imageAsset), findsOneWidget);
     }
     expect(
       _assetImage(
         'assets/icons/security_center/security_center_sensor_battery_full.png',
       ),
-      findsNWidgets(6),
+      findsNWidgets(3),
     );
     expect(
       _assetImage(
@@ -913,7 +923,7 @@ void main() {
     expect(find.text('Wireless wicket door'), findsOneWidget);
     expect(find.text('Wireless E-lock'), findsOneWidget);
     expect(find.text('Wireless safety edge'), findsOneWidget);
-    expect(find.text('Disconnect'), findsNWidgets(2));
+    expect(find.text('Offline'), findsNWidgets(2));
     expect(
       find.byKey(const ValueKey<String>('sensor-status-Wired photo beam')),
       findsOneWidget,
@@ -924,7 +934,7 @@ void main() {
     );
     expect(
       find.byKey(const ValueKey<String>('sensor-battery')),
-      findsNWidgets(3),
+      findsNWidgets(2),
     );
     for (final name in [
       'Wireless Photo Beam',
@@ -947,7 +957,7 @@ void main() {
       _assetImage(
         'assets/icons/security_center/security_center_sensor_battery_full.png',
       ),
-      findsNWidgets(3),
+      findsNWidgets(2),
     );
     expect(
       _assetImage(
@@ -1036,7 +1046,24 @@ void main() {
 
     expect(find.text('Wireless Photo Beam'), findsOneWidget);
     expect(find.text('Low battery power'), findsOneWidget);
-    expect(find.text('Image placeholder'), findsNWidgets(2));
+    expect(
+      _assetImage(
+        'assets/icons/security_center/safety_sensor_low_battery_overview_placeholder_infrared_amplification.png',
+      ),
+      findsOneWidget,
+    );
+    expect(
+      _assetImage(
+        'assets/icons/security_center/safety_sensor_battery_model_placeholder.png',
+      ),
+      findsOneWidget,
+    );
+    expect(
+      _assetImage(
+        'assets/icons/security_center/safety_sensor_battery_replacement_placeholder_infrared_amplification_battery.png',
+      ),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
 
@@ -1440,7 +1467,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final emptyHistoryToggle = find.byKey(
-      const ValueKey<String>('sensor-toggle-Empty history sensor'),
+      const ValueKey<String>('sensor-toggle-Wireless Photo Beam'),
     );
     await tester.ensureVisible(emptyHistoryToggle);
     await tester.pumpAndSettle();
@@ -1449,7 +1476,7 @@ void main() {
 
     expect(
       find.byKey(
-        const ValueKey<String>('sensor-operation-chart-Empty history sensor'),
+        const ValueKey<String>('sensor-operation-chart-Wireless Photo Beam'),
       ),
       findsOneWidget,
     );
@@ -1783,6 +1810,9 @@ Future<void> _pumpRouter(
         securityBalanceRefreshRepositoryProvider.overrideWithValue(
           const _FakeSecurityBalanceRefreshRepository(),
         ),
+        securityCenterConnectionStatusRepositoryProvider.overrideWithValue(
+          const _FakeSecurityCenterConnectionStatusRepository(),
+        ),
         fetchGeneralEvaluationUseCaseProvider.overrideWithValue(
           const FetchGeneralEvaluationUseCase(
             repository: _FakeGeneralEvaluationRepository(),
@@ -1832,6 +1862,9 @@ Future<void> _pumpPage(
         securityBalanceRefreshRepositoryProvider.overrideWithValue(
           const _FakeSecurityBalanceRefreshRepository(),
         ),
+        securityCenterConnectionStatusRepositoryProvider.overrideWithValue(
+          const _FakeSecurityCenterConnectionStatusRepository(),
+        ),
         fetchGeneralEvaluationUseCaseProvider.overrideWithValue(
           FetchGeneralEvaluationUseCase(
             repository: _FakeGeneralEvaluationRepository(
@@ -1859,6 +1892,79 @@ Future<void> _pumpPage(
     ),
   );
   await tester.pumpAndSettle();
+}
+
+class _FakeSecurityCenterConnectionStatusRepository
+    implements SecurityCenterConnectionStatusRepository {
+  const _FakeSecurityCenterConnectionStatusRepository();
+
+  @override
+  Future<SecurityCenterConnectionStatus> fetchConnectionStatus({
+    required String doorId,
+    required String requestId,
+  }) async => const SecurityCenterConnectionStatus(
+    wifiConnectionStatus: '0',
+    sensorEvaluation: SecuritySensorEvaluation(
+      status: SecurityEvaluationStatus.warning,
+      highlightedSensorTypes: [
+        SecuritySensorType.photoBeam,
+        SecuritySensorType.eLock,
+      ],
+      wirelessSensors: [
+        SecuritySensorSnapshot(
+          id: 'WIRELESS_PHOTO_BEAM',
+          type: SecuritySensorType.photoBeam,
+          status: SecurityEvaluationStatus.critical,
+          batteryPercentage: 12,
+          batteryStatus: SafetySensorBatteryStatus.low,
+        ),
+        SecuritySensorSnapshot(
+          id: 'WIRELESS_WICKET_DOOR',
+          type: SecuritySensorType.doorSensor,
+          status: SecurityEvaluationStatus.normal,
+          batteryPercentage: 80,
+          batteryStatus: SafetySensorBatteryStatus.normal,
+        ),
+        SecuritySensorSnapshot(
+          id: 'WIRELESS_ELECTRONIC_LOCK',
+          type: SecuritySensorType.eLock,
+          status: SecurityEvaluationStatus.normal,
+          batteryPercentage: 80,
+          batteryStatus: SafetySensorBatteryStatus.normal,
+        ),
+        SecuritySensorSnapshot(
+          id: 'WIRELESS_SAFETY_EDGE',
+          type: SecuritySensorType.safetyEdge,
+          status: SecurityEvaluationStatus.normal,
+          batteryPercentage: 80,
+          batteryStatus: SafetySensorBatteryStatus.normal,
+        ),
+        SecuritySensorSnapshot(
+          id: 'WIRELESS_SLACK_ROPE',
+          type: SecuritySensorType.radar,
+          status: SecurityEvaluationStatus.offline,
+          batteryPercentage: 0,
+          batteryStatus: SafetySensorBatteryStatus.unknown,
+        ),
+      ],
+      wiredSensors: [
+        SecuritySensorSnapshot(
+          id: 'WIRED_PHOTO_BEAM',
+          type: SecuritySensorType.wiredPhotoBeam,
+          status: SecurityEvaluationStatus.normal,
+          batteryPercentage: 100,
+          hasBattery: false,
+        ),
+        SecuritySensorSnapshot(
+          id: 'WIRED_ELECTRONIC_LOCK',
+          type: SecuritySensorType.wiredELock,
+          status: SecurityEvaluationStatus.normal,
+          batteryPercentage: 100,
+          hasBattery: false,
+        ),
+      ],
+    ),
+  );
 }
 
 class _FakeSecurityBalanceRefreshRepository

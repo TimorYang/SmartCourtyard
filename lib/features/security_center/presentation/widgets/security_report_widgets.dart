@@ -392,13 +392,15 @@ class _BalanceTable extends StatelessWidget {
                                     color: AppColors.securityCenterSuccess,
                                   ),
                                   const SizedBox(width: 5),
-                                  // Flexible(
-                                  //   child: Text(
-                                  //     _statusLabel(context, index),
-                                  //     overflow: TextOverflow.ellipsis,
-                                  //     style: AppTextTokens.securityReportBody(Theme.of(context).textTheme),
-                                  //   ),
-                                  // ),
+                                  Flexible(
+                                    child: Text(
+                                      _statusLabel(context, index),
+                                      overflow: TextOverflow.ellipsis,
+                                      style: AppTextTokens.securityReportBody(
+                                        Theme.of(context).textTheme,
+                                      ),
+                                    ),
+                                  ),
                                 ],
                               )
                             : Row(
