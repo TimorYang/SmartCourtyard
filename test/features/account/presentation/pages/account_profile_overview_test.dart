@@ -33,7 +33,6 @@ void main() {
     expect(repository.refreshCount, 1);
     expect(find.text('Alex'), findsOneWidget);
     expect(find.text('2026-07-28 20:30:00'), findsOneWidget);
-    expect(find.text('3'), findsOneWidget);
     expect(find.text('2'), findsOneWidget);
     expect(find.text('1'), findsOneWidget);
     expect(

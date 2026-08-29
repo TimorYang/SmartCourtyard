@@ -936,8 +936,9 @@ class _RenameDialogState extends State<_RenameDialog> {
 
   Future<void> _submit() async {
     final value = _controller.text.trim();
-    if (value.isNotEmpty && await widget.onConfirm(value) && mounted)
+    if (value.isNotEmpty && await widget.onConfirm(value) && mounted) {
       Navigator.pop(context);
+    }
   }
 }
 

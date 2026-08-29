@@ -852,33 +852,34 @@ class _SettingsRow extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: 12),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (data.value != null) ...[
-                      Text(
+                if (data.value != null)
+                  SizedBox(
+                    width: 112,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 12, right: 12),
+                      child: Text(
                         data.value!,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.end,
                         style: AppTextTokens.deviceSettingsRowValue(textTheme),
                       ),
-                      const SizedBox(width: 12),
-                    ],
-                    if (data.showChevron)
-                      const SizedBox(
-                        width: 28,
-                        child: Align(
-                          alignment: Alignment.centerRight,
-                          child: Icon(
-                            Icons.chevron_right,
-                            size: 28,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
+                    ),
+                  )
+                else
+                  const SizedBox(width: 12),
+                if (data.showChevron)
+                  const SizedBox(
+                    width: 28,
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: Icon(
+                        Icons.chevron_right,
+                        size: 28,
+                        color: AppColors.textPrimary,
                       ),
-                  ],
-                ),
+                    ),
+                  ),
               ],
             ),
           ),

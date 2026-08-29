@@ -145,6 +145,72 @@ class DeviceBleProtocolConfigTest {
   }
 
   @Test
+  fun `safety accessory pairing separates start acknowledgement from final result`() {
+    val startAck = byteArrayOf(0x01, 0x97.toByte(), 0xBC.toByte(), 0x00, 0x00, 0x00, 0x00)
+    val parsedAck = DeviceBleProtocolConfig.parseSafetyAccessoryPairingStartAcknowledgement(
+      command = DeviceBleProtocolConfig.commandSafetyAccessoryPairing,
+      control = DeviceBleProtocolConfig.controlSafetyAccessoryPairingStart,
+      data = startAck,
+    )
+    assertEquals(0x01, parsedAck?.resultCode)
+    assertEquals(0x97BC, parsedAck?.pairingFlowId)
+    assertEquals(0L, parsedAck?.reasonCode)
+
+    val finalSuccess = DeviceBleProtocolConfig.parseSafetyAccessoryPairingFinalReport(
+      frameType = DeviceBleProtocolConfig.frameTypeRequest,
+      command = DeviceBleProtocolConfig.commandSafetyAccessoryPairingResult,
+      data = byteArrayOf(0x97.toByte(), 0xBC.toByte(), 0x01),
+    )
+    assertEquals(0x01, finalSuccess?.resultCode)
+    assertEquals(0x97BC, finalSuccess?.pairingFlowId)
+    assertEquals(0L, finalSuccess?.reasonCode)
+    assertTrue(
+      DeviceBleProtocolConfig.matchesSafetyAccessoryPairingFinalReport(
+        pairingFlowId = 0x97BC,
+        report = requireNotNull(finalSuccess),
+      ),
+    )
+    assertFalse(
+      DeviceBleProtocolConfig.matchesSafetyAccessoryPairingFinalReport(
+        pairingFlowId = 0xE2CA,
+        report = finalSuccess,
+      ),
+    )
+
+    val finalFailure = DeviceBleProtocolConfig.parseSafetyAccessoryPairingFinalReport(
+      frameType = DeviceBleProtocolConfig.frameTypeRequest,
+      command = DeviceBleProtocolConfig.commandSafetyAccessoryPairingResult,
+      data = byteArrayOf(0x97.toByte(), 0xBC.toByte(), 0x02),
+    )
+    assertEquals(0x02, finalFailure?.resultCode)
+    assertEquals(0L, finalFailure?.reasonCode)
+    assertEquals(
+      0x03,
+      DeviceBleProtocolConfig.parseSafetyAccessoryPairingFinalReport(
+        frameType = DeviceBleProtocolConfig.frameTypeRequest,
+        command = DeviceBleProtocolConfig.commandSafetyAccessoryPairingResult,
+        data = byteArrayOf(0x97.toByte(), 0xBC.toByte(), 0x03),
+      )?.resultCode,
+    )
+    assertEquals(
+      null,
+      DeviceBleProtocolConfig.parseSafetyAccessoryPairingFinalReport(
+        frameType = DeviceBleProtocolConfig.frameTypeResponse,
+        command = DeviceBleProtocolConfig.commandSafetyAccessoryPairing,
+        data = byteArrayOf(0x01, 0x00, 0x00, 0x00, 0x00),
+      ),
+    )
+    assertEquals(
+      null,
+      DeviceBleProtocolConfig.parseSafetyAccessoryPairingFinalReport(
+        frameType = DeviceBleProtocolConfig.frameTypeRequest,
+        command = DeviceBleProtocolConfig.commandSafetyAccessoryPairingResult,
+        data = byteArrayOf(0x97.toByte(), 0xBC.toByte(), 0x7F),
+      ),
+    )
+  }
+
+  @Test
   fun `request frame type is accepted only for remote pairing result`() {
     assertTrue(
       DeviceBleProtocolConfig.matchesProtocolResponse(

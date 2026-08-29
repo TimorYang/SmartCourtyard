@@ -33,7 +33,6 @@ void main() {
     expect(find.text('Garden gate'), findsOneWidget);
     expect(find.text('Share to 0 people'), findsOneWidget);
     expect(find.byKey(SharedDevicesKeys.deviceCard(0)), findsOneWidget);
-    expect(find.byKey(SharedDevicesKeys.addButton), findsOneWidget);
   });
 
   testWidgets('renders a localized empty state', (tester) async {

@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
-import '../../../add_device/presentation/pages/f_box_wiring_test_page.dart';
 import 'login_page.dart';
 import 'register_page.dart';
 

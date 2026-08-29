@@ -5,6 +5,7 @@ import android.os.Looper
 import com.flinx.flinx.flinxhardware.bluetooth.BleManager
 import com.flinx.flinx.flinxhardware.permissions.PermissionManager
 import com.flinx.flinx.flinxhardware.protocol.DeviceBleProtocolConfig
+import com.flinx.flinx.flinxhardware.protocol.DeviceBleFrame
 import com.flinx.flinx.flinxhardware.protocol.DeviceRemotePairingResult
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -413,7 +414,11 @@ class HardwareHostApiImpl(
     action: SafetyAccessoryPairingActionDto,
     callback: (Result<SafetyAccessoryPairingResultDto>) -> Unit,
   ) {
-    val control = if (action == SafetyAccessoryPairingActionDto.START) 0x100A else 0x100B
+    val control = if (action == SafetyAccessoryPairingActionDto.START) {
+      DeviceBleProtocolConfig.controlSafetyAccessoryPairingStart
+    } else {
+      DeviceBleProtocolConfig.controlSafetyAccessoryPairingCancel
+    }
     if (action == SafetyAccessoryPairingActionDto.CANCEL) {
       bleManager.cancelProtocolCommand(deviceId, "safety_accessory_pairing_cancelled")
     }
@@ -424,6 +429,18 @@ class HardwareHostApiImpl(
       control = control,
       timeout = 30_000L,
       operation = "Safety Accessory Pairing",
+      responseParser = { frame ->
+        val response = DeviceBleProtocolConfig.parseSafetyAccessoryPairingFinalReport(
+          frameType = frame.frameType,
+          command = frame.command,
+          data = frame.data,
+        )
+          ?: throw FlutterError(
+            "invalid_safety_accessory_pairing_response",
+            "Safety accessory pairing result report is invalid.",
+          )
+        response.resultCode to response.reasonCode
+      },
       callback = callback,
     ) { result, reason ->
       SafetyAccessoryPairingResultDto(requestId, deviceId, safetyPairingStatus(result), reason, "result=0x%02X".format(result), if (result == 1) null else "pairing_failed")
@@ -502,6 +519,7 @@ class HardwareHostApiImpl(
     requestId: String, deviceId: String, command: Int,
     responseCommand: Int = command, control: Int, timeout: Long,
     operation: String,
+    responseParser: ((DeviceBleFrame) -> Pair<Int, Long>)? = null,
     callback: (Result<T>) -> Unit, transform: (Int, Long) -> T,
   ) = executeProtocol(
     requestId = requestId,
@@ -514,8 +532,12 @@ class HardwareHostApiImpl(
     control = control,
     callback = callback,
   ) { frame ->
-    val result = frame.data.firstOrNull()?.toInt()?.and(0xFF) ?: throw FlutterError("invalid_pairing_response", "Pairing response is empty.")
-    transform(result, frame.data.reasonCode())
+    val parsed = responseParser?.invoke(frame) ?: run {
+      val result = frame.data.firstOrNull()?.toInt()?.and(0xFF)
+        ?: throw FlutterError("invalid_pairing_response", "Pairing response is empty.")
+      result to frame.data.reasonCode()
+    }
+    transform(parsed.first, parsed.second)
   }
 
   private fun handleProtocolFrame(deviceId: String, frame: com.flinx.flinx.flinxhardware.protocol.DeviceBleFrame) {

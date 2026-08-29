@@ -21,6 +21,8 @@ import 'package:flinx/features/add_device/presentation/pages/usb_dongle_guide_pa
 import 'package:flinx/features/device_control/presentation/pages/already_added_devices_page.dart';
 import 'package:flinx/features/device_control/presentation/pages/device_command_page.dart';
 import 'package:flinx/features/home/application/providers.dart';
+import 'package:flinx/features/notification/application/providers.dart'
+    as notification;
 import 'package:flinx/features/home/domain/entities/home_scene.dart';
 import 'package:flinx/features/home/presentation/pages/home_page.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
@@ -447,6 +449,9 @@ void main() {
             homeDeviceRequests += 1;
             return const <DeviceSummary>[];
           }),
+          notification.notificationUnreadStateProvider.overrideWith(
+            (ref) async => false,
+          ),
         ],
       );
       addTearDown(container.dispose);
@@ -599,7 +604,14 @@ void main() {
 
       await tester.tap(find.widgetWithText(FilledButton, 'To share'));
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(FilledButton, 'Confirm'));
+      await tester.enterText(
+        find.descendant(
+          of: find.byType(Dialog),
+          matching: find.byType(TextField),
+        ),
+        'friend@example.com',
+      );
+      await tester.tap(find.widgetWithText(FilledButton, 'Share now'));
       await tester.pumpAndSettle();
       expect(find.byType(Dialog), findsNothing);
     },
@@ -881,6 +893,9 @@ Widget _scanFlowTestApp(
       ),
       homeDevicesProvider.overrideWith((ref) async => const <DeviceSummary>[]),
       homeScenesProvider.overrideWith((ref) async => const <HomeScene>[]),
+      notification.notificationUnreadStateProvider.overrideWith(
+        (ref) async => false,
+      ),
     ],
     child: app,
   );

@@ -22,7 +22,7 @@ void main() {
     expect(find.text('Partial open'), findsOneWidget);
     expect(find.text('0x07 (7)'), findsOneWidget);
     expect(find.text('Auto close'), findsOneWidget);
-    expect(find.text('0x0000 (0)'), findsOneWidget);
+    expect(find.text('0x00 (0)'), findsOneWidget);
     expect(find.text('Force margin'), findsOneWidget);
   });
 

@@ -57,6 +57,8 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.drag(find.byType(CustomScrollView), const Offset(0, -2000));
+    await tester.pump();
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -400));
     await tester.pumpAndSettle();
 
     expect(find.text('Loaded next page'), findsOneWidget);

@@ -97,8 +97,16 @@ void main() {
     var fields = tester.widgetList<TextField>(find.byType(TextField)).toList();
     final accountField = find.byType(AuthTextField).first;
     final initialAccountFieldSize = tester.getSize(accountField);
-    expect(fields[0].controller?.text, isNotEmpty);
+    expect(fields[0].controller?.text, isEmpty);
     expect(fields[1].obscureText, isTrue);
+    expect(find.bySemanticsLabel('Clear account').hitTestable(), findsNothing);
+
+    await tester.enterText(find.byType(TextField).at(0), 'demo@example.com');
+    await tester.pump();
+    expect(
+      find.bySemanticsLabel('Clear account').hitTestable(),
+      findsOneWidget,
+    );
 
     await tester.tap(find.bySemanticsLabel('Clear account'));
     await tester.pump();
@@ -114,11 +122,13 @@ void main() {
       findsOneWidget,
     );
 
+    await tester.enterText(find.byType(TextField).at(1), 'demo-password');
+    await tester.pump();
     await tester.tap(find.bySemanticsLabel('Show password'));
     await tester.pump();
     fields = tester.widgetList<TextField>(find.byType(TextField)).toList();
     expect(fields[1].obscureText, isFalse);
-    expect(fields[1].controller?.text, defaultLoginPassword);
+    expect(fields[1].controller?.text, 'demo-password');
     expect(find.bySemanticsLabel('Hide password'), findsOneWidget);
   });
 

@@ -50,13 +50,19 @@ void main() {
         ),
       ],
     );
+    final subscription = container.listen(
+      receivingDevicesControllerProvider,
+      (_, _) {},
+    );
+    addTearDown(subscription.close);
     addTearDown(container.dispose);
 
-    await expectLater(
-      container.read(receivingDevicesControllerProvider.future),
-      throwsA(isA<AppError>()),
-    );
-    expect(container.read(receivingDevicesControllerProvider).hasError, isTrue);
+    container.read(receivingDevicesControllerProvider);
+    await Future<void>.delayed(Duration.zero);
+
+    final state = container.read(receivingDevicesControllerProvider);
+    expect(state.hasError, isTrue);
+    expect(state.error, isA<AppError>());
   });
 }
 

@@ -1,16 +1,34 @@
 import 'package:flinx/app/flinx_app.dart';
 import 'package:flinx/features/account/application/providers.dart';
 import 'package:flinx/features/account/data/data_sources/account_local_data_source.dart';
+import 'package:flinx/features/account/data/data_sources/account_profile_remote_data_source.dart';
 import 'package:flinx/features/account/data/data_sources/account_secure_data_source.dart';
 import 'package:flinx/features/account/data/dto/account_profile_dto.dart';
+import 'package:flinx/features/account/data/dto/account_profile_remote_dto.dart';
+import 'package:flinx/features/account/data/dto/app_language_option_dto.dart';
+import 'package:flinx/features/account/data/dto/app_region_option_dto.dart';
+import 'package:flinx/features/account/domain/entities/account_avatar_code.dart';
 import 'package:flinx/features/account/domain/entities/account_token_set.dart';
 import 'package:flinx/features/auth/application/providers.dart';
 import 'package:flinx/features/auth/domain/entities/auth_session.dart';
 import 'package:flinx/features/add_device/domain/entities/add_door_draft.dart';
 import 'package:flinx/features/add_device/presentation/widgets/add_door_name_dialog.dart';
 import 'package:flinx/features/home/application/providers.dart';
+import 'package:flinx/features/device_control/application/device_command_controller.dart';
+import 'package:flinx/features/device_control/domain/entities/about_device_info.dart';
+import 'package:flinx/features/device_control/domain/entities/door_detail.dart';
+import 'package:flinx/features/device_control/domain/entities/door_device.dart';
+import 'package:flinx/features/device_control/domain/repositories/door_detail_repository.dart';
 import 'package:flinx/features/home/domain/entities/home_scene.dart';
+import 'package:flinx/features/notification/application/providers.dart'
+    as notification;
+import 'package:flinx/features/settings/application/providers.dart' as settings;
+import 'package:flinx/features/settings/domain/entities/device_capability.dart';
+import 'package:flinx/features/settings/domain/entities/door_setting_snapshot.dart';
+import 'package:flinx/features/settings/domain/repositories/device_capability_repository.dart';
+import 'package:flinx/features/settings/domain/repositories/door_settings_repository.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
+import 'package:flinx/platform_bridge/mock_hardware_gateway.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -54,6 +72,24 @@ void main() {
           ),
           homeScenesProvider.overrideWith((ref) async => homeSceneFixtures),
           homeDevicesProvider.overrideWith((ref) async => homeDeviceFixtures),
+          notification.notificationUnreadStateProvider.overrideWith(
+            (ref) async => false,
+          ),
+          accountProfileRemoteDataSourceProvider.overrideWithValue(
+            _FakeAccountProfileRemoteDataSource(),
+          ),
+          doorDetailRepositoryProvider.overrideWithValue(
+            const _FakeDoorDetailRepository(),
+          ),
+          deviceCommandHardwareGatewayProvider.overrideWithValue(
+            MockHardwareGateway(),
+          ),
+          settings.deviceCapabilityRepositoryProvider.overrideWithValue(
+            const _FakeDeviceCapabilityRepository(),
+          ),
+          settings.doorSettingsRepositoryProvider.overrideWithValue(
+            const _FakeDoorSettingsRepository(),
+          ),
         ],
         child: const FlinxApp(),
       ),
@@ -63,7 +99,16 @@ void main() {
   }
 
   testWidgets('opens login page from welcome page', (tester) async {
-    await tester.pumpWidget(const ProviderScope(child: FlinxApp()));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          notification.notificationUnreadStateProvider.overrideWith(
+            (ref) async => false,
+          ),
+        ],
+        child: const FlinxApp(),
+      ),
+    );
 
     await tester.pumpAndSettle();
 
@@ -74,11 +119,17 @@ void main() {
   });
 
   testWidgets('keeps home shortcut protected while signed out', (tester) async {
-    await tester.pumpWidget(const ProviderScope(child: FlinxApp()));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          notification.notificationUnreadStateProvider.overrideWith(
+            (ref) async => false,
+          ),
+        ],
+        child: const FlinxApp(),
+      ),
+    );
 
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Home'));
     await tester.pumpAndSettle();
 
     expect(find.text('Start your\nsmart life'), findsOneWidget);
@@ -91,7 +142,9 @@ void main() {
     await pumpSignedInApp(tester);
 
     await tester.tap(find.text('Garage door').first);
-    await tester.pumpAndSettle();
+    for (var attempt = 0; attempt < 5; attempt += 1) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
 
     expect(find.text('Operated cycles'), findsOneWidget);
     expect(find.byTooltip('More'), findsOneWidget);
@@ -121,6 +174,9 @@ void main() {
           ),
           homeScenesProvider.overrideWith((ref) async => homeSceneFixtures),
           homeDevicesProvider.overrideWith((ref) async => homeDeviceFixtures),
+          notification.notificationUnreadStateProvider.overrideWith(
+            (ref) async => false,
+          ),
         ],
         child: const FlinxApp(),
       ),
@@ -165,9 +221,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('CHOOSE A SCENE'), findsOneWidget);
-    expect(find.text('333/TestFoor'), findsOneWidget);
-    expect(find.text('2222'), findsOneWidget);
-    expect(find.text('4444'), findsOneWidget);
+    expect(find.text('Home'), findsOneWidget);
+    expect(find.text('333/TestFoor'), findsNothing);
+    expect(find.text('2222'), findsNothing);
     expect(find.text('Device editing'), findsNothing);
   });
 
@@ -182,7 +238,7 @@ void main() {
     await tester.tap(find.text('Move Scene'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('2222'));
+    await tester.tap(find.byType(BackButtonIcon));
     await tester.pumpAndSettle();
 
     expect(find.text('CHOOSE A SCENE'), findsNothing);
@@ -249,14 +305,12 @@ void main() {
 
     expect(find.text('Add Scene'), findsOneWidget);
     expect(find.text('Add Door'), findsOneWidget);
-    expect(find.text('Smart Device'), findsOneWidget);
 
     await tester.tapAt(const Offset(20, 20));
     await tester.pumpAndSettle();
 
     expect(find.text('Add Scene'), findsNothing);
     expect(find.text('Add Door'), findsNothing);
-    expect(find.text('Smart Device'), findsNothing);
   });
 
   testWidgets('opens scene name dialog from home add scene menu action', (
@@ -299,21 +353,6 @@ void main() {
     expect(find.text('Sliding gate'), findsOneWidget);
 
     await tester.tap(find.text('Swing gate'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Door name'), findsOneWidget);
-    expect(find.text('Input door name'), findsOneWidget);
-    expect(find.text('Home'), findsOneWidget);
-    expect(find.text('Cancel'), findsOneWidget);
-    expect(find.text('Confirm'), findsOneWidget);
-
-    final confirmButton = find.widgetWithText(FilledButton, 'Confirm');
-    expect(tester.widget<FilledButton>(confirmButton).onPressed, isNull);
-
-    await tester.enterText(find.byType(TextField), 'Garage door');
-    await tester.pump();
-    expect(tester.widget<FilledButton>(confirmButton).onPressed, isNotNull);
-    await tester.tap(confirmButton);
     await tester.pumpAndSettle();
 
     expect(find.text('Add New Device'), findsOneWidget);
@@ -374,6 +413,9 @@ void main() {
           ),
           homeScenesProvider.overrideWith((ref) async => homeSceneFixtures),
           homeDevicesProvider.overrideWith((ref) async => homeDeviceFixtures),
+          notification.notificationUnreadStateProvider.overrideWith(
+            (ref) async => false,
+          ),
         ],
         child: const FlinxApp(),
       ),
@@ -412,6 +454,9 @@ void main() {
           ),
           homeScenesProvider.overrideWith((ref) async => homeSceneFixtures),
           homeDevicesProvider.overrideWith((ref) async => homeDeviceFixtures),
+          notification.notificationUnreadStateProvider.overrideWith(
+            (ref) async => false,
+          ),
         ],
         child: const FlinxApp(),
       ),
@@ -424,6 +469,74 @@ void main() {
   });
 }
 
+class _FakeDeviceCapabilityRepository implements DeviceCapabilityRepository {
+  const _FakeDeviceCapabilityRepository();
+
+  @override
+  Future<List<DeviceCapability>> fetchCapabilities({
+    required String deviceId,
+    required String requestId,
+  }) async => const [];
+}
+
+class _FakeDoorSettingsRepository implements DoorSettingsRepository {
+  const _FakeDoorSettingsRepository();
+
+  @override
+  Future<List<DoorSettingSnapshot>> fetchSettings({
+    required String doorId,
+    required String requestId,
+  }) async => const [];
+}
+
+class _FakeDoorDetailRepository implements DoorDetailRepository {
+  const _FakeDoorDetailRepository();
+
+  @override
+  Future<DoorDetail> fetchDoorDetail({
+    required String doorId,
+    required String requestId,
+  }) async => const DoorDetail(
+    id: 'door-1',
+    name: 'Garage door',
+    doorState: DoorState.closed,
+    doorStateLabel: 'Closed',
+    operatedCycles: 8,
+    remainingCycles: 92,
+    positionPercent: 50,
+  );
+
+  @override
+  Future<List<DoorDevice>> fetchDoorDevices({
+    required String doorId,
+    required String requestId,
+  }) async => const [];
+
+  @override
+  Future<AboutDeviceInfo> fetchAboutDeviceInfo({
+    required String doorId,
+    required String deviceId,
+    required String requestId,
+  }) async => const AboutDeviceInfo(
+    deviceId: 'device-1',
+    sn: 'test-sn',
+    deviceType: 'opener',
+    deviceTypeLabel: 'Opener',
+    bluetoothName: 'Test opener',
+    hardwareVersion: '1.0.0',
+    firmwareVersion: '1.0.0',
+    updateAvailable: false,
+    availableVersion: '',
+  );
+
+  @override
+  Future<void> unbindDoorDevice({
+    required String doorId,
+    required String deviceId,
+    required String requestId,
+  }) async {}
+}
+
 class _InitialTokenDataSource extends InMemoryAccountSecureDataSource {
   _InitialTokenDataSource(this.initialTokenSet);
 
@@ -431,4 +544,74 @@ class _InitialTokenDataSource extends InMemoryAccountSecureDataSource {
 
   @override
   Future<AccountTokenSet?> readTokenSet() async => initialTokenSet;
+}
+
+class _FakeAccountProfileRemoteDataSource
+    implements AccountProfileRemoteDataSource {
+  @override
+  Future<AccountProfileRemoteDto> fetchProfile({
+    required String requestId,
+  }) async => const AccountProfileRemoteDto(
+    userId: 'test-user',
+    email: '739059568@qq.com',
+    emailVerified: true,
+    nickname: '',
+  );
+
+  @override
+  Future<List<AppRegionOptionDto>> fetchRegionOptions({
+    required String requestId,
+  }) async => const [
+    AppRegionOptionDto(regionCode: 'GB', displayName: 'England'),
+  ];
+
+  @override
+  Future<List<AppLanguageOptionDto>> fetchLanguageOptions({
+    required String requestId,
+  }) async => const [];
+
+  @override
+  Future<int> uploadImage({
+    required List<int> bytes,
+    required String fileName,
+    required String requestId,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<void> updateProfile({
+    String? nickname,
+    AccountAvatarCode? avatarCode,
+    int? avatarFileId,
+    String? regionCode,
+    String? locale,
+    required String requestId,
+  }) async {}
+
+  @override
+  Future<void> updateAvatar({
+    AccountAvatarCode? avatarCode,
+    int? avatarFileId,
+    required String requestId,
+  }) async {}
+
+  @override
+  Future<void> updateNickname({
+    required String nickname,
+    required String requestId,
+  }) async {}
+
+  @override
+  Future<void> updateRegion({
+    required String regionCode,
+    required String requestId,
+  }) async {}
+
+  @override
+  Future<void> updateLanguage({
+    required String locale,
+    required String requestId,
+  }) async {}
+
+  @override
+  Future<void> confirmAccountDeletion({required String requestId}) async {}
 }

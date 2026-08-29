@@ -216,6 +216,65 @@ class RunnerTests: XCTestCase {
     )
   }
 
+  func testSafetyAccessoryPairingSeparatesStartAckFromFinalResult() {
+    let startAck = Data([0x01, 0x97, 0xBC, 0x00, 0x00, 0x00, 0x00])
+    let parsedAck = HardwareBridge
+      .parseSafetyAccessoryPairingStartAcknowledgementForTesting(startAck)
+    XCTAssertEqual(parsedAck?.resultCode, 0x01)
+    XCTAssertEqual(parsedAck?.pairingFlowId, 0x97BC)
+    XCTAssertEqual(parsedAck?.reasonCode, 0x00000000)
+    XCTAssertEqual(
+      HardwareBridge.safetyAccessoryPairingDiagnosticResultForTesting(startAck),
+      "pairing_started"
+    )
+
+    let finalSuccess = Data([0x97, 0xBC, 0x01])
+    let parsedSuccess = HardwareBridge.parseSafetyAccessoryPairingResponseForTesting(
+      finalSuccess
+    )
+    XCTAssertEqual(parsedSuccess?.resultCode, 0x01)
+    XCTAssertEqual(parsedSuccess?.reasonCode, 0x00000000)
+    XCTAssertTrue(
+      HardwareBridge.matchesSafetyAccessoryPairingFinalReportForTesting(
+        pairingFlowId: 0x97BC,
+        payload: finalSuccess
+      )
+    )
+    XCTAssertFalse(
+      HardwareBridge.matchesSafetyAccessoryPairingFinalReportForTesting(
+        pairingFlowId: 0xE2CA,
+        payload: finalSuccess
+      )
+    )
+    XCTAssertEqual(
+      HardwareBridge.safetyAccessoryPairingDiagnosticResultForTesting(finalSuccess),
+      "success"
+    )
+
+    let finalFailure = Data([0x97, 0xBC, 0x02])
+    let parsedFailure = HardwareBridge.parseSafetyAccessoryPairingResponseForTesting(
+      finalFailure
+    )
+    XCTAssertEqual(parsedFailure?.resultCode, 0x02)
+    XCTAssertEqual(parsedFailure?.reasonCode, 0)
+    XCTAssertEqual(
+      HardwareBridge.safetyAccessoryPairingDiagnosticResultForTesting(
+        Data([0x97, 0xBC, 0x03])
+      ),
+      "timeout"
+    )
+    XCTAssertNil(
+      HardwareBridge.parseSafetyAccessoryPairingResponseForTesting(
+        Data([0x01, 0x00, 0x00, 0x00, 0x00])
+      )
+    )
+    XCTAssertNil(
+      HardwareBridge.parseSafetyAccessoryPairingResponseForTesting(
+        Data([0x97, 0xBC, 0x7F])
+      )
+    )
+  }
+
   func testNonWifiCommandsAcceptZeroResponseSequence() {
     XCTAssertTrue(
       HardwareBridge.matchesProvisioningResponseForTesting(

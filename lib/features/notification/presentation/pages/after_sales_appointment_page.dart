@@ -119,13 +119,18 @@ class _AfterSalesAppointmentPageState extends State<AfterSalesAppointmentPage> {
                                 'after-sales-time-slot-field',
                               ),
                               initialValue: _timeSlot,
+                              isExpanded: true,
                               decoration: _inputDecoration(),
                               style: AppTextTokens.afterSalesField(textTheme),
                               items: [
                                 for (final slot in _timeSlots)
                                   DropdownMenuItem(
                                     value: slot,
-                                    child: Text(slot),
+                                    child: Text(
+                                      slot,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
                               ],
                               onChanged: (value) {

@@ -776,6 +776,13 @@ final class HardwareBridge: HardwareHostApi {
            pending.command == .safetyAccessoryPairing {
             pending.timeout.cancel()
             pendingProvisioningRequests.removeValue(forKey: deviceId)
+            pendingDiagnostics.removeValue(
+                forKey: Self.diagnosticTransactionId(
+                    deviceId: deviceId,
+                    command: BleProvisioningCommand.safetyAccessoryPairing.rawValue,
+                    sequence: pending.sequence
+                )
+            )
             pending.failure(
                 PigeonError(
                     code: "safety_accessory_pairing_cancelled",
@@ -810,14 +817,28 @@ final class HardwareBridge: HardwareHostApi {
                     deviceId: deviceId,
                     command: .safetyAccessoryPairing,
                     payload: Data(Self.bigEndianBytes(control)),
-                    responseTimeout: 30
+                    responseTimeout: 30,
+                    control: control
                 ) { response in
-                    guard response.data.count >= 5 else {
+                    guard let parsedResponse = Self.parseSafetyAccessoryPairingFinalReport(
+                        command: response.command,
+                        type: response.type,
+                        payload: response.data
+                    ) else {
+                        self.logger.warning(
+                            "safety_accessory_pairing",
+                            requestId: requestId,
+                            deviceId: deviceId,
+                            state: "invalid_response",
+                            nativeCode: "invalid_safety_accessory_pairing_response",
+                            payloadBytes: response.data.count,
+                            details: "expectedCommand=\(DoorControlCommand.hex(SafetyAccessoryPairingProtocol.resultCommand)) expectedFinalDataBytes=3 actualCommand=\(DoorControlCommand.hex(response.command)) actualType=\(response.type) actualDataBytes=\(response.data.count) data=\(self.logger.payloadHex(response.data))"
+                        )
                         completion(
                             .failure(
                                 PigeonError(
                                     code: "invalid_safety_accessory_pairing_response",
-                                    message: "Safety accessory pairing response is incomplete.",
+                                    message: "Safety accessory pairing result report is invalid.",
                                     details: nil
                                 )
                             )
@@ -825,10 +846,8 @@ final class HardwareBridge: HardwareHostApi {
                         return
                     }
 
-                    let resultCode = response.data[0]
-                    let reasonCode = Self.parseUInt32(
-                        response.data.dropFirst().prefix(4).asData
-                    )
+                    let resultCode = parsedResponse.resultCode
+                    let reasonCode = parsedResponse.reasonCode
                     let status = SafetyAccessoryPairingStatusDto(resultCode: resultCode)
                     self.logger.info(
                         "safety_accessory_pairing",
@@ -1258,6 +1277,57 @@ extension HardwareBridge {
         ).accessories.map { ($0.serialNumber, $0.statusCode) }
     }
 
+    static func parseSafetyAccessoryPairingResponseForTesting(
+        _ payload: Data
+    ) -> (resultCode: UInt8, reasonCode: UInt32)? {
+        parseSafetyAccessoryPairingFinalReport(
+            command: SafetyAccessoryPairingProtocol.resultCommand,
+            type: 0x03,
+            payload: payload
+        ).map { ($0.resultCode, $0.reasonCode) }
+    }
+
+    static func parseSafetyAccessoryPairingStartAcknowledgementForTesting(
+        _ payload: Data
+    ) -> (resultCode: UInt8, pairingFlowId: UInt16, reasonCode: UInt32)? {
+        parseSafetyAccessoryPairingStartAcknowledgement(
+            command: SafetyAccessoryPairingProtocol.command,
+            control: SafetyAccessoryPairingProtocol.startControl,
+            payload: payload
+        )
+    }
+
+    static func matchesSafetyAccessoryPairingFinalReportForTesting(
+        pairingFlowId: UInt16?,
+        payload: Data
+    ) -> Bool {
+        guard let report = parseSafetyAccessoryPairingFinalReport(
+            command: SafetyAccessoryPairingProtocol.resultCommand,
+            type: 0x03,
+            payload: payload
+        ) else {
+            return false
+        }
+        return pairingFlowId == report.pairingFlowId
+    }
+
+    static func safetyAccessoryPairingDiagnosticResultForTesting(
+        _ payload: Data
+    ) -> String? {
+        let isFinalReport = payload.count == SafetyAccessoryPairingProtocol.resultDataLength
+        return diagnosticResult(
+            BleProtocolFrame(
+                crypto: 0x01,
+                type: isFinalReport ? 0x03 : 0x04,
+                sequence: 0,
+                command: isFinalReport
+                    ? SafetyAccessoryPairingProtocol.resultCommand
+                    : SafetyAccessoryPairingProtocol.command,
+                data: payload
+            )
+        )
+    }
+
     static func makeSafetyAccessoryDeletePayloadForTesting(
         serialNumber: UInt32
     ) -> Data {
@@ -1350,6 +1420,7 @@ extension HardwareBridge: BleManagerDelegate {
             provisioningAesKeys[event.deviceId] = nil
             if let pending = pendingProvisioningRequests.removeValue(forKey: event.deviceId) {
                 pending.timeout.cancel()
+                removePendingDiagnostic(pending)
                 pending.failure(
                     PigeonError(
                         code: "bluetooth_disconnected",
@@ -1503,6 +1574,7 @@ private extension HardwareBridge {
             guard let self, let pending = self.pendingProvisioningRequests.removeValue(forKey: deviceId) else {
                 return
             }
+            self.removePendingDiagnostic(pending)
             self.logger.warning(
                 "provisioning_response",
                 requestId: pending.requestId,
@@ -1527,6 +1599,8 @@ private extension HardwareBridge {
             command: command,
             expectedResponseCommand: responseCommand,
             sequence: sequence,
+            control: control,
+            safetyAccessoryPairingFlowId: nil,
             timeout: timeout,
             success: success,
             failure: failure
@@ -1549,7 +1623,7 @@ private extension HardwareBridge {
             deviceId: deviceId,
             operation: command.displayName,
             command: command.rawValue,
-            control: nil,
+            control: control,
             sequence: sequence,
             originPayload: Self.makeFrameData(
                 sequence: sequence,
@@ -1571,7 +1645,10 @@ private extension HardwareBridge {
         ) { [weak self] result in
             guard let self else { return }
             if case .failure(let error) = result {
-                self.pendingProvisioningRequests.removeValue(forKey: deviceId)?.timeout.cancel()
+                if let pending = self.pendingProvisioningRequests.removeValue(forKey: deviceId) {
+                    pending.timeout.cancel()
+                    self.removePendingDiagnostic(pending)
+                }
                 self.logger.error(
                     "provisioning_request",
                     requestId: requestId,
@@ -1789,7 +1866,7 @@ private extension HardwareBridge {
             resolveAttributeReport(frame, deviceId: deviceId)
             return
         }
-        guard let pending = pendingProvisioningRequests[deviceId] else {
+        guard var pending = pendingProvisioningRequests[deviceId] else {
             logger.info(
                 "provisioning_response",
                 deviceId: deviceId,
@@ -1800,6 +1877,41 @@ private extension HardwareBridge {
             return
         }
         
+        if let finalReport = Self.parseSafetyAccessoryPairingFinalReport(
+            command: frame.command,
+            type: frame.type,
+            payload: frame.data
+        ) {
+            guard pending.command == .safetyAccessoryPairing,
+                  pending.control == SafetyAccessoryPairingProtocol.startControl,
+                  let pairingFlowId = pending.safetyAccessoryPairingFlowId,
+                  pairingFlowId == finalReport.pairingFlowId else {
+                logger.warning(
+                    "safety_accessory_pairing",
+                    requestId: pending.requestId,
+                    deviceId: deviceId,
+                    state: "ignored_result",
+                    nativeCode: "safety_accessory_pairing_flow_mismatch",
+                    payloadBytes: frame.data.count,
+                    details: "expectedFlowId=\(pending.safetyAccessoryPairingFlowId.map(DoorControlCommand.hex) ?? "-") actualFlowId=\(DoorControlCommand.hex(finalReport.pairingFlowId)) result=0x\(String(format: "%02X", finalReport.resultCode))"
+                )
+                return
+            }
+            pending.timeout.cancel()
+            pendingProvisioningRequests.removeValue(forKey: deviceId)
+            removePendingDiagnostic(pending)
+            logger.info(
+                "provisioning_response",
+                requestId: pending.requestId,
+                deviceId: deviceId,
+                state: "matched",
+                payloadBytes: frame.data.count,
+                details: "command=\(DoorControlCommand.hex(frame.command)) pairingFlowId=\(DoorControlCommand.hex(pairingFlowId)) result=0x\(String(format: "%02X", finalReport.resultCode))"
+            )
+            pending.success(frame)
+            return
+        }
+
         guard Self.matchesProvisioningResponse(
                   requestCommand: pending.command.rawValue,
                   expectedCommand: pending.expectedResponseCommand,
@@ -1828,9 +1940,44 @@ private extension HardwareBridge {
                 details: "requestCommand=\(pending.command.hexCode) expectedResponseCommand=\(DoorControlCommand.hex(pending.expectedResponseCommand)) requestSequence=\(pending.sequence) responseSequence=\(frame.sequence)"
             )
         }
+
+        if let acknowledgement = Self.parseSafetyAccessoryPairingStartAcknowledgement(
+            command: frame.command,
+            control: pending.control,
+            payload: frame.data
+        ) {
+            pending.safetyAccessoryPairingFlowId = acknowledgement.pairingFlowId
+            pendingProvisioningRequests[deviceId] = pending
+            logger.info(
+                "safety_accessory_pairing",
+                requestId: pending.requestId,
+                deviceId: deviceId,
+                state: "start_acknowledged",
+                nativeCode: "safety_accessory_pairing_started",
+                payloadBytes: frame.data.count,
+                details: "control=\(DoorControlCommand.hex(pending.control ?? 0)) result=0x\(String(format: "%02X", acknowledgement.resultCode)) pairingFlowId=\(DoorControlCommand.hex(acknowledgement.pairingFlowId)) reason=\(DoorControlCommand.hex(acknowledgement.reasonCode)) waitingForFinalResult=1"
+            )
+            return
+        }
+
+        if pending.command == .safetyAccessoryPairing,
+           pending.control == SafetyAccessoryPairingProtocol.startControl,
+           frame.command == SafetyAccessoryPairingProtocol.command {
+            logger.warning(
+                "safety_accessory_pairing",
+                requestId: pending.requestId,
+                deviceId: deviceId,
+                state: "ignored_invalid_acknowledgement",
+                nativeCode: "invalid_safety_accessory_pairing_acknowledgement",
+                payloadBytes: frame.data.count,
+                details: "type=\(frame.type) data=\(logger.payloadHex(frame.data)) waitingForFinalResult=1"
+            )
+            return
+        }
         
         pending.timeout.cancel()
         pendingProvisioningRequests.removeValue(forKey: deviceId)
+        removePendingDiagnostic(pending)
         logger.info(
             "provisioning_response",
             requestId: pending.requestId,
@@ -1886,6 +2033,7 @@ private extension HardwareBridge {
             return
         }
         pending.timeout.cancel()
+        removePendingDiagnostic(pending)
         logger.error(
             "provisioning_response",
             requestId: pending.requestId,
@@ -1996,6 +2144,9 @@ private extension HardwareBridge {
         expectedResponseCommand: UInt16? = nil
     ) {
         guard flutterConsoleLoggingEnabled else { return }
+        pendingDiagnostics = pendingDiagnostics.filter {
+            !($0.value.deviceId == deviceId && $0.value.requestCommand == command)
+        }
         let transactionId = Self.diagnosticTransactionId(
             deviceId: deviceId,
             command: command,
@@ -2058,9 +2209,24 @@ private extension HardwareBridge {
             command: frame.command,
             sequence: frame.sequence
         )
-        let matchedEntry = pendingDiagnostics.removeValue(forKey: directId)
-            .map { (directId, $0) }
-            ?? pendingDiagnostics.first(where: {
+        var matchedEntry: (String, PendingBleDiagnostic)?
+        if let activeRequest = pendingProvisioningRequests[deviceId] {
+            let activeKey = Self.diagnosticTransactionId(
+                deviceId: deviceId,
+                command: activeRequest.command.rawValue,
+                sequence: activeRequest.sequence
+            )
+            if let activeDiagnostic = pendingDiagnostics[activeKey],
+               Self.diagnosticFrameMatchesActiveRequest(
+                   frame,
+                   pending: activeRequest
+               ) {
+                matchedEntry = (activeKey, activeDiagnostic)
+            }
+        } else if let directEntry = pendingDiagnostics[directId] {
+            matchedEntry = (directId, directEntry)
+        } else if let fallbackEntry = pendingDiagnostics
+            .filter({
                 $0.value.deviceId == deviceId &&
                     Self.matchesProvisioningResponse(
                         requestCommand: $0.value.requestCommand,
@@ -2070,10 +2236,21 @@ private extension HardwareBridge {
                         responseSequence: frame.sequence,
                         responseType: frame.type
                     )
-            }).map { key, value in
-                pendingDiagnostics.removeValue(forKey: key)
-                return (key, value)
-            }
+            })
+            .max(by: { $0.value.startedAt < $1.value.startedAt }) {
+            matchedEntry = (fallbackEntry.key, fallbackEntry.value)
+        }
+        let isPairingAcknowledgement = Self.parseSafetyAccessoryPairingStartAcknowledgement(
+            command: frame.command,
+            control: matchedEntry?.1.control,
+            payload: frame.data
+        ) != nil
+        if let (key, pending) = matchedEntry,
+           !isPairingAcknowledgement,
+           !(pending.requestCommand == SafetyAccessoryPairingProtocol.command &&
+             frame.command == SafetyAccessoryPairingProtocol.command) {
+            pendingDiagnostics.removeValue(forKey: key)
+        }
         let transactionId = matchedEntry?.0 ?? directId
         let pending = matchedEntry?.1
         let now = Date()
@@ -2090,7 +2267,11 @@ private extension HardwareBridge {
                 transactionId: transactionId,
                 requestId: pending?.requestId,
                 deviceId: deviceId,
-                operation: pending.map { "\($0.operation) Ack" } ?? "Unknown Response",
+                operation: pending.map {
+                    frame.command == SafetyAccessoryPairingProtocol.resultCommand
+                        ? "\($0.operation) Result"
+                        : "\($0.operation) Ack"
+                } ?? "Unknown Response",
                 command: Int64(frame.command),
                 control: pending?.control.map(Int64.init),
                 sequence: Int64(frame.sequence),
@@ -2121,7 +2302,105 @@ private extension HardwareBridge {
         "\(deviceId):\(command):\(sequence)"
     }
 
+    func removePendingDiagnostic(_ pending: PendingProvisioningRequest) {
+        pendingDiagnostics.removeValue(
+            forKey: Self.diagnosticTransactionId(
+                deviceId: pending.deviceId,
+                command: pending.command.rawValue,
+                sequence: pending.sequence
+            )
+        )
+    }
+
+    private static func parseSafetyAccessoryPairingStartAcknowledgement(
+        command: UInt16,
+        control: UInt16?,
+        payload: Data
+    ) -> (resultCode: UInt8, pairingFlowId: UInt16, reasonCode: UInt32)? {
+        guard command == SafetyAccessoryPairingProtocol.command,
+              control == SafetyAccessoryPairingProtocol.startControl,
+              payload.count == SafetyAccessoryPairingProtocol.startAcknowledgementDataLength,
+              payload[0] == SafetyAccessoryPairingProtocol.successResult else {
+            return nil
+        }
+        let pairingFlowId = UInt16(payload[1]) << 8 | UInt16(payload[2])
+        let reasonCode = parseUInt32(payload.dropFirst(3).asData)
+        guard reasonCode == 0 else { return nil }
+        return (
+            resultCode: payload[0],
+            pairingFlowId: pairingFlowId,
+            reasonCode: reasonCode
+        )
+    }
+
+    private static func parseSafetyAccessoryPairingFinalReport(
+        command: UInt16,
+        type: UInt8,
+        payload: Data
+    ) -> (resultCode: UInt8, pairingFlowId: UInt16, reasonCode: UInt32)? {
+        guard command == SafetyAccessoryPairingProtocol.resultCommand,
+              type == 0x03,
+              payload.count == SafetyAccessoryPairingProtocol.resultDataLength else {
+            return nil
+        }
+        let resultCode = payload[2]
+        guard SafetyAccessoryPairingProtocol.knownResults.contains(resultCode) else {
+            return nil
+        }
+        return (
+            resultCode: resultCode,
+            pairingFlowId: UInt16(payload[0]) << 8 | UInt16(payload[1]),
+            reasonCode: 0
+        )
+    }
+
+    private static func diagnosticFrameMatchesActiveRequest(
+        _ frame: BleProtocolFrame,
+        pending: PendingProvisioningRequest
+    ) -> Bool {
+        if let report = parseSafetyAccessoryPairingFinalReport(
+            command: frame.command,
+            type: frame.type,
+            payload: frame.data
+        ) {
+            return pending.command == .safetyAccessoryPairing &&
+                pending.control == SafetyAccessoryPairingProtocol.startControl &&
+                pending.safetyAccessoryPairingFlowId == report.pairingFlowId
+        }
+        return matchesProvisioningResponse(
+            requestCommand: pending.command.rawValue,
+            expectedCommand: pending.expectedResponseCommand,
+            pendingSequence: pending.sequence,
+            responseCommand: frame.command,
+            responseSequence: frame.sequence,
+            responseType: frame.type
+        )
+    }
+
     static func diagnosticResult(_ frame: BleProtocolFrame) -> String? {
+        if parseSafetyAccessoryPairingStartAcknowledgement(
+                command: frame.command,
+                control: SafetyAccessoryPairingProtocol.startControl,
+                payload: frame.data
+            ) != nil {
+                return "pairing_started"
+        }
+        if let report = parseSafetyAccessoryPairingFinalReport(
+            command: frame.command,
+            type: frame.type,
+            payload: frame.data
+        ) {
+            switch report.resultCode {
+            case SafetyAccessoryPairingProtocol.successResult:
+                return "success"
+            case SafetyAccessoryPairingProtocol.failureResult:
+                return "failure"
+            case SafetyAccessoryPairingProtocol.timeoutResult:
+                return "timeout"
+            default:
+                return nil
+            }
+        }
         guard let code = frame.data.first else { return nil }
         let successCode: UInt8
         if frame.command == RemotePairingProtocol.responseCommand {
@@ -3045,13 +3324,30 @@ private enum RemotePairingProtocol {
     static let responseTimeout: TimeInterval = 20
 }
 
+private enum SafetyAccessoryPairingProtocol {
+    static let command: UInt16 = 0x000B
+    static let resultCommand: UInt16 = 0x0012
+    static let startControl: UInt16 = 0x100A
+    static let cancelControl: UInt16 = 0x100B
+    static let successResult: UInt8 = 0x01
+    static let failureResult: UInt8 = 0x02
+    static let timeoutResult: UInt8 = 0x03
+    static let startAcknowledgementDataLength = 7
+    static let resultDataLength = 3
+    static let knownResults: Set<UInt8> = [
+        successResult,
+        failureResult,
+        timeoutResult
+    ]
+}
+
 private extension SafetyAccessoryPairingActionDto {
     var safetyAccessoryPairingControlCode: UInt16 {
         switch self {
         case .start:
-            return 0x100A
+            return SafetyAccessoryPairingProtocol.startControl
         case .cancel:
-            return 0x100B
+            return SafetyAccessoryPairingProtocol.cancelControl
         }
     }
 }
@@ -3142,6 +3438,8 @@ private struct PendingProvisioningRequest {
     let command: BleProvisioningCommand
     let expectedResponseCommand: UInt16
     let sequence: UInt16
+    let control: UInt16?
+    var safetyAccessoryPairingFlowId: UInt16?
     let timeout: DispatchWorkItem
     let success: (BleProtocolFrame) -> Void
     let failure: (Error) -> Void

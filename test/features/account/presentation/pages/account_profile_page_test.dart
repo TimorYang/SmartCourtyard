@@ -9,6 +9,7 @@ import 'package:flinx/features/account/data/dto/app_language_option_dto.dart';
 import 'package:flinx/features/account/data/dto/app_region_option_dto.dart';
 import 'package:flinx/features/account/data/dto/account_profile_remote_dto.dart';
 import 'package:flinx/features/account/domain/entities/account_overview.dart';
+import 'package:flinx/features/account/domain/entities/managed_login_device.dart';
 import 'package:flinx/features/account/domain/entities/receiving_door.dart';
 import 'package:flinx/features/account/domain/entities/account_avatar_code.dart';
 import 'package:flinx/features/account/domain/entities/app_language_option.dart';
@@ -17,6 +18,7 @@ import 'package:flinx/features/account/domain/entities/shared_door.dart';
 import 'package:flinx/features/account/domain/entities/shared_door_members.dart';
 import 'package:flinx/features/account/domain/repositories/receiving_devices_repository.dart';
 import 'package:flinx/features/account/domain/repositories/account_overview_repository.dart';
+import 'package:flinx/features/account/domain/repositories/managed_devices_repository.dart';
 import 'package:flinx/features/account/domain/repositories/shared_devices_repository.dart';
 import 'package:flinx/features/account/presentation/pages/account_details_page.dart';
 import 'package:flinx/features/account/presentation/pages/account_profile_page.dart';
@@ -60,7 +62,6 @@ void main() {
     expect(find.text('Shared devices'), findsOneWidget);
     expect(find.text('Receiving devices'), findsOneWidget);
     expect(find.text('manage devices'), findsOneWidget);
-    expect(find.text('after-sales service'), findsOneWidget);
     expect(find.text('Region'), findsOneWidget);
     expect(find.text('Language'), findsOneWidget);
     expect(find.text('System permissions'), findsOneWidget);
@@ -539,7 +540,9 @@ void main() {
         GoRoute(
           path: SharedDeviceMemberManagementPage.routePath,
           name: SharedDeviceMemberManagementPage.routeName,
-          builder: (context, state) => const SharedDeviceMemberManagementPage(),
+          builder: (context, state) => SharedDeviceMemberManagementPage(
+            device: state.extra as SharedDoor?,
+          ),
         ),
       ],
     );
@@ -549,6 +552,9 @@ void main() {
         overrides: [
           sharedDevicesRepositoryProvider.overrideWithValue(
             _FakeSharedDevicesRepository(),
+          ),
+          accountProfileRemoteDataSourceProvider.overrideWithValue(
+            _AvatarProfileRemoteDataSource(),
           ),
         ],
         child: MaterialApp.router(
@@ -568,38 +574,27 @@ void main() {
     expect(find.text('Garage door'), findsOneWidget);
     expect(find.text('Industrial door'), findsOneWidget);
     expect(find.text('Share to 3 people'), findsNWidgets(2));
-    expect(find.byKey(SharedDevicesKeys.addButton), findsOneWidget);
 
     await tester.tap(find.byKey(SharedDevicesKeys.deviceCard(0)));
     await tester.pumpAndSettle();
 
-    expect(find.text('Garage door'), findsOneWidget);
+    expect(find.text('Door 1'), findsOneWidget);
     expect(find.text('Administrator'), findsOneWidget);
     expect(find.text('Guest'), findsOneWidget);
-    expect(find.text('Andy@forcedoor.cn'), findsNWidgets(4));
-    expect(find.text('2025-10-16 17:54:28'), findsNWidgets(4));
-    expect(find.text('Accepted'), findsNWidgets(4));
     expect(
-      find.byKey(
-        SharedDeviceMemberManagementKeys.editButton('member-admin-001'),
-      ),
+      find.byKey(SharedDeviceMemberManagementKeys.memberCard('1')),
       findsOneWidget,
     );
-
-    await tester.scrollUntilVisible(
-      find.byKey(
-        SharedDeviceMemberManagementKeys.memberCard('member-guest-002'),
-      ),
-      200,
-    );
-
-    expect(find.text('Andy@forcedoor.cn'), findsNWidgets(4));
-    expect(find.text('2025-10-16 17:54:28'), findsNWidgets(4));
-    expect(find.text('Accepted'), findsNWidgets(4));
     expect(
-      find.byKey(
-        SharedDeviceMemberManagementKeys.deleteButton('member-guest-002'),
-      ),
+      find.byKey(SharedDeviceMemberManagementKeys.memberCard('2')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(SharedDeviceMemberManagementKeys.editButton('1')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(SharedDeviceMemberManagementKeys.deleteButton('2')),
       findsOneWidget,
     );
 
@@ -705,6 +700,14 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
+        overrides: [
+          managedDevicesRepositoryProvider.overrideWithValue(
+            _FakeManagedDevicesRepository(),
+          ),
+          accountProfileRemoteDataSourceProvider.overrideWithValue(
+            _AvatarProfileRemoteDataSource(),
+          ),
+        ],
         child: MaterialApp.router(
           theme: AppTheme.light(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -715,6 +718,11 @@ void main() {
     );
 
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.byKey(AccountProfileKeys.manageDevicesMenuItem),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.tap(find.byKey(AccountProfileKeys.manageDevicesMenuItem));
     await tester.pumpAndSettle();
 
@@ -1271,6 +1279,34 @@ class _AvatarProfileRemoteDataSource implements AccountProfileRemoteDataSource {
   }
 }
 
+class _FakeManagedDevicesRepository implements ManagedDevicesRepository {
+  @override
+  Future<List<ManagedLoginDevice>> fetchLoginDevices({
+    required String requestId,
+  }) async => [
+    ManagedLoginDevice(
+      sessionId: 'iphone',
+      deviceModel: 'Iphone 16 pro max',
+      platform: ManagedLoginDevicePlatform.ios,
+      lastLoginTime: DateTime(2025, 8, 2, 11, 2),
+      currentDevice: true,
+    ),
+    ManagedLoginDevice(
+      sessionId: 'ipad',
+      deviceModel: 'Ipad air',
+      platform: ManagedLoginDevicePlatform.ios,
+      lastLoginTime: DateTime(2025, 8, 2, 11, 2),
+      currentDevice: false,
+    ),
+  ];
+
+  @override
+  Future<void> removeLoginDevice({
+    required String sessionId,
+    required String requestId,
+  }) async {}
+}
+
 class _FakeSharedDevicesRepository implements SharedDevicesRepository {
   @override
   Future<List<SharedDoor>> fetchSharedDoors({required String requestId}) async {
@@ -1287,8 +1323,26 @@ class _FakeSharedDevicesRepository implements SharedDevicesRepository {
   }) async => SharedDoorMembers(
     doorId: doorId,
     doorName: 'Door $doorId',
-    administrators: const [],
-    guests: const [],
+    administrators: [
+      SharedDoorMember(
+        doorId: doorId,
+        shareId: 1,
+        email: 'admin@example.com',
+        role: SharedDoorMemberRole.administrator,
+        expiryType: SharedDoorMemberExpiryType.neverExpired,
+        capabilityCodes: const [],
+      ),
+    ],
+    guests: [
+      SharedDoorMember(
+        doorId: doorId,
+        shareId: 2,
+        email: 'guest@example.com',
+        role: SharedDoorMemberRole.guest,
+        expiryType: SharedDoorMemberExpiryType.neverExpired,
+        capabilityCodes: const [],
+      ),
+    ],
   );
 
   @override

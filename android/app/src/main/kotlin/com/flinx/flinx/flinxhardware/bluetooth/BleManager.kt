@@ -815,9 +815,30 @@ class BleManager(
       encrypted = true,
       expectedResponseCommand = responseCommand,
     )
-    val pending = PendingProtocolCommand(requestId, deviceId, sequence, responseCommand, callback)
+    val pending = PendingProtocolCommand(
+      requestId = requestId,
+      deviceId = deviceId,
+      sequence = sequence,
+      command = command,
+      responseCommand = responseCommand,
+      control = control,
+      callback = callback,
+    )
     pending.timeoutRunnable = Runnable {
-      protocolSessions.remove(deviceId)?.callback(Result.failure(FlutterError("command_timeout", "BLE protocol command timed out.", "requestId=$requestId,deviceId=$deviceId,sequence=$sequence")))
+      protocolSessions.remove(deviceId)?.let { expired ->
+        pendingDiagnostics.remove(
+          diagnosticTransactionId(deviceId, expired.command, expired.sequence),
+        )
+        expired.callback(
+          Result.failure(
+            FlutterError(
+              "command_timeout",
+              "BLE protocol command timed out.",
+              "requestId=$requestId,deviceId=$deviceId,sequence=$sequence",
+            ),
+          ),
+        )
+      }
     }
     protocolSessions[deviceId] = pending
     mainHandler.postDelayed(pending.timeoutRunnable!!, timeoutMillis)
@@ -839,9 +860,16 @@ class BleManager(
   }
 
   fun cancelProtocolCommand(deviceId: String, code: String) {
-    removeProtocolSession(deviceId)?.callback(
-      Result.failure(FlutterError(code, "BLE protocol operation was cancelled.", "deviceId=$deviceId")),
-    )
+    removeProtocolSession(deviceId)?.let { pending ->
+      pendingDiagnostics.remove(
+        diagnosticTransactionId(deviceId, pending.command, pending.sequence),
+      )
+      pending.callback(
+        Result.failure(
+          FlutterError(code, "BLE protocol operation was cancelled.", "deviceId=$deviceId"),
+        ),
+      )
+    }
   }
 
   /** 发送门控命令。0x0005 Data 为 2 字节大端 Controls。 */
@@ -1856,14 +1884,65 @@ class BleManager(
   private fun removeProtocolSession(deviceId: String): PendingProtocolCommand? {
     val pending = protocolSessions.remove(deviceId) ?: return null
     pending.timeoutRunnable?.let(mainHandler::removeCallbacks)
+    pendingDiagnostics.remove(
+      diagnosticTransactionId(deviceId, pending.command, pending.sequence),
+    )
     return pending
   }
 
   private fun handleProtocolNotification(deviceId: String, payload: ByteArray) {
-    val frame = parseProvisioningFrame(deviceId, payload) ?: return
+    val frame = parseProvisioningFrame(deviceId, payload)
+    if (frame == null) {
+      val pending = protocolSessions[deviceId]
+      val encryptedEnvelope = DeviceBleProtocolConfig.hasValidEnvelope(payload) &&
+        (payload[4].toInt() and 0xFF) == DeviceBleProtocolConfig.cryptoAes128 &&
+        extractEncryptedPayload(payload) != null
+      if (pending != null && encryptedEnvelope) {
+        BleNativeLog.e(
+          TAG,
+          "event=protocol_decrypt_failed requestId=${pending.requestId} deviceId=$deviceId command=0x${pending.command.toString(16).padStart(4, '0')}",
+        )
+        removeProtocolSession(deviceId)?.callback(
+          Result.failure(
+            FlutterError(
+              "encrypted_protocol_frame_decrypt_failed",
+              "Encrypted BLE protocol response could not be decrypted.",
+              "requestId=${pending.requestId},deviceId=$deviceId",
+            ),
+          ),
+        )
+      }
+      return
+    }
     val pending = protocolSessions[deviceId]
     if (pending == null) {
       onProtocolFrame?.invoke(deviceId, frame)
+      return
+    }
+    val finalReport = DeviceBleProtocolConfig.parseSafetyAccessoryPairingFinalReport(
+      frameType = frame.frameType,
+      command = frame.command,
+      data = frame.data,
+    )
+    if (finalReport != null) {
+      if (pending.command == DeviceBleProtocolConfig.commandSafetyAccessoryPairing &&
+        pending.control == DeviceBleProtocolConfig.controlSafetyAccessoryPairingStart &&
+        DeviceBleProtocolConfig.matchesSafetyAccessoryPairingFinalReport(
+          pairingFlowId = pending.safetyAccessoryPairingFlowId,
+          report = finalReport,
+        )
+      ) {
+        BleNativeLog.i(
+          TAG,
+          "event=safety_accessory_pairing_result_matched requestId=${pending.requestId} deviceId=$deviceId pairingFlowId=0x${finalReport.pairingFlowId.toString(16).padStart(4, '0')} result=0x${finalReport.resultCode.toString(16).padStart(2, '0')}",
+        )
+        removeProtocolSession(deviceId)?.callback(Result.success(frame))
+      } else {
+        BleNativeLog.w(
+          TAG,
+          "event=safety_accessory_pairing_result_ignored requestId=${pending.requestId} deviceId=$deviceId expectedFlowId=${pending.safetyAccessoryPairingFlowId?.let { "0x${it.toString(16).padStart(4, '0')}" } ?: "-"} actualFlowId=0x${finalReport.pairingFlowId.toString(16).padStart(4, '0')} result=0x${finalReport.resultCode.toString(16).padStart(2, '0')}",
+        )
+      }
       return
     }
     if (DeviceBleProtocolConfig.matchesProtocolResponse(
@@ -1876,6 +1955,29 @@ class BleManager(
           TAG,
           "event=protocol_response_sequence_mismatch_accepted requestId=${pending.requestId} deviceId=$deviceId requestSequence=${pending.sequence} responseSequence=${frame.sequence} command=0x${frame.command.toString(16).padStart(4, '0')}",
         )
+      }
+      val acknowledgement = DeviceBleProtocolConfig.parseSafetyAccessoryPairingStartAcknowledgement(
+          command = frame.command,
+          control = pending.control,
+          data = frame.data,
+        )
+      if (acknowledgement != null) {
+        pending.safetyAccessoryPairingFlowId = acknowledgement.pairingFlowId
+        BleNativeLog.i(
+          TAG,
+          "event=safety_accessory_pairing_started requestId=${pending.requestId} deviceId=$deviceId command=0x${frame.command.toString(16).padStart(4, '0')} pairingFlowId=0x${acknowledgement.pairingFlowId.toString(16).padStart(4, '0')} reason=0x${acknowledgement.reasonCode.toString(16).padStart(8, '0')} waitingForFinalResult=true",
+        )
+        return
+      }
+      if (pending.command == DeviceBleProtocolConfig.commandSafetyAccessoryPairing &&
+        pending.control == DeviceBleProtocolConfig.controlSafetyAccessoryPairingStart &&
+        frame.command == DeviceBleProtocolConfig.commandSafetyAccessoryPairing
+      ) {
+        BleNativeLog.w(
+          TAG,
+          "event=safety_accessory_pairing_ack_ignored requestId=${pending.requestId} deviceId=$deviceId frameType=0x${frame.frameType.toString(16).padStart(2, '0')} dataBytes=${frame.data.size} waitingForFinalResult=true",
+        )
+        return
       }
       removeProtocolSession(deviceId)?.callback(Result.success(frame))
       return
@@ -2239,6 +2341,9 @@ class BleManager(
     expectedResponseCommand: Int = command,
   ) {
     if (!flutterConsoleLoggingEnabled) return
+    pendingDiagnostics.entries.removeIf {
+      it.value.deviceId == deviceId && it.value.requestCommand == command
+    }
     val transactionId = diagnosticTransactionId(deviceId, command, sequence)
     val now = System.currentTimeMillis()
     val pending = PendingBleDiagnostic(
@@ -2246,6 +2351,7 @@ class BleManager(
       deviceId = deviceId,
       operation = operation,
       control = control,
+      requestCommand = command,
       sequence = sequence,
       expectedResponseCommand = expectedResponseCommand,
       timestampMillis = now,
@@ -2286,20 +2392,54 @@ class BleManager(
     val frame = parseProvisioningFrame(deviceId, packet) ?: return
     val directId = diagnosticTransactionId(deviceId, frame.command, frame.sequence)
     var transactionId = directId
-    var pending = pendingDiagnostics.remove(directId)
-    if (pending == null) {
-      val fallback = pendingDiagnostics.entries.firstOrNull {
+    var matchedKey: String? = null
+    var pending: PendingBleDiagnostic? = null
+    val activeRequest = protocolSessions[deviceId]
+    if (activeRequest != null) {
+      val activeKey = diagnosticTransactionId(
+        deviceId,
+        activeRequest.command,
+        activeRequest.sequence,
+      )
+      val activeDiagnostic = pendingDiagnostics[activeKey]
+      if (activeDiagnostic != null && diagnosticFrameMatchesActiveRequest(frame, activeRequest)) {
+        transactionId = activeKey
+        matchedKey = activeKey
+        pending = activeDiagnostic
+      }
+    } else {
+      pending = pendingDiagnostics[directId]
+      if (pending != null) {
+        matchedKey = directId
+      }
+      val fallback = if (pending == null) pendingDiagnostics.entries
+        .filter {
         it.value.deviceId == deviceId &&
           DeviceBleProtocolConfig.matchesProtocolResponse(
             frameType = frame.frameType,
             command = frame.command,
             expectedCommand = it.value.expectedResponseCommand,
           )
-      }
+        }
+        .maxByOrNull { it.value.timestampMillis } else null
       if (fallback != null) {
         transactionId = fallback.key
-        pending = pendingDiagnostics.remove(fallback.key)
+        matchedKey = fallback.key
+        pending = fallback.value
       }
+    }
+    val isPairingAcknowledgement = pending != null &&
+      DeviceBleProtocolConfig.parseSafetyAccessoryPairingStartAcknowledgement(
+        command = frame.command,
+        control = pending.control,
+        data = frame.data,
+      ) != null
+    if (matchedKey != null && pending != null &&
+      !isPairingAcknowledgement &&
+      !(pending.requestCommand == DeviceBleProtocolConfig.commandSafetyAccessoryPairing &&
+        frame.command == DeviceBleProtocolConfig.commandSafetyAccessoryPairing)
+    ) {
+      pendingDiagnostics.remove(matchedKey)
     }
     val now = System.currentTimeMillis()
     val encrypted = frame.cryptoType == DeviceBleProtocolConfig.cryptoAes128
@@ -2310,7 +2450,13 @@ class BleManager(
         transactionId = transactionId,
         requestId = pending?.requestId,
         deviceId = deviceId,
-        operation = pending?.let { "${it.operation} Ack" } ?: "Unknown Response",
+        operation = pending?.let {
+          if (frame.command == DeviceBleProtocolConfig.commandSafetyAccessoryPairingResult) {
+            "${it.operation} Result"
+          } else {
+            "${it.operation} Ack"
+          }
+        } ?: "Unknown Response",
         command = frame.command.toLong(),
         control = pending?.control?.toLong(),
         sequence = frame.sequence.toLong(),
@@ -2325,17 +2471,7 @@ class BleManager(
         ),
         packet = packet,
         elapsedMillis = pending?.let { now - it.timestampMillis },
-        result = frame.data.firstOrNull()?.let { resultByte ->
-          val result = resultByte.toInt() and 0xFF
-          val successful = if (
-            frame.command == DeviceBleProtocolConfig.commandRemotePairingResponse
-          ) {
-            result == DeviceBleProtocolConfig.resultRemotePairingSuccess
-          } else {
-            result == 0
-          }
-          if (successful) "success" else null
-        },
+        result = diagnosticResult(frame, pending?.control),
       ),
     )
   }
@@ -2360,6 +2496,60 @@ class BleManager(
     command: Int,
     sequence: Int,
   ): String = "$deviceId:$command:$sequence"
+
+  private fun diagnosticFrameMatchesActiveRequest(
+    frame: DeviceBleFrame,
+    pending: PendingProtocolCommand,
+  ): Boolean {
+    val finalReport = DeviceBleProtocolConfig.parseSafetyAccessoryPairingFinalReport(
+      frameType = frame.frameType,
+      command = frame.command,
+      data = frame.data,
+    )
+    if (finalReport != null) {
+      return pending.command == DeviceBleProtocolConfig.commandSafetyAccessoryPairing &&
+        pending.control == DeviceBleProtocolConfig.controlSafetyAccessoryPairingStart &&
+        DeviceBleProtocolConfig.matchesSafetyAccessoryPairingFinalReport(
+          pairingFlowId = pending.safetyAccessoryPairingFlowId,
+          report = finalReport,
+        )
+    }
+    return DeviceBleProtocolConfig.matchesProtocolResponse(
+      frameType = frame.frameType,
+      command = frame.command,
+      expectedCommand = pending.responseCommand,
+    )
+  }
+
+  private fun diagnosticResult(frame: DeviceBleFrame, control: Int?): String? {
+    if (DeviceBleProtocolConfig.parseSafetyAccessoryPairingStartAcknowledgement(
+          command = frame.command,
+          control = control,
+          data = frame.data,
+        ) != null) {
+      return "pairing_started"
+    }
+    val finalReport = DeviceBleProtocolConfig.parseSafetyAccessoryPairingFinalReport(
+      frameType = frame.frameType,
+      command = frame.command,
+      data = frame.data,
+    )
+    if (finalReport != null) {
+      return when (finalReport.resultCode) {
+        DeviceBleProtocolConfig.safetyAccessoryPairingSuccessResult -> "success"
+        DeviceBleProtocolConfig.safetyAccessoryPairingFailureResult -> "failure"
+        DeviceBleProtocolConfig.safetyAccessoryPairingTimeoutResult -> "timeout"
+        else -> null
+      }
+    }
+    val result = frame.data.firstOrNull()?.toInt()?.and(0xFF) ?: return null
+    val successful = if (frame.command == DeviceBleProtocolConfig.commandRemotePairingResponse) {
+      result == DeviceBleProtocolConfig.resultRemotePairingSuccess
+    } else {
+      result == 0
+    }
+    return if (successful) "success" else null
+  }
 
   private fun doorOperationName(control: Int): String {
     return when (control) {
@@ -2735,7 +2925,10 @@ private data class PendingProtocolCommand(
   val requestId: String,
   val deviceId: String,
   val sequence: Int,
+  val command: Int,
   val responseCommand: Int,
+  val control: Int?,
+  var safetyAccessoryPairingFlowId: Int? = null,
   val callback: (Result<DeviceBleFrame>) -> Unit,
   var timeoutRunnable: Runnable? = null,
 )
@@ -2745,6 +2938,7 @@ private data class PendingBleDiagnostic(
   val deviceId: String,
   val operation: String,
   val control: Int?,
+  val requestCommand: Int,
   val sequence: Int,
   val expectedResponseCommand: Int,
   val timestampMillis: Long,

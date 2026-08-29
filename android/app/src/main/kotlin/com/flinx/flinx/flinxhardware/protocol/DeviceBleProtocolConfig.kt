@@ -46,6 +46,14 @@ object DeviceBleProtocolConfig {
   const val commandRemoteDelete: Int = 0x0009
   const val commandRemoteRename: Int = 0x000A
   const val commandSafetyAccessoryPairing: Int = 0x000B
+  const val commandSafetyAccessoryPairingResult: Int = 0x0012
+  const val controlSafetyAccessoryPairingStart: Int = 0x100A
+  const val controlSafetyAccessoryPairingCancel: Int = 0x100B
+  const val safetyAccessoryPairingSuccessResult: Int = 0x01
+  const val safetyAccessoryPairingFailureResult: Int = 0x02
+  const val safetyAccessoryPairingTimeoutResult: Int = 0x03
+  const val safetyAccessoryPairingStartAcknowledgementDataLength: Int = 7
+  const val safetyAccessoryPairingResultDataLength: Int = 3
   const val controlOpenDoor: Int = 0x1001
   const val controlCloseDoor: Int = 0x1002
   const val controlStopDoor: Int = 0x1003
@@ -66,6 +74,64 @@ object DeviceBleProtocolConfig {
   fun doorOpenReminderResponseCode(data: ByteArray): Int? {
     return if (data.size == 1) data[0].toInt() and 0xFF else null
   }
+
+  fun parseSafetyAccessoryPairingStartAcknowledgement(
+    command: Int,
+    control: Int?,
+    data: ByteArray,
+  ): SafetyAccessoryPairingAcknowledgement? {
+    if (command != commandSafetyAccessoryPairing ||
+      control != controlSafetyAccessoryPairingStart ||
+      data.size != safetyAccessoryPairingStartAcknowledgementDataLength ||
+      (data[0].toInt() and 0xFF) != safetyAccessoryPairingSuccessResult
+    ) {
+      return null
+    }
+    val reasonCode = ByteBuffer.wrap(data, 3, 4)
+      .order(ByteOrder.BIG_ENDIAN)
+      .int
+      .toLong() and 0xffffffffL
+    if (reasonCode != 0L) {
+      return null
+    }
+    return SafetyAccessoryPairingAcknowledgement(
+      resultCode = data[0].toInt() and 0xFF,
+      pairingFlowId = ByteBuffer.wrap(data, 1, 2).order(ByteOrder.BIG_ENDIAN).short.toInt() and 0xFFFF,
+      reasonCode = reasonCode,
+    )
+  }
+
+  fun parseSafetyAccessoryPairingFinalReport(
+    frameType: Int,
+    command: Int,
+    data: ByteArray,
+  ): SafetyAccessoryPairingResponse? {
+    if (frameType != frameTypeRequest ||
+      command != commandSafetyAccessoryPairingResult ||
+      data.size != safetyAccessoryPairingResultDataLength
+    ) {
+      return null
+    }
+    val resultCode = data[2].toInt() and 0xFF
+    if (resultCode !in setOf(
+        safetyAccessoryPairingSuccessResult,
+        safetyAccessoryPairingFailureResult,
+        safetyAccessoryPairingTimeoutResult,
+      )
+    ) {
+      return null
+    }
+    return SafetyAccessoryPairingResponse(
+      resultCode = resultCode,
+      pairingFlowId = ByteBuffer.wrap(data, 0, 2).order(ByteOrder.BIG_ENDIAN).short.toInt() and 0xFFFF,
+      reasonCode = 0L,
+    )
+  }
+
+  fun matchesSafetyAccessoryPairingFinalReport(
+    pairingFlowId: Int?,
+    report: SafetyAccessoryPairingResponse,
+  ): Boolean = pairingFlowId != null && pairingFlowId == report.pairingFlowId
 
   const val authTokenHexLength: Int = 32
   const val authTokenBinaryLengthBytes: Int = 16
@@ -416,6 +482,18 @@ data class DeviceBleFrame(
   val sequence: Int,
   val command: Int,
   val data: ByteArray,
+)
+
+data class SafetyAccessoryPairingResponse(
+  val resultCode: Int,
+  val pairingFlowId: Int,
+  val reasonCode: Long,
+)
+
+data class SafetyAccessoryPairingAcknowledgement(
+  val resultCode: Int,
+  val pairingFlowId: Int,
+  val reasonCode: Long,
 )
 
 data class DeviceBleAesKeyCandidate(

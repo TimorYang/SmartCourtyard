@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:toastification/toastification.dart';
 
 void main() {
   testWidgets(
@@ -98,7 +99,12 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('feedback'));
     await tester.pump();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('Feedback submitted'), findsOneWidget);
+    toastification.dismissAll(delayForAnimation: false);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
   });
 
   testWidgets('appointment form edits fields and submits locally', (
@@ -118,8 +124,13 @@ void main() {
     );
     await tester.tap(find.byKey(const ValueKey('after-sales-submit-button')));
     await tester.pump();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.text('Appointment submitted successfully'), findsOneWidget);
+    toastification.dismissAll(delayForAnimation: false);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
   });
 }
 
@@ -143,11 +154,20 @@ Widget _routerApp(
         repository ?? _FakeNotificationMessageRepository(),
       ),
     ],
-    child: MaterialApp.router(
-      theme: AppTheme.light(),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      routerConfig: router,
+    child: ToastificationWrapper(
+      child: MaterialApp.router(
+        theme: AppTheme.light(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        routerConfig: router,
+        builder: (context, child) => ToastificationConfigProvider(
+          config: const ToastificationConfig(
+            alignment: Alignment.topCenter,
+            animationDuration: Duration(milliseconds: 220),
+          ),
+          child: child!,
+        ),
+      ),
     ),
   );
 }

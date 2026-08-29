@@ -65,5 +65,5 @@ class _FakeSharedDevicesRepository implements SharedDevicesRepository {
   }
 
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

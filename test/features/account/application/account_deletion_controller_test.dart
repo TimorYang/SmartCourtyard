@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flinx/features/account/application/account_deletion_controller.dart';
 import 'package:flinx/features/account/application/providers.dart';
 import 'package:flinx/features/account/domain/repositories/account_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
