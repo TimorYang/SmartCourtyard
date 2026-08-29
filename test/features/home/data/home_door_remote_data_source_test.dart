@@ -88,7 +88,7 @@ void main() {
     );
   });
 
-  test('accepts code 0 response', () async {
+  test('rejects code 0 response', () async {
     final dataSource = HomeDoorRemoteDataSourceImpl(
       api: _FakeHomeApi(
         doorResponse: const ApiEnvelopeDto(
@@ -101,7 +101,7 @@ void main() {
 
     await expectLater(
       dataSource.fetchDoors(sceneId: 7, requestId: 'home-doors-123'),
-      completes,
+      throwsA(isA<HomeDoorRemoteException>()),
     );
   });
 

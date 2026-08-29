@@ -115,15 +115,10 @@ final featureApiProvider = Provider<FeatureApi>((ref) {
 
 其中：
 
-- `code`：服务端业务响应码；`0` 和 `200` 视为成功码，其他值视为业务失败。
+- `code`：服务端业务响应码。
 - `success`：服务端业务成功标志。
-- `msg`：服务端业务失败提示。共享 Dio 拦截器会在 `code` 不是 `0/200`
-  且 `msg` 非空时，通过全局错误 Toast 原样展示；该 Toast 的优先级高于页面通用错误提示。
+- `msg`：服务端消息，仅用于诊断或映射，不直接展示给用户。
 - `data`：接口数据。
-
-Feature 页面和 Controller 不得自行解析 `code` 或 `msg`。全局提示由共享网络层
-统一发出，Feature DataSource 仍需按自身协议校验 `success`、`data` 和业务字段，
-并通过原有错误分层维护页面状态。
 
 有固定结构的 `data` 必须定义强类型 DTO。只有服务端明确返回布尔值或暂时没有固定结构时，才使用 `dynamic`。
 
@@ -394,10 +389,6 @@ DioException
 - UI：展示本地化文案，不解析底层异常。
 
 服务端返回 `success: false` 即使 HTTP 状态为 200，也应视为业务失败并由 DataSource 校验。
-无论 HTTP 状态是否为 2xx，只要标准响应包中的 `code` 不是 `0/200` 且 `msg`
-非空，共享网络层都会展示该 `msg`。Feature 层不得重复解析响应 Map 来显示文案。
-对于 HTTP 非 2xx 的标准业务失败响应，共享 Dio 会将其交回协议层校验，避免把
-HTTP 400 等业务失败误判为断网；HTTP 401/403 仍保留原有认证和会话处理语义。
 
 ## 11. 日志规范
 

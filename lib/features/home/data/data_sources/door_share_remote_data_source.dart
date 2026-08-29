@@ -36,7 +36,7 @@ class DoorShareRemoteDataSourceImpl implements DoorShareRemoteDataSource {
         doorId,
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      if ((response.code != 0 && response.code != 200) || !response.success) {
+      if (response.code != 200 || !response.success) {
         throw const DoorShareRemoteException.invalidResponse();
       }
       return response.data ?? const [];
@@ -61,7 +61,7 @@ class DoorShareRemoteDataSourceImpl implements DoorShareRemoteDataSource {
         request,
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      if ((response.code != 0 && response.code != 200) || !response.success) {
+      if (response.code != 200 || !response.success) {
         throw const DoorShareRemoteException.invalidResponse();
       }
     } on DioException catch (error) {
@@ -85,7 +85,7 @@ class DoorShareRemoteDataSourceImpl implements DoorShareRemoteDataSource {
         request,
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      if ((response.code != 0 && response.code != 200) || !response.success) {
+      if (response.code != 200 || !response.success) {
         throw const DoorShareRemoteException.invalidResponse();
       }
     } on DioException catch (error) {

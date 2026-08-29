@@ -8,9 +8,6 @@ enum AppToastType { info, success, error }
 class AppToast {
   const AppToast._();
 
-  static var _serverErrorPending = false;
-  static String? _activeServerErrorId;
-
   static void info(BuildContext context, String message) {
     _show(context, message, AppToastType.info);
   }
@@ -20,55 +17,12 @@ class AppToast {
   }
 
   static void error(BuildContext context, String message) {
-    if (_hasServerErrorPriority) return;
     _show(context, message, AppToastType.error);
   }
 
-  static void reserveServerError() {
-    _serverErrorPending = true;
-  }
-
-  static void cancelServerErrorReservation() {
-    _serverErrorPending = false;
-  }
-
-  static void serverError(BuildContext context, String message) {
-    final item = _show(
-      context,
-      message,
-      AppToastType.error,
-      callbacks: ToastificationCallbacks(
-        onAutoCompleteCompleted: _clearServerError,
-        onDismissed: _clearServerError,
-      ),
-    );
-    _activeServerErrorId = item.id;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _serverErrorPending = false;
-    });
-  }
-
-  static bool get _hasServerErrorPriority {
-    if (_serverErrorPending) return true;
-    final activeId = _activeServerErrorId;
-    if (activeId == null) return false;
-    if (toastification.findToastificationItem(activeId) != null) return true;
-    _activeServerErrorId = null;
-    return false;
-  }
-
-  static void _clearServerError(ToastificationItem item) {
-    if (_activeServerErrorId == item.id) _activeServerErrorId = null;
-  }
-
-  static ToastificationItem _show(
-    BuildContext context,
-    String message,
-    AppToastType type, {
-    ToastificationCallbacks callbacks = const ToastificationCallbacks(),
-  }) {
+  static void _show(BuildContext context, String message, AppToastType type) {
     toastification.dismissAll(delayForAnimation: false);
-    return toastification.show(
+    toastification.show(
       context: context,
       title: Text(message),
       type: _toastificationType(type),
@@ -81,7 +35,6 @@ class AppToast {
       showProgressBar: false,
       closeOnClick: true,
       dragToClose: true,
-      callbacks: callbacks,
     );
   }
 

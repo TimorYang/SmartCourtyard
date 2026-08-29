@@ -22,9 +22,7 @@ class AccountOverviewRemoteDataSourceImpl
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       final data = response.data;
-      if ((response.code != 0 && response.code != 200) ||
-          !response.success ||
-          data == null) {
+      if (response.code != 200 || !response.success || data == null) {
         throw const AccountOverviewRemoteException.invalidResponse();
       }
       return data;

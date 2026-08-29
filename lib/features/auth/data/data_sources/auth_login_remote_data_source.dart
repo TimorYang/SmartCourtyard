@@ -67,7 +67,7 @@ class AuthLoginRemoteDataSourceImpl implements AuthLoginRemoteDataSource {
         _authorizationOptions(requestId),
       );
       final data = response.data;
-      if ((response.code != 0 && response.code != 200) ||
+      if (response.code != 200 ||
           !response.success ||
           data == null ||
           data.nonceId.trim().isEmpty ||
@@ -97,8 +97,9 @@ class AuthLoginRemoteDataSourceImpl implements AuthLoginRemoteDataSource {
     _validateConfiguration();
     try {
       final response = await submit(request, _authorizationOptions(requestId));
+      // The login endpoint's business contract defines code 200 as success.
       final data = response.data;
-      if ((response.code != 0 && response.code != 200) ||
+      if (response.code != 200 ||
           !response.success ||
           data == null ||
           !_hasUsableTokens(data)) {
@@ -114,7 +115,7 @@ class AuthLoginRemoteDataSourceImpl implements AuthLoginRemoteDataSource {
         ),
       );
       final profile = profileResponse.data;
-      if ((profileResponse.code != 0 && profileResponse.code != 200) ||
+      if (profileResponse.code != 200 ||
           !profileResponse.success ||
           profile == null ||
           !_hasProfile(profile)) {

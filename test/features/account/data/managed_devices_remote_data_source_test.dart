@@ -43,18 +43,8 @@ void main() {
     );
   });
 
-  test('accepts business code zero', () async {
+  test('rejects a non-zero business code', () async {
     final api = _FakeManagedDevicesApi(code: 0);
-    final dataSource = ManagedDevicesRemoteDataSourceImpl(api: api);
-
-    await expectLater(
-      dataSource.fetchLoginDevices(requestId: 'managed-devices-123'),
-      completes,
-    );
-  });
-
-  test('rejects a failed business code', () async {
-    final api = _FakeManagedDevicesApi(code: 100005);
     final dataSource = ManagedDevicesRemoteDataSourceImpl(api: api);
 
     await expectLater(

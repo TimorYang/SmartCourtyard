@@ -50,9 +50,7 @@ class AuthRegistrationRemoteDataSourceImpl
       final response = await api.sendRegistrationEmailCode({
         'email': email,
       }, _options(requestId));
-      if ((response.code != 0 && response.code != 200) ||
-          !response.success ||
-          response.data != true) {
+      if (response.code != 200 || !response.success || response.data != true) {
         throw const AuthRegistrationRemoteException.invalidResponse();
       }
     } on DioException catch (error) {
@@ -76,9 +74,7 @@ class AuthRegistrationRemoteDataSourceImpl
         'code': int.parse(code),
       }, _options(requestId));
       final data = response.data;
-      if ((response.code != 0 && response.code != 200) ||
-          !response.success ||
-          data is! Map) {
+      if (response.code != 200 || !response.success || data is! Map) {
         throw const AuthRegistrationRemoteException.invalidResponse();
       }
       final token = data['registrationToken'];
@@ -119,9 +115,7 @@ class AuthRegistrationRemoteDataSourceImpl
         request,
         _options(requestId),
       );
-      if ((response.code != 0 && response.code != 200) ||
-          !response.success ||
-          response.data != true) {
+      if (response.code != 200 || !response.success || response.data != true) {
         throw const AuthRegistrationRemoteException.invalidResponse();
       }
     } on DioException catch (error) {

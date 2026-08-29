@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../config/providers.dart';
 import '../logging/providers.dart';
 import 'dio_factory.dart';
-import 'server_business_message.dart';
 import 'session_expired_handler.dart';
 
 final sessionExpiredHandlerProvider = Provider<SessionExpiredHandler>(
@@ -20,10 +19,5 @@ final dioProvider = Provider((ref) {
     logger: ref.watch(appLoggerProvider),
     onSessionExpired: ref.watch(sessionExpiredHandlerProvider),
     onTokenRefresh: ref.watch(tokenRefreshHandlerProvider),
-    onServerBusinessMessage: ({required code, required message}) {
-      ref
-          .read(serverBusinessMessageProvider.notifier)
-          .show(code: code, message: message);
-    },
   );
 });

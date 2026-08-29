@@ -298,8 +298,7 @@ class AccountProfileRemoteDataSourceImpl
     }
   }
 
-  bool _success(int code, bool success) =>
-      success && (code == 0 || code == 200);
+  bool _success(int code, bool success) => code == 200 && success;
 
   bool _languageOptionsSuccess(int code, bool success) {
     return success && (code == 0 || code == 200);

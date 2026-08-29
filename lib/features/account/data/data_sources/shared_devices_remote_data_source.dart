@@ -35,9 +35,7 @@ class SharedDevicesRemoteDataSourceImpl
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       final data = response.data;
-      if ((response.code != 0 && response.code != 200) ||
-          !response.success ||
-          data == null) {
+      if (response.code != 200 || !response.success || data == null) {
         throw const SharedDevicesRemoteException.invalidResponse();
       }
       return data;
@@ -62,9 +60,8 @@ class SharedDevicesRemoteDataSourceImpl
         shareId,
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      if ((response.code != 0 && response.code != 200) || !response.success) {
+      if (response.code != 200 || !response.success)
         throw const SharedDevicesRemoteException.invalidResponse();
-      }
     } on DioException catch (error) {
       throw SharedDevicesRemoteException.fromNetwork(
         NetworkException.fromDio(error),
@@ -84,9 +81,7 @@ class SharedDevicesRemoteDataSourceImpl
         doorId,
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      if ((response.code != 0 && response.code != 200) ||
-          !response.success ||
-          response.data == null) {
+      if (response.code != 200 || !response.success || response.data == null) {
         throw const SharedDevicesRemoteException.invalidResponse();
       }
       return response.data!;
