@@ -10,12 +10,14 @@ class RegisterPasswordState {
     this.confirmPassword = '',
     this.isSubmitting = false,
     this.errorMessageKey,
+    this.errorMessage,
   });
 
   final String password;
   final String confirmPassword;
   final bool isSubmitting;
   final String? errorMessageKey;
+  final String? errorMessage;
 
   bool get hasValidPassword => PasswordPolicy.isValid(password);
 
@@ -31,6 +33,7 @@ class RegisterPasswordState {
     String? confirmPassword,
     bool? isSubmitting,
     String? errorMessageKey,
+    String? errorMessage,
     bool clearError = false,
   }) {
     return RegisterPasswordState(
@@ -40,6 +43,7 @@ class RegisterPasswordState {
       errorMessageKey: clearError
           ? null
           : errorMessageKey ?? this.errorMessageKey,
+      errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
     );
   }
 }
@@ -93,7 +97,10 @@ class RegisterPasswordController extends Notifier<RegisterPasswordState> {
       ref.read(registrationFlowStoreProvider).clear();
       return true;
     } on AppError catch (error) {
-      state = state.copyWith(errorMessageKey: error.messageKey);
+      state = state.copyWith(
+        errorMessageKey: error.messageKey,
+        errorMessage: error.userMessage,
+      );
       return false;
     } catch (_) {
       state = state.copyWith(errorMessageKey: 'auth.registration.unavailable');

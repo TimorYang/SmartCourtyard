@@ -10,12 +10,14 @@ class ForgotPasswordResetState {
     this.confirmPassword = '',
     this.isSubmitting = false,
     this.errorMessageKey,
+    this.errorMessage,
   });
 
   final String password;
   final String confirmPassword;
   final bool isSubmitting;
   final String? errorMessageKey;
+  final String? errorMessage;
 
   bool get hasValidPassword => PasswordPolicy.isValid(password);
 
@@ -31,6 +33,7 @@ class ForgotPasswordResetState {
     String? confirmPassword,
     bool? isSubmitting,
     String? errorMessageKey,
+    String? errorMessage,
     bool clearError = false,
   }) {
     return ForgotPasswordResetState(
@@ -40,6 +43,7 @@ class ForgotPasswordResetState {
       errorMessageKey: clearError
           ? null
           : errorMessageKey ?? this.errorMessageKey,
+      errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
     );
   }
 }
@@ -91,7 +95,10 @@ class ForgotPasswordResetController extends Notifier<ForgotPasswordResetState> {
       ref.read(passwordResetFlowStoreProvider).clear();
       return true;
     } on AppError catch (error) {
-      state = state.copyWith(errorMessageKey: error.messageKey);
+      state = state.copyWith(
+        errorMessageKey: error.messageKey,
+        errorMessage: error.userMessage,
+      );
       return false;
     } catch (_) {
       state = state.copyWith(errorMessageKey: 'auth.passwordReset.unavailable');

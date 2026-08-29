@@ -9,11 +9,13 @@ class ForgotPasswordState {
     this.email = '',
     this.isSendingCode = false,
     this.errorMessageKey,
+    this.errorMessage,
   });
 
   final String email;
   final bool isSendingCode;
   final String? errorMessageKey;
+  final String? errorMessage;
 
   String get trimmedEmail => email.trim();
 
@@ -27,6 +29,7 @@ class ForgotPasswordState {
     String? email,
     bool? isSendingCode,
     String? errorMessageKey,
+    String? errorMessage,
     bool clearError = false,
   }) {
     return ForgotPasswordState(
@@ -35,6 +38,7 @@ class ForgotPasswordState {
       errorMessageKey: clearError
           ? null
           : errorMessageKey ?? this.errorMessageKey,
+      errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
     );
   }
 }
@@ -63,7 +67,10 @@ class ForgotPasswordController extends Notifier<ForgotPasswordState> {
       ref.read(passwordResetFlowStoreProvider).start(state.trimmedEmail);
       return true;
     } on AppError catch (error) {
-      state = state.copyWith(errorMessageKey: error.messageKey);
+      state = state.copyWith(
+        errorMessageKey: error.messageKey,
+        errorMessage: error.userMessage,
+      );
       return false;
     } catch (_) {
       state = state.copyWith(errorMessageKey: 'auth.passwordReset.unavailable');

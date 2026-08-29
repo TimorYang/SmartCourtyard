@@ -12,6 +12,7 @@ class ForgotPasswordCodeState {
     this.isVerifying = false,
     this.isResending = false,
     this.errorMessageKey,
+    this.errorMessage,
   });
 
   final String code;
@@ -19,6 +20,7 @@ class ForgotPasswordCodeState {
   final bool isVerifying;
   final bool isResending;
   final String? errorMessageKey;
+  final String? errorMessage;
 
   bool get isComplete => code.length == 6;
 
@@ -30,6 +32,7 @@ class ForgotPasswordCodeState {
     bool? isVerifying,
     bool? isResending,
     String? errorMessageKey,
+    String? errorMessage,
     bool clearError = false,
   }) {
     return ForgotPasswordCodeState(
@@ -41,6 +44,7 @@ class ForgotPasswordCodeState {
       errorMessageKey: clearError
           ? null
           : errorMessageKey ?? this.errorMessageKey,
+      errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
     );
   }
 }
@@ -94,7 +98,10 @@ class ForgotPasswordCodeController extends Notifier<ForgotPasswordCodeState> {
           );
       return true;
     } on AppError catch (error) {
-      state = state.copyWith(errorMessageKey: error.messageKey);
+      state = state.copyWith(
+        errorMessageKey: error.messageKey,
+        errorMessage: error.userMessage,
+      );
       return false;
     } catch (_) {
       state = state.copyWith(errorMessageKey: 'auth.passwordReset.unavailable');
@@ -111,7 +118,10 @@ class ForgotPasswordCodeController extends Notifier<ForgotPasswordCodeState> {
       await ref.read(sendPasswordResetEmailCodeUseCaseProvider)(email);
       resetResendCountdown();
     } on AppError catch (error) {
-      state = state.copyWith(errorMessageKey: error.messageKey);
+      state = state.copyWith(
+        errorMessageKey: error.messageKey,
+        errorMessage: error.userMessage,
+      );
     } catch (_) {
       state = state.copyWith(errorMessageKey: 'auth.passwordReset.unavailable');
     } finally {

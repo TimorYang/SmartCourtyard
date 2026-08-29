@@ -1,5 +1,6 @@
 import 'package:flinx/core/errors/app_error.dart';
 import 'package:flinx/core/logging/app_logger.dart';
+import 'package:flinx/core/network/api_business_failure.dart';
 import 'package:flinx/features/add_device/data/data_sources/add_device_onboarding_remote_data_source.dart';
 import 'package:flinx/features/add_device/data/dto/force_door_response_dto.dart';
 import 'package:flinx/features/add_device/data/dto/onboarding_device_key_response_dto.dart';
@@ -9,7 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   test('maps current-user ownership to a dedicated app error', () async {
     final repository = AddDeviceOnboardingRepositoryImpl(
-      remoteDataSource: const _ThrowingRemoteDataSource(
+      remoteDataSource: _ThrowingRemoteDataSource(
         AddDeviceOnboardingRemoteException.alreadyBound(
           ownedByCurrentUser: true,
         ),
@@ -61,10 +62,12 @@ void main() {
 
   test('maps missing device server message key to add device app error', () {
     final repository = AddDeviceOnboardingRepositoryImpl(
-      remoteDataSource: const _ThrowingRemoteDataSource(
-        AddDeviceOnboardingRemoteException.invalidResponse(
-          serverCode: 100408,
-          serverMessageKey: 'app.door.device_not_exists',
+      remoteDataSource: _ThrowingRemoteDataSource(
+        AddDeviceOnboardingRemoteException.businessFailure(
+          ApiBusinessFailure(
+            code: 100408,
+            messageKey: 'app.door.device_not_exists',
+          ),
         ),
       ),
       logger: const _NoopLogger(),
@@ -84,7 +87,13 @@ void main() {
               'messageKey',
               'addDevice.deviceNotExists',
             )
-            .having((error) => error.requestId, 'requestId', 'request-1'),
+            .having((error) => error.requestId, 'requestId', 'request-1')
+            .having((error) => error.businessCode, 'businessCode', 100408)
+            .having(
+              (error) => error.businessMessageKey,
+              'businessMessageKey',
+              'app.door.device_not_exists',
+            ),
       ),
     );
   });

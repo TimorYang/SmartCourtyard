@@ -25,11 +25,16 @@ class ForgotPasswordPage extends ConsumerWidget {
     final controller = ref.read(forgotPasswordControllerProvider.notifier);
 
     ref.listen(forgotPasswordControllerProvider, (previous, next) {
-      if (next.errorMessageKey != null &&
-          next.errorMessageKey != previous?.errorMessageKey) {
+      if ((next.errorMessageKey != null || next.errorMessage != null) &&
+          (next.errorMessageKey != previous?.errorMessageKey ||
+              next.errorMessage != previous?.errorMessage)) {
         AppToast.error(
           context,
-          passwordResetErrorMessage(context, next.errorMessageKey),
+          passwordResetErrorMessage(
+            context,
+            next.errorMessageKey,
+            userMessage: next.errorMessage,
+          ),
         );
       }
     });

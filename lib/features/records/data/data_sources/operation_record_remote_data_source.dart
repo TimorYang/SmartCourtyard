@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../../../../core/network/api_business_failure.dart';
 import '../../../../core/network/dio_factory.dart';
 import '../../../../core/network/network_exception.dart';
 import '../dto/operation_record_response_dto.dart';
@@ -35,7 +36,12 @@ class OperationRecordRemoteDataSourceImpl
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       final data = response.data;
-      if (!_isSuccessCode(response.code) || !response.success || data == null) {
+      if (!_isSuccessCode(response.code) || !response.success) {
+        throw OperationRecordRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
+      }
+      if (data == null) {
         throw const OperationRecordRemoteException.invalidResponse();
       }
       return data;
@@ -52,19 +58,33 @@ class OperationRecordRemoteDataSourceImpl
 }
 
 class OperationRecordRemoteException implements Exception {
-  const OperationRecordRemoteException._(this.kind, {this.statusCode});
+  const OperationRecordRemoteException._(
+    this.kind, {
+    this.network,
+    this.businessFailure,
+  });
 
   OperationRecordRemoteException.fromNetwork(NetworkException exception)
-    : this._(
-        OperationRecordRemoteErrorKind.network,
-        statusCode: exception.statusCode,
+    : this._(OperationRecordRemoteErrorKind.network, network: exception);
+
+  const OperationRecordRemoteException.businessFailure(
+    ApiBusinessFailure failure,
+  ) : this._(
+        OperationRecordRemoteErrorKind.businessFailure,
+        businessFailure: failure,
       );
 
   const OperationRecordRemoteException.invalidResponse()
     : this._(OperationRecordRemoteErrorKind.invalidResponse);
 
   final OperationRecordRemoteErrorKind kind;
-  final int? statusCode;
+  final NetworkException? network;
+  final ApiBusinessFailure? businessFailure;
+  int? get statusCode => network?.statusCode;
 }
 
-enum OperationRecordRemoteErrorKind { network, invalidResponse }
+enum OperationRecordRemoteErrorKind {
+  network,
+  businessFailure,
+  invalidResponse,
+}

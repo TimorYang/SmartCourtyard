@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../../../core/logging/app_logger.dart';
+import '../../../../core/network/api_business_failure.dart';
 import '../../../../core/network/dio_factory.dart';
 import '../../../../core/network/network_exception.dart';
 import '../dto/add_force_door_request_dto.dart';
@@ -45,15 +46,13 @@ class AddDeviceOnboardingRemoteDataSourceImpl
         Options(extra: _bindingRequestExtras(requestId)),
       );
       final data = response.data;
-      if (!_isSuccessCode(response.code) ||
-          !response.success ||
-          data == null ||
-          !data.isValid) {
-        throw AddDeviceOnboardingRemoteException.invalidResponse(
-          serverCode: response.code,
-          serverMessage: response.success ? null : response.msg,
-          serverMessageKey: response.messageKey,
+      if (!_isSuccessCode(response.code) || !response.success) {
+        throw AddDeviceOnboardingRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
         );
+      }
+      if (data == null || !data.isValid) {
+        throw const AddDeviceOnboardingRemoteException.invalidResponse();
       }
       if (!data.canBind) {
         if (data.bound) {
@@ -61,10 +60,7 @@ class AddDeviceOnboardingRemoteDataSourceImpl
             ownedByCurrentUser: data.ownedByCurrentUser,
           );
         }
-        throw AddDeviceOnboardingRemoteException.invalidResponse(
-          serverCode: response.code,
-          serverMessageKey: response.messageKey,
-        );
+        throw const AddDeviceOnboardingRemoteException.invalidResponse();
       }
     } on DioException catch (error) {
       throw AddDeviceOnboardingRemoteException.fromNetwork(
@@ -86,15 +82,13 @@ class AddDeviceOnboardingRemoteDataSourceImpl
         Options(extra: _bindingRequestExtras(requestId)),
       );
       final data = response.data;
-      if (!_isSuccessCode(response.code) ||
-          !response.success ||
-          data == null ||
-          !data.isValid) {
-        throw AddDeviceOnboardingRemoteException.invalidResponse(
-          serverCode: response.code,
-          serverMessage: response.msg,
-          serverMessageKey: response.messageKey,
+      if (!_isSuccessCode(response.code) || !response.success) {
+        throw AddDeviceOnboardingRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
         );
+      }
+      if (data == null || !data.isValid) {
+        throw const AddDeviceOnboardingRemoteException.invalidResponse();
       }
       return data;
     } on DioException catch (error) {
@@ -125,12 +119,13 @@ class AddDeviceOnboardingRemoteDataSourceImpl
         Options(extra: _bindingRequestExtras(requestId)),
       );
       final data = response.data;
-      if (response.code != 200 || data == null) {
-        throw AddDeviceOnboardingRemoteException.invalidResponse(
-          serverCode: response.code,
-          serverMessage: response.msg,
-          serverMessageKey: response.messageKey,
+      if (response.code != 200) {
+        throw AddDeviceOnboardingRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
         );
+      }
+      if (data == null) {
+        throw const AddDeviceOnboardingRemoteException.invalidResponse();
       }
       return data;
     } on DioException catch (error) {
@@ -156,28 +151,22 @@ class AddDeviceOnboardingRemoteDataSourceImpl
 class AddDeviceOnboardingRemoteException implements Exception {
   const AddDeviceOnboardingRemoteException._(
     this.kind, {
-    this.statusCode,
-    this.serverCode,
-    this.serverMessage,
-    this.serverMessageKey,
+    this.network,
+    this.businessFailure,
   });
 
   AddDeviceOnboardingRemoteException.fromNetwork(NetworkException exception)
-    : this._(
-        AddDeviceOnboardingRemoteErrorKind.network,
-        statusCode: exception.statusCode,
+    : this._(AddDeviceOnboardingRemoteErrorKind.network, network: exception);
+
+  const AddDeviceOnboardingRemoteException.businessFailure(
+    ApiBusinessFailure failure,
+  ) : this._(
+        AddDeviceOnboardingRemoteErrorKind.businessFailure,
+        businessFailure: failure,
       );
 
-  const AddDeviceOnboardingRemoteException.invalidResponse({
-    int? serverCode,
-    String? serverMessage,
-    String? serverMessageKey,
-  }) : this._(
-         AddDeviceOnboardingRemoteErrorKind.invalidResponse,
-         serverCode: serverCode,
-         serverMessage: serverMessage,
-         serverMessageKey: serverMessageKey,
-       );
+  const AddDeviceOnboardingRemoteException.invalidResponse()
+    : this._(AddDeviceOnboardingRemoteErrorKind.invalidResponse);
 
   const AddDeviceOnboardingRemoteException.alreadyBound({
     required bool ownedByCurrentUser,
@@ -188,14 +177,14 @@ class AddDeviceOnboardingRemoteException implements Exception {
        );
 
   final AddDeviceOnboardingRemoteErrorKind kind;
-  final int? statusCode;
-  final int? serverCode;
-  final String? serverMessage;
-  final String? serverMessageKey;
+  final NetworkException? network;
+  final ApiBusinessFailure? businessFailure;
+  int? get statusCode => network?.statusCode;
 }
 
 enum AddDeviceOnboardingRemoteErrorKind {
   network,
+  businessFailure,
   invalidResponse,
   alreadyBoundToCurrentUser,
   alreadyBoundToAnotherUser,

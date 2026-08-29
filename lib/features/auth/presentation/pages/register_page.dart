@@ -27,11 +27,16 @@ class RegisterPage extends ConsumerWidget {
     final controller = ref.read(registerFormControllerProvider.notifier);
 
     ref.listen(registerFormControllerProvider, (previous, next) {
-      if (next.errorMessageKey != null &&
-          next.errorMessageKey != previous?.errorMessageKey) {
+      if ((next.errorMessageKey != null || next.errorMessage != null) &&
+          (next.errorMessageKey != previous?.errorMessageKey ||
+              next.errorMessage != previous?.errorMessage)) {
         AppToast.error(
           context,
-          registrationErrorMessage(context, next.errorMessageKey),
+          registrationErrorMessage(
+            context,
+            next.errorMessageKey,
+            userMessage: next.errorMessage,
+          ),
         );
       }
     });

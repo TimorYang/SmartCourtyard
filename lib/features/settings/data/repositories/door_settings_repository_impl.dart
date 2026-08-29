@@ -1,4 +1,5 @@
 import '../../../../core/errors/app_error.dart';
+import '../../../../core/errors/network_app_error_mapper.dart';
 import '../../../../core/logging/app_logger.dart';
 import '../../domain/entities/door_setting_snapshot.dart';
 import '../../domain/repositories/door_settings_repository.dart';
@@ -53,13 +54,22 @@ class DoorSettingsRepositoryImpl implements DoorSettingsRepository {
         stackTrace: stackTrace,
         context: {'doorId': doorId, 'errorKind': error.kind.name},
       );
+      if (error.kind == DoorSettingsRemoteErrorKind.network &&
+          error.network != null) {
+        throw mapNetworkExceptionToAppError(
+          error.network!,
+          requestId: requestId,
+          deviceId: doorId,
+        );
+      }
       throw AppError(
-        code: error.kind == DoorSettingsRemoteErrorKind.network
-            ? AppErrorCode.networkUnavailable
-            : AppErrorCode.serverError,
-        messageKey: error.kind == DoorSettingsRemoteErrorKind.network
-            ? 'door_settings_network_unavailable'
-            : 'door_settings_invalid_response',
+        code: AppErrorCode.serverError,
+        messageKey: 'door_settings_invalid_response',
+        businessCode: error.businessFailure?.code,
+        businessMessageKey: error.businessFailure?.messageKey,
+        userMessage: error.kind == DoorSettingsRemoteErrorKind.businessFailure
+            ? error.businessFailure?.message
+            : null,
         action: AppErrorAction.retry,
         requestId: requestId,
         deviceId: doorId,

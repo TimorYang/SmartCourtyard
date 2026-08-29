@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../../../../core/network/api_business_failure.dart';
 import '../../../../core/network/dio_factory.dart';
 import '../../../../core/network/network_exception.dart';
 import '../dto/door_setting_response_dto.dart';
@@ -28,9 +29,12 @@ class DoorSettingsRemoteDataSourceImpl implements DoorSettingsRemoteDataSource {
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       final data = response.data;
-      if ((response.code != 0 && response.code != 200) ||
-          !response.success ||
-          data == null) {
+      if ((response.code != 0 && response.code != 200) || !response.success) {
+        throw DoorSettingsRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
+      }
+      if (data == null) {
         throw const DoorSettingsRemoteException.invalidResponse();
       }
       return data;
@@ -45,19 +49,28 @@ class DoorSettingsRemoteDataSourceImpl implements DoorSettingsRemoteDataSource {
 }
 
 class DoorSettingsRemoteException implements Exception {
-  const DoorSettingsRemoteException._(this.kind, {this.statusCode});
+  const DoorSettingsRemoteException._(
+    this.kind, {
+    this.network,
+    this.businessFailure,
+  });
 
   DoorSettingsRemoteException.fromNetwork(NetworkException exception)
+    : this._(DoorSettingsRemoteErrorKind.network, network: exception);
+
+  const DoorSettingsRemoteException.businessFailure(ApiBusinessFailure failure)
     : this._(
-        DoorSettingsRemoteErrorKind.network,
-        statusCode: exception.statusCode,
+        DoorSettingsRemoteErrorKind.businessFailure,
+        businessFailure: failure,
       );
 
   const DoorSettingsRemoteException.invalidResponse()
     : this._(DoorSettingsRemoteErrorKind.invalidResponse);
 
   final DoorSettingsRemoteErrorKind kind;
-  final int? statusCode;
+  final NetworkException? network;
+  final ApiBusinessFailure? businessFailure;
+  int? get statusCode => network?.statusCode;
 }
 
-enum DoorSettingsRemoteErrorKind { network, invalidResponse }
+enum DoorSettingsRemoteErrorKind { network, businessFailure, invalidResponse }

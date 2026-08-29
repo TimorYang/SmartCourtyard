@@ -12,6 +12,7 @@ class RegisterCodeState {
     this.isVerifying = false,
     this.isResending = false,
     this.errorMessageKey,
+    this.errorMessage,
   });
 
   final String code;
@@ -19,6 +20,7 @@ class RegisterCodeState {
   final bool isVerifying;
   final bool isResending;
   final String? errorMessageKey;
+  final String? errorMessage;
 
   bool get isComplete => code.length == 6;
 
@@ -30,6 +32,7 @@ class RegisterCodeState {
     bool? isVerifying,
     bool? isResending,
     String? errorMessageKey,
+    String? errorMessage,
     bool clearError = false,
   }) {
     return RegisterCodeState(
@@ -41,6 +44,7 @@ class RegisterCodeState {
       errorMessageKey: clearError
           ? null
           : errorMessageKey ?? this.errorMessageKey,
+      errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
     );
   }
 }
@@ -99,7 +103,10 @@ class RegisterCodeController extends Notifier<RegisterCodeState> {
           );
       return true;
     } on AppError catch (error) {
-      state = state.copyWith(errorMessageKey: error.messageKey);
+      state = state.copyWith(
+        errorMessageKey: error.messageKey,
+        errorMessage: error.userMessage,
+      );
       return false;
     } catch (_) {
       state = state.copyWith(errorMessageKey: 'auth.registration.unavailable');
@@ -124,7 +131,10 @@ class RegisterCodeController extends Notifier<RegisterCodeState> {
       resetResendCountdown();
       return true;
     } on AppError catch (error) {
-      state = state.copyWith(errorMessageKey: error.messageKey);
+      state = state.copyWith(
+        errorMessageKey: error.messageKey,
+        errorMessage: error.userMessage,
+      );
       return false;
     } catch (_) {
       state = state.copyWith(errorMessageKey: 'auth.registration.unavailable');

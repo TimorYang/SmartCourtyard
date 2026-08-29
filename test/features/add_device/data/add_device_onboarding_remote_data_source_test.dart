@@ -49,11 +49,17 @@ void main() {
         requestId: 'request-0',
       ),
       throwsA(
-        isA<AddDeviceOnboardingRemoteException>().having(
-          (error) => error.serverMessage,
-          'serverMessage',
-          'This device has already been bound.',
-        ),
+        isA<AddDeviceOnboardingRemoteException>()
+            .having(
+              (error) => error.kind,
+              'kind',
+              AddDeviceOnboardingRemoteErrorKind.businessFailure,
+            )
+            .having(
+              (error) => error.businessFailure?.message,
+              'message',
+              'This device has already been bound.',
+            ),
       ),
     );
   });
@@ -357,10 +363,14 @@ void main() {
       ),
       throwsA(
         isA<AddDeviceOnboardingRemoteException>()
-            .having((error) => error.serverCode, 'serverCode', 100408)
             .having(
-              (error) => error.serverMessageKey,
-              'serverMessageKey',
+              (error) => error.businessFailure?.code,
+              'business code',
+              100408,
+            )
+            .having(
+              (error) => error.businessFailure?.messageKey,
+              'messageKey',
               'app.door.device_not_exists',
             ),
       ),

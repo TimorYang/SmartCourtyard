@@ -1,6 +1,7 @@
 import 'package:intl/intl.dart';
 
 import '../../../../core/errors/app_error.dart';
+import '../../../../core/errors/network_app_error_mapper.dart';
 import '../../../../core/logging/app_logger.dart';
 import '../../domain/entities/full_report.dart';
 import '../../domain/entities/general_evaluation_report.dart';
@@ -165,11 +166,22 @@ class GeneralEvaluationRepositoryImpl implements GeneralEvaluationRepository {
         stackTrace: s,
         context: {'doorId': doorId},
       );
+      if (e.kind == GeneralEvaluationRemoteErrorKind.network &&
+          e.network != null) {
+        throw mapNetworkExceptionToAppError(
+          e.network!,
+          requestId: requestId,
+          deviceId: doorId,
+        );
+      }
       throw AppError(
-        code: e.kind == GeneralEvaluationRemoteErrorKind.network
-            ? AppErrorCode.networkUnavailable
-            : AppErrorCode.serverError,
+        code: AppErrorCode.serverError,
         messageKey: 'general_evaluation_load_failed',
+        businessCode: e.businessFailure?.code,
+        businessMessageKey: e.businessFailure?.messageKey,
+        userMessage: e.kind == GeneralEvaluationRemoteErrorKind.businessFailure
+            ? e.businessFailure?.message
+            : null,
         requestId: requestId,
         retryable: true,
       );

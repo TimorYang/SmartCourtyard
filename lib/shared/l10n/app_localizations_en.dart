@@ -9,6 +9,34 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get networkErrorUnavailable =>
+      'Network unavailable. Check your connection and try again.';
+
+  @override
+  String get networkErrorSessionExpired =>
+      'Your session has expired. Please sign in again.';
+
+  @override
+  String get networkErrorAccessDenied =>
+      'You don\'t have permission to complete this action.';
+
+  @override
+  String get networkErrorRequestTimeout =>
+      'The request timed out. Please try again.';
+
+  @override
+  String get networkErrorRateLimited =>
+      'Too many requests. Please wait a moment and try again.';
+
+  @override
+  String get networkErrorRequestFailed =>
+      'The request couldn\'t be completed. Please try again.';
+
+  @override
+  String get networkErrorServiceUnavailable =>
+      'The service is temporarily unavailable. Please try again later.';
+
+  @override
   String get appTitle => 'FLINX';
 
   @override

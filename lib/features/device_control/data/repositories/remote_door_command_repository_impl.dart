@@ -1,6 +1,6 @@
 import '../../../../core/errors/app_error.dart';
+import '../../../../core/errors/network_app_error_mapper.dart';
 import '../../../../core/logging/app_logger.dart';
-import '../../../../core/network/network_exception.dart';
 import '../../domain/entities/remote_door_command.dart';
 import '../../domain/repositories/remote_door_command_repository.dart';
 import '../data_sources/remote_door_command_remote_data_source.dart';
@@ -107,22 +107,26 @@ class RemoteDoorCommandRepositoryImpl implements RemoteDoorCommandRepository {
       requestId: requestId,
       error: error,
       stackTrace: stackTrace,
-      context: {'doorId': doorId, 'errorKind': error.kind.name},
+      context: {
+        'doorId': doorId,
+        'errorKind': error.kind.name,
+        'businessCode': error.businessFailure?.code,
+        'businessMessageKey': error.businessFailure?.messageKey,
+      },
     );
     if (error.kind == RemoteDoorCommandRemoteErrorKind.network &&
-        error.network?.category == NetworkFailureCategory.networkUnavailable) {
-      return AppError(
-        code: AppErrorCode.networkUnavailable,
-        messageKey: 'remote_door_command_network_unavailable',
-        action: AppErrorAction.retry,
+        error.network != null) {
+      return mapNetworkExceptionToAppError(
+        error.network!,
         requestId: requestId,
         deviceId: doorId,
-        retryable: true,
       );
     }
     return _invalidResponse(
       doorId,
       requestId,
+      businessCode: error.businessFailure?.code,
+      businessMessageKey: error.businessFailure?.messageKey,
       userMessage:
           error.kind == RemoteDoorCommandRemoteErrorKind.businessFailure
           ? error.businessFailure?.message
@@ -133,11 +137,15 @@ class RemoteDoorCommandRepositoryImpl implements RemoteDoorCommandRepository {
   AppError _invalidResponse(
     String doorId,
     String requestId, {
+    int? businessCode,
+    String? businessMessageKey,
     String? userMessage,
   }) {
     return AppError(
       code: AppErrorCode.serverError,
       messageKey: 'remote_door_command_invalid_response',
+      businessCode: businessCode,
+      businessMessageKey: businessMessageKey,
       userMessage: userMessage,
       action: AppErrorAction.retry,
       requestId: requestId,

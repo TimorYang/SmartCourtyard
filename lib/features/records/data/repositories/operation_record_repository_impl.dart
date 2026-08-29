@@ -1,4 +1,5 @@
 import '../../../../core/errors/app_error.dart';
+import '../../../../core/errors/network_app_error_mapper.dart';
 import '../../../../core/logging/app_logger.dart';
 import '../../../account/domain/entities/account_avatar_code.dart';
 import '../../domain/entities/operation_record.dart';
@@ -57,19 +58,22 @@ class OperationRecordRepositoryImpl implements OperationRecordRepository {
     String requestId,
     String doorId,
   ) {
-    if (error.kind == OperationRecordRemoteErrorKind.network) {
-      return AppError(
-        code: AppErrorCode.networkUnavailable,
-        messageKey: 'operation_record_network_unavailable',
-        action: AppErrorAction.retry,
+    if (error.kind == OperationRecordRemoteErrorKind.network &&
+        error.network != null) {
+      return mapNetworkExceptionToAppError(
+        error.network!,
         requestId: requestId,
         deviceId: doorId,
-        retryable: true,
       );
     }
     return AppError(
       code: AppErrorCode.serverError,
       messageKey: 'operation_record_invalid_response',
+      businessCode: error.businessFailure?.code,
+      businessMessageKey: error.businessFailure?.messageKey,
+      userMessage: error.kind == OperationRecordRemoteErrorKind.businessFailure
+          ? error.businessFailure?.message
+          : null,
       action: AppErrorAction.retry,
       requestId: requestId,
       deviceId: doorId,

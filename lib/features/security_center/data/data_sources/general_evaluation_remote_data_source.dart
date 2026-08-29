@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import '../../../../core/logging/app_logger.dart';
+import '../../../../core/network/api_business_failure.dart';
 import '../../../../core/network/dio_factory.dart';
 import '../../../../core/network/network_exception.dart';
 import '../dto/general_evaluation_dtos.dart';
@@ -31,7 +32,6 @@ class GeneralEvaluationRemoteDataSourceImpl
   final GeneralEvaluationApi api;
   final AppLogger logger;
   Options _o(String id) => Options(extra: {NetworkRequestExtras.requestId: id});
-  bool _ok(int c, bool s, Object? d) => (c == 0 || c == 200) && s && d != null;
   @override
   Future<GeneralEvaluationResponseDto> general({
     required int doorId,
@@ -71,7 +71,7 @@ class GeneralEvaluationRemoteDataSourceImpl
   }) async {
     try {
       final r = await call();
-      if (!_ok(r.code, r.success, r.data)) {
+      if ((r.code != 0 && r.code != 200) || !r.success) {
         logger.warning(
           'General evaluation response failed envelope validation',
           requestId: requestId,
@@ -82,6 +82,22 @@ class GeneralEvaluationRemoteDataSourceImpl
             'success': r.success,
             'hasData': r.data != null,
             'dataType': r.data?.runtimeType.toString(),
+          },
+        );
+        throw GeneralEvaluationRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(r),
+        );
+      }
+      if (r.data == null) {
+        logger.warning(
+          'General evaluation response has invalid data',
+          requestId: requestId,
+          context: {
+            'endpoint': endpoint,
+            'range': range,
+            'code': r.code,
+            'success': r.success,
+            'hasData': false,
           },
         );
         throw const GeneralEvaluationRemoteException.invalidResponse();
@@ -108,12 +124,28 @@ class GeneralEvaluationRemoteDataSourceImpl
 }
 
 class GeneralEvaluationRemoteException implements Exception {
-  const GeneralEvaluationRemoteException._(this.kind);
+  const GeneralEvaluationRemoteException._(
+    this.kind, {
+    this.network,
+    this.businessFailure,
+  });
   GeneralEvaluationRemoteException.fromNetwork(NetworkException e)
-    : this._(GeneralEvaluationRemoteErrorKind.network);
+    : this._(GeneralEvaluationRemoteErrorKind.network, network: e);
+  const GeneralEvaluationRemoteException.businessFailure(
+    ApiBusinessFailure failure,
+  ) : this._(
+        GeneralEvaluationRemoteErrorKind.businessFailure,
+        businessFailure: failure,
+      );
   const GeneralEvaluationRemoteException.invalidResponse()
     : this._(GeneralEvaluationRemoteErrorKind.invalidResponse);
   final GeneralEvaluationRemoteErrorKind kind;
+  final NetworkException? network;
+  final ApiBusinessFailure? businessFailure;
 }
 
-enum GeneralEvaluationRemoteErrorKind { network, invalidResponse }
+enum GeneralEvaluationRemoteErrorKind {
+  network,
+  businessFailure,
+  invalidResponse,
+}

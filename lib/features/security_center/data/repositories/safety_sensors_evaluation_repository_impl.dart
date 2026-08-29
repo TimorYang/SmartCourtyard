@@ -1,4 +1,5 @@
 import '../../../../core/errors/app_error.dart';
+import '../../../../core/errors/network_app_error_mapper.dart';
 import '../../../../core/logging/app_logger.dart';
 import '../../domain/entities/safety_sensors_evaluation.dart';
 import '../../domain/repositories/safety_sensors_evaluation_repository.dart';
@@ -56,13 +57,23 @@ class SafetySensorsEvaluationRepositoryImpl
         stackTrace: stackTrace,
         context: {'doorId': doorId, 'errorKind': error.kind.name},
       );
+      if (error.kind == SafetySensorsEvaluationRemoteErrorKind.network &&
+          error.network != null) {
+        throw mapNetworkExceptionToAppError(
+          error.network!,
+          requestId: requestId,
+          deviceId: doorId,
+        );
+      }
       throw AppError(
-        code: error.kind == SafetySensorsEvaluationRemoteErrorKind.network
-            ? AppErrorCode.networkUnavailable
-            : AppErrorCode.serverError,
-        messageKey: error.kind == SafetySensorsEvaluationRemoteErrorKind.network
-            ? 'safety_sensors_network_unavailable'
-            : 'safety_sensors_invalid_response',
+        code: AppErrorCode.serverError,
+        messageKey: 'safety_sensors_invalid_response',
+        businessCode: error.businessFailure?.code,
+        businessMessageKey: error.businessFailure?.messageKey,
+        userMessage:
+            error.kind == SafetySensorsEvaluationRemoteErrorKind.businessFailure
+            ? error.businessFailure?.message
+            : null,
         action: AppErrorAction.retry,
         requestId: requestId,
         deviceId: doorId,

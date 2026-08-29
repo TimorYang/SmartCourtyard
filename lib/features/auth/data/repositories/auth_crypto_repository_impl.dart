@@ -1,6 +1,6 @@
 import '../../../../core/errors/app_error.dart';
+import '../../../../core/errors/network_app_error_mapper.dart';
 import '../../../../core/logging/app_logger.dart';
-import '../../../../core/network/network_exception.dart';
 import '../../domain/entities/password_encryption_material.dart';
 import '../../domain/repositories/auth_crypto_repository.dart';
 import '../data_sources/auth_crypto_remote_data_source.dart';
@@ -46,13 +46,26 @@ class AuthCryptoRepositoryImpl implements AuthCryptoRepository {
         requestId: requestId,
         error: error,
         stackTrace: stackTrace,
-        context: {'statusCode': error.statusCode},
+        context: {
+          'statusCode': error.statusCode,
+          'businessCode': error.businessFailure?.code,
+          'businessMessageKey': error.businessFailure?.messageKey,
+        },
       );
       throw appError;
     }
   }
 
   AppError _mapError(AuthCryptoRemoteException error, String requestId) {
+    if (error.kind == AuthCryptoRemoteErrorKind.network &&
+        error.network != null &&
+        error.statusCode != 401 &&
+        error.statusCode != 403) {
+      return mapNetworkExceptionToAppError(
+        error.network!,
+        requestId: requestId,
+      );
+    }
     return switch (error.kind) {
       AuthCryptoRemoteErrorKind.configuration => AppError(
         code: AppErrorCode.unknown,
@@ -66,20 +79,18 @@ class AuthCryptoRepositoryImpl implements AuthCryptoRepository {
           messageKey: 'auth.crypto.clientAuthorizationFailed',
           requestId: requestId,
         ),
-      AuthCryptoRemoteErrorKind.network
-          when error.network == null ||
-              error.network?.category ==
-                  NetworkFailureCategory.networkUnavailable =>
-        AppError(
-          code: AppErrorCode.networkUnavailable,
-          messageKey: 'auth.crypto.networkUnavailable',
-          action: AppErrorAction.retry,
-          requestId: requestId,
-          retryable: true,
-        ),
+      AuthCryptoRemoteErrorKind.network when error.network == null => AppError(
+        code: AppErrorCode.networkUnavailable,
+        messageKey: 'auth.crypto.networkUnavailable',
+        action: AppErrorAction.retry,
+        requestId: requestId,
+        retryable: true,
+      ),
       AuthCryptoRemoteErrorKind.businessFailure => AppError(
         code: AppErrorCode.serverError,
         messageKey: 'auth.crypto.unavailable',
+        businessCode: error.businessFailure?.code,
+        businessMessageKey: error.businessFailure?.messageKey,
         userMessage: error.businessFailure?.message,
         action: AppErrorAction.retry,
         requestId: requestId,

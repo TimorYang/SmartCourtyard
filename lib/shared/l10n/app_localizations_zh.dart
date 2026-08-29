@@ -9,6 +9,27 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String get networkErrorUnavailable => '网络不可用，请检查网络连接后重试。';
+
+  @override
+  String get networkErrorSessionExpired => '登录状态已失效，请重新登录。';
+
+  @override
+  String get networkErrorAccessDenied => '你没有权限执行此操作。';
+
+  @override
+  String get networkErrorRequestTimeout => '请求超时，请重试。';
+
+  @override
+  String get networkErrorRateLimited => '请求过于频繁，请稍后重试。';
+
+  @override
+  String get networkErrorRequestFailed => '请求未完成，请重试。';
+
+  @override
+  String get networkErrorServiceUnavailable => '服务暂时不可用，请稍后重试。';
+
+  @override
   String get appTitle => 'FLINX';
 
   @override

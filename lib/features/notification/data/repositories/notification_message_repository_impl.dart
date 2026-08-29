@@ -1,4 +1,5 @@
 import '../../../../core/errors/app_error.dart';
+import '../../../../core/errors/network_app_error_mapper.dart';
 import '../../../../core/logging/app_logger.dart';
 import '../../domain/entities/app_notification.dart';
 import '../../domain/entities/notification_message_page_result.dart';
@@ -94,25 +95,21 @@ class NotificationMessageRepositoryImpl
       context: {'messageId': messageId, 'statusCode': error.statusCode},
     );
     if (error.kind == NotificationMessageRemoteErrorKind.network &&
-        (error.statusCode == 401 || error.statusCode == 403)) {
-      return AppError(
-        code: AppErrorCode.accessDenied,
-        messageKey: 'notification.accessDenied',
+        error.network != null) {
+      return mapNetworkExceptionToAppError(
+        error.network!,
         requestId: requestId,
-      );
-    }
-    if (error.kind == NotificationMessageRemoteErrorKind.network) {
-      return AppError(
-        code: AppErrorCode.networkUnavailable,
-        messageKey: 'notification.networkUnavailable',
-        action: AppErrorAction.retry,
-        requestId: requestId,
-        retryable: true,
       );
     }
     return AppError(
       code: AppErrorCode.serverError,
       messageKey: 'notification.failed',
+      businessCode: error.businessFailure?.code,
+      businessMessageKey: error.businessFailure?.messageKey,
+      userMessage:
+          error.kind == NotificationMessageRemoteErrorKind.businessFailure
+          ? error.businessFailure?.message
+          : null,
       action: AppErrorAction.retry,
       requestId: requestId,
       retryable: true,

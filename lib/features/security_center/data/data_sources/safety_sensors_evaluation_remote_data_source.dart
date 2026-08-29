@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../../../../core/network/api_business_failure.dart';
 import '../../../../core/network/dio_factory.dart';
 import '../../../../core/network/network_exception.dart';
 import '../dto/safety_sensors_evaluation_dto.dart';
@@ -29,9 +30,12 @@ class SafetySensorsEvaluationRemoteDataSourceImpl
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       final data = response.data;
-      if ((response.code != 0 && response.code != 200) ||
-          !response.success ||
-          data == null) {
+      if ((response.code != 0 && response.code != 200) || !response.success) {
+        throw SafetySensorsEvaluationRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
+      }
+      if (data == null) {
         throw const SafetySensorsEvaluationRemoteException.invalidResponse();
       }
       return data;
@@ -46,15 +50,32 @@ class SafetySensorsEvaluationRemoteDataSourceImpl
 }
 
 class SafetySensorsEvaluationRemoteException implements Exception {
-  const SafetySensorsEvaluationRemoteException._(this.kind);
+  const SafetySensorsEvaluationRemoteException._(
+    this.kind, {
+    this.network,
+    this.businessFailure,
+  });
 
   SafetySensorsEvaluationRemoteException.fromNetwork(NetworkException error)
-    : this._(SafetySensorsEvaluationRemoteErrorKind.network);
+    : this._(SafetySensorsEvaluationRemoteErrorKind.network, network: error);
+
+  const SafetySensorsEvaluationRemoteException.businessFailure(
+    ApiBusinessFailure failure,
+  ) : this._(
+        SafetySensorsEvaluationRemoteErrorKind.businessFailure,
+        businessFailure: failure,
+      );
 
   const SafetySensorsEvaluationRemoteException.invalidResponse()
     : this._(SafetySensorsEvaluationRemoteErrorKind.invalidResponse);
 
   final SafetySensorsEvaluationRemoteErrorKind kind;
+  final NetworkException? network;
+  final ApiBusinessFailure? businessFailure;
 }
 
-enum SafetySensorsEvaluationRemoteErrorKind { network, invalidResponse }
+enum SafetySensorsEvaluationRemoteErrorKind {
+  network,
+  businessFailure,
+  invalidResponse,
+}

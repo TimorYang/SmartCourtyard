@@ -1,6 +1,6 @@
 import '../../../../core/errors/app_error.dart';
+import '../../../../core/errors/network_app_error_mapper.dart';
 import '../../../../core/logging/app_logger.dart';
-import '../../../../core/network/network_exception.dart';
 import '../../domain/entities/shared_door.dart';
 import '../../domain/entities/shared_door_members.dart';
 import '../../domain/entities/account_avatar_code.dart';
@@ -98,26 +98,17 @@ class SharedDevicesRepositoryImpl implements SharedDevicesRepository {
 
   AppError _mapError(SharedDevicesRemoteException error, String requestId) {
     if (error.kind == SharedDevicesRemoteErrorKind.network &&
-        (error.statusCode == 401 || error.statusCode == 403)) {
-      return AppError(
-        code: AppErrorCode.accessDenied,
-        messageKey: 'sharedDevices.accessDenied',
+        error.network != null) {
+      return mapNetworkExceptionToAppError(
+        error.network!,
         requestId: requestId,
-      );
-    }
-    if (error.kind == SharedDevicesRemoteErrorKind.network &&
-        error.network?.category == NetworkFailureCategory.networkUnavailable) {
-      return AppError(
-        code: AppErrorCode.networkUnavailable,
-        messageKey: 'sharedDevices.networkUnavailable',
-        action: AppErrorAction.retry,
-        requestId: requestId,
-        retryable: true,
       );
     }
     return AppError(
       code: AppErrorCode.serverError,
       messageKey: 'sharedDevices.failed',
+      businessCode: error.businessFailure?.code,
+      businessMessageKey: error.businessFailure?.messageKey,
       userMessage: error.kind == SharedDevicesRemoteErrorKind.businessFailure
           ? error.businessFailure?.message
           : null,

@@ -1,7 +1,7 @@
 import '../../../../core/network/access_token_cache.dart';
 import '../../../../core/errors/app_error.dart';
+import '../../../../core/errors/network_app_error_mapper.dart';
 import '../../../../core/logging/app_logger.dart';
-import '../../../../core/network/network_exception.dart';
 import '../../domain/entities/account_profile.dart';
 import '../../domain/entities/account_avatar_code.dart';
 import '../../domain/entities/account_token_set.dart';
@@ -196,15 +196,17 @@ class AccountRepositoryImpl implements AccountRepository {
       stackTrace: stackTrace,
       context: {'statusCode': error.network?.statusCode},
     );
+    if (error.network != null) {
+      return mapNetworkExceptionToAppError(
+        error.network!,
+        requestId: requestId,
+      );
+    }
     return AppError(
-      code: error.network == null
-          ? AppErrorCode.serverError
-          : error.network?.statusCode == 401 || error.network?.statusCode == 403
-          ? AppErrorCode.accessDenied
-          : error.network?.category == NetworkFailureCategory.networkUnavailable
-          ? AppErrorCode.networkUnavailable
-          : AppErrorCode.serverError,
+      code: AppErrorCode.serverError,
       messageKey: messageKey,
+      businessCode: error.businessFailure?.code,
+      businessMessageKey: error.businessFailure?.messageKey,
       userMessage: error.businessFailure?.message,
       action: AppErrorAction.retry,
       requestId: requestId,

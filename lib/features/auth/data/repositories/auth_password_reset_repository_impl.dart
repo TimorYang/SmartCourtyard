@@ -1,6 +1,6 @@
 import '../../../../core/errors/app_error.dart';
+import '../../../../core/errors/network_app_error_mapper.dart';
 import '../../../../core/logging/app_logger.dart';
-import '../../../../core/network/network_exception.dart';
 import '../../domain/entities/password_reset_verification.dart';
 import '../../domain/repositories/auth_password_reset_repository.dart';
 import '../data_sources/auth_password_reset_remote_data_source.dart';
@@ -85,6 +85,15 @@ class AuthPasswordResetRepositoryImpl implements AuthPasswordResetRepository {
   }
 
   AppError _mapError(AuthPasswordResetRemoteException error, String requestId) {
+    if (error.kind == AuthPasswordResetRemoteErrorKind.network &&
+        error.network != null &&
+        error.statusCode != 401 &&
+        error.statusCode != 403) {
+      return mapNetworkExceptionToAppError(
+        error.network!,
+        requestId: requestId,
+      );
+    }
     return switch (error.kind) {
       AuthPasswordResetRemoteErrorKind.configuration => AppError(
         code: AppErrorCode.unknown,
@@ -98,19 +107,11 @@ class AuthPasswordResetRepositoryImpl implements AuthPasswordResetRepository {
           messageKey: 'auth.passwordReset.clientAuthorizationFailed',
           requestId: requestId,
         ),
-      AuthPasswordResetRemoteErrorKind.network
-          when error.network?.category ==
-              NetworkFailureCategory.networkUnavailable =>
-        AppError(
-          code: AppErrorCode.networkUnavailable,
-          messageKey: 'auth.passwordReset.networkUnavailable',
-          action: AppErrorAction.retry,
-          requestId: requestId,
-          retryable: true,
-        ),
       AuthPasswordResetRemoteErrorKind.businessFailure => AppError(
         code: AppErrorCode.serverError,
         messageKey: 'auth.passwordReset.unavailable',
+        businessCode: error.businessFailure?.code,
+        businessMessageKey: error.businessFailure?.messageKey,
         userMessage: error.businessFailure?.message,
         action: AppErrorAction.retry,
         requestId: requestId,

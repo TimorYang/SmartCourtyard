@@ -67,11 +67,16 @@ class _RegisterPasswordPageState extends ConsumerState<RegisterPasswordPage> {
     ref.listen(registerPasswordControllerProvider, (previous, next) {
       _syncTextController(_passwordTextController, next.password);
       _syncTextController(_confirmPasswordTextController, next.confirmPassword);
-      if (next.errorMessageKey != null &&
-          next.errorMessageKey != previous?.errorMessageKey) {
+      if ((next.errorMessageKey != null || next.errorMessage != null) &&
+          (next.errorMessageKey != previous?.errorMessageKey ||
+              next.errorMessage != previous?.errorMessage)) {
         AppToast.error(
           context,
-          registrationErrorMessage(context, next.errorMessageKey),
+          registrationErrorMessage(
+            context,
+            next.errorMessageKey,
+            userMessage: next.errorMessage,
+          ),
         );
       }
     });

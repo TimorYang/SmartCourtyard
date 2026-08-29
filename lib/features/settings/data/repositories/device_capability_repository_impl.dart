@@ -1,4 +1,5 @@
 import '../../../../core/errors/app_error.dart';
+import '../../../../core/errors/network_app_error_mapper.dart';
 import '../../../../core/logging/app_logger.dart';
 import '../../domain/entities/device_capability.dart';
 import '../../domain/repositories/device_capability_repository.dart';
@@ -49,13 +50,23 @@ class DeviceCapabilityRepositoryImpl implements DeviceCapabilityRepository {
         stackTrace: stackTrace,
         context: {'deviceId': deviceId, 'errorKind': error.kind.name},
       );
+      if (error.kind == DeviceCapabilityRemoteErrorKind.network &&
+          error.network != null) {
+        throw mapNetworkExceptionToAppError(
+          error.network!,
+          requestId: requestId,
+          deviceId: deviceId,
+        );
+      }
       throw AppError(
-        code: error.kind == DeviceCapabilityRemoteErrorKind.network
-            ? AppErrorCode.networkUnavailable
-            : AppErrorCode.serverError,
-        messageKey: error.kind == DeviceCapabilityRemoteErrorKind.network
-            ? 'device_capabilities_network_unavailable'
-            : 'device_capabilities_invalid_response',
+        code: AppErrorCode.serverError,
+        messageKey: 'device_capabilities_invalid_response',
+        businessCode: error.businessFailure?.code,
+        businessMessageKey: error.businessFailure?.messageKey,
+        userMessage:
+            error.kind == DeviceCapabilityRemoteErrorKind.businessFailure
+            ? error.businessFailure?.message
+            : null,
         action: AppErrorAction.retry,
         requestId: requestId,
         deviceId: deviceId,

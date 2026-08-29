@@ -1,4 +1,5 @@
 import '../../../../core/errors/app_error.dart';
+import '../../../../core/errors/network_app_error_mapper.dart';
 import '../../../../core/logging/app_logger.dart';
 import '../../domain/entities/security_center_connection_status.dart';
 import '../../domain/entities/security_center_overview.dart';
@@ -51,12 +52,24 @@ class SecurityCenterConnectionStatusRepositoryImpl
         stackTrace: stackTrace,
         context: {'doorId': doorId, 'errorKind': error.kind.name},
       );
+      if (error.kind == SecurityCenterConnectionStatusRemoteErrorKind.network &&
+          error.network != null) {
+        throw mapNetworkExceptionToAppError(
+          error.network!,
+          requestId: requestId,
+          deviceId: doorId,
+        );
+      }
       throw AppError(
-        code:
-            error.kind == SecurityCenterConnectionStatusRemoteErrorKind.network
-            ? AppErrorCode.networkUnavailable
-            : AppErrorCode.serverError,
+        code: AppErrorCode.serverError,
         messageKey: 'security_center_connection_status_load_failed',
+        businessCode: error.businessFailure?.code,
+        businessMessageKey: error.businessFailure?.messageKey,
+        userMessage:
+            error.kind ==
+                SecurityCenterConnectionStatusRemoteErrorKind.businessFailure
+            ? error.businessFailure?.message
+            : null,
         action: AppErrorAction.retry,
         requestId: requestId,
         deviceId: doorId,

@@ -1,6 +1,6 @@
 import '../../../../core/errors/app_error.dart';
+import '../../../../core/errors/network_app_error_mapper.dart';
 import '../../../../core/logging/app_logger.dart';
-import '../../../../core/network/network_exception.dart';
 import '../../domain/entities/managed_login_device.dart';
 import '../../domain/repositories/managed_devices_repository.dart';
 import '../data_sources/managed_devices_remote_data_source.dart';
@@ -73,26 +73,17 @@ class ManagedDevicesRepositoryImpl implements ManagedDevicesRepository {
       context: {'sessionId': sessionId, 'statusCode': error.statusCode},
     );
     if (error.kind == ManagedDevicesRemoteErrorKind.network &&
-        (error.statusCode == 401 || error.statusCode == 403)) {
-      return AppError(
-        code: AppErrorCode.accessDenied,
-        messageKey: 'managedDevices.accessDenied',
+        error.network != null) {
+      return mapNetworkExceptionToAppError(
+        error.network!,
         requestId: requestId,
-      );
-    }
-    if (error.kind == ManagedDevicesRemoteErrorKind.network &&
-        error.network?.category == NetworkFailureCategory.networkUnavailable) {
-      return AppError(
-        code: AppErrorCode.networkUnavailable,
-        messageKey: 'managedDevices.networkUnavailable',
-        action: AppErrorAction.retry,
-        requestId: requestId,
-        retryable: true,
       );
     }
     return AppError(
       code: AppErrorCode.serverError,
       messageKey: 'managedDevices.failed',
+      businessCode: error.businessFailure?.code,
+      businessMessageKey: error.businessFailure?.messageKey,
       userMessage: error.kind == ManagedDevicesRemoteErrorKind.businessFailure
           ? error.businessFailure?.message
           : null,

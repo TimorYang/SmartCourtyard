@@ -1,6 +1,6 @@
 import '../../../../core/errors/app_error.dart';
+import '../../../../core/errors/network_app_error_mapper.dart';
 import '../../../../core/logging/app_logger.dart';
-import '../../../../core/network/network_exception.dart';
 import '../../domain/entities/upgrade_check.dart';
 import '../../domain/repositories/upgrade_repository.dart';
 import '../data_sources/upgrade_progress_local_data_source.dart';
@@ -153,27 +153,17 @@ class UpgradeRepositoryImpl implements UpgradeRepository {
       stackTrace: stackTrace,
       context: {'statusCode': error.statusCode, 'kind': error.kind.name},
     );
-    if (error.kind == UpgradeRemoteErrorKind.network &&
-        (error.statusCode == 401 || error.statusCode == 403)) {
-      return AppError(
-        code: AppErrorCode.accessDenied,
-        messageKey: 'upgradeCheck.accessDenied',
+    if (error.kind == UpgradeRemoteErrorKind.network && error.network != null) {
+      return mapNetworkExceptionToAppError(
+        error.network!,
         requestId: requestId,
-      );
-    }
-    if (error.kind == UpgradeRemoteErrorKind.network &&
-        error.network?.category == NetworkFailureCategory.networkUnavailable) {
-      return AppError(
-        code: AppErrorCode.networkUnavailable,
-        messageKey: 'upgradeCheck.networkUnavailable',
-        action: AppErrorAction.retry,
-        requestId: requestId,
-        retryable: true,
       );
     }
     return AppError(
       code: AppErrorCode.serverError,
       messageKey: 'upgradeCheck.failed',
+      businessCode: error.businessFailure?.code,
+      businessMessageKey: error.businessFailure?.messageKey,
       userMessage: error.kind == UpgradeRemoteErrorKind.businessFailure
           ? error.businessFailure?.message
           : null,

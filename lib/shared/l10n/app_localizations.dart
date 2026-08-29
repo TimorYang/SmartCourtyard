@@ -98,6 +98,48 @@ abstract class AppLocalizations {
     Locale('zh'),
   ];
 
+  /// No description provided for @networkErrorUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Network unavailable. Check your connection and try again.'**
+  String get networkErrorUnavailable;
+
+  /// No description provided for @networkErrorSessionExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Your session has expired. Please sign in again.'**
+  String get networkErrorSessionExpired;
+
+  /// No description provided for @networkErrorAccessDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'You don\'t have permission to complete this action.'**
+  String get networkErrorAccessDenied;
+
+  /// No description provided for @networkErrorRequestTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'The request timed out. Please try again.'**
+  String get networkErrorRequestTimeout;
+
+  /// No description provided for @networkErrorRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many requests. Please wait a moment and try again.'**
+  String get networkErrorRateLimited;
+
+  /// No description provided for @networkErrorRequestFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The request couldn\'t be completed. Please try again.'**
+  String get networkErrorRequestFailed;
+
+  /// No description provided for @networkErrorServiceUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The service is temporarily unavailable. Please try again later.'**
+  String get networkErrorServiceUnavailable;
+
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:

@@ -73,11 +73,18 @@ void main() {
     expect(
       () => repository.getPasswordEncryptionMaterial(requestId: 'request-2'),
       throwsA(
-        isA<AppError>().having(
-          (error) => error.userMessage,
-          'userMessage',
-          'Encryption is temporarily unavailable.',
-        ),
+        isA<AppError>()
+            .having((error) => error.businessCode, 'businessCode', 100500)
+            .having(
+              (error) => error.businessMessageKey,
+              'businessMessageKey',
+              isNull,
+            )
+            .having(
+              (error) => error.userMessage,
+              'userMessage',
+              'Encryption is temporarily unavailable.',
+            ),
       ),
     );
   });

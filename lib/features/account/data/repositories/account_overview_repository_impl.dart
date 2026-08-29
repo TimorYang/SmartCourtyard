@@ -1,6 +1,6 @@
 import '../../../../core/errors/app_error.dart';
+import '../../../../core/errors/network_app_error_mapper.dart';
 import '../../../../core/logging/app_logger.dart';
-import '../../../../core/network/network_exception.dart';
 import '../../domain/entities/account_overview.dart';
 import '../../domain/repositories/account_overview_repository.dart';
 import '../data_sources/account_overview_local_data_source.dart';
@@ -41,7 +41,11 @@ class AccountOverviewRepositoryImpl implements AccountOverviewRepository {
         requestId: requestId,
         error: error,
         stackTrace: stackTrace,
-        context: {'statusCode': error.statusCode},
+        context: {
+          'statusCode': error.statusCode,
+          'businessCode': error.businessFailure?.code,
+          'businessMessageKey': error.businessFailure?.messageKey,
+        },
       );
       throw _mapError(error, requestId);
     }
@@ -52,26 +56,17 @@ class AccountOverviewRepositoryImpl implements AccountOverviewRepository {
 
   AppError _mapError(AccountOverviewRemoteException error, String requestId) {
     if (error.kind == AccountOverviewRemoteErrorKind.network &&
-        (error.statusCode == 401 || error.statusCode == 403)) {
-      return AppError(
-        code: AppErrorCode.accessDenied,
-        messageKey: 'account.overview.accessDenied',
+        error.network != null) {
+      return mapNetworkExceptionToAppError(
+        error.network!,
         requestId: requestId,
-      );
-    }
-    if (error.kind == AccountOverviewRemoteErrorKind.network &&
-        error.network?.category == NetworkFailureCategory.networkUnavailable) {
-      return AppError(
-        code: AppErrorCode.networkUnavailable,
-        messageKey: 'account.overview.networkUnavailable',
-        action: AppErrorAction.retry,
-        requestId: requestId,
-        retryable: true,
       );
     }
     return AppError(
       code: AppErrorCode.serverError,
       messageKey: 'account.overview.failed',
+      businessCode: error.businessFailure?.code,
+      businessMessageKey: error.businessFailure?.messageKey,
       userMessage: error.kind == AccountOverviewRemoteErrorKind.businessFailure
           ? error.businessFailure?.message
           : null,

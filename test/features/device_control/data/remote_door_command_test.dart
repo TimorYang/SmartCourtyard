@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flinx/core/errors/app_error.dart';
 import 'package:flinx/core/logging/app_logger.dart';
+import 'package:flinx/core/network/api_business_failure.dart';
 import 'package:flinx/core/network/api_envelope_dto.dart';
 import 'package:flinx/core/network/dio_factory.dart';
 import 'package:flinx/features/device_control/data/data_sources/remote_door_command_api.dart';
@@ -106,6 +107,49 @@ void main() {
     );
   });
 
+  test('preserves business failure metadata in the repository error', () async {
+    final repository = RemoteDoorCommandRepositoryImpl(
+      remoteDataSource: _ThrowingRemoteDoorCommandRemoteDataSource(
+        RemoteDoorCommandRemoteException.businessFailure(
+          ApiBusinessFailure(
+            code: 409,
+            messageKey: 'app.door.busy',
+            message: 'The door is busy',
+          ),
+        ),
+      ),
+      logger: const _NoopLogger(),
+    );
+
+    await expectLater(
+      repository.submitCommand(
+        doorId: '12',
+        action: RemoteDoorCommandAction.open,
+        requestId: 'remote-command-business-failure',
+      ),
+      throwsA(
+        isA<AppError>()
+            .having((error) => error.businessCode, 'businessCode', 409)
+            .having(
+              (error) => error.businessMessageKey,
+              'businessMessageKey',
+              'app.door.busy',
+            )
+            .having(
+              (error) => error.userMessage,
+              'userMessage',
+              'The door is busy',
+            )
+            .having(
+              (error) => error.requestId,
+              'requestId',
+              'remote-command-business-failure',
+            )
+            .having((error) => error.deviceId, 'deviceId', '12'),
+      ),
+    );
+  });
+
   test('maps wire status and failures into domain values', () async {
     final repository = RemoteDoorCommandRepositoryImpl(
       remoteDataSource: _FakeRemoteDoorCommandRemoteDataSource(
@@ -204,6 +248,20 @@ class _FakeRemoteDoorCommandRemoteDataSource
     required RemoteDoorCommandRequestDto body,
     required String requestId,
   }) async => response;
+}
+
+class _ThrowingRemoteDoorCommandRemoteDataSource
+    implements RemoteDoorCommandRemoteDataSource {
+  const _ThrowingRemoteDoorCommandRemoteDataSource(this.exception);
+
+  final RemoteDoorCommandRemoteException exception;
+
+  @override
+  Future<RemoteDoorCommandResponseDto> submitCommand({
+    required int doorId,
+    required RemoteDoorCommandRequestDto body,
+    required String requestId,
+  }) async => throw exception;
 }
 
 class _NoopLogger implements AppLogger {

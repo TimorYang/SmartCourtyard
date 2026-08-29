@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../../../../core/network/api_business_failure.dart';
 import '../../../../core/network/dio_factory.dart';
 import '../../../../core/network/network_exception.dart';
 import '../dto/security_balance_refresh_response_dto.dart';
@@ -29,7 +30,9 @@ class SecurityBalanceRefreshRemoteDataSourceImpl
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       if (response.code != 0 && response.code != 200) {
-        throw const SecurityBalanceRefreshRemoteException.invalidResponse();
+        throw SecurityBalanceRefreshRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
       }
       return response.data ?? const SecurityBalanceRefreshResponseDto();
     } on DioException catch (error) {
@@ -43,19 +46,33 @@ class SecurityBalanceRefreshRemoteDataSourceImpl
 }
 
 class SecurityBalanceRefreshRemoteException implements Exception {
-  const SecurityBalanceRefreshRemoteException._(this.kind, {this.statusCode});
+  const SecurityBalanceRefreshRemoteException._(
+    this.kind, {
+    this.network,
+    this.businessFailure,
+  });
 
   SecurityBalanceRefreshRemoteException.fromNetwork(NetworkException exception)
-    : this._(
-        SecurityBalanceRefreshRemoteErrorKind.network,
-        statusCode: exception.statusCode,
+    : this._(SecurityBalanceRefreshRemoteErrorKind.network, network: exception);
+
+  const SecurityBalanceRefreshRemoteException.businessFailure(
+    ApiBusinessFailure failure,
+  ) : this._(
+        SecurityBalanceRefreshRemoteErrorKind.businessFailure,
+        businessFailure: failure,
       );
 
   const SecurityBalanceRefreshRemoteException.invalidResponse()
     : this._(SecurityBalanceRefreshRemoteErrorKind.invalidResponse);
 
   final SecurityBalanceRefreshRemoteErrorKind kind;
-  final int? statusCode;
+  final NetworkException? network;
+  final ApiBusinessFailure? businessFailure;
+  int? get statusCode => network?.statusCode;
 }
 
-enum SecurityBalanceRefreshRemoteErrorKind { network, invalidResponse }
+enum SecurityBalanceRefreshRemoteErrorKind {
+  network,
+  businessFailure,
+  invalidResponse,
+}

@@ -1,4 +1,5 @@
 import '../../../../core/errors/app_error.dart';
+import '../../../../core/errors/network_app_error_mapper.dart';
 import '../../../../core/logging/app_logger.dart';
 import '../../domain/entities/onboarded_force_door.dart';
 import '../../domain/entities/onboarding_device_key.dart';
@@ -42,7 +43,12 @@ class AddDeviceOnboardingRepositoryImpl
         requestId: requestId,
         error: error,
         stackTrace: stackTrace,
-        context: {'sn': sn, 'statusCode': error.statusCode},
+        context: {
+          'sn': sn,
+          'statusCode': error.statusCode,
+          'businessCode': error.businessFailure?.code,
+          'businessMessageKey': error.businessFailure?.messageKey,
+        },
       );
       throw _mapError(error, requestId, 'addDevice.bindingStatusFailed');
     }
@@ -74,7 +80,12 @@ class AddDeviceOnboardingRepositoryImpl
         requestId: requestId,
         error: error,
         stackTrace: stackTrace,
-        context: {'sn': sn, 'statusCode': error.statusCode},
+        context: {
+          'sn': sn,
+          'statusCode': error.statusCode,
+          'businessCode': error.businessFailure?.code,
+          'businessMessageKey': error.businessFailure?.messageKey,
+        },
       );
       throw _mapError(error, requestId, 'addDevice.deviceKeyFailed');
     }
@@ -117,7 +128,12 @@ class AddDeviceOnboardingRepositoryImpl
         requestId: requestId,
         error: error,
         stackTrace: stackTrace,
-        context: {'sn': sn, 'statusCode': error.statusCode},
+        context: {
+          'sn': sn,
+          'statusCode': error.statusCode,
+          'businessCode': error.businessFailure?.code,
+          'businessMessageKey': error.businessFailure?.messageKey,
+        },
       );
       throw _mapError(error, requestId, 'addDevice.bindDoorFailed');
     }
@@ -143,16 +159,15 @@ class AddDeviceOnboardingRepositoryImpl
         requestId: requestId,
       );
     }
-    final resolvedMessageKey =
-        _messageKeyForServerMessageKey(error.serverMessageKey) ?? messageKey;
-    if (error.kind == AddDeviceOnboardingRemoteErrorKind.network) {
-      return AppError(
-        code: AppErrorCode.networkUnavailable,
-        messageKey: resolvedMessageKey,
-        action: AppErrorAction.retry,
+    final localizedBusinessMessageKey = _messageKeyForServerMessageKey(
+      error.businessFailure?.messageKey,
+    );
+    final resolvedMessageKey = localizedBusinessMessageKey ?? messageKey;
+    if (error.kind == AddDeviceOnboardingRemoteErrorKind.network &&
+        error.network != null) {
+      return mapNetworkExceptionToAppError(
+        error.network!,
         requestId: requestId,
-        userMessage: error.serverMessage,
-        retryable: true,
       );
     }
     return AppError(
@@ -160,7 +175,11 @@ class AddDeviceOnboardingRepositoryImpl
       messageKey: resolvedMessageKey,
       action: AppErrorAction.retry,
       requestId: requestId,
-      userMessage: error.serverMessage,
+      businessCode: error.businessFailure?.code,
+      businessMessageKey: error.businessFailure?.messageKey,
+      userMessage: localizedBusinessMessageKey == null
+          ? error.businessFailure?.message
+          : null,
       retryable: true,
     );
   }

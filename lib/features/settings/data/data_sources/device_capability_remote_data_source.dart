@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../../../../core/network/api_business_failure.dart';
 import '../../../../core/network/dio_factory.dart';
 import '../../../../core/network/network_exception.dart';
 import '../dto/device_capability_response_dto.dart';
@@ -29,9 +30,12 @@ class DeviceCapabilityRemoteDataSourceImpl
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       final data = response.data;
-      if ((response.code != 0 && response.code != 200) ||
-          !response.success ||
-          data == null) {
+      if ((response.code != 0 && response.code != 200) || !response.success) {
+        throw DeviceCapabilityRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
+      }
+      if (data == null) {
         throw const DeviceCapabilityRemoteException.invalidResponse();
       }
       return data;
@@ -46,19 +50,33 @@ class DeviceCapabilityRemoteDataSourceImpl
 }
 
 class DeviceCapabilityRemoteException implements Exception {
-  const DeviceCapabilityRemoteException._(this.kind, {this.statusCode});
+  const DeviceCapabilityRemoteException._(
+    this.kind, {
+    this.network,
+    this.businessFailure,
+  });
 
   DeviceCapabilityRemoteException.fromNetwork(NetworkException exception)
-    : this._(
-        DeviceCapabilityRemoteErrorKind.network,
-        statusCode: exception.statusCode,
+    : this._(DeviceCapabilityRemoteErrorKind.network, network: exception);
+
+  const DeviceCapabilityRemoteException.businessFailure(
+    ApiBusinessFailure failure,
+  ) : this._(
+        DeviceCapabilityRemoteErrorKind.businessFailure,
+        businessFailure: failure,
       );
 
   const DeviceCapabilityRemoteException.invalidResponse()
     : this._(DeviceCapabilityRemoteErrorKind.invalidResponse);
 
   final DeviceCapabilityRemoteErrorKind kind;
-  final int? statusCode;
+  final NetworkException? network;
+  final ApiBusinessFailure? businessFailure;
+  int? get statusCode => network?.statusCode;
 }
 
-enum DeviceCapabilityRemoteErrorKind { network, invalidResponse }
+enum DeviceCapabilityRemoteErrorKind {
+  network,
+  businessFailure,
+  invalidResponse,
+}

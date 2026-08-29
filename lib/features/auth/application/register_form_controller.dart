@@ -11,12 +11,14 @@ class RegisterFormState {
     this.agreedToPrivacyPolicy = false,
     this.isSubmitting = false,
     this.errorMessageKey,
+    this.errorMessage,
   });
 
   final String email;
   final bool agreedToPrivacyPolicy;
   final bool isSubmitting;
   final String? errorMessageKey;
+  final String? errorMessage;
 
   String get trimmedEmail => email.trim();
 
@@ -32,6 +34,7 @@ class RegisterFormState {
     bool? agreedToPrivacyPolicy,
     bool? isSubmitting,
     String? errorMessageKey,
+    String? errorMessage,
     bool clearError = false,
   }) {
     return RegisterFormState(
@@ -42,6 +45,7 @@ class RegisterFormState {
       errorMessageKey: clearError
           ? null
           : errorMessageKey ?? this.errorMessageKey,
+      errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
     );
   }
 }
@@ -85,7 +89,10 @@ class RegisterFormController extends Notifier<RegisterFormState> {
       ref.read(registrationFlowStoreProvider).start(state.trimmedEmail);
       return true;
     } on AppError catch (error) {
-      state = state.copyWith(errorMessageKey: error.messageKey);
+      state = state.copyWith(
+        errorMessageKey: error.messageKey,
+        errorMessage: error.userMessage,
+      );
       return false;
     } catch (error) {
       if (kDebugMode) {

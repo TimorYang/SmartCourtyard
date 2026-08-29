@@ -1,4 +1,5 @@
 import '../../../../core/errors/app_error.dart';
+import '../../../../core/errors/network_app_error_mapper.dart';
 import '../../../../core/logging/app_logger.dart';
 import '../../domain/repositories/security_balance_refresh_repository.dart';
 import '../../domain/entities/security_balance_refresh_result.dart';
@@ -56,13 +57,23 @@ class SecurityBalanceRefreshRepositoryImpl
     String requestId,
     String doorId,
   ) {
+    if (error.kind == SecurityBalanceRefreshRemoteErrorKind.network &&
+        error.network != null) {
+      return mapNetworkExceptionToAppError(
+        error.network!,
+        requestId: requestId,
+        deviceId: doorId,
+      );
+    }
     return AppError(
-      code: error.kind == SecurityBalanceRefreshRemoteErrorKind.network
-          ? AppErrorCode.networkUnavailable
-          : AppErrorCode.serverError,
-      messageKey: error.kind == SecurityBalanceRefreshRemoteErrorKind.network
-          ? 'security_balance_refresh_network_unavailable'
-          : 'security_balance_refresh_invalid_response',
+      code: AppErrorCode.serverError,
+      messageKey: 'security_balance_refresh_invalid_response',
+      businessCode: error.businessFailure?.code,
+      businessMessageKey: error.businessFailure?.messageKey,
+      userMessage:
+          error.kind == SecurityBalanceRefreshRemoteErrorKind.businessFailure
+          ? error.businessFailure?.message
+          : null,
       action: AppErrorAction.retry,
       requestId: requestId,
       deviceId: doorId,

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/config/app_links.dart';
 import '../../../../app/theme/app_design_tokens.dart';
+import '../../../../core/errors/app_error.dart';
 import '../../../account/application/providers.dart';
 import '../../../home/presentation/pages/home_page.dart';
 import '../../application/login_form_controller.dart';
@@ -254,10 +255,19 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                       return;
                                     }
                                     context.go(HomePage.routePath);
-                                  } catch (_) {
+                                  } on AppError catch (error) {
                                     if (!context.mounted) {
                                       return;
                                     }
+                                    AppToast.error(
+                                      context,
+                                      error.userMessage?.trim().isNotEmpty ==
+                                              true
+                                          ? error.userMessage!.trim()
+                                          : l10n.loginFailed,
+                                    );
+                                  } catch (_) {
+                                    if (!context.mounted) return;
                                     AppToast.error(context, l10n.loginFailed);
                                   } finally {
                                     if (mounted) {

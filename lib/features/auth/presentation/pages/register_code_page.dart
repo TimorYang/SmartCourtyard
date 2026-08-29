@@ -63,11 +63,16 @@ class _RegisterCodePageState extends ConsumerState<RegisterCodePage> {
           selection: TextSelection.collapsed(offset: next.code.length),
         );
       }
-      if (next.errorMessageKey != null &&
-          next.errorMessageKey != previous?.errorMessageKey) {
+      if ((next.errorMessageKey != null || next.errorMessage != null) &&
+          (next.errorMessageKey != previous?.errorMessageKey ||
+              next.errorMessage != previous?.errorMessage)) {
         AppToast.error(
           context,
-          registrationErrorMessage(context, next.errorMessageKey),
+          registrationErrorMessage(
+            context,
+            next.errorMessageKey,
+            userMessage: next.errorMessage,
+          ),
         );
       }
     });

@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../../../../core/network/api_business_failure.dart';
 import '../../../../core/network/dio_factory.dart';
 import '../../../../core/network/network_exception.dart';
 import '../dto/security_center_connection_status_dto.dart';
@@ -29,10 +30,12 @@ class SecurityCenterConnectionStatusRemoteDataSourceImpl
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       final status = response.data?.wifiConnectionStatus?.trim();
-      if ((response.code != 0 && response.code != 200) ||
-          !response.success ||
-          status == null ||
-          !const {'0', '1', '2'}.contains(status)) {
+      if ((response.code != 0 && response.code != 200) || !response.success) {
+        throw SecurityCenterConnectionStatusRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
+      }
+      if (status == null || !const {'0', '1', '2'}.contains(status)) {
         throw const SecurityCenterConnectionStatusRemoteException.invalidResponse();
       }
       return SecurityCenterConnectionStatusDto(
@@ -52,16 +55,36 @@ class SecurityCenterConnectionStatusRemoteDataSourceImpl
 }
 
 class SecurityCenterConnectionStatusRemoteException implements Exception {
-  const SecurityCenterConnectionStatusRemoteException._(this.kind);
+  const SecurityCenterConnectionStatusRemoteException._(
+    this.kind, {
+    this.network,
+    this.businessFailure,
+  });
 
   SecurityCenterConnectionStatusRemoteException.fromNetwork(
     NetworkException exception,
-  ) : this._(SecurityCenterConnectionStatusRemoteErrorKind.network);
+  ) : this._(
+        SecurityCenterConnectionStatusRemoteErrorKind.network,
+        network: exception,
+      );
+
+  const SecurityCenterConnectionStatusRemoteException.businessFailure(
+    ApiBusinessFailure failure,
+  ) : this._(
+        SecurityCenterConnectionStatusRemoteErrorKind.businessFailure,
+        businessFailure: failure,
+      );
 
   const SecurityCenterConnectionStatusRemoteException.invalidResponse()
     : this._(SecurityCenterConnectionStatusRemoteErrorKind.invalidResponse);
 
   final SecurityCenterConnectionStatusRemoteErrorKind kind;
+  final NetworkException? network;
+  final ApiBusinessFailure? businessFailure;
 }
 
-enum SecurityCenterConnectionStatusRemoteErrorKind { network, invalidResponse }
+enum SecurityCenterConnectionStatusRemoteErrorKind {
+  network,
+  businessFailure,
+  invalidResponse,
+}

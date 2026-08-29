@@ -1,6 +1,6 @@
 import '../../../../core/errors/app_error.dart';
+import '../../../../core/errors/network_app_error_mapper.dart';
 import '../../../../core/logging/app_logger.dart';
-import '../../../../core/network/network_exception.dart';
 import '../../../../platform_bridge/hardware_models.dart';
 import '../../domain/entities/door_detail.dart';
 import '../../domain/entities/door_device.dart';
@@ -187,19 +187,18 @@ class DoorDetailRepositoryImpl implements DoorDetailRepository {
     String doorId,
   ) {
     if (error.kind == DoorDetailRemoteErrorKind.network &&
-        error.network?.category == NetworkFailureCategory.networkUnavailable) {
-      return AppError(
-        code: AppErrorCode.networkUnavailable,
-        messageKey: 'door_detail_network_unavailable',
-        action: AppErrorAction.retry,
+        error.network != null) {
+      return mapNetworkExceptionToAppError(
+        error.network!,
         requestId: requestId,
         deviceId: doorId,
-        retryable: true,
       );
     }
     return AppError(
       code: AppErrorCode.serverError,
       messageKey: 'door_detail_invalid_response',
+      businessCode: error.businessFailure?.code,
+      businessMessageKey: error.businessFailure?.messageKey,
       userMessage: error.kind == DoorDetailRemoteErrorKind.businessFailure
           ? error.businessFailure?.message
           : null,

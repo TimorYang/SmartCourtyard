@@ -1,6 +1,6 @@
 import '../../../../core/errors/app_error.dart';
+import '../../../../core/errors/network_app_error_mapper.dart';
 import '../../../../core/logging/app_logger.dart';
-import '../../../../core/network/network_exception.dart';
 import '../../../account/domain/entities/account_profile.dart';
 import '../../../account/domain/entities/account_avatar_code.dart';
 import '../../../account/domain/entities/account_token_set.dart';
@@ -173,18 +173,17 @@ class AuthLoginRepositoryImpl implements AuthLoginRepository {
       );
     }
     if (error.kind == AuthLoginRemoteErrorKind.network &&
-        error.network?.category == NetworkFailureCategory.networkUnavailable) {
-      return AppError(
-        code: AppErrorCode.networkUnavailable,
-        messageKey: 'auth.login.networkUnavailable',
-        action: AppErrorAction.retry,
+        error.network != null) {
+      return mapNetworkExceptionToAppError(
+        error.network!,
         requestId: requestId,
-        retryable: true,
       );
     }
     return AppError(
       code: AppErrorCode.serverError,
       messageKey: 'auth.login.failed',
+      businessCode: error.businessFailure?.code,
+      businessMessageKey: error.businessFailure?.messageKey,
       userMessage: error.kind == AuthLoginRemoteErrorKind.businessFailure
           ? error.businessFailure?.message
           : null,

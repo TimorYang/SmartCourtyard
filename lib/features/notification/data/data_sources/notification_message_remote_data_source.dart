@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../../../../core/network/api_business_failure.dart';
 import '../../../../core/network/api_envelope_dto.dart';
 import '../../../../core/network/dio_factory.dart';
 import '../../../../core/network/network_exception.dart';
@@ -74,7 +75,12 @@ class NotificationMessageRemoteDataSourceImpl
     try {
       final response = await request();
       final data = response.data;
-      if (response.code != 200 || !response.success || data == null) {
+      if (response.code != 200 || !response.success) {
+        throw NotificationMessageRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
+      }
+      if (data == null) {
         throw const NotificationMessageRemoteException.invalidResponse();
       }
       return data;
@@ -91,16 +97,29 @@ class NotificationMessageRemoteDataSourceImpl
 }
 
 class NotificationMessageRemoteException implements Exception {
-  const NotificationMessageRemoteException._(this.kind, {this.statusCode});
+  const NotificationMessageRemoteException._(
+    this.kind, {
+    this.network,
+    this.businessFailure,
+  });
   NotificationMessageRemoteException.fromNetwork(NetworkException exception)
-    : this._(
-        NotificationMessageRemoteErrorKind.network,
-        statusCode: exception.statusCode,
+    : this._(NotificationMessageRemoteErrorKind.network, network: exception);
+  const NotificationMessageRemoteException.businessFailure(
+    ApiBusinessFailure failure,
+  ) : this._(
+        NotificationMessageRemoteErrorKind.businessFailure,
+        businessFailure: failure,
       );
   const NotificationMessageRemoteException.invalidResponse()
     : this._(NotificationMessageRemoteErrorKind.invalidResponse);
   final NotificationMessageRemoteErrorKind kind;
-  final int? statusCode;
+  final NetworkException? network;
+  final ApiBusinessFailure? businessFailure;
+  int? get statusCode => network?.statusCode;
 }
 
-enum NotificationMessageRemoteErrorKind { network, invalidResponse }
+enum NotificationMessageRemoteErrorKind {
+  network,
+  businessFailure,
+  invalidResponse,
+}
