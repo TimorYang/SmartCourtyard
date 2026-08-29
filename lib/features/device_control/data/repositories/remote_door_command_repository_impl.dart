@@ -1,5 +1,6 @@
 import '../../../../core/errors/app_error.dart';
 import '../../../../core/logging/app_logger.dart';
+import '../../../../core/network/network_exception.dart';
 import '../../domain/entities/remote_door_command.dart';
 import '../../domain/repositories/remote_door_command_repository.dart';
 import '../data_sources/remote_door_command_remote_data_source.dart';
@@ -108,7 +109,8 @@ class RemoteDoorCommandRepositoryImpl implements RemoteDoorCommandRepository {
       stackTrace: stackTrace,
       context: {'doorId': doorId, 'errorKind': error.kind.name},
     );
-    if (error.kind == RemoteDoorCommandRemoteErrorKind.network) {
+    if (error.kind == RemoteDoorCommandRemoteErrorKind.network &&
+        error.network?.category == NetworkFailureCategory.networkUnavailable) {
       return AppError(
         code: AppErrorCode.networkUnavailable,
         messageKey: 'remote_door_command_network_unavailable',
@@ -118,13 +120,25 @@ class RemoteDoorCommandRepositoryImpl implements RemoteDoorCommandRepository {
         retryable: true,
       );
     }
-    return _invalidResponse(doorId, requestId);
+    return _invalidResponse(
+      doorId,
+      requestId,
+      userMessage:
+          error.kind == RemoteDoorCommandRemoteErrorKind.businessFailure
+          ? error.businessFailure?.message
+          : null,
+    );
   }
 
-  AppError _invalidResponse(String doorId, String requestId) {
+  AppError _invalidResponse(
+    String doorId,
+    String requestId, {
+    String? userMessage,
+  }) {
     return AppError(
       code: AppErrorCode.serverError,
       messageKey: 'remote_door_command_invalid_response',
+      userMessage: userMessage,
       action: AppErrorAction.retry,
       requestId: requestId,
       deviceId: doorId,

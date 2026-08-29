@@ -1,5 +1,6 @@
 import '../../../../core/errors/app_error.dart';
 import '../../../../core/logging/app_logger.dart';
+import '../../../../core/network/network_exception.dart';
 import '../../../../platform_bridge/hardware_models.dart';
 import '../../domain/repositories/home_door_repository.dart';
 import '../../domain/entities/home_door_cover_image.dart';
@@ -207,7 +208,8 @@ class HomeDoorRepositoryImpl implements HomeDoorRepository {
   }
 
   AppError _mapError(HomeDoorRemoteException error, String requestId) {
-    if (error.kind == HomeDoorRemoteErrorKind.network) {
+    if (error.kind == HomeDoorRemoteErrorKind.network &&
+        error.network?.category == NetworkFailureCategory.networkUnavailable) {
       return AppError(
         code: AppErrorCode.networkUnavailable,
         messageKey: 'home.doors.networkUnavailable',
@@ -219,6 +221,9 @@ class HomeDoorRepositoryImpl implements HomeDoorRepository {
     return AppError(
       code: AppErrorCode.serverError,
       messageKey: 'home.doors.failed',
+      userMessage: error.kind == HomeDoorRemoteErrorKind.businessFailure
+          ? error.businessFailure?.message
+          : null,
       action: AppErrorAction.retry,
       requestId: requestId,
       retryable: true,

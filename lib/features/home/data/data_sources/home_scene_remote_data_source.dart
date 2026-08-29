@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../../../../core/network/api_business_failure.dart';
 import '../../../../core/network/dio_factory.dart';
 import '../../../../core/network/network_exception.dart';
 import '../dto/create_home_scene_request_dto.dart';
@@ -37,7 +38,12 @@ class HomeSceneRemoteDataSourceImpl implements HomeSceneRemoteDataSource {
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       final data = response.data;
-      if (!_isSuccessCode(response.code) || !response.success || data == null) {
+      if (!_isSuccessCode(response.code) || !response.success) {
+        throw HomeSceneRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
+      }
+      if (data == null) {
         throw const HomeSceneRemoteException.invalidResponse();
       }
       return data;
@@ -61,7 +67,12 @@ class HomeSceneRemoteDataSourceImpl implements HomeSceneRemoteDataSource {
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       final data = response.data;
-      if (!_isSuccessCode(response.code) || !response.success || data == null) {
+      if (!_isSuccessCode(response.code) || !response.success) {
+        throw HomeSceneRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
+      }
+      if (data == null) {
         throw const HomeSceneRemoteException.invalidResponse();
       }
       return data;
@@ -85,7 +96,9 @@ class HomeSceneRemoteDataSourceImpl implements HomeSceneRemoteDataSource {
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       if (!_isSuccessCode(response.code) || !response.success) {
-        throw const HomeSceneRemoteException.invalidResponse();
+        throw HomeSceneRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
       }
     } on DioException catch (error) {
       throw HomeSceneRemoteException.fromNetwork(
@@ -108,9 +121,12 @@ class HomeSceneRemoteDataSourceImpl implements HomeSceneRemoteDataSource {
         CreateHomeSceneRequestDto(name: name),
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      if (!_isSuccessCode(response.code) ||
-          !response.success ||
-          response.data != true) {
+      if (!_isSuccessCode(response.code) || !response.success) {
+        throw HomeSceneRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
+      }
+      if (response.data != true) {
         throw const HomeSceneRemoteException.invalidResponse();
       }
     } on DioException catch (error) {
@@ -126,18 +142,26 @@ class HomeSceneRemoteDataSourceImpl implements HomeSceneRemoteDataSource {
 }
 
 class HomeSceneRemoteException implements Exception {
-  const HomeSceneRemoteException._(this.kind, {this.statusCode});
+  const HomeSceneRemoteException._(
+    this.kind, {
+    this.network,
+    this.businessFailure,
+  });
 
   HomeSceneRemoteException.fromNetwork(NetworkException exception)
+    : this._(HomeSceneRemoteErrorKind.network, network: exception);
+  const HomeSceneRemoteException.businessFailure(ApiBusinessFailure failure)
     : this._(
-        HomeSceneRemoteErrorKind.network,
-        statusCode: exception.statusCode,
+        HomeSceneRemoteErrorKind.businessFailure,
+        businessFailure: failure,
       );
   const HomeSceneRemoteException.invalidResponse()
     : this._(HomeSceneRemoteErrorKind.invalidResponse);
 
   final HomeSceneRemoteErrorKind kind;
-  final int? statusCode;
+  final NetworkException? network;
+  final ApiBusinessFailure? businessFailure;
+  int? get statusCode => network?.statusCode;
 }
 
-enum HomeSceneRemoteErrorKind { network, invalidResponse }
+enum HomeSceneRemoteErrorKind { network, businessFailure, invalidResponse }

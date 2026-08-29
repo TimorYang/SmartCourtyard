@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../../../../core/network/api_business_failure.dart';
 import '../../../../core/network/dio_factory.dart';
 import '../../../../core/network/network_exception.dart';
 import '../dto/home_door_response_dto.dart';
@@ -56,7 +57,12 @@ class HomeDoorRemoteDataSourceImpl implements HomeDoorRemoteDataSource {
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       final data = response.data;
-      if (!_isSuccessCode(response.code) || !response.success || data == null) {
+      if (!_isSuccessCode(response.code) || !response.success) {
+        throw HomeDoorRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
+      }
+      if (data == null) {
         throw const HomeDoorRemoteException.invalidResponse();
       }
       return data;
@@ -77,7 +83,9 @@ class HomeDoorRemoteDataSourceImpl implements HomeDoorRemoteDataSource {
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       if (!_isSuccessCode(response.code) || !response.success) {
-        throw const HomeDoorRemoteException.invalidResponse();
+        throw HomeDoorRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
       }
     } on DioException catch (error) {
       throw HomeDoorRemoteException.fromNetwork(
@@ -99,7 +107,9 @@ class HomeDoorRemoteDataSourceImpl implements HomeDoorRemoteDataSource {
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       if (!_isSuccessCode(response.code) || !response.success) {
-        throw const HomeDoorRemoteException.invalidResponse();
+        throw HomeDoorRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
       }
     } on DioException catch (error) {
       throw HomeDoorRemoteException.fromNetwork(
@@ -120,9 +130,12 @@ class HomeDoorRemoteDataSourceImpl implements HomeDoorRemoteDataSource {
         doorId,
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      if (!_isSuccessCode(response.code) ||
-          !response.success ||
-          response.data != true) {
+      if (!_isSuccessCode(response.code) || !response.success) {
+        throw HomeDoorRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
+      }
+      if (response.data != true) {
         throw const HomeDoorRemoteException.invalidResponse();
       }
     } on DioException catch (error) {
@@ -143,7 +156,10 @@ class HomeDoorRemoteDataSourceImpl implements HomeDoorRemoteDataSource {
     try {
       final uploadResponse = await api.uploadDoorCoverImage(
         FormData.fromMap({
-          'file': MultipartFile.fromBytes(image.bytes, filename: image.fileName),
+          'file': MultipartFile.fromBytes(
+            image.bytes,
+            filename: image.fileName,
+          ),
         }),
         Options(
           contentType: Headers.multipartFormDataContentType,
@@ -151,10 +167,12 @@ class HomeDoorRemoteDataSourceImpl implements HomeDoorRemoteDataSource {
         ),
       );
       final uploadResult = uploadResponse.data;
-      if (!_isSuccessCode(uploadResponse.code) ||
-          !uploadResponse.success ||
-          uploadResult == null ||
-          uploadResult.fileId <= 0) {
+      if (!_isSuccessCode(uploadResponse.code) || !uploadResponse.success) {
+        throw HomeDoorRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(uploadResponse),
+        );
+      }
+      if (uploadResult == null || uploadResult.fileId <= 0) {
         throw const HomeDoorRemoteException.invalidResponse();
       }
 
@@ -163,9 +181,12 @@ class HomeDoorRemoteDataSourceImpl implements HomeDoorRemoteDataSource {
         UpdateHomeDoorCoverRequestDto(coverFileId: uploadResult.fileId),
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      if (!_isSuccessCode(coverResponse.code) ||
-          !coverResponse.success ||
-          coverResponse.data != true) {
+      if (!_isSuccessCode(coverResponse.code) || !coverResponse.success) {
+        throw HomeDoorRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(coverResponse),
+        );
+      }
+      if (coverResponse.data != true) {
         throw const HomeDoorRemoteException.invalidResponse();
       }
     } on DioException catch (error) {
@@ -189,9 +210,12 @@ class HomeDoorRemoteDataSourceImpl implements HomeDoorRemoteDataSource {
         RenameHomeDoorRequestDto(name: name),
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      if (!_isSuccessCode(response.code) ||
-          !response.success ||
-          response.data != true) {
+      if (!_isSuccessCode(response.code) || !response.success) {
+        throw HomeDoorRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
+      }
+      if (response.data != true) {
         throw const HomeDoorRemoteException.invalidResponse();
       }
     } on DioException catch (error) {
@@ -215,9 +239,12 @@ class HomeDoorRemoteDataSourceImpl implements HomeDoorRemoteDataSource {
         MoveHomeDoorSceneRequestDto(sceneId: sceneId),
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      if (!_isSuccessCode(response.code) ||
-          !response.success ||
-          response.data != true) {
+      if (!_isSuccessCode(response.code) || !response.success) {
+        throw HomeDoorRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
+      }
+      if (response.data != true) {
         throw const HomeDoorRemoteException.invalidResponse();
       }
     } on DioException catch (error) {
@@ -233,15 +260,23 @@ class HomeDoorRemoteDataSourceImpl implements HomeDoorRemoteDataSource {
 }
 
 class HomeDoorRemoteException implements Exception {
-  const HomeDoorRemoteException._(this.kind, {this.statusCode});
+  const HomeDoorRemoteException._(
+    this.kind, {
+    this.network,
+    this.businessFailure,
+  });
 
   HomeDoorRemoteException.fromNetwork(NetworkException exception)
-    : this._(HomeDoorRemoteErrorKind.network, statusCode: exception.statusCode);
+    : this._(HomeDoorRemoteErrorKind.network, network: exception);
+  const HomeDoorRemoteException.businessFailure(ApiBusinessFailure failure)
+    : this._(HomeDoorRemoteErrorKind.businessFailure, businessFailure: failure);
   const HomeDoorRemoteException.invalidResponse()
     : this._(HomeDoorRemoteErrorKind.invalidResponse);
 
   final HomeDoorRemoteErrorKind kind;
-  final int? statusCode;
+  final NetworkException? network;
+  final ApiBusinessFailure? businessFailure;
+  int? get statusCode => network?.statusCode;
 }
 
-enum HomeDoorRemoteErrorKind { network, invalidResponse }
+enum HomeDoorRemoteErrorKind { network, businessFailure, invalidResponse }

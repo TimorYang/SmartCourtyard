@@ -1,5 +1,6 @@
 import '../../../../core/errors/app_error.dart';
 import '../../../../core/logging/app_logger.dart';
+import '../../../../core/network/network_exception.dart';
 import '../../domain/entities/door_share.dart';
 import '../../domain/repositories/door_share_repository.dart';
 import '../data_sources/door_share_remote_data_source.dart';
@@ -128,7 +129,8 @@ class DoorShareRepositoryImpl implements DoorShareRepository {
         requestId: requestId,
       );
     }
-    if (error.kind == DoorShareRemoteErrorKind.network) {
+    if (error.kind == DoorShareRemoteErrorKind.network &&
+        error.network?.category == NetworkFailureCategory.networkUnavailable) {
       return AppError(
         code: AppErrorCode.networkUnavailable,
         messageKey: 'doorShare.networkUnavailable',
@@ -140,6 +142,9 @@ class DoorShareRepositoryImpl implements DoorShareRepository {
     return AppError(
       code: AppErrorCode.serverError,
       messageKey: 'doorShare.failed',
+      userMessage: error.kind == DoorShareRemoteErrorKind.businessFailure
+          ? error.businessFailure?.message
+          : null,
       action: AppErrorAction.retry,
       requestId: requestId,
       retryable: true,

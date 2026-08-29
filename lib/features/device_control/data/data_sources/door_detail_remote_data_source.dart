@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../../../../core/network/api_business_failure.dart';
 import '../../../../core/network/dio_factory.dart';
 import '../../../../core/network/network_exception.dart';
 import '../dto/door_detail_response_dto.dart';
@@ -47,7 +48,12 @@ class DoorDetailRemoteDataSourceImpl implements DoorDetailRemoteDataSource {
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       final data = response.data;
-      if (!_isSuccessCode(response.code) || !response.success || data == null) {
+      if (!_isSuccessCode(response.code) || !response.success) {
+        throw DoorDetailRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
+      }
+      if (data == null) {
         throw const DoorDetailRemoteException.invalidResponse();
       }
       return data;
@@ -71,7 +77,12 @@ class DoorDetailRemoteDataSourceImpl implements DoorDetailRemoteDataSource {
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       final data = response.data;
-      if (!_isSuccessCode(response.code) || !response.success || data == null) {
+      if (!_isSuccessCode(response.code) || !response.success) {
+        throw DoorDetailRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
+      }
+      if (data == null) {
         throw const DoorDetailRemoteException.invalidResponse();
       }
       return data;
@@ -97,7 +108,12 @@ class DoorDetailRemoteDataSourceImpl implements DoorDetailRemoteDataSource {
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       final data = response.data;
-      if (!_isSuccessCode(response.code) || !response.success || data == null) {
+      if (!_isSuccessCode(response.code) || !response.success) {
+        throw DoorDetailRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
+      }
+      if (data == null) {
         throw const DoorDetailRemoteException.invalidResponse();
       }
       return data;
@@ -122,9 +138,12 @@ class DoorDetailRemoteDataSourceImpl implements DoorDetailRemoteDataSource {
         deviceId,
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      if (!_isSuccessCode(response.code) ||
-          !response.success ||
-          response.data != true) {
+      if (!_isSuccessCode(response.code) || !response.success) {
+        throw DoorDetailRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
+      }
+      if (response.data != true) {
         throw const DoorDetailRemoteException.invalidResponse();
       }
     } on DioException catch (error) {
@@ -140,18 +159,26 @@ class DoorDetailRemoteDataSourceImpl implements DoorDetailRemoteDataSource {
 }
 
 class DoorDetailRemoteException implements Exception {
-  const DoorDetailRemoteException._(this.kind, {this.statusCode});
+  const DoorDetailRemoteException._(
+    this.kind, {
+    this.network,
+    this.businessFailure,
+  });
 
   DoorDetailRemoteException.fromNetwork(NetworkException exception)
+    : this._(DoorDetailRemoteErrorKind.network, network: exception);
+  const DoorDetailRemoteException.businessFailure(ApiBusinessFailure failure)
     : this._(
-        DoorDetailRemoteErrorKind.network,
-        statusCode: exception.statusCode,
+        DoorDetailRemoteErrorKind.businessFailure,
+        businessFailure: failure,
       );
   const DoorDetailRemoteException.invalidResponse()
     : this._(DoorDetailRemoteErrorKind.invalidResponse);
 
   final DoorDetailRemoteErrorKind kind;
-  final int? statusCode;
+  final NetworkException? network;
+  final ApiBusinessFailure? businessFailure;
+  int? get statusCode => network?.statusCode;
 }
 
-enum DoorDetailRemoteErrorKind { network, invalidResponse }
+enum DoorDetailRemoteErrorKind { network, businessFailure, invalidResponse }

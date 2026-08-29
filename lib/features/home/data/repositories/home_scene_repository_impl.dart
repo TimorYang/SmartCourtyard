@@ -1,5 +1,6 @@
 import '../../../../core/errors/app_error.dart';
 import '../../../../core/logging/app_logger.dart';
+import '../../../../core/network/network_exception.dart';
 import '../../domain/entities/home_scene.dart';
 import '../../domain/repositories/home_scene_repository.dart';
 import '../data_sources/home_scene_remote_data_source.dart';
@@ -121,7 +122,8 @@ class HomeSceneRepositoryImpl implements HomeSceneRepository {
   }
 
   AppError _mapError(HomeSceneRemoteException error, String requestId) {
-    if (error.kind == HomeSceneRemoteErrorKind.network) {
+    if (error.kind == HomeSceneRemoteErrorKind.network &&
+        error.network?.category == NetworkFailureCategory.networkUnavailable) {
       return AppError(
         code: AppErrorCode.networkUnavailable,
         messageKey: 'home.scenes.networkUnavailable',
@@ -133,6 +135,9 @@ class HomeSceneRepositoryImpl implements HomeSceneRepository {
     return AppError(
       code: AppErrorCode.serverError,
       messageKey: 'home.scenes.failed',
+      userMessage: error.kind == HomeSceneRemoteErrorKind.businessFailure
+          ? error.businessFailure?.message
+          : null,
       action: AppErrorAction.retry,
       requestId: requestId,
       retryable: true,

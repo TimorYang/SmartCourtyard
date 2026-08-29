@@ -71,6 +71,41 @@ void main() {
     );
   });
 
+  test('preserves a business failure message', () async {
+    final dataSource = RemoteDoorCommandRemoteDataSourceImpl(
+      api: _FakeRemoteDoorCommandApi(
+        response: const ApiEnvelopeDto(
+          code: 409,
+          success: false,
+          msg: 'The door is busy',
+        ),
+      ),
+    );
+
+    await expectLater(
+      dataSource.submitCommand(
+        doorId: 12,
+        body: const RemoteDoorCommandRequestDto(
+          action: RemoteDoorCommandAction.open,
+        ),
+        requestId: 'remote-command-1',
+      ),
+      throwsA(
+        isA<RemoteDoorCommandRemoteException>()
+            .having(
+              (error) => error.kind,
+              'kind',
+              RemoteDoorCommandRemoteErrorKind.businessFailure,
+            )
+            .having(
+              (error) => error.businessFailure?.message,
+              'message',
+              'The door is busy',
+            ),
+      ),
+    );
+  });
+
   test('maps wire status and failures into domain values', () async {
     final repository = RemoteDoorCommandRepositoryImpl(
       remoteDataSource: _FakeRemoteDoorCommandRemoteDataSource(
@@ -128,19 +163,22 @@ void main() {
 }
 
 class _FakeRemoteDoorCommandApi implements RemoteDoorCommandApi {
+  _FakeRemoteDoorCommandApi({
+    this.response = const ApiEnvelopeDto(
+      code: 0,
+      success: true,
+      data: RemoteDoorCommandResponseDto(
+        commandId: 'command-1',
+        doorId: '12',
+        action: 'OPEN',
+        status: 'PROCESSING',
+      ),
+    ),
+  });
+
   final List<String> paths = <String>[];
   final List<Options> options = <Options>[];
-
-  static const response = ApiEnvelopeDto(
-    code: 0,
-    success: true,
-    data: RemoteDoorCommandResponseDto(
-      commandId: 'command-1',
-      doorId: '12',
-      action: 'OPEN',
-      status: 'PROCESSING',
-    ),
-  );
+  final ApiEnvelopeDto<RemoteDoorCommandResponseDto> response;
 
   @override
   Future<ApiEnvelopeDto<RemoteDoorCommandResponseDto>> submitCommand(

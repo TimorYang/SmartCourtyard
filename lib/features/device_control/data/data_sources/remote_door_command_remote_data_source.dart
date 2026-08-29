@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 
+import '../../../../core/network/api_business_failure.dart';
+import '../../../../core/network/api_envelope_dto.dart';
 import '../../../../core/network/dio_factory.dart';
 import '../../../../core/network/network_exception.dart';
 import '../dto/remote_door_command_request_dto.dart';
@@ -32,7 +34,7 @@ class RemoteDoorCommandRemoteDataSourceImpl
         body,
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      return _validated(response.code, response.success, response.data);
+      return _validated(response);
     } on DioException catch (error) {
       throw RemoteDoorCommandRemoteException.fromNetwork(
         NetworkException.fromDio(error),
@@ -43,13 +45,15 @@ class RemoteDoorCommandRemoteDataSourceImpl
   }
 
   RemoteDoorCommandResponseDto _validated(
-    int code,
-    bool success,
-    RemoteDoorCommandResponseDto? data,
+    ApiEnvelopeDto<RemoteDoorCommandResponseDto> response,
   ) {
-    if ((code != 0 && code != 200) ||
-        !success ||
-        data == null ||
+    if ((response.code != 0 && response.code != 200) || !response.success) {
+      throw RemoteDoorCommandRemoteException.businessFailure(
+        ApiBusinessFailure.fromEnvelope(response),
+      );
+    }
+    final data = response.data;
+    if (data == null ||
         data.commandId.trim().isEmpty ||
         data.doorId.trim().isEmpty ||
         data.action.trim().isEmpty ||
@@ -61,19 +65,33 @@ class RemoteDoorCommandRemoteDataSourceImpl
 }
 
 class RemoteDoorCommandRemoteException implements Exception {
-  const RemoteDoorCommandRemoteException._(this.kind, {this.statusCode});
+  const RemoteDoorCommandRemoteException._(
+    this.kind, {
+    this.network,
+    this.businessFailure,
+  });
 
   RemoteDoorCommandRemoteException.fromNetwork(NetworkException exception)
-    : this._(
-        RemoteDoorCommandRemoteErrorKind.network,
-        statusCode: exception.statusCode,
+    : this._(RemoteDoorCommandRemoteErrorKind.network, network: exception);
+
+  const RemoteDoorCommandRemoteException.businessFailure(
+    ApiBusinessFailure failure,
+  ) : this._(
+        RemoteDoorCommandRemoteErrorKind.businessFailure,
+        businessFailure: failure,
       );
 
   const RemoteDoorCommandRemoteException.invalidResponse()
     : this._(RemoteDoorCommandRemoteErrorKind.invalidResponse);
 
   final RemoteDoorCommandRemoteErrorKind kind;
-  final int? statusCode;
+  final NetworkException? network;
+  final ApiBusinessFailure? businessFailure;
+  int? get statusCode => network?.statusCode;
 }
 
-enum RemoteDoorCommandRemoteErrorKind { network, invalidResponse }
+enum RemoteDoorCommandRemoteErrorKind {
+  network,
+  businessFailure,
+  invalidResponse,
+}

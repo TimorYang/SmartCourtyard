@@ -97,6 +97,7 @@ void main() {
         createResponse: const ApiEnvelopeDto<HomeSceneResponseDto>(
           code: 500,
           success: false,
+          msg: 'Unable to create scene',
         ),
       ),
     );
@@ -107,11 +108,17 @@ void main() {
         requestId: 'home-create-scene-123',
       ),
       throwsA(
-        isA<HomeSceneRemoteException>().having(
-          (error) => error.kind,
-          'kind',
-          HomeSceneRemoteErrorKind.invalidResponse,
-        ),
+        isA<HomeSceneRemoteException>()
+            .having(
+              (error) => error.kind,
+              'kind',
+              HomeSceneRemoteErrorKind.businessFailure,
+            )
+            .having(
+              (error) => error.businessFailure?.message,
+              'message',
+              'Unable to create scene',
+            ),
       ),
     );
   });
@@ -122,6 +129,7 @@ void main() {
         fetchResponse: const ApiEnvelopeDto<List<HomeSceneResponseDto>>(
           code: 0,
           success: false,
+          msg: 'Unable to load scenes',
         ),
       ),
     );
@@ -129,11 +137,17 @@ void main() {
     expect(
       () => dataSource.fetchScenes(requestId: 'home-scenes-123'),
       throwsA(
-        isA<HomeSceneRemoteException>().having(
-          (error) => error.kind,
-          'kind',
-          HomeSceneRemoteErrorKind.invalidResponse,
-        ),
+        isA<HomeSceneRemoteException>()
+            .having(
+              (error) => error.kind,
+              'kind',
+              HomeSceneRemoteErrorKind.businessFailure,
+            )
+            .having(
+              (error) => error.businessFailure?.message,
+              'message',
+              'Unable to load scenes',
+            ),
       ),
     );
   });

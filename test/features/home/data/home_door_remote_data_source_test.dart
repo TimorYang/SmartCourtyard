@@ -373,6 +373,7 @@ void main() {
         doorResponse: const ApiEnvelopeDto<List<HomeDoorResponseDto>>(
           code: 500,
           success: false,
+          msg: 'Unable to load doors',
         ),
       ),
     );
@@ -380,11 +381,17 @@ void main() {
     expect(
       () => dataSource.fetchDoors(sceneId: 7, requestId: 'home-doors-123'),
       throwsA(
-        isA<HomeDoorRemoteException>().having(
-          (error) => error.kind,
-          'kind',
-          HomeDoorRemoteErrorKind.invalidResponse,
-        ),
+        isA<HomeDoorRemoteException>()
+            .having(
+              (error) => error.kind,
+              'kind',
+              HomeDoorRemoteErrorKind.businessFailure,
+            )
+            .having(
+              (error) => error.businessFailure?.message,
+              'message',
+              'Unable to load doors',
+            ),
       ),
     );
   });

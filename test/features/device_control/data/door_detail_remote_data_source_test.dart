@@ -217,6 +217,7 @@ void main() {
         response: const ApiEnvelopeDto<DoorDetailResponseDto>(
           code: 500,
           success: false,
+          msg: 'Unable to load door details',
         ),
       ),
     );
@@ -225,11 +226,17 @@ void main() {
       () =>
           dataSource.fetchDoorDetail(doorId: 12, requestId: 'door-detail-123'),
       throwsA(
-        isA<DoorDetailRemoteException>().having(
-          (error) => error.kind,
-          'kind',
-          DoorDetailRemoteErrorKind.invalidResponse,
-        ),
+        isA<DoorDetailRemoteException>()
+            .having(
+              (error) => error.kind,
+              'kind',
+              DoorDetailRemoteErrorKind.businessFailure,
+            )
+            .having(
+              (error) => error.businessFailure?.message,
+              'message',
+              'Unable to load door details',
+            ),
       ),
     );
   });
