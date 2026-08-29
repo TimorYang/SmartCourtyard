@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../../../core/network/dio_factory.dart';
+import '../../../../core/network/api_business_failure.dart';
 import '../../../../core/network/network_exception.dart';
 import '../dto/auth_public_key_response_dto.dart';
 import 'auth_api.dart';
@@ -35,7 +36,12 @@ class AuthCryptoRemoteDataSourceImpl implements AuthCryptoRemoteDataSource {
         ),
       );
       final data = response.data;
-      if (response.code != 200 || !response.success || data == null) {
+      if (response.code != 200 || !response.success) {
+        throw AuthCryptoRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
+      }
+      if (data == null) {
         throw const AuthCryptoRemoteException.invalidResponse();
       }
       _validate(data);
@@ -63,22 +69,35 @@ class AuthCryptoRemoteDataSourceImpl implements AuthCryptoRemoteDataSource {
 }
 
 class AuthCryptoRemoteException implements Exception {
-  const AuthCryptoRemoteException._(this.kind, {this.statusCode});
+  const AuthCryptoRemoteException._(
+    this.kind, {
+    this.network,
+    this.businessFailure,
+  });
 
   const AuthCryptoRemoteException.configuration()
     : this._(AuthCryptoRemoteErrorKind.configuration);
   const AuthCryptoRemoteException.network()
     : this._(AuthCryptoRemoteErrorKind.network);
   AuthCryptoRemoteException.fromNetwork(NetworkException exception)
+    : this._(AuthCryptoRemoteErrorKind.network, network: exception);
+  AuthCryptoRemoteException.businessFailure(ApiBusinessFailure failure)
     : this._(
-        AuthCryptoRemoteErrorKind.network,
-        statusCode: exception.statusCode,
+        AuthCryptoRemoteErrorKind.businessFailure,
+        businessFailure: failure,
       );
   const AuthCryptoRemoteException.invalidResponse()
     : this._(AuthCryptoRemoteErrorKind.invalidResponse);
 
   final AuthCryptoRemoteErrorKind kind;
-  final int? statusCode;
+  final NetworkException? network;
+  int? get statusCode => network?.statusCode;
+  final ApiBusinessFailure? businessFailure;
 }
 
-enum AuthCryptoRemoteErrorKind { configuration, network, invalidResponse }
+enum AuthCryptoRemoteErrorKind {
+  configuration,
+  network,
+  businessFailure,
+  invalidResponse,
+}

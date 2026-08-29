@@ -1,6 +1,7 @@
 import '../../../../core/network/access_token_cache.dart';
 import '../../../../core/errors/app_error.dart';
 import '../../../../core/logging/app_logger.dart';
+import '../../../../core/network/network_exception.dart';
 import '../../domain/entities/account_profile.dart';
 import '../../domain/entities/account_avatar_code.dart';
 import '../../domain/entities/account_token_set.dart';
@@ -200,8 +201,11 @@ class AccountRepositoryImpl implements AccountRepository {
           ? AppErrorCode.serverError
           : error.network?.statusCode == 401 || error.network?.statusCode == 403
           ? AppErrorCode.accessDenied
-          : AppErrorCode.networkUnavailable,
+          : error.network?.category == NetworkFailureCategory.networkUnavailable
+          ? AppErrorCode.networkUnavailable
+          : AppErrorCode.serverError,
       messageKey: messageKey,
+      userMessage: error.businessFailure?.message,
       action: AppErrorAction.retry,
       requestId: requestId,
       retryable: true,

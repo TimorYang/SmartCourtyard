@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../../../core/network/api_envelope_dto.dart';
+import '../../../../core/network/api_business_failure.dart';
 import '../../../../core/network/dio_factory.dart';
 import '../../../../core/network/network_exception.dart';
 import '../dto/apple_login_nonce_response_dto.dart';
@@ -67,9 +68,12 @@ class AuthLoginRemoteDataSourceImpl implements AuthLoginRemoteDataSource {
         _authorizationOptions(requestId),
       );
       final data = response.data;
-      if (response.code != 200 ||
-          !response.success ||
-          data == null ||
+      if (response.code != 200 || !response.success) {
+        throw AuthLoginRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
+      }
+      if (data == null ||
           data.nonceId.trim().isEmpty ||
           data.nonce.trim().isEmpty ||
           data.expiresInSeconds <= 0) {
@@ -99,10 +103,12 @@ class AuthLoginRemoteDataSourceImpl implements AuthLoginRemoteDataSource {
       final response = await submit(request, _authorizationOptions(requestId));
       // The login endpoint's business contract defines code 200 as success.
       final data = response.data;
-      if (response.code != 200 ||
-          !response.success ||
-          data == null ||
-          !_hasUsableTokens(data)) {
+      if (response.code != 200 || !response.success) {
+        throw AuthLoginRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
+      }
+      if (data == null || !_hasUsableTokens(data)) {
         throw const AuthLoginRemoteException.invalidResponse();
       }
       final profileResponse = await api.fetchAccountProfile(
@@ -115,10 +121,12 @@ class AuthLoginRemoteDataSourceImpl implements AuthLoginRemoteDataSource {
         ),
       );
       final profile = profileResponse.data;
-      if (profileResponse.code != 200 ||
-          !profileResponse.success ||
-          profile == null ||
-          !_hasProfile(profile)) {
+      if (profileResponse.code != 200 || !profileResponse.success) {
+        throw AuthLoginRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(profileResponse),
+        );
+      }
+      if (profile == null || !_hasProfile(profile)) {
         throw const AuthLoginRemoteException.invalidResponse();
       }
       return AuthLoginRemoteResult(login: data, profile: profile);
@@ -163,20 +171,33 @@ class AuthLoginRemoteResult {
 }
 
 class AuthLoginRemoteException implements Exception {
-  const AuthLoginRemoteException._(this.kind, {this.statusCode});
+  const AuthLoginRemoteException._(
+    this.kind, {
+    this.network,
+    this.businessFailure,
+  });
 
   const AuthLoginRemoteException.configuration()
     : this._(AuthLoginRemoteErrorKind.configuration);
   AuthLoginRemoteException.fromNetwork(NetworkException exception)
+    : this._(AuthLoginRemoteErrorKind.network, network: exception);
+  AuthLoginRemoteException.businessFailure(ApiBusinessFailure failure)
     : this._(
-        AuthLoginRemoteErrorKind.network,
-        statusCode: exception.statusCode,
+        AuthLoginRemoteErrorKind.businessFailure,
+        businessFailure: failure,
       );
   const AuthLoginRemoteException.invalidResponse()
     : this._(AuthLoginRemoteErrorKind.invalidResponse);
 
   final AuthLoginRemoteErrorKind kind;
-  final int? statusCode;
+  final NetworkException? network;
+  int? get statusCode => network?.statusCode;
+  final ApiBusinessFailure? businessFailure;
 }
 
-enum AuthLoginRemoteErrorKind { configuration, network, invalidResponse }
+enum AuthLoginRemoteErrorKind {
+  configuration,
+  network,
+  businessFailure,
+  invalidResponse,
+}

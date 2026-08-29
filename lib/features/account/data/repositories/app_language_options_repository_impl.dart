@@ -1,5 +1,6 @@
 import '../../../../core/errors/app_error.dart';
 import '../../../../core/logging/app_logger.dart';
+import '../../../../core/network/network_exception.dart';
 import '../../domain/entities/app_language_option.dart';
 import '../../domain/repositories/app_language_options_repository.dart';
 import '../data_sources/account_profile_remote_data_source.dart';
@@ -40,8 +41,12 @@ class AppLanguageOptionsRepositoryImpl implements AppLanguageOptionsRepository {
       throw AppError(
         code: error.network == null
             ? AppErrorCode.serverError
-            : AppErrorCode.networkUnavailable,
+            : error.network?.category ==
+                  NetworkFailureCategory.networkUnavailable
+            ? AppErrorCode.networkUnavailable
+            : AppErrorCode.serverError,
         messageKey: 'account.languageOptionsFailed',
+        userMessage: error.businessFailure?.message,
         action: AppErrorAction.retry,
         requestId: requestId,
         retryable: true,

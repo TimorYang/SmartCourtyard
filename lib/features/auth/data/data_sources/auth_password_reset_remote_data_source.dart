@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 
 import '../../../../core/network/dio_factory.dart';
+import '../../../../core/network/api_business_failure.dart';
+import '../../../../core/network/api_envelope_dto.dart';
 import '../../../../core/network/network_exception.dart';
 import '../../domain/entities/password_reset_verification.dart';
 import 'auth_api.dart';
@@ -52,7 +54,7 @@ class AuthPasswordResetRemoteDataSourceImpl
       final response = await api.sendPasswordResetEmailCode({
         'email': email,
       }, _options(requestId));
-      _validateEnvelope(response.code, response.success);
+      _validateEnvelope(response);
     } on DioException catch (error) {
       throw AuthPasswordResetRemoteException.fromNetwork(
         NetworkException.fromDio(error),
@@ -73,7 +75,7 @@ class AuthPasswordResetRemoteDataSourceImpl
         'email': email,
         'code': code,
       }, _options(requestId));
-      _validateEnvelope(response.code, response.success);
+      _validateEnvelope(response);
       final data = response.data;
       if (data is! Map) {
         throw const AuthPasswordResetRemoteException.invalidResponse();
@@ -114,7 +116,7 @@ class AuthPasswordResetRemoteDataSourceImpl
         request,
         _options(requestId),
       );
-      _validateEnvelope(response.code, response.success);
+      _validateEnvelope(response);
     } on DioException catch (error) {
       throw AuthPasswordResetRemoteException.fromNetwork(
         NetworkException.fromDio(error),
@@ -124,34 +126,46 @@ class AuthPasswordResetRemoteDataSourceImpl
     }
   }
 
-  void _validateEnvelope(int code, bool success) {
-    if (code != 200 || !success) {
-      throw const AuthPasswordResetRemoteException.invalidResponse();
+  void _validateEnvelope<T>(ApiEnvelopeDto<T> response) {
+    if (response.code != 200 || !response.success) {
+      throw AuthPasswordResetRemoteException.businessFailure(
+        ApiBusinessFailure.fromEnvelope(response),
+      );
     }
   }
 }
 
 class AuthPasswordResetRemoteException implements Exception {
-  const AuthPasswordResetRemoteException._(this.kind, {this.statusCode});
+  const AuthPasswordResetRemoteException._(
+    this.kind, {
+    this.network,
+    this.businessFailure,
+  });
 
   const AuthPasswordResetRemoteException.configuration()
     : this._(AuthPasswordResetRemoteErrorKind.configuration);
 
   AuthPasswordResetRemoteException.fromNetwork(NetworkException exception)
+    : this._(AuthPasswordResetRemoteErrorKind.network, network: exception);
+
+  AuthPasswordResetRemoteException.businessFailure(ApiBusinessFailure failure)
     : this._(
-        AuthPasswordResetRemoteErrorKind.network,
-        statusCode: exception.statusCode,
+        AuthPasswordResetRemoteErrorKind.businessFailure,
+        businessFailure: failure,
       );
 
   const AuthPasswordResetRemoteException.invalidResponse()
     : this._(AuthPasswordResetRemoteErrorKind.invalidResponse);
 
   final AuthPasswordResetRemoteErrorKind kind;
-  final int? statusCode;
+  final NetworkException? network;
+  int? get statusCode => network?.statusCode;
+  final ApiBusinessFailure? businessFailure;
 }
 
 enum AuthPasswordResetRemoteErrorKind {
   configuration,
   network,
+  businessFailure,
   invalidResponse,
 }

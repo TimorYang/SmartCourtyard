@@ -1,5 +1,6 @@
 import '../../../../core/errors/app_error.dart';
 import '../../../../core/logging/app_logger.dart';
+import '../../../../core/network/network_exception.dart';
 import '../../domain/entities/receiving_door.dart';
 import '../../domain/repositories/receiving_devices_repository.dart';
 import '../data_sources/receiving_devices_remote_data_source.dart';
@@ -49,7 +50,8 @@ class ReceivingDevicesRepositoryImpl implements ReceivingDevicesRepository {
         requestId: requestId,
       );
     }
-    if (error.kind == ReceivingDevicesRemoteErrorKind.network) {
+    if (error.kind == ReceivingDevicesRemoteErrorKind.network &&
+        error.network?.category == NetworkFailureCategory.networkUnavailable) {
       return AppError(
         code: AppErrorCode.networkUnavailable,
         messageKey: 'receivingDevices.networkUnavailable',
@@ -61,6 +63,9 @@ class ReceivingDevicesRepositoryImpl implements ReceivingDevicesRepository {
     return AppError(
       code: AppErrorCode.serverError,
       messageKey: 'receivingDevices.failed',
+      userMessage: error.kind == ReceivingDevicesRemoteErrorKind.businessFailure
+          ? error.businessFailure?.message
+          : null,
       action: AppErrorAction.retry,
       requestId: requestId,
       retryable: true,

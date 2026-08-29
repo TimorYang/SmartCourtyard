@@ -1,5 +1,6 @@
 import '../../../../core/errors/app_error.dart';
 import '../../../../core/logging/app_logger.dart';
+import '../../../../core/network/network_exception.dart';
 import '../../domain/entities/password_reset_verification.dart';
 import '../../domain/repositories/auth_password_reset_repository.dart';
 import '../data_sources/auth_password_reset_remote_data_source.dart';
@@ -97,13 +98,25 @@ class AuthPasswordResetRepositoryImpl implements AuthPasswordResetRepository {
           messageKey: 'auth.passwordReset.clientAuthorizationFailed',
           requestId: requestId,
         ),
-      AuthPasswordResetRemoteErrorKind.network => AppError(
-        code: AppErrorCode.networkUnavailable,
-        messageKey: 'auth.passwordReset.networkUnavailable',
+      AuthPasswordResetRemoteErrorKind.network
+          when error.network?.category ==
+              NetworkFailureCategory.networkUnavailable =>
+        AppError(
+          code: AppErrorCode.networkUnavailable,
+          messageKey: 'auth.passwordReset.networkUnavailable',
+          action: AppErrorAction.retry,
+          requestId: requestId,
+          retryable: true,
+        ),
+      AuthPasswordResetRemoteErrorKind.businessFailure => AppError(
+        code: AppErrorCode.serverError,
+        messageKey: 'auth.passwordReset.unavailable',
+        userMessage: error.businessFailure?.message,
         action: AppErrorAction.retry,
         requestId: requestId,
         retryable: true,
       ),
+      AuthPasswordResetRemoteErrorKind.network ||
       AuthPasswordResetRemoteErrorKind.invalidResponse => AppError(
         code: AppErrorCode.serverError,
         messageKey: 'auth.passwordReset.unavailable',

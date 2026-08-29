@@ -1,5 +1,6 @@
 import '../../../../core/errors/app_error.dart';
 import '../../../../core/logging/app_logger.dart';
+import '../../../../core/network/network_exception.dart';
 import '../../domain/entities/registration_verification.dart';
 import '../../domain/repositories/auth_registration_repository.dart';
 import '../data_sources/auth_registration_remote_data_source.dart';
@@ -106,7 +107,8 @@ class AuthRegistrationRepositoryImpl implements AuthRegistrationRepository {
         requestId: requestId,
       );
     }
-    if (error.kind == AuthRegistrationRemoteErrorKind.network) {
+    if (error.kind == AuthRegistrationRemoteErrorKind.network &&
+        error.network?.category == NetworkFailureCategory.networkUnavailable) {
       return AppError(
         code: AppErrorCode.networkUnavailable,
         messageKey: 'auth.registration.networkUnavailable',
@@ -118,6 +120,9 @@ class AuthRegistrationRepositoryImpl implements AuthRegistrationRepository {
     return AppError(
       code: AppErrorCode.serverError,
       messageKey: 'auth.registration.unavailable',
+      userMessage: error.kind == AuthRegistrationRemoteErrorKind.businessFailure
+          ? error.businessFailure?.message
+          : null,
       action: AppErrorAction.retry,
       requestId: requestId,
       retryable: true,

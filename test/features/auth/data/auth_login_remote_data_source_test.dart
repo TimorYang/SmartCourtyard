@@ -196,7 +196,11 @@ void main() {
   test('rejects a non-200 business response code', () async {
     final dataSource = AuthLoginRemoteDataSourceImpl(
       api: _FakeAuthApi(
-        const ApiEnvelopeDto<AuthLoginResponseDto>(code: 400, success: true),
+        const ApiEnvelopeDto<AuthLoginResponseDto>(
+          code: 400,
+          success: true,
+          msg: 'Account is unavailable.',
+        ),
       ),
       clientAuthorization: 'encoded-client-credentials',
     );
@@ -204,11 +208,17 @@ void main() {
     expect(
       () => dataSource.login(requestId: 'login-123', request: const {}),
       throwsA(
-        isA<AuthLoginRemoteException>().having(
-          (error) => error.kind,
-          'kind',
-          AuthLoginRemoteErrorKind.invalidResponse,
-        ),
+        isA<AuthLoginRemoteException>()
+            .having(
+              (error) => error.kind,
+              'kind',
+              AuthLoginRemoteErrorKind.businessFailure,
+            )
+            .having(
+              (error) => error.businessFailure?.message,
+              'message',
+              'Account is unavailable.',
+            ),
       ),
     );
   });
@@ -238,7 +248,7 @@ void main() {
         isA<AuthLoginRemoteException>().having(
           (error) => error.kind,
           'kind',
-          AuthLoginRemoteErrorKind.invalidResponse,
+          AuthLoginRemoteErrorKind.businessFailure,
         ),
       ),
     );

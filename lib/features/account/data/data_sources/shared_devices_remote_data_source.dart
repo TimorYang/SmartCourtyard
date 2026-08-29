@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../../../core/network/dio_factory.dart';
+import '../../../../core/network/api_business_failure.dart';
 import '../../../../core/network/network_exception.dart';
 import '../dto/shared_door_response_dto.dart';
 import '../dto/shared_door_members_response_dto.dart';
@@ -35,7 +36,12 @@ class SharedDevicesRemoteDataSourceImpl
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       final data = response.data;
-      if (response.code != 200 || !response.success || data == null) {
+      if (response.code != 200 || !response.success) {
+        throw SharedDevicesRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
+      }
+      if (data == null) {
         throw const SharedDevicesRemoteException.invalidResponse();
       }
       return data;
@@ -60,8 +66,11 @@ class SharedDevicesRemoteDataSourceImpl
         shareId,
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      if (response.code != 200 || !response.success)
-        throw const SharedDevicesRemoteException.invalidResponse();
+      if (response.code != 200 || !response.success) {
+        throw SharedDevicesRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
+      }
     } on DioException catch (error) {
       throw SharedDevicesRemoteException.fromNetwork(
         NetworkException.fromDio(error),
@@ -81,7 +90,12 @@ class SharedDevicesRemoteDataSourceImpl
         doorId,
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      if (response.code != 200 || !response.success || response.data == null) {
+      if (response.code != 200 || !response.success) {
+        throw SharedDevicesRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
+      }
+      if (response.data == null) {
         throw const SharedDevicesRemoteException.invalidResponse();
       }
       return response.data!;
@@ -96,19 +110,28 @@ class SharedDevicesRemoteDataSourceImpl
 }
 
 class SharedDevicesRemoteException implements Exception {
-  const SharedDevicesRemoteException._(this.kind, {this.statusCode});
+  const SharedDevicesRemoteException._(
+    this.kind, {
+    this.network,
+    this.businessFailure,
+  });
 
   SharedDevicesRemoteException.fromNetwork(NetworkException exception)
+    : this._(SharedDevicesRemoteErrorKind.network, network: exception);
+
+  SharedDevicesRemoteException.businessFailure(ApiBusinessFailure failure)
     : this._(
-        SharedDevicesRemoteErrorKind.network,
-        statusCode: exception.statusCode,
+        SharedDevicesRemoteErrorKind.businessFailure,
+        businessFailure: failure,
       );
 
   const SharedDevicesRemoteException.invalidResponse()
     : this._(SharedDevicesRemoteErrorKind.invalidResponse);
 
   final SharedDevicesRemoteErrorKind kind;
-  final int? statusCode;
+  final NetworkException? network;
+  final ApiBusinessFailure? businessFailure;
+  int? get statusCode => network?.statusCode;
 }
 
-enum SharedDevicesRemoteErrorKind { network, invalidResponse }
+enum SharedDevicesRemoteErrorKind { network, businessFailure, invalidResponse }

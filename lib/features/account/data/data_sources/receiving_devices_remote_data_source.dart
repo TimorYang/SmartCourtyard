@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../../../core/network/dio_factory.dart';
+import '../../../../core/network/api_business_failure.dart';
 import '../../../../core/network/network_exception.dart';
 import '../dto/receiving_door_response_dto.dart';
 import 'receiving_devices_api.dart';
@@ -26,7 +27,12 @@ class ReceivingDevicesRemoteDataSourceImpl
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       final data = response.data;
-      if (response.code != 200 || !response.success || data == null) {
+      if (response.code != 200 || !response.success) {
+        throw ReceivingDevicesRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
+      }
+      if (data == null) {
         throw const ReceivingDevicesRemoteException.invalidResponse();
       }
       return data;
@@ -43,19 +49,32 @@ class ReceivingDevicesRemoteDataSourceImpl
 }
 
 class ReceivingDevicesRemoteException implements Exception {
-  const ReceivingDevicesRemoteException._(this.kind, {this.statusCode});
+  const ReceivingDevicesRemoteException._(
+    this.kind, {
+    this.network,
+    this.businessFailure,
+  });
 
   ReceivingDevicesRemoteException.fromNetwork(NetworkException exception)
+    : this._(ReceivingDevicesRemoteErrorKind.network, network: exception);
+
+  ReceivingDevicesRemoteException.businessFailure(ApiBusinessFailure failure)
     : this._(
-        ReceivingDevicesRemoteErrorKind.network,
-        statusCode: exception.statusCode,
+        ReceivingDevicesRemoteErrorKind.businessFailure,
+        businessFailure: failure,
       );
 
   const ReceivingDevicesRemoteException.invalidResponse()
     : this._(ReceivingDevicesRemoteErrorKind.invalidResponse);
 
   final ReceivingDevicesRemoteErrorKind kind;
-  final int? statusCode;
+  final NetworkException? network;
+  final ApiBusinessFailure? businessFailure;
+  int? get statusCode => network?.statusCode;
 }
 
-enum ReceivingDevicesRemoteErrorKind { network, invalidResponse }
+enum ReceivingDevicesRemoteErrorKind {
+  network,
+  businessFailure,
+  invalidResponse,
+}

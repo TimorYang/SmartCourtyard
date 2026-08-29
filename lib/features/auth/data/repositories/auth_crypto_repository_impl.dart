@@ -1,5 +1,6 @@
 import '../../../../core/errors/app_error.dart';
 import '../../../../core/logging/app_logger.dart';
+import '../../../../core/network/network_exception.dart';
 import '../../domain/entities/password_encryption_material.dart';
 import '../../domain/repositories/auth_crypto_repository.dart';
 import '../data_sources/auth_crypto_remote_data_source.dart';
@@ -65,14 +66,27 @@ class AuthCryptoRepositoryImpl implements AuthCryptoRepository {
           messageKey: 'auth.crypto.clientAuthorizationFailed',
           requestId: requestId,
         ),
-      AuthCryptoRemoteErrorKind.network => AppError(
-        code: AppErrorCode.networkUnavailable,
-        messageKey: 'auth.crypto.networkUnavailable',
+      AuthCryptoRemoteErrorKind.network
+          when error.network == null ||
+              error.network?.category ==
+                  NetworkFailureCategory.networkUnavailable =>
+        AppError(
+          code: AppErrorCode.networkUnavailable,
+          messageKey: 'auth.crypto.networkUnavailable',
+          action: AppErrorAction.retry,
+          requestId: requestId,
+          retryable: true,
+        ),
+      AuthCryptoRemoteErrorKind.businessFailure => AppError(
+        code: AppErrorCode.serverError,
+        messageKey: 'auth.crypto.unavailable',
+        userMessage: error.businessFailure?.message,
         action: AppErrorAction.retry,
         requestId: requestId,
         retryable: true,
       ),
-      _ => AppError(
+      AuthCryptoRemoteErrorKind.network ||
+      AuthCryptoRemoteErrorKind.invalidResponse => AppError(
         code: AppErrorCode.serverError,
         messageKey: 'auth.crypto.unavailable',
         action: AppErrorAction.retry,

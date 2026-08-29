@@ -1,5 +1,6 @@
 import 'package:flinx/core/errors/app_error.dart';
 import 'package:flinx/core/logging/app_logger.dart';
+import 'package:flinx/core/network/api_business_failure.dart';
 import 'package:flinx/features/auth/data/data_sources/auth_crypto_remote_data_source.dart';
 import 'package:flinx/features/auth/data/repositories/auth_crypto_repository_impl.dart';
 import 'package:flinx/features/auth/data/dto/auth_public_key_response_dto.dart';
@@ -52,6 +53,31 @@ void main() {
             )
             .having((error) => error.retryable, 'retryable', isTrue)
             .having((error) => error.requestId, 'requestId', 'request-1'),
+      ),
+    );
+  });
+
+  test('preserves an unknown business message for presentation', () async {
+    final repository = AuthCryptoRepositoryImpl(
+      remoteDataSource: _ThrowingRemoteDataSource(
+        AuthCryptoRemoteException.businessFailure(
+          ApiBusinessFailure(
+            code: 100500,
+            message: 'Encryption is temporarily unavailable.',
+          ),
+        ),
+      ),
+      logger: _FakeLogger(),
+    );
+
+    expect(
+      () => repository.getPasswordEncryptionMaterial(requestId: 'request-2'),
+      throwsA(
+        isA<AppError>().having(
+          (error) => error.userMessage,
+          'userMessage',
+          'Encryption is temporarily unavailable.',
+        ),
       ),
     );
   });

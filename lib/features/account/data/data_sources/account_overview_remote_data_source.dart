@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../../../core/network/dio_factory.dart';
+import '../../../../core/network/api_business_failure.dart';
 import '../../../../core/network/network_exception.dart';
 import '../dto/account_overview_dto.dart';
 import 'account_overview_api.dart';
@@ -22,7 +23,12 @@ class AccountOverviewRemoteDataSourceImpl
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       final data = response.data;
-      if (response.code != 200 || !response.success || data == null) {
+      if (response.code != 200 || !response.success) {
+        throw AccountOverviewRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
+      }
+      if (data == null) {
         throw const AccountOverviewRemoteException.invalidResponse();
       }
       return data;
@@ -39,19 +45,32 @@ class AccountOverviewRemoteDataSourceImpl
 }
 
 class AccountOverviewRemoteException implements Exception {
-  const AccountOverviewRemoteException._(this.kind, {this.statusCode});
+  const AccountOverviewRemoteException._(
+    this.kind, {
+    this.network,
+    this.businessFailure,
+  });
 
   AccountOverviewRemoteException.fromNetwork(NetworkException exception)
+    : this._(AccountOverviewRemoteErrorKind.network, network: exception);
+
+  AccountOverviewRemoteException.businessFailure(ApiBusinessFailure failure)
     : this._(
-        AccountOverviewRemoteErrorKind.network,
-        statusCode: exception.statusCode,
+        AccountOverviewRemoteErrorKind.businessFailure,
+        businessFailure: failure,
       );
 
   const AccountOverviewRemoteException.invalidResponse()
     : this._(AccountOverviewRemoteErrorKind.invalidResponse);
 
   final AccountOverviewRemoteErrorKind kind;
-  final int? statusCode;
+  final NetworkException? network;
+  final ApiBusinessFailure? businessFailure;
+  int? get statusCode => network?.statusCode;
 }
 
-enum AccountOverviewRemoteErrorKind { network, invalidResponse }
+enum AccountOverviewRemoteErrorKind {
+  network,
+  businessFailure,
+  invalidResponse,
+}

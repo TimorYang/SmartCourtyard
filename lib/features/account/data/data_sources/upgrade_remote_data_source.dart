@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../../../core/network/dio_factory.dart';
+import '../../../../core/network/api_business_failure.dart';
 import '../../../../core/network/network_exception.dart';
 import '../dto/upgrade_dto.dart';
 import '../services/platform_app_release_context_provider.dart';
@@ -38,7 +39,12 @@ class UpgradeRemoteDataSourceImpl implements UpgradeRemoteDataSource {
       final request = await appReleaseContextProvider.read();
       final response = await api.checkAppRelease(request, _options(requestId));
       final data = response.data;
-      if (!_isSuccessful(response.code, response.success) || data == null) {
+      if (!_isSuccessful(response.code, response.success)) {
+        throw UpgradeRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
+      }
+      if (data == null) {
         throw const UpgradeRemoteException.invalidResponse();
       }
       return data;
@@ -58,7 +64,12 @@ class UpgradeRemoteDataSourceImpl implements UpgradeRemoteDataSource {
     try {
       final response = await api.fetchFirmwareUpgrades(_options(requestId));
       final data = response.data;
-      if (!_isSuccessful(response.code, response.success) || data == null) {
+      if (!_isSuccessful(response.code, response.success)) {
+        throw UpgradeRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
+      }
+      if (data == null) {
         throw const UpgradeRemoteException.invalidResponse();
       }
       return data;
@@ -82,7 +93,12 @@ class UpgradeRemoteDataSourceImpl implements UpgradeRemoteDataSource {
         _options(requestId),
       );
       final data = response.data;
-      if (!_isSuccessful(response.code, response.success) || data == null) {
+      if (!_isSuccessful(response.code, response.success)) {
+        throw UpgradeRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
+      }
+      if (data == null) {
         throw const UpgradeRemoteException.invalidResponse();
       }
       return data;
@@ -104,16 +120,25 @@ class UpgradeRemoteDataSourceImpl implements UpgradeRemoteDataSource {
 }
 
 class UpgradeRemoteException implements Exception {
-  const UpgradeRemoteException._(this.kind, {this.statusCode});
+  const UpgradeRemoteException._(
+    this.kind, {
+    this.network,
+    this.businessFailure,
+  });
 
   UpgradeRemoteException.fromNetwork(NetworkException exception)
-    : this._(UpgradeRemoteErrorKind.network, statusCode: exception.statusCode);
+    : this._(UpgradeRemoteErrorKind.network, network: exception);
+
+  UpgradeRemoteException.businessFailure(ApiBusinessFailure failure)
+    : this._(UpgradeRemoteErrorKind.businessFailure, businessFailure: failure);
 
   const UpgradeRemoteException.invalidResponse()
     : this._(UpgradeRemoteErrorKind.invalidResponse);
 
   final UpgradeRemoteErrorKind kind;
-  final int? statusCode;
+  final NetworkException? network;
+  final ApiBusinessFailure? businessFailure;
+  int? get statusCode => network?.statusCode;
 }
 
-enum UpgradeRemoteErrorKind { network, invalidResponse }
+enum UpgradeRemoteErrorKind { network, businessFailure, invalidResponse }

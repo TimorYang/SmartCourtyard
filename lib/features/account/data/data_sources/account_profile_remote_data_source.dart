@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../../../../core/network/api_envelope_dto.dart';
 import '../../../../core/network/dio_factory.dart';
+import '../../../../core/network/api_business_failure.dart';
 import '../../../../core/network/network_exception.dart';
 import '../../domain/entities/account_avatar_code.dart';
 import '../dto/app_language_option_dto.dart';
@@ -72,7 +73,12 @@ class AccountProfileRemoteDataSourceImpl
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       final data = response.data;
-      if (!_accountSuccess(response.code, response.success) || data == null) {
+      if (!_accountSuccess(response.code, response.success)) {
+        throw AccountProfileRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
+      }
+      if (data == null) {
         throw const AccountProfileRemoteException.invalidResponse();
       }
       return data;
@@ -94,7 +100,12 @@ class AccountProfileRemoteDataSourceImpl
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       final data = response.data;
-      if (!_accountSuccess(response.code, response.success) || data == null) {
+      if (!_accountSuccess(response.code, response.success)) {
+        throw AccountProfileRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
+      }
+      if (data == null) {
         throw const AccountProfileRemoteException.invalidResponse();
       }
       return data;
@@ -116,8 +127,12 @@ class AccountProfileRemoteDataSourceImpl
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       final data = response.data;
-      if (!_languageOptionsSuccess(response.code, response.success) ||
-          data == null) {
+      if (!_languageOptionsSuccess(response.code, response.success)) {
+        throw AccountProfileRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
+      }
+      if (data == null) {
         throw const AccountProfileRemoteException.invalidResponse();
       }
       return data;
@@ -153,9 +168,12 @@ class AccountProfileRemoteDataSourceImpl
           : raw is String
           ? int.tryParse(raw)
           : null;
-      if (!_success(response.code, response.success) ||
-          fileId == null ||
-          fileId <= 0) {
+      if (!_success(response.code, response.success)) {
+        throw AccountProfileRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
+      }
+      if (fileId == null || fileId <= 0) {
         throw const AccountProfileRemoteException.invalidResponse();
       }
       return fileId;
@@ -193,7 +211,9 @@ class AccountProfileRemoteDataSourceImpl
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       if (!_accountSuccess(response.code, response.success)) {
-        throw const AccountProfileRemoteException.invalidResponse();
+        throw AccountProfileRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
       }
     } on DioException catch (error) {
       throw AccountProfileRemoteException.fromNetwork(
@@ -219,7 +239,9 @@ class AccountProfileRemoteDataSourceImpl
         'avatarFileId': ?avatarFileId,
       }, Options(extra: {NetworkRequestExtras.requestId: requestId}));
       if (!_success(response.code, response.success)) {
-        throw const AccountProfileRemoteException.invalidResponse();
+        throw AccountProfileRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
       }
     } on DioException catch (error) {
       throw AccountProfileRemoteException.fromNetwork(
@@ -273,7 +295,9 @@ class AccountProfileRemoteDataSourceImpl
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       if (!_success(response.code, response.success)) {
-        throw const AccountProfileRemoteException.invalidResponse();
+        throw AccountProfileRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
       }
     } on DioException catch (error) {
       throw AccountProfileRemoteException.fromNetwork(
@@ -289,7 +313,9 @@ class AccountProfileRemoteDataSourceImpl
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       if (!_accountSuccess(response.code, response.success)) {
-        throw const AccountProfileRemoteException.invalidResponse();
+        throw AccountProfileRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
       }
     } on DioException catch (error) {
       throw AccountProfileRemoteException.fromNetwork(
@@ -310,8 +336,19 @@ class AccountProfileRemoteDataSourceImpl
 }
 
 class AccountProfileRemoteException implements Exception {
-  const AccountProfileRemoteException._(this.network);
-  const AccountProfileRemoteException.invalidResponse() : this._(null);
-  AccountProfileRemoteException.fromNetwork(this.network);
+  const AccountProfileRemoteException._({
+    this.network,
+    this.businessFailure,
+    this.isInvalidResponse = false,
+  });
+  const AccountProfileRemoteException.invalidResponse()
+    : this._(isInvalidResponse: true);
+  AccountProfileRemoteException.fromNetwork(NetworkException network)
+    : this._(network: network);
+  AccountProfileRemoteException.businessFailure(
+    ApiBusinessFailure businessFailure,
+  ) : this._(businessFailure: businessFailure);
   final NetworkException? network;
+  final ApiBusinessFailure? businessFailure;
+  final bool isInvalidResponse;
 }

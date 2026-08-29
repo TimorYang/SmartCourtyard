@@ -1,5 +1,6 @@
 import '../../../../core/errors/app_error.dart';
 import '../../../../core/logging/app_logger.dart';
+import '../../../../core/network/network_exception.dart';
 import '../../domain/entities/managed_login_device.dart';
 import '../../domain/repositories/managed_devices_repository.dart';
 import '../data_sources/managed_devices_remote_data_source.dart';
@@ -79,7 +80,8 @@ class ManagedDevicesRepositoryImpl implements ManagedDevicesRepository {
         requestId: requestId,
       );
     }
-    if (error.kind == ManagedDevicesRemoteErrorKind.network) {
+    if (error.kind == ManagedDevicesRemoteErrorKind.network &&
+        error.network?.category == NetworkFailureCategory.networkUnavailable) {
       return AppError(
         code: AppErrorCode.networkUnavailable,
         messageKey: 'managedDevices.networkUnavailable',
@@ -91,6 +93,9 @@ class ManagedDevicesRepositoryImpl implements ManagedDevicesRepository {
     return AppError(
       code: AppErrorCode.serverError,
       messageKey: 'managedDevices.failed',
+      userMessage: error.kind == ManagedDevicesRemoteErrorKind.businessFailure
+          ? error.businessFailure?.message
+          : null,
       action: AppErrorAction.retry,
       requestId: requestId,
       retryable: true,

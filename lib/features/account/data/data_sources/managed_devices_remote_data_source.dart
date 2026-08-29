@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../../../core/network/dio_factory.dart';
+import '../../../../core/network/api_business_failure.dart';
 import '../../../../core/network/network_exception.dart';
 import '../dto/managed_login_device_dto.dart';
 import 'managed_devices_api.dart';
@@ -30,8 +31,12 @@ class ManagedDevicesRemoteDataSourceImpl
       final response = await api.fetchLoginDevices(
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      if (!_isSuccessful(response.code, response.success) ||
-          response.data == null) {
+      if (!_isSuccessful(response.code, response.success)) {
+        throw ManagedDevicesRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
+      }
+      if (response.data == null) {
         throw const ManagedDevicesRemoteException.invalidResponse();
       }
       return response.data!;
@@ -55,7 +60,9 @@ class ManagedDevicesRemoteDataSourceImpl
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       if (!_isSuccessful(response.code, response.success)) {
-        throw const ManagedDevicesRemoteException.invalidResponse();
+        throw ManagedDevicesRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
       }
     } on DioException catch (error) {
       throw ManagedDevicesRemoteException.fromNetwork(
@@ -70,19 +77,28 @@ class ManagedDevicesRemoteDataSourceImpl
 }
 
 class ManagedDevicesRemoteException implements Exception {
-  const ManagedDevicesRemoteException._(this.kind, {this.statusCode});
+  const ManagedDevicesRemoteException._(
+    this.kind, {
+    this.network,
+    this.businessFailure,
+  });
 
   ManagedDevicesRemoteException.fromNetwork(NetworkException exception)
+    : this._(ManagedDevicesRemoteErrorKind.network, network: exception);
+
+  ManagedDevicesRemoteException.businessFailure(ApiBusinessFailure failure)
     : this._(
-        ManagedDevicesRemoteErrorKind.network,
-        statusCode: exception.statusCode,
+        ManagedDevicesRemoteErrorKind.businessFailure,
+        businessFailure: failure,
       );
 
   const ManagedDevicesRemoteException.invalidResponse()
     : this._(ManagedDevicesRemoteErrorKind.invalidResponse);
 
   final ManagedDevicesRemoteErrorKind kind;
-  final int? statusCode;
+  final NetworkException? network;
+  final ApiBusinessFailure? businessFailure;
+  int? get statusCode => network?.statusCode;
 }
 
-enum ManagedDevicesRemoteErrorKind { network, invalidResponse }
+enum ManagedDevicesRemoteErrorKind { network, businessFailure, invalidResponse }

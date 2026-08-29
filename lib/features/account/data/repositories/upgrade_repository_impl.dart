@@ -1,5 +1,6 @@
 import '../../../../core/errors/app_error.dart';
 import '../../../../core/logging/app_logger.dart';
+import '../../../../core/network/network_exception.dart';
 import '../../domain/entities/upgrade_check.dart';
 import '../../domain/repositories/upgrade_repository.dart';
 import '../data_sources/upgrade_progress_local_data_source.dart';
@@ -160,7 +161,8 @@ class UpgradeRepositoryImpl implements UpgradeRepository {
         requestId: requestId,
       );
     }
-    if (error.kind == UpgradeRemoteErrorKind.network) {
+    if (error.kind == UpgradeRemoteErrorKind.network &&
+        error.network?.category == NetworkFailureCategory.networkUnavailable) {
       return AppError(
         code: AppErrorCode.networkUnavailable,
         messageKey: 'upgradeCheck.networkUnavailable',
@@ -172,6 +174,9 @@ class UpgradeRepositoryImpl implements UpgradeRepository {
     return AppError(
       code: AppErrorCode.serverError,
       messageKey: 'upgradeCheck.failed',
+      userMessage: error.kind == UpgradeRemoteErrorKind.businessFailure
+          ? error.businessFailure?.message
+          : null,
       action: AppErrorAction.retry,
       requestId: requestId,
       retryable: true,

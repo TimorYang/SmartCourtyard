@@ -1,5 +1,6 @@
 import '../../../../core/errors/app_error.dart';
 import '../../../../core/logging/app_logger.dart';
+import '../../../../core/network/network_exception.dart';
 import '../../domain/entities/account_overview.dart';
 import '../../domain/repositories/account_overview_repository.dart';
 import '../data_sources/account_overview_local_data_source.dart';
@@ -58,7 +59,8 @@ class AccountOverviewRepositoryImpl implements AccountOverviewRepository {
         requestId: requestId,
       );
     }
-    if (error.kind == AccountOverviewRemoteErrorKind.network) {
+    if (error.kind == AccountOverviewRemoteErrorKind.network &&
+        error.network?.category == NetworkFailureCategory.networkUnavailable) {
       return AppError(
         code: AppErrorCode.networkUnavailable,
         messageKey: 'account.overview.networkUnavailable',
@@ -70,6 +72,9 @@ class AccountOverviewRepositoryImpl implements AccountOverviewRepository {
     return AppError(
       code: AppErrorCode.serverError,
       messageKey: 'account.overview.failed',
+      userMessage: error.kind == AccountOverviewRemoteErrorKind.businessFailure
+          ? error.businessFailure?.message
+          : null,
       action: AppErrorAction.retry,
       requestId: requestId,
       retryable: true,

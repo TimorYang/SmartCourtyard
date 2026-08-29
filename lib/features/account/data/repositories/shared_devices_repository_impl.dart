@@ -1,5 +1,6 @@
 import '../../../../core/errors/app_error.dart';
 import '../../../../core/logging/app_logger.dart';
+import '../../../../core/network/network_exception.dart';
 import '../../domain/entities/shared_door.dart';
 import '../../domain/entities/shared_door_members.dart';
 import '../../domain/entities/account_avatar_code.dart';
@@ -104,7 +105,8 @@ class SharedDevicesRepositoryImpl implements SharedDevicesRepository {
         requestId: requestId,
       );
     }
-    if (error.kind == SharedDevicesRemoteErrorKind.network) {
+    if (error.kind == SharedDevicesRemoteErrorKind.network &&
+        error.network?.category == NetworkFailureCategory.networkUnavailable) {
       return AppError(
         code: AppErrorCode.networkUnavailable,
         messageKey: 'sharedDevices.networkUnavailable',
@@ -116,6 +118,9 @@ class SharedDevicesRepositoryImpl implements SharedDevicesRepository {
     return AppError(
       code: AppErrorCode.serverError,
       messageKey: 'sharedDevices.failed',
+      userMessage: error.kind == SharedDevicesRemoteErrorKind.businessFailure
+          ? error.businessFailure?.message
+          : null,
       action: AppErrorAction.retry,
       requestId: requestId,
       retryable: true,
