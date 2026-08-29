@@ -652,7 +652,10 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
         ? switch (realtimeStatus) {
             DoorRealtimeStatus.open => l10n.homeDoorStateOpen,
             DoorRealtimeStatus.closed => l10n.homeDoorStateClosed,
-            DoorRealtimeStatus.stopped => l10n.homeDoorStateStopped,
+            DoorRealtimeStatus.stopped =>
+              positionPercent != null && positionPercent > 0
+                  ? l10n.homeDoorStateOpen
+                  : l10n.homeDoorStateStopped,
             DoorRealtimeStatus.opening => l10n.homeDoorStateOpening,
             DoorRealtimeStatus.closing => l10n.homeDoorStateClosing,
             DoorRealtimeStatus.running => l10n.deviceCommandDoorStateRunning,

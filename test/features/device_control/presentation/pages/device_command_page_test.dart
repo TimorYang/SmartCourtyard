@@ -268,7 +268,8 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    expect(find.text('Stopped · 50%'), findsOneWidget);
+    expect(find.text('Opened · 50%'), findsOneWidget);
+    expect(find.text('Stopped · 50%'), findsNothing);
 
     gateway.emitDeviceAttributeSnapshot(
       DeviceAttributeSnapshot(
