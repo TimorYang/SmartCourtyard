@@ -52,6 +52,34 @@ void main() {
 
     expect(exception.kind, NetworkErrorKind.httpStatus);
     expect(exception.statusCode, 503);
+    expect(exception.category, NetworkFailureCategory.serviceUnavailable);
+  });
+
+  test('classifies HTTP failures without exposing their response message', () {
+    NetworkException exceptionFor(int statusCode) {
+      final options = RequestOptions(path: 'health');
+      return NetworkException.fromDio(
+        DioException(
+          requestOptions: options,
+          response: Response<Map<String, dynamic>>(
+            requestOptions: options,
+            statusCode: statusCode,
+            data: {'msg': 'Do not show this raw message.'},
+          ),
+          type: DioExceptionType.badResponse,
+        ),
+      );
+    }
+
+    expect(exceptionFor(401).category, NetworkFailureCategory.sessionExpired);
+    expect(exceptionFor(403).category, NetworkFailureCategory.accessDenied);
+    expect(exceptionFor(408).category, NetworkFailureCategory.requestTimeout);
+    expect(exceptionFor(429).category, NetworkFailureCategory.rateLimited);
+    expect(exceptionFor(422).category, NetworkFailureCategory.requestFailed);
+    expect(
+      exceptionFor(500).category,
+      NetworkFailureCategory.serviceUnavailable,
+    );
   });
 
   test('adds Blade-Auth for non-authentication endpoints', () async {

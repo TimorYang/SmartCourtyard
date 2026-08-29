@@ -117,7 +117,7 @@ final featureApiProvider = Provider<FeatureApi>((ref) {
 
 - `code`：服务端业务响应码。
 - `success`：服务端业务成功标志。
-- `msg`：服务端消息，仅用于诊断或映射，不直接展示给用户。
+- `msg`：服务端提供的用户可读业务失败文案。服务端必须保证内容不含敏感信息、技术实现细节或原始异常文本，并使用适合当前用户的语言。
 - `data`：接口数据。
 
 有固定结构的 `data` 必须定义强类型 DTO。只有服务端明确返回布尔值或暂时没有固定结构时，才使用 `dynamic`。
@@ -389,6 +389,18 @@ DioException
 - UI：展示本地化文案，不解析底层异常。
 
 服务端返回 `success: false` 即使 HTTP 状态为 200，也应视为业务失败并由 DataSource 校验。
+
+HTTP 200 的错误必须区分两类：
+
+- 业务失败：业务 `code` 或 `success` 不满足接口成功条件。DataSource
+  通过 `ApiBusinessFailure` 保留 `code`、`msg` 和 `messageKey`，Repository
+  优先映射已知错误为客户端本地化文案；未知错误才回退使用非空 `msg`。
+- 响应格式错误：业务状态成功，但必需的 `data`、字段或类型不符合接口协议。
+  此类错误使用 `invalidResponse`，不得携带或展示服务端 `msg`。
+
+HTTP 4xx/5xx 必须继续作为 `DioException`/`NetworkException` 处理。即使响应体
+包含 `msg`，也不得直接展示；Repository 应按会话失效、无权限、请求超时、限流、
+请求失败或服务暂不可用等稳定类别映射成本地化 `AppError`。
 
 ## 11. 日志规范
 
