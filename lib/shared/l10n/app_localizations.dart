@@ -716,6 +716,24 @@ abstract class AppLocalizations {
   /// **'Sign in with Apple failed. Please try again.'**
   String get appleLoginFailed;
 
+  /// Message shown when Google sign-in is attempted before accepting the agreements
+  ///
+  /// In en, this message translates to:
+  /// **'Please agree to the User Agreement and Privacy Policy first.'**
+  String get googleLoginAgreementRequired;
+
+  /// Message shown when Google sign-in is not supported or configured
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Google is unavailable or not configured on this device.'**
+  String get googleLoginUnavailable;
+
+  /// Message shown when Google sign-in fails
+  ///
+  /// In en, this message translates to:
+  /// **'Google sign-in failed. Please try again.'**
+  String get googleLoginFailed;
+
   /// Temporary shortcut button from the welcome page to the home page
   ///
   /// In en, this message translates to:

@@ -9,6 +9,7 @@ import '../../../core/network/providers.dart';
 import '../../../core/network/session_expired_handler.dart';
 import 'forgot_password_code_controller.dart';
 import 'apple_login_controller.dart';
+import 'google_login_controller.dart';
 import 'forgot_password_controller.dart';
 import 'forgot_password_reset_controller.dart';
 import 'login_form_controller.dart';
@@ -30,6 +31,7 @@ import '../data/services/rsa_oaep_password_ciphertext_encryptor.dart';
 import '../data/services/platform_login_device_context_provider.dart';
 import '../data/services/auth_token_refresh_service.dart';
 import '../data/services/sign_in_with_apple_identity_provider.dart';
+import '../data/services/google_sign_in_identity_provider.dart';
 import '../domain/entities/auth_session.dart';
 import '../domain/entities/registration_device_context.dart';
 import '../domain/repositories/auth_crypto_repository.dart';
@@ -39,10 +41,12 @@ import '../domain/repositories/auth_registration_repository.dart';
 import '../domain/services/password_ciphertext_encryptor.dart';
 import '../domain/services/login_device_context_provider.dart';
 import '../domain/services/apple_identity_provider.dart';
+import '../domain/services/google_identity_provider.dart';
 import '../domain/use_cases/complete_registration_use_case.dart';
 import '../domain/use_cases/complete_password_reset_use_case.dart';
 import '../domain/use_cases/login_use_case.dart';
 import '../domain/use_cases/apple_login_use_case.dart';
+import '../domain/use_cases/google_login_use_case.dart';
 import '../domain/use_cases/send_registration_email_code_use_case.dart';
 import '../domain/use_cases/send_password_reset_email_code_use_case.dart';
 import '../domain/use_cases/verify_registration_email_code_use_case.dart';
@@ -284,6 +288,24 @@ final appleLoginPlatformSupportedProvider = Provider<bool>((ref) {
 final appleLoginControllerProvider =
     NotifierProvider.autoDispose<AppleLoginController, AppleLoginState>(
       AppleLoginController.new,
+    );
+
+final googleIdentityProvider = Provider<GoogleIdentityProvider>((ref) {
+  return GoogleSignInIdentityProvider();
+});
+
+final googleLoginUseCaseProvider = Provider<GoogleLoginUseCase>((ref) {
+  return GoogleLoginUseCase(
+    identityProvider: ref.watch(googleIdentityProvider),
+    loginRepository: ref.watch(authLoginRepositoryProvider),
+    accountRepository: ref.watch(accountRepositoryProvider),
+    deviceContextProvider: ref.watch(loginDeviceContextProvider),
+  );
+});
+
+final googleLoginControllerProvider =
+    NotifierProvider.autoDispose<GoogleLoginController, GoogleLoginState>(
+      GoogleLoginController.new,
     );
 
 final loginFormControllerProvider =

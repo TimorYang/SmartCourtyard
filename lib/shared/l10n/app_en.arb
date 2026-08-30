@@ -301,6 +301,18 @@
   "@appleLoginFailed": {
     "description": "Message shown when Apple sign-in fails"
   },
+  "googleLoginAgreementRequired": "Please agree to the User Agreement and Privacy Policy first.",
+  "@googleLoginAgreementRequired": {
+    "description": "Message shown when Google sign-in is attempted before accepting the agreements"
+  },
+  "googleLoginUnavailable": "Sign in with Google is unavailable or not configured on this device.",
+  "@googleLoginUnavailable": {
+    "description": "Message shown when Google sign-in is not supported or configured"
+  },
+  "googleLoginFailed": "Google sign-in failed. Please try again.",
+  "@googleLoginFailed": {
+    "description": "Message shown when Google sign-in fails"
+  },
   "homeShortcutAction": "Home",
   "@homeShortcutAction": {
     "description": "Temporary shortcut button from the welcome page to the home page"

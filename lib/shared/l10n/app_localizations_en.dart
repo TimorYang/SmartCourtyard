@@ -351,6 +351,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appleLoginFailed => 'Sign in with Apple failed. Please try again.';
 
   @override
+  String get googleLoginAgreementRequired =>
+      'Please agree to the User Agreement and Privacy Policy first.';
+
+  @override
+  String get googleLoginUnavailable =>
+      'Sign in with Google is unavailable or not configured on this device.';
+
+  @override
+  String get googleLoginFailed => 'Google sign-in failed. Please try again.';
+
+  @override
   String get homeShortcutAction => 'Home';
 
   @override

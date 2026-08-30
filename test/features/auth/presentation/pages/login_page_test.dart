@@ -65,6 +65,21 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
   });
 
+  testWidgets('requires agreement before starting Google login', (
+    tester,
+  ) async {
+    await openLoginPage(tester);
+
+    await tester.tap(find.byKey(const ValueKey('google_login_button')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Please agree to the User Agreement and Privacy Policy first.'),
+      findsOneWidget,
+    );
+    await tester.pump(const Duration(seconds: 3));
+  });
+
   testWidgets('hides Apple login when the platform is unsupported', (
     tester,
   ) async {
