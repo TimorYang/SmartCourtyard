@@ -1,14 +1,22 @@
 import 'package:flinx/app/theme/app_design_tokens.dart';
+import 'package:flinx/features/add_device/application/add_device_controller.dart';
+import 'package:flinx/features/add_device/application/providers.dart';
 import 'package:flinx/features/add_device/presentation/pages/f_box_wiring_test_page.dart';
+import 'package:flinx/features/device_control/application/device_command_controller.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
+import 'package:flinx/shared/widgets/flinx_door_command_button.dart';
+import 'package:flinx/platform_bridge/hardware_models.dart';
+import 'package:flinx/platform_bridge/mock_hardware_gateway.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   testWidgets('renders the PB wiring state and records a local test action', (
     tester,
   ) async {
-    await _pumpPage(tester);
+    final gateway = _RecordingHardwareGateway();
+    await _pumpPage(tester, gateway: gateway);
 
     expect(find.text('Test'), findsOneWidget);
     expect(find.text('PB wiring'), findsOneWidget);
@@ -17,15 +25,20 @@ void main() {
     expect(find.byKey(const Key('fBoxWiringTestOpenControl')), findsNothing);
     expect(find.text('door operates normally'), findsOneWidget);
     expect(find.text('NEXT'), findsOneWidget);
+    expect(find.byTooltip('Add'), findsOneWidget);
 
     expect(_statusColor(tester), AppColors.fBoxWiringTestStatusPending);
     await tester.tap(find.byKey(const Key('fBoxWiringTestPbControl')));
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(_statusColor(tester), AppColors.brandPrimary);
+    expect(gateway.commands, [DoorCommand.pb]);
   });
 
-  testWidgets('switches to O/S/C controls and leaves NEXT local', (tester) async {
-    await _pumpPage(tester);
+  testWidgets('switches to O/S/C controls and leaves NEXT local', (
+    tester,
+  ) async {
+    final gateway = _RecordingHardwareGateway();
+    await _pumpPage(tester, gateway: gateway);
 
     await tester.tap(find.byKey(const Key('fBoxWiringTestOscSegment')));
     await tester.pump();
@@ -34,14 +47,67 @@ void main() {
     expect(find.byKey(const Key('fBoxWiringTestOpenControl')), findsOneWidget);
     expect(find.byKey(const Key('fBoxWiringTestStopControl')), findsOneWidget);
     expect(find.byKey(const Key('fBoxWiringTestCloseControl')), findsOneWidget);
+    expect(find.byTooltip('Close door'), findsOneWidget);
+    expect(find.byTooltip('Stop door'), findsOneWidget);
+    expect(find.byTooltip('Open door'), findsOneWidget);
+
+    final closeControl = tester.widget<FlinxDoorCommandButton>(
+      find.descendant(
+        of: find.byKey(const Key('fBoxWiringTestOpenControl')),
+        matching: find.byType(FlinxDoorCommandButton),
+      ),
+    );
+    final stopControl = tester.widget<FlinxDoorCommandButton>(
+      find.descendant(
+        of: find.byKey(const Key('fBoxWiringTestStopControl')),
+        matching: find.byType(FlinxDoorCommandButton),
+      ),
+    );
+    final openControl = tester.widget<FlinxDoorCommandButton>(
+      find.descendant(
+        of: find.byKey(const Key('fBoxWiringTestCloseControl')),
+        matching: find.byType(FlinxDoorCommandButton),
+      ),
+    );
+    expect(closeControl.icon, Icons.keyboard_arrow_down);
+    expect(stopControl.icon, Icons.pause);
+    expect(openControl.icon, Icons.keyboard_arrow_up);
+    expect(
+      tester.getSize(find.byKey(const Key('fBoxWiringTestOpenControl'))),
+      const Size(52, 52),
+    );
+    expect(
+      tester.getSize(find.byKey(const Key('fBoxWiringTestStopControl'))),
+      const Size(52, 52),
+    );
+    expect(
+      tester.getSize(find.byKey(const Key('fBoxWiringTestCloseControl'))),
+      const Size(52, 52),
+    );
+    expect(
+      tester.getTopLeft(find.byKey(const Key('fBoxWiringTestStopControl'))).dx -
+          tester
+              .getTopRight(find.byKey(const Key('fBoxWiringTestOpenControl')))
+              .dx,
+      closeTo(40, 0.01),
+    );
+    expect(
+      tester
+              .getTopLeft(find.byKey(const Key('fBoxWiringTestCloseControl')))
+              .dx -
+          tester
+              .getTopRight(find.byKey(const Key('fBoxWiringTestStopControl')))
+              .dx,
+      closeTo(40, 0.01),
+    );
 
     await tester.tap(find.byKey(const Key('fBoxWiringTestStopControl')));
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(_statusColor(tester), AppColors.brandPrimary);
+    expect(gateway.commands, [DoorCommand.stop]);
 
-    await tester.tap(find.byKey(const Key('fBoxWiringTestNextButton')));
-    await tester.pump();
-    expect(find.byType(FBoxWiringTestPage), findsOneWidget);
+    final nextButton = find.byKey(const Key('fBoxWiringTestNextButton'));
+    expect(tester.widget<FilledButton>(nextButton).onPressed, isNotNull);
   });
 
   testWidgets('renders the Chinese copy', (tester) async {
@@ -50,6 +116,63 @@ void main() {
     expect(find.text('测试'), findsOneWidget);
     expect(find.text('PB 接线'), findsOneWidget);
     expect(find.text('门体正常运行'), findsOneWidget);
+    expect(find.byTooltip('添加'), findsOneWidget);
+  });
+
+  testWidgets('uses the renamed PB asset and reference geometry on mobile', (
+    tester,
+  ) async {
+    await _pumpPage(tester, surfaceSize: const Size(375, 812));
+
+    final image = tester.widget<Image>(
+      find.descendant(
+        of: find.byKey(const Key('fBoxWiringTestPbControl')),
+        matching: find.byType(Image),
+      ),
+    );
+    expect(
+      (image.image as AssetImage).assetName,
+      FBoxWiringTestAssetPaths.pbControl,
+    );
+    expect(
+      tester.getSize(find.byKey(const Key('fBoxWiringTestSegmentedControl'))),
+      const Size(224, 32),
+    );
+    expect(
+      tester.getSize(find.byKey(const Key('fBoxWiringTestPbControl'))),
+      const Size(170, 170),
+    );
+    expect(
+      tester.getSize(find.byKey(const Key('fBoxWiringTestNextButton'))),
+      const Size(335, 52),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('centers and constrains content on a wide window', (
+    tester,
+  ) async {
+    await _pumpPage(tester, surfaceSize: const Size(1024, 768));
+
+    final segment = find.byKey(const Key('fBoxWiringTestSegmentedControl'));
+    expect(tester.getSize(segment), const Size(224, 32));
+    expect(
+      tester.getSize(find.byKey(const Key('fBoxWiringTestNextButton'))),
+      const Size(640, 52),
+    );
+    expect(tester.getTopLeft(segment).dx, closeTo(192, 0.01));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('allows scrolling on a short window without overflow', (
+    tester,
+  ) async {
+    await _pumpPage(tester, surfaceSize: const Size(375, 400));
+
+    expect(tester.takeException(), isNull);
+    final nextButton = find.byKey(const Key('fBoxWiringTestNextButton'));
+    await tester.ensureVisible(nextButton);
+    expect(tester.takeException(), isNull);
   });
 }
 
@@ -60,14 +183,71 @@ Color _statusColor(WidgetTester tester) {
   return (indicator.decoration! as BoxDecoration).color!;
 }
 
-Future<void> _pumpPage(WidgetTester tester, {Locale? locale}) async {
+Future<void> _pumpPage(
+  WidgetTester tester, {
+  Locale? locale,
+  Size? surfaceSize,
+  _RecordingHardwareGateway? gateway,
+}) async {
+  if (surfaceSize != null) {
+    await tester.binding.setSurfaceSize(surfaceSize);
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+  }
+  final selectedDevice = BleDevice(
+    requestId: 'test-request',
+    scanSessionId: 'test-session',
+    id: 'fbox-native-device',
+    rssi: -30,
+    seenAtMillis: 1,
+  );
+  final initialState = AddDeviceState.initial().copyWith(
+    selectedDevice: selectedDevice,
+    connectionStates: {selectedDevice.id: BleConnectionState.connected},
+    onboardingDeviceType: 'fbox',
+  );
+  final hardwareGateway = gateway ?? _RecordingHardwareGateway();
   await tester.pumpWidget(
-    MaterialApp(
-      locale: locale,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: const FBoxWiringTestPage(),
+    ProviderScope(
+      overrides: [
+        addDeviceControllerProvider.overrideWith(
+          () => _FBoxAddDeviceController(initialState),
+        ),
+        deviceCommandHardwareGatewayProvider.overrideWithValue(hardwareGateway),
+      ],
+      child: MaterialApp(
+        locale: locale,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const FBoxWiringTestPage(),
+      ),
     ),
   );
   await tester.pumpAndSettle();
+}
+
+class _FBoxAddDeviceController extends AddDeviceController {
+  _FBoxAddDeviceController(this.initialState);
+
+  final AddDeviceState initialState;
+
+  @override
+  AddDeviceState build() => initialState;
+}
+
+class _RecordingHardwareGateway extends MockHardwareGateway {
+  final List<DoorCommand> commands = <DoorCommand>[];
+
+  @override
+  Future<CommandResult> sendDoorCommand({
+    required String requestId,
+    required String deviceId,
+    required DoorCommand command,
+  }) async {
+    commands.add(command);
+    return super.sendDoorCommand(
+      requestId: requestId,
+      deviceId: deviceId,
+      command: command,
+    );
+  }
 }

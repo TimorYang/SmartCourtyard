@@ -1177,6 +1177,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fBoxConnectionGuideNextAction => 'NEXT';
 
   @override
+  String get fBoxWiringTestAddTooltip => 'Add';
+
+  @override
   String get fBoxWiringTestTitle => 'Test';
 
   @override
@@ -1203,6 +1206,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fBoxWiringTestCloseAction => 'Close door';
+
+  @override
+  String get fBoxWiringTestNoConnectedDevice =>
+      'Connect the F-box over Bluetooth before testing.';
+
+  @override
+  String get fBoxWiringTestCommandRejected =>
+      'The command was not accepted. Try again.';
+
+  @override
+  String get fBoxWiringTestCommandFailed =>
+      'The test failed. Check the connection and try again.';
 
   @override
   String get addDeviceUsbWifiModule => 'USB WIFI module';

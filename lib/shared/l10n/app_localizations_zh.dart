@@ -1122,6 +1122,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get fBoxConnectionGuideNextAction => '下一步';
 
   @override
+  String get fBoxWiringTestAddTooltip => '添加';
+
+  @override
   String get fBoxWiringTestTitle => '测试';
 
   @override
@@ -1148,6 +1151,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get fBoxWiringTestCloseAction => '关门';
+
+  @override
+  String get fBoxWiringTestNoConnectedDevice => '测试前请通过蓝牙连接 F-box。';
+
+  @override
+  String get fBoxWiringTestCommandRejected => '命令未被接受，请重试。';
+
+  @override
+  String get fBoxWiringTestCommandFailed => '测试失败，请检查连接后重试。';
 
   @override
   String get addDeviceUsbWifiModule => 'USB WIFI 模块';

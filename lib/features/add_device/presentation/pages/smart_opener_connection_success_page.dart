@@ -8,13 +8,13 @@ import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../core/errors/app_error.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
+import '../../application/device_type_ble_filter.dart';
 import '../../application/providers.dart';
 import '../../../home/application/providers.dart';
 import '../../../home/domain/entities/home_scene.dart';
 import '../../../home/presentation/pages/device_share_page.dart';
-import '../../../device_control/presentation/pages/already_added_devices_page.dart';
-import '../../../device_control/presentation/pages/device_command_page.dart';
-import 'add_new_doors_page.dart';
+import '../navigation/f_box_wiring_test_route.dart';
+import '../navigation/onboarding_device_navigation.dart';
 
 class SmartOpenerConnectionSuccessPage extends ConsumerStatefulWidget {
   const SmartOpenerConnectionSuccessPage({super.key});
@@ -265,12 +265,13 @@ class _SmartOpenerConnectionSuccessPageState
                     label: l10n.smartOpenerTryAction,
                     onPressed: onboardedDoor == null
                         ? null
-                        : () => _openDeviceCommand(
+                        : () => _openTryIt(
                             context,
                             doorId: onboardedDoor.id.toString(),
                             deviceId: deviceId,
                             onboardingFlowId:
                                 addDeviceState.onboardingFlowId ?? '',
+                            deviceType: addDeviceState.onboardingDeviceType,
                           ),
                   ),
                 ),
@@ -282,40 +283,35 @@ class _SmartOpenerConnectionSuccessPageState
     );
   }
 
-  void _openDeviceCommand(
+  void _openTryIt(
     BuildContext context, {
     required String doorId,
     required String deviceId,
     required String onboardingFlowId,
+    required String? deviceType,
   }) {
     ref.read(addDeviceControllerProvider.notifier).logDeviceDetailNavigation();
 
-    final router = GoRouter.of(context);
-    final navigator = Navigator.of(context);
-    String? flowBoundaryRouteName;
-    final location =
-        '${DeviceCommandPage.routePath}'
-        '?doorId=${Uri.encodeQueryComponent(doorId)}'
-        '&deviceId=${Uri.encodeQueryComponent(deviceId)}'
-        '&onboardingFlowId=${Uri.encodeQueryComponent(onboardingFlowId)}';
-
-    navigator.popUntil((route) {
-      final routeName = route.settings.name;
-      if (routeName == AddNewDoorsPage.routeName ||
-          routeName == AlreadyAddedDevicesPage.routeName) {
-        flowBoundaryRouteName = routeName;
-        return true;
-      }
-      return route.isFirst;
-    });
-
-    if (flowBoundaryRouteName == AlreadyAddedDevicesPage.routeName &&
-        navigator.canPop()) {
-      navigator.pop(deviceId);
+    if (normalizeDoorDeviceType(deviceType) == 'fbox') {
+      unawaited(
+        context.push(
+          FBoxWiringTestRoute.location(
+            doorId: doorId,
+            deviceId: deviceId,
+            onboardingFlowId: onboardingFlowId,
+            entryPoint: FBoxWiringTestEntryPoint.tryIt,
+          ),
+        ),
+      );
       return;
     }
 
-    router.pushReplacement(location);
+    OnboardingDeviceNavigation.openDeviceCommandFromOnboarding(
+      context,
+      doorId: doorId,
+      deviceId: deviceId,
+      onboardingFlowId: onboardingFlowId,
+    );
   }
 
   Future<void> _showShareDialog(

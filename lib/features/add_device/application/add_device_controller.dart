@@ -41,6 +41,7 @@ class AddDeviceState {
     this.onboardingFlowId,
     this.onboardingDoorId,
     this.onboardingSceneId,
+    this.onboardingDeviceType,
   });
 
   factory AddDeviceState.initial() {
@@ -78,6 +79,7 @@ class AddDeviceState {
   final String? onboardingFlowId;
   final String? onboardingDoorId;
   final int? onboardingSceneId;
+  final String? onboardingDeviceType;
 
   List<BleDevice> sortedDevices() {
     final items = devices.values.toList();
@@ -118,6 +120,8 @@ class AddDeviceState {
     bool clearOnboardingDoorId = false,
     int? onboardingSceneId,
     bool clearOnboardingSceneId = false,
+    String? onboardingDeviceType,
+    bool clearOnboardingDeviceType = false,
   }) {
     return AddDeviceState(
       devices: devices ?? this.devices,
@@ -157,6 +161,9 @@ class AddDeviceState {
       onboardingSceneId: clearOnboardingSceneId
           ? null
           : onboardingSceneId ?? this.onboardingSceneId,
+      onboardingDeviceType: clearOnboardingDeviceType
+          ? null
+          : onboardingDeviceType ?? this.onboardingDeviceType,
     );
   }
 }
@@ -302,6 +309,7 @@ class AddDeviceController extends Notifier<AddDeviceState> {
       connectionStates: const <String, BleConnectionState>{},
       clearSelectedDevice: true,
       clearOnboardedDoor: true,
+      clearOnboardingDeviceType: true,
       clearErrorMessage: true,
       clearInfoMessage: true,
     );
@@ -330,6 +338,7 @@ class AddDeviceController extends Notifier<AddDeviceState> {
   }) async {
     final flowId = _ensureFlow();
     _activeDeviceType = normalizeDoorDeviceType(deviceType);
+    state = state.copyWith(onboardingDeviceType: _activeDeviceType);
     final normalizedTargetSn = targetSn?.trim();
     _targetBleName = normalizedTargetSn?.isEmpty == true
         ? null
@@ -919,6 +928,7 @@ class AddDeviceController extends Notifier<AddDeviceState> {
     final flowId = _ensureFlow();
     state = state.copyWith(
       doorType: doorType,
+      clearOnboardingDeviceType: true,
       onboardingDoorId: doorId,
       clearOnboardingDoorId: doorId == null,
       onboardingSceneId: sceneId,

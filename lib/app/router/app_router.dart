@@ -8,6 +8,7 @@ import '../../features/add_device/application/device_type_ble_filter.dart';
 import '../../features/add_device/presentation/pages/add_new_doors_page.dart';
 import '../../features/add_device/presentation/pages/f_box_connection_guide_page.dart';
 import '../../features/add_device/presentation/pages/f_box_wiring_test_page.dart';
+import '../../features/add_device/presentation/navigation/f_box_wiring_test_route.dart';
 import '../../features/add_device/presentation/pages/smart_opener_ble_scan_page.dart';
 import '../../features/add_device/presentation/pages/smart_opener_choose_wifi_page.dart';
 import '../../features/add_device/presentation/pages/smart_opener_connecting_page.dart';
@@ -309,7 +310,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: FBoxWiringTestPage.routePath,
         name: FBoxWiringTestPage.routeName,
-        builder: (context, state) => const FBoxWiringTestPage(),
+        builder: (context, state) => FBoxWiringTestPage(
+          routeData: FBoxWiringTestRoute.fromQueryParameters(
+            state.uri.queryParameters,
+          ),
+        ),
       ),
       GoRoute(
         path: SmartOpenerScanGuidePage.routePath,

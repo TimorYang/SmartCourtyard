@@ -1177,6 +1177,10 @@
   "@fBoxConnectionGuideNextAction": {
     "description": "Primary action on the F-box connection guide"
   },
+  "fBoxWiringTestAddTooltip": "Add",
+  "@fBoxWiringTestAddTooltip": {
+    "description": "Tooltip for the add action on the F-box wiring test page"
+  },
   "fBoxWiringTestTitle": "Test",
   "@fBoxWiringTestTitle": {
     "description": "Title of the F-box wiring test page"
@@ -1212,6 +1216,18 @@
   "fBoxWiringTestCloseAction": "Close door",
   "@fBoxWiringTestCloseAction": {
     "description": "Accessibility label for the O/S/C close control"
+  },
+  "fBoxWiringTestNoConnectedDevice": "Connect the F-box over Bluetooth before testing.",
+  "@fBoxWiringTestNoConnectedDevice": {
+    "description": "Shown when an F-box wiring test is attempted without a connected BLE device"
+  },
+  "fBoxWiringTestCommandRejected": "The command was not accepted. Try again.",
+  "@fBoxWiringTestCommandRejected": {
+    "description": "Shown when the F-box rejects a wiring test command"
+  },
+  "fBoxWiringTestCommandFailed": "The test failed. Check the connection and try again.",
+  "@fBoxWiringTestCommandFailed": {
+    "description": "Shown when an F-box wiring test command fails"
   },
   "addDeviceUsbWifiModule": "USB WIFI module",
   "@addDeviceUsbWifiModule": {

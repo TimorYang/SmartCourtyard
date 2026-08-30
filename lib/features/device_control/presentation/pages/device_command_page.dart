@@ -10,6 +10,7 @@ import '../../../../core/logging/providers.dart';
 import '../../../../platform_bridge/hardware_models.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/app_toast.dart';
+import '../../../../shared/widgets/flinx_door_command_button.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../../../shared/widgets/flinx_switch.dart';
 import '../../../records/application/providers.dart';
@@ -39,6 +40,22 @@ class DeviceCommandPage extends ConsumerStatefulWidget {
 
   static const routeName = 'device-command';
   static const routePath = '/device-command';
+
+  static String location({
+    required String doorId,
+    required String deviceId,
+    String? onboardingFlowId,
+  }) {
+    final queryParameters = <String, String>{
+      'doorId': doorId,
+      'deviceId': deviceId,
+    };
+    final flowId = onboardingFlowId?.trim();
+    if (flowId != null && flowId.isNotEmpty) {
+      queryParameters['onboardingFlowId'] = flowId;
+    }
+    return Uri(path: routePath, queryParameters: queryParameters).toString();
+  }
 
   final String doorId;
   final String deviceId;
@@ -1397,67 +1414,27 @@ class _DoorCommandRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _DoorCommandButton(
+        FlinxDoorCommandButton(
           tooltip: AppLocalizations.of(context).deviceCommandCloseTooltip,
           icon: Icons.keyboard_arrow_down,
           pending: pendingAction == DeviceCommandAction.closeDoor,
           onPressed: enabled && !busy ? onClose : null,
         ),
         const SizedBox(width: 34),
-        _DoorCommandButton(
+        FlinxDoorCommandButton(
           tooltip: AppLocalizations.of(context).deviceCommandStopTooltip,
           icon: Icons.pause,
           pending: pendingAction == DeviceCommandAction.stopDoor,
           onPressed: enabled && !busy ? onStop : null,
         ),
         const SizedBox(width: 34),
-        _DoorCommandButton(
+        FlinxDoorCommandButton(
           tooltip: AppLocalizations.of(context).deviceCommandOpenTooltip,
           icon: Icons.keyboard_arrow_up,
           pending: pendingAction == DeviceCommandAction.openDoor,
           onPressed: enabled && !busy ? onOpen : null,
         ),
       ],
-    );
-  }
-}
-
-class _DoorCommandButton extends StatelessWidget {
-  const _DoorCommandButton({
-    required this.tooltip,
-    required this.icon,
-    required this.pending,
-    required this.onPressed,
-  });
-
-  final String tooltip;
-  final IconData icon;
-  final bool pending;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return IconButton(
-      tooltip: tooltip,
-      onPressed: onPressed,
-      style: IconButton.styleFrom(
-        fixedSize: const Size.square(46),
-        backgroundColor: AppColors.deviceControlPrimaryAction,
-        disabledBackgroundColor: AppColors.deviceControlPrimaryAction
-            .withValues(alpha: 0.5),
-        foregroundColor: AppColors.deviceControlPrimaryActionForeground,
-        disabledForegroundColor: AppColors.deviceControlPrimaryActionForeground,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-      icon: pending
-          ? const SizedBox.square(
-              dimension: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 3,
-                color: AppColors.deviceControlPrimaryActionForeground,
-              ),
-            )
-          : Icon(icon, size: 30),
     );
   }
 }

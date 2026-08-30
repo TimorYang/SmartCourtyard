@@ -12,7 +12,6 @@ import '../../../core/logging/providers.dart';
 import '../../../core/network/providers.dart';
 import '../../../platform_bridge/hardware_gateway.dart';
 import '../../../platform_bridge/hardware_models.dart';
-import '../../../platform_bridge/providers.dart';
 import '../data/data_sources/door_detail_api.dart';
 import '../data/data_sources/door_detail_remote_data_source.dart';
 import '../data/data_sources/remote_door_command_api.dart';
@@ -31,10 +30,9 @@ import '../domain/use_cases/fetch_door_devices_use_case.dart';
 import '../domain/use_cases/fetch_about_device_info_use_case.dart';
 import '../domain/use_cases/submit_remote_door_command_use_case.dart';
 import '../domain/use_cases/unbind_door_device_use_case.dart';
+import 'local_door_command_executor.dart';
 
-final deviceCommandHardwareGatewayProvider = Provider<HardwareGateway>((ref) {
-  return ref.watch(nativeHardwareGatewayProvider);
-});
+export 'local_door_command_executor.dart';
 
 final deviceCommandBleScanDurationProvider = Provider<Duration>((ref) {
   return const Duration(seconds: 10);
@@ -374,6 +372,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
   ];
 
   late final HardwareGateway _gateway;
+  late final LocalDoorCommandExecutor _localDoorCommandExecutor;
   late final FetchDoorDetailUseCase _fetchDoorDetailUseCase;
   late final FetchDoorDevicesUseCase _fetchDoorDevicesUseCase;
   late final FetchOnboardingDeviceKeyUseCase _fetchDeviceKeyUseCase;
@@ -400,6 +399,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
   @override
   DeviceCommandState build() {
     _gateway = ref.watch(deviceCommandHardwareGatewayProvider);
+    _localDoorCommandExecutor = ref.watch(localDoorCommandExecutorProvider);
     _fetchDoorDetailUseCase = ref.watch(fetchDoorDetailUseCaseProvider);
     _fetchDoorDevicesUseCase = ref.watch(fetchDoorDevicesUseCaseProvider);
     _fetchDeviceKeyUseCase = ref.watch(fetchOnboardingDeviceKeyUseCaseProvider);
@@ -1263,7 +1263,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
     );
 
     try {
-      final result = await _gateway.sendDoorCommand(
+      final result = await _localDoorCommandExecutor.send(
         requestId: _nextRequestId(action),
         deviceId: targetDeviceId,
         command: action.doorCommand,

@@ -46,6 +46,8 @@ class AppColors {
   static const fBoxWiringTestControlSurface = Color(0xFF151D27);
   static const fBoxWiringTestControlForeground = Color(0xFFFFFFFF);
   static const fBoxWiringTestStatusPending = Color(0xFFD9DCE0);
+  static const fBoxWiringTestPrimaryAction = Color(0xFF176CFF);
+  static const fBoxWiringTestPrimaryActionForeground = Color(0xFFFFFFFF);
   static const accountDetailsLogoutSurface = Color(0xFFF3F4F6);
   static const accountDetailsAvatarSurface = Color(0xFFF1F3F6);
   static const accountDetailsAvatarForeground = Color(0xFFFFFFFF);
@@ -311,6 +313,7 @@ class AppShapeTokens {
   static const upgradeCheckCardRadius = 16.0;
   static const upgradeCheckDialogRadius = 16.0;
   static const upgradeCheckActionRadius = 28.0;
+  static const deviceControlCommandButtonRadius = 8.0;
   static const fBoxWiringTestControlRadius = 12.0;
 }
 
@@ -319,6 +322,8 @@ class AppLayoutTokens {
 
   static const accountProfileThemeIconSize = 26.0;
   static const accountProfileThemeIconRightInset = 21.0;
+  static const fBoxWiringTestLargeScreenMinWidth = 600.0;
+  static const fBoxWiringTestContentMaxWidth = 680.0;
 }
 
 class AppSpacingTokens {
@@ -331,17 +336,29 @@ class AppSpacingTokens {
   static const smartOpenerAddedPageTop = 10.0;
   static const smartOpenerAddedCardPadding = 22.0;
   static const smartOpenerAddedCardGap = 10.0;
-  static const fBoxWiringTestPageHorizontal = 28.0;
+  static const deviceControlCommandButtonSize = 46.0;
+  static const deviceControlCommandButtonIconSize = 30.0;
+  static const deviceControlCommandButtonProgressSize = 24.0;
+  static const deviceControlCommandButtonProgressStrokeWidth = 3.0;
+  static const fBoxWiringTestNavigationActionTrailingSpacing = 4.0;
+  static const fBoxWiringTestPageHorizontal = 20.0;
   static const fBoxWiringTestPageTop = 27.0;
   static const fBoxWiringTestTitleToDescription = 12.0;
   static const fBoxWiringTestDescriptionToSegment = 37.0;
   static const fBoxWiringTestSegmentHeight = 32.0;
-  static const fBoxWiringTestPbControlSize = 250.0;
+  static const fBoxWiringTestSegmentWidth = 224.0;
+  static const fBoxWiringTestDescriptionMaxWidth = 360.0;
+  static const fBoxWiringTestPbControlSize = 170.0;
   static const fBoxWiringTestControlSize = 52.0;
-  static const fBoxWiringTestControlGap = 52.0;
+  static const fBoxWiringTestControlIconSize = 42.0;
+  static const fBoxWiringTestControlGap = 40.0;
+  static const fBoxWiringTestStatusIndicatorSize = 16.0;
+  static const fBoxWiringTestStatusIndicatorGap = 12.0;
+  static const fBoxWiringTestErrorTopSpacing = 10.0;
   static const fBoxWiringTestBottomPadding = 28.0;
   static const fBoxWiringTestStatusToAction = 32.0;
   static const fBoxWiringTestActionHeight = 52.0;
+  static const fBoxWiringTestMinimumPageHeight = 620.0;
   static const safetySensorPairingContentTop = 48.0;
   static const safetySensorPairingIllustrationSize = 230.0;
   static const safetySensorPairingMatchingIllustrationSize = 327.0;
@@ -441,6 +458,7 @@ class AppOpacityTokens {
   const AppOpacityTokens._();
 
   static const deviceShareDisabled = 0.45;
+  static const deviceControlCommandButtonDisabled = 0.5;
 }
 
 class AppTextTokens {
@@ -2304,6 +2322,21 @@ class AppTextTokens {
       fontSize: 16,
       fontWeight: FontWeight.w400,
       height: 1.2,
+    );
+  }
+
+  static TextStyle fBoxWiringTestError(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.toastError,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle fBoxWiringTestPrimaryButton(TextTheme textTheme) {
+    return (textTheme.titleLarge ?? const TextStyle()).copyWith(
+      color: AppColors.fBoxWiringTestPrimaryActionForeground,
+      fontSize: 18,
+      fontWeight: FontWeight.w400,
     );
   }
 
