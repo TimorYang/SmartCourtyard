@@ -333,6 +333,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get googleLoginFailed => 'Google 登录失败，请重试。';
 
   @override
+  String get facebookLoginAgreementRequired => '请先同意用户协议和隐私政策。';
+
+  @override
+  String get facebookLoginUnavailable =>
+      '当前设备无法使用 Facebook 登录，或 Facebook 登录尚未配置。';
+
+  @override
+  String get facebookLoginFailed => 'Facebook 登录失败，请重试。';
+
+  @override
   String get homeShortcutAction => '首页';
 
   @override

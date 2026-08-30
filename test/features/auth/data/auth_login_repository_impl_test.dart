@@ -3,7 +3,9 @@ import 'package:flinx/features/auth/data/data_sources/auth_login_remote_data_sou
 import 'package:flinx/features/auth/data/dto/apple_login_nonce_response_dto.dart';
 import 'package:flinx/features/auth/data/dto/auth_login_response_dto.dart';
 import 'package:flinx/features/auth/data/dto/auth_profile_response_dto.dart';
+import 'package:flinx/features/auth/data/dto/facebook_login_nonce_response_dto.dart';
 import 'package:flinx/features/auth/data/dto/google_login_nonce_response_dto.dart';
+import 'package:flinx/features/auth/domain/entities/facebook_identity_credential.dart';
 import 'package:flinx/features/auth/data/repositories/auth_login_repository_impl.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -68,6 +70,70 @@ void main() {
       'appVersion': '1.0.0',
     });
     expect(remoteDataSource.requestId, 'google-login-123');
+  });
+
+  test(
+    'builds the iOS Facebook request with the authentication token',
+    () async {
+      final remoteDataSource = _FakeAuthLoginRemoteDataSource();
+      final repository = AuthLoginRepositoryImpl(
+        remoteDataSource: remoteDataSource,
+        logger: const _SilentAppLogger(),
+      );
+
+      await repository.loginWithFacebook(
+        credential: const FacebookIdentityCredential(
+          kind: FacebookTokenKind.authenticationToken,
+          tokenString: 'jwt-token',
+        ),
+        nonceId: 'facebook-nonce-id',
+        deviceId: 'installation-id',
+        deviceModel: 'iPhone17,2',
+        platform: 'IOS',
+        appVersion: '1.0.0',
+        requestId: 'facebook-login-ios-123',
+      );
+
+      expect(remoteDataSource.request, {
+        'nonceId': 'facebook-nonce-id',
+        'authenticationToken': 'jwt-token',
+        'deviceId': 'installation-id',
+        'deviceModel': 'iPhone17,2',
+        'platform': 'IOS',
+        'appVersion': '1.0.0',
+      });
+      expect(remoteDataSource.requestId, 'facebook-login-ios-123');
+    },
+  );
+
+  test('builds the Android Facebook request without a nonce field', () async {
+    final remoteDataSource = _FakeAuthLoginRemoteDataSource();
+    final repository = AuthLoginRepositoryImpl(
+      remoteDataSource: remoteDataSource,
+      logger: const _SilentAppLogger(),
+    );
+
+    await repository.loginWithFacebook(
+      credential: const FacebookIdentityCredential(
+        kind: FacebookTokenKind.accessToken,
+        tokenString: 'access-token',
+      ),
+      nonceId: 'must-not-be-sent',
+      deviceId: 'installation-id',
+      deviceModel: 'Pixel 9',
+      platform: 'ANDROID',
+      appVersion: '1.0.0',
+      requestId: 'facebook-login-android-123',
+    );
+
+    expect(remoteDataSource.request, {
+      'accessToken': 'access-token',
+      'deviceId': 'installation-id',
+      'deviceModel': 'Pixel 9',
+      'platform': 'ANDROID',
+      'appVersion': '1.0.0',
+    });
+    expect(remoteDataSource.requestId, 'facebook-login-android-123');
   });
 }
 
@@ -137,7 +203,40 @@ class _FakeAuthLoginRemoteDataSource implements AuthLoginRemoteDataSource {
   }
 
   @override
+  Future<AuthLoginRemoteResult> loginWithFacebook({
+    required Map<String, dynamic> request,
+    required String requestId,
+  }) async {
+    this.request = request;
+    this.requestId = requestId;
+    return const AuthLoginRemoteResult(
+      login: AuthLoginResponseDto(
+        accountId: '2',
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+        tokenType: 'bearer',
+        expiresInSeconds: 7200,
+        refreshExpiresInSeconds: 2592000,
+      ),
+      profile: AuthProfileResponseDto(
+        userId: '2',
+        email: 'alice@example.com',
+        emailVerified: true,
+        nickname: 'Alice',
+        regionCode: 'NL',
+        locale: 'en-NL',
+        timezone: 'Europe/Amsterdam',
+      ),
+    );
+  }
+
+  @override
   Future<GoogleLoginNonceResponseDto> fetchGoogleLoginNonce({
+    required String requestId,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<FacebookLoginNonceResponseDto> fetchFacebookLoginNonce({
     required String requestId,
   }) => throw UnimplementedError();
 

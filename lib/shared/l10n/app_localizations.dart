@@ -734,6 +734,24 @@ abstract class AppLocalizations {
   /// **'Google sign-in failed. Please try again.'**
   String get googleLoginFailed;
 
+  /// Message shown when Facebook sign-in is attempted before accepting the agreements
+  ///
+  /// In en, this message translates to:
+  /// **'Please agree to the User Agreement and Privacy Policy first.'**
+  String get facebookLoginAgreementRequired;
+
+  /// Message shown when Facebook sign-in is not supported or configured
+  ///
+  /// In en, this message translates to:
+  /// **'Facebook sign-in is unavailable or not configured on this device.'**
+  String get facebookLoginUnavailable;
+
+  /// Message shown when Facebook sign-in fails
+  ///
+  /// In en, this message translates to:
+  /// **'Facebook sign-in failed. Please try again.'**
+  String get facebookLoginFailed;
+
   /// Temporary shortcut button from the welcome page to the home page
   ///
   /// In en, this message translates to:

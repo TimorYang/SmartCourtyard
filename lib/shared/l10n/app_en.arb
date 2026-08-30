@@ -313,6 +313,18 @@
   "@googleLoginFailed": {
     "description": "Message shown when Google sign-in fails"
   },
+  "facebookLoginAgreementRequired": "Please agree to the User Agreement and Privacy Policy first.",
+  "@facebookLoginAgreementRequired": {
+    "description": "Message shown when Facebook sign-in is attempted before accepting the agreements"
+  },
+  "facebookLoginUnavailable": "Facebook sign-in is unavailable or not configured on this device.",
+  "@facebookLoginUnavailable": {
+    "description": "Message shown when Facebook sign-in is not supported or configured"
+  },
+  "facebookLoginFailed": "Facebook sign-in failed. Please try again.",
+  "@facebookLoginFailed": {
+    "description": "Message shown when Facebook sign-in fails"
+  },
   "homeShortcutAction": "Home",
   "@homeShortcutAction": {
     "description": "Temporary shortcut button from the welcome page to the home page"

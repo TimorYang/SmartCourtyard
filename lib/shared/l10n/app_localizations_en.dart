@@ -362,6 +362,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get googleLoginFailed => 'Google sign-in failed. Please try again.';
 
   @override
+  String get facebookLoginAgreementRequired =>
+      'Please agree to the User Agreement and Privacy Policy first.';
+
+  @override
+  String get facebookLoginUnavailable =>
+      'Facebook sign-in is unavailable or not configured on this device.';
+
+  @override
+  String get facebookLoginFailed =>
+      'Facebook sign-in failed. Please try again.';
+
+  @override
   String get homeShortcutAction => 'Home';
 
   @override

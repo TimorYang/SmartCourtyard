@@ -10,6 +10,7 @@ import '../../../account/application/providers.dart';
 import '../../../home/presentation/pages/home_page.dart';
 import '../../application/login_form_controller.dart';
 import '../../application/apple_login_controller.dart';
+import '../../application/facebook_login_controller.dart';
 import '../../application/google_login_controller.dart';
 import '../../application/providers.dart';
 import '../../../../shared/l10n/app_localizations.dart';
@@ -107,6 +108,36 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     }
   }
 
+  Future<void> _submitFacebookLogin({required bool agreedToTerms}) async {
+    final submission = await ref
+        .read(facebookLoginControllerProvider.notifier)
+        .submit(agreedToTerms: agreedToTerms);
+    if (!mounted) {
+      return;
+    }
+    final l10n = AppLocalizations.of(context);
+    switch (submission.type) {
+      case FacebookLoginSubmissionType.success:
+        final result = submission.result!;
+        ref
+            .read(accountControllerProvider.notifier)
+            .setSessionProfile(result.profile);
+        ref
+            .read(activeAuthSessionProvider.notifier)
+            .markAuthenticated(userId: result.profile.userId);
+        context.go(HomePage.routePath);
+      case FacebookLoginSubmissionType.agreementRequired:
+        AppToast.info(context, l10n.facebookLoginAgreementRequired);
+      case FacebookLoginSubmissionType.unavailable:
+        AppToast.info(context, l10n.facebookLoginUnavailable);
+      case FacebookLoginSubmissionType.failed:
+        AppToast.error(context, l10n.facebookLoginFailed);
+      case FacebookLoginSubmissionType.canceled:
+      case FacebookLoginSubmissionType.busy:
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -115,6 +146,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final controller = ref.read(loginFormControllerProvider.notifier);
     final appleLoginState = ref.watch(appleLoginControllerProvider);
     final googleLoginState = ref.watch(googleLoginControllerProvider);
+    final facebookLoginState = ref.watch(facebookLoginControllerProvider);
     final showAppleLogin = ref.watch(appleLoginPlatformSupportedProvider);
 
     return Scaffold(
@@ -257,7 +289,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               state.canSubmit &&
                                   !_isSubmitting &&
                                   !appleLoginState.isSubmitting &&
-                                  !googleLoginState.isSubmitting
+                                  !googleLoginState.isSubmitting &&
+                                  !facebookLoginState.isSubmitting
                               ? () async {
                                   if (!controller.validateEmailForSubmit()) {
                                     await showAuthEmailInvalidDialog(context);
@@ -378,6 +411,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   showAppleLogin: showAppleLogin,
                   isAppleSubmitting: appleLoginState.isSubmitting,
                   isGoogleSubmitting: googleLoginState.isSubmitting,
+                  isFacebookSubmitting: facebookLoginState.isSubmitting,
                   onAppleLogin: _isSubmitting
                       ? null
                       : () => _submitAppleLogin(
@@ -386,6 +420,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   onGoogleLogin: _isSubmitting
                       ? null
                       : () => _submitGoogleLogin(
+                          agreedToTerms: state.agreedToTerms,
+                        ),
+                  onFacebookLogin: _isSubmitting
+                      ? null
+                      : () => _submitFacebookLogin(
                           agreedToTerms: state.agreedToTerms,
                         ),
                 ),
@@ -415,15 +454,19 @@ class _ThirdPartyLoginSection extends StatelessWidget {
     required this.showAppleLogin,
     required this.isAppleSubmitting,
     required this.isGoogleSubmitting,
+    required this.isFacebookSubmitting,
     required this.onAppleLogin,
     required this.onGoogleLogin,
+    required this.onFacebookLogin,
   });
 
   final bool showAppleLogin;
   final bool isAppleSubmitting;
   final bool isGoogleSubmitting;
+  final bool isFacebookSubmitting;
   final VoidCallback? onAppleLogin;
   final VoidCallback? onGoogleLogin;
+  final VoidCallback? onFacebookLogin;
 
   @override
   Widget build(BuildContext context) {
@@ -453,7 +496,12 @@ class _ThirdPartyLoginSection extends StatelessWidget {
                       size: 36,
                       fallback: SizedBox.shrink(),
                     ),
-              onTap: isGoogleSubmitting ? null : onGoogleLogin,
+              onTap:
+                  isAppleSubmitting ||
+                      isGoogleSubmitting ||
+                      isFacebookSubmitting
+                  ? null
+                  : onGoogleLogin,
             ),
             if (showAppleLogin) ...[
               const SizedBox(width: 18),
@@ -473,22 +521,37 @@ class _ThirdPartyLoginSection extends StatelessWidget {
                         size: 36,
                         fallback: SizedBox.shrink(),
                       ),
-                onTap: isAppleSubmitting || isGoogleSubmitting
+                onTap:
+                    isAppleSubmitting ||
+                        isGoogleSubmitting ||
+                        isFacebookSubmitting
                     ? null
                     : onAppleLogin,
               ),
             ],
             const SizedBox(width: 18),
             _CompactProviderButton(
+              key: const ValueKey('facebook_login_button'),
               label: l10n.continueWithFacebook,
-              icon: const _ProviderAssetIcon(
-                assetPath: _LoginPageAssetPaths.facebookProviderMark,
-                size: 36,
-                fallback: SizedBox.shrink(),
-              ),
-              onTap: isAppleSubmitting || isGoogleSubmitting
+              icon: isFacebookSubmitting
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.brandPrimaryLight,
+                      ),
+                    )
+                  : const _ProviderAssetIcon(
+                      assetPath: _LoginPageAssetPaths.facebookProviderMark,
+                      size: 36,
+                      fallback: SizedBox.shrink(),
+                    ),
+              onTap:
+                  isAppleSubmitting ||
+                      isGoogleSubmitting ||
+                      isFacebookSubmitting
                   ? null
-                  : () => AppToast.info(context, l10n.continueWithFacebook),
+                  : onFacebookLogin,
             ),
           ],
         ),

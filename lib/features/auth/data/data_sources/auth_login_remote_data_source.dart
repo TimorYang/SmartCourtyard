@@ -7,6 +7,7 @@ import '../../../../core/network/network_exception.dart';
 import '../dto/apple_login_nonce_response_dto.dart';
 import '../dto/auth_login_response_dto.dart';
 import '../dto/auth_profile_response_dto.dart';
+import '../dto/facebook_login_nonce_response_dto.dart';
 import '../dto/google_login_nonce_response_dto.dart';
 import 'auth_api.dart';
 
@@ -26,11 +27,20 @@ abstract interface class AuthLoginRemoteDataSource {
     required String requestId,
   });
 
+  Future<AuthLoginRemoteResult> loginWithFacebook({
+    required Map<String, dynamic> request,
+    required String requestId,
+  });
+
   Future<AppleLoginNonceResponseDto> fetchAppleLoginNonce({
     required String requestId,
   });
 
   Future<GoogleLoginNonceResponseDto> fetchGoogleLoginNonce({
+    required String requestId,
+  });
+
+  Future<FacebookLoginNonceResponseDto> fetchFacebookLoginNonce({
     required String requestId,
   });
 }
@@ -81,6 +91,18 @@ class AuthLoginRemoteDataSourceImpl implements AuthLoginRemoteDataSource {
   }
 
   @override
+  Future<AuthLoginRemoteResult> loginWithFacebook({
+    required Map<String, dynamic> request,
+    required String requestId,
+  }) async {
+    return _performLogin(
+      requestId: requestId,
+      request: request,
+      submit: api.loginWithFacebook,
+    );
+  }
+
+  @override
   Future<AppleLoginNonceResponseDto> fetchAppleLoginNonce({
     required String requestId,
   }) async {
@@ -118,6 +140,37 @@ class AuthLoginRemoteDataSourceImpl implements AuthLoginRemoteDataSource {
     _validateConfiguration();
     try {
       final response = await api.fetchGoogleLoginNonce(
+        _authorizationOptions(requestId),
+      );
+      final data = response.data;
+      if (response.code != 200 || !response.success) {
+        throw AuthLoginRemoteException.businessFailure(
+          ApiBusinessFailure.fromEnvelope(response),
+        );
+      }
+      if (data == null ||
+          data.nonceId.trim().isEmpty ||
+          data.nonce.trim().isEmpty ||
+          data.expiresInSeconds <= 0) {
+        throw const AuthLoginRemoteException.invalidResponse();
+      }
+      return data;
+    } on DioException catch (error) {
+      throw AuthLoginRemoteException.fromNetwork(
+        NetworkException.fromDio(error),
+      );
+    } on AuthLoginRemoteException {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<FacebookLoginNonceResponseDto> fetchFacebookLoginNonce({
+    required String requestId,
+  }) async {
+    _validateConfiguration();
+    try {
+      final response = await api.fetchFacebookLoginNonce(
         _authorizationOptions(requestId),
       );
       final data = response.data;

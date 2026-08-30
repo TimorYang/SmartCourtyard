@@ -1,5 +1,7 @@
 {
   "FLINX_API_ORIGIN": "https://api.example.com",
   "FLINX_API_PATH_PREFIX": "/api/force-door",
-  "FLINX_CLIENT_AUTHORIZATION": "replace-with-production-client-authorization"
+  "FLINX_CLIENT_AUTHORIZATION": "replace-with-production-client-authorization",
+  "FLINX_FACEBOOK_APP_ID": "",
+  "FLINX_FACEBOOK_CLIENT_TOKEN": ""
 }

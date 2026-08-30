@@ -6,6 +6,7 @@ import '../dto/apple_login_nonce_response_dto.dart';
 import '../dto/auth_login_response_dto.dart';
 import '../dto/auth_profile_response_dto.dart';
 import '../dto/auth_public_key_response_dto.dart';
+import '../dto/facebook_login_nonce_response_dto.dart';
 import '../dto/google_login_nonce_response_dto.dart';
 
 part 'auth_api.g.dart';
@@ -43,6 +44,17 @@ abstract class AuthApi {
 
   @POST('app/auth/google/login')
   Future<ApiEnvelopeDto<AuthLoginResponseDto>> loginWithGoogle(
+    @Body() Map<String, dynamic> body,
+    @DioOptions() Options options,
+  );
+
+  @POST('app/auth/facebook/nonce')
+  Future<ApiEnvelopeDto<FacebookLoginNonceResponseDto>> fetchFacebookLoginNonce(
+    @DioOptions() Options options,
+  );
+
+  @POST('app/auth/facebook/login')
+  Future<ApiEnvelopeDto<AuthLoginResponseDto>> loginWithFacebook(
     @Body() Map<String, dynamic> body,
     @DioOptions() Options options,
   );

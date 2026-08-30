@@ -6,6 +6,8 @@ import '../../../account/domain/entities/account_avatar_code.dart';
 import '../../../account/domain/entities/account_token_set.dart';
 import '../../domain/entities/apple_login_nonce.dart';
 import '../../domain/entities/auth_login_result.dart';
+import '../../domain/entities/facebook_identity_credential.dart';
+import '../../domain/entities/facebook_login_nonce.dart';
 import '../../domain/entities/google_login_nonce.dart';
 import '../../domain/repositories/auth_login_repository.dart';
 import '../data_sources/auth_login_remote_data_source.dart';
@@ -142,6 +144,54 @@ class AuthLoginRepositoryImpl implements AuthLoginRepository {
   }
 
   @override
+  Future<AuthLoginResult> loginWithFacebook({
+    required FacebookIdentityCredential credential,
+    required String? nonceId,
+    required String deviceId,
+    required String deviceModel,
+    required String platform,
+    required String appVersion,
+    required String requestId,
+  }) async {
+    final token = credential.tokenString.trim();
+    final credentialField =
+        credential.kind == FacebookTokenKind.authenticationToken
+        ? 'authenticationToken'
+        : 'accessToken';
+    final request = <String, dynamic>{
+      if (credential.kind == FacebookTokenKind.authenticationToken &&
+          nonceId?.trim().isNotEmpty == true)
+        'nonceId': nonceId!.trim(),
+      credentialField: token,
+      'deviceId': deviceId,
+      'deviceModel': deviceModel,
+      'platform': platform,
+      'appVersion': appVersion,
+    };
+    try {
+      final result = await remoteDataSource.loginWithFacebook(
+        request: request,
+        requestId: requestId,
+      );
+      logger.info(
+        'Completed Facebook login.',
+        requestId: requestId,
+        context: {'tokenKind': credential.kind.name},
+      );
+      return _mapResult(result);
+    } on AuthLoginRemoteException catch (error, stackTrace) {
+      logger.error(
+        'Failed Facebook login.',
+        requestId: requestId,
+        error: error,
+        stackTrace: stackTrace,
+        context: {'statusCode': error.statusCode},
+      );
+      throw _mapError(error, requestId);
+    }
+  }
+
+  @override
   Future<AppleLoginNonce> getAppleLoginNonce({
     required String requestId,
   }) async {
@@ -192,6 +242,36 @@ class AuthLoginRepositoryImpl implements AuthLoginRepository {
     } on AuthLoginRemoteException catch (error, stackTrace) {
       logger.error(
         'Failed to fetch Google login nonce.',
+        requestId: requestId,
+        error: error,
+        stackTrace: stackTrace,
+        context: {'statusCode': error.statusCode},
+      );
+      throw _mapError(error, requestId);
+    }
+  }
+
+  @override
+  Future<FacebookLoginNonce> getFacebookLoginNonce({
+    required String requestId,
+  }) async {
+    try {
+      final dto = await remoteDataSource.fetchFacebookLoginNonce(
+        requestId: requestId,
+      );
+      logger.info(
+        'Fetched Facebook login nonce.',
+        requestId: requestId,
+        context: {'expiresInSeconds': dto.expiresInSeconds},
+      );
+      return FacebookLoginNonce(
+        nonceId: dto.nonceId,
+        nonce: dto.nonce,
+        expiresIn: Duration(seconds: dto.expiresInSeconds),
+      );
+    } on AuthLoginRemoteException catch (error, stackTrace) {
+      logger.error(
+        'Failed to fetch Facebook login nonce.',
         requestId: requestId,
         error: error,
         stackTrace: stackTrace,

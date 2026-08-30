@@ -1,11 +1,19 @@
 import 'package:flinx/app/flinx_app.dart';
+import 'package:flinx/features/account/domain/entities/account_profile.dart';
+import 'package:flinx/features/account/domain/entities/account_token_set.dart';
+import 'package:flinx/features/auth/application/facebook_login_controller.dart';
 import 'package:flinx/features/auth/application/login_form_controller.dart';
 import 'package:flinx/features/auth/application/providers.dart';
+import 'package:flinx/features/auth/domain/entities/auth_login_result.dart';
+import 'package:flinx/features/auth/presentation/pages/login_page.dart';
+import 'package:flinx/features/home/presentation/pages/home_page.dart';
+import 'package:flinx/app/router/app_router.dart';
 import 'package:flinx/features/auth/presentation/widgets/auth_flow_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
 void main() {
   Future<void> openLoginPage(
@@ -78,6 +86,80 @@ void main() {
       findsOneWidget,
     );
     await tester.pump(const Duration(seconds: 3));
+  });
+
+  testWidgets('requires agreement before starting Facebook login', (
+    tester,
+  ) async {
+    await openLoginPage(tester);
+
+    await tester.tap(find.byKey(const ValueKey('facebook_login_button')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Please agree to the User Agreement and Privacy Policy first.'),
+      findsOneWidget,
+    );
+    await tester.pump(const Duration(seconds: 3));
+  });
+
+  testWidgets('shows Facebook unavailable when configuration is missing', (
+    tester,
+  ) async {
+    await openLoginPage(tester);
+
+    await tester.tap(find.byKey(const ValueKey('login_agreement_toggle')));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('facebook_login_button')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(
+        'Facebook sign-in is unavailable or not configured on this device.',
+      ),
+      findsOneWidget,
+    );
+    await tester.pump(const Duration(seconds: 3));
+  });
+
+  testWidgets('navigates to Home after a successful Facebook login', (
+    tester,
+  ) async {
+    final router = GoRouter(
+      initialLocation: LoginPage.routePath,
+      routes: [
+        GoRoute(
+          path: LoginPage.routePath,
+          builder: (context, state) => const LoginPage(),
+        ),
+        GoRoute(
+          path: HomePage.routePath,
+          builder: (context, state) =>
+              const Scaffold(body: Center(child: Text('Home destination'))),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appRouterProvider.overrideWithValue(router),
+          facebookLoginControllerProvider.overrideWith(
+            _SuccessfulFacebookLoginController.new,
+          ),
+        ],
+        child: const FlinxApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('login_agreement_toggle')));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('facebook_login_button')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Home destination'), findsOneWidget);
+    expect(find.text('Sign in'), findsNothing);
   });
 
   testWidgets('hides Apple login when the platform is unsupported', (
@@ -212,4 +294,29 @@ void main() {
     expect(find.text('Enter your email address'), findsOneWidget);
     expect(find.text('Send code'), findsOneWidget);
   });
+}
+
+class _SuccessfulFacebookLoginController extends FacebookLoginController {
+  static final _result = AuthLoginResult(
+    tokenSet: const AccountTokenSet(
+      accessToken: 'access-token',
+      refreshToken: 'refresh-token',
+    ),
+    profile: AccountProfile(
+      userId: 'facebook-user-id',
+      email: 'facebook@example.com',
+      nickname: 'Facebook User',
+    ),
+  );
+
+  @override
+  FacebookLoginState build() => const FacebookLoginState();
+
+  @override
+  Future<FacebookLoginSubmission> submit({required bool agreedToTerms}) async {
+    if (!agreedToTerms) {
+      return const FacebookLoginSubmission.agreementRequired();
+    }
+    return FacebookLoginSubmission.success(_result);
+  }
 }

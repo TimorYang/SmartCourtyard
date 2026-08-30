@@ -7,6 +7,8 @@ import 'package:flinx/features/auth/application/google_login_controller.dart';
 import 'package:flinx/features/auth/application/providers.dart';
 import 'package:flinx/features/auth/domain/entities/apple_login_nonce.dart';
 import 'package:flinx/features/auth/domain/entities/auth_login_result.dart';
+import 'package:flinx/features/auth/domain/entities/facebook_identity_credential.dart';
+import 'package:flinx/features/auth/domain/entities/facebook_login_nonce.dart';
 import 'package:flinx/features/auth/domain/entities/google_identity_credential.dart';
 import 'package:flinx/features/auth/domain/entities/google_login_nonce.dart';
 import 'package:flinx/features/auth/domain/entities/login_device_context.dart';
@@ -186,6 +188,22 @@ class _FakeAuthLoginRepository implements AuthLoginRepository {
           expiresIn: Duration(minutes: 5),
         ),
       );
+
+  @override
+  Future<AuthLoginResult> loginWithFacebook({
+    required FacebookIdentityCredential credential,
+    required String? nonceId,
+    required String deviceId,
+    required String deviceModel,
+    required String platform,
+    required String appVersion,
+    required String requestId,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<FacebookLoginNonce> getFacebookLoginNonce({
+    required String requestId,
+  }) => throw UnimplementedError();
 }
 
 class _FakeLoginDeviceContextProvider implements LoginDeviceContextProvider {
