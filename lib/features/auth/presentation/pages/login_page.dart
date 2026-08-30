@@ -10,6 +10,7 @@ import '../../../account/application/providers.dart';
 import '../../../home/presentation/pages/home_page.dart';
 import '../../application/login_form_controller.dart';
 import '../../application/apple_login_controller.dart';
+import '../../application/google_login_controller.dart';
 import '../../application/providers.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/app_toast.dart';
@@ -76,6 +77,36 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     }
   }
 
+  Future<void> _submitGoogleLogin({required bool agreedToTerms}) async {
+    final submission = await ref
+        .read(googleLoginControllerProvider.notifier)
+        .submit(agreedToTerms: agreedToTerms);
+    if (!mounted) {
+      return;
+    }
+    final l10n = AppLocalizations.of(context);
+    switch (submission.type) {
+      case GoogleLoginSubmissionType.success:
+        final result = submission.result!;
+        ref
+            .read(accountControllerProvider.notifier)
+            .setSessionProfile(result.profile);
+        ref
+            .read(activeAuthSessionProvider.notifier)
+            .markAuthenticated(userId: result.profile.userId);
+        context.go(HomePage.routePath);
+      case GoogleLoginSubmissionType.agreementRequired:
+        AppToast.info(context, l10n.googleLoginAgreementRequired);
+      case GoogleLoginSubmissionType.unavailable:
+        AppToast.info(context, l10n.googleLoginUnavailable);
+      case GoogleLoginSubmissionType.failed:
+        AppToast.error(context, l10n.googleLoginFailed);
+      case GoogleLoginSubmissionType.canceled:
+      case GoogleLoginSubmissionType.busy:
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -83,6 +114,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final state = ref.watch(loginFormControllerProvider);
     final controller = ref.read(loginFormControllerProvider.notifier);
     final appleLoginState = ref.watch(appleLoginControllerProvider);
+    final googleLoginState = ref.watch(googleLoginControllerProvider);
     final showAppleLogin = ref.watch(appleLoginPlatformSupportedProvider);
 
     return Scaffold(
@@ -224,7 +256,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           onPressed:
                               state.canSubmit &&
                                   !_isSubmitting &&
-                                  !appleLoginState.isSubmitting
+                                  !appleLoginState.isSubmitting &&
+                                  !googleLoginState.isSubmitting
                               ? () async {
                                   if (!controller.validateEmailForSubmit()) {
                                     await showAuthEmailInvalidDialog(context);
@@ -344,9 +377,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 child: _ThirdPartyLoginSection(
                   showAppleLogin: showAppleLogin,
                   isAppleSubmitting: appleLoginState.isSubmitting,
+                  isGoogleSubmitting: googleLoginState.isSubmitting,
                   onAppleLogin: _isSubmitting
                       ? null
                       : () => _submitAppleLogin(
+                          agreedToTerms: state.agreedToTerms,
+                        ),
+                  onGoogleLogin: _isSubmitting
+                      ? null
+                      : () => _submitGoogleLogin(
                           agreedToTerms: state.agreedToTerms,
                         ),
                 ),
@@ -375,12 +414,16 @@ class _ThirdPartyLoginSection extends StatelessWidget {
   const _ThirdPartyLoginSection({
     required this.showAppleLogin,
     required this.isAppleSubmitting,
+    required this.isGoogleSubmitting,
     required this.onAppleLogin,
+    required this.onGoogleLogin,
   });
 
   final bool showAppleLogin;
   final bool isAppleSubmitting;
+  final bool isGoogleSubmitting;
   final VoidCallback? onAppleLogin;
+  final VoidCallback? onGoogleLogin;
 
   @override
   Widget build(BuildContext context) {
@@ -395,13 +438,22 @@ class _ThirdPartyLoginSection extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _CompactProviderButton(
+              key: const ValueKey('google_login_button'),
               label: l10n.continueWithGoogle,
-              icon: const _ProviderAssetIcon(
-                assetPath: _LoginPageAssetPaths.googleProviderMark,
-                size: 36,
-                fallback: SizedBox.shrink(),
-              ),
-              onTap: () => AppToast.info(context, l10n.continueWithGoogle),
+              icon: isGoogleSubmitting
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.brandPrimaryLight,
+                      ),
+                    )
+                  : const _ProviderAssetIcon(
+                      assetPath: _LoginPageAssetPaths.googleProviderMark,
+                      size: 36,
+                      fallback: SizedBox.shrink(),
+                    ),
+              onTap: isGoogleSubmitting ? null : onGoogleLogin,
             ),
             if (showAppleLogin) ...[
               const SizedBox(width: 18),
@@ -421,7 +473,9 @@ class _ThirdPartyLoginSection extends StatelessWidget {
                         size: 36,
                         fallback: SizedBox.shrink(),
                       ),
-                onTap: isAppleSubmitting ? null : onAppleLogin,
+                onTap: isAppleSubmitting || isGoogleSubmitting
+                    ? null
+                    : onAppleLogin,
               ),
             ],
             const SizedBox(width: 18),
@@ -432,7 +486,9 @@ class _ThirdPartyLoginSection extends StatelessWidget {
                 size: 36,
                 fallback: SizedBox.shrink(),
               ),
-              onTap: () => AppToast.info(context, l10n.continueWithFacebook),
+              onTap: isAppleSubmitting || isGoogleSubmitting
+                  ? null
+                  : () => AppToast.info(context, l10n.continueWithFacebook),
             ),
           ],
         ),

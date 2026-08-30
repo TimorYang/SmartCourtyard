@@ -7,6 +7,7 @@ import 'package:flinx/features/auth/data/dto/apple_login_nonce_response_dto.dart
 import 'package:flinx/features/auth/data/dto/auth_public_key_response_dto.dart';
 import 'package:flinx/features/auth/data/dto/auth_login_response_dto.dart';
 import 'package:flinx/features/auth/data/dto/auth_profile_response_dto.dart';
+import 'package:flinx/features/auth/data/dto/google_login_nonce_response_dto.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -135,6 +136,41 @@ void main() {
     );
   });
 
+  test('fetches and validates the Google login nonce', () async {
+    final api = _FakeAuthApi(
+      const ApiEnvelopeDto<AuthLoginResponseDto>(code: 500, success: false),
+      googleNonceResponse: const ApiEnvelopeDto(
+        code: 200,
+        success: true,
+        data: GoogleLoginNonceResponseDto(
+          nonceId: 'google-nonce-id',
+          nonce: 'google-raw-nonce',
+          expiresInSeconds: 300,
+        ),
+      ),
+    );
+    final dataSource = AuthLoginRemoteDataSourceImpl(
+      api: api,
+      clientAuthorization: 'encoded-client-credentials',
+    );
+
+    final result = await dataSource.fetchGoogleLoginNonce(
+      requestId: 'google-login-123',
+    );
+
+    expect(result.nonceId, 'google-nonce-id');
+    expect(result.nonce, 'google-raw-nonce');
+    expect(result.expiresInSeconds, 300);
+    expect(
+      api.nonceOptions.headers?['authorization'],
+      'Basic encoded-client-credentials',
+    );
+    expect(
+      api.nonceOptions.extra?[NetworkRequestExtras.requestId],
+      'google-login-123',
+    );
+  });
+
   test('submits the complete Apple login request', () async {
     final api = _FakeAuthApi(
       const ApiEnvelopeDto(
@@ -188,6 +224,60 @@ void main() {
     expect(
       api.loginOptions.extra?[NetworkRequestExtras.requestId],
       'apple-login-123',
+    );
+    expect(result.login.accessToken, 'access-token');
+    expect(result.profile.userId, '2');
+  });
+
+  test('submits the complete Google login request', () async {
+    final api = _FakeAuthApi(
+      const ApiEnvelopeDto(
+        code: 200,
+        success: true,
+        data: AuthLoginResponseDto(
+          accountId: '2',
+          accessToken: 'access-token',
+          refreshToken: 'refresh-token',
+          tokenType: 'bearer',
+          expiresInSeconds: 86400,
+          refreshExpiresInSeconds: 2592000,
+        ),
+      ),
+    );
+    final dataSource = AuthLoginRemoteDataSourceImpl(
+      api: api,
+      clientAuthorization: 'encoded-client-credentials',
+    );
+
+    final result = await dataSource.loginWithGoogle(
+      request: const {
+        'nonceId': 'google-nonce-id',
+        'idToken': 'header.payload.signature',
+        'authorizationCode': 'authorization-code',
+        'deviceId': 'installation-id',
+        'deviceModel': 'iPhone17,2',
+        'platform': 'IOS',
+        'appVersion': '1.0.0',
+      },
+      requestId: 'google-login-123',
+    );
+
+    expect(api.body, {
+      'nonceId': 'google-nonce-id',
+      'idToken': 'header.payload.signature',
+      'authorizationCode': 'authorization-code',
+      'deviceId': 'installation-id',
+      'deviceModel': 'iPhone17,2',
+      'platform': 'IOS',
+      'appVersion': '1.0.0',
+    });
+    expect(
+      api.loginOptions.headers?['authorization'],
+      'Basic encoded-client-credentials',
+    );
+    expect(
+      api.loginOptions.extra?[NetworkRequestExtras.requestId],
+      'google-login-123',
     );
     expect(result.login.accessToken, 'access-token');
     expect(result.profile.userId, '2');
@@ -305,6 +395,15 @@ class _FakeAuthApi implements AuthApi {
         expiresInSeconds: 300,
       ),
     ),
+    this.googleNonceResponse = const ApiEnvelopeDto(
+      code: 200,
+      success: true,
+      data: GoogleLoginNonceResponseDto(
+        nonceId: 'google-nonce-id',
+        nonce: 'google-raw-nonce',
+        expiresInSeconds: 300,
+      ),
+    ),
     this.profileResponse = const ApiEnvelopeDto(
       code: 200,
       success: true,
@@ -322,6 +421,7 @@ class _FakeAuthApi implements AuthApi {
 
   final ApiEnvelopeDto<AuthLoginResponseDto> response;
   final ApiEnvelopeDto<AppleLoginNonceResponseDto> nonceResponse;
+  final ApiEnvelopeDto<GoogleLoginNonceResponseDto> googleNonceResponse;
   final ApiEnvelopeDto<AuthProfileResponseDto> profileResponse;
   late Map<String, dynamic> body;
   late Options loginOptions;
@@ -349,11 +449,29 @@ class _FakeAuthApi implements AuthApi {
   }
 
   @override
+  Future<ApiEnvelopeDto<AuthLoginResponseDto>> loginWithGoogle(
+    Map<String, dynamic> requestBody,
+    Options requestOptions,
+  ) async {
+    body = requestBody;
+    loginOptions = requestOptions;
+    return response;
+  }
+
+  @override
   Future<ApiEnvelopeDto<AppleLoginNonceResponseDto>> fetchAppleLoginNonce(
     Options requestOptions,
   ) async {
     nonceOptions = requestOptions;
     return nonceResponse;
+  }
+
+  @override
+  Future<ApiEnvelopeDto<GoogleLoginNonceResponseDto>> fetchGoogleLoginNonce(
+    Options requestOptions,
+  ) async {
+    nonceOptions = requestOptions;
+    return googleNonceResponse;
   }
 
   @override
