@@ -1153,9 +1153,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get fBoxWiringTestCloseAction => '关门';
 
   @override
-  String get fBoxWiringTestNoConnectedDevice => '测试前请通过蓝牙连接 F-box。';
-
-  @override
   String get fBoxWiringTestCommandRejected => '命令未被接受，请重试。';
 
   @override
@@ -2364,6 +2361,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get deviceCommandMoreSettingsTitle => '更多设置';
+
+  @override
+  String get deviceCommandControlMethod => '控制方式';
 
   @override
   String get deviceCommandActionOpen => '开门';

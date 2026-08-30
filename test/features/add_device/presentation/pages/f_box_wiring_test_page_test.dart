@@ -110,6 +110,26 @@ void main() {
     expect(tester.widget<FilledButton>(nextButton).onPressed, isNotNull);
   });
 
+  testWidgets('does not show a connection prompt on the wiring test page', (
+    tester,
+  ) async {
+    final gateway = _RecordingHardwareGateway();
+    await _pumpPage(
+      tester,
+      gateway: gateway,
+      connectionState: BleConnectionState.disconnected,
+    );
+
+    await tester.tap(find.byKey(const Key('fBoxWiringTestPbControl')));
+    await tester.pumpAndSettle();
+
+    expect(gateway.commands, isEmpty);
+    expect(
+      find.text('Connect the F-box over Bluetooth before testing.'),
+      findsNothing,
+    );
+  });
+
   testWidgets('renders the Chinese copy', (tester) async {
     await _pumpPage(tester, locale: const Locale('zh'));
 
@@ -188,6 +208,7 @@ Future<void> _pumpPage(
   Locale? locale,
   Size? surfaceSize,
   _RecordingHardwareGateway? gateway,
+  BleConnectionState connectionState = BleConnectionState.connected,
 }) async {
   if (surfaceSize != null) {
     await tester.binding.setSurfaceSize(surfaceSize);
@@ -202,7 +223,7 @@ Future<void> _pumpPage(
   );
   final initialState = AddDeviceState.initial().copyWith(
     selectedDevice: selectedDevice,
-    connectionStates: {selectedDevice.id: BleConnectionState.connected},
+    connectionStates: {selectedDevice.id: connectionState},
     onboardingDeviceType: 'fbox',
   );
   final hardwareGateway = gateway ?? _RecordingHardwareGateway();

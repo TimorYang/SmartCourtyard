@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../../../shared/widgets/flinx_fbox_control_assets.dart';
 import '../../../../shared/widgets/flinx_door_command_button.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/f_box_wiring_test_controller.dart';
@@ -15,8 +16,7 @@ import '../navigation/onboarding_device_navigation.dart';
 class FBoxWiringTestAssetPaths {
   const FBoxWiringTestAssetPaths._();
 
-  static const pbControl =
-      'assets/icons/add_device/f_box_wiring_test_pb_control.png';
+  static const pbControl = FlinxFBoxControlAssetPaths.pbControl;
 }
 
 class FBoxWiringTestPage extends ConsumerStatefulWidget {
@@ -227,8 +227,7 @@ class _FBoxWiringTestPageState extends ConsumerState<FBoxWiringTestPage> {
     required FBoxWiringTestState commandState,
   }) {
     final errorMessage = switch (commandState.error) {
-      FBoxWiringTestError.noConnectedDevice =>
-        l10n.fBoxWiringTestNoConnectedDevice,
+      FBoxWiringTestError.noConnectedDevice => null,
       FBoxWiringTestError.commandRejected => l10n.fBoxWiringTestCommandRejected,
       FBoxWiringTestError.commandFailed => l10n.fBoxWiringTestCommandFailed,
       null => null,

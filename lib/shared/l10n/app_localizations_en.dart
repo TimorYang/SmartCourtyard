@@ -1208,10 +1208,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fBoxWiringTestCloseAction => 'Close door';
 
   @override
-  String get fBoxWiringTestNoConnectedDevice =>
-      'Connect the F-box over Bluetooth before testing.';
-
-  @override
   String get fBoxWiringTestCommandRejected =>
       'The command was not accepted. Try again.';
 
@@ -2520,6 +2516,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deviceCommandMoreSettingsTitle => 'More settings';
+
+  @override
+  String get deviceCommandControlMethod => 'Control method';
 
   @override
   String get deviceCommandActionOpen => 'Open';

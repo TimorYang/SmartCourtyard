@@ -1,12 +1,15 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:flinx/app/theme/app_design_tokens.dart';
 import 'package:flinx/features/add_device/application/providers.dart';
 import 'package:flinx/features/add_device/domain/entities/onboarding_device_key.dart';
 import 'package:flinx/features/add_device/domain/entities/onboarded_force_door.dart';
 import 'package:flinx/features/add_device/domain/repositories/add_device_onboarding_repository.dart';
 import 'package:flinx/features/add_device/domain/use_cases/fetch_onboarding_device_key_use_case.dart';
+import 'package:flinx/features/add_device/presentation/navigation/f_box_wiring_test_route.dart';
 import 'package:flinx/features/device_control/application/device_command_controller.dart';
+import 'package:flinx/features/device_control/domain/entities/door_control_mode.dart';
 import 'package:flinx/features/device_control/domain/entities/door_detail.dart';
 import 'package:flinx/features/device_control/domain/entities/about_device_info.dart';
 import 'package:flinx/features/device_control/domain/entities/door_device.dart';
@@ -28,6 +31,7 @@ import 'package:flinx/features/settings/domain/repositories/door_settings_reposi
 import 'package:flinx/platform_bridge/hardware_models.dart';
 import 'package:flinx/platform_bridge/mock_hardware_gateway.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
+import 'package:flinx/shared/widgets/flinx_door_command_button.dart';
 import 'package:flinx/shared/widgets/flinx_switch.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -174,6 +178,331 @@ void main() {
     expect(gateway.commands.last, DoorCommand.close);
     expect(find.text('Close command sent (0x1002).'), findsOneWidget);
     expect(reports.last.action, OperationReportAction.close);
+  });
+
+  test('maps F-Box control mode using the label before the numeric value', () {
+    expect(
+      DoorControlMode.fromBackend(value: 1, label: 'PB wiring'),
+      DoorControlMode.pb,
+    );
+    expect(
+      DoorControlMode.fromBackend(value: 2, label: 'O/S/C wiring'),
+      DoorControlMode.osc,
+    );
+  });
+
+  test('maps F-Box control mode numeric fallback and unknown values', () {
+    expect(DoorControlMode.fromBackend(value: 1), DoorControlMode.osc);
+    expect(DoorControlMode.fromBackend(value: 2), DoorControlMode.pb);
+    expect(
+      DoorControlMode.fromBackend(value: 99, label: 'unknown'),
+      DoorControlMode.osc,
+    );
+    expect(DoorControlMode.fromBackend(), DoorControlMode.osc);
+  });
+
+  testWidgets('renders F-Box O/S/C controls and sends commands in order', (
+    tester,
+  ) async {
+    final gateway = _RecordingHardwareGateway();
+    const fBoxDevice = DoorDevice(
+      deviceId: 'fbox-device',
+      sn: 'fbox-sn',
+      deviceType: 'fbox',
+      bleName: 'Garage door',
+      bleConnectionStatus: 1,
+      wifiConnectionStatus: 1,
+      capabilities: ['DOOR_CONTROL'],
+    );
+
+    await _pumpDevicePage(
+      tester,
+      gateway,
+      size: const Size(375, 812),
+      repository: const _DeviceListDoorDetailRepository([
+        fBoxDevice,
+      ], controlMode: 1),
+    );
+
+    expect(find.text('Operated cycles'), findsNothing);
+    expect(find.text('Remaining'), findsNothing);
+    expect(find.text('More settings'), findsNothing);
+    expect(
+      find.byKey(const ValueKey<String>('fbox-device-command-osc')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey<String>('fbox-device-command-pb')),
+      findsNothing,
+    );
+    expect(find.text('Control method'), findsOneWidget);
+    expect(find.text('About the device'), findsOneWidget);
+
+    final commandButtons = tester
+        .widgetList<FlinxDoorCommandButton>(
+          find.descendant(
+            of: find.byKey(const ValueKey<String>('fbox-device-command-osc')),
+            matching: find.byType(FlinxDoorCommandButton),
+          ),
+        )
+        .toList();
+    expect(commandButtons, hasLength(3));
+    expect(commandButtons.map((button) => button.size), everyElement(52));
+    expect(
+      commandButtons.map((button) => button.iconSize),
+      everyElement(AppSpacingTokens.deviceControlCommandButtonIconSize),
+    );
+
+    final close = find.byTooltip('Close');
+    final stop = find.byTooltip('Stop');
+    final open = find.byTooltip('Open');
+    expect(tester.getCenter(close).dx, lessThan(tester.getCenter(stop).dx));
+    expect(tester.getCenter(stop).dx, lessThan(tester.getCenter(open).dx));
+
+    await tester.tap(close);
+    await tester.pumpAndSettle();
+    expect(gateway.commands.last, DoorCommand.close);
+
+    await tester.tap(stop);
+    await tester.pumpAndSettle();
+    expect(gateway.commands.last, DoorCommand.stop);
+
+    await tester.tap(open);
+    await tester.pumpAndSettle();
+    expect(gateway.commands.last, DoorCommand.open);
+    expect(gateway.deviceIds.last, 'mock-ble-device');
+  });
+
+  testWidgets('renders the F-Box PB asset when PB is selected', (tester) async {
+    final gateway = _RecordingHardwareGateway();
+    const fBoxDevice = DoorDevice(
+      deviceId: 'fbox-device',
+      sn: 'fbox-sn',
+      deviceType: 'fbox',
+      bleName: 'Garage door',
+      bleConnectionStatus: 1,
+      wifiConnectionStatus: 1,
+      capabilities: ['DOOR_CONTROL'],
+    );
+
+    await _pumpDevicePage(
+      tester,
+      gateway,
+      repository: const _DeviceListDoorDetailRepository([
+        fBoxDevice,
+      ], controlMode: 2),
+    );
+
+    final pbControl = find.byKey(
+      const ValueKey<String>('fbox-device-command-pb'),
+    );
+    expect(pbControl, findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('fbox-device-command-osc')),
+      findsNothing,
+    );
+    final image = tester.widget<Image>(
+      find.descendant(of: pbControl, matching: find.byType(Image)),
+    );
+    expect(
+      (image.image as AssetImage).assetName,
+      'assets/icons/add_device/f_box_wiring_test_pb_control.png',
+    );
+
+    await tester.tap(pbControl);
+    await tester.pumpAndSettle();
+    expect(gateway.commands.last, DoorCommand.pb);
+    expect(find.text('PB command sent (0x1007).'), findsOneWidget);
+  });
+
+  testWidgets('uses an explicit O/S/C label before the PB numeric value', (
+    tester,
+  ) async {
+    const fBoxDevice = DoorDevice(
+      deviceId: 'fbox-device',
+      sn: 'fbox-sn',
+      deviceType: 'fbox',
+      bleName: 'Garage door',
+      bleConnectionStatus: 1,
+      wifiConnectionStatus: 1,
+      capabilities: ['DOOR_CONTROL'],
+    );
+
+    await _pumpDevicePage(
+      tester,
+      _RecordingHardwareGateway(),
+      repository: const _DeviceListDoorDetailRepository(
+        [fBoxDevice],
+        controlMode: 2,
+        controlModeLabel: 'O/S/C wiring',
+      ),
+    );
+
+    expect(
+      find.byKey(const ValueKey<String>('fbox-device-command-osc')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey<String>('fbox-device-command-pb')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('opens F-Box control method with the device-command source', (
+    tester,
+  ) async {
+    const fBoxDevice = DoorDevice(
+      deviceId: 'fbox-device',
+      sn: 'fbox-sn',
+      deviceType: 'fbox',
+      bleName: 'Garage door',
+      bleConnectionStatus: 1,
+      wifiConnectionStatus: 1,
+      capabilities: ['DOOR_CONTROL'],
+    );
+
+    await _pumpDevicePage(
+      tester,
+      _RecordingHardwareGateway(),
+      repository: const _DeviceListDoorDetailRepository([fBoxDevice]),
+    );
+
+    await tester.tap(
+      find.byKey(const ValueKey<String>('fbox-control-method-action')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('wiring source=device-command door=12 device=fbox-device'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('requires Bluetooth before opening F-Box control method', (
+    tester,
+  ) async {
+    const fBoxDevice = DoorDevice(
+      deviceId: 'fbox-device',
+      sn: 'fbox-sn',
+      deviceType: 'fbox',
+      bleName: 'Garage door',
+      bleConnectionStatus: 1,
+      wifiConnectionStatus: 1,
+      capabilities: ['DOOR_CONTROL'],
+    );
+
+    await _pumpDevicePage(
+      tester,
+      _DisconnectedHardwareGateway(),
+      repository: const _DeviceListDoorDetailRepository([fBoxDevice]),
+    );
+
+    await tester.tap(
+      find.byKey(const ValueKey<String>('fbox-control-method-action')),
+    );
+    await tester.pump();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(
+      find.text(
+        'Connect the selected device via Bluetooth to use Control method.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.textContaining('wiring source='), findsNothing);
+    toastification.dismissAll(delayForAnimation: false);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump();
+  });
+
+  testWidgets('opens About the device with the selected F-Box identifiers', (
+    tester,
+  ) async {
+    const fBoxDevice = DoorDevice(
+      deviceId: 'fbox-device',
+      sn: 'fbox-sn',
+      deviceType: 'fbox',
+      bleName: 'Garage door',
+      bleConnectionStatus: 1,
+      wifiConnectionStatus: 1,
+      capabilities: ['DOOR_CONTROL'],
+    );
+
+    await _pumpDevicePage(
+      tester,
+      _RecordingHardwareGateway(),
+      repository: const _DeviceListDoorDetailRepository([fBoxDevice]),
+    );
+
+    await tester.tap(
+      find.byKey(const ValueKey<String>('fbox-about-device-action')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('about door=12 device=fbox-device'), findsOneWidget);
+  });
+
+  testWidgets('centers and constrains F-Box content on a wide window', (
+    tester,
+  ) async {
+    const fBoxDevice = DoorDevice(
+      deviceId: 'fbox-device',
+      sn: 'fbox-sn',
+      deviceType: 'fbox',
+      bleName: 'Garage door',
+      bleConnectionStatus: 1,
+      wifiConnectionStatus: 1,
+      capabilities: ['DOOR_CONTROL'],
+    );
+
+    await _pumpDevicePage(
+      tester,
+      _RecordingHardwareGateway(),
+      size: const Size(1000, 900),
+      repository: const _DeviceListDoorDetailRepository([fBoxDevice]),
+    );
+
+    final card = find.byKey(
+      const ValueKey<String>('fbox-control-method-action'),
+    );
+    expect(tester.getTopLeft(card).dx, greaterThan(100));
+    expect(tester.getSize(card).width, lessThan(350));
+  });
+
+  testWidgets('allows a short F-Box window to scroll without overflow', (
+    tester,
+  ) async {
+    const fBoxDevice = DoorDevice(
+      deviceId: 'fbox-device',
+      sn: 'fbox-sn',
+      deviceType: 'fbox',
+      bleName: 'Garage door',
+      bleConnectionStatus: 1,
+      wifiConnectionStatus: 1,
+      capabilities: ['DOOR_CONTROL'],
+    );
+
+    await _pumpDevicePage(
+      tester,
+      _RecordingHardwareGateway(),
+      size: const Size(375, 500),
+      repository: const _DeviceListDoorDetailRepository([fBoxDevice]),
+    );
+
+    expect(tester.takeException(), isNull);
+    final scroll = find.byKey(
+      const PageStorageKey<String>('device-command-fbox-scroll'),
+    );
+    expect(scroll, findsOneWidget);
+    await tester.drag(scroll, const Offset(0, -250));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    await tester.ensureVisible(
+      find.byKey(const ValueKey<String>('fbox-about-device-action')),
+    );
+    expect(find.text('About the device'), findsOneWidget);
   });
 
   testWidgets('updates the door frame and state from attribute reports', (
@@ -1149,6 +1478,23 @@ Widget _buildPage(
               ),
             ),
             GoRoute(
+              path: FBoxWiringTestRoute.routePath,
+              builder: (context, state) => _RouteResultPage(
+                text:
+                    'wiring source=${state.uri.queryParameters['source']} '
+                    'door=${state.uri.queryParameters['doorId']} '
+                    'device=${state.uri.queryParameters['deviceId']}',
+              ),
+            ),
+            GoRoute(
+              path: AboutDevicePage.routePath,
+              builder: (context, state) => _RouteResultPage(
+                text:
+                    'about door=${state.uri.queryParameters['doorId']} '
+                    'device=${state.uri.queryParameters['deviceId']}',
+              ),
+            ),
+            GoRoute(
               path: DeviceSettingsPage.routePath,
               builder: (context, state) => DeviceSettingsPage(
                 doorId: state.uri.queryParameters['doorId'] ?? '',
@@ -1169,6 +1515,17 @@ Widget _buildPage(
       ),
     ),
   );
+}
+
+class _RouteResultPage extends StatelessWidget {
+  const _RouteResultPage({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(body: Center(child: Text(text)));
+  }
 }
 
 class _SettingsDeviceCapabilityRepository
@@ -1222,6 +1579,7 @@ class _CommandDoorSettingsRepository implements DoorSettingsRepository {
 Future<void> _pumpDevicePage(
   WidgetTester tester,
   MockHardwareGateway gateway, {
+  Size size = const Size(393, 852),
   DoorDetailRepository repository = const _FakeDoorDetailRepository(),
   DeviceCapabilityRepository capabilityRepository =
       const _SettingsDeviceCapabilityRepository(),
@@ -1232,7 +1590,7 @@ Future<void> _pumpDevicePage(
   Duration remotePollInterval = const Duration(seconds: 1),
   int remotePollMaxAttempts = 6,
 }) async {
-  tester.view.physicalSize = const Size(393, 852);
+  tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
@@ -1678,11 +2036,15 @@ class _FakeDoorDetailRepository implements DoorDetailRepository {
     ],
     this.doorType,
     this.positionPercent,
+    this.controlMode,
+    this.controlModeLabel,
   });
 
   final List<String> capabilities;
   final int? doorType;
   final double? positionPercent;
+  final int? controlMode;
+  final String? controlModeLabel;
 
   @override
   Future<DoorDetail> fetchDoorDetail({
@@ -1696,6 +2058,8 @@ class _FakeDoorDetailRepository implements DoorDetailRepository {
       doorStateLabel: 'Closed',
       doorType: doorType,
       positionPercent: positionPercent,
+      controlMode: controlMode,
+      controlModeLabel: controlModeLabel,
       operatedCycles: 123,
       remainingCycles: 4567,
       ledStatus: 1,
@@ -1822,7 +2186,11 @@ List<DoorDevice> _testDoorDevices() {
 }
 
 class _DeviceListDoorDetailRepository extends _FakeDoorDetailRepository {
-  const _DeviceListDoorDetailRepository(this.devices);
+  const _DeviceListDoorDetailRepository(
+    this.devices, {
+    super.controlMode,
+    super.controlModeLabel,
+  });
 
   final List<DoorDevice> devices;
 

@@ -1217,10 +1217,6 @@
   "@fBoxWiringTestCloseAction": {
     "description": "Accessibility label for the O/S/C close control"
   },
-  "fBoxWiringTestNoConnectedDevice": "Connect the F-box over Bluetooth before testing.",
-  "@fBoxWiringTestNoConnectedDevice": {
-    "description": "Shown when an F-box wiring test is attempted without a connected BLE device"
-  },
   "fBoxWiringTestCommandRejected": "The command was not accepted. Try again.",
   "@fBoxWiringTestCommandRejected": {
     "description": "Shown when the F-box rejects a wiring test command"
@@ -1966,6 +1962,7 @@
   "deviceCommandPartialOpenSettingUnavailable": "Partial-open positions are temporarily unavailable. Please try again.",
   "deviceCommandPartialOpenSettingFailed": "Unable to save the partial-open position. Please try again.",
   "deviceCommandMoreSettingsTitle": "More settings",
+  "deviceCommandControlMethod": "Control method",
   "deviceCommandActionOpen": "Open",
   "deviceCommandActionClose": "Close",
   "deviceCommandActionStop": "Stop",

@@ -314,6 +314,7 @@ class AppShapeTokens {
   static const upgradeCheckDialogRadius = 16.0;
   static const upgradeCheckActionRadius = 28.0;
   static const deviceControlCommandButtonRadius = 8.0;
+  static const deviceControlCardRadius = 7.0;
   static const fBoxWiringTestControlRadius = 12.0;
 }
 
@@ -324,6 +325,8 @@ class AppLayoutTokens {
   static const accountProfileThemeIconRightInset = 21.0;
   static const fBoxWiringTestLargeScreenMinWidth = 600.0;
   static const fBoxWiringTestContentMaxWidth = 680.0;
+  static const deviceControlLargeScreenMinWidth = 600.0;
+  static const deviceControlContentMaxWidth = 680.0;
 }
 
 class AppSpacingTokens {
@@ -340,6 +343,19 @@ class AppSpacingTokens {
   static const deviceControlCommandButtonIconSize = 30.0;
   static const deviceControlCommandButtonProgressSize = 24.0;
   static const deviceControlCommandButtonProgressStrokeWidth = 3.0;
+  static const deviceControlPageHorizontal = 20.0;
+  static const deviceControlFBoxHeaderHeight = 80.0;
+  static const deviceControlFBoxHeaderActionTop = 16.0;
+  static const deviceControlFBoxConnectionToContent = 12.0;
+  static const deviceControlFBoxStateToControls = 24.0;
+  static const deviceControlFBoxControlsToEntries = 24.0;
+  static const deviceControlFBoxContentBottom = 12.0;
+  static const deviceControlFBoxEntryHeight = 68.0;
+  static const deviceControlFBoxEntryGap = 12.0;
+  static const deviceControlFBoxEntryIconSize = 42.0;
+  static const deviceControlFBoxEntryIconGap = 10.0;
+  static const deviceControlFBoxEntryHorizontalPadding = 10.0;
+  static const deviceControlFBoxEntryVerticalPadding = 8.0;
   static const fBoxWiringTestNavigationActionTrailingSpacing = 4.0;
   static const fBoxWiringTestPageHorizontal = 20.0;
   static const fBoxWiringTestPageTop = 27.0;
@@ -350,7 +366,8 @@ class AppSpacingTokens {
   static const fBoxWiringTestDescriptionMaxWidth = 360.0;
   static const fBoxWiringTestPbControlSize = 170.0;
   static const fBoxWiringTestControlSize = 52.0;
-  static const fBoxWiringTestControlIconSize = 42.0;
+  static const fBoxWiringTestControlIconSize =
+      deviceControlCommandButtonIconSize;
   static const fBoxWiringTestControlGap = 40.0;
   static const fBoxWiringTestStatusIndicatorSize = 16.0;
   static const fBoxWiringTestStatusIndicatorGap = 12.0;

@@ -285,9 +285,10 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
                       fallbackIcon: Icons.info_outline,
                       title: l10n.deviceSettingsAboutDevice,
                       onTap: () => context.push(
-                        '${AboutDevicePage.routePath}'
-                        '?doorId=${Uri.encodeComponent(widget.doorId)}'
-                        '&deviceId=${Uri.encodeComponent(widget.deviceId)}',
+                        AboutDevicePage.location(
+                          doorId: widget.doorId,
+                          deviceId: widget.deviceId,
+                        ),
                       ),
                     ),
                     if (capabilitiesState.supports(
@@ -624,6 +625,16 @@ class AboutDevicePage extends ConsumerStatefulWidget {
 
   static const routeName = 'about-device';
   static const routePath = '/device-settings/about';
+
+  static String location({required String doorId, required String deviceId}) {
+    return Uri(
+      path: routePath,
+      queryParameters: <String, String>{
+        'doorId': doorId,
+        'deviceId': deviceId,
+      },
+    ).toString();
+  }
 
   final String doorId;
   final String deviceId;

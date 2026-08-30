@@ -2294,12 +2294,6 @@ abstract class AppLocalizations {
   /// **'Close door'**
   String get fBoxWiringTestCloseAction;
 
-  /// Shown when an F-box wiring test is attempted without a connected BLE device
-  ///
-  /// In en, this message translates to:
-  /// **'Connect the F-box over Bluetooth before testing.'**
-  String get fBoxWiringTestNoConnectedDevice;
-
   /// Shown when the F-box rejects a wiring test command
   ///
   /// In en, this message translates to:
@@ -4615,6 +4609,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'More settings'**
   String get deviceCommandMoreSettingsTitle;
+
+  /// No description provided for @deviceCommandControlMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Control method'**
+  String get deviceCommandControlMethod;
 
   /// No description provided for @deviceCommandActionOpen.
   ///

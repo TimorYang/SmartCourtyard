@@ -29,6 +29,7 @@ class FlinxDoorCommandButton extends StatelessWidget {
       onPressed: onPressed,
       style: IconButton.styleFrom(
         fixedSize: Size.square(size),
+        padding: EdgeInsets.zero,
         backgroundColor: AppColors.deviceControlPrimaryAction,
         disabledBackgroundColor: AppColors.deviceControlPrimaryAction
             .withValues(
