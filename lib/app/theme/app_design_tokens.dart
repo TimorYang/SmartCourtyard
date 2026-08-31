@@ -216,6 +216,18 @@ class AppColors {
   static const systemPermissionsCard = Color(0xFFF3F4F6);
   static const systemPermissionsGranted = Color(0xFF176CFF);
   static const systemPermissionsDenied = Color(0xFFE52323);
+  static const httpProxySettingsRowSurface = Color(0xFFF3F4F6);
+  static const httpProxySettingsFieldSurface = Color(0xFFFFFFFF);
+  static const httpProxySettingsFieldBorder = Color(0xFFD8DADD);
+  static const httpProxySettingsFieldFocusedBorder = Color(0xFF176CFF);
+  static const httpProxySettingsFieldDisabledBorder = Color(0xFFE7E9EC);
+  static const httpProxySettingsFieldError = Color(0xFFE52323);
+  static const httpProxySettingsWarningSurface = Color(0xFFFFF7E8);
+  static const httpProxySettingsWarningIcon = Color(0xFFFF9800);
+  static const httpProxySettingsAction = Color(0xFF176CFF);
+  static const httpProxySettingsActionForeground = Color(0xFFFFFFFF);
+  static const httpProxySettingsActionDisabled = Color(0xFFB5D8F5);
+  static const httpProxySettingsActionDisabledForeground = Color(0xFFFFFFFF);
   static const upgradeCheckBackground = Color(0xFFF5F7FB);
   static const upgradeCheckCard = Color(0xFFFFFFFF);
   static const upgradeCheckDivider = Color(0xFFE9EBEF);
@@ -310,6 +322,10 @@ class AppShapeTokens {
   static const safetySensorManagementDialogRadius = 16.0;
   static const smartOpenerAddedDeviceCardRadius = 16.0;
   static const systemPermissionsCardRadius = 16.0;
+  static const httpProxySettingsRowRadius = 16.0;
+  static const httpProxySettingsWarningRadius = 12.0;
+  static const httpProxySettingsFieldRadius = 12.0;
+  static const httpProxySettingsActionRadius = 28.0;
   static const upgradeCheckCardRadius = 16.0;
   static const upgradeCheckDialogRadius = 16.0;
   static const upgradeCheckActionRadius = 28.0;
@@ -327,6 +343,14 @@ class AppLayoutTokens {
   static const fBoxWiringTestContentMaxWidth = 680.0;
   static const deviceControlLargeScreenMinWidth = 600.0;
   static const deviceControlContentMaxWidth = 680.0;
+  static const httpProxySettingsSwitchHitWidth = 64.0;
+  static const httpProxySettingsSwitchHitHeight = 48.0;
+  static const httpProxySettingsProgressSize = 20.0;
+  static const httpProxySettingsProgressStrokeWidth = 2.0;
+  static const httpProxySettingsWarningIconSize = 20.0;
+  static const httpProxySettingsChevronSize = 24.0;
+  static const httpProxySettingsContentMaxWidth = 430.0;
+  static const httpProxySettingsFieldFocusedBorderWidth = 2.0;
 }
 
 class AppSpacingTokens {
@@ -369,6 +393,24 @@ class AppSpacingTokens {
   static const fBoxWiringTestControlIconSize =
       deviceControlCommandButtonIconSize;
   static const fBoxWiringTestControlGap = 40.0;
+  static const httpProxySettingsPageHorizontal = 24.0;
+  static const httpProxySettingsPageVertical = 24.0;
+  static const httpProxySettingsDescriptionGap = 24.0;
+  static const httpProxySettingsSectionGap = 20.0;
+  static const httpProxySettingsFieldGap = 16.0;
+  static const httpProxySettingsWarningGap = 24.0;
+  static const httpProxySettingsActionGap = 24.0;
+  static const httpProxySettingsActionHeight = 52.0;
+  static const httpProxySettingsRowGap = 20.0;
+  static const httpProxySettingsRowHorizontal = 16.0;
+  static const httpProxySettingsRowVertical = 16.0;
+  static const httpProxySettingsRowTextGap = 6.0;
+  static const httpProxySettingsWarningPadding = 16.0;
+  static const httpProxySettingsWarningIconTop = 1.0;
+  static const httpProxySettingsWarningIconGap = 12.0;
+  static const httpProxySettingsWarningTextGap = 8.0;
+  static const httpProxySettingsFieldHorizontal = 16.0;
+  static const httpProxySettingsFieldVertical = 16.0;
   static const fBoxWiringTestStatusIndicatorSize = 16.0;
   static const fBoxWiringTestStatusIndicatorGap = 12.0;
   static const fBoxWiringTestErrorTopSpacing = 10.0;
@@ -1837,6 +1879,118 @@ class AppTextTokens {
       color: AppColors.textMuted,
       fontSize: 12,
       fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle httpProxySettingsDescription(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 14,
+      fontWeight: FontWeight.w400,
+      height: 1.45,
+    );
+  }
+
+  static TextStyle httpProxySettingsRowTitle(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 16,
+      fontWeight: FontWeight.w500,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle httpProxySettingsRowStatus(
+    TextTheme textTheme, {
+    required bool enabled,
+  }) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: enabled ? AppColors.authSuccess : AppColors.textMuted,
+      fontSize: 12,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle httpProxySettingsFieldValue(TextTheme textTheme) {
+    return (textTheme.bodyLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 16,
+      fontWeight: FontWeight.w400,
+      height: 1.2,
+    );
+  }
+
+  static TextStyle httpProxySettingsFieldLabel(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 14,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle httpProxySettingsFieldHint(TextTheme textTheme) {
+    return (textTheme.bodyLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textHint,
+      fontSize: 16,
+      fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle httpProxySettingsFieldHelper(TextTheme textTheme) {
+    return (textTheme.bodySmall ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 12,
+      fontWeight: FontWeight.w400,
+      height: 1.3,
+    );
+  }
+
+  static TextStyle httpProxySettingsFieldError(TextTheme textTheme) {
+    return (textTheme.bodySmall ?? const TextStyle()).copyWith(
+      color: AppColors.httpProxySettingsFieldError,
+      fontSize: 12,
+      fontWeight: FontWeight.w400,
+      height: 1.3,
+    );
+  }
+
+  static TextStyle httpProxySettingsFieldDisabledLabel(TextTheme textTheme) {
+    return httpProxySettingsFieldLabel(
+      textTheme,
+    ).copyWith(color: AppColors.textHint);
+  }
+
+  static TextStyle httpProxySettingsFieldDisabledHint(TextTheme textTheme) {
+    return httpProxySettingsFieldHint(
+      textTheme,
+    ).copyWith(color: AppColors.textHint);
+  }
+
+  static TextStyle httpProxySettingsWarning(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 13,
+      fontWeight: FontWeight.w500,
+      height: 1.4,
+    );
+  }
+
+  static TextStyle httpProxySettingsCertificateHint(TextTheme textTheme) {
+    return (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+      color: AppColors.textMuted,
+      fontSize: 13,
+      fontWeight: FontWeight.w400,
+      height: 1.4,
+    );
+  }
+
+  static TextStyle httpProxySettingsAction(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.httpProxySettingsActionForeground,
+      fontSize: 16,
+      fontWeight: FontWeight.w600,
       height: 1.2,
     );
   }

@@ -88,7 +88,9 @@ flutter build appbundle --dart-define-from-file=config/env/prod.json
 - 请求与响应默认使用 JSON。
 - 从请求 `extra` 读取 `requestId`，写入 `X-Request-Id` 请求头。
 - 记录请求开始、完成和失败日志。
-- Debug 模式下按 `NetworkDebugSettings` 配置抓包代理。
+- 读取“账号 → 关于 → 硬件诊断 → HTTP Proxy”保存的应用级手动代理配置。
+- Debug、Profile 和 Release 的移动端构建使用同一套代理规则：开关打开时走已配置
+  的代理，关闭时直连；始终保留系统 TLS 证书校验。
 
 Provider 的典型依赖关系：
 
@@ -430,16 +432,16 @@ logger.info(
 
 ## 12. 抓包调试
 
-Debug 构建可通过 `lib/core/network/network_debug_settings.dart` 配置代理：
+代理配置通过页面“账号 → 关于 → 硬件诊断 → HTTP Proxy”维护，不再通过源码中的
+个人地址或 Debug 常量配置。Host/IP 只填写主机名、IPv4 或 IPv6 literal，端口范围
+为 `1–65535`。配置写入 Application Support 下的 `network_proxy_settings.json`，
+应用启动时先读取配置，再创建共享 Dio；保存成功后会重建 Dio，使后续请求立即使用
+新配置，进行中的请求继续使用原连接。
 
-```dart
-static const proxy = 'PROXY 192.168.1.10:9090';
-static const allowInvalidProxyCertificates = false;
-```
-
-真机必须使用电脑的局域网 IP；模拟器可以按平台情况使用 `127.0.0.1`。优先安装并信任抓包工具根证书，不要长期启用无效证书放行。
-
-代理和证书放行只在 Debug 模式生效。个人代理地址不应提交到共享分支。
+页面开关关闭时所有后续请求直连；开启时所有移动端构建使用该代理。Android 不读取
+系统 HTTP 代理，也不会使用系统代理覆盖页面配置。代理仅用于测试，不支持代理账号
+密码，也不提供无效 HTTPS 证书放行。请先安装并信任抓包工具根证书，HTTPS 请求仍
+按正常系统证书校验处理。
 
 ## 13. 启动网络探测
 

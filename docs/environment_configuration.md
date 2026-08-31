@@ -27,12 +27,18 @@ Facebook 的 App ID、Client Token 和平台回调配置还需要同步填写到
 
 ## 调试抓包
 
-Android Debug 构建会读取设备当前的系统 HTTP 代理，并让 Dio 使用该代理，因此配置 Charles、Proxyman 或 mitmproxy 后无需在项目中填写电脑局域网 IP。修改手机 Wi-Fi 代理后，重新启动 App 以刷新代理地址。
+HTTP Proxy 测试配置位于“账号 → 关于 → 硬件诊断 → HTTP Proxy”，Debug、Profile
+和 Release 构建均可使用。页面中的开关是唯一的代理控制来源：开启后，所有后续
+HTTP 请求使用页面填写的 Host/IP 与端口；关闭后直连。Android 不会再自动读取手机
+Wi-Fi 的系统代理，因此系统代理不会覆盖页面配置。
 
-iOS Debug 构建继续使用 `NetworkDebugSettings.proxy` 中的手动代理配置，格式为 Dart `HttpClient.findProxy` 使用的 `PROXY <电脑局域网 IP>:<端口>`。Android 不会读取该手动配置，两个平台的调试代理互不影响。
+配置保存在应用 Application Support 目录的 `network_proxy_settings.json` 中，应用
+重启后仍然保留。默认状态为关闭；文件缺失、损坏或配置非法时会回退为关闭状态。
+Host/IP 只填写主机名、IPv4 或 IPv6 literal，不包含协议、路径或端口。页面不会发起
+额外的连通性测试，实际业务请求负责验证代理是否可用。
 
-`NetworkDebugSettings.allowInvalidProxyCertificates` 仅用于尚未在设备安装抓包根证书时接受代理签发的 HTTPS 证书。它只在 debug 模式生效；release/profile 构建会忽略代理与证书放行配置。
-
-优先在设备中安装并信任抓包工具根证书，然后仅设置代理，不要长期启用无效证书放行。
+代理仅用于测试。请先在设备中安装并信任 Charles、Proxyman 或 mitmproxy 等工具的
+根证书；应用始终执行系统 HTTPS 证书校验，不提供无效证书放行，也不支持代理账号
+密码。
 
 `FLINX_CLIENT_AUTHORIZATION` 会随移动端应用分发，不能作为真正的服务端秘密。服务端必须把它视为公开客户端标识，并继续实施用户认证、授权、限流与滥用防护。
