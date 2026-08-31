@@ -196,6 +196,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get registerConfirmPasswordPlaceholder => '请再次输入密码';
 
   @override
+  String get registerPasswordRule => '须包含至少一个小写字母、一个大写字母和一个数字，长度为 8 至 16 个字符。';
+
+  @override
   String get registerPasswordPending => '密码注册功能暂未接入';
 
   @override

@@ -464,6 +464,12 @@ abstract class AppLocalizations {
   /// **'Enter password again'**
   String get registerConfirmPasswordPlaceholder;
 
+  /// Password complexity requirements shown below the register action
+  ///
+  /// In en, this message translates to:
+  /// **'Contain at least one lowercase letter, one uppercase letter, and one number, with a length between 8 and 16 characters.'**
+  String get registerPasswordRule;
+
   /// Temporary message shown when the user submits the register password form
   ///
   /// In en, this message translates to:

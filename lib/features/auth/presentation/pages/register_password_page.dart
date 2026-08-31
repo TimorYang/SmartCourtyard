@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
@@ -111,6 +112,11 @@ class _RegisterPasswordPageState extends ConsumerState<RegisterPasswordPage> {
           onPressed: state.canSubmit
               ? () => _submit(context, controller)
               : null,
+        ),
+        const SizedBox(height: 20),
+        Text(
+          l10n.registerPasswordRule,
+          style: AppTextTokens.authPasswordRule(Theme.of(context).textTheme),
         ),
       ],
     );
