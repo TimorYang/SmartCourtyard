@@ -1,12 +1,12 @@
-package com.flinx.flinx.flinxhardware.bridge
+package com.feizhou.znty.flinxhardware.bridge
 
 import android.os.Handler
 import android.os.Looper
-import com.flinx.flinx.flinxhardware.bluetooth.BleManager
-import com.flinx.flinx.flinxhardware.permissions.PermissionManager
-import com.flinx.flinx.flinxhardware.protocol.DeviceBleProtocolConfig
-import com.flinx.flinx.flinxhardware.protocol.DeviceBleFrame
-import com.flinx.flinx.flinxhardware.protocol.DeviceRemotePairingResult
+import com.feizhou.znty.flinxhardware.bluetooth.BleManager
+import com.feizhou.znty.flinxhardware.permissions.PermissionManager
+import com.feizhou.znty.flinxhardware.protocol.DeviceBleProtocolConfig
+import com.feizhou.znty.flinxhardware.protocol.DeviceBleFrame
+import com.feizhou.znty.flinxhardware.protocol.DeviceRemotePairingResult
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -497,7 +497,7 @@ class HardwareHostApiImpl(
     requestId: String, deviceId: String, command: Int, responseCommand: Int = command,
     data: ByteArray = ByteArray(0), timeoutMillis: Long = 15_000L,
     operation: String? = null, control: Int? = null,
-    callback: (Result<T>) -> Unit, transform: (com.flinx.flinx.flinxhardware.protocol.DeviceBleFrame) -> T,
+    callback: (Result<T>) -> Unit, transform: (com.feizhou.znty.flinxhardware.protocol.DeviceBleFrame) -> T,
   ) {
     permissionManager.ensureBleConnectPreconditions()
     bleManager.executeProtocolCommand(
@@ -540,13 +540,13 @@ class HardwareHostApiImpl(
     transform(parsed.first, parsed.second)
   }
 
-  private fun handleProtocolFrame(deviceId: String, frame: com.flinx.flinx.flinxhardware.protocol.DeviceBleFrame) {
+  private fun handleProtocolFrame(deviceId: String, frame: com.feizhou.znty.flinxhardware.protocol.DeviceBleFrame) {
     if (frame.command != DeviceBleProtocolConfig.commandAttributeReport) return
     runCatching { attributesSnapshot(null, deviceId, frame, DeviceAttributeReportOriginDto.ACTIVE_REPORT) }
       .onSuccess { snapshot -> runOnMainThread { hardwareFlutterApi.onDeviceAttributesChanged(snapshot) {} } }
   }
 
-  private fun attributesSnapshot(requestId: String?, deviceId: String, frame: com.flinx.flinx.flinxhardware.protocol.DeviceBleFrame, origin: DeviceAttributeReportOriginDto): DeviceAttributeSnapshotDto =
+  private fun attributesSnapshot(requestId: String?, deviceId: String, frame: com.feizhou.znty.flinxhardware.protocol.DeviceBleFrame, origin: DeviceAttributeReportOriginDto): DeviceAttributeSnapshotDto =
     DeviceAttributeSnapshotDto(requestId, deviceId, frame.sequence.toLong(), System.currentTimeMillis(), origin, DeviceAttributeProtocol.parse(frame.data))
 
   private fun remoteList(requestId: String, deviceId: String, data: ByteArray): RemoteControlListResultDto {

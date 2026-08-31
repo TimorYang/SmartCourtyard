@@ -69,10 +69,28 @@ class AppLocalizationsZh extends AppLocalizations {
   String get operationRecordActionStop => '停止';
 
   @override
+  String get operationRecordActionAutoCloseToggle => '切换自动关门';
+
+  @override
   String get operationRecordActionLedOn => '开灯';
 
   @override
   String get operationRecordActionLedOff => '关灯';
+
+  @override
+  String get operationRecordActionLedOffDelayChanged => '修改延迟关灯';
+
+  @override
+  String get operationRecordActionPartialOpenChanged => '修改部分开门';
+
+  @override
+  String get operationRecordActionAutoCloseDelayChanged => '修改自动关门延迟';
+
+  @override
+  String get operationRecordActionDoorOpenReminderToggle => '切换开门提醒';
+
+  @override
+  String get operationRecordActionDoorOpenReminderDelayChanged => '修改开门提醒延迟';
 
   @override
   String get operationRecordActionUnknown => '未知操作';

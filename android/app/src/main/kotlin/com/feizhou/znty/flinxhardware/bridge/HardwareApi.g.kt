@@ -2,7 +2,7 @@
 // See also: https://pub.dev/packages/pigeon
 @file:Suppress("UNCHECKED_CAST", "ArrayInDataClass")
 
-package com.flinx.flinx.flinxhardware.bridge
+package com.feizhou.znty.flinxhardware.bridge
 
 import android.util.Log
 import io.flutter.plugin.common.BasicMessageChannel

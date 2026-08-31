@@ -1,4 +1,4 @@
-package com.flinx.flinx.flinxhardware.bridge
+package com.feizhou.znty.flinxhardware.bridge
 
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals

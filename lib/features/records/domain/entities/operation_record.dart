@@ -46,4 +46,17 @@ class OperationRecord {
   }
 }
 
-enum OperationRecordAction { open, close, stop, ledOn, ledOff, unknown }
+enum OperationRecordAction {
+  open,
+  close,
+  stop,
+  autoCloseToggle,
+  ledOn,
+  ledOff,
+  ledOffDelayChanged,
+  partialOpenChanged,
+  autoCloseDelayChanged,
+  doorOpenReminderToggle,
+  doorOpenReminderDelayChanged,
+  unknown,
+}

@@ -6,9 +6,9 @@ import 'package:pigeon/pigeon.dart';
     dartOut: 'lib/platform_bridge/pigeon/generated/hardware_api.g.dart',
     swiftOut: 'ios/Runner/FLINXHardware/Bridge/HardwareApi.g.swift',
     kotlinOut:
-        'android/app/src/main/kotlin/com/flinx/flinx/flinxhardware/bridge/HardwareApi.g.kt',
+        'android/app/src/main/kotlin/com/feizhou/znty/flinxhardware/bridge/HardwareApi.g.kt',
     kotlinOptions: KotlinOptions(
-      package: 'com.flinx.flinx.flinxhardware.bridge',
+      package: 'com.feizhou.znty.flinxhardware.bridge',
     ),
   ),
 )

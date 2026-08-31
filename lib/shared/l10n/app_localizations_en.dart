@@ -79,10 +79,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get operationRecordActionStop => 'Stop door';
 
   @override
+  String get operationRecordActionAutoCloseToggle => 'Toggle auto close';
+
+  @override
   String get operationRecordActionLedOn => 'LED on';
 
   @override
   String get operationRecordActionLedOff => 'LED off';
+
+  @override
+  String get operationRecordActionLedOffDelayChanged => 'Change LED off delay';
+
+  @override
+  String get operationRecordActionPartialOpenChanged => 'Change partial open';
+
+  @override
+  String get operationRecordActionAutoCloseDelayChanged =>
+      'Change auto close delay';
+
+  @override
+  String get operationRecordActionDoorOpenReminderToggle =>
+      'Toggle door open reminder';
+
+  @override
+  String get operationRecordActionDoorOpenReminderDelayChanged =>
+      'Change door open reminder delay';
 
   @override
   String get operationRecordActionUnknown => 'Unknown action';

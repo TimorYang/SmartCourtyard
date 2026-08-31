@@ -218,6 +218,12 @@ abstract class AppLocalizations {
   /// **'Stop door'**
   String get operationRecordActionStop;
 
+  /// No description provided for @operationRecordActionAutoCloseToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle auto close'**
+  String get operationRecordActionAutoCloseToggle;
+
   /// No description provided for @operationRecordActionLedOn.
   ///
   /// In en, this message translates to:
@@ -229,6 +235,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'LED off'**
   String get operationRecordActionLedOff;
+
+  /// No description provided for @operationRecordActionLedOffDelayChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Change LED off delay'**
+  String get operationRecordActionLedOffDelayChanged;
+
+  /// No description provided for @operationRecordActionPartialOpenChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Change partial open'**
+  String get operationRecordActionPartialOpenChanged;
+
+  /// No description provided for @operationRecordActionAutoCloseDelayChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Change auto close delay'**
+  String get operationRecordActionAutoCloseDelayChanged;
+
+  /// No description provided for @operationRecordActionDoorOpenReminderToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle door open reminder'**
+  String get operationRecordActionDoorOpenReminderToggle;
+
+  /// No description provided for @operationRecordActionDoorOpenReminderDelayChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Change door open reminder delay'**
+  String get operationRecordActionDoorOpenReminderDelayChanged;
 
   /// No description provided for @operationRecordActionUnknown.
   ///

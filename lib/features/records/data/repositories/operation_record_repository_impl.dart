@@ -178,8 +178,16 @@ extension OperationRecordResponseDtoMapper on OperationRecordResponseDto {
       'OPEN' => OperationRecordAction.open,
       'CLOSE' => OperationRecordAction.close,
       'STOP' => OperationRecordAction.stop,
+      'AUTO_CLOSE_TOGGLE' => OperationRecordAction.autoCloseToggle,
       'LED_ON' => OperationRecordAction.ledOn,
       'LED_OFF' => OperationRecordAction.ledOff,
+      'LED_OFF_DELAY_CHANGED' => OperationRecordAction.ledOffDelayChanged,
+      'PARTIAL_OPEN_CHANGED' => OperationRecordAction.partialOpenChanged,
+      'AUTO_CLOSE_DELAY_CHANGED' => OperationRecordAction.autoCloseDelayChanged,
+      'DOOR_OPEN_REMINDER_TOGGLE' =>
+        OperationRecordAction.doorOpenReminderToggle,
+      'DOOR_OPEN_REMINDER_DELAY_CHANGED' =>
+        OperationRecordAction.doorOpenReminderDelayChanged,
       _ => OperationRecordAction.unknown,
     },
     occurredAt: occurredAt == null

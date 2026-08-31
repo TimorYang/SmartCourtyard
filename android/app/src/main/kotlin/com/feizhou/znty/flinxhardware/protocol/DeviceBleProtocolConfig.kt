@@ -1,4 +1,4 @@
-package com.flinx.flinx.flinxhardware.protocol
+package com.feizhou.znty.flinxhardware.protocol
 
 import java.nio.ByteBuffer
 import java.nio.ByteOrder

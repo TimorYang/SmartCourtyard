@@ -1,4 +1,4 @@
-package com.flinx.flinx.flinxhardware.permissions
+package com.feizhou.znty.flinxhardware.permissions
 
 import android.Manifest
 import android.app.Activity
@@ -14,9 +14,9 @@ import android.net.Uri
 import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.flinx.flinx.flinxhardware.bridge.PermissionKindDto
-import com.flinx.flinx.flinxhardware.bridge.PermissionSnapshotDto
-import com.flinx.flinx.flinxhardware.bridge.PermissionStatusDto
+import com.feizhou.znty.flinxhardware.bridge.PermissionKindDto
+import com.feizhou.znty.flinxhardware.bridge.PermissionSnapshotDto
+import com.feizhou.znty.flinxhardware.bridge.PermissionStatusDto
 
 /** 权限管理器：负责权限快照读取与运行时权限请求。 */
 class PermissionManager(
@@ -156,19 +156,19 @@ class PermissionManager(
   /** 判断当前系统是否满足 BLE 扫描所需前置条件。 */
   fun ensureBleScanPreconditions() {
     if (!hasBluetoothPermission()) {
-      throw com.flinx.flinx.flinxhardware.bridge.FlutterError(
+      throw com.feizhou.znty.flinxhardware.bridge.FlutterError(
         "permission_denied",
         "Bluetooth scan permission is not granted.",
       )
     }
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S && !isLocationServiceEnabled()) {
-      throw com.flinx.flinx.flinxhardware.bridge.FlutterError(
+      throw com.feizhou.znty.flinxhardware.bridge.FlutterError(
         "location_services_disabled",
         "Location services must be enabled for BLE scanning on this Android version.",
       )
     }
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !isLocationServiceEnabled()) {
-      throw com.flinx.flinx.flinxhardware.bridge.FlutterError(
+      throw com.feizhou.znty.flinxhardware.bridge.FlutterError(
         "location_services_disabled",
         "Location services must be enabled for reliable BLE scanning on this device.",
       )
@@ -178,7 +178,7 @@ class PermissionManager(
   /** 判断当前系统是否满足 BLE 连接所需前置条件。 */
   fun ensureBleConnectPreconditions() {
     if (!hasBluetoothPermission()) {
-      throw com.flinx.flinx.flinxhardware.bridge.FlutterError(
+      throw com.feizhou.znty.flinxhardware.bridge.FlutterError(
         "permission_denied",
         "Bluetooth connection permission is not granted.",
       )

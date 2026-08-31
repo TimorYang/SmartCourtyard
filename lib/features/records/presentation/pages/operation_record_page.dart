@@ -387,8 +387,20 @@ extension on OperationRecordAction {
     OperationRecordAction.open => l10n.operationRecordActionOpen,
     OperationRecordAction.close => l10n.operationRecordActionClose,
     OperationRecordAction.stop => l10n.operationRecordActionStop,
+    OperationRecordAction.autoCloseToggle =>
+      l10n.operationRecordActionAutoCloseToggle,
     OperationRecordAction.ledOn => l10n.operationRecordActionLedOn,
     OperationRecordAction.ledOff => l10n.operationRecordActionLedOff,
+    OperationRecordAction.ledOffDelayChanged =>
+      l10n.operationRecordActionLedOffDelayChanged,
+    OperationRecordAction.partialOpenChanged =>
+      l10n.operationRecordActionPartialOpenChanged,
+    OperationRecordAction.autoCloseDelayChanged =>
+      l10n.operationRecordActionAutoCloseDelayChanged,
+    OperationRecordAction.doorOpenReminderToggle =>
+      l10n.operationRecordActionDoorOpenReminderToggle,
+    OperationRecordAction.doorOpenReminderDelayChanged =>
+      l10n.operationRecordActionDoorOpenReminderDelayChanged,
     OperationRecordAction.unknown => l10n.operationRecordActionUnknown,
   };
 }

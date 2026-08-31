@@ -1,12 +1,12 @@
-package com.flinx.flinx
+package com.feizhou.znty
 
 import android.content.Intent
 import android.net.Proxy
-import com.flinx.flinx.flinxhardware.bluetooth.BleManager
-import com.flinx.flinx.flinxhardware.bridge.HardwareHostApi
-import com.flinx.flinx.flinxhardware.bridge.HardwareFlutterApi
-import com.flinx.flinx.flinxhardware.bridge.HardwareHostApiImpl
-import com.flinx.flinx.flinxhardware.permissions.PermissionManager
+import com.feizhou.znty.flinxhardware.bluetooth.BleManager
+import com.feizhou.znty.flinxhardware.bridge.HardwareHostApi
+import com.feizhou.znty.flinxhardware.bridge.HardwareFlutterApi
+import com.feizhou.znty.flinxhardware.bridge.HardwareHostApiImpl
+import com.feizhou.znty.flinxhardware.permissions.PermissionManager
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel

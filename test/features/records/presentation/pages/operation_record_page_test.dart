@@ -10,6 +10,30 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  const expectedActionLabels = <OperationRecordAction, String>{
+    OperationRecordAction.open: 'Open door',
+    OperationRecordAction.close: 'Close door',
+    OperationRecordAction.stop: 'Stop door',
+    OperationRecordAction.autoCloseToggle: 'Toggle auto close',
+    OperationRecordAction.ledOn: 'LED on',
+    OperationRecordAction.ledOff: 'LED off',
+    OperationRecordAction.ledOffDelayChanged: 'Change LED off delay',
+    OperationRecordAction.partialOpenChanged: 'Change partial open',
+    OperationRecordAction.autoCloseDelayChanged: 'Change auto close delay',
+    OperationRecordAction.doorOpenReminderToggle: 'Toggle door open reminder',
+    OperationRecordAction.doorOpenReminderDelayChanged:
+        'Change door open reminder delay',
+    OperationRecordAction.unknown: 'Unknown action',
+  };
+  const expectedNewChineseActionLabels = <OperationRecordAction, String>{
+    OperationRecordAction.autoCloseToggle: '切换自动关门',
+    OperationRecordAction.ledOffDelayChanged: '修改延迟关灯',
+    OperationRecordAction.partialOpenChanged: '修改部分开门',
+    OperationRecordAction.autoCloseDelayChanged: '修改自动关门延迟',
+    OperationRecordAction.doorOpenReminderToggle: '切换开门提醒',
+    OperationRecordAction.doorOpenReminderDelayChanged: '修改开门提醒延迟',
+  };
+
   testWidgets('renders records and the completed pagination footer', (
     tester,
   ) async {
@@ -37,6 +61,47 @@ void main() {
     );
     expect(find.text('No more records'), findsOneWidget);
   });
+
+  for (final entry in expectedActionLabels.entries) {
+    testWidgets('renders the ${entry.key.name} operation action label', (
+      tester,
+    ) async {
+      await _pumpPage(
+        tester,
+        repository: _FakeOperationRecordRepository(
+          pages: <int, OperationRecordPageResult>{
+            1: _result(<OperationRecord>[
+              _record('Garage door', action: entry.key),
+            ]),
+          },
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text(entry.value), findsOneWidget, reason: entry.key.name);
+    });
+  }
+
+  for (final entry in expectedNewChineseActionLabels.entries) {
+    testWidgets('renders the Chinese ${entry.key.name} action label', (
+      tester,
+    ) async {
+      await _pumpPage(
+        tester,
+        locale: const Locale('zh'),
+        repository: _FakeOperationRecordRepository(
+          pages: <int, OperationRecordPageResult>{
+            1: _result(<OperationRecord>[
+              _record('Garage door', action: entry.key),
+            ]),
+          },
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text(entry.value), findsOneWidget, reason: entry.key.name);
+    });
+  }
 
   testWidgets('loads the next page when scrolling near the bottom', (
     tester,
@@ -117,6 +182,7 @@ void main() {
 Future<void> _pumpPage(
   WidgetTester tester, {
   required OperationRecordRepository repository,
+  Locale? locale,
 }) {
   return tester.pumpWidget(
     ProviderScope(
@@ -124,6 +190,7 @@ Future<void> _pumpPage(
         operationRecordRepositoryProvider.overrideWithValue(repository),
       ],
       child: MaterialApp(
+        locale: locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: OperationRecordPage(doorId: '10001', onTabSelected: (_) {}),
@@ -132,14 +199,17 @@ Future<void> _pumpPage(
   );
 }
 
-OperationRecord _record(String doorName, {AccountAvatarCode? avatarCode}) =>
-    OperationRecord(
-      action: OperationRecordAction.open,
-      occurredAt: DateTime(2026, 7, 9, 13, 34, 52),
-      doorName: doorName,
-      operatorAccount: 'mark@f-linx.com',
-      operatorAvatarCode: avatarCode,
-    );
+OperationRecord _record(
+  String doorName, {
+  AccountAvatarCode? avatarCode,
+  OperationRecordAction action = OperationRecordAction.open,
+}) => OperationRecord(
+  action: action,
+  occurredAt: DateTime(2026, 7, 9, 13, 34, 52),
+  doorName: doorName,
+  operatorAccount: 'mark@f-linx.com',
+  operatorAvatarCode: avatarCode,
+);
 
 OperationRecordPageResult _result(
   List<OperationRecord> records, {

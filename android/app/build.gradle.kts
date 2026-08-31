@@ -14,7 +14,7 @@ plugins {
 }
 
 android {
-    namespace = "com.flinx.flinx"
+    namespace = "com.feizhou.znty"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -25,7 +25,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.flinx.flinx"
+        applicationId = "com.feizhou.znty"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
