@@ -99,6 +99,56 @@ void main() {
     );
   });
 
+  testWidgets('uses type-specific icons and omits unknown type icons', (
+    tester,
+  ) async {
+    const expectedAssets = <String, String>{
+      'FIRMWARE': 'assets/icons/notification/notification_upgrade.png',
+      'SERVICE_ORDER': 'assets/icons/notification/notification_after_sales.png',
+      'DEVICE': 'assets/icons/notification/notification_device.png',
+    };
+
+    for (final entry in expectedAssets.entries) {
+      await tester.pumpWidget(
+        _app(
+          initialLocation: NotificationListPage.routePath,
+          repository: _SingleNotificationMessageRepository(type: entry.key),
+          scopeKey: ValueKey('notification-icon-test-${entry.key}'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final icon = find.byKey(const ValueKey('notification-icon-icon-test'));
+      expect(icon, findsOneWidget);
+      final image = tester.widget<Image>(
+        find.descendant(of: icon, matching: find.byType(Image)),
+      );
+      expect((image.image as AssetImage).assetName, entry.value);
+    }
+
+    for (final type in <String>['', 'UNKNOWN', 'SECURITY', 'SYSTEM']) {
+      await tester.pumpWidget(
+        _app(
+          initialLocation: NotificationListPage.routePath,
+          repository: _SingleNotificationMessageRepository(type: type),
+          scopeKey: ValueKey('notification-icon-test-$type'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const ValueKey('notification-card-icon-test')),
+        findsOneWidget,
+        reason: 'The $type card should remain visible.',
+      );
+      expect(
+        find.byKey(const ValueKey('notification-icon-icon-test')),
+        findsNothing,
+        reason: 'The $type card should not have an icon.',
+      );
+    }
+  });
+
   testWidgets('after-sales detail actions show local feedback', (tester) async {
     await tester.pumpWidget(
       _app(initialLocation: AfterSalesDetailPage.routePath),
@@ -153,18 +203,22 @@ void main() {
 Widget _app({
   required String initialLocation,
   NotificationMessageRepository? repository,
+  Key? scopeKey,
 }) {
   return _routerApp(
     GoRouter(initialLocation: initialLocation, routes: _routes),
     repository: repository,
+    scopeKey: scopeKey,
   );
 }
 
 Widget _routerApp(
   GoRouter router, {
   NotificationMessageRepository? repository,
+  Key? scopeKey,
 }) {
   return ProviderScope(
+    key: scopeKey,
     overrides: [
       notificationMessageRepositoryProvider.overrideWithValue(
         repository ?? _FakeNotificationMessageRepository(),
@@ -217,7 +271,6 @@ class _FakeNotificationMessageRepository
         id: '10001',
         templateCode: 'DEVICE_ABNORMAL',
         type: 'DEVICE',
-        kind: NotificationKind.lowBattery,
         title: 'Garage door battery is low',
         category: 'Device',
         summary: 'Battery below 15%, please handle it in time.',
@@ -264,19 +317,18 @@ class _ColorTagNotificationMessageRepository
   }) async => NotificationMessagePageResult(
     messages:
         const [
-              ('red', 'SYSTEM', NotificationColorTag.red),
+              ('red', 'UNKNOWN', NotificationColorTag.red),
               ('green', 'DEVICE', NotificationColorTag.green),
               ('blue', 'FIRMWARE', NotificationColorTag.blue),
               ('fallback-device', 'DEVICE', NotificationColorTag.unknown),
               ('fallback-firmware', 'FIRMWARE', NotificationColorTag.unknown),
-              ('fallback-other', 'SYSTEM', NotificationColorTag.unknown),
+              ('fallback-other', 'UNKNOWN', NotificationColorTag.unknown),
             ]
             .map(
               (item) => AppNotification(
                 id: item.$1,
                 templateCode: 'TEST',
                 type: item.$2,
-                kind: NotificationKind.systemMaintenance,
                 colorTag: item.$3,
                 title: item.$1,
                 category: item.$1,
@@ -289,6 +341,37 @@ class _ColorTagNotificationMessageRepository
     currentPage: 1,
     pageSize: 20,
     total: 6,
+    hasMore: false,
+  );
+}
+
+class _SingleNotificationMessageRepository
+    extends _FakeNotificationMessageRepository {
+  _SingleNotificationMessageRepository({required this.type});
+
+  final String type;
+
+  @override
+  Future<NotificationMessagePageResult> fetchMessages({
+    required int page,
+    required int pageSize,
+    required String requestId,
+  }) async => NotificationMessagePageResult(
+    messages: [
+      AppNotification(
+        id: 'icon-test',
+        templateCode: 'LEGACY_TEMPLATE_CODE',
+        type: type,
+        title: 'Icon test',
+        category: 'Test',
+        summary: 'Icon test summary',
+        timestamp: '2026-07-01T09:00:00Z',
+        isRead: true,
+      ),
+    ],
+    currentPage: 1,
+    pageSize: 20,
+    total: 1,
     hasMore: false,
   );
 }

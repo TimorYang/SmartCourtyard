@@ -180,6 +180,7 @@ class _NotificationCard extends StatelessWidget {
       notification.colorTag,
       notification.type,
     );
+    final iconAsset = _iconForType(notification.type);
 
     return Semantics(
       button: true,
@@ -196,22 +197,25 @@ class _NotificationCard extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: AppColors.notificationIconSurface,
-                    borderRadius: BorderRadius.circular(6),
+                if (iconAsset != null) ...[
+                  Container(
+                    key: ValueKey('notification-icon-${notification.id}'),
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: AppColors.notificationIconSurface,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    alignment: Alignment.center,
+                    child: Image.asset(
+                      iconAsset,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const SizedBox.shrink(),
+                    ),
                   ),
-                  alignment: Alignment.center,
-                  child: Image.asset(
-                    _iconFor(notification.kind),
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) =>
-                        const SizedBox.shrink(),
-                  ),
-                ),
-                const SizedBox(width: 12),
+                  const SizedBox(width: 12),
+                ],
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -290,21 +294,11 @@ class _NotificationCard extends StatelessWidget {
     );
   }
 
-  String _iconFor(NotificationKind kind) => switch (kind) {
-    NotificationKind.appointmentConfirmed =>
-      'assets/icons/notification/notification_after_sales_confirmed_placeholder.png',
-    NotificationKind.appointmentReminder =>
-      'assets/icons/notification/notification_after_sales_reminder_placeholder.png',
-    NotificationKind.upgrade =>
-      'assets/icons/notification/notification_upgrade_prompt_placeholder.png',
-    NotificationKind.lowBattery =>
-      'assets/icons/notification/notification_low_battery_placeholder.png',
-    NotificationKind.motorResetWarning =>
-      'assets/icons/notification/notification_motor_reset_placeholder.png',
-    NotificationKind.sensorAbnormality =>
-      'assets/icons/notification/notification_sensor_abnormality_placeholder.png',
-    NotificationKind.systemMaintenance =>
-      'assets/icons/notification/notification_system_maintenance_placeholder.png',
+  String? _iconForType(String type) => switch (type.trim().toUpperCase()) {
+    'FIRMWARE' => 'assets/icons/notification/notification_upgrade.png',
+    'DEVICE' => 'assets/icons/notification/notification_device.png',
+    'SERVICE_ORDER' => 'assets/icons/notification/notification_after_sales.png',
+    _ => null,
   };
 
   (Color, Color) _categoryColors(NotificationColorTag colorTag, String type) =>
@@ -331,7 +325,7 @@ class _NotificationCard extends StatelessWidget {
       AppColors.notificationUpgradeTag,
       AppColors.notificationUpgradeText,
     ),
-    'DEVICE' || 'SECURITY' => (
+    'DEVICE' => (
       AppColors.notificationEquipmentTag,
       AppColors.notificationEquipmentText,
     ),

@@ -122,7 +122,6 @@ extension NotificationMessageCardDtoMapper on NotificationMessageCardDto {
     id: id,
     templateCode: templateCode,
     type: type,
-    kind: _notificationKind(templateCode, type),
     colorTag: _notificationColorTag(colorTag),
     title: title,
     category: label,
@@ -144,29 +143,6 @@ extension NotificationMessageDetailDtoMapper on NotificationMessageDetailDto {
     isRead: read,
     timestamp: _formatTimestamp(createTime),
   );
-}
-
-NotificationKind _notificationKind(String templateCode, String type) {
-  final code = templateCode.trim().toUpperCase();
-  if (code.contains('APPOINTMENT') && code.contains('REMIND')) {
-    return NotificationKind.appointmentReminder;
-  }
-  if (code.contains('APPOINTMENT') || code.contains('SERVICE_ORDER')) {
-    return NotificationKind.appointmentConfirmed;
-  }
-  if (code.contains('UPGRADE') || type.trim().toUpperCase() == 'FIRMWARE') {
-    return NotificationKind.upgrade;
-  }
-  if (code.contains('BATTERY')) {
-    return NotificationKind.lowBattery;
-  }
-  if (code.contains('MOTOR') || code.contains('RESET')) {
-    return NotificationKind.motorResetWarning;
-  }
-  if (code.contains('SENSOR') || type.trim().toUpperCase() == 'SECURITY') {
-    return NotificationKind.sensorAbnormality;
-  }
-  return NotificationKind.systemMaintenance;
 }
 
 NotificationColorTag _notificationColorTag(String? value) =>

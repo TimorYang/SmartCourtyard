@@ -210,6 +210,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get registerConfirmPasswordPlaceholder => 'Enter password again';
 
   @override
+  String get registerPasswordRule =>
+      'Contain at least one lowercase letter, one uppercase letter, and one number, with a length between 8 and 16 characters.';
+
+  @override
   String get registerPasswordPending =>
       'Password registration is not connected yet';
 

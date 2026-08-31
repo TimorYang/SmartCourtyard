@@ -61,6 +61,7 @@
   "registerPasswordDescription": "设置您的密码",
   "registerPasswordPlaceholder": "请输入密码",
   "registerConfirmPasswordPlaceholder": "请再次输入密码",
+  "registerPasswordRule": "须包含至少一个小写字母、一个大写字母和一个数字，长度为 8 至 16 个字符。",
   "registerPasswordPending": "密码注册功能暂未接入",
   "registerCodeResending": "正在发送验证码…",
   "registerRequestFailed": "注册失败，请重试。",
