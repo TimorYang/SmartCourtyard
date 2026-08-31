@@ -110,7 +110,9 @@ void main() {
     await controller.loadInitial();
     controller.synchronizeMessageReadState(messageId: '1', isRead: true);
 
-    final messages = container.read(notificationMessagesControllerProvider).messages;
+    final messages = container
+        .read(notificationMessagesControllerProvider)
+        .messages;
     expect(messages.first.isRead, isTrue);
     expect(messages.last.isRead, isFalse);
   });
@@ -127,7 +129,6 @@ AppNotification _message(String id) => AppNotification(
   id: id,
   templateCode: 'DEVICE_ABNORMAL',
   type: 'DEVICE',
-  kind: NotificationKind.lowBattery,
   title: 'Message $id',
   category: 'Device',
   summary: 'Summary $id',

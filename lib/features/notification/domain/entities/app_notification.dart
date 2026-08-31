@@ -1,13 +1,3 @@
-enum NotificationKind {
-  appointmentConfirmed, //预约已确认
-  appointmentReminder, //预约提醒
-  upgrade, //升级
-  lowBattery, //电池电量低
-  motorResetWarning, //电机次数即将清零
-  sensorAbnormality, //传感器异常
-  systemMaintenance, //系统维护
-}
-
 enum NotificationColorTag { red, green, blue, unknown }
 
 class AppNotification {
@@ -15,7 +5,6 @@ class AppNotification {
     required this.id,
     required this.templateCode,
     required this.type,
-    required this.kind,
     this.colorTag = NotificationColorTag.unknown,
     required this.title,
     required this.category,
@@ -27,7 +16,6 @@ class AppNotification {
   final String id;
   final String templateCode;
   final String type;
-  final NotificationKind kind;
   final NotificationColorTag colorTag;
   final String title;
   final String category;
@@ -39,7 +27,6 @@ class AppNotification {
     id: id,
     templateCode: templateCode,
     type: type,
-    kind: kind,
     colorTag: colorTag,
     title: title,
     category: category,
