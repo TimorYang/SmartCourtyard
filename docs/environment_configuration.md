@@ -43,7 +43,7 @@ flutter build apk --release --dart-define-from-file=config/env/prod.json
 - `FLINX_CLIENT_AUTHORIZATION`：当前 auth 握手使用的 Basic 凭据部分。
 - `FLINX_FACEBOOK_APP_ID`：Facebook App ID。未配置时 Facebook 按钮保留，但不会调用 SDK。
 - `FLINX_FACEBOOK_CLIENT_TOKEN`：Facebook Client Token。真实值只放在本机忽略的环境文件中。
-- `FLINX_GOOGLE_IOS_CLIENT_ID`：GCP 中登记 `com.feizhou.znty` 的 iOS OAuth Client ID。
+- `FLINX_GOOGLE_IOS_CLIENT_ID`：GCP 中登记 `com.feizhou.znty` 的 iOS OAuth Client ID；iOS 构建阶段会从该值自动生成 reversed client ID 回调 Scheme。
 - `FLINX_GOOGLE_SERVER_CLIENT_ID`：GCP Web OAuth Client ID，同时作为 Google 登录的
   `serverClientId`，用于 Android 登录及后端授权码校验。
 - `FLINX_GOOGLE_HOSTED_DOMAIN`：可选的 Google Workspace 托管域限制；普通账号登录保持为空。
@@ -53,10 +53,12 @@ Facebook 的 App ID、Client Token 和平台回调配置还需要同步填写到
 仅用于保证无配置构建可启动的占位值，不要提交真实凭据。
 
 Google 登录使用 Dart 编译期环境变量传入 Client ID，不需要提交
-`GoogleService-Info.plist`。iOS 仍需要在 `ios/Runner/Info.plist` 注册由 iOS
-Client ID 派生的回调 Scheme。Android 需要在 GCP 登记包名
-`com.feizhou.znty`，并为 Debug/Release 签名配置对应 SHA；未使用
-`google-services.json` 时，Android 直接使用 `FLINX_GOOGLE_SERVER_CLIENT_ID`。
+`GoogleService-Info.plist`。iOS 的 `Info.plist` 只保留回调 Scheme 模板，Flutter
+构建时会从同一次 `DART_DEFINES` 注入的 `FLINX_GOOGLE_IOS_CLIENT_ID` 自动生成
+对应 Scheme，因此不同环境不能绕过 Flutter 构建直接使用未配置的 Xcode Archive。
+Android 需要在 GCP 登记包名 `com.feizhou.znty`，并为 Debug/Release 签名配置对应
+SHA；未使用 `google-services.json` 时，Android 直接使用
+`FLINX_GOOGLE_SERVER_CLIENT_ID`。
 
 Google Client ID 属于公开客户端标识，不是服务端密钥；但本项目仍按环境配置规则，
 将真实值保存在本机忽略的 `config/env/*.json` 中，提交的 `.example` 文件只保留占位值。

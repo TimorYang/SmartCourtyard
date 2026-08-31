@@ -140,6 +140,35 @@ void main() {
     },
   );
 
+  test('requires the iOS client ID on iOS', () async {
+    var initialized = false;
+    final provider = GoogleSignInIdentityProvider(
+      configuration: const GoogleSignInConfiguration(
+        serverClientId: 'server-client-id',
+      ),
+      platformSupportChecker: () => true,
+      targetPlatformProvider: () => TargetPlatform.iOS,
+      initializer: (_) async {
+        initialized = true;
+      },
+    );
+
+    expect(await provider.isAvailable(), isFalse);
+    expect(initialized, isFalse);
+  });
+
+  test('requires only the server client ID on Android', () async {
+    final provider = GoogleSignInIdentityProvider(
+      configuration: const GoogleSignInConfiguration(
+        serverClientId: 'server-client-id',
+      ),
+      platformSupportChecker: () => true,
+      targetPlatformProvider: () => TargetPlatform.android,
+    );
+
+    expect(await provider.isAvailable(), isTrue);
+  });
+
   test('rejects a missing server authorization code', () async {
     final provider = GoogleSignInIdentityProvider(
       configuration: const GoogleSignInConfiguration(

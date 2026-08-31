@@ -48,7 +48,9 @@ class GoogleSignInIdentityProvider implements GoogleIdentityProvider {
 
   @override
   Future<bool> isAvailable() async {
-    return _platformSupportChecker() && _configuration.hasRequiredClientIds;
+    final targetPlatform = _targetPlatformProvider();
+    return _platformSupportChecker() &&
+        _configuration.hasRequiredClientIdsFor(targetPlatform);
   }
 
   @override

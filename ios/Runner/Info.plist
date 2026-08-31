@@ -51,7 +51,7 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.311777572509-9g5m60naqsoh82bmrbe3m2kinaogu4vo</string>
+				<string>__FLINX_GOOGLE_IOS_REVERSED_CLIENT_ID__</string>
 			</array>
 		</dict>
 	</array>
