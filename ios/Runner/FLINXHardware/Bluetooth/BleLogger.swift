@@ -2,7 +2,7 @@ import Foundation
 import OSLog
 
 final class BleLogger {
-  private let subsystem = Bundle.main.bundleIdentifier ?? "com.flinx.flinx"
+  private let subsystem = Bundle.main.bundleIdentifier ?? "com.feizhou.znty"
   private let category = "FLINX_BLE"
   private(set) var nativeConsoleEnabled = false
 

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in_platform_interface/google_sign_in_platform_interface.dart';
 
 import '../../domain/entities/google_identity_credential.dart';
@@ -13,6 +14,7 @@ typedef GooglePlatformServerAuthorizer =
       ServerAuthorizationTokensForScopesParameters parameters,
     );
 typedef GooglePlatformSupportChecker = bool Function();
+typedef GoogleTargetPlatformProvider = TargetPlatform Function();
 
 class GoogleSignInIdentityProvider implements GoogleIdentityProvider {
   GoogleSignInIdentityProvider({
@@ -21,6 +23,7 @@ class GoogleSignInIdentityProvider implements GoogleIdentityProvider {
     GooglePlatformAuthenticator? authenticator,
     GooglePlatformServerAuthorizer? serverAuthorizer,
     GooglePlatformSupportChecker? platformSupportChecker,
+    GoogleTargetPlatformProvider? targetPlatformProvider,
   }) : _configuration =
            configuration ?? GoogleSignInConfiguration.fromEnvironment(),
        _initializer = initializer ?? _initializePlatform,
@@ -30,7 +33,9 @@ class GoogleSignInIdentityProvider implements GoogleIdentityProvider {
            platformSupportChecker ??
            (() => _isSupportedPlatform(
              configuration ?? GoogleSignInConfiguration.fromEnvironment(),
-           ));
+           )),
+       _targetPlatformProvider =
+           targetPlatformProvider ?? (() => defaultTargetPlatform);
 
   static const _scopes = <String>['openid', 'email', 'profile'];
 
@@ -39,6 +44,7 @@ class GoogleSignInIdentityProvider implements GoogleIdentityProvider {
   final GooglePlatformAuthenticator _authenticator;
   final GooglePlatformServerAuthorizer _serverAuthorizer;
   final GooglePlatformSupportChecker _platformSupportChecker;
+  final GoogleTargetPlatformProvider _targetPlatformProvider;
 
   @override
   Future<bool> isAvailable() async {
@@ -64,8 +70,12 @@ class GoogleSignInIdentityProvider implements GoogleIdentityProvider {
           nonce: nonce,
         ),
       );
+      // Ask for the basic OpenID scopes during the user-initiated sign-in.
+      // The iOS implementation caches the server authorization code returned
+      // by this combined flow, so the follow-up server-token lookup can stay
+      // silent instead of presenting a second authorization sheet.
       final authentication = await _authenticator(
-        const AuthenticateParameters(),
+        const AuthenticateParameters(scopeHint: _scopes),
       );
       final idToken = authentication.authenticationTokens.idToken?.trim();
       final serverAuthorization = await _serverAuthorizer(
@@ -74,7 +84,12 @@ class GoogleSignInIdentityProvider implements GoogleIdentityProvider {
             scopes: _scopes,
             userId: authentication.user.id,
             email: authentication.user.email,
-            promptIfUnauthorized: true,
+            // iOS returns and caches the server auth code from the combined
+            // authenticate(scopeHint: ...) call, so this lookup must remain
+            // silent. Android's Credential Manager ignores scopeHint and
+            // needs this explicit authorization request on first sign-in.
+            promptIfUnauthorized:
+                _targetPlatformProvider() == TargetPlatform.android,
           ),
         ),
       );
