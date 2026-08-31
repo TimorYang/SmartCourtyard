@@ -2555,6 +2555,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deviceCommandPartialOpenTitle => 'Partial open';
 
   @override
+  String get deviceCommandPermissionDenied =>
+      'You don\'t have permission to use this control.';
+
+  @override
   String get deviceCommandPartialOpenSettingUnavailable =>
       'Partial-open positions are temporarily unavailable. Please try again.';
 

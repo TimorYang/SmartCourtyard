@@ -8,11 +8,13 @@ class FlinxSwitch extends StatelessWidget {
     required this.value,
     required this.onChanged,
     this.enabled = true,
+    this.onDisabled,
   });
 
   final bool value;
   final bool enabled;
   final ValueChanged<bool> onChanged;
+  final VoidCallback? onDisabled;
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +28,7 @@ class FlinxSwitch extends StatelessWidget {
       enabled: enabled,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: enabled ? () => onChanged(!value) : null,
+        onTap: enabled ? () => onChanged(!value) : onDisabled,
         child: AnimatedOpacity(
           duration: const Duration(milliseconds: 120),
           opacity: enabled ? 1 : 0.55,

@@ -240,6 +240,8 @@ extension DoorDetailResponseDtoMapper on DoorDetailResponseDto {
       controlModeLabel: controlModeLabel,
       onlineStatus: onlineStatus,
       onlineStatusLabel: onlineStatusLabel,
+      relationType: relationType,
+      effectiveCapabilities: effectiveCapabilities,
       doorState: _doorState(),
       doorStateLabel: _doorStateLabel(),
       positionPercent: positionPercent,

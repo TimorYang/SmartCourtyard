@@ -8,6 +8,8 @@ class DoorDetailResponseDto {
     this.controlModeLabel,
     this.onlineStatus,
     this.onlineStatusLabel,
+    this.relationType,
+    this.effectiveCapabilities = const <String>[],
     this.doorState,
     this.doorStateLabel,
     this.positionPercent,
@@ -30,6 +32,8 @@ class DoorDetailResponseDto {
   final String? controlModeLabel;
   final int? onlineStatus;
   final String? onlineStatusLabel;
+  final int? relationType;
+  final List<String> effectiveCapabilities;
   final int? doorState;
   final String? doorStateLabel;
   final double? positionPercent;
@@ -53,6 +57,8 @@ class DoorDetailResponseDto {
       controlModeLabel: json['controlModeLabel'] as String?,
       onlineStatus: _parseNullableInt(json['onlineStatus']),
       onlineStatusLabel: json['onlineStatusLabel'] as String?,
+      relationType: _parseNullableInt(json['relationType']),
+      effectiveCapabilities: _parseCapabilities(json['effectiveCapabilities']),
       doorState: _parseNullableInt(json['doorState']),
       doorStateLabel: json['doorStateLabel'] as String?,
       positionPercent: _parseNullableDouble(json['positionPercent']),
@@ -90,5 +96,12 @@ class DoorDetailResponseDto {
       return double.tryParse(value);
     }
     return null;
+  }
+
+  static List<String> _parseCapabilities(Object? value) {
+    if (value is! List) {
+      return const <String>[];
+    }
+    return value.whereType<String>().toList(growable: false);
   }
 }

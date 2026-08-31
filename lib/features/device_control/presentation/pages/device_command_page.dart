@@ -232,15 +232,28 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
 
   Set<String> _capabilitiesForCurrentDevice(DeviceCommandState commandState) {
     final device = _selectedDoorDevice(commandState);
-    if (device != null) {
-      return device.capabilities
-          .map((capability) => capability.trim().toUpperCase())
-          .where((capability) => capability.isNotEmpty)
-          .toSet();
+    if (device == null) {
+      // Capabilities must be tied to a known device type. Do not enable an
+      // extension when the response cannot be matched to the active device.
+      return const <String>{};
     }
-    // Capabilities must be tied to a known device type. Do not enable an
-    // extension when the response cannot be matched to the active device.
-    return const <String>{};
+
+    final deviceCapabilities = _normalizeCapabilityCodes(device.capabilities);
+    if (commandState.doorDetail?.relationType == 0) {
+      return deviceCapabilities;
+    }
+
+    final effectiveCapabilities = _normalizeCapabilityCodes(
+      commandState.doorDetail?.effectiveCapabilities ?? const <String>[],
+    );
+    return deviceCapabilities.intersection(effectiveCapabilities);
+  }
+
+  Set<String> _normalizeCapabilityCodes(Iterable<String> capabilities) {
+    return capabilities
+        .map((capability) => capability.trim().toUpperCase())
+        .where((capability) => capability.isNotEmpty)
+        .toSet();
   }
 
   Widget _buildCommandPage({
@@ -250,6 +263,21 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     required TextTheme textTheme,
   }) {
     final doorDetail = commandState.doorDetail;
+    final l10n = AppLocalizations.of(context);
+    final isOwner = doorDetail?.relationType == 0;
+    final effectiveCapabilities = _normalizeCapabilityCodes(
+      doorDetail?.effectiveCapabilities ?? const <String>[],
+    );
+    void showPermissionDenied() {
+      AppToast.info(context, l10n.deviceCommandPermissionDenied);
+    }
+    VoidCallback? permissionDeniedFor(String capabilityCode) {
+      if (isOwner || effectiveCapabilities.contains(capabilityCode)) {
+        return null;
+      }
+      return showPermissionDenied;
+    }
+
     final ledEnabled = _ledEnabledOverride ?? doorDetail?.isLedEnabled ?? false;
     final autoCloseEnabled =
         _autoCloseEnabledOverride ?? doorDetail?.autoCloseEnabled ?? false;
@@ -311,9 +339,15 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     final canControlDoor = capabilities.contains('DOOR_CONTROL');
     final canControlLed = capabilities.contains('LED_CONTROL');
     final canPartialOpen = capabilities.contains('PARTIAL_OPEN');
+    final canSetPartialOpenLevel =
+        capabilities.contains(DeviceCapabilityCode.partialOpenLevel) &&
+        partialOpenCapability != null &&
+        partialOpenCapability.options.isNotEmpty;
     final canUseAutoClose = capabilities.contains('AUTO_CLOSE');
     final canUseOpenReminder = capabilities.contains('DOOR_OPEN_REMINDER');
-    final l10n = AppLocalizations.of(context);
+    final settingsCapabilityScope = doorDetail?.relationType == 0
+        ? null
+        : DeviceSettingsCapabilityScope(allowedCapabilityCodes: capabilities);
     final realtimePositionPercent =
         commandState.doorRealtimeState?.positionPercent;
     final doorPositionPercent =
@@ -415,6 +449,9 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                               selectedDeviceUsesBle: selectedDeviceUsesBle,
                               isBusy: isBusy,
                               canControlDoor: canControlDoor,
+                              onPermissionDenied: permissionDeniedFor(
+                                'DOOR_CONTROL',
+                              ),
                               textTheme: textTheme,
                               l10n: l10n,
                             )
@@ -463,6 +500,9 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                                   enabled: canControlDoor,
                                   busy: isBusy,
                                   pendingAction: commandState.pendingAction,
+                                  onPermissionDenied: permissionDeniedFor(
+                                    'DOOR_CONTROL',
+                                  ),
                                   onClose: () {
                                     unawaited(
                                       _runCommandAndReport(
@@ -533,9 +573,21 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                                   autoCloseAvailable: canUseAutoClose,
                                   partialOpenAvailable: canPartialOpen,
                                   partialOpenSettingAvailable:
-                                      partialOpenCapability != null &&
-                                      partialOpenCapability.options.isNotEmpty,
+                                      canSetPartialOpenLevel,
                                   openReminderAvailable: canUseOpenReminder,
+                                  ledPermissionDenied: permissionDeniedFor(
+                                    'LED_CONTROL',
+                                  ),
+                                  autoClosePermissionDenied:
+                                      permissionDeniedFor('AUTO_CLOSE'),
+                                  openReminderPermissionDenied:
+                                      permissionDeniedFor('DOOR_OPEN_REMINDER'),
+                                  partialOpenPermissionDenied:
+                                      permissionDeniedFor('PARTIAL_OPEN'),
+                                  partialOpenSettingPermissionDenied:
+                                      permissionDeniedFor(
+                                        DeviceCapabilityCode.partialOpenLevel,
+                                      ),
                                   busy: isBusy,
                                   settingsBusy:
                                       deviceSettingsState.pendingKey != null,
@@ -608,6 +660,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                                     '&deviceId=${Uri.encodeComponent(selectedDeviceId)}'
                                     '&bleName=${Uri.encodeComponent(selectedBleName)}'
                                     '&bleDeviceId=${Uri.encodeComponent(connectedBleDeviceId)}',
+                                    extra: settingsCapabilityScope,
                                   ),
                                 ),
                                 const SizedBox(height: 22),
@@ -634,6 +687,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     required bool selectedDeviceUsesBle,
     required bool isBusy,
     required bool canControlDoor,
+    required VoidCallback? onPermissionDenied,
     required TextTheme textTheme,
     required AppLocalizations l10n,
   }) {
@@ -692,6 +746,9 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                             ),
                           )
                         : null,
+                    onDisabled: !canControlDoor && !isBusy
+                        ? onPermissionDenied
+                        : null,
                   )
                 else
                   _DoorCommandRow(
@@ -699,6 +756,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                     enabled: canControlDoor,
                     busy: isBusy,
                     pendingAction: commandState.pendingAction,
+                    onPermissionDenied: onPermissionDenied,
                     buttonSize: AppSpacingTokens.fBoxWiringTestControlSize,
                     buttonIconSize:
                         AppSpacingTokens.fBoxWiringTestControlIconSize,
@@ -1683,6 +1741,7 @@ class _DoorCommandRow extends StatelessWidget {
     required this.enabled,
     required this.busy,
     required this.pendingAction,
+    this.onPermissionDenied,
     required this.onClose,
     required this.onStop,
     required this.onOpen,
@@ -1695,6 +1754,7 @@ class _DoorCommandRow extends StatelessWidget {
   final bool enabled;
   final bool busy;
   final DeviceCommandAction? pendingAction;
+  final VoidCallback? onPermissionDenied;
   final VoidCallback onClose;
   final VoidCallback onStop;
   final VoidCallback onOpen;
@@ -1716,6 +1776,7 @@ class _DoorCommandRow extends StatelessWidget {
           iconSize: buttonIconSize,
           radius: buttonRadius,
           onPressed: enabled && !busy ? onClose : null,
+          onDisabled: !enabled && !busy ? onPermissionDenied : null,
         ),
         SizedBox(width: gap),
         FlinxDoorCommandButton(
@@ -1726,6 +1787,7 @@ class _DoorCommandRow extends StatelessWidget {
           iconSize: buttonIconSize,
           radius: buttonRadius,
           onPressed: enabled && !busy ? onStop : null,
+          onDisabled: !enabled && !busy ? onPermissionDenied : null,
         ),
         SizedBox(width: gap),
         FlinxDoorCommandButton(
@@ -1736,6 +1798,7 @@ class _DoorCommandRow extends StatelessWidget {
           iconSize: buttonIconSize,
           radius: buttonRadius,
           onPressed: enabled && !busy ? onOpen : null,
+          onDisabled: !enabled && !busy ? onPermissionDenied : null,
         ),
       ],
     );
@@ -1747,11 +1810,13 @@ class _FBoxPbControl extends StatelessWidget {
     super.key,
     required this.tooltip,
     required this.onPressed,
+    this.onDisabled,
     required this.pending,
   });
 
   final String tooltip;
   final VoidCallback? onPressed;
+  final VoidCallback? onDisabled;
   final bool pending;
 
   @override
@@ -1760,29 +1825,32 @@ class _FBoxPbControl extends StatelessWidget {
       button: true,
       enabled: onPressed != null,
       label: tooltip,
-      child: SizedBox(
-        width: AppSpacingTokens.fBoxWiringTestPbControlSize,
-        height: AppSpacingTokens.fBoxWiringTestPbControlSize,
-        child: FilledButton(
-          onPressed: onPressed,
-          style: FilledButton.styleFrom(
-            backgroundColor: Colors.transparent,
-            foregroundColor: AppColors.textHint,
-            elevation: 0,
-            padding: EdgeInsets.zero,
-            shape: const CircleBorder(),
-          ),
-          child: pending
-              ? const CircularProgressIndicator(color: AppColors.textHint)
-              : Image.asset(
-                  FlinxFBoxControlAssetPaths.pbControl,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) => const Icon(
-                    Icons.image_not_supported_outlined,
-                    color: AppColors.textHint,
-                    size: 96,
+      onTap: onPressed ?? onDisabled,
+      child: ExcludeSemantics(
+        child: SizedBox(
+          width: AppSpacingTokens.fBoxWiringTestPbControlSize,
+          height: AppSpacingTokens.fBoxWiringTestPbControlSize,
+          child: FilledButton(
+            onPressed: onPressed ?? onDisabled,
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              foregroundColor: AppColors.textHint,
+              elevation: 0,
+              padding: EdgeInsets.zero,
+              shape: const CircleBorder(),
+            ),
+            child: pending
+                ? const CircularProgressIndicator(color: AppColors.textHint)
+                : Image.asset(
+                    FlinxFBoxControlAssetPaths.pbControl,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) => const Icon(
+                      Icons.image_not_supported_outlined,
+                      color: AppColors.textHint,
+                      size: 96,
+                    ),
                   ),
-                ),
+          ),
         ),
       ),
     );
@@ -1938,6 +2006,11 @@ class _QuickActionGrid extends StatelessWidget {
     required this.partialOpenAvailable,
     required this.partialOpenSettingAvailable,
     required this.openReminderAvailable,
+    required this.ledPermissionDenied,
+    required this.autoClosePermissionDenied,
+    required this.openReminderPermissionDenied,
+    required this.partialOpenPermissionDenied,
+    required this.partialOpenSettingPermissionDenied,
     required this.busy,
     required this.settingsBusy,
     required this.partialOpenSettingBusy,
@@ -1958,6 +2031,11 @@ class _QuickActionGrid extends StatelessWidget {
   final bool partialOpenAvailable;
   final bool partialOpenSettingAvailable;
   final bool openReminderAvailable;
+  final VoidCallback? ledPermissionDenied;
+  final VoidCallback? autoClosePermissionDenied;
+  final VoidCallback? openReminderPermissionDenied;
+  final VoidCallback? partialOpenPermissionDenied;
+  final VoidCallback? partialOpenSettingPermissionDenied;
   final bool busy;
   final bool settingsBusy;
   final bool partialOpenSettingBusy;
@@ -1986,6 +2064,9 @@ class _QuickActionGrid extends StatelessWidget {
                     busy: busy,
                     textTheme: textTheme,
                     onChanged: onLedChanged,
+                    onDisabled: !ledAvailable && !busy
+                        ? ledPermissionDenied
+                        : null,
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -2001,6 +2082,9 @@ class _QuickActionGrid extends StatelessWidget {
                     busy: busy || settingsBusy,
                     textTheme: textTheme,
                     onChanged: onAutoCloseChanged,
+                    onDisabled: !autoCloseAvailable && !busy && !settingsBusy
+                        ? autoClosePermissionDenied
+                        : null,
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -2020,6 +2104,9 @@ class _QuickActionGrid extends StatelessWidget {
                     busy: busy || settingsBusy,
                     textTheme: textTheme,
                     onChanged: onOpenReminderChanged,
+                    onDisabled: !openReminderAvailable && !busy && !settingsBusy
+                        ? openReminderPermissionDenied
+                        : null,
                   ),
                 ),
               ],
@@ -2040,6 +2127,16 @@ class _QuickActionGrid extends StatelessWidget {
                     textTheme: textTheme,
                     onPressed: onPartialOpen,
                     onSettingPressed: onPartialOpenSetting,
+                    onPermissionDenied: !partialOpenAvailable && !busy
+                        ? partialOpenPermissionDenied
+                        : null,
+                    onSettingPermissionDenied:
+                        !partialOpenSettingAvailable &&
+                            !busy &&
+                            !settingsBusy &&
+                            !partialOpenSettingBusy
+                        ? partialOpenSettingPermissionDenied
+                        : null,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -2067,6 +2164,7 @@ class _LedActionCard extends StatelessWidget {
     required this.busy,
     required this.textTheme,
     required this.onChanged,
+    this.onDisabled,
   });
 
   final bool enabled;
@@ -2074,6 +2172,7 @@ class _LedActionCard extends StatelessWidget {
   final bool busy;
   final TextTheme textTheme;
   final ValueChanged<bool> onChanged;
+  final VoidCallback? onDisabled;
 
   @override
   Widget build(BuildContext context) {
@@ -2093,6 +2192,7 @@ class _LedActionCard extends StatelessWidget {
                 value: enabled,
                 enabled: available && !busy,
                 onChanged: onChanged,
+                onDisabled: onDisabled,
               ),
             ],
           ),
@@ -2129,6 +2229,7 @@ class _ToggleActionCard extends StatelessWidget {
     required this.busy,
     required this.textTheme,
     required this.onChanged,
+    this.onDisabled,
   });
 
   final String iconAssetPath;
@@ -2140,6 +2241,7 @@ class _ToggleActionCard extends StatelessWidget {
   final bool busy;
   final TextTheme textTheme;
   final ValueChanged<bool> onChanged;
+  final VoidCallback? onDisabled;
 
   @override
   Widget build(BuildContext context) {
@@ -2157,6 +2259,7 @@ class _ToggleActionCard extends StatelessWidget {
                 value: enabled,
                 enabled: available && !busy,
                 onChanged: onChanged,
+                onDisabled: onDisabled,
               ),
             ],
           ),
@@ -2191,6 +2294,8 @@ class _PartialOpenCard extends StatelessWidget {
     required this.textTheme,
     required this.onPressed,
     required this.onSettingPressed,
+    this.onPermissionDenied,
+    this.onSettingPermissionDenied,
   });
 
   final bool busy;
@@ -2201,6 +2306,8 @@ class _PartialOpenCard extends StatelessWidget {
   final TextTheme textTheme;
   final VoidCallback onPressed;
   final VoidCallback onSettingPressed;
+  final VoidCallback? onPermissionDenied;
+  final VoidCallback? onSettingPermissionDenied;
 
   @override
   Widget build(BuildContext context) {
@@ -2215,7 +2322,11 @@ class _PartialOpenCard extends StatelessWidget {
               label: AppLocalizations.of(context).deviceCommandPartialOpenTitle,
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
-                onTap: available && !busy ? onPressed : () {},
+                onTap: available && !busy
+                    ? onPressed
+                    : !busy
+                    ? onPermissionDenied
+                    : null,
               ),
             ),
           ),
@@ -2266,7 +2377,9 @@ class _PartialOpenCard extends StatelessWidget {
                   behavior: HitTestBehavior.opaque,
                   onTap: settingAvailable && !settingBusy
                       ? onSettingPressed
-                      : () {},
+                      : !settingBusy
+                      ? onSettingPermissionDenied
+                      : null,
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       color: AppColors.deviceControlInactive.withValues(

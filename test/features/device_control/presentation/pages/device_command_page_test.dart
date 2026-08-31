@@ -801,6 +801,39 @@ void main() {
     expect(gateway.commands, isEmpty);
   });
 
+  testWidgets(
+    'shared users cannot edit partial-open height without level permission',
+    (tester) async {
+      final gateway = _RecordingHardwareGateway();
+      await _pumpDevicePage(
+        tester,
+        gateway,
+        repository: const _FakeDoorDetailRepository(
+          relationType: 1,
+          effectiveCapabilities: ['PARTIAL_OPEN'],
+        ),
+      );
+
+      final positionAction = find.byKey(
+        const ValueKey<String>('partial-open-position-action'),
+      );
+      await tester.ensureVisible(positionAction);
+      await tester.tap(positionAction);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ListWheelScrollView), findsNothing);
+      expect(gateway.attributeWriteCount, 0);
+      expect(gateway.commands, isEmpty);
+      expect(
+        find.text("You don't have permission to use this control."),
+        findsOneWidget,
+      );
+      toastification.dismissAll(delayForAnimation: false);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+    },
+  );
+
   testWidgets('failed partial-open level writes keep the previous position', (
     tester,
   ) async {
@@ -1052,6 +1085,326 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(gateway.commands, [DoorCommand.open]);
+  });
+
+  testWidgets('shows a permission toast for unavailable shared-user controls', (
+    tester,
+  ) async {
+    final gateway = _RecordingHardwareGateway();
+    await _pumpDevicePage(
+      tester,
+      gateway,
+      repository: const _FakeDoorDetailRepository(
+        relationType: 1,
+        effectiveCapabilities: [],
+      ),
+    );
+
+    Future<void> expectPermissionToast(Finder target) async {
+      await tester.ensureVisible(target);
+      await tester.tap(target);
+      await tester.pumpAndSettle();
+      expect(
+        find.text("You don't have permission to use this control."),
+        findsOneWidget,
+      );
+      toastification.dismissAll(delayForAnimation: false);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+    }
+
+    await expectPermissionToast(find.byTooltip('Open'));
+    await expectPermissionToast(
+      find.byKey(const ValueKey<String>('led-switch')),
+    );
+    await expectPermissionToast(
+      find.byKey(const ValueKey<String>('auto-close-switch')),
+    );
+    await expectPermissionToast(
+      find.byKey(const ValueKey<String>('open-reminder-switch')),
+    );
+    await expectPermissionToast(
+      find.byKey(const ValueKey<String>('partial-open-action')),
+    );
+    await expectPermissionToast(
+      find.byKey(const ValueKey<String>('partial-open-position-action')),
+    );
+
+    expect(gateway.commands, isEmpty);
+    expect(gateway.attributeWriteCount, 0);
+  });
+
+  testWidgets('owner uses the selected device capabilities', (tester) async {
+    final gateway = _RecordingHardwareGateway();
+
+    await _pumpDevicePage(
+      tester,
+      gateway,
+      repository: const _FakeDoorDetailRepository(
+        relationType: 0,
+        effectiveCapabilities: [],
+      ),
+    );
+
+    expect(
+      tester
+          .widget<FlinxSwitch>(find.byKey(const ValueKey<String>('led-switch')))
+          .enabled,
+      isTrue,
+    );
+    expect(
+      tester
+          .widget<FlinxSwitch>(
+            find.byKey(const ValueKey<String>('auto-close-switch')),
+          )
+          .enabled,
+      isTrue,
+    );
+    expect(
+      tester
+          .widget<FlinxSwitch>(
+            find.byKey(const ValueKey<String>('open-reminder-switch')),
+          )
+          .enabled,
+      isTrue,
+    );
+  });
+
+  testWidgets(
+    'shared user uses the intersection of effective and device capabilities',
+    (tester) async {
+      final gateway = _RecordingHardwareGateway();
+
+      await _pumpDevicePage(
+        tester,
+        gateway,
+        repository: const _FakeDoorDetailRepository(
+          relationType: 1,
+          effectiveCapabilities: ['DOOR_CONTROL', 'LED_CONTROL'],
+        ),
+      );
+
+      expect(
+        tester
+            .widget<FlinxSwitch>(
+              find.byKey(const ValueKey<String>('led-switch')),
+            )
+            .enabled,
+        isTrue,
+      );
+      expect(
+        tester
+            .widget<FlinxSwitch>(
+              find.byKey(const ValueKey<String>('auto-close-switch')),
+            )
+            .enabled,
+        isFalse,
+      );
+      expect(
+        tester
+            .widget<FlinxSwitch>(
+              find.byKey(const ValueKey<String>('open-reminder-switch')),
+            )
+            .enabled,
+        isFalse,
+      );
+
+      final partialOpenAction = find.byKey(
+        const ValueKey<String>('partial-open-action'),
+      );
+      await tester.ensureVisible(partialOpenAction);
+      await tester.tap(partialOpenAction);
+      await tester.pumpAndSettle();
+      expect(gateway.commands, isEmpty);
+      toastification.dismissAll(delayForAnimation: false);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      await tester.tap(find.byTooltip('Open'));
+      await tester.pumpAndSettle();
+      expect(gateway.commands, [DoorCommand.open]);
+    },
+  );
+
+  testWidgets('missing relation type is treated as a non-owner', (
+    tester,
+  ) async {
+    final gateway = _RecordingHardwareGateway();
+
+    await _pumpDevicePage(
+      tester,
+      gateway,
+      repository: const _FakeDoorDetailRepository(
+        relationType: null,
+        effectiveCapabilities: ['DOOR_CONTROL'],
+      ),
+    );
+
+    expect(
+      tester
+          .widget<FlinxSwitch>(find.byKey(const ValueKey<String>('led-switch')))
+          .enabled,
+      isFalse,
+    );
+    await tester.tap(find.byTooltip('Open'));
+    await tester.pumpAndSettle();
+    expect(gateway.commands, [DoorCommand.open]);
+  });
+
+  testWidgets('unknown relation type is treated as a non-owner', (
+    tester,
+  ) async {
+    final gateway = _RecordingHardwareGateway();
+
+    await _pumpDevicePage(
+      tester,
+      gateway,
+      repository: const _FakeDoorDetailRepository(
+        relationType: 99,
+        effectiveCapabilities: ['DOOR_CONTROL'],
+      ),
+    );
+
+    expect(
+      tester
+          .widget<FlinxSwitch>(find.byKey(const ValueKey<String>('led-switch')))
+          .enabled,
+      isFalse,
+    );
+    await tester.tap(find.byTooltip('Open'));
+    await tester.pumpAndSettle();
+    expect(gateway.commands, [DoorCommand.open]);
+  });
+
+  testWidgets(
+    'shared user with no effective capabilities cannot control devices',
+    (tester) async {
+      final gateway = _RecordingHardwareGateway();
+
+      await _pumpDevicePage(
+        tester,
+        gateway,
+        repository: const _FakeDoorDetailRepository(
+          relationType: 1,
+          effectiveCapabilities: [],
+        ),
+      );
+
+      expect(
+        tester
+            .widget<FlinxSwitch>(
+              find.byKey(const ValueKey<String>('led-switch')),
+            )
+            .enabled,
+        isFalse,
+      );
+      expect(
+        tester
+            .widget<FlinxSwitch>(
+              find.byKey(const ValueKey<String>('auto-close-switch')),
+            )
+            .enabled,
+        isFalse,
+      );
+      expect(
+        tester
+            .widget<FlinxSwitch>(
+              find.byKey(const ValueKey<String>('open-reminder-switch')),
+            )
+            .enabled,
+        isFalse,
+      );
+
+      await tester.tap(find.byTooltip('Open'));
+      await tester.pumpAndSettle();
+      expect(gateway.commands, isEmpty);
+      toastification.dismissAll(delayForAnimation: false);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+    },
+  );
+
+  testWidgets('recomputes capabilities after selecting another device', (
+    tester,
+  ) async {
+    const repository = _DeviceListDoorDetailRepository(
+      [
+        DoorDevice(
+          deviceId: 'opener-with-led',
+          sn: 'Opener with LED',
+          deviceType: 'opener',
+          capabilities: ['DOOR_CONTROL', 'LED_CONTROL'],
+        ),
+        DoorDevice(
+          deviceId: 'opener-without-led',
+          sn: 'Opener without LED',
+          deviceType: 'opener',
+          capabilities: ['DOOR_CONTROL'],
+        ),
+      ],
+      relationType: 1,
+      effectiveCapabilities: ['LED_CONTROL'],
+    );
+
+    await _pumpDevicePage(
+      tester,
+      _RecordingHardwareGateway(),
+      repository: repository,
+    );
+
+    expect(
+      tester
+          .widget<FlinxSwitch>(find.byKey(const ValueKey<String>('led-switch')))
+          .enabled,
+      isTrue,
+    );
+
+    await tester.tap(find.byTooltip('More'));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(
+        const ValueKey<String>('already-added-device-card-Opener without LED'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      tester
+          .widget<FlinxSwitch>(find.byKey(const ValueKey<String>('led-switch')))
+          .enabled,
+      isFalse,
+    );
+  });
+
+  testWidgets('passes shared capability scope to more settings', (
+    tester,
+  ) async {
+    await _pumpDevicePage(
+      tester,
+      _RecordingHardwareGateway(),
+      repository: const _FakeDoorDetailRepository(
+        capabilities: ['DOOR_CONTROL', 'TRANSMITTER_PAIRING'],
+        relationType: 1,
+        effectiveCapabilities: ['TRANSMITTER_PAIRING', 'LED_CONTROL'],
+      ),
+    );
+
+    final moreSettingsAction = find.byKey(
+      const ValueKey<String>('more-settings-action'),
+    );
+    await tester.ensureVisible(moreSettingsAction);
+    await tester.tap(moreSettingsAction);
+    await tester.pumpAndSettle();
+
+    final settingsPage = tester.widget<DeviceSettingsPage>(
+      find.byType(DeviceSettingsPage),
+    );
+    expect(settingsPage.capabilityScope?.allowedCapabilityCodes, {
+      'TRANSMITTER_PAIRING',
+    });
+    expect(find.text('Transmitter management'), findsOneWidget);
+    expect(find.text('Partial open'), findsNothing);
+    expect(find.text('About the device'), findsOneWidget);
   });
 
   testWidgets('uses door-device list to highlight the matching fixed card', (
@@ -1501,6 +1854,9 @@ Widget _buildPage(
                 deviceId: state.uri.queryParameters['deviceId'] ?? '',
                 bleName: state.uri.queryParameters['bleName'] ?? '',
                 bleDeviceId: state.uri.queryParameters['bleDeviceId'] ?? '',
+                capabilityScope: state.extra is DeviceSettingsCapabilityScope
+                    ? state.extra as DeviceSettingsCapabilityScope
+                    : null,
               ),
             ),
             GoRoute(
@@ -1914,6 +2270,7 @@ DoorDetail _lightDoorDetail(int? ledStatus) {
     name: 'Garage door',
     doorState: DoorState.closed,
     doorStateLabel: 'Closed',
+    relationType: 0,
     operatedCycles: 0,
     remainingCycles: 0,
     ledStatus: ledStatus,
@@ -1927,6 +2284,7 @@ class _SequencedDoorDetailRepository implements DoorDetailRepository {
       name: 'Garage door',
       doorState: DoorState.closed,
       doorStateLabel: 'Closed',
+      relationType: 0,
       positionPercent: 0,
       operatedCycles: 0,
       remainingCycles: 0,
@@ -1936,6 +2294,7 @@ class _SequencedDoorDetailRepository implements DoorDetailRepository {
       name: 'Garage door',
       doorState: DoorState.opening,
       doorStateLabel: 'Opening',
+      relationType: 0,
       positionPercent: 40,
       operatedCycles: 0,
       remainingCycles: 0,
@@ -1945,6 +2304,7 @@ class _SequencedDoorDetailRepository implements DoorDetailRepository {
       name: 'Garage door',
       doorState: DoorState.open,
       doorStateLabel: 'Open',
+      relationType: 0,
       positionPercent: 100,
       operatedCycles: 0,
       remainingCycles: 0,
@@ -2030,6 +2390,7 @@ class _FakeDoorDetailRepository implements DoorDetailRepository {
     this.capabilities = const [
       'DOOR_CONTROL',
       'PARTIAL_OPEN',
+      'PARTIAL_OPEN_LEVEL',
       'LED_CONTROL',
       'AUTO_CLOSE',
       'DOOR_OPEN_REMINDER',
@@ -2038,6 +2399,8 @@ class _FakeDoorDetailRepository implements DoorDetailRepository {
     this.positionPercent,
     this.controlMode,
     this.controlModeLabel,
+    this.relationType = 0,
+    this.effectiveCapabilities = const <String>[],
   });
 
   final List<String> capabilities;
@@ -2045,6 +2408,8 @@ class _FakeDoorDetailRepository implements DoorDetailRepository {
   final double? positionPercent;
   final int? controlMode;
   final String? controlModeLabel;
+  final int? relationType;
+  final List<String> effectiveCapabilities;
 
   @override
   Future<DoorDetail> fetchDoorDetail({
@@ -2057,6 +2422,8 @@ class _FakeDoorDetailRepository implements DoorDetailRepository {
       doorState: DoorState.closed,
       doorStateLabel: 'Closed',
       doorType: doorType,
+      relationType: relationType,
+      effectiveCapabilities: effectiveCapabilities,
       positionPercent: positionPercent,
       controlMode: controlMode,
       controlModeLabel: controlModeLabel,
@@ -2156,6 +2523,7 @@ DoorDetail _testDoorDetail() {
     name: 'Garage door',
     doorState: DoorState.closed,
     doorStateLabel: 'Closed',
+    relationType: 0,
     operatedCycles: 123,
     remainingCycles: 4567,
     ledStatus: 1,
@@ -2177,6 +2545,7 @@ List<DoorDevice> _testDoorDevices() {
       capabilities: [
         'DOOR_CONTROL',
         'PARTIAL_OPEN',
+        'PARTIAL_OPEN_LEVEL',
         'LED_CONTROL',
         'AUTO_CLOSE',
         'DOOR_OPEN_REMINDER',
@@ -2190,6 +2559,8 @@ class _DeviceListDoorDetailRepository extends _FakeDoorDetailRepository {
     this.devices, {
     super.controlMode,
     super.controlModeLabel,
+    super.relationType,
+    super.effectiveCapabilities,
   });
 
   final List<DoorDevice> devices;

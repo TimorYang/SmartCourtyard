@@ -87,12 +87,30 @@ class OpeningSpeedConfig {
   final int current;
 }
 
+String _normalizeCapabilityCode(String code) => code.trim().toUpperCase();
+
+class DeviceSettingsCapabilityScope {
+  DeviceSettingsCapabilityScope({
+    required Iterable<String> allowedCapabilityCodes,
+  }) : allowedCapabilityCodes = Set.unmodifiable(
+         allowedCapabilityCodes
+             .map(_normalizeCapabilityCode)
+             .where((code) => code.isNotEmpty),
+       );
+
+  final Set<String> allowedCapabilityCodes;
+
+  bool allows(String code) =>
+      allowedCapabilityCodes.contains(_normalizeCapabilityCode(code));
+}
+
 class DeviceSettingsPage extends ConsumerStatefulWidget {
   const DeviceSettingsPage({
     required this.doorId,
     required this.deviceId,
     this.bleName = '',
     this.bleDeviceId = '',
+    this.capabilityScope,
     this.forceMarginDialogState = 1,
     this.openingSpeedConfig = const OpeningSpeedConfig._(
       allowedValues: [100, 80, 60],
@@ -108,6 +126,7 @@ class DeviceSettingsPage extends ConsumerStatefulWidget {
   final String doorId;
   final String bleName;
   final String bleDeviceId;
+  final DeviceSettingsCapabilityScope? capabilityScope;
   final int forceMarginDialogState;
   final OpeningSpeedConfig openingSpeedConfig;
 
@@ -129,7 +148,8 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
     final doorSettingsState = ref.watch(
       doorSettingsControllerProvider(widget.doorId),
     );
-    final showsForceMargin = capabilitiesState.supports(
+    final showsForceMargin = _supportsCapability(
+      capabilitiesState,
       DeviceCapabilityCode.forceMargin,
     );
 
@@ -207,7 +227,8 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
                 const SizedBox(height: 10),
                 _SettingsRows(
                   rows: [
-                    if (capabilitiesState.supports(
+                    if (_supportsCapability(
+                      capabilitiesState,
                       DeviceCapabilityCode.transmitterPairing,
                     ))
                       _SettingsRowData(
@@ -220,7 +241,8 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
                           '?deviceId=${Uri.encodeComponent(widget.deviceId)}',
                         ),
                       ),
-                    if (capabilitiesState.supports(
+                    if (_supportsCapability(
+                      capabilitiesState,
                       DeviceCapabilityCode.ledOffDelay,
                     ))
                       _capabilitySettingsRow(
@@ -235,7 +257,8 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
                           DeviceCapabilityCode.ledOffDelay,
                         ),
                       ),
-                    if (capabilitiesState.supports(
+                    if (_supportsCapability(
+                      capabilitiesState,
                       DeviceCapabilityCode.partialOpenLevel,
                     ))
                       _capabilitySettingsRow(
@@ -250,7 +273,8 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
                           DeviceCapabilityCode.partialOpen,
                         ),
                       ),
-                    if (capabilitiesState.supports(
+                    if (_supportsCapability(
+                      capabilitiesState,
                       DeviceCapabilityCode.autoClose,
                     ))
                       _capabilitySettingsRow(
@@ -265,7 +289,8 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
                           DeviceCapabilityCode.autoClose,
                         ),
                       ),
-                    if (capabilitiesState.supports(
+                    if (_supportsCapability(
+                      capabilitiesState,
                       DeviceCapabilityCode.openingSpeed,
                     ))
                       _capabilitySettingsRow(
@@ -291,7 +316,8 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
                         ),
                       ),
                     ),
-                    if (capabilitiesState.supports(
+                    if (_supportsCapability(
+                      capabilitiesState,
                       DeviceCapabilityCode.doorOpenReminder,
                     ))
                       _capabilitySettingsRow(
@@ -346,6 +372,14 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
         ),
       ),
     );
+  }
+
+  bool _supportsCapability(
+    DeviceCapabilitiesState capabilitiesState,
+    String code,
+  ) {
+    return capabilitiesState.supports(code) &&
+        (widget.capabilityScope?.allows(code) ?? true);
   }
 
   String _settingValue(
@@ -625,10 +659,7 @@ class AboutDevicePage extends ConsumerStatefulWidget {
   static String location({required String doorId, required String deviceId}) {
     return Uri(
       path: routePath,
-      queryParameters: <String, String>{
-        'doorId': doorId,
-        'deviceId': deviceId,
-      },
+      queryParameters: <String, String>{'doorId': doorId, 'deviceId': deviceId},
     ).toString();
   }
 

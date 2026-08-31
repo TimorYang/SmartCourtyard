@@ -54,6 +54,8 @@ void main() {
       'name': 'Main Gate',
       'doorType': 0,
       'onlineStatus': 2,
+      'relationType': 1,
+      'effectiveCapabilities': ['DOOR_CONTROL', ' LED_CONTROL '],
       'doorState': 0,
       'doorStateLabel': 'Unknown',
       'positionPercent': null,
@@ -72,6 +74,8 @@ void main() {
     expect(dto.name, 'Main Gate');
     expect(dto.doorType, 0);
     expect(dto.onlineStatus, 2);
+    expect(dto.relationType, 1);
+    expect(dto.effectiveCapabilities, ['DOOR_CONTROL', ' LED_CONTROL ']);
     expect(dto.doorState, 0);
     expect(dto.doorStateLabel, 'Unknown');
     expect(dto.positionPercent, isNull);
@@ -83,6 +87,21 @@ void main() {
     expect(dto.autoCloseEnabled, isFalse);
     expect(dto.openReminderEnabled, isTrue);
     expect(dto.partialOpenValue, 60);
+  });
+
+  test('defaults missing or empty effective capabilities to an empty list', () {
+    final missing = DoorDetailResponseDto.fromJson(const {
+      'id': '12',
+      'name': 'Main Gate',
+    });
+    final empty = DoorDetailResponseDto.fromJson(const {
+      'id': '12',
+      'name': 'Main Gate',
+      'effectiveCapabilities': [],
+    });
+
+    expect(missing.effectiveCapabilities, isEmpty);
+    expect(empty.effectiveCapabilities, isEmpty);
   });
 
   test('fetches door detail with door id and request id', () async {

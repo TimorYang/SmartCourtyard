@@ -1993,6 +1993,7 @@
     }
   },
   "deviceCommandPartialOpenTitle": "Partial open",
+  "deviceCommandPermissionDenied": "You don't have permission to use this control.",
   "deviceCommandPartialOpenSettingUnavailable": "Partial-open positions are temporarily unavailable. Please try again.",
   "deviceCommandPartialOpenSettingFailed": "Unable to save the partial-open position. Please try again.",
   "deviceCommandMoreSettingsTitle": "More settings",
