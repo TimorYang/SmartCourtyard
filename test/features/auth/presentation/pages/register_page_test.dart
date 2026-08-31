@@ -167,13 +167,16 @@ void main() {
       expect(find.text('Set your password'), findsOneWidget);
       expect(find.text('Enter password'), findsOneWidget);
       expect(find.text('Enter password again'), findsOneWidget);
-      expect(find.text('Login'), findsOneWidget);
+      final loginButton = find.text('Login');
+      expect(loginButton, findsOneWidget);
+      final passwordRule = find.text(
+        'Contain at least one lowercase letter, one uppercase letter, and one '
+        'number, with a length between 8 and 16 characters.',
+      );
+      expect(passwordRule, findsOneWidget);
       expect(
-        find.text(
-          'Contain at least one lowercase letter, one uppercase letter, and one '
-          'number, with a length between 8 and 16 characters.',
-        ),
-        findsOneWidget,
+        tester.getBottomLeft(passwordRule).dy,
+        lessThan(tester.getTopLeft(loginButton).dy),
       );
     },
   );

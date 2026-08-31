@@ -106,17 +106,17 @@ class _RegisterPasswordPageState extends ConsumerState<RegisterPasswordPage> {
           textInputAction: TextInputAction.done,
           onChanged: controller.updateConfirmPassword,
         ),
+        const SizedBox(height: 8),
+        Text(
+          l10n.registerPasswordRule,
+          style: AppTextTokens.authPasswordRule(Theme.of(context).textTheme),
+        ),
         const SizedBox(height: 55),
         AuthPrimaryButton(
           label: l10n.loginAction,
           onPressed: state.canSubmit
               ? () => _submit(context, controller)
               : null,
-        ),
-        const SizedBox(height: 20),
-        Text(
-          l10n.registerPasswordRule,
-          style: AppTextTokens.authPasswordRule(Theme.of(context).textTheme),
         ),
       ],
     );
