@@ -30,6 +30,65 @@ void main() {
     expect(find.text('Force margin'), findsOneWidget);
   });
 
+  testWidgets('localizes known setting titles instead of server labels', (
+    tester,
+  ) async {
+    await _pumpSettingsRouter(
+      tester,
+      locale: const Locale('zh'),
+      capabilityDefinitions: const [
+        DeviceCapability(
+          code: DeviceCapabilityCode.ledOffDelay,
+          label: 'Server LED off delay',
+        ),
+        DeviceCapability(
+          code: DeviceCapabilityCode.partialOpenLevel,
+          label: 'Server partial open',
+        ),
+        DeviceCapability(
+          code: DeviceCapabilityCode.autoClose,
+          label: 'Server auto close',
+        ),
+        DeviceCapability(
+          code: DeviceCapabilityCode.doorOpenReminder,
+          label: 'Server door open reminder',
+        ),
+      ],
+      settingSnapshots: const [
+        DoorSettingSnapshot(
+          code: DeviceCapabilityCode.ledOffDelay,
+          label: 'Server LED off delay setting',
+          supported: true,
+          configured: true,
+        ),
+        DoorSettingSnapshot(
+          code: DeviceCapabilityCode.partialOpen,
+          label: 'Server partial open setting',
+          supported: true,
+          configured: true,
+        ),
+        DoorSettingSnapshot(
+          code: DeviceCapabilityCode.autoClose,
+          label: 'Server auto close setting',
+          supported: true,
+          configured: true,
+        ),
+        DoorSettingSnapshot(
+          code: DeviceCapabilityCode.doorOpenReminder,
+          label: 'Server door open reminder setting',
+          supported: true,
+          configured: true,
+        ),
+      ],
+    );
+
+    expect(find.text('LED 熄灭延时'), findsOneWidget);
+    expect(find.text('部分开启'), findsOneWidget);
+    expect(find.text('自动关闭'), findsOneWidget);
+    expect(find.text('开门提醒'), findsOneWidget);
+    expect(find.textContaining('Server '), findsNothing);
+  });
+
   testWidgets('accepts a hexadecimal raw value and refreshes the page', (
     tester,
   ) async {
@@ -260,7 +319,7 @@ void main() {
   ) async {
     await _pumpSettingsRouter(
       tester,
-      capabilities: const [DeviceCapabilityCode.ledOffDelay],
+      capabilities: const [DeviceCapabilityCode.ledOffDelay, 'UNKNOWN_SETTING'],
     );
 
     expect(find.text('Transmitter management'), findsNothing);
@@ -270,6 +329,7 @@ void main() {
     expect(find.text('Opening speed'), findsNothing);
     expect(find.text('Door open reminder'), findsNothing);
     expect(find.text('Force margin'), findsNothing);
+    expect(find.text('UNKNOWN_SETTING'), findsNothing);
     expect(find.text('About the device'), findsOneWidget);
   });
 }
@@ -277,6 +337,7 @@ void main() {
 Future<void> _pumpSettingsRouter(
   WidgetTester tester, {
   bool setDefaultSize = true,
+  Locale? locale,
   bool bleConnected = true,
   bool matchingBleName = true,
   List<String> capabilities = const [
@@ -335,6 +396,7 @@ Future<void> _pumpSettingsRouter(
         ),
       ],
       child: MaterialApp.router(
+        locale: locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         routerConfig: GoRouter(

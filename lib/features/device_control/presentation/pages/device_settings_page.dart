@@ -226,7 +226,7 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
                       _capabilitySettingsRow(
                         assetPath: DeviceSettingsAssetPaths.ledOffDelay,
                         fallbackIcon: Icons.light_mode_outlined,
-                        fallbackTitle: l10n.deviceSettingsLedOffDelay,
+                        localizedTitle: l10n.deviceSettingsLedOffDelay,
                         key: DeviceSettingKey.ledOffDelay,
                         capability: capabilitiesState.capabilityFor(
                           DeviceCapabilityCode.ledOffDelay,
@@ -241,7 +241,7 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
                       _capabilitySettingsRow(
                         assetPath: DeviceSettingsAssetPaths.partialOpen,
                         fallbackIcon: Icons.sensor_door_outlined,
-                        fallbackTitle: l10n.deviceSettingsPartialOpen,
+                        localizedTitle: l10n.deviceSettingsPartialOpen,
                         key: DeviceSettingKey.partialOpen,
                         capability: capabilitiesState.capabilityFor(
                           DeviceCapabilityCode.partialOpenLevel,
@@ -256,7 +256,7 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
                       _capabilitySettingsRow(
                         assetPath: DeviceSettingsAssetPaths.autoClose,
                         fallbackIcon: Icons.door_back_door_outlined,
-                        fallbackTitle: l10n.deviceSettingsAutoClose,
+                        localizedTitle: l10n.deviceSettingsAutoClose,
                         key: DeviceSettingKey.autoCloseTime,
                         capability: capabilitiesState.capabilityFor(
                           DeviceCapabilityCode.autoClose,
@@ -271,7 +271,7 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
                       _capabilitySettingsRow(
                         assetPath: DeviceSettingsAssetPaths.openingSpeed,
                         fallbackIcon: Icons.speed_outlined,
-                        fallbackTitle: l10n.deviceSettingsOpeningSpeed,
+                        localizedTitle: l10n.deviceSettingsOpeningSpeed,
                         key: DeviceSettingKey.openingSpeed,
                         capability: capabilitiesState.capabilityFor(
                           DeviceCapabilityCode.openingSpeed,
@@ -297,7 +297,7 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
                       _capabilitySettingsRow(
                         assetPath: DeviceSettingsAssetPaths.doorOpenReminder,
                         fallbackIcon: Icons.notifications_active_outlined,
-                        fallbackTitle: l10n.deviceSettingsDoorOpenReminder,
+                        localizedTitle: l10n.deviceSettingsDoorOpenReminder,
                         key: DeviceSettingKey.doorOpenReminder,
                         capability: capabilitiesState.capabilityFor(
                           DeviceCapabilityCode.doorOpenReminder,
@@ -391,7 +391,7 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
   _SettingsRowData _capabilitySettingsRow({
     required String assetPath,
     required IconData fallbackIcon,
-    required String fallbackTitle,
+    required String localizedTitle,
     required DeviceSettingKey key,
     required DeviceCapability? capability,
     required DoorSettingSnapshot? setting,
@@ -400,11 +400,7 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
     final settingsState = ref.read(
       deviceSettingsControllerProvider(widget.bleDeviceId),
     );
-    final title = setting?.label.isNotEmpty == true
-        ? setting!.label
-        : capability?.label.isNotEmpty == true
-        ? capability!.label
-        : fallbackTitle;
+    final title = localizedTitle;
     return _SettingsRowData(
       assetPath: assetPath,
       fallbackIcon: fallbackIcon,
