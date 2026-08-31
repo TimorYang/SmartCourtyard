@@ -4,6 +4,7 @@ import 'package:flinx/features/notification/data/data_sources/notification_messa
 import 'package:flinx/features/notification/data/data_sources/notification_message_remote_data_source.dart';
 import 'package:flinx/features/notification/data/dto/notification_message_dto.dart';
 import 'package:flinx/features/notification/data/repositories/notification_message_repository_impl.dart';
+import 'package:flinx/features/notification/domain/entities/app_notification.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -18,6 +19,7 @@ void main() {
           'templateCode': 'DEVICE_ABNORMAL',
           'type': 'DEVICE',
           'iconCode': 'device-alert',
+          'colorTag': 'BLUE',
           'title': 'Device Abnormality Alert',
           'label': 'Device Message',
           'summary': 'An abnormality has been detected.',
@@ -38,7 +40,24 @@ void main() {
     });
 
     expect(page.records.single.createTime, '1786100633000');
+    expect(page.records.single.colorTag, 'BLUE');
+    expect(page.records.single.toJson()['colorTag'], 'BLUE');
     expect(detail.createTime, '1786100633000');
+  });
+
+  test('maps color tags to typed domain values with an unknown fallback', () {
+    const expectedTags = <String, NotificationColorTag>{
+      'RED': NotificationColorTag.red,
+      ' green ': NotificationColorTag.green,
+      'blue': NotificationColorTag.blue,
+      'PURPLE': NotificationColorTag.unknown,
+    };
+
+    for (final entry in expectedTags.entries) {
+      final message = _messageCard(colorTag: entry.key).toDomain();
+      expect(message.colorTag, entry.value, reason: entry.key);
+    }
+    expect(_messageCard().toDomain().colorTag, NotificationColorTag.unknown);
   });
 
   test('formats a millisecond timestamp when mapping notification data', () {
@@ -103,6 +122,20 @@ String _expectedTimestamp(int milliseconds) {
       '${twoDigits(value.hour)}:${twoDigits(value.minute)}:'
       '${twoDigits(value.second)}';
 }
+
+NotificationMessageCardDto _messageCard({String? colorTag}) =>
+    NotificationMessageCardDto(
+      id: '2',
+      templateCode: 'DEVICE_ABNORMAL',
+      type: 'DEVICE',
+      iconCode: 'device-alert',
+      colorTag: colorTag,
+      title: 'Device Abnormality Alert',
+      label: 'Device Message',
+      summary: 'An abnormality has been detected.',
+      read: true,
+      createTime: '1786100633000',
+    );
 
 class _FakeNotificationMessageApi implements NotificationMessageApi {
   _FakeNotificationMessageApi({this.code = 200});

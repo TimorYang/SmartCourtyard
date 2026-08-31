@@ -123,6 +123,7 @@ extension NotificationMessageCardDtoMapper on NotificationMessageCardDto {
     templateCode: templateCode,
     type: type,
     kind: _notificationKind(templateCode, type),
+    colorTag: _notificationColorTag(colorTag),
     title: title,
     category: label,
     summary: summary,
@@ -167,6 +168,14 @@ NotificationKind _notificationKind(String templateCode, String type) {
   }
   return NotificationKind.systemMaintenance;
 }
+
+NotificationColorTag _notificationColorTag(String? value) =>
+    switch (value?.trim().toUpperCase()) {
+      'RED' => NotificationColorTag.red,
+      'GREEN' => NotificationColorTag.green,
+      'BLUE' => NotificationColorTag.blue,
+      _ => NotificationColorTag.unknown,
+    };
 
 String _formatTimestamp(String value) {
   final normalized = value.trim();

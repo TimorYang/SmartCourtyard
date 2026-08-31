@@ -176,7 +176,10 @@ class _NotificationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final categoryColors = _categoryColors(notification.type);
+    final categoryColors = _categoryColors(
+      notification.colorTag,
+      notification.type,
+    );
 
     return Semantics(
       button: true,
@@ -304,7 +307,24 @@ class _NotificationCard extends StatelessWidget {
       'assets/icons/notification/notification_system_maintenance_placeholder.png',
   };
 
-  (Color, Color) _categoryColors(String type) => switch (type
+  (Color, Color) _categoryColors(NotificationColorTag colorTag, String type) =>
+      switch (colorTag) {
+        NotificationColorTag.red => (
+          AppColors.notificationEquipmentTag,
+          AppColors.notificationEquipmentText,
+        ),
+        NotificationColorTag.green => (
+          AppColors.notificationUpgradeTag,
+          AppColors.notificationUpgradeText,
+        ),
+        NotificationColorTag.blue => (
+          AppColors.notificationServiceTag,
+          AppColors.notificationServiceText,
+        ),
+        NotificationColorTag.unknown => _legacyCategoryColors(type),
+      };
+
+  (Color, Color) _legacyCategoryColors(String type) => switch (type
       .trim()
       .toUpperCase()) {
     'FIRMWARE' => (

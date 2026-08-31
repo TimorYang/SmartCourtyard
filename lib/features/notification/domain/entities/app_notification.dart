@@ -8,12 +8,15 @@ enum NotificationKind {
   systemMaintenance, //系统维护
 }
 
+enum NotificationColorTag { red, green, blue, unknown }
+
 class AppNotification {
   const AppNotification({
     required this.id,
     required this.templateCode,
     required this.type,
     required this.kind,
+    this.colorTag = NotificationColorTag.unknown,
     required this.title,
     required this.category,
     required this.summary,
@@ -25,6 +28,7 @@ class AppNotification {
   final String templateCode;
   final String type;
   final NotificationKind kind;
+  final NotificationColorTag colorTag;
   final String title;
   final String category;
   final String summary;
@@ -36,6 +40,7 @@ class AppNotification {
     templateCode: templateCode,
     type: type,
     kind: kind,
+    colorTag: colorTag,
     title: title,
     category: category,
     summary: summary,

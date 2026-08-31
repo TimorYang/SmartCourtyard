@@ -44,6 +44,7 @@ class NotificationMessageCardDto {
     required this.templateCode,
     required this.type,
     required this.iconCode,
+    this.colorTag,
     required this.title,
     required this.label,
     required this.summary,
@@ -55,6 +56,7 @@ class NotificationMessageCardDto {
   final String templateCode;
   final String type;
   final String? iconCode;
+  final String? colorTag;
   final String title;
   final String label;
   final String summary;
@@ -67,6 +69,7 @@ class NotificationMessageCardDto {
         templateCode: json['templateCode'] as String? ?? '',
         type: json['type'] as String? ?? '',
         iconCode: json['iconCode'] as String?,
+        colorTag: json['colorTag'] as String?,
         title: json['title'] as String? ?? '',
         label: json['label'] as String? ?? '',
         summary: json['summary'] as String? ?? '',
@@ -79,6 +82,7 @@ class NotificationMessageCardDto {
     'templateCode': templateCode,
     'type': type,
     'iconCode': iconCode,
+    'colorTag': colorTag,
     'title': title,
     'label': label,
     'summary': summary,

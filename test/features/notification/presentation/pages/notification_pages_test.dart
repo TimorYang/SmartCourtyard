@@ -46,38 +46,54 @@ void main() {
     },
   );
 
-  testWidgets('uses API message type for notification category colors', (
+  testWidgets('uses API color tag with a message type fallback', (
     tester,
   ) async {
     await tester.pumpWidget(
       _app(
         initialLocation: NotificationListPage.routePath,
-        repository: _TypeColorNotificationMessageRepository(),
+        repository: _ColorTagNotificationMessageRepository(),
       ),
     );
     await tester.pumpAndSettle();
 
     _expectCategoryColors(
       tester,
-      id: 'device',
+      id: 'red',
       background: AppColors.notificationEquipmentTag,
       foreground: AppColors.notificationEquipmentText,
     );
     _expectCategoryColors(
       tester,
-      id: 'security',
-      background: AppColors.notificationEquipmentTag,
-      foreground: AppColors.notificationEquipmentText,
-    );
-    _expectCategoryColors(
-      tester,
-      id: 'firmware',
+      id: 'green',
       background: AppColors.notificationUpgradeTag,
       foreground: AppColors.notificationUpgradeText,
     );
     _expectCategoryColors(
       tester,
-      id: 'other',
+      id: 'blue',
+      background: AppColors.notificationServiceTag,
+      foreground: AppColors.notificationServiceText,
+    );
+    _expectCategoryColors(
+      tester,
+      id: 'fallback-device',
+      background: AppColors.notificationEquipmentTag,
+      foreground: AppColors.notificationEquipmentText,
+    );
+
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -800));
+    await tester.pumpAndSettle();
+
+    _expectCategoryColors(
+      tester,
+      id: 'fallback-firmware',
+      background: AppColors.notificationUpgradeTag,
+      foreground: AppColors.notificationUpgradeText,
+    );
+    _expectCategoryColors(
+      tester,
+      id: 'fallback-other',
       background: AppColors.notificationServiceTag,
       foreground: AppColors.notificationServiceText,
     );
@@ -238,7 +254,7 @@ class _FakeNotificationMessageRepository
   Future<void> markAllRead({required String requestId}) async {}
 }
 
-class _TypeColorNotificationMessageRepository
+class _ColorTagNotificationMessageRepository
     extends _FakeNotificationMessageRepository {
   @override
   Future<NotificationMessagePageResult> fetchMessages({
@@ -248,10 +264,12 @@ class _TypeColorNotificationMessageRepository
   }) async => NotificationMessagePageResult(
     messages:
         const [
-              ('device', 'DEVICE'),
-              ('security', ' security '),
-              ('firmware', 'FIRMWARE'),
-              ('other', 'SYSTEM'),
+              ('red', 'SYSTEM', NotificationColorTag.red),
+              ('green', 'DEVICE', NotificationColorTag.green),
+              ('blue', 'FIRMWARE', NotificationColorTag.blue),
+              ('fallback-device', 'DEVICE', NotificationColorTag.unknown),
+              ('fallback-firmware', 'FIRMWARE', NotificationColorTag.unknown),
+              ('fallback-other', 'SYSTEM', NotificationColorTag.unknown),
             ]
             .map(
               (item) => AppNotification(
@@ -259,6 +277,7 @@ class _TypeColorNotificationMessageRepository
                 templateCode: 'TEST',
                 type: item.$2,
                 kind: NotificationKind.systemMaintenance,
+                colorTag: item.$3,
                 title: item.$1,
                 category: item.$1,
                 summary: item.$1,
@@ -269,7 +288,7 @@ class _TypeColorNotificationMessageRepository
             .toList(growable: false),
     currentPage: 1,
     pageSize: 20,
-    total: 4,
+    total: 6,
     hasMore: false,
   );
 }
