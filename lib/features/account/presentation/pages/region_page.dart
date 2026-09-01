@@ -51,31 +51,46 @@ class RegionPage extends ConsumerWidget {
                         child: Text(l10n.regionOptionsRetryAction),
                       ),
                     ),
-                    data: (state) => ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 32),
-                      itemCount: state.regions.length,
-                      itemBuilder: (context, index) {
-                        final region = state.regions[index];
-                        return _RegionRow(
-                          option: region,
-                          label: region.displayName,
-                          selected: state.selectedRegionCode == region.code,
-                          isEnabled: !state.isSaving,
-                          onTap: () async {
-                            final saved = await ref
-                                .read(
-                                  regionSelectionControllerProvider.notifier,
-                                )
-                                .select(region.code);
-                            if (!saved && context.mounted) {
-                              AppToast.error(
-                                context,
-                                l10n.regionOptionsSaveFailed,
-                              );
-                            }
+                    data: (state) => Stack(
+                      children: [
+                        ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 32),
+                          itemCount: state.regions.length,
+                          itemBuilder: (context, index) {
+                            final region = state.regions[index];
+                            return _RegionRow(
+                              option: region,
+                              label: region.displayName,
+                              selected: state.selectedRegionCode == region.code,
+                              isEnabled: !state.isSaving,
+                              onTap: () async {
+                                final saved = await ref
+                                    .read(
+                                      regionSelectionControllerProvider
+                                          .notifier,
+                                    )
+                                    .select(region.code);
+                                if (!saved && context.mounted) {
+                                  AppToast.error(
+                                    context,
+                                    l10n.regionOptionsSaveFailed,
+                                  );
+                                }
+                              },
+                            );
                           },
-                        );
-                      },
+                        ),
+                        if (state.isSaving)
+                          const Positioned.fill(
+                            child: AbsorbPointer(
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  key: RegionPageKeys.savingIndicator,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ),
@@ -90,6 +105,8 @@ class RegionPage extends ConsumerWidget {
 
 class RegionPageKeys {
   const RegionPageKeys._();
+
+  static const savingIndicator = ValueKey('region-saving-indicator');
 
   static ValueKey<String> option(String id) => ValueKey('region-option-$id');
 }

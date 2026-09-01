@@ -32,21 +32,28 @@ class RegionSelectionController extends AsyncNotifier<RegionSelectionState> {
   @override
   Future<RegionSelectionState> build() async {
     final repository = ref.watch(accountRepositoryProvider);
-    final profile = await repository.readCachedProfile();
+    ref.listen(accountControllerProvider, (_, next) {
+      next.whenOrNull(
+        data: (profile) =>
+            _syncSelectedRegion(profile?.regionCode ?? profile?.country),
+      );
+    });
+
     final regions = await repository.fetchRegionOptions(
       requestId:
           'account-region-options-${DateTime.now().microsecondsSinceEpoch}',
     );
-    final profileRegionCode = profile?.regionCode ?? profile?.country;
-    final selectedRegionCode =
-        regions.any((region) => region.code == profileRegionCode)
-        ? profileRegionCode
-        : regions.isEmpty
-        ? null
-        : regions.first.code;
+    final accountProfile = ref
+        .read(accountControllerProvider)
+        .maybeWhen(data: (value) => value, orElse: () => null);
+    final profile = accountProfile ?? await repository.readCachedProfile();
+
     return RegionSelectionState(
       regions: regions,
-      selectedRegionCode: selectedRegionCode,
+      selectedRegionCode: _selectedRegionCode(
+        regions,
+        profile?.regionCode ?? profile?.country,
+      ),
     );
   }
 
@@ -70,5 +77,48 @@ class RegionSelectionController extends AsyncNotifier<RegionSelectionState> {
       ),
     );
     return updated;
+  }
+
+  void _syncSelectedRegion(String? profileRegionCode) {
+    final current = state.whenOrNull(data: (value) => value);
+    if (current == null || current.isSaving) {
+      return;
+    }
+
+    final selectedRegionCode = _selectedRegionCode(
+      current.regions,
+      profileRegionCode,
+    );
+    if (current.selectedRegionCode == selectedRegionCode) {
+      return;
+    }
+    state = AsyncData(
+      RegionSelectionState(
+        regions: current.regions,
+        selectedRegionCode: selectedRegionCode,
+      ),
+    );
+  }
+
+  String? _selectedRegionCode(
+    List<RegionOption> regions,
+    String? profileRegionCode,
+  ) {
+    final normalizedProfileCode = _normalizeRegionCode(profileRegionCode);
+    if (normalizedProfileCode == null) {
+      return regions.isEmpty ? null : regions.first.code;
+    }
+
+    for (final region in regions) {
+      if (_normalizeRegionCode(region.code) == normalizedProfileCode) {
+        return region.code;
+      }
+    }
+    return null;
+  }
+
+  String? _normalizeRegionCode(String? value) {
+    final trimmed = value?.trim();
+    return trimmed == null || trimmed.isEmpty ? null : trimmed.toUpperCase();
   }
 }
