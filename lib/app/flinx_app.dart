@@ -12,6 +12,7 @@ import '../core/diagnostics/diagnostic_logging.dart';
 import '../features/account/application/providers.dart';
 import '../features/account/domain/entities/app_locale_preference.dart';
 import 'router/app_router.dart';
+import 'theme/app_design_tokens.dart';
 import 'theme/app_theme.dart';
 
 class FlinxApp extends ConsumerStatefulWidget {
@@ -34,13 +35,13 @@ class _FlinxAppState extends ConsumerState<FlinxApp> {
   @override
   Widget build(BuildContext context) {
     ref.watch(diagnosticLoggingControllerProvider);
+    final localeState = ref.watch(appLocaleControllerProvider);
+    final locale = localeState.value;
+    if (locale == null) {
+      return const ColoredBox(color: AppColors.backgroundPrimary);
+    }
+
     final router = ref.watch(appRouterProvider);
-    final locale = ref
-        .watch(appLocaleControllerProvider)
-        .maybeWhen(
-          data: (value) => value,
-          orElse: () => ref.watch(systemAppLocaleProvider),
-        );
 
     if (!kDebugMode) {
       return _buildApp(

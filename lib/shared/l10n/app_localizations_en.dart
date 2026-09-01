@@ -1050,19 +1050,49 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountLanguageDialogTitle => 'Language';
 
   @override
-  String get accountLanguageOptionFrench => 'France';
-
-  @override
   String get accountLanguageOptionEnglish => 'English';
 
   @override
   String get accountLanguageOptionSimplifiedChinese => '中文(简体)';
 
   @override
-  String get accountLanguageOptionTraditionalChinese => '中文(繁体)';
+  String get accountLanguageOptionArgentineSpanish => 'Español (Argentina)';
 
   @override
-  String get accountLanguageOptionGerman => 'Das ist Deutsch';
+  String get accountLanguageOptionItalian => 'Italiano';
+
+  @override
+  String get accountLanguageOptionEuropeanPortuguese => 'Português (Portugal)';
+
+  @override
+  String get accountLanguageOptionCzech => 'Čeština';
+
+  @override
+  String get accountLanguageOptionDutch => 'Nederlands';
+
+  @override
+  String get accountLanguageOptionFrench => 'Français';
+
+  @override
+  String get accountLanguageOptionGerman => 'Deutsch';
+
+  @override
+  String get accountLanguageOptionPolish => 'Polski';
+
+  @override
+  String get accountLanguageOptionUkrainian => 'Українська';
+
+  @override
+  String get accountLanguageOptionRussian => 'Русский';
+
+  @override
+  String get accountLanguageOptionNorwegian => 'Norsk';
+
+  @override
+  String get accountLanguageOptionHungarian => 'Magyar';
+
+  @override
+  String get accountLanguageOptionTraditionalChinese => '中文(繁体)';
 
   @override
   String get accountLanguageCancelAction => 'Cancel';

@@ -991,19 +991,49 @@ class AppLocalizationsZh extends AppLocalizations {
   String get accountLanguageDialogTitle => '语言';
 
   @override
-  String get accountLanguageOptionFrench => '法国';
-
-  @override
   String get accountLanguageOptionEnglish => '英语';
 
   @override
   String get accountLanguageOptionSimplifiedChinese => '中文(简体)';
 
   @override
-  String get accountLanguageOptionTraditionalChinese => '中文(繁体)';
+  String get accountLanguageOptionArgentineSpanish => '阿根廷西班牙语';
+
+  @override
+  String get accountLanguageOptionItalian => '意大利语';
+
+  @override
+  String get accountLanguageOptionEuropeanPortuguese => '葡萄牙语（葡萄牙）';
+
+  @override
+  String get accountLanguageOptionCzech => '捷克语';
+
+  @override
+  String get accountLanguageOptionDutch => '荷兰语';
+
+  @override
+  String get accountLanguageOptionFrench => '法语';
 
   @override
   String get accountLanguageOptionGerman => '德语';
+
+  @override
+  String get accountLanguageOptionPolish => '波兰语';
+
+  @override
+  String get accountLanguageOptionUkrainian => '乌克兰语';
+
+  @override
+  String get accountLanguageOptionRussian => '俄语';
+
+  @override
+  String get accountLanguageOptionNorwegian => '挪威语';
+
+  @override
+  String get accountLanguageOptionHungarian => '匈牙利语';
+
+  @override
+  String get accountLanguageOptionTraditionalChinese => '中文(繁体)';
 
   @override
   String get accountLanguageCancelAction => '取消';

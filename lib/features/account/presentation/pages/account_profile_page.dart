@@ -461,51 +461,59 @@ class _AccountProfileContent extends StatelessWidget {
       AppLocalePreference.english => l10n.accountLanguageOptionEnglish,
       AppLocalePreference.simplifiedChinese =>
         l10n.accountLanguageOptionSimplifiedChinese,
+      AppLocalePreference.argentineSpanish =>
+        l10n.accountLanguageOptionArgentineSpanish,
+      AppLocalePreference.italian => l10n.accountLanguageOptionItalian,
+      AppLocalePreference.europeanPortuguese =>
+        l10n.accountLanguageOptionEuropeanPortuguese,
+      AppLocalePreference.czech => l10n.accountLanguageOptionCzech,
+      AppLocalePreference.dutch => l10n.accountLanguageOptionDutch,
+      AppLocalePreference.french => l10n.accountLanguageOptionFrench,
+      AppLocalePreference.german => l10n.accountLanguageOptionGerman,
+      AppLocalePreference.polish => l10n.accountLanguageOptionPolish,
+      AppLocalePreference.ukrainian => l10n.accountLanguageOptionUkrainian,
+      AppLocalePreference.russian => l10n.accountLanguageOptionRussian,
+      AppLocalePreference.norwegian => l10n.accountLanguageOptionNorwegian,
+      AppLocalePreference.hungarian => l10n.accountLanguageOptionHungarian,
     };
   }
 
   List<_LanguageOptionData> _fallbackLanguageOptions(AppLocalizations l10n) {
-    return [
-      _LanguageOptionData(
-        label: l10n.accountLanguageOptionSimplifiedChinese,
-        locale: AppLocalePreference.simplifiedChinese,
-        serverLocale: 'zh-CN',
-      ),
-      _LanguageOptionData(
-        label: l10n.accountLanguageOptionEnglish,
-        locale: AppLocalePreference.english,
-        serverLocale: 'en-US',
-      ),
-    ];
+    return AppLocalePreference.values
+        .map(
+          (locale) => _LanguageOptionData(
+            label: _languageLabel(l10n, locale),
+            locale: locale,
+            serverLocale: locale.serverLocale,
+          ),
+        )
+        .toList(growable: false);
   }
 
   List<_LanguageOptionData> _remoteLanguageOptions(
     List<AppLanguageOption> options,
   ) {
     final seenLocales = <String>{};
-    return options
-        .map(
-          (option) => (
-            locale:
-                AppLocalePreference.fromLanguageCode(option.locale) ??
-                AppLocalePreference.english,
-            label: option.nativeName,
-            serverLocale: option.locale,
-          ),
-        )
-        .where(
-          (option) =>
-              option.serverLocale.trim().isNotEmpty && option.label.isNotEmpty,
-        )
-        .where((option) => seenLocales.add(option.serverLocale.toLowerCase()))
-        .map(
-          (option) => _LanguageOptionData(
-            label: option.label,
-            locale: option.locale,
-            serverLocale: option.serverLocale,
-          ),
-        )
-        .toList(growable: false);
+    final languages = <_LanguageOptionData>[];
+    for (final option in options) {
+      final serverLocale = option.locale.trim();
+      final label = option.nativeName.trim();
+      final locale = AppLocalePreference.fromLanguageCode(serverLocale);
+      if (serverLocale.isEmpty ||
+          label.isEmpty ||
+          locale == null ||
+          !seenLocales.add(serverLocale.toLowerCase())) {
+        continue;
+      }
+      languages.add(
+        _LanguageOptionData(
+          label: label,
+          locale: locale,
+          serverLocale: serverLocale,
+        ),
+      );
+    }
+    return languages;
   }
 }
 

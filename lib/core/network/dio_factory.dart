@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 import '../config/app_api_configuration.dart';
+import '../localization/current_app_locale_store.dart';
 import '../logging/app_logger.dart';
 import 'access_token_cache.dart';
 import 'debug_system_proxy.dart';
@@ -22,6 +23,7 @@ abstract final class NetworkRequestExtras {
 abstract final class NetworkHeaders {
   static const requestId = 'X-Request-Id';
   static const bladeAuth = 'Blade-Auth';
+  static const acceptLanguage = 'Accept-Language';
 }
 
 class DioFactory {
@@ -32,6 +34,7 @@ class DioFactory {
     required AppLogger logger,
     SessionExpiredHandler onSessionExpired = ignoreSessionExpired,
     TokenRefreshHandler onTokenRefresh = noTokenRefreshAvailable,
+    String Function()? acceptLanguageResolver,
   }) {
     final dio = Dio(
       BaseOptions(
@@ -61,6 +64,9 @@ class DioFactory {
       );
     }
     dio.interceptors.addAll([
+      _AcceptLanguageInterceptor(
+        acceptLanguageResolver ?? () => CurrentAppLocaleStore.defaultLocale,
+      ),
       _RequestIdInterceptor(),
       _SessionExpiredInterceptor(
         onSessionExpired: onSessionExpired,
@@ -70,6 +76,26 @@ class DioFactory {
       _SafeNetworkLogInterceptor(logger),
     ]);
     return dio;
+  }
+}
+
+class _AcceptLanguageInterceptor extends Interceptor {
+  _AcceptLanguageInterceptor(this._resolveAcceptLanguage);
+
+  final String Function() _resolveAcceptLanguage;
+
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    String locale;
+    try {
+      locale = _resolveAcceptLanguage().trim();
+    } on Object {
+      locale = '';
+    }
+    options.headers[NetworkHeaders.acceptLanguage] = locale.isEmpty
+        ? CurrentAppLocaleStore.defaultLocale
+        : locale;
+    handler.next(options);
   }
 }
 

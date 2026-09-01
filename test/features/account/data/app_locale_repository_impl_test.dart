@@ -14,14 +14,21 @@ void main() {
     final writer = AppLocaleRepositoryImpl(
       JsonFileAppLocaleLocalDataSource(preferencesFile: preferenceFile),
     );
-    await writer.savePreferredLocale(AppLocalePreference.simplifiedChinese);
+    await writer.savePreferredLocale(AppLocalePreference.argentineSpanish);
+
+    expect(
+      await JsonFileAppLocaleLocalDataSource(
+        preferencesFile: preferenceFile,
+      ).readLanguageCode(),
+      'es-AR',
+    );
 
     final reader = AppLocaleRepositoryImpl(
       JsonFileAppLocaleLocalDataSource(preferencesFile: preferenceFile),
     );
     expect(
       await reader.readPreferredLocale(),
-      AppLocalePreference.simplifiedChinese,
+      AppLocalePreference.argentineSpanish,
     );
   });
 
@@ -29,7 +36,7 @@ void main() {
     final directory = await Directory.systemTemp.createTemp('flinx-locale-');
     addTearDown(() => directory.delete(recursive: true));
     final preferenceFile = File('${directory.path}/app_locale_preference.json');
-    await preferenceFile.writeAsString('{"languageCode":"de"}');
+    await preferenceFile.writeAsString('{"languageCode":"xx-XX"}');
 
     final repository = AppLocaleRepositoryImpl(
       JsonFileAppLocaleLocalDataSource(preferencesFile: preferenceFile),

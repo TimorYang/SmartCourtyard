@@ -1,5 +1,6 @@
 import 'package:flinx/features/account/application/providers.dart';
 import 'package:flinx/features/account/domain/entities/app_locale_preference.dart';
+import 'package:flinx/core/localization/providers.dart';
 import 'package:flinx/features/account/domain/repositories/app_locale_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -22,6 +23,7 @@ void main() {
       await container.read(appLocaleControllerProvider.future),
       AppLocalePreference.simplifiedChinese,
     );
+    expect(container.read(currentAppLocaleStoreProvider).value, 'zh-CN');
   });
 
   test('restores a saved Simplified Chinese preference', () async {
@@ -40,6 +42,7 @@ void main() {
       await container.read(appLocaleControllerProvider.future),
       AppLocalePreference.simplifiedChinese,
     );
+    expect(container.read(currentAppLocaleStoreProvider).value, 'zh-CN');
   });
 
   test('persists a newly selected language', () async {
@@ -59,6 +62,7 @@ void main() {
       _localeFrom(container.read(appLocaleControllerProvider)),
       AppLocalePreference.simplifiedChinese,
     );
+    expect(container.read(currentAppLocaleStoreProvider).value, 'zh-CN');
   });
 
   test(
@@ -89,6 +93,7 @@ void main() {
         _localeFrom(container.read(appLocaleControllerProvider)),
         AppLocalePreference.english,
       );
+      expect(container.read(currentAppLocaleStoreProvider).value, 'en-US');
     },
   );
 }

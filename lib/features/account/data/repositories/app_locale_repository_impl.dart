@@ -16,6 +16,6 @@ class AppLocaleRepositoryImpl implements AppLocaleRepository {
 
   @override
   Future<void> savePreferredLocale(AppLocalePreference locale) {
-    return _localDataSource.saveLanguageCode(locale.languageCode);
+    return _localDataSource.saveLanguageCode(locale.serverLocale);
   }
 }

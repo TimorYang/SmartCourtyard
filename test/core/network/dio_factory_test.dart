@@ -37,8 +37,57 @@ void main() {
         adapter.requestOptions.headers[NetworkHeaders.requestId],
         'request-123',
       );
+      expect(
+        adapter.requestOptions.headers[NetworkHeaders.acceptLanguage],
+        'en-US',
+      );
     },
   );
+
+  test('reads the current Accept-Language value for each request', () async {
+    var currentLocale = 'zh-CN';
+    final adapter = _CapturingAdapter();
+    final dio = DioFactory.create(
+      configuration: const AppApiConfiguration(
+        apiOrigin: 'https://api.flinx.example',
+        apiPathPrefix: '/api/force-door',
+      ),
+      logger: _FakeLogger(),
+      acceptLanguageResolver: () => currentLocale,
+    )..httpClientAdapter = adapter;
+
+    await dio.get<void>('health');
+    expect(
+      adapter.requestOptions.headers[NetworkHeaders.acceptLanguage],
+      'zh-CN',
+    );
+
+    currentLocale = 'en-US';
+    await dio.get<void>('health');
+    expect(
+      adapter.requestOptions.headers[NetworkHeaders.acceptLanguage],
+      'en-US',
+    );
+  });
+
+  test('falls back to en-US when the current locale is empty', () async {
+    final adapter = _CapturingAdapter();
+    final dio = DioFactory.create(
+      configuration: const AppApiConfiguration(
+        apiOrigin: 'https://api.flinx.example',
+        apiPathPrefix: '/api/force-door',
+      ),
+      logger: _FakeLogger(),
+      acceptLanguageResolver: () => '  ',
+    )..httpClientAdapter = adapter;
+
+    await dio.get<void>('health');
+
+    expect(
+      adapter.requestOptions.headers[NetworkHeaders.acceptLanguage],
+      'en-US',
+    );
+  });
 
   test('maps a bad HTTP response to a network exception with its status', () {
     final options = RequestOptions(path: 'health');

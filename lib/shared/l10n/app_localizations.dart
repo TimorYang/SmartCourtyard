@@ -1976,12 +1976,6 @@ abstract class AppLocalizations {
   /// **'Language'**
   String get accountLanguageDialogTitle;
 
-  /// No description provided for @accountLanguageOptionFrench.
-  ///
-  /// In en, this message translates to:
-  /// **'France'**
-  String get accountLanguageOptionFrench;
-
   /// No description provided for @accountLanguageOptionEnglish.
   ///
   /// In en, this message translates to:
@@ -1994,17 +1988,83 @@ abstract class AppLocalizations {
   /// **'中文(简体)'**
   String get accountLanguageOptionSimplifiedChinese;
 
+  /// No description provided for @accountLanguageOptionArgentineSpanish.
+  ///
+  /// In en, this message translates to:
+  /// **'Español (Argentina)'**
+  String get accountLanguageOptionArgentineSpanish;
+
+  /// No description provided for @accountLanguageOptionItalian.
+  ///
+  /// In en, this message translates to:
+  /// **'Italiano'**
+  String get accountLanguageOptionItalian;
+
+  /// No description provided for @accountLanguageOptionEuropeanPortuguese.
+  ///
+  /// In en, this message translates to:
+  /// **'Português (Portugal)'**
+  String get accountLanguageOptionEuropeanPortuguese;
+
+  /// No description provided for @accountLanguageOptionCzech.
+  ///
+  /// In en, this message translates to:
+  /// **'Čeština'**
+  String get accountLanguageOptionCzech;
+
+  /// No description provided for @accountLanguageOptionDutch.
+  ///
+  /// In en, this message translates to:
+  /// **'Nederlands'**
+  String get accountLanguageOptionDutch;
+
+  /// No description provided for @accountLanguageOptionFrench.
+  ///
+  /// In en, this message translates to:
+  /// **'Français'**
+  String get accountLanguageOptionFrench;
+
+  /// No description provided for @accountLanguageOptionGerman.
+  ///
+  /// In en, this message translates to:
+  /// **'Deutsch'**
+  String get accountLanguageOptionGerman;
+
+  /// No description provided for @accountLanguageOptionPolish.
+  ///
+  /// In en, this message translates to:
+  /// **'Polski'**
+  String get accountLanguageOptionPolish;
+
+  /// No description provided for @accountLanguageOptionUkrainian.
+  ///
+  /// In en, this message translates to:
+  /// **'Українська'**
+  String get accountLanguageOptionUkrainian;
+
+  /// No description provided for @accountLanguageOptionRussian.
+  ///
+  /// In en, this message translates to:
+  /// **'Русский'**
+  String get accountLanguageOptionRussian;
+
+  /// No description provided for @accountLanguageOptionNorwegian.
+  ///
+  /// In en, this message translates to:
+  /// **'Norsk'**
+  String get accountLanguageOptionNorwegian;
+
+  /// No description provided for @accountLanguageOptionHungarian.
+  ///
+  /// In en, this message translates to:
+  /// **'Magyar'**
+  String get accountLanguageOptionHungarian;
+
   /// No description provided for @accountLanguageOptionTraditionalChinese.
   ///
   /// In en, this message translates to:
   /// **'中文(繁体)'**
   String get accountLanguageOptionTraditionalChinese;
-
-  /// No description provided for @accountLanguageOptionGerman.
-  ///
-  /// In en, this message translates to:
-  /// **'Das ist Deutsch'**
-  String get accountLanguageOptionGerman;
 
   /// No description provided for @accountLanguageCancelAction.
   ///

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../config/providers.dart';
+import '../localization/providers.dart';
 import '../logging/providers.dart';
 import 'dio_factory.dart';
 import 'session_expired_handler.dart';
@@ -19,5 +20,6 @@ final dioProvider = Provider((ref) {
     logger: ref.watch(appLoggerProvider),
     onSessionExpired: ref.watch(sessionExpiredHandlerProvider),
     onTokenRefresh: ref.watch(tokenRefreshHandlerProvider),
+    acceptLanguageResolver: () => ref.read(currentAppLocaleStoreProvider).value,
   );
 });
