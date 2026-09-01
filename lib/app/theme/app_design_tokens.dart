@@ -255,6 +255,7 @@ class AppColors {
   static const toastSuccess = Color(0xFF12C76B);
   static const toastError = Color(0xFFFF3D12);
   static const toastForeground = Color(0xFFFFFFFF);
+  static const authInputErrorBorder = Color(0xFFFF3D1F);
   static const deviceShareFieldBorder = Color(0xFFEDEEEF);
   static const deviceShareFieldShadow = Color(0x0F000000);
   static const deviceShareFieldDisabled = Color(0xFFFBFBFC);

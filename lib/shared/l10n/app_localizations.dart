@@ -560,6 +560,12 @@ abstract class AppLocalizations {
   /// **'Password: 8-16 chars, 1 uppercase, lowercase & number'**
   String get authPasswordRule;
 
+  /// Toast shown when a password does not meet the complexity requirements
+  ///
+  /// In en, this message translates to:
+  /// **'Use 8-16 characters with at least one uppercase letter, one lowercase letter, and one number.'**
+  String get authPasswordInvalid;
+
   /// Finish button label
   ///
   /// In en, this message translates to:

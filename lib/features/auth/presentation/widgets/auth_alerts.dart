@@ -31,6 +31,7 @@ String registrationErrorMessage(
     'auth.registration.networkUnavailable' => l10n.registerNetworkUnavailable,
     'auth.registration.clientAuthorizationFailed' =>
       l10n.registerAuthorizationFailed,
+    'auth.password.invalid' => l10n.authPasswordInvalid,
     _ => l10n.registerRequestFailed,
   };
 }
@@ -56,6 +57,7 @@ String passwordResetErrorMessage(
     'auth.passwordReset.clientAuthorizationFailed' =>
       l10n.passwordResetAuthorizationFailed,
     'auth.passwordReset.restartRequired' => l10n.passwordResetRestartRequired,
+    'auth.password.invalid' => l10n.authPasswordInvalid,
     _ => l10n.passwordResetRequestFailed,
   };
 }

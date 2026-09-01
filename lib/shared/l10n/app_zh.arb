@@ -77,6 +77,7 @@
   "forgotPasswordResetTitle": "密码",
   "forgotPasswordResetDescription": "设置您的密码",
   "authPasswordRule": "密码：8 至 16 个字符，须包含大写字母、小写字母和数字",
+  "authPasswordInvalid": "密码需为 8 至 16 个字符，且至少包含一个大写字母、一个小写字母和一个数字。",
   "finishAction": "完成",
   "forgotPasswordResetPending": "重置密码功能暂未接入",
   "passwordResetRequestFailed": "密码重置失败，请重试。",

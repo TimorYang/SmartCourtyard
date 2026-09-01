@@ -194,6 +194,10 @@
   "@authPasswordRule": {
     "description": "Password complexity requirements shown below password confirmation fields"
   },
+  "authPasswordInvalid": "Use 8-16 characters with at least one uppercase letter, one lowercase letter, and one number.",
+  "@authPasswordInvalid": {
+    "description": "Toast shown when a password does not meet the complexity requirements"
+  },
   "finishAction": "Finish",
   "@finishAction": {
     "description": "Finish button label"

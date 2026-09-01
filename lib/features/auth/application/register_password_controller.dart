@@ -19,14 +19,30 @@ class RegisterPasswordState {
   final String? errorMessageKey;
   final String? errorMessage;
 
+  bool get hasValidPasswordLength => PasswordPolicy.isLengthValid(password);
+
+  bool get hasValidConfirmationLength =>
+      PasswordPolicy.isLengthValid(confirmPassword);
+
   bool get hasValidPassword => PasswordPolicy.isValid(password);
 
   bool get hasValidConfirmation => PasswordPolicy.isValid(confirmPassword);
 
   bool get passwordsMatch =>
-      hasValidPassword && hasValidConfirmation && password == confirmPassword;
+      password.isNotEmpty &&
+      confirmPassword.isNotEmpty &&
+      password == confirmPassword;
 
-  bool get canSubmit => passwordsMatch && !isSubmitting;
+  bool get hasPasswordMismatch =>
+      password.isNotEmpty &&
+      confirmPassword.isNotEmpty &&
+      password != confirmPassword;
+
+  bool get canSubmit =>
+      passwordsMatch &&
+      hasValidPasswordLength &&
+      hasValidConfirmationLength &&
+      !isSubmitting;
 
   RegisterPasswordState copyWith({
     String? password,
@@ -76,6 +92,10 @@ class RegisterPasswordController extends Notifier<RegisterPasswordState> {
 
   Future<bool> submit() async {
     if (!state.canSubmit) return false;
+    if (!state.hasValidPassword || !state.hasValidConfirmation) {
+      _setPasswordPolicyError();
+      return false;
+    }
     final token = ref.read(registrationFlowStoreProvider).registrationToken;
     if (token == null) {
       state = state.copyWith(
@@ -108,5 +128,11 @@ class RegisterPasswordController extends Notifier<RegisterPasswordState> {
     } finally {
       state = state.copyWith(isSubmitting: false);
     }
+  }
+
+  void _setPasswordPolicyError() {
+    // Clear first so a repeated tap emits the same validation error again.
+    state = state.copyWith(clearError: true);
+    state = state.copyWith(errorMessageKey: 'auth.password.invalid');
   }
 }

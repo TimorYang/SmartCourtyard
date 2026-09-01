@@ -246,6 +246,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get authPasswordRule => '密码：8 至 16 个字符，须包含大写字母、小写字母和数字';
 
   @override
+  String get authPasswordInvalid => '密码需为 8 至 16 个字符，且至少包含一个大写字母、一个小写字母和一个数字。';
+
+  @override
   String get finishAction => '完成';
 
   @override
