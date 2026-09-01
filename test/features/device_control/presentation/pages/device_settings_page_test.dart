@@ -332,6 +332,26 @@ void main() {
     expect(find.text('UNKNOWN_SETTING'), findsNothing);
     expect(find.text('About the device'), findsOneWidget);
   });
+
+  testWidgets('filters capability settings using the navigation scope', (
+    tester,
+  ) async {
+    await _pumpSettingsRouter(
+      tester,
+      capabilityScope: DeviceSettingsCapabilityScope(
+        allowedCapabilityCodes: const [DeviceCapabilityCode.ledOffDelay],
+      ),
+    );
+
+    expect(find.text('LED off delay'), findsOneWidget);
+    expect(find.text('Transmitter management'), findsNothing);
+    expect(find.text('Partial open'), findsNothing);
+    expect(find.text('Auto close'), findsNothing);
+    expect(find.text('Opening speed'), findsNothing);
+    expect(find.text('Door open reminder'), findsNothing);
+    expect(find.text('Force margin'), findsNothing);
+    expect(find.text('About the device'), findsOneWidget);
+  });
 }
 
 Future<void> _pumpSettingsRouter(
@@ -353,6 +373,7 @@ Future<void> _pumpSettingsRouter(
   List<DoorSettingSnapshot> settingSnapshots = const [],
   OperationRecordRepository? operationRecordRepository,
   MockHardwareGateway? gateway,
+  DeviceSettingsCapabilityScope? capabilityScope,
 }) async {
   if (setDefaultSize) {
     tester.view.physicalSize = const Size(393, 852);
@@ -403,6 +424,7 @@ Future<void> _pumpSettingsRouter(
           initialLocation:
               '${DeviceSettingsPage.routePath}'
               '?doorId=12&deviceId=mock-device&bleName=mock-device',
+          initialExtra: capabilityScope,
           routes: [
             GoRoute(
               path: DeviceSettingsPage.routePath,
@@ -412,6 +434,9 @@ Future<void> _pumpSettingsRouter(
                 bleName: state.uri.queryParameters['bleName'] ?? '',
                 bleDeviceId:
                     state.uri.queryParameters['bleDeviceId'] ?? 'mock-device',
+                capabilityScope: state.extra is DeviceSettingsCapabilityScope
+                    ? state.extra as DeviceSettingsCapabilityScope
+                    : null,
               ),
             ),
             GoRoute(

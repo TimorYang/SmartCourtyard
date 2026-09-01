@@ -3,5 +3,8 @@
   "FLINX_API_PATH_PREFIX": "/api/force-door",
   "FLINX_CLIENT_AUTHORIZATION": "replace-with-dev-client-authorization",
   "FLINX_FACEBOOK_APP_ID": "",
-  "FLINX_FACEBOOK_CLIENT_TOKEN": ""
+  "FLINX_FACEBOOK_CLIENT_TOKEN": "",
+  "FLINX_GOOGLE_IOS_CLIENT_ID": "replace-with-google-ios-client-id",
+  "FLINX_GOOGLE_SERVER_CLIENT_ID": "replace-with-google-server-client-id",
+  "FLINX_GOOGLE_HOSTED_DOMAIN": ""
 }

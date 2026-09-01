@@ -21,6 +21,8 @@ void main() {
           doorStateLabel: 'Closing',
           operatedCycles: 123,
           remainingCycles: 4567,
+          relationType: 1,
+          effectiveCapabilities: ['DOOR_CONTROL'],
           ledStatus: 2,
           ledStatusLabel: 'On',
           autoCloseEnabled: true,
@@ -43,6 +45,8 @@ void main() {
     expect(detail.doorStateLabel, 'Closing');
     expect(detail.operatedCycles, 123);
     expect(detail.remainingCycles, 4567);
+    expect(detail.relationType, 1);
+    expect(detail.effectiveCapabilities, ['DOOR_CONTROL']);
     expect(detail.isLedEnabled, isTrue);
     expect(detail.autoCloseEnabled, isTrue);
     expect(detail.openReminderEnabled, isTrue);

@@ -27,7 +27,14 @@ class GoogleSignInConfiguration {
         defaultTargetPlatform == TargetPlatform.iOS;
   }
 
-  bool get hasRequiredClientIds => serverClientId.trim().isNotEmpty;
+  bool hasRequiredClientIdsFor(TargetPlatform targetPlatform) {
+    final hasServerClientId = serverClientId.trim().isNotEmpty;
+    return switch (targetPlatform) {
+      TargetPlatform.android => hasServerClientId,
+      TargetPlatform.iOS => hasServerClientId && iosClientId.trim().isNotEmpty,
+      _ => false,
+    };
+  }
 
   String? get optionalIosClientId {
     final value = iosClientId.trim();

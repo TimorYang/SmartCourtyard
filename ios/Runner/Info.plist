@@ -46,6 +46,14 @@
 				<string>fb123456789012345</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>__FLINX_GOOGLE_IOS_REVERSED_CLIENT_ID__</string>
+			</array>
+		</dict>
 	</array>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>

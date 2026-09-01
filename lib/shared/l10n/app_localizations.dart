@@ -4694,6 +4694,12 @@ abstract class AppLocalizations {
   /// **'Partial open'**
   String get deviceCommandPartialOpenTitle;
 
+  /// No description provided for @deviceCommandPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'You don\'t have permission to use this control.'**
+  String get deviceCommandPermissionDenied;
+
   /// No description provided for @deviceCommandPartialOpenSettingUnavailable.
   ///
   /// In en, this message translates to:

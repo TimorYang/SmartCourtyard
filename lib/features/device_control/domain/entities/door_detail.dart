@@ -14,6 +14,8 @@ class DoorDetail {
     this.controlModeLabel,
     this.onlineStatus,
     this.onlineStatusLabel,
+    this.relationType,
+    this.effectiveCapabilities = const <String>[],
     this.positionPercent,
     this.coverFileId,
     this.operatorAvatarFileId,
@@ -32,6 +34,8 @@ class DoorDetail {
   final String? controlModeLabel;
   final int? onlineStatus;
   final String? onlineStatusLabel;
+  final int? relationType;
+  final List<String> effectiveCapabilities;
   final DoorState doorState;
   final String doorStateLabel;
   final double? positionPercent;

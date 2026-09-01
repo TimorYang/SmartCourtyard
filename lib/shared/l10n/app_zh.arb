@@ -910,6 +910,7 @@
     }
   },
   "deviceCommandPartialOpenTitle": "部分开门",
+  "deviceCommandPermissionDenied": "当前账号没有使用此功能的权限。",
   "deviceCommandPartialOpenSettingUnavailable": "半开门档位暂不可用，请重试。",
   "deviceCommandPartialOpenSettingFailed": "无法保存半开门位置，请重试。",
   "deviceCommandMoreSettingsTitle": "更多设置",

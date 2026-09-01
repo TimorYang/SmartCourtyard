@@ -13,6 +13,29 @@ flutter build ipa --dart-define-from-file=config/env/prod.json
 flutter build appbundle --dart-define-from-file=config/env/prod.json
 ```
 
+VS Code 的 Flutter 启动配置也会自动使用 `config/env/dev.json`。请在 Run and
+Debug 中选择 `FLINX Dev`；编辑器中的直接 Run 入口也通过工作区设置传入同一份
+环境文件。
+
+打包时也必须显式传入环境文件，不能直接在 Xcode 中 Archive 或执行不带环境参数的
+Flutter 构建。Ad Hoc iOS 包可以使用：
+
+```sh
+bash tool/build_ios_adhoc.sh --env config/env/dev.json
+```
+
+正式 iOS 包和 Android 包应使用已填写真实服务地址、授权值及 Google Client ID 的
+本机忽略配置：
+
+```sh
+flutter build ipa --release --dart-define-from-file=config/env/prod.json
+flutter build appbundle --release --dart-define-from-file=config/env/prod.json
+flutter build apk --release --dart-define-from-file=config/env/prod.json
+```
+
+`config/env/prod.json`、`config/env/staging.json` 等真实环境文件不会提交到仓库；
+应从对应的 `.example` 文件复制后，在本机填写真实值。
+
 必填字段：
 
 - `FLINX_API_ORIGIN`：仅包含 `http` 或 `https` 的服务 origin，例如 `https://api.example.com`。
@@ -20,10 +43,25 @@ flutter build appbundle --dart-define-from-file=config/env/prod.json
 - `FLINX_CLIENT_AUTHORIZATION`：当前 auth 握手使用的 Basic 凭据部分。
 - `FLINX_FACEBOOK_APP_ID`：Facebook App ID。未配置时 Facebook 按钮保留，但不会调用 SDK。
 - `FLINX_FACEBOOK_CLIENT_TOKEN`：Facebook Client Token。真实值只放在本机忽略的环境文件中。
+- `FLINX_GOOGLE_IOS_CLIENT_ID`：GCP 中登记 `com.feizhou.znty` 的 iOS OAuth Client ID；iOS 构建阶段会从该值自动生成 reversed client ID 回调 Scheme。
+- `FLINX_GOOGLE_SERVER_CLIENT_ID`：GCP Web OAuth Client ID，同时作为 Google 登录的
+  `serverClientId`，用于 Android 登录及后端授权码校验。
+- `FLINX_GOOGLE_HOSTED_DOMAIN`：可选的 Google Workspace 托管域限制；普通账号登录保持为空。
 
 Facebook 的 App ID、Client Token 和平台回调配置还需要同步填写到 Meta
 开发者后台以及 Android `strings.xml`、iOS `Info.plist`。仓库中的原生值是
 仅用于保证无配置构建可启动的占位值，不要提交真实凭据。
+
+Google 登录使用 Dart 编译期环境变量传入 Client ID，不需要提交
+`GoogleService-Info.plist`。iOS 的 `Info.plist` 只保留回调 Scheme 模板，Flutter
+构建时会从同一次 `DART_DEFINES` 注入的 `FLINX_GOOGLE_IOS_CLIENT_ID` 自动生成
+对应 Scheme，因此不同环境不能绕过 Flutter 构建直接使用未配置的 Xcode Archive。
+Android 需要在 GCP 登记包名 `com.feizhou.znty`，并为 Debug/Release 签名配置对应
+SHA；未使用 `google-services.json` 时，Android 直接使用
+`FLINX_GOOGLE_SERVER_CLIENT_ID`。
+
+Google Client ID 属于公开客户端标识，不是服务端密钥；但本项目仍按环境配置规则，
+将真实值保存在本机忽略的 `config/env/*.json` 中，提交的 `.example` 文件只保留占位值。
 
 ## 调试抓包
 

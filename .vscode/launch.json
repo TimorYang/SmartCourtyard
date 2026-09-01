@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "FLINX Dev",
+      "request": "launch",
+      "type": "dart",
+      "templateFor": "lib/main.dart",
+      "toolArgs": [
+        "--dart-define-from-file=config/env/dev.json"
+      ]
+    }
+  ]
+}

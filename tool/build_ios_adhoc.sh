@@ -10,12 +10,11 @@ environment_file=""
 
 usage() {
   cat <<'EOF'
-Usage: bash tool/build_ios_adhoc.sh [--env <dart-define-json>]
+Usage: bash tool/build_ios_adhoc.sh --env <dart-define-json>
 
 Builds a manually signed Ad Hoc IPA using ios/ExportOptions.plist.
 
 Examples:
-  bash tool/build_ios_adhoc.sh
   bash tool/build_ios_adhoc.sh --env config/env/prod.json
 EOF
 }
@@ -44,7 +43,13 @@ done
   exit 1
 }
 
-if [[ -n "$environment_file" && ! -f "$environment_file" ]]; then
+[[ -n "$environment_file" ]] || {
+  echo "Missing required --env. Refusing to build without Dart environment definitions." >&2
+  usage >&2
+  exit 2
+}
+
+if [[ ! -f "$environment_file" ]]; then
   echo "Environment file not found: $environment_file" >&2
   exit 1
 fi
@@ -56,17 +61,15 @@ else
 fi
 
 build_args=(build ipa --release --export-options-plist="$export_options_plist")
-if [[ -n "$environment_file" ]]; then
-  build_args+=(--dart-define-from-file="$environment_file")
-fi
+build_args+=(--dart-define-from-file="$environment_file")
 
 echo "Building signed Ad Hoc IPA..."
 "${flutter_cmd[@]}" "${build_args[@]}"
 
-ipa_path="build/ios/ipa/flinx.ipa"
+ipa_path="$(find build/ios/ipa -maxdepth 1 -type f -name '*.ipa' -print | head -n 1)"
+[[ -n "$ipa_path" ]] || { echo "IPA was not produced in build/ios/ipa." >&2; exit 1; }
 archive_app="build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app"
 
-[[ -f "$ipa_path" ]] || { echo "IPA was not produced: $ipa_path" >&2; exit 1; }
 [[ -d "$archive_app" ]] || { echo "Archive app was not produced: $archive_app" >&2; exit 1; }
 
 echo
