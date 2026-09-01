@@ -193,7 +193,7 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
                                   ref
                                       .read(
                                         deviceSettingsControllerProvider(
-                                          widget.deviceId,
+                                          widget.bleDeviceId,
                                         ).notifier,
                                       )
                                       .load();
