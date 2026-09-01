@@ -4,6 +4,7 @@
   "FLINX_CLIENT_AUTHORIZATION": "replace-with-test-client-authorization",
   "FLINX_FACEBOOK_APP_ID": "",
   "FLINX_FACEBOOK_CLIENT_TOKEN": "",
+  "FLINX_FACEBOOK_DISPLAY_NAME": "",
   "FLINX_GOOGLE_IOS_CLIENT_ID": "replace-with-google-ios-client-id",
   "FLINX_GOOGLE_SERVER_CLIENT_ID": "replace-with-google-server-client-id",
   "FLINX_GOOGLE_HOSTED_DOMAIN": ""

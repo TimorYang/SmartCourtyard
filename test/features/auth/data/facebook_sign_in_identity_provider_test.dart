@@ -13,8 +13,9 @@ void main() {
     String? capturedNonce;
     final provider = FacebookSignInIdentityProvider(
       configuration: const FacebookLoginConfiguration(
-        appId: 'app-id',
+        appId: '1732924337995646',
         clientToken: 'client-token',
+        displayName: 'force-test',
       ),
       platformSupportChecker: () => true,
       loginRequester:
@@ -58,8 +59,9 @@ void main() {
     String? capturedNonce = 'unexpected';
     final provider = FacebookSignInIdentityProvider(
       configuration: const FacebookLoginConfiguration(
-        appId: 'app-id',
+        appId: '1732924337995646',
         clientToken: 'client-token',
+        displayName: 'force-test',
       ),
       platformSupportChecker: () => true,
       loginRequester:
@@ -97,8 +99,9 @@ void main() {
   test('maps a cancelled SDK result to the domain error', () async {
     final provider = FacebookSignInIdentityProvider(
       configuration: const FacebookLoginConfiguration(
-        appId: 'app-id',
+        appId: '1732924337995646',
         clientToken: 'client-token',
+        displayName: 'force-test',
       ),
       platformSupportChecker: () => true,
       loginRequester:
@@ -162,8 +165,9 @@ void main() {
   test('rejects an iOS success without a LimitedToken credential', () async {
     final provider = FacebookSignInIdentityProvider(
       configuration: const FacebookLoginConfiguration(
-        appId: 'app-id',
+        appId: '1732924337995646',
         clientToken: 'client-token',
+        displayName: 'force-test',
       ),
       platformSupportChecker: () => true,
       loginRequester:
