@@ -375,8 +375,25 @@ class AddDeviceController extends Notifier<AddDeviceState> {
         ? null
         : normalizedTargetSn;
     final requestId = _nextRequestId('ble-scan');
-    final bluetoothReadiness =
-        await AndroidBlePermissionGateway.requestBleScanReady();
+    late final AndroidBleScanReadiness bluetoothReadiness;
+    try {
+      bluetoothReadiness =
+          await AndroidBlePermissionGateway.requestBleScanReady();
+    } catch (error) {
+      _logError(
+        'ble_scan_failed',
+        requestId: requestId,
+        stage: 'scan_permission',
+        result: 'failed',
+        error: error,
+      );
+      state = state.copyWith(
+        isScanning: false,
+        errorMessage: appErrorMessage(error, ''),
+        clearInfoMessage: true,
+      );
+      return false;
+    }
     if (bluetoothReadiness == AndroidBleScanReadiness.cancelled) {
       return false;
     }
@@ -440,6 +457,14 @@ class AddDeviceController extends Notifier<AddDeviceState> {
         requestId: requestId,
         stage: 'scan',
         result: 'success',
+      );
+    } catch (error) {
+      _logError(
+        'ble_scan_stop_failed',
+        requestId: requestId,
+        stage: 'scan',
+        result: 'failed',
+        error: error,
       );
     } finally {
       if (ref.mounted) {
