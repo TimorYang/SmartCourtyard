@@ -481,20 +481,36 @@ class _DashedStatusRowPainter extends CustomPainter {
 
 enum RecordRange { last24Hours, last7Days }
 
+const _operationChartYAxisDivisionCount = 5;
+const _operationChartYAxisLabelCount =
+    _operationChartYAxisDivisionCount + 1;
+
 @visibleForTesting
 List<int> operationChartYAxisLabels(
   List<FullReportOperationCyclePoint> points,
-) {
-  final maximum = points.fold<int>(
-    0,
-    (value, point) => point.cycles > value ? point.cycles : value,
-  );
-  if (maximum == 0) return List<int>.filled(6, 0, growable: false);
+) => operationChartYAxisLabelsForValues(
+  points.map((point) => point.cycles),
+);
 
-  final chartMaximum = (maximum * 1.2).ceilToDouble();
+List<int> operationChartYAxisLabelsForValues(Iterable<int> values) {
+  final maximum = values.fold<int>(
+    0,
+    (maximum, value) => value > maximum ? value : maximum,
+  );
+  if (maximum == 0) {
+    return List<int>.generate(
+      _operationChartYAxisLabelCount,
+      (index) => index,
+      growable: false,
+    );
+  }
+
+  final minimumChartMaximum = (maximum * 1.2).ceil();
+  final interval =
+      (minimumChartMaximum / _operationChartYAxisDivisionCount).ceil();
   return List<int>.generate(
-    6,
-    (index) => (chartMaximum * index / 5).round(),
+    _operationChartYAxisLabelCount,
+    (index) => interval * index,
     growable: false,
   );
 }
@@ -625,13 +641,8 @@ abstract final class _OperationChartLayout {
   static Rect chart(Size size) =>
       Rect.fromLTWH(22, 10, size.width - 22, size.height - 26);
 
-  static double yAxisMaximum(List<FullReportOperationCyclePoint> points) {
-    final maximum = points.fold<int>(
-      0,
-      (value, point) => point.cycles > value ? point.cycles : value,
-    );
-    return maximum == 0 ? 1 : (maximum * 1.2).ceilToDouble();
-  }
+  static double yAxisMaximum(List<FullReportOperationCyclePoint> points) =>
+      operationChartYAxisLabels(points).last.toDouble();
 
   static List<Rect> bars(
     Size size,
@@ -692,8 +703,9 @@ class _OperationChartPainter extends CustomPainter {
       ..color = AppColors.textPrimary
       ..strokeWidth = 1.2;
     final chart = _OperationChartLayout.chart(size);
-    for (var index = 0; index <= 5; index++) {
-      final y = chart.bottom - chart.height * index / 5;
+    for (var index = 0; index <= _operationChartYAxisDivisionCount; index++) {
+      final y =
+          chart.bottom - chart.height * index / _operationChartYAxisDivisionCount;
       canvas.drawLine(Offset(chart.left, y), Offset(chart.right, y), grid);
     }
     canvas.drawLine(
@@ -733,8 +745,9 @@ class _OperationChartPainter extends CustomPainter {
     Rect chart, {
     required List<int> yAxisLabels,
   }) {
-    for (var index = 0; index <= 5; index++) {
-      final y = chart.bottom - chart.height * index / 5 - 8;
+    for (var index = 0; index <= _operationChartYAxisDivisionCount; index++) {
+      final y =
+          chart.bottom - chart.height * index / _operationChartYAxisDivisionCount - 8;
       final painter = TextPainter(
         text: TextSpan(
           text: yAxisLabels[index].toString(),

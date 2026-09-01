@@ -149,6 +149,23 @@ void main() {
     expect(container.read(addDeviceControllerProvider).pendingDoorDraft, draft);
   });
 
+  test('opens app settings for camera permission recovery', () async {
+    final gateway = _DisconnectTrackingGateway();
+    final container = _createContainer(gateway);
+    addTearDown(container.dispose);
+
+    final opened = await container
+        .read(addDeviceControllerProvider.notifier)
+        .openCameraPermissionSettings();
+
+    expect(opened, isTrue);
+    expect(gateway.openAppSettingsRequestIds, hasLength(1));
+    expect(
+      gateway.openAppSettingsRequestIds.single,
+      contains(':camera-permission-settings:'),
+    );
+  });
+
   test(
     'uses one flow id across scan, authentication, provisioning and binding',
     () async {
@@ -244,6 +261,7 @@ class _DisconnectTrackingGateway extends MockHardwareGateway {
 
   final bool throwOnDisconnect;
   final List<String> disconnectedDeviceIds = <String>[];
+  final List<String> openAppSettingsRequestIds = <String>[];
   var scanStarted = false;
   BleScanFilter? lastScanFilter;
 
@@ -266,6 +284,11 @@ class _DisconnectTrackingGateway extends MockHardwareGateway {
       throw StateError('disconnect failed');
     }
     return super.disconnectBleDevice(requestId: requestId, deviceId: deviceId);
+  }
+
+  @override
+  Future<void> openAppSettings({required String requestId}) async {
+    openAppSettingsRequestIds.add(requestId);
   }
 }
 

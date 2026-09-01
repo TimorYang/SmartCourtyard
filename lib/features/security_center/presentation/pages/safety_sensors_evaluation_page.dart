@@ -11,6 +11,7 @@ import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/providers.dart';
 import '../../application/safety_sensors_evaluation_controller.dart';
 import '../../domain/entities/safety_sensors_evaluation.dart';
+import '../widgets/security_report_widgets.dart';
 import 'safety_sensor_battery_solution_page.dart';
 import 'safety_sensor_management_page.dart';
 import 'safety_sensor_pairing_pages.dart';
@@ -1045,13 +1046,13 @@ abstract final class _SensorOperationChartLayout {
   static Rect chart(Size size) =>
       Rect.fromLTWH(30, 8, size.width - 36, size.height - 32);
 
-  static double yAxisMaximum(List<SafetySensorOperationPoint> points) {
-    final maximum = points.fold<int>(
-      0,
-      (value, point) => point.cycles > value ? point.cycles : value,
-    );
-    return maximum == 0 ? 1 : (maximum * 1.2).ceilToDouble();
-  }
+  static List<int> yAxisLabels(List<SafetySensorOperationPoint> points) =>
+      operationChartYAxisLabelsForValues(
+        points.map((point) => point.cycles),
+      );
+
+  static double yAxisMaximum(List<SafetySensorOperationPoint> points) =>
+      yAxisLabels(points).last.toDouble();
 
   static List<Rect> bars(Size size, List<SafetySensorOperationPoint> points) {
     if (points.isEmpty) return const [];
@@ -1107,9 +1108,11 @@ class _SensorOperationChartPainter extends CustomPainter {
       ..color = AppColors.textPrimary
       ..strokeWidth = 1.2;
     final chart = _SensorOperationChartLayout.chart(size);
+    final yAxisLabels = _SensorOperationChartLayout.yAxisLabels(points);
+    final yAxisDivisionCount = yAxisLabels.length - 1;
 
-    for (var index = 0; index <= 5; index++) {
-      final y = chart.bottom - chart.height * index / 5;
+    for (var index = 0; index < yAxisLabels.length; index++) {
+      final y = chart.bottom - chart.height * index / yAxisDivisionCount;
       canvas.drawLine(Offset(chart.left, y), Offset(chart.right, y), grid);
     }
     canvas.drawLine(
@@ -1120,17 +1123,19 @@ class _SensorOperationChartPainter extends CustomPainter {
 
     final normalBar = Paint()..color = AppColors.securityReportSegmentSelected;
     final warningBar = Paint()..color = AppColors.securityReportChartBar;
-    final maximum = _SensorOperationChartLayout.yAxisMaximum(points);
     final bars = _SensorOperationChartLayout.bars(size, points);
     for (var index = 0; index < bars.length; index++) {
       final point = points[index];
       canvas.drawRect(bars[index], point.isAbnormal ? warningBar : normalBar);
     }
-    for (var index = 0; index <= 5; index++) {
+    for (var index = 0; index < yAxisLabels.length; index++) {
       _paintText(
         canvas,
-        (maximum * index / 5).round().toString(),
-        Offset(chart.left - 24, chart.bottom - chart.height * index / 5 - 8),
+        yAxisLabels[index].toString(),
+        Offset(
+          chart.left - 24,
+          chart.bottom - chart.height * index / yAxisDivisionCount - 8,
+        ),
         fontSize: 11,
         color: AppColors.textPrimary,
       );

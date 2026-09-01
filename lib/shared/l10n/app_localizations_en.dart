@@ -1331,6 +1331,21 @@ class AppLocalizationsEn extends AppLocalizations {
       'Camera permission is required to scan the QR code.';
 
   @override
+  String get smartOpenerScannerPermissionDialogTitle =>
+      'Camera permission required';
+
+  @override
+  String get smartOpenerScannerPermissionDialogMessage =>
+      'Camera access is turned off. Go to Settings to enable it, or continue with Gallery or Bluetooth scanning.';
+
+  @override
+  String get smartOpenerScannerPermissionSettingsAction => 'Go to Settings';
+
+  @override
+  String get smartOpenerScannerPermissionSettingsFailed =>
+      'Unable to open Settings. Please try again.';
+
+  @override
   String get smartOpenerScannerUnknownError => 'Unable to start the scanner.';
 
   @override
