@@ -10,14 +10,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:toastification/toastification.dart';
 
 void main() {
-  Future<void> openForgotPasswordPage(WidgetTester tester) async {
+  Future<void> openForgotPasswordPage(
+    WidgetTester tester, {
+    AuthPasswordResetRepository? repository,
+  }) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           authPasswordResetRepositoryProvider.overrideWithValue(
-            _SuccessfulPasswordResetRepository(),
+            repository ?? _SuccessfulPasswordResetRepository(),
           ),
           authCryptoRepositoryProvider.overrideWithValue(
             _FakeCryptoRepository(),
@@ -107,6 +111,115 @@ void main() {
     );
     expect(find.text('Enter Code'), findsNothing);
   });
+
+  testWidgets(
+    'password reset enables matching valid-length passwords and validates complexity on submit',
+    (tester) async {
+      final repository = _SuccessfulPasswordResetRepository();
+      await openForgotPasswordPage(tester, repository: repository);
+
+      await tester.enterText(
+        find.byKey(const ValueKey('forgot_password_email_input')),
+        'user@example.com',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Send code'));
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+
+      final codeField = find.descendant(
+        of: find.byKey(const ValueKey('forgot_password_code_pinput')),
+        matching: find.byType(EditableText),
+      );
+      await tester.enterText(codeField, '123456');
+      await tester.pumpAndSettle();
+
+      final passwordField = find.descendant(
+        of: find.byKey(const ValueKey('forgot_password_reset_password_input')),
+        matching: find.byType(TextField),
+      );
+      final confirmPasswordField = find.descendant(
+        of: find.byKey(
+          const ValueKey('forgot_password_reset_confirm_password_input'),
+        ),
+        matching: find.byType(TextField),
+      );
+
+      FilledButton button = tester.widget<FilledButton>(
+        find.byType(FilledButton),
+      );
+      expect(button.onPressed, isNull);
+
+      await tester.enterText(passwordField, 'password123');
+      await tester.pumpAndSettle();
+      expect(
+        _bottomBorderColor(
+          tester,
+          const ValueKey('forgot_password_reset_confirm_password_input'),
+        ),
+        AppColors.borderSubtle,
+      );
+      button = tester.widget<FilledButton>(find.byType(FilledButton));
+      expect(button.onPressed, isNull);
+
+      await tester.enterText(confirmPasswordField, '12345670');
+      await tester.pumpAndSettle();
+
+      expect(
+        _bottomBorderColor(
+          tester,
+          const ValueKey('forgot_password_reset_confirm_password_input'),
+        ),
+        AppColors.authInputErrorBorder,
+      );
+      button = tester.widget<FilledButton>(find.byType(FilledButton));
+      expect(button.onPressed, isNull);
+
+      await tester.enterText(confirmPasswordField, 'password123');
+      await tester.pumpAndSettle();
+
+      expect(
+        _bottomBorderColor(
+          tester,
+          const ValueKey('forgot_password_reset_confirm_password_input'),
+        ),
+        AppColors.borderSubtle,
+      );
+      button = tester.widget<FilledButton>(find.byType(FilledButton));
+      expect(button.onPressed, isNotNull);
+
+      await tester.tap(find.text('Finish'));
+      await tester.pump();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(
+        find.text(
+          'Use 8-16 characters with at least one uppercase letter, one lowercase letter, and one number.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Reset Succeeded'), findsNothing);
+      expect(repository.completePasswordResetCalls, 0);
+
+      toastification.dismissAll(delayForAnimation: false);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      await tester.enterText(passwordField, 'Password123');
+      await tester.enterText(confirmPasswordField, 'Password123');
+      await tester.pumpAndSettle();
+
+      button = tester.widget<FilledButton>(find.byType(FilledButton));
+      expect(button.onPressed, isNotNull);
+
+      await tester.tap(find.text('Finish'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Reset Succeeded'), findsOneWidget);
+      expect(repository.completePasswordResetCalls, 1);
+    },
+  );
 
   testWidgets('verifies the reset token and completes password reset', (
     tester,
@@ -252,6 +365,8 @@ void main() {
 
 class _SuccessfulPasswordResetRepository
     implements AuthPasswordResetRepository {
+  int completePasswordResetCalls = 0;
+
   @override
   Future<void> completePasswordReset({
     required String passwordResetToken,
@@ -260,7 +375,9 @@ class _SuccessfulPasswordResetRepository
     required String keyId,
     required String nonce,
     required String requestId,
-  }) async {}
+  }) async {
+    completePasswordResetCalls += 1;
+  }
 
   @override
   Future<void> sendEmailCode({
@@ -302,4 +419,15 @@ class _FakeEncryptor implements PasswordCiphertextEncryptor {
     required String plaintext,
     required PasswordEncryptionMaterial material,
   }) => 'ciphertext:$plaintext';
+}
+
+Color _bottomBorderColor(WidgetTester tester, Key fieldKey) {
+  final decoratedBox = find.descendant(
+    of: find.byKey(fieldKey),
+    matching: find.byType(DecoratedBox),
+  );
+  expect(decoratedBox, findsOneWidget);
+  final decoration = tester.widget<DecoratedBox>(decoratedBox).decoration;
+  final border = (decoration as BoxDecoration).border! as Border;
+  return border.bottom.color;
 }

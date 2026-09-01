@@ -269,6 +269,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Password: 8-16 chars, 1 uppercase, lowercase & number';
 
   @override
+  String get authPasswordInvalid =>
+      'Use 8-16 characters with at least one uppercase letter, one lowercase letter, and one number.';
+
+  @override
   String get finishAction => 'Finish';
 
   @override

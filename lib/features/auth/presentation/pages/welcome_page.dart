@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import 'login_page.dart';
-import 'register_password_page.dart.dart';
 import 'register_page.dart';
 
 class _WelcomeAssets {

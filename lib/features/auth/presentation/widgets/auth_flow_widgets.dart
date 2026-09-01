@@ -183,6 +183,7 @@ class AuthTextField extends StatelessWidget {
     this.onSubmitted,
     this.onTapOutside,
     this.rightView,
+    this.hasError = false,
     this.compact = true,
     this.ultraCompact = true,
   });
@@ -203,6 +204,7 @@ class AuthTextField extends StatelessWidget {
   final ValueChanged<String>? onSubmitted;
   final TapRegionCallback? onTapOutside;
   final Widget? rightView;
+  final bool hasError;
   final bool compact;
   final bool ultraCompact;
 
@@ -235,8 +237,14 @@ class AuthTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.borderSubtle)),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: hasError
+                ? AppColors.authInputErrorBorder
+                : AppColors.borderSubtle,
+          ),
+        ),
       ),
       child: Row(
         children: [
@@ -324,6 +332,7 @@ class AuthPasswordField extends StatefulWidget {
     required this.onChanged,
     this.focusNode,
     this.onSubmitted,
+    this.hasError = false,
   });
 
   final TextEditingController controller;
@@ -332,6 +341,7 @@ class AuthPasswordField extends StatefulWidget {
   final TextInputAction textInputAction;
   final ValueChanged<String> onChanged;
   final ValueChanged<String>? onSubmitted;
+  final bool hasError;
 
   @override
   State<AuthPasswordField> createState() => _AuthPasswordFieldState();
@@ -359,6 +369,7 @@ class _AuthPasswordFieldState extends State<AuthPasswordField> {
       autocorrect: false,
       obscureText: _isPasswordObscured,
       enableSuggestions: false,
+      hasError: widget.hasError,
       inputFormatters: [
         LengthLimitingTextInputFormatter(PasswordPolicy.maxLength),
       ],

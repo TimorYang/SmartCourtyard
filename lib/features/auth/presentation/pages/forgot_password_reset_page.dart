@@ -107,6 +107,7 @@ class _ForgotPasswordResetPageState
           controller: _confirmPasswordTextController,
           hintText: l10n.registerConfirmPasswordPlaceholder,
           textInputAction: TextInputAction.done,
+          hasError: state.hasPasswordMismatch,
           onChanged: controller.updateConfirmPassword,
         ),
         const SizedBox(height: 8),
