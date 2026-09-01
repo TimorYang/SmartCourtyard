@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flinx/app/theme/app_theme.dart';
 import 'package:flinx/features/account/application/providers.dart';
 import 'package:flinx/features/account/application/region_selection_controller.dart';
@@ -139,6 +141,119 @@ void main() {
     expect(find.text('Canada'), findsOneWidget);
     expect(find.text('CA'), findsNothing);
     semantics.dispose();
+  });
+
+  testWidgets('shows a loading indicator while saving a region', (
+    tester,
+  ) async {
+    final updateCompletion = Completer<void>();
+    final remoteDataSource = _PendingRegionProfileRemoteDataSource(
+      updateCompletion,
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          accountProfileRemoteDataSourceProvider.overrideWithValue(
+            remoteDataSource,
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const RegionPage(),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(RegionPage)),
+    );
+    await container.read(accountControllerProvider.future);
+
+    await tester.tap(find.byKey(RegionPageKeys.option('ca')));
+    await tester.pump();
+
+    expect(find.byKey(RegionPageKeys.savingIndicator), findsOneWidget);
+
+    updateCompletion.complete();
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(RegionPageKeys.savingIndicator), findsNothing);
+  });
+
+  testWidgets('synchronizes the region list with refreshed profile data', (
+    tester,
+  ) async {
+    final remoteDataSource = _AvatarProfileRemoteDataSource(regionCode: 'CN');
+    final router = GoRouter(
+      initialLocation: AccountProfilePage.routePath,
+      routes: [
+        GoRoute(
+          path: AccountProfilePage.routePath,
+          name: AccountProfilePage.routeName,
+          builder: (context, state) => const AccountProfilePage(),
+        ),
+        GoRoute(
+          path: RegionPage.routePath,
+          name: RegionPage.routeName,
+          builder: (context, state) => const RegionPage(),
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          accountOverviewAutoRefreshProvider.overrideWithValue(false),
+          accountLocalDataSourceProvider.overrideWithValue(
+            InMemoryAccountLocalDataSource(
+              initialProfile: const AccountProfileDto(
+                schemaVersion: AccountProfileDto.currentSchemaVersion,
+                userId: 'user-1',
+                email: 'alex@example.com',
+                nickname: 'Alex',
+                registeredAtIso8601: '',
+                country: 'CN',
+                regionCode: 'CN',
+              ),
+            ),
+          ),
+          accountProfileRemoteDataSourceProvider.overrideWithValue(
+            remoteDataSource,
+          ),
+        ],
+        child: MaterialApp.router(
+          theme: AppTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          routerConfig: router,
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    remoteDataSource.regionCode = 'us';
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(AccountProfilePage)),
+    );
+    await container.read(accountControllerProvider.notifier).refreshProfile();
+    await tester.pumpAndSettle();
+
+    expect(find.text('America'), findsOneWidget);
+
+    await tester.tap(find.byKey(AccountProfileKeys.regionMenuItem));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.descendant(
+        of: find.byKey(RegionPageKeys.option('us')),
+        matching: find.byIcon(Icons.check_rounded),
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('shows the localized region name instead of its code', (
@@ -1276,6 +1391,22 @@ class _AvatarProfileRemoteDataSource implements AccountProfileRemoteDataSource {
   @override
   Future<void> confirmAccountDeletion({required String requestId}) async {
     confirmedDeletionRequestId = requestId;
+  }
+}
+
+class _PendingRegionProfileRemoteDataSource
+    extends _AvatarProfileRemoteDataSource {
+  _PendingRegionProfileRemoteDataSource(this.updateCompletion);
+
+  final Completer<void> updateCompletion;
+
+  @override
+  Future<void> updateRegion({
+    required String regionCode,
+    required String requestId,
+  }) async {
+    await updateCompletion.future;
+    await super.updateRegion(regionCode: regionCode, requestId: requestId);
   }
 }
 

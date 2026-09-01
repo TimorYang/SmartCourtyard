@@ -237,6 +237,7 @@ class AppColors {
   static const sceneDialogCancelButton = Color(0xFFF4F5F6);
   static const sceneDialogInputBorder = Color(0xFFC8C8C8);
   static const scannerBackground = Color(0xFF171717);
+  static const scannerOverlayScrim = Color(0x80000000);
   static const scannerWindowFill = Color(0xFF4A4A4A);
   static const scannerWindowCorner = Color(0xFFE8E8E8);
   static const scannerChipBackground = Color(0xFF565656);

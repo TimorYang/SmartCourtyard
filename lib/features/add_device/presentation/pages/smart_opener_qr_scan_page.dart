@@ -473,7 +473,7 @@ class _SmartOpenerQrScanPageState extends ConsumerState<SmartOpenerQrScanPage>
                 const ColoredBox(color: AppColors.scannerBackground),
               Positioned.fill(
                 child: CustomPaint(
-                  painter: _ScannerOverlayPainter(
+                  painter: ScannerOverlayPainter(
                     scanWindow: scanWindow,
                     paintWindowFill: !widget.enableCamera,
                   ),
@@ -658,8 +658,8 @@ class _ScannerActionButton extends StatelessWidget {
   }
 }
 
-class _ScannerOverlayPainter extends CustomPainter {
-  const _ScannerOverlayPainter({
+class ScannerOverlayPainter extends CustomPainter {
+  const ScannerOverlayPainter({
     required this.scanWindow,
     required this.paintWindowFill,
   });
@@ -669,6 +669,15 @@ class _ScannerOverlayPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    final overlayPath = Path()
+      ..fillType = PathFillType.evenOdd
+      ..addRect(Offset.zero & size)
+      ..addRect(scanWindow);
+    canvas.drawPath(
+      overlayPath,
+      Paint()..color = AppColors.scannerOverlayScrim,
+    );
+
     if (paintWindowFill) {
       final fillPaint = Paint()..color = AppColors.scannerWindowFill;
       canvas.drawRect(scanWindow, fillPaint);
@@ -724,7 +733,7 @@ class _ScannerOverlayPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _ScannerOverlayPainter oldDelegate) {
+  bool shouldRepaint(covariant ScannerOverlayPainter oldDelegate) {
     return oldDelegate.scanWindow != scanWindow ||
         oldDelegate.paintWindowFill != paintWindowFill;
   }

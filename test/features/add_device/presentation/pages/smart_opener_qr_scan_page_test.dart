@@ -1,3 +1,6 @@
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+
 import 'package:flinx/app/theme/app_theme.dart';
 import 'package:flinx/features/add_device/application/providers.dart';
 import 'package:flinx/features/add_device/domain/entities/onboarded_force_door.dart';
@@ -90,6 +93,35 @@ void main() {
       );
     },
   );
+
+  test('dims the camera preview outside the QR scan window', () async {
+    const imageSize = Size(100, 100);
+    const scanWindow = Rect.fromLTWH(30, 30, 40, 40);
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+
+    const ScannerOverlayPainter(
+      scanWindow: scanWindow,
+      paintWindowFill: false,
+    ).paint(canvas, imageSize);
+
+    final image = await recorder.endRecording().toImage(100, 100);
+    final pixels = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+    image.dispose();
+
+    expect(_rgbaAt(pixels!, x: 10, y: 10, width: 100), [0, 0, 0, 128]);
+    expect(_rgbaAt(pixels, x: 50, y: 50, width: 100), [0, 0, 0, 0]);
+  });
+}
+
+List<int> _rgbaAt(
+  ByteData pixels, {
+  required int x,
+  required int y,
+  required int width,
+}) {
+  final offset = (y * width + x) * 4;
+  return List<int>.generate(4, (index) => pixels.getUint8(offset + index));
 }
 
 Future<void> _pumpQrScannerPage(
