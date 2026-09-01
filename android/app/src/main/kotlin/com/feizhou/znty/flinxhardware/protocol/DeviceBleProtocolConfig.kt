@@ -40,6 +40,7 @@ object DeviceBleProtocolConfig {
   const val commandQueryAttributes: Int = 0x0002
   const val commandSetAttributes: Int = 0x0001
   const val commandAttributeReport: Int = 0x0202
+  const val controlQueryAllAttributes: Int = 0xFFFF
   const val commandControlDoor: Int = 0x0005
   const val commandRemotePairingResponse: Int = 0x0104
   const val commandRemoteQuery: Int = 0x0008
@@ -74,6 +75,11 @@ object DeviceBleProtocolConfig {
   fun doorOpenReminderResponseCode(data: ByteArray): Int? {
     return if (data.size == 1) data[0].toInt() and 0xFF else null
   }
+
+  fun attributeQueryPayload(): ByteArray = byteArrayOf(
+    (controlQueryAllAttributes ushr 8).toByte(),
+    controlQueryAllAttributes.toByte(),
+  )
 
   fun parseSafetyAccessoryPairingStartAcknowledgement(
     command: Int,
@@ -183,7 +189,9 @@ object DeviceBleProtocolConfig {
       return false
     }
     return frameType == frameTypeResponse ||
-      (frameType == frameTypeRequest && command == commandRemotePairingResponse)
+      (frameType == frameTypeRequest &&
+        (command == commandRemotePairingResponse ||
+          command == commandAttributeReport))
   }
 
   fun buildEncryptedCommandFrame(

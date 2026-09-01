@@ -315,6 +315,35 @@ class AddDeviceController extends Notifier<AddDeviceState> {
     );
   }
 
+  Future<bool> openCameraPermissionSettings() async {
+    final requestId = _nextRequestId('camera-permission-settings');
+    _log(
+      'camera_permission_settings_opened',
+      requestId: requestId,
+      stage: 'camera_permission',
+      result: 'started',
+    );
+    try {
+      await _gateway.openAppSettings(requestId: requestId);
+      _log(
+        'camera_permission_settings_opened',
+        requestId: requestId,
+        stage: 'camera_permission',
+        result: 'success',
+      );
+      return true;
+    } catch (error) {
+      _logError(
+        'camera_permission_settings_opened',
+        requestId: requestId,
+        stage: 'camera_permission',
+        result: 'failed',
+        error: error,
+      );
+      return false;
+    }
+  }
+
   void selectBleDevice(BleDevice device) {
     _ensureFlow();
     _log(

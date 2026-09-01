@@ -32,6 +32,23 @@ class SmartOpenerQrScanAssetPaths {
       'assets/icons/add_device/smart_opener_qr_flashlight_on_icon.png';
 }
 
+class SmartOpenerQrScanPageKeys {
+  const SmartOpenerQrScanPageKeys._();
+
+  static const cameraPermissionDialog = ValueKey<String>(
+    'smart-opener-qr-camera-permission-dialog',
+  );
+  static const cameraPermissionDialogCancelAction = ValueKey<String>(
+    'smart-opener-qr-camera-permission-dialog-cancel',
+  );
+  static const cameraPermissionDialogSettingsAction = ValueKey<String>(
+    'smart-opener-qr-camera-permission-dialog-settings',
+  );
+  static const cameraPermissionErrorSettingsAction = ValueKey<String>(
+    'smart-opener-qr-camera-permission-error-settings',
+  );
+}
+
 class SmartOpenerQrScanPage extends ConsumerStatefulWidget {
   const SmartOpenerQrScanPage({
     super.key,
@@ -50,7 +67,8 @@ class SmartOpenerQrScanPage extends ConsumerStatefulWidget {
       _SmartOpenerQrScanPageState();
 }
 
-class _SmartOpenerQrScanPageState extends ConsumerState<SmartOpenerQrScanPage> {
+class _SmartOpenerQrScanPageState extends ConsumerState<SmartOpenerQrScanPage>
+    with WidgetsBindingObserver {
   static const _targetScanTimeout = Duration(seconds: 10);
 
   late final MobileScannerController _scannerController;
@@ -60,14 +78,21 @@ class _SmartOpenerQrScanPageState extends ConsumerState<SmartOpenerQrScanPage> {
   String? _targetSn;
   var _isProcessing = false;
   var _isConnectingTarget = false;
+  var _isShowingCameraPermissionDialog = false;
+  var _isOpeningCameraPermissionSettings = false;
+  var _resumeScanningAfterSettings = false;
+  var _didLeaveAppForSettings = false;
+  var _suppressNextPermissionDialog = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _scannerController = MobileScannerController(
       detectionSpeed: DetectionSpeed.normal,
       formats: const <BarcodeFormat>[BarcodeFormat.qrCode],
     );
+    _scannerController.addListener(_handleScannerStateChanged);
     _addDeviceController = ref.read(addDeviceControllerProvider.notifier);
     ref.listenManual(addDeviceControllerProvider, (previous, next) {
       final targetSn = _targetSn;
@@ -85,10 +110,118 @@ class _SmartOpenerQrScanPageState extends ConsumerState<SmartOpenerQrScanPage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _targetScanTimer?.cancel();
     unawaited(_addDeviceController.stopScan());
+    _scannerController.removeListener(_handleScannerStateChanged);
     unawaited(_scannerController.dispose());
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused) {
+      if (_resumeScanningAfterSettings) {
+        _didLeaveAppForSettings = true;
+      }
+      return;
+    }
+    if (state == AppLifecycleState.resumed &&
+        _resumeScanningAfterSettings &&
+        _didLeaveAppForSettings) {
+      _resumeScanningAfterSettings = false;
+      _didLeaveAppForSettings = false;
+      _suppressNextPermissionDialog = true;
+      unawaited(_restartScannerAfterSettings());
+    }
+  }
+
+  void _handleScannerStateChanged() {
+    final scannerState = _scannerController.value;
+    final error = scannerState.error;
+    if (error?.errorCode != MobileScannerErrorCode.permissionDenied) {
+      if (scannerState.isRunning) {
+        _suppressNextPermissionDialog = false;
+      }
+      return;
+    }
+    if (_suppressNextPermissionDialog) {
+      _suppressNextPermissionDialog = false;
+      return;
+    }
+    if (_isShowingCameraPermissionDialog) {
+      return;
+    }
+    _isShowingCameraPermissionDialog = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        _isShowingCameraPermissionDialog = false;
+        return;
+      }
+      unawaited(_showCameraPermissionDeniedDialog());
+    });
+  }
+
+  Future<void> _showCameraPermissionDeniedDialog() async {
+    final l10n = AppLocalizations.of(context);
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        key: SmartOpenerQrScanPageKeys.cameraPermissionDialog,
+        title: Text(l10n.smartOpenerScannerPermissionDialogTitle),
+        content: Text(l10n.smartOpenerScannerPermissionDialogMessage),
+        actions: [
+          TextButton(
+            key: SmartOpenerQrScanPageKeys.cameraPermissionDialogCancelAction,
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(l10n.smartOpenerCancelAction),
+          ),
+          TextButton(
+            key: SmartOpenerQrScanPageKeys.cameraPermissionDialogSettingsAction,
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              unawaited(_openCameraPermissionSettings());
+            },
+            child: Text(l10n.smartOpenerScannerPermissionSettingsAction),
+          ),
+        ],
+      ),
+    );
+    _isShowingCameraPermissionDialog = false;
+  }
+
+  Future<void> _openCameraPermissionSettings() async {
+    if (_isOpeningCameraPermissionSettings) {
+      return;
+    }
+    _isOpeningCameraPermissionSettings = true;
+    _resumeScanningAfterSettings = true;
+    _didLeaveAppForSettings = false;
+    final opened = await _addDeviceController.openCameraPermissionSettings();
+    _isOpeningCameraPermissionSettings = false;
+    if (opened || !mounted) {
+      return;
+    }
+    _resumeScanningAfterSettings = false;
+    _showMessage(
+      AppLocalizations.of(context).smartOpenerScannerPermissionSettingsFailed,
+    );
+  }
+
+  Future<void> _restartScannerAfterSettings() async {
+    if (!widget.enableCamera || !mounted) {
+      return;
+    }
+    try {
+      await _scannerController.start();
+    } catch (_) {
+      if (mounted) {
+        _showMessage(
+          AppLocalizations.of(context).smartOpenerScannerUnknownError,
+        );
+      }
+    }
   }
 
   Future<void> _toggleTorch() async {
@@ -319,7 +452,18 @@ class _SmartOpenerQrScanPageState extends ConsumerState<SmartOpenerQrScanPage> {
                   scanWindow: scanWindow,
                   onDetect: _handleDetection,
                   errorBuilder: (context, error) {
-                    return _ScannerError(message: _scannerMessage(l10n, error));
+                    final hasPermissionError =
+                        error.errorCode ==
+                        MobileScannerErrorCode.permissionDenied;
+                    return _ScannerError(
+                      message: _scannerMessage(l10n, error),
+                      actionLabel: hasPermissionError
+                          ? l10n.smartOpenerScannerPermissionSettingsAction
+                          : null,
+                      onAction: hasPermissionError
+                          ? () => unawaited(_openCameraPermissionSettings())
+                          : null,
+                    );
                   },
                   placeholderBuilder: (context) {
                     return const ColoredBox(color: AppColors.scannerBackground);
@@ -405,9 +549,11 @@ class _SmartOpenerQrScanPageState extends ConsumerState<SmartOpenerQrScanPage> {
 }
 
 class _ScannerError extends StatelessWidget {
-  const _ScannerError({required this.message});
+  const _ScannerError({required this.message, this.actionLabel, this.onAction});
 
   final String message;
+  final String? actionLabel;
+  final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context) {
@@ -416,12 +562,24 @@ class _ScannerError extends StatelessWidget {
       child: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Text(
-            message,
-            textAlign: TextAlign.center,
-            style: AppTextTokens.scannerControlLabel(
-              Theme.of(context).textTheme,
-            ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: AppTextTokens.scannerControlLabel(
+                  Theme.of(context).textTheme,
+                ),
+              ),
+              if (actionLabel != null && onAction != null)
+                TextButton(
+                  key: SmartOpenerQrScanPageKeys
+                      .cameraPermissionErrorSettingsAction,
+                  onPressed: onAction,
+                  child: Text(actionLabel!),
+                ),
+            ],
           ),
         ),
       ),

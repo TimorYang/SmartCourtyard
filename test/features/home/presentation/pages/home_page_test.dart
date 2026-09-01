@@ -13,12 +13,59 @@ import 'package:flinx/features/home/domain/entities/home_scene.dart';
 import 'package:flinx/features/home/presentation/pages/home_page.dart';
 import 'package:flinx/features/notification/application/providers.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
+import 'package:flinx/platform_bridge/mock_hardware_gateway.dart';
+import 'package:flinx/platform_bridge/providers.dart';
 import 'package:easy_refresh/easy_refresh.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets(
+    'requests Android Bluetooth and location permissions after the home first frame',
+    (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      try {
+        final gateway = _HomeStartupPermissionGateway();
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              authSessionProvider.overrideWith(
+                (ref) async =>
+                    const AuthSession(isAuthenticated: true, userId: 'user-1'),
+              ),
+              accountLocalDataSourceProvider.overrideWithValue(
+                InMemoryAccountLocalDataSource(),
+              ),
+              hardwareGatewayProvider.overrideWithValue(gateway),
+              homeScenesProvider.overrideWith(
+                (ref) async => const [
+                  HomeScene(id: 1, name: 'Home', doorCount: 0, isDefault: true),
+                ],
+              ),
+              homeDevicesProvider.overrideWith(
+                (ref) async => const <DeviceSummary>[],
+              ),
+              notificationUnreadStateProvider.overrideWith(
+                (ref) async => false,
+              ),
+            ],
+            child: const FlinxApp(),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(gateway.requestedPermissions, [
+          [PermissionKind.bluetooth],
+        ]);
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
+    },
+  );
+
   testWidgets('shows a badge when unread messages are available', (
     tester,
   ) async {
@@ -525,5 +572,34 @@ class _HomeBleDisconnectController extends AddDeviceController {
   Future<bool> disconnectConnectedBleDevices() async {
     _tracker.callCount += 1;
     return true;
+  }
+}
+
+class _HomeStartupPermissionGateway extends MockHardwareGateway {
+  final List<List<PermissionKind>> requestedPermissions =
+      <List<PermissionKind>>[];
+
+  @override
+  Future<PermissionSnapshot> getPermissionSnapshot({
+    required String requestId,
+  }) async {
+    return const PermissionSnapshot(
+      bluetoothStatus: PermissionStatus.denied,
+      cameraStatus: PermissionStatus.granted,
+      locationStatus: PermissionStatus.denied,
+      microphoneStatus: PermissionStatus.granted,
+      storageStatus: PermissionStatus.granted,
+      localNetworkGranted: true,
+      notificationGranted: true,
+    );
+  }
+
+  @override
+  Future<PermissionSnapshot> requestPermissions({
+    required String requestId,
+    required List<PermissionKind> permissions,
+  }) async {
+    requestedPermissions.add(List<PermissionKind>.of(permissions));
+    return getPermissionSnapshot(requestId: requestId);
   }
 }

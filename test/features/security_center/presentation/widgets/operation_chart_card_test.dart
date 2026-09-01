@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('shows only zero y-axis values when every operation bucket is zero', () {
+  test('uses one-step y-axis values when every operation bucket is zero', () {
     final points = List<FullReportOperationCyclePoint>.generate(
       24,
       (hour) => FullReportOperationCyclePoint(
@@ -15,10 +15,28 @@ void main() {
       ),
     );
 
-    expect(operationChartYAxisLabels(points), [0, 0, 0, 0, 0, 0]);
+    expect(operationChartYAxisLabels(points), [0, 1, 2, 3, 4, 5]);
   });
 
-  test('keeps dynamic y-axis values when operation data is non-zero', () {
+  test('uses one-step y-axis values when no operation data is available', () {
+    expect(
+      operationChartYAxisLabels(const <FullReportOperationCyclePoint>[]),
+      [0, 1, 2, 3, 4, 5],
+    );
+  });
+
+  test('shares the y-axis scale with sensor operation cycles', () {
+    expect(
+      operationChartYAxisLabelsForValues(const <int>[]),
+      [0, 1, 2, 3, 4, 5],
+    );
+    expect(
+      operationChartYAxisLabelsForValues(const <int>[17]),
+      [0, 5, 10, 15, 20, 25],
+    );
+  });
+
+  test('uses equal y-axis intervals when operation data is non-zero', () {
     final points = [
       FullReportOperationCyclePoint(
         occurredAt: DateTime(2026, 7, 22),
@@ -26,7 +44,18 @@ void main() {
       ),
     ];
 
-    expect(operationChartYAxisLabels(points), [0, 2, 5, 7, 10, 12]);
+    expect(operationChartYAxisLabels(points), [0, 3, 6, 9, 12, 15]);
+  });
+
+  test('adjusts the equal interval when the data maximum changes', () {
+    final points = [
+      FullReportOperationCyclePoint(
+        occurredAt: DateTime(2026, 7, 22),
+        cycles: 17,
+      ),
+    ];
+
+    expect(operationChartYAxisLabels(points), [0, 5, 10, 15, 20, 25]);
   });
 
   testWidgets('uses the record abnormal status for both chart ranges', (

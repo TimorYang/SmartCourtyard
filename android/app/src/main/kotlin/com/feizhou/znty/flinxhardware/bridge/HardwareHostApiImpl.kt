@@ -309,7 +309,16 @@ class HardwareHostApiImpl(
     deviceId: String,
     callback: (Result<DeviceAttributeSnapshotDto>) -> Unit,
   ) {
-    executeProtocol(requestId, deviceId, DeviceBleProtocolConfig.commandQueryAttributes, DeviceBleProtocolConfig.commandAttributeReport, callback = callback) { frame ->
+    executeProtocol(
+      requestId = requestId,
+      deviceId = deviceId,
+      command = DeviceBleProtocolConfig.commandQueryAttributes,
+      responseCommand = DeviceBleProtocolConfig.commandAttributeReport,
+      data = DeviceBleProtocolConfig.attributeQueryPayload(),
+      operation = "Query Device Attributes",
+      control = DeviceBleProtocolConfig.controlQueryAllAttributes,
+      callback = callback,
+    ) { frame ->
       attributesSnapshot(requestId, deviceId, frame, DeviceAttributeReportOriginDto.QUERY_RESULT).also { snapshot ->
         runOnMainThread { hardwareFlutterApi.onDeviceAttributesChanged(snapshot) {} }
       }

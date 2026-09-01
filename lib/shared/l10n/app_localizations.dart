@@ -2504,6 +2504,30 @@ abstract class AppLocalizations {
   /// **'Camera permission is required to scan the QR code.'**
   String get smartOpenerScannerPermissionError;
 
+  /// Title for the QR scanner camera permission dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Camera permission required'**
+  String get smartOpenerScannerPermissionDialogTitle;
+
+  /// Explanation for the QR scanner camera permission dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Camera access is turned off. Go to Settings to enable it, or continue with Gallery or Bluetooth scanning.'**
+  String get smartOpenerScannerPermissionDialogMessage;
+
+  /// Action that opens app settings from the QR scanner permission UI
+  ///
+  /// In en, this message translates to:
+  /// **'Go to Settings'**
+  String get smartOpenerScannerPermissionSettingsAction;
+
+  /// Shown when the QR scanner cannot open app settings
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to open Settings. Please try again.'**
+  String get smartOpenerScannerPermissionSettingsFailed;
+
   /// Generic scanner error on QR scanner page
   ///
   /// In en, this message translates to:

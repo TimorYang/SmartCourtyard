@@ -1260,6 +1260,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get smartOpenerScannerPermissionError => '需要相机权限才能扫描二维码。';
 
   @override
+  String get smartOpenerScannerPermissionDialogTitle => '需要相机权限';
+
+  @override
+  String get smartOpenerScannerPermissionDialogMessage =>
+      '相机权限已关闭，请前往系统设置开启；你也可以继续使用相册或蓝牙扫描。';
+
+  @override
+  String get smartOpenerScannerPermissionSettingsAction => '去设置';
+
+  @override
+  String get smartOpenerScannerPermissionSettingsFailed => '无法打开系统设置，请重试。';
+
+  @override
   String get smartOpenerScannerUnknownError => '无法启动扫码器。';
 
   @override

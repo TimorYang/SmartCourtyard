@@ -110,6 +110,30 @@ class DeviceBleProtocolConfigTest {
   }
 
   @Test
+  fun `attribute query includes the all-attributes control word`() {
+    val packet = DeviceBleProtocolConfig.buildEncryptedCommandFrame(
+      sequence = 10,
+      command = DeviceBleProtocolConfig.commandQueryAttributes,
+      aesKeyHex = correctKey,
+      data = DeviceBleProtocolConfig.attributeQueryPayload(),
+    )
+    val encryptedPayload = packet.copyOfRange(5, packet.size - 3)
+    val plaintext = DeviceBleProtocolConfig.tryDecryptAesEcbPkcs7(
+      encryptedPayload,
+      DeviceBleProtocolConfig.candidateAesKeys(correctKey).single().keyBytes,
+    )
+    val decoded = requireNotNull(
+      DeviceBleProtocolConfig.parseDecryptedPayload(
+        requireNotNull(plaintext),
+        DeviceBleProtocolConfig.cryptoAes128,
+      ),
+    )
+
+    assertEquals(DeviceBleProtocolConfig.commandQueryAttributes, decoded.command)
+    assertArrayEquals(byteArrayOf(0xFF.toByte(), 0xFF.toByte()), decoded.data)
+  }
+
+  @Test
   fun `door open reminder uses command 0x0E09 and one byte duration`() {
     assertEquals(0x0E09, DeviceBleProtocolConfig.commandDoorOpenReminder)
     assertTrue(DeviceBleProtocolConfig.isValidDoorOpenReminderValue(0L))
@@ -211,12 +235,19 @@ class DeviceBleProtocolConfigTest {
   }
 
   @Test
-  fun `request frame type is accepted only for remote pairing result`() {
+  fun `request frame type is accepted for supported device reports`() {
     assertTrue(
       DeviceBleProtocolConfig.matchesProtocolResponse(
         frameType = DeviceBleProtocolConfig.frameTypeRequest,
         command = DeviceBleProtocolConfig.commandRemotePairingResponse,
         expectedCommand = DeviceBleProtocolConfig.commandRemotePairingResponse,
+      ),
+    )
+    assertTrue(
+      DeviceBleProtocolConfig.matchesProtocolResponse(
+        frameType = DeviceBleProtocolConfig.frameTypeRequest,
+        command = DeviceBleProtocolConfig.commandAttributeReport,
+        expectedCommand = DeviceBleProtocolConfig.commandAttributeReport,
       ),
     )
     assertFalse(

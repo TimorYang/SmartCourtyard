@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:easy_refresh/easy_refresh.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,8 +14,10 @@ import '../../../../core/network/dio_factory.dart';
 import '../../../../app/router/app_route_observer.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../features/account/application/providers.dart';
+import '../../../../features/account/application/system_permissions_controller.dart';
 import '../../../../features/account/domain/entities/account_profile.dart';
 import '../../../../features/account/domain/entities/account_avatar_code.dart';
+import '../../../../features/account/domain/entities/system_permission.dart';
 import '../../../../features/account/presentation/widgets/account_avatar_code_assets.dart';
 import '../../../../features/account/presentation/pages/account_profile_page.dart';
 import '../../../../shared/l10n/app_localizations.dart';
@@ -97,7 +100,38 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(_disconnectConnectedBleDevices());
+      unawaited(_requestAndroidStartupPermissions());
     });
+  }
+
+  Future<void> _requestAndroidStartupPermissions() async {
+    if (defaultTargetPlatform != TargetPlatform.android) {
+      return;
+    }
+
+    final controller = ref.read(systemPermissionsControllerProvider.notifier);
+    await controller.refresh();
+    if (!mounted) {
+      return;
+    }
+
+    final permissions = ref.read(systemPermissionsControllerProvider);
+    final bluetoothStatus = permissions
+        .permissionFor(SystemPermission.bluetooth)
+        ?.status;
+    final locationStatus = permissions
+        .permissionFor(SystemPermission.location)
+        ?.status;
+    if (!mounted ||
+        bluetoothStatus == null ||
+        locationStatus == null ||
+        (bluetoothStatus == SystemPermissionStatus.granted &&
+            locationStatus == SystemPermissionStatus.granted)) {
+      return;
+    }
+
+    // Android maps the Bluetooth request to both Bluetooth and location grants.
+    await controller.activate(SystemPermission.bluetooth);
   }
 
   @override

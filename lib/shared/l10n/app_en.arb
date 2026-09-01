@@ -1339,6 +1339,22 @@
   "@smartOpenerScannerPermissionError": {
     "description": "Camera permission error on QR scanner page"
   },
+  "smartOpenerScannerPermissionDialogTitle": "Camera permission required",
+  "@smartOpenerScannerPermissionDialogTitle": {
+    "description": "Title for the QR scanner camera permission dialog"
+  },
+  "smartOpenerScannerPermissionDialogMessage": "Camera access is turned off. Go to Settings to enable it, or continue with Gallery or Bluetooth scanning.",
+  "@smartOpenerScannerPermissionDialogMessage": {
+    "description": "Explanation for the QR scanner camera permission dialog"
+  },
+  "smartOpenerScannerPermissionSettingsAction": "Go to Settings",
+  "@smartOpenerScannerPermissionSettingsAction": {
+    "description": "Action that opens app settings from the QR scanner permission UI"
+  },
+  "smartOpenerScannerPermissionSettingsFailed": "Unable to open Settings. Please try again.",
+  "@smartOpenerScannerPermissionSettingsFailed": {
+    "description": "Shown when the QR scanner cannot open app settings"
+  },
   "smartOpenerScannerUnknownError": "Unable to start the scanner.",
   "@smartOpenerScannerUnknownError": {
     "description": "Generic scanner error on QR scanner page"
