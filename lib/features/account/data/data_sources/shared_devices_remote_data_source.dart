@@ -36,7 +36,7 @@ class SharedDevicesRemoteDataSourceImpl
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       final data = response.data;
-      if (response.code != 200 || !response.success) {
+      if (!response.isBusinessSuccess) {
         throw SharedDevicesRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -66,7 +66,7 @@ class SharedDevicesRemoteDataSourceImpl
         shareId,
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      if (response.code != 200 || !response.success) {
+      if (!response.isBusinessSuccess) {
         throw SharedDevicesRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -90,7 +90,7 @@ class SharedDevicesRemoteDataSourceImpl
         doorId,
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      if (response.code != 200 || !response.success) {
+      if (!response.isBusinessSuccess) {
         throw SharedDevicesRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );

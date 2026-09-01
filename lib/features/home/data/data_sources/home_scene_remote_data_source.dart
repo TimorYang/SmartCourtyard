@@ -38,7 +38,7 @@ class HomeSceneRemoteDataSourceImpl implements HomeSceneRemoteDataSource {
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       final data = response.data;
-      if (!_isSuccessCode(response.code) || !response.success) {
+      if (!response.isBusinessSuccess) {
         throw HomeSceneRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -67,7 +67,7 @@ class HomeSceneRemoteDataSourceImpl implements HomeSceneRemoteDataSource {
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       final data = response.data;
-      if (!_isSuccessCode(response.code) || !response.success) {
+      if (!response.isBusinessSuccess) {
         throw HomeSceneRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -95,7 +95,7 @@ class HomeSceneRemoteDataSourceImpl implements HomeSceneRemoteDataSource {
         sceneId,
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      if (!_isSuccessCode(response.code) || !response.success) {
+      if (!response.isBusinessSuccess) {
         throw HomeSceneRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -121,7 +121,7 @@ class HomeSceneRemoteDataSourceImpl implements HomeSceneRemoteDataSource {
         CreateHomeSceneRequestDto(name: name),
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      if (!_isSuccessCode(response.code) || !response.success) {
+      if (!response.isBusinessSuccess) {
         throw HomeSceneRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -137,8 +137,6 @@ class HomeSceneRemoteDataSourceImpl implements HomeSceneRemoteDataSource {
       rethrow;
     }
   }
-
-  bool _isSuccessCode(int code) => code == 0 || code == 200;
 }
 
 class HomeSceneRemoteException implements Exception {

@@ -1,4 +1,7 @@
+import 'package:dio/dio.dart';
+import 'package:flinx/core/errors/app_error.dart';
 import 'package:flinx/core/logging/app_logger.dart';
+import 'package:flinx/core/network/network_exception.dart';
 import 'package:flinx/features/auth/data/data_sources/auth_login_remote_data_source.dart';
 import 'package:flinx/features/auth/data/dto/apple_login_nonce_response_dto.dart';
 import 'package:flinx/features/auth/data/dto/auth_login_response_dto.dart';
@@ -135,9 +138,66 @@ void main() {
     });
     expect(remoteDataSource.requestId, 'facebook-login-android-123');
   });
+
+  test('maps a login business message to AppError.userMessage', () async {
+    final requestOptions = RequestOptions(path: 'app/auth/login');
+    final repository = AuthLoginRepositoryImpl(
+      remoteDataSource: _FakeAuthLoginRemoteDataSource(
+        loginError: AuthLoginRemoteException.fromNetwork(
+          NetworkException.fromDio(
+            DioException.badResponse(
+              statusCode: 400,
+              requestOptions: requestOptions,
+              response: Response<dynamic>(
+                requestOptions: requestOptions,
+                statusCode: 400,
+                data: const {
+                  'code': 100001,
+                  'msg': 'Account or password error.',
+                  'messageKey': 'account_or_password_error',
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+      logger: const _SilentAppLogger(),
+    );
+
+    await expectLater(
+      repository.login(
+        email: 'alice@example.com',
+        passwordCiphertext: 'ciphertext',
+        keyId: 'key-1',
+        nonce: 'nonce-1',
+        deviceId: 'installation-id',
+        deviceModel: 'iPhone17,2',
+        platform: 'IOS',
+        appVersion: '1.0.0',
+        requestId: 'login-123',
+      ),
+      throwsA(
+        isA<AppError>()
+            .having((error) => error.businessCode, 'business code', 100001)
+            .having(
+              (error) => error.businessMessageKey,
+              'message key',
+              'account_or_password_error',
+            )
+            .having(
+              (error) => error.userMessage,
+              'user message',
+              'Account or password error.',
+            ),
+      ),
+    );
+  });
 }
 
 class _FakeAuthLoginRemoteDataSource implements AuthLoginRemoteDataSource {
+  _FakeAuthLoginRemoteDataSource({this.loginError});
+
+  final AuthLoginRemoteException? loginError;
   Map<String, dynamic>? request;
   String? requestId;
 
@@ -244,7 +304,31 @@ class _FakeAuthLoginRemoteDataSource implements AuthLoginRemoteDataSource {
   Future<AuthLoginRemoteResult> login({
     required Map<String, dynamic> request,
     required String requestId,
-  }) => throw UnimplementedError();
+  }) async {
+    this.request = request;
+    this.requestId = requestId;
+    final error = loginError;
+    if (error != null) throw error;
+    return const AuthLoginRemoteResult(
+      login: AuthLoginResponseDto(
+        accountId: '2',
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+        tokenType: 'bearer',
+        expiresInSeconds: 7200,
+        refreshExpiresInSeconds: 2592000,
+      ),
+      profile: AuthProfileResponseDto(
+        userId: '2',
+        email: 'alice@example.com',
+        emailVerified: true,
+        nickname: 'Alice',
+        regionCode: 'NL',
+        locale: 'en-NL',
+        timezone: 'Europe/Amsterdam',
+      ),
+    );
+  }
 }
 
 class _SilentAppLogger implements AppLogger {

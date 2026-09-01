@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flinx/core/errors/app_error.dart';
 import 'package:flinx/features/notification/application/notification_messages_controller.dart';
 import 'package:flinx/features/notification/application/providers.dart';
 import 'package:flinx/features/notification/domain/entities/app_notification.dart';
@@ -116,6 +117,35 @@ void main() {
     expect(messages.first.isRead, isTrue);
     expect(messages.last.isRead, isFalse);
   });
+
+  test('mark all read preserves a server business message', () async {
+    const businessError = AppError(
+      code: AppErrorCode.serverError,
+      messageKey: 'notification.markAllReadFailed',
+      businessCode: 100500,
+      userMessage: 'Messages cannot be marked as read right now.',
+    );
+    final repository = _RecordingRepository(
+      <int, NotificationMessagePageResult>{
+        1: _page(<AppNotification>[_message('1')]),
+      },
+      markAllReadError: businessError,
+    );
+    final container = _container(repository);
+    addTearDown(container.dispose);
+    final controller = container.read(
+      notificationMessagesControllerProvider.notifier,
+    );
+
+    await controller.loadInitial();
+    final result = await controller.markAllRead();
+
+    expect(result, same(businessError));
+    expect(
+      container.read(notificationMessagesControllerProvider).messages.single.isRead,
+      isFalse,
+    );
+  });
 }
 
 ProviderContainer _container(NotificationMessageRepository repository) =>
@@ -149,10 +179,15 @@ NotificationMessagePageResult _page(
 );
 
 class _RecordingRepository implements NotificationMessageRepository {
-  _RecordingRepository(this.pages, {this.pendingPage});
+  _RecordingRepository(
+    this.pages, {
+    this.pendingPage,
+    this.markAllReadError,
+  });
 
   final Map<int, NotificationMessagePageResult> pages;
   final Completer<NotificationMessagePageResult>? pendingPage;
+  final AppError? markAllReadError;
   final List<int> requestedPages = <int>[];
   final List<int> requestedPageSizes = <int>[];
 
@@ -178,5 +213,8 @@ class _RecordingRepository implements NotificationMessageRepository {
   Future<bool> fetchUnreadState({required String requestId}) async => false;
 
   @override
-  Future<void> markAllRead({required String requestId}) async {}
+  Future<void> markAllRead({required String requestId}) async {
+    final error = markAllReadError;
+    if (error != null) throw error;
+  }
 }

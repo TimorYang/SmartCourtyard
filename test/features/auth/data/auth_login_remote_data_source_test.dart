@@ -430,6 +430,58 @@ void main() {
     );
   });
 
+  test('preserves HTTP 400 response fields on the network error', () async {
+    final requestOptions = RequestOptions(path: 'app/auth/login');
+    final dataSource = AuthLoginRemoteDataSourceImpl(
+      api: _FakeAuthApi(
+        const ApiEnvelopeDto<AuthLoginResponseDto>(code: 500, success: false),
+        loginError: DioException.badResponse(
+          statusCode: 400,
+          requestOptions: requestOptions,
+          response: Response<dynamic>(
+            requestOptions: requestOptions,
+            statusCode: 400,
+            data: const {
+              'code': 100001,
+              'success': false,
+              'data': <String, dynamic>{},
+              'msg': 'Account or password error.',
+              'messageKey': 'account_or_password_error',
+            },
+          ),
+        ),
+      ),
+      clientAuthorization: 'encoded-client-credentials',
+    );
+
+    await expectLater(
+      dataSource.login(requestId: 'login-123', request: const {}),
+      throwsA(
+        isA<AuthLoginRemoteException>()
+            .having(
+              (error) => error.kind,
+              'kind',
+              AuthLoginRemoteErrorKind.network,
+            )
+            .having(
+              (error) => error.network?.businessCode,
+              'business code',
+              100001,
+            )
+            .having(
+              (error) => error.network?.userMessage,
+              'message',
+              'Account or password error.',
+            )
+            .having(
+              (error) => error.network?.businessMessageKey,
+              'message key',
+              'account_or_password_error',
+            ),
+      ),
+    );
+  });
+
   test('rejects a login response whose success flag is false', () async {
     final dataSource = AuthLoginRemoteDataSourceImpl(
       api: _FakeAuthApi(
@@ -543,6 +595,7 @@ class _FakeAuthApi implements AuthApi {
         timezone: 'Asia/Shanghai',
       ),
     ),
+    this.loginError,
   });
 
   final ApiEnvelopeDto<AuthLoginResponseDto> response;
@@ -550,6 +603,7 @@ class _FakeAuthApi implements AuthApi {
   final ApiEnvelopeDto<GoogleLoginNonceResponseDto> googleNonceResponse;
   final ApiEnvelopeDto<FacebookLoginNonceResponseDto> facebookNonceResponse;
   final ApiEnvelopeDto<AuthProfileResponseDto> profileResponse;
+  final DioException? loginError;
   late Map<String, dynamic> body;
   late Options loginOptions;
   late Options nonceOptions;
@@ -562,6 +616,8 @@ class _FakeAuthApi implements AuthApi {
   ) async {
     body = requestBody;
     loginOptions = requestOptions;
+    final error = loginError;
+    if (error != null) throw error;
     return response;
   }
 

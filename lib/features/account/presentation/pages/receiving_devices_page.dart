@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/errors/app_error_message.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../platform_bridge/hardware_models.dart';
 import '../../../../shared/design_system/door_type_option.dart';
@@ -176,7 +177,10 @@ class _ReceivingDevicesPageState extends ConsumerState<ReceivingDevicesPage> {
       } else {
         AppToast.error(
           context,
-          AppLocalizations.of(context).receivingDevicesDeleteFailed,
+          appErrorMessage(
+            error,
+            AppLocalizations.of(context).receivingDevicesDeleteFailed,
+          ),
         );
       }
     } finally {

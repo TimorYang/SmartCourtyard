@@ -2093,5 +2093,11 @@
     "placeholders": {
       "action": {"type": "String"}
     }
-  }
+  },
+  "sceneCreateFailed": "Unable to create the scene. Please try again.",
+  "sceneRenameFailed": "Unable to rename the scene. Please try again.",
+  "sceneDeleteFailed": "Unable to delete the scene. Please try again.",
+  "deviceRenameFailed": "Unable to rename the device. Please try again.",
+  "deviceUnbindFailed": "Unable to unbind the device. Please try again.",
+  "deviceTopFailed": "Unable to pin the device. Please try again."
 }

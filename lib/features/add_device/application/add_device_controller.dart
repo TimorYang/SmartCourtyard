@@ -3,6 +3,8 @@ import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/errors/app_error_message.dart';
+
 import '../../../core/errors/app_error.dart';
 import '../../../core/logging/app_logger.dart';
 import '../../../core/logging/providers.dart';
@@ -419,7 +421,7 @@ class AddDeviceController extends Notifier<AddDeviceState> {
       );
       state = state.copyWith(
         isScanning: false,
-        errorMessage: error.toString(),
+        errorMessage: appErrorMessage(error, ''),
         clearInfoMessage: true,
       );
       return false;
@@ -700,7 +702,7 @@ class AddDeviceController extends Notifier<AddDeviceState> {
       state = state.copyWith(
         isConnecting: false,
         isAuthenticating: false,
-        errorMessage: error.toString(),
+        errorMessage: appErrorMessage(error, ''),
         clearInfoMessage: true,
       );
       return false;
@@ -759,7 +761,7 @@ class AddDeviceController extends Notifier<AddDeviceState> {
       );
       state = state.copyWith(
         isScanningWifi: false,
-        errorMessage: error.toString(),
+        errorMessage: appErrorMessage(error, ''),
         clearInfoMessage: true,
       );
       return const <WifiNetwork>[];
@@ -910,7 +912,7 @@ class AddDeviceController extends Notifier<AddDeviceState> {
       );
       state = state.copyWith(
         isProvisioningWifi: false,
-        errorMessage: error.toString(),
+        errorMessage: appErrorMessage(error, ''),
         clearInfoMessage: true,
       );
       return false;

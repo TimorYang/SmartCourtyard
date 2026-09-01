@@ -29,7 +29,7 @@ class SecurityBalanceRefreshRemoteDataSourceImpl
         doorId,
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      if (response.code != 0 && response.code != 200) {
+      if (!response.isBusinessSuccess) {
         throw SecurityBalanceRefreshRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );

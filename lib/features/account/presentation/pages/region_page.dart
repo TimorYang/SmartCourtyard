@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/errors/app_error_message.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
+import '../../application/providers.dart';
 import '../../application/region_selection_controller.dart';
 import '../../domain/entities/region_option.dart';
 
@@ -70,7 +72,12 @@ class RegionPage extends ConsumerWidget {
                             if (!saved && context.mounted) {
                               AppToast.error(
                                 context,
-                                l10n.regionOptionsSaveFailed,
+                                appErrorMessage(
+                                  ref
+                                      .read(accountControllerProvider.notifier)
+                                      .lastUpdateError,
+                                  l10n.regionOptionsSaveFailed,
+                                ),
                               );
                             }
                           },

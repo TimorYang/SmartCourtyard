@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/errors/app_error.dart';
+
 import '../domain/entities/app_notification.dart';
 import '../domain/entities/notification_message_page_result.dart';
 import '../domain/use_cases/fetch_notification_messages_use_case.dart';
@@ -133,9 +135,12 @@ class NotificationMessagesController
     }
   }
 
-  Future<bool> markAllRead() async {
+  Future<AppError?> markAllRead() async {
     if (state.isInitialLoading || state.isRefreshing || state.isLoadingMore) {
-      return false;
+      return const AppError(
+        code: AppErrorCode.unknown,
+        messageKey: 'notification.operationUnavailable',
+      );
     }
     try {
       await _markAllRead(requestId: _nextRequestId('mark-all-read'));
@@ -145,9 +150,14 @@ class NotificationMessagesController
             .toList(growable: false),
       );
       ref.invalidate(notificationUnreadStateProvider);
-      return true;
+      return null;
+    } on AppError catch (error) {
+      return error;
     } catch (_) {
-      return false;
+      return const AppError(
+        code: AppErrorCode.unknown,
+        messageKey: 'notification.markAllReadFailed',
+      );
     }
   }
 
@@ -158,11 +168,13 @@ class NotificationMessagesController
     if (!isRead) return;
 
     var changed = false;
-    final messages = state.messages.map((message) {
-      if (message.id != messageId || message.isRead) return message;
-      changed = true;
-      return message.copyWith(isRead: true);
-    }).toList(growable: false);
+    final messages = state.messages
+        .map((message) {
+          if (message.id != messageId || message.isRead) return message;
+          changed = true;
+          return message.copyWith(isRead: true);
+        })
+        .toList(growable: false);
 
     if (changed) {
       state = state.copyWith(messages: messages);

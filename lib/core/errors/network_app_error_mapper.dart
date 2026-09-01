@@ -56,6 +56,9 @@ AppError mapNetworkExceptionToAppError(
     NetworkFailureCategory.unknown => AppError(
       code: AppErrorCode.serverError,
       messageKey: 'networkErrorRequestFailed',
+      businessCode: exception.businessCode,
+      businessMessageKey: exception.businessMessageKey,
+      userMessage: exception.userMessage,
       requestId: requestId,
       deviceId: deviceId,
     ),

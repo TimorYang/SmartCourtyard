@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/errors/app_error_message.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/l10n/app_localizations.dart';
@@ -9,7 +10,8 @@ import '../../domain/entities/home_scene.dart';
 
 class SceneNameDialogAssetPaths {
   const SceneNameDialogAssetPaths._();
-  static const nameInputPlaceholder = 'assets/icons/home/device_name_input_placeholder.png';
+  static const nameInputPlaceholder =
+      'assets/icons/home/device_name_input_placeholder.png';
 }
 
 Future<void> showSceneRenameDialog(
@@ -167,7 +169,10 @@ class _SceneRenameDialogState extends ConsumerState<SceneRenameDialog> {
   Future<void> _submit() async {
     final name = _controller.text.trim();
     if (name.isEmpty) {
-      AppToast.error(context, 'input scene name');
+      AppToast.error(
+        context,
+        AppLocalizations.of(context).sceneNameInputPlaceholder,
+      );
       return;
     }
     setState(() {
@@ -185,9 +190,15 @@ class _SceneRenameDialogState extends ConsumerState<SceneRenameDialog> {
       if (mounted) {
         Navigator.pop(context);
       }
-    } catch (_) {
+    } catch (error) {
       if (mounted) {
-        AppToast.error(context, 'Failed to rename scene');
+        AppToast.error(
+          context,
+          appErrorMessage(
+            error,
+            AppLocalizations.of(context).sceneRenameFailed,
+          ),
+        );
       }
     } finally {
       if (mounted) {

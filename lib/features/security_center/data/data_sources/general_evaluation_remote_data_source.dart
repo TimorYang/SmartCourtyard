@@ -64,14 +64,14 @@ class GeneralEvaluationRemoteDataSourceImpl
   );
 
   Future<T> _wrap<T>(
-    Future<dynamic> Function() call, {
+    Future<ApiEnvelopeDto<T>> Function() call, {
     required String endpoint,
     required String requestId,
     int? range,
   }) async {
     try {
       final r = await call();
-      if ((r.code != 0 && r.code != 200) || !r.success) {
+      if (!r.isBusinessSuccess) {
         logger.warning(
           'General evaluation response failed envelope validation',
           requestId: requestId,

@@ -1,3 +1,5 @@
+export 'api_envelope_dto.dart';
+
 import 'api_envelope_dto.dart';
 
 /// Structured details for an HTTP-success response rejected by its business

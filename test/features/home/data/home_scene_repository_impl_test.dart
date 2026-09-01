@@ -84,6 +84,50 @@ void main() {
       ),
     );
   });
+
+  test('preserves an HTTP 400 message for a delete action', () async {
+    final requestOptions = RequestOptions(path: 'app/scenes/10');
+    final repository = HomeSceneRepositoryImpl(
+      remoteDataSource: _FailingHomeSceneRemoteDataSource(
+        HomeSceneRemoteException.fromNetwork(
+          NetworkException.fromDio(
+            DioException.badResponse(
+              statusCode: 400,
+              requestOptions: requestOptions,
+              response: Response<dynamic>(
+                requestOptions: requestOptions,
+                statusCode: 400,
+                data: const {
+                  'code': 100409,
+                  'msg': 'The scene still contains devices.',
+                  'messageKey': 'scene_not_empty',
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+      logger: const _NoopLogger(),
+    );
+
+    await expectLater(
+      repository.deleteScene(sceneId: 10, requestId: 'delete-scene-123'),
+      throwsA(
+        isA<AppError>()
+            .having((error) => error.businessCode, 'business code', 100409)
+            .having(
+              (error) => error.businessMessageKey,
+              'message key',
+              'scene_not_empty',
+            )
+            .having(
+              (error) => error.userMessage,
+              'user message',
+              'The scene still contains devices.',
+            ),
+      ),
+    );
+  });
 }
 
 class _FakeHomeSceneRemoteDataSource implements HomeSceneRemoteDataSource {

@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 
 import '../../../../core/network/api_business_failure.dart';
-import '../../../../core/network/api_envelope_dto.dart';
 import '../../../../core/network/dio_factory.dart';
 import '../../../../core/network/network_exception.dart';
 import '../dto/remote_door_command_request_dto.dart';
@@ -47,7 +46,7 @@ class RemoteDoorCommandRemoteDataSourceImpl
   RemoteDoorCommandResponseDto _validated(
     ApiEnvelopeDto<RemoteDoorCommandResponseDto> response,
   ) {
-    if ((response.code != 0 && response.code != 200) || !response.success) {
+    if (!response.isBusinessSuccess) {
       throw RemoteDoorCommandRemoteException.businessFailure(
         ApiBusinessFailure.fromEnvelope(response),
       );

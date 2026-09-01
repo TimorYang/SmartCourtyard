@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../core/errors/app_error_message.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../platform_bridge/hardware_models.dart';
 import '../../../../shared/l10n/app_localizations.dart';
@@ -138,9 +139,9 @@ class _DeviceCustomizeDialogState extends ConsumerState<DeviceCustomizeDialog> {
       if (mounted) {
         Navigator.pop(context);
       }
-    } catch (_) {
+    } catch (error) {
       if (mounted) {
-        _showFailure();
+        _showFailure(error);
       }
     } finally {
       if (mounted) {
@@ -185,9 +186,9 @@ class _DeviceCustomizeDialogState extends ConsumerState<DeviceCustomizeDialog> {
       if (mounted) {
         Navigator.pop(context);
       }
-    } catch (_) {
+    } catch (error) {
       if (mounted) {
-        _showUpdateFailure();
+        _showUpdateFailure(error);
       }
     } finally {
       if (mounted) {
@@ -198,21 +199,27 @@ class _DeviceCustomizeDialogState extends ConsumerState<DeviceCustomizeDialog> {
     }
   }
 
-  void _showFailure() {
+  void _showFailure([Object? error]) {
     AppToast.error(
       widget.parentContext,
-      AppLocalizations.of(
-        widget.parentContext,
-      ).deviceCustomizeResetPictureFailed,
+      appErrorMessage(
+        error,
+        AppLocalizations.of(
+          widget.parentContext,
+        ).deviceCustomizeResetPictureFailed,
+      ),
     );
   }
 
-  void _showUpdateFailure() {
+  void _showUpdateFailure([Object? error]) {
     AppToast.error(
       widget.parentContext,
-      AppLocalizations.of(
-        widget.parentContext,
-      ).deviceCustomizeChangePictureFailed,
+      appErrorMessage(
+        error,
+        AppLocalizations.of(
+          widget.parentContext,
+        ).deviceCustomizeChangePictureFailed,
+      ),
     );
   }
 }

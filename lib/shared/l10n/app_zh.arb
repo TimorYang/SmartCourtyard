@@ -985,5 +985,11 @@
     "placeholders": {
       "action": {"type": "String"}
     }
-  }
+  },
+  "sceneCreateFailed": "创建场景失败，请重试。",
+  "sceneRenameFailed": "重命名场景失败，请重试。",
+  "sceneDeleteFailed": "删除场景失败，请重试。",
+  "deviceRenameFailed": "重命名设备失败，请重试。",
+  "deviceUnbindFailed": "解绑设备失败，请重试。",
+  "deviceTopFailed": "置顶设备失败，请重试。"
 }

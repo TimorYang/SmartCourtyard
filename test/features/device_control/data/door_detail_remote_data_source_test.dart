@@ -132,7 +132,7 @@ void main() {
     );
   });
 
-  test('accepts code 0 response', () async {
+  test('rejects code 0 response', () async {
     final dataSource = DoorDetailRemoteDataSourceImpl(
       api: _FakeDoorDetailApi(
         response: const ApiEnvelopeDto(
@@ -143,12 +143,16 @@ void main() {
       ),
     );
 
-    final detail = await dataSource.fetchDoorDetail(
-      doorId: 12,
-      requestId: 'door-detail-123',
+    await expectLater(
+      dataSource.fetchDoorDetail(doorId: 12, requestId: 'door-detail-123'),
+      throwsA(
+        isA<DoorDetailRemoteException>().having(
+          (error) => error.kind,
+          'kind',
+          DoorDetailRemoteErrorKind.businessFailure,
+        ),
+      ),
     );
-
-    expect(detail.id, '12');
   });
 
   test('fetches door devices with the same request correlation', () async {
@@ -267,7 +271,11 @@ void main() {
         success: true,
         data: DoorDetailResponseDto(id: '12', name: 'Main Gate'),
       ),
-      unbindResponse: const ApiEnvelopeDto(code: 0, success: true, data: true),
+      unbindResponse: const ApiEnvelopeDto(
+        code: 200,
+        success: true,
+        data: true,
+      ),
     );
     final dataSource = DoorDetailRemoteDataSourceImpl(api: api);
 

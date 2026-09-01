@@ -24,13 +24,29 @@ ApiEnvelopeDto<T> _$ApiEnvelopeDtoFromJson<T>(
   Map<String, dynamic> json,
   T Function(Object? json) fromJsonT,
 ) {
+  final code = (json['code'] as num).toInt();
   final success = json['success'] as bool;
   final dataJson = json['data'];
+  final message = _readMessage(json['msg']) ?? _readMessage(json['message']);
   return ApiEnvelopeDto<T>(
-    code: (json['code'] as num).toInt(),
+    code: code,
     success: success,
-    msg: json['msg'] as String?,
-    messageKey: json['messageKey'] as String?,
-    data: success && dataJson != null ? fromJsonT(dataJson) : null,
+    msg: message,
+    messageKey: _readMessage(json['messageKey']),
+    data: code == 200 && success && dataJson != null
+        ? fromJsonT(dataJson)
+        : null,
   );
+}
+
+String? _readMessage(Object? value) {
+  if (value is! String) return null;
+  final normalized = value.trim();
+  return normalized.isEmpty ? null : normalized;
+}
+
+/// The REST protocol considers a response successful only when both fields
+/// explicitly indicate success. In particular, legacy code 0 is a failure.
+extension ApiEnvelopeDtoBusinessSuccess<T> on ApiEnvelopeDto<T> {
+  bool get isBusinessSuccess => code == 200 && success;
 }

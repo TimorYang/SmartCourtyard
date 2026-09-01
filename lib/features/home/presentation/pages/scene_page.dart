@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/errors/app_error_message.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/l10n/app_localizations.dart';
@@ -15,10 +16,13 @@ import '../widgets/scene_rename_dialog.dart';
 class SceneAssetPaths {
   const SceneAssetPaths._();
 
-  static const warehousePlaceholder = 'assets/icons/home/scene_warehouse_placeholder.png';
-  static const warehousePlaceholderOther = 'assets/icons/home/scene_warehouse_placeholder_other.png';
+  static const warehousePlaceholder =
+      'assets/icons/home/scene_warehouse_placeholder.png';
+  static const warehousePlaceholderOther =
+      'assets/icons/home/scene_warehouse_placeholder_other.png';
   static const editPlaceholder = 'assets/icons/home/scene_edit_placeholder.png';
-  static const editDonePlaceholder = 'assets/icons/home/scene_edit_done_placeholder.png';
+  static const editDonePlaceholder =
+      'assets/icons/home/scene_edit_done_placeholder.png';
 }
 
 class ScenePage extends ConsumerStatefulWidget {
@@ -49,7 +53,9 @@ class _ScenePageState extends ConsumerState<ScenePage> {
         showBottomDivider: false,
         actions: [
           IconButton(
-            tooltip: _isEditing ? l10n.sceneDoneEditingTooltip : l10n.sceneEditTooltip,
+            tooltip: _isEditing
+                ? l10n.sceneDoneEditingTooltip
+                : l10n.sceneEditTooltip,
             visualDensity: VisualDensity.compact,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints.tightFor(width: 34, height: 34),
@@ -58,7 +64,11 @@ class _ScenePageState extends ConsumerState<ScenePage> {
                 _isEditing = !_isEditing;
               });
             },
-            icon: _SceneEditActionIcon(assetPath: _isEditing ? SceneAssetPaths.editDonePlaceholder : SceneAssetPaths.editPlaceholder),
+            icon: _SceneEditActionIcon(
+              assetPath: _isEditing
+                  ? SceneAssetPaths.editDonePlaceholder
+                  : SceneAssetPaths.editPlaceholder,
+            ),
           ),
           const SizedBox(width: 16),
         ],
@@ -68,11 +78,17 @@ class _ScenePageState extends ConsumerState<ScenePage> {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(5, 10, 0, 10),
-            child: Text(_isEditing ? l10n.sceneEditingTitle : l10n.sceneTitle, style: AppTextTokens.sceneTitle(textTheme)),
+            child: Text(
+              _isEditing ? l10n.sceneEditingTitle : l10n.sceneTitle,
+              style: AppTextTokens.sceneTitle(textTheme),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
-            child: Text(l10n.sceneCount(sceneCount), style: AppTextTokens.sceneBreadcrumb(textTheme)),
+            child: Text(
+              l10n.sceneCount(sceneCount),
+              style: AppTextTokens.sceneBreadcrumb(textTheme),
+            ),
           ),
           const SizedBox(height: 46),
           scenesState.when(
@@ -82,10 +98,13 @@ class _ScenePageState extends ConsumerState<ScenePage> {
               deletingSceneIds: _deletingSceneIds,
               onCreateScene: () => unawaited(_showCreateSceneDialog()),
               onDeleteScene: (scene) => unawaited(_deleteScene(scene)),
-              onRenameScene: (scene) => unawaited(_showRenameSceneDialog(scene)),
+              onRenameScene: (scene) =>
+                  unawaited(_showRenameSceneDialog(scene)),
             ),
             loading: () => const _SceneLoadingState(),
-            error: (error, stackTrace) => _SceneErrorState(onRetry: () => ref.invalidate(homeScenesProvider)),
+            error: (error, stackTrace) => _SceneErrorState(
+              onRetry: () => ref.invalidate(homeScenesProvider),
+            ),
           ),
         ],
       ),
@@ -113,13 +132,23 @@ class _ScenePageState extends ConsumerState<ScenePage> {
     setState(() {
       _deletingSceneIds.add(scene.id);
     });
-    final requestId = 'home-delete-scene-${DateTime.now().toUtc().microsecondsSinceEpoch}';
+    final requestId =
+        'home-delete-scene-${DateTime.now().toUtc().microsecondsSinceEpoch}';
     try {
-      await ref.read(deleteHomeSceneUseCaseProvider)(sceneId: scene.id, requestId: requestId);
+      await ref.read(deleteHomeSceneUseCaseProvider)(
+        sceneId: scene.id,
+        requestId: requestId,
+      );
       ref.invalidate(homeScenesProvider);
-    } catch (_) {
+    } catch (error) {
       if (mounted) {
-        AppToast.error(context, 'Failed to delete scene');
+        AppToast.error(
+          context,
+          appErrorMessage(
+            error,
+            AppLocalizations.of(context).sceneDeleteFailed,
+          ),
+        );
       }
     } finally {
       if (mounted) {
@@ -164,14 +193,24 @@ class _SceneList extends StatelessWidget {
           ),
           const SizedBox(height: 16),
         ],
-        if (!isEditing) ...[const SizedBox(height: 2), _NewSceneCard(onPressed: onCreateScene)],
+        if (!isEditing) ...[
+          const SizedBox(height: 2),
+          _NewSceneCard(onPressed: onCreateScene),
+        ],
       ],
     );
   }
 }
 
 class _SceneCard extends StatelessWidget {
-  const _SceneCard({required this.scene, required this.showDeleteAction, required this.isDeleting, required this.onDelete, required this.onRename,required this.indexNumber});
+  const _SceneCard({
+    required this.scene,
+    required this.showDeleteAction,
+    required this.isDeleting,
+    required this.onDelete,
+    required this.onRename,
+    required this.indexNumber,
+  });
 
   final HomeScene scene;
   final bool showDeleteAction;
@@ -190,21 +229,38 @@ class _SceneCard extends StatelessWidget {
       onLongPress: onRename,
       child: Container(
         height: 88,
-        decoration: BoxDecoration(color: AppColors.surfaceItemSceneCard, borderRadius: BorderRadius.circular(14)),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceItemSceneCard,
+          borderRadius: BorderRadius.circular(14),
+        ),
         padding: const EdgeInsets.symmetric(horizontal: 28),
         child: Row(
           children: [
-            if (showDeleteAction) ...[_DeleteSceneButton(isDeleting: isDeleting, onPressed: onDelete), const SizedBox(width: 15)],
-            _SceneIcon(assetPath: indexNumber == 0 ? SceneAssetPaths.warehousePlaceholder : SceneAssetPaths.warehousePlaceholderOther, icon: Icons.home_outlined),
+            if (showDeleteAction) ...[
+              _DeleteSceneButton(isDeleting: isDeleting, onPressed: onDelete),
+              const SizedBox(width: 15),
+            ],
+            _SceneIcon(
+              assetPath: indexNumber == 0
+                  ? SceneAssetPaths.warehousePlaceholder
+                  : SceneAssetPaths.warehousePlaceholderOther,
+              icon: Icons.home_outlined,
+            ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(scene.name.trim().isEmpty ? 'Home' : scene.name.trim(), style: AppTextTokens.sceneCardTitle(textTheme)),
+                  Text(
+                    scene.name.trim().isEmpty ? 'Home' : scene.name.trim(),
+                    style: AppTextTokens.sceneCardTitle(textTheme),
+                  ),
                   const SizedBox(height: 12),
-                  Text(l10n.sceneDeviceCount(scene.doorCount), style: AppTextTokens.sceneCardMeta(textTheme)),
+                  Text(
+                    l10n.sceneDeviceCount(scene.doorCount),
+                    style: AppTextTokens.sceneCardMeta(textTheme),
+                  ),
                 ],
               ),
             ),
@@ -220,7 +276,10 @@ class _SceneLoadingState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const SizedBox(height: 88, child: Center(child: CircularProgressIndicator()));
+    return const SizedBox(
+      height: 88,
+      child: Center(child: CircularProgressIndicator()),
+    );
   }
 }
 
@@ -239,7 +298,10 @@ class _SceneErrorState extends StatelessWidget {
         child: TextButton.icon(
           onPressed: onRetry,
           icon: const Icon(Icons.refresh_rounded),
-          label: Text('Failed to load scenes', style: AppTextTokens.sceneCardMeta(textTheme)),
+          label: Text(
+            'Failed to load scenes',
+            style: AppTextTokens.sceneCardMeta(textTheme),
+          ),
         ),
       ),
     );
@@ -254,7 +316,11 @@ class _SceneEditActionIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      child: Image.asset(assetPath, fit: BoxFit.contain, errorBuilder: (context, error, stackTrace) => const SizedBox.shrink()),
+      child: Image.asset(
+        assetPath,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+      ),
     );
   }
 }
@@ -273,13 +339,23 @@ class _DeleteSceneButton extends StatelessWidget {
       child: Container(
         width: 24,
         height: 24,
-        decoration: const BoxDecoration(color: AppColors.sceneDeleteAction, shape: BoxShape.circle),
+        decoration: const BoxDecoration(
+          color: AppColors.sceneDeleteAction,
+          shape: BoxShape.circle,
+        ),
         child: isDeleting
             ? const Padding(
                 padding: EdgeInsets.all(5),
-                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.backgroundPrimary),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.backgroundPrimary,
+                ),
               )
-            : const Icon(Icons.remove_rounded, color: AppColors.backgroundPrimary, size: 24),
+            : const Icon(
+                Icons.remove_rounded,
+                color: AppColors.backgroundPrimary,
+                size: 24,
+              ),
       ),
     );
   }
@@ -331,11 +407,23 @@ class _NewSceneCard extends StatelessWidget {
                 Container(
                   width: 24,
                   height: 24,
-                  decoration: const BoxDecoration(color: AppColors.authSuccess, shape: BoxShape.circle),
-                  child: const Icon(Icons.add_rounded, color: AppColors.backgroundPrimary, size: 24),
+                  decoration: const BoxDecoration(
+                    color: AppColors.authSuccess,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.add_rounded,
+                    color: AppColors.backgroundPrimary,
+                    size: 24,
+                  ),
                 ),
                 const SizedBox(height: 6),
-                Text(l10n.sceneNewSceneAction, style: AppTextTokens.sceneNewScene(Theme.of(context).textTheme)),
+                Text(
+                  l10n.sceneNewSceneAction,
+                  style: AppTextTokens.sceneNewScene(
+                    Theme.of(context).textTheme,
+                  ),
+                ),
               ],
             ),
           ),

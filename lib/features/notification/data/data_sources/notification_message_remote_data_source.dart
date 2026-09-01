@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 
 import '../../../../core/network/api_business_failure.dart';
-import '../../../../core/network/api_envelope_dto.dart';
 import '../../../../core/network/dio_factory.dart';
 import '../../../../core/network/network_exception.dart';
 import '../dto/notification_message_dto.dart';
@@ -75,7 +74,7 @@ class NotificationMessageRemoteDataSourceImpl
     try {
       final response = await request();
       final data = response.data;
-      if (response.code != 200 || !response.success) {
+      if (!response.isBusinessSuccess) {
         throw NotificationMessageRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );

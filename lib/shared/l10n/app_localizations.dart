@@ -4891,6 +4891,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unable to send {action}. Check your network and try again.'**
   String deviceCommandNetworkFailure(String action);
+
+  /// No description provided for @sceneCreateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to create the scene. Please try again.'**
+  String get sceneCreateFailed;
+
+  /// No description provided for @sceneRenameFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to rename the scene. Please try again.'**
+  String get sceneRenameFailed;
+
+  /// No description provided for @sceneDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to delete the scene. Please try again.'**
+  String get sceneDeleteFailed;
+
+  /// No description provided for @deviceRenameFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to rename the device. Please try again.'**
+  String get deviceRenameFailed;
+
+  /// No description provided for @deviceUnbindFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to unbind the device. Please try again.'**
+  String get deviceUnbindFailed;
+
+  /// No description provided for @deviceTopFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to pin the device. Please try again.'**
+  String get deviceTopFailed;
 }
 
 class _AppLocalizationsDelegate

@@ -46,7 +46,7 @@ class AddDeviceOnboardingRemoteDataSourceImpl
         Options(extra: _bindingRequestExtras(requestId)),
       );
       final data = response.data;
-      if (!_isSuccessCode(response.code) || !response.success) {
+      if (!response.isBusinessSuccess) {
         throw AddDeviceOnboardingRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -82,7 +82,7 @@ class AddDeviceOnboardingRemoteDataSourceImpl
         Options(extra: _bindingRequestExtras(requestId)),
       );
       final data = response.data;
-      if (!_isSuccessCode(response.code) || !response.success) {
+      if (!response.isBusinessSuccess) {
         throw AddDeviceOnboardingRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -119,7 +119,7 @@ class AddDeviceOnboardingRemoteDataSourceImpl
         Options(extra: _bindingRequestExtras(requestId)),
       );
       final data = response.data;
-      if (response.code != 200) {
+      if (!response.isBusinessSuccess) {
         throw AddDeviceOnboardingRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -136,8 +136,6 @@ class AddDeviceOnboardingRemoteDataSourceImpl
       rethrow;
     }
   }
-
-  bool _isSuccessCode(int code) => code == 0 || code == 200;
 
   Map<String, Object?> _bindingRequestExtras(String requestId) {
     return {

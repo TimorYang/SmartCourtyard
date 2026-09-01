@@ -58,7 +58,7 @@ void main() {
   test('passes door and request IDs to the refresh API', () async {
     final api = _FakeSecurityBalanceRefreshApi(
       const ApiEnvelopeDto(
-        code: 0,
+        code: 200,
         success: true,
         data: SecurityBalanceRefreshResponseDto(requestId: 'server-request'),
       ),
@@ -71,26 +71,21 @@ void main() {
     expect(api.options.extra?[NetworkRequestExtras.requestId], 'refresh-12');
   });
 
-  test(
-    'accepts a success code even when success and data are absent',
-    () async {
-      final dataSource = SecurityBalanceRefreshRemoteDataSourceImpl(
-        api: _FakeSecurityBalanceRefreshApi(
-          const ApiEnvelopeDto<SecurityBalanceRefreshResponseDto>(
-            code: 200,
-            success: false,
-          ),
+  test('rejects code 200 when success is false', () async {
+    final dataSource = SecurityBalanceRefreshRemoteDataSourceImpl(
+      api: _FakeSecurityBalanceRefreshApi(
+        const ApiEnvelopeDto<SecurityBalanceRefreshResponseDto>(
+          code: 200,
+          success: false,
         ),
-      );
+      ),
+    );
 
-      final response = await dataSource.refreshBalance(
-        doorId: 12,
-        requestId: 'refresh-12',
-      );
-
-      expect(response.requestId, isNull);
-    },
-  );
+    await expectLater(
+      dataSource.refreshBalance(doorId: 12, requestId: 'refresh-12'),
+      throwsA(isA<SecurityBalanceRefreshRemoteException>()),
+    );
+  });
 
   test('rejects unsuccessful responses', () async {
     final dataSource = SecurityBalanceRefreshRemoteDataSourceImpl(

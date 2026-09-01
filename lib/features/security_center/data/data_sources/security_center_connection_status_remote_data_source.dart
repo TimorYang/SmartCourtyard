@@ -30,7 +30,7 @@ class SecurityCenterConnectionStatusRemoteDataSourceImpl
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       final status = response.data?.wifiConnectionStatus?.trim();
-      if ((response.code != 0 && response.code != 200) || !response.success) {
+      if (!response.isBusinessSuccess) {
         throw SecurityCenterConnectionStatusRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );

@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/errors/app_error_message.dart';
+
 import '../domain/entities/device_setting.dart';
 import '../domain/repositories/device_settings_repository.dart';
 import '../domain/use_cases/query_device_settings_use_case.dart';
@@ -90,7 +92,10 @@ class DeviceSettingsController extends Notifier<DeviceSettingsState> {
       if (!ref.mounted) {
         return;
       }
-      state = state.copyWith(loading: false, errorMessage: error.toString());
+      state = state.copyWith(
+        loading: false,
+        errorMessage: appErrorMessage(error, ''),
+      );
     }
   }
 
@@ -123,7 +128,7 @@ class DeviceSettingsController extends Notifier<DeviceSettingsState> {
         return false;
       }
       state = state.copyWith(
-        errorMessage: error.toString(),
+        errorMessage: appErrorMessage(error, ''),
         clearPendingKey: true,
       );
       return false;
@@ -159,7 +164,10 @@ class DeviceSettingsController extends Notifier<DeviceSettingsState> {
     if (!ref.mounted) {
       return;
     }
-    state = state.copyWith(loading: false, errorMessage: error.toString());
+    state = state.copyWith(
+      loading: false,
+      errorMessage: appErrorMessage(error, ''),
+    );
   }
 
   String _nextRequestId(String operation) {

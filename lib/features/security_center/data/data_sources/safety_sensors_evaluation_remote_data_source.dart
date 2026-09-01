@@ -30,7 +30,7 @@ class SafetySensorsEvaluationRemoteDataSourceImpl
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       final data = response.data;
-      if ((response.code != 0 && response.code != 200) || !response.success) {
+      if (!response.isBusinessSuccess) {
         throw SafetySensorsEvaluationRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );

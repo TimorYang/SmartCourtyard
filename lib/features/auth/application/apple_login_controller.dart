@@ -24,7 +24,7 @@ enum AppleLoginSubmissionType {
 }
 
 class AppleLoginSubmission {
-  const AppleLoginSubmission._(this.type, [this.result]);
+  const AppleLoginSubmission._(this.type, [this.result, this.error]);
 
   const AppleLoginSubmission.success(AuthLoginResult result)
     : this._(AppleLoginSubmissionType.success, result);
@@ -38,12 +38,14 @@ class AppleLoginSubmission {
   const AppleLoginSubmission.unavailable()
     : this._(AppleLoginSubmissionType.unavailable);
 
-  const AppleLoginSubmission.failed() : this._(AppleLoginSubmissionType.failed);
+  const AppleLoginSubmission.failed([Object? error])
+    : this._(AppleLoginSubmissionType.failed, null, error);
 
   const AppleLoginSubmission.busy() : this._(AppleLoginSubmissionType.busy);
 
   final AppleLoginSubmissionType type;
   final AuthLoginResult? result;
+  final Object? error;
 }
 
 class AppleLoginController extends Notifier<AppleLoginState> {
@@ -69,10 +71,10 @@ class AppleLoginController extends Notifier<AppleLoginState> {
         AppleIdentityErrorCode.unavailable =>
           const AppleLoginSubmission.unavailable(),
         AppleIdentityErrorCode.invalidCredential ||
-        AppleIdentityErrorCode.failed => const AppleLoginSubmission.failed(),
+        AppleIdentityErrorCode.failed => AppleLoginSubmission.failed(error),
       };
-    } on Object {
-      return const AppleLoginSubmission.failed();
+    } on Object catch (error) {
+      return AppleLoginSubmission.failed(error);
     } finally {
       state = state.copyWith(isSubmitting: false);
     }

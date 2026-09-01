@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/errors/app_error_message.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../platform_bridge/hardware_models.dart';
 import '../../../../shared/l10n/app_localizations.dart';
@@ -194,9 +195,9 @@ class _DeviceNameDialogState extends ConsumerState<DeviceNameDialog> {
       if (mounted) {
         Navigator.pop(context);
       }
-    } catch (_) {
+    } catch (error) {
       if (mounted) {
-        _showFailure();
+        _showFailure(error);
       }
     } finally {
       if (mounted) {
@@ -207,8 +208,14 @@ class _DeviceNameDialogState extends ConsumerState<DeviceNameDialog> {
     }
   }
 
-  void _showFailure() {
-    AppToast.error(widget.parentContext, 'Failed to rename device');
+  void _showFailure([Object? error]) {
+    AppToast.error(
+      widget.parentContext,
+      appErrorMessage(
+        error,
+        AppLocalizations.of(widget.parentContext).deviceRenameFailed,
+      ),
+    );
   }
 }
 

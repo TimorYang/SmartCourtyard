@@ -57,7 +57,7 @@ class HomeDoorRemoteDataSourceImpl implements HomeDoorRemoteDataSource {
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       final data = response.data;
-      if (!_isSuccessCode(response.code) || !response.success) {
+      if (!response.isBusinessSuccess) {
         throw HomeDoorRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -82,7 +82,7 @@ class HomeDoorRemoteDataSourceImpl implements HomeDoorRemoteDataSource {
         doorId,
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      if (!_isSuccessCode(response.code) || !response.success) {
+      if (!response.isBusinessSuccess) {
         throw HomeDoorRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -106,7 +106,7 @@ class HomeDoorRemoteDataSourceImpl implements HomeDoorRemoteDataSource {
         doorId,
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      if (!_isSuccessCode(response.code) || !response.success) {
+      if (!response.isBusinessSuccess) {
         throw HomeDoorRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -130,7 +130,7 @@ class HomeDoorRemoteDataSourceImpl implements HomeDoorRemoteDataSource {
         doorId,
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      if (!_isSuccessCode(response.code) || !response.success) {
+      if (!response.isBusinessSuccess) {
         throw HomeDoorRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -167,7 +167,7 @@ class HomeDoorRemoteDataSourceImpl implements HomeDoorRemoteDataSource {
         ),
       );
       final uploadResult = uploadResponse.data;
-      if (!_isSuccessCode(uploadResponse.code) || !uploadResponse.success) {
+      if (!uploadResponse.isBusinessSuccess) {
         throw HomeDoorRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(uploadResponse),
         );
@@ -181,7 +181,7 @@ class HomeDoorRemoteDataSourceImpl implements HomeDoorRemoteDataSource {
         UpdateHomeDoorCoverRequestDto(coverFileId: uploadResult.fileId),
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      if (!_isSuccessCode(coverResponse.code) || !coverResponse.success) {
+      if (!coverResponse.isBusinessSuccess) {
         throw HomeDoorRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(coverResponse),
         );
@@ -210,7 +210,7 @@ class HomeDoorRemoteDataSourceImpl implements HomeDoorRemoteDataSource {
         RenameHomeDoorRequestDto(name: name),
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      if (!_isSuccessCode(response.code) || !response.success) {
+      if (!response.isBusinessSuccess) {
         throw HomeDoorRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -239,7 +239,7 @@ class HomeDoorRemoteDataSourceImpl implements HomeDoorRemoteDataSource {
         MoveHomeDoorSceneRequestDto(sceneId: sceneId),
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      if (!_isSuccessCode(response.code) || !response.success) {
+      if (!response.isBusinessSuccess) {
         throw HomeDoorRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -255,8 +255,6 @@ class HomeDoorRemoteDataSourceImpl implements HomeDoorRemoteDataSource {
       rethrow;
     }
   }
-
-  bool _isSuccessCode(int code) => code == 200;
 }
 
 class HomeDoorRemoteException implements Exception {

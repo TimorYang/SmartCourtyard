@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 
 import '../../../../core/network/dio_factory.dart';
 import '../../../../core/network/api_business_failure.dart';
-import '../../../../core/network/api_envelope_dto.dart';
 import '../../../../core/network/network_exception.dart';
 import '../../domain/entities/password_reset_verification.dart';
 import 'auth_api.dart';
@@ -127,7 +126,7 @@ class AuthPasswordResetRemoteDataSourceImpl
   }
 
   void _validateEnvelope<T>(ApiEnvelopeDto<T> response) {
-    if (response.code != 200 || !response.success) {
+    if (!response.isBusinessSuccess) {
       throw AuthPasswordResetRemoteException.businessFailure(
         ApiBusinessFailure.fromEnvelope(response),
       );

@@ -48,7 +48,7 @@ class DoorDetailRemoteDataSourceImpl implements DoorDetailRemoteDataSource {
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       final data = response.data;
-      if (!_isSuccessCode(response.code) || !response.success) {
+      if (!response.isBusinessSuccess) {
         throw DoorDetailRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -77,7 +77,7 @@ class DoorDetailRemoteDataSourceImpl implements DoorDetailRemoteDataSource {
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       final data = response.data;
-      if (!_isSuccessCode(response.code) || !response.success) {
+      if (!response.isBusinessSuccess) {
         throw DoorDetailRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -108,7 +108,7 @@ class DoorDetailRemoteDataSourceImpl implements DoorDetailRemoteDataSource {
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       final data = response.data;
-      if (!_isSuccessCode(response.code) || !response.success) {
+      if (!response.isBusinessSuccess) {
         throw DoorDetailRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -138,7 +138,7 @@ class DoorDetailRemoteDataSourceImpl implements DoorDetailRemoteDataSource {
         deviceId,
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      if (!_isSuccessCode(response.code) || !response.success) {
+      if (!response.isBusinessSuccess) {
         throw DoorDetailRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -154,8 +154,6 @@ class DoorDetailRemoteDataSourceImpl implements DoorDetailRemoteDataSource {
       rethrow;
     }
   }
-
-  bool _isSuccessCode(int code) => code == 0 || code == 200;
 }
 
 class DoorDetailRemoteException implements Exception {

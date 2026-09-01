@@ -2689,4 +2689,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String deviceCommandNetworkFailure(String action) {
     return 'Unable to send $action. Check your network and try again.';
   }
+
+  @override
+  String get sceneCreateFailed =>
+      'Unable to create the scene. Please try again.';
+
+  @override
+  String get sceneRenameFailed =>
+      'Unable to rename the scene. Please try again.';
+
+  @override
+  String get sceneDeleteFailed =>
+      'Unable to delete the scene. Please try again.';
+
+  @override
+  String get deviceRenameFailed =>
+      'Unable to rename the device. Please try again.';
+
+  @override
+  String get deviceUnbindFailed =>
+      'Unable to unbind the device. Please try again.';
+
+  @override
+  String get deviceTopFailed => 'Unable to pin the device. Please try again.';
 }

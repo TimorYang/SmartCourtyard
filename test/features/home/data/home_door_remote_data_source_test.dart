@@ -568,7 +568,7 @@ class _FakeHomeApi implements HomeApi {
     Options options,
   ) async {
     return const ApiEnvelopeDto<List<HomeSceneResponseDto>>(
-      code: 0,
+      code: 200,
       success: true,
       data: <HomeSceneResponseDto>[],
     );

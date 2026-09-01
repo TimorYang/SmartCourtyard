@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/errors/app_error_message.dart';
+
 import '../domain/entities/door_setting_snapshot.dart';
 import '../domain/use_cases/fetch_door_settings_use_case.dart';
 import 'providers.dart';
@@ -68,7 +70,7 @@ class DoorSettingsController extends Notifier<DoorSettingsState> {
       state = DoorSettingsState(
         settings: state.settings,
         loading: false,
-        errorMessage: error.toString(),
+        errorMessage: appErrorMessage(error, ''),
       );
     }
   }

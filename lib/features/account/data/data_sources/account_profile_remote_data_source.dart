@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 
-import '../../../../core/network/api_envelope_dto.dart';
 import '../../../../core/network/dio_factory.dart';
 import '../../../../core/network/api_business_failure.dart';
 import '../../../../core/network/network_exception.dart';
@@ -73,7 +72,7 @@ class AccountProfileRemoteDataSourceImpl
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       final data = response.data;
-      if (!_accountSuccess(response.code, response.success)) {
+      if (!response.isBusinessSuccess) {
         throw AccountProfileRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -100,7 +99,7 @@ class AccountProfileRemoteDataSourceImpl
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       final data = response.data;
-      if (!_accountSuccess(response.code, response.success)) {
+      if (!response.isBusinessSuccess) {
         throw AccountProfileRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -127,7 +126,7 @@ class AccountProfileRemoteDataSourceImpl
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       final data = response.data;
-      if (!_languageOptionsSuccess(response.code, response.success)) {
+      if (!response.isBusinessSuccess) {
         throw AccountProfileRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -168,7 +167,7 @@ class AccountProfileRemoteDataSourceImpl
           : raw is String
           ? int.tryParse(raw)
           : null;
-      if (!_success(response.code, response.success)) {
+      if (!response.isBusinessSuccess) {
         throw AccountProfileRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -210,7 +209,7 @@ class AccountProfileRemoteDataSourceImpl
         body,
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      if (!_accountSuccess(response.code, response.success)) {
+      if (!response.isBusinessSuccess) {
         throw AccountProfileRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -238,7 +237,7 @@ class AccountProfileRemoteDataSourceImpl
         'avatarCode': ?avatarCode?.wireValue,
         'avatarFileId': ?avatarFileId,
       }, Options(extra: {NetworkRequestExtras.requestId: requestId}));
-      if (!_success(response.code, response.success)) {
+      if (!response.isBusinessSuccess) {
         throw AccountProfileRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -294,7 +293,7 @@ class AccountProfileRemoteDataSourceImpl
         body,
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      if (!_success(response.code, response.success)) {
+      if (!response.isBusinessSuccess) {
         throw AccountProfileRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -312,7 +311,7 @@ class AccountProfileRemoteDataSourceImpl
       final response = await api.confirmAccountDeletion(
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      if (!_accountSuccess(response.code, response.success)) {
+      if (!response.isBusinessSuccess) {
         throw AccountProfileRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -322,16 +321,6 @@ class AccountProfileRemoteDataSourceImpl
         NetworkException.fromDio(error),
       );
     }
-  }
-
-  bool _success(int code, bool success) => code == 200 && success;
-
-  bool _languageOptionsSuccess(int code, bool success) {
-    return success && (code == 0 || code == 200);
-  }
-
-  bool _accountSuccess(int code, bool success) {
-    return success && (code == 0 || code == 200);
   }
 }
 

@@ -22,7 +22,7 @@ void main() {
     () async {
       final adapter = _RefreshResponseAdapter(
         body: {
-          'code': 0,
+          'code': 200,
           'success': true,
           'data': {
             'account': 'user@example.com',

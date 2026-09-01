@@ -51,7 +51,7 @@ class AuthRegistrationRemoteDataSourceImpl
       final response = await api.sendRegistrationEmailCode({
         'email': email,
       }, _options(requestId));
-      if (response.code != 200 || !response.success) {
+      if (!response.isBusinessSuccess) {
         throw AuthRegistrationRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -80,7 +80,7 @@ class AuthRegistrationRemoteDataSourceImpl
         'code': int.parse(code),
       }, _options(requestId));
       final data = response.data;
-      if (response.code != 200 || !response.success) {
+      if (!response.isBusinessSuccess) {
         throw AuthRegistrationRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -126,7 +126,7 @@ class AuthRegistrationRemoteDataSourceImpl
         request,
         _options(requestId),
       );
-      if (response.code != 200 || !response.success) {
+      if (!response.isBusinessSuccess) {
         throw AuthRegistrationRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );

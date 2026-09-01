@@ -37,7 +37,7 @@ class DoorShareRemoteDataSourceImpl implements DoorShareRemoteDataSource {
         doorId,
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      if (response.code != 200 || !response.success) {
+      if (!response.isBusinessSuccess) {
         throw DoorShareRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -64,7 +64,7 @@ class DoorShareRemoteDataSourceImpl implements DoorShareRemoteDataSource {
         request,
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      if (response.code != 200 || !response.success) {
+      if (!response.isBusinessSuccess) {
         throw DoorShareRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -90,7 +90,7 @@ class DoorShareRemoteDataSourceImpl implements DoorShareRemoteDataSource {
         request,
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      if (response.code != 200 || !response.success) {
+      if (!response.isBusinessSuccess) {
         throw DoorShareRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );

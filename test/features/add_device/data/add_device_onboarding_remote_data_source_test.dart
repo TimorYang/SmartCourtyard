@@ -134,7 +134,7 @@ void main() {
     },
   );
 
-  test('fetchDeviceKey accepts code 0 and returns device key data', () async {
+  test('fetchDeviceKey rejects code 0', () async {
     final dataSource = AddDeviceOnboardingRemoteDataSourceImpl(
       api: _FakeAddDeviceOnboardingApi(
         deviceKeyResponse: const ApiEnvelopeDto(
@@ -149,13 +149,16 @@ void main() {
       ),
     );
 
-    final result = await dataSource.fetchDeviceKey(
-      sn: 'SN-001',
-      requestId: 'request-1',
+    await expectLater(
+      dataSource.fetchDeviceKey(sn: 'SN-001', requestId: 'request-1'),
+      throwsA(
+        isA<AddDeviceOnboardingRemoteException>().having(
+          (error) => error.kind,
+          'kind',
+          AddDeviceOnboardingRemoteErrorKind.businessFailure,
+        ),
+      ),
     );
-
-    expect(result.sn, 'SN-001');
-    expect(result.aesKey, '0123456789abcdef0123456789abcdef');
   });
 
   test('fetchDeviceKey rejects missing aesKey', () async {
@@ -264,29 +267,33 @@ void main() {
     });
   });
 
-  test(
-    'addForceDoor accepts code 200 regardless of envelope success flag',
-    () async {
-      final dataSource = AddDeviceOnboardingRemoteDataSourceImpl(
-        api: _FakeAddDeviceOnboardingApi(
-          addDoorResponse: const ApiEnvelopeDto(
-            code: 200,
-            success: false,
-            data: ForceDoorResponseDto(id: 7),
-          ),
+  test('addForceDoor rejects code 200 when success is false', () async {
+    final dataSource = AddDeviceOnboardingRemoteDataSourceImpl(
+      api: _FakeAddDeviceOnboardingApi(
+        addDoorResponse: const ApiEnvelopeDto(
+          code: 200,
+          success: false,
+          data: ForceDoorResponseDto(id: 7),
         ),
-      );
+      ),
+    );
 
-      final result = await dataSource.addForceDoor(
+    await expectLater(
+      dataSource.addForceDoor(
         sn: 'SN-001',
         doorId: '7',
         doorType: 0,
         requestId: 'request-2',
-      );
-
-      expect(result.id, 7);
-    },
-  );
+      ),
+      throwsA(
+        isA<AddDeviceOnboardingRemoteException>().having(
+          (error) => error.kind,
+          'kind',
+          AddDeviceOnboardingRemoteErrorKind.businessFailure,
+        ),
+      ),
+    );
+  });
 
   test('parses the latest force door response data structure', () {
     final result = ForceDoorResponseDto.fromJson({
@@ -416,7 +423,7 @@ class _FakeAddDeviceOnboardingApi implements AddDeviceOnboardingApi {
   ) async {
     return deviceKeyResponse ??
         const ApiEnvelopeDto(
-          code: 0,
+          code: 200,
           success: true,
           data: OnboardingDeviceKeyResponseDto(
             sn: 'SN-001',

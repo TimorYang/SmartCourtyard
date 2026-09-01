@@ -617,7 +617,10 @@ AppError
 
 ```text
 code
-message
+messageKey
+businessCode?
+businessMessageKey?
+userMessage?
 userAction
 nativeCode?
 requestId?
@@ -634,6 +637,12 @@ retry
 contactSupport
 none
 ```
+
+REST 业务响应只有 `code == 200 && success == true` 时成功。Data 层必须在
+校验成功后再验证 `data` 和业务字段；业务失败需将服务端 `msg`（兼容
+`message`）经 Repository 保留到 `AppError.userMessage`。用户主动操作的 UI
+优先显示非空 `userMessage`，否则使用本地化 fallback；自动加载和后台刷新只
+进入相应错误状态，不主动显示 Toast。UI 不解析 REST code、messageKey 或 DTO。
 
 ## 10. 权限设计
 

@@ -36,7 +36,7 @@ class AuthCryptoRemoteDataSourceImpl implements AuthCryptoRemoteDataSource {
         ),
       );
       final data = response.data;
-      if (response.code != 200 || !response.success) {
+      if (!response.isBusinessSuccess) {
         throw AuthCryptoRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );

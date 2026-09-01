@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/errors/app_error_message.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/app_toast.dart';
@@ -65,9 +66,15 @@ class _ManageDevicesPageState extends ConsumerState<ManageDevicesPage> {
                       await ref
                           .read(managedDevicesControllerProvider.notifier)
                           .removeDevice(device.sessionId);
-                    } catch (_) {
+                    } catch (error) {
                       if (context.mounted) {
-                        AppToast.error(context, l10n.manageDevicesRemoveFailed);
+                        AppToast.error(
+                          context,
+                          appErrorMessage(
+                            error,
+                            l10n.manageDevicesRemoveFailed,
+                          ),
+                        );
                       }
                       rethrow;
                     }

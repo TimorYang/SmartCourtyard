@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../core/errors/app_error.dart';
+import '../../../../core/errors/app_error_message.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../core/config/app_api_configuration.dart';
 import '../../../../core/network/access_token_cache.dart';
@@ -69,12 +71,19 @@ class AccountDetailsPage extends ConsumerWidget {
                 maxHeight: constraints.maxHeight,
                 onLogout: () => clearAccountAndNavigate(WelcomePage.routePath),
                 onConfirmAccountDeletion: () async {
-                  final succeeded = await ref
-                      .read(accountDeletionControllerProvider.notifier)
-                      .confirm();
-                  if (!succeeded) return false;
+                  final controller = ref.read(
+                    accountDeletionControllerProvider.notifier,
+                  );
+                  final succeeded = await controller.confirm();
+                  if (!succeeded) {
+                    return ref
+                            .read(accountDeletionControllerProvider)
+                            .asError
+                            ?.error
+                        as AppError?;
+                  }
                   await clearAccountAndNavigate(LoginPage.routePath);
-                  return true;
+                  return null;
                 },
                 onRename: (name) => ref
                     .read(accountControllerProvider.notifier)
@@ -120,7 +129,7 @@ class _AccountDetailsContent extends StatelessWidget {
   final AccountProfile? profile;
   final double maxHeight;
   final Future<void> Function() onLogout;
-  final Future<bool> Function() onConfirmAccountDeletion;
+  final Future<AppError?> Function() onConfirmAccountDeletion;
   final Future<bool> Function(String) onRename;
   final Future<bool> Function(ImageSource) onAvatar;
   final Future<bool> Function(AccountAvatarCode) onAvatarCode;
@@ -397,7 +406,7 @@ Future<void> _showAccountPasswordDialog(BuildContext context) {
 
 Future<void> _showAccountDeletionSheet(
   BuildContext context, {
-  required Future<bool> Function() onConfirm,
+  required Future<AppError?> Function() onConfirm,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -413,7 +422,7 @@ Future<void> _showAccountDeletionSheet(
 class _AccountDeletionSheet extends StatefulWidget {
   const _AccountDeletionSheet({required this.onConfirm});
 
-  final Future<bool> Function() onConfirm;
+  final Future<AppError?> Function() onConfirm;
 
   @override
   State<_AccountDeletionSheet> createState() => _AccountDeletionSheetState();
@@ -424,12 +433,15 @@ class _AccountDeletionSheetState extends State<_AccountDeletionSheet> {
 
   Future<void> _confirm() async {
     setState(() => _isSubmitting = true);
-    final succeeded = await widget.onConfirm();
-    if (!mounted || succeeded) return;
+    final error = await widget.onConfirm();
+    if (!mounted || error == null) return;
     setState(() => _isSubmitting = false);
     AppToast.error(
       context,
-      AppLocalizations.of(context).accountDetailsDeletionFailed,
+      appErrorMessage(
+        error,
+        AppLocalizations.of(context).accountDetailsDeletionFailed,
+      ),
     );
   }
 

@@ -65,7 +65,7 @@ void main() {
   test('creates scene with request body and request id', () async {
     final api = _FakeHomeApi(
       createResponse: const ApiEnvelopeDto(
-        code: 0,
+        code: 200,
         success: true,
         data: HomeSceneResponseDto(
           defaultScene: false,
@@ -249,7 +249,7 @@ class _FakeHomeApi implements HomeApi {
   ) async {
     options = requestOptions;
     return const ApiEnvelopeDto<List<HomeDoorResponseDto>>(
-      code: 0,
+      code: 200,
       success: true,
       data: <HomeDoorResponseDto>[],
     );
@@ -271,7 +271,7 @@ class _FakeHomeApi implements HomeApi {
     Options requestOptions,
   ) async {
     options = requestOptions;
-    return const ApiEnvelopeDto<dynamic>(code: 0, success: true);
+    return const ApiEnvelopeDto<dynamic>(code: 200, success: true);
   }
 
   @override
@@ -282,7 +282,7 @@ class _FakeHomeApi implements HomeApi {
   ) async {
     createRequest = request;
     options = requestOptions;
-    return const ApiEnvelopeDto<bool>(code: 0, success: true, data: true);
+    return const ApiEnvelopeDto<bool>(code: 200, success: true, data: true);
   }
 }
 

@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/errors/app_error_message.dart';
+
 import '../domain/entities/device_capability.dart';
 import '../domain/use_cases/fetch_device_capabilities_use_case.dart';
 import 'providers.dart';
@@ -76,7 +78,7 @@ class DeviceCapabilitiesController extends Notifier<DeviceCapabilitiesState> {
       state = DeviceCapabilitiesState(
         capabilities: state.capabilities,
         loading: false,
-        errorMessage: error.toString(),
+        errorMessage: appErrorMessage(error, ''),
       );
     }
   }

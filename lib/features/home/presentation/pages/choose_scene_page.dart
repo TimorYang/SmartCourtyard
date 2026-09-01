@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/errors/app_error_message.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../core/errors/app_error.dart';
 import '../../../../platform_bridge/hardware_models.dart';
@@ -103,10 +104,11 @@ class _ChooseScenePageState extends ConsumerState<ChooseScenePage> {
       if (mounted) context.pop();
     } catch (error) {
       if (mounted) {
-        final message =
+        final fallback =
             error is AppError && error.code == AppErrorCode.networkUnavailable
             ? AppLocalizations.of(context).chooseSceneMoveNetworkUnavailable
             : AppLocalizations.of(context).chooseSceneMoveFailed;
+        final message = appErrorMessage(error, fallback);
         AppToast.error(context, message);
       }
     } finally {

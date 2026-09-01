@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 
 import '../../../../core/network/api_business_failure.dart';
-import '../../../../core/network/api_envelope_dto.dart';
 import '../../../../core/network/dio_factory.dart';
 import '../../../../core/network/network_exception.dart';
 import '../dto/operation_report_request_dto.dart';
@@ -68,7 +67,7 @@ class OperationRecordRemoteDataSourceImpl
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
       final data = response.data;
-      if (!_isSuccessCode(response.code) || !response.success) {
+      if (!response.isBusinessSuccess) {
         throw OperationRecordRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -86,10 +85,8 @@ class OperationRecordRemoteDataSourceImpl
     }
   }
 
-  bool _isSuccessCode(int code) => code == 0 || code == 200;
-
   void _validateReportResponse(ApiEnvelopeDto<bool> response) {
-    if (!_isSuccessCode(response.code) || !response.success) {
+    if (!response.isBusinessSuccess) {
       throw OperationRecordRemoteException.businessFailure(
         ApiBusinessFailure.fromEnvelope(response),
       );

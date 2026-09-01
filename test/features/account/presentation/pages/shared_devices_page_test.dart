@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flinx/app/theme/app_theme.dart';
+import 'package:flinx/core/errors/app_error.dart';
 import 'package:flinx/features/account/application/providers.dart';
 import 'package:flinx/features/account/domain/entities/shared_door.dart';
 import 'package:flinx/features/account/domain/repositories/shared_devices_repository.dart';
@@ -75,14 +76,23 @@ void main() {
     await tester.pumpWidget(
       _TestApp(
         repository: _FakeSharedDevicesRepository(
-          loader: () => Future.error(StateError('offline')),
+          loader: () => Future.error(
+            const AppError(
+              code: AppErrorCode.serverError,
+              messageKey: 'networkErrorRequestFailed',
+              userMessage: 'Backend load message must not become a toast.',
+            ),
+          ),
         ),
       ),
     );
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 20));
+    await tester.pumpAndSettle();
     expect(find.text('Unable to load shared devices.'), findsOneWidget);
     expect(find.byKey(SharedDevicesKeys.retryButton), findsOneWidget);
+    expect(
+      find.text('Backend load message must not become a toast.'),
+      findsNothing,
+    );
   });
 }
 

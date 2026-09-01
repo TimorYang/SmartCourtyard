@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flinx/core/errors/app_error.dart';
 import 'package:flinx/features/account/domain/entities/account_profile.dart';
 import 'package:flinx/features/account/domain/entities/account_token_set.dart';
 import 'package:flinx/features/account/domain/repositories/account_repository.dart';
@@ -59,6 +60,25 @@ void main() {
     expect(container.read(googleLoginControllerProvider).isSubmitting, isFalse);
   });
 
+  test('preserves an AppError from the REST login operation', () async {
+    const error = AppError(
+      code: AppErrorCode.serverError,
+      messageKey: 'networkErrorRequestFailed',
+      userMessage: 'This Google account cannot be used.',
+    );
+    final container = _createContainer(
+      _FakeGoogleIdentityProvider(),
+      loginError: error,
+    );
+
+    final submission = await container
+        .read(googleLoginControllerProvider.notifier)
+        .submit(agreedToTerms: true);
+
+    expect(submission.type, GoogleLoginSubmissionType.failed);
+    expect(submission.error, same(error));
+  });
+
   test('rejects duplicate submissions while Google login is pending', () async {
     final blocker = Completer<void>();
     final identityProvider = _FakeGoogleIdentityProvider(blocker: blocker);
@@ -85,11 +105,12 @@ void main() {
 }
 
 ProviderContainer _createContainer(
-  _FakeGoogleIdentityProvider identityProvider,
-) {
+  _FakeGoogleIdentityProvider identityProvider, {
+  Object? loginError,
+}) {
   final useCase = GoogleLoginUseCase(
     identityProvider: identityProvider,
-    loginRepository: _FakeAuthLoginRepository(),
+    loginRepository: _FakeAuthLoginRepository(loginError: loginError),
     accountRepository: _FakeAccountRepository(),
     deviceContextProvider: const _FakeLoginDeviceContextProvider(),
   );
@@ -126,6 +147,10 @@ class _FakeGoogleIdentityProvider implements GoogleIdentityProvider {
 }
 
 class _FakeAuthLoginRepository implements AuthLoginRepository {
+  const _FakeAuthLoginRepository({this.loginError});
+
+  final Object? loginError;
+
   @override
   Future<AuthLoginResult> login({
     required String email,
@@ -167,17 +192,21 @@ class _FakeAuthLoginRepository implements AuthLoginRepository {
     required String platform,
     required String appVersion,
     required String requestId,
-  }) async => AuthLoginResult(
-    tokenSet: const AccountTokenSet(
-      accessToken: 'access-token',
-      refreshToken: 'refresh-token',
-    ),
-    profile: AccountProfile(
-      userId: '2',
-      email: 'alice@example.com',
-      nickname: 'Alice',
-    ),
-  );
+  }) async {
+    final error = loginError;
+    if (error != null) throw error;
+    return AuthLoginResult(
+      tokenSet: const AccountTokenSet(
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+      ),
+      profile: AccountProfile(
+        userId: '2',
+        email: 'alice@example.com',
+        nickname: 'Alice',
+      ),
+    );
+  }
 
   @override
   Future<GoogleLoginNonce> getGoogleLoginNonce({required String requestId}) =>

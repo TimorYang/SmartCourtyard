@@ -31,7 +31,7 @@ class ManagedDevicesRemoteDataSourceImpl
       final response = await api.fetchLoginDevices(
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      if (!_isSuccessful(response.code, response.success)) {
+      if (!response.isBusinessSuccess) {
         throw ManagedDevicesRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -59,7 +59,7 @@ class ManagedDevicesRemoteDataSourceImpl
         sessionId,
         Options(extra: {NetworkRequestExtras.requestId: requestId}),
       );
-      if (!_isSuccessful(response.code, response.success)) {
+      if (!response.isBusinessSuccess) {
         throw ManagedDevicesRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -72,8 +72,6 @@ class ManagedDevicesRemoteDataSourceImpl
       rethrow;
     }
   }
-
-  bool _isSuccessful(int code, bool success) => code == 200 && success;
 }
 
 class ManagedDevicesRemoteException implements Exception {

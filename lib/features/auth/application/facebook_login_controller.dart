@@ -24,7 +24,7 @@ enum FacebookLoginSubmissionType {
 }
 
 class FacebookLoginSubmission {
-  const FacebookLoginSubmission._(this.type, [this.result]);
+  const FacebookLoginSubmission._(this.type, [this.result, this.error]);
 
   const FacebookLoginSubmission.success(AuthLoginResult result)
     : this._(FacebookLoginSubmissionType.success, result);
@@ -38,14 +38,15 @@ class FacebookLoginSubmission {
   const FacebookLoginSubmission.unavailable()
     : this._(FacebookLoginSubmissionType.unavailable);
 
-  const FacebookLoginSubmission.failed()
-    : this._(FacebookLoginSubmissionType.failed);
+  const FacebookLoginSubmission.failed([Object? error])
+    : this._(FacebookLoginSubmissionType.failed, null, error);
 
   const FacebookLoginSubmission.busy()
     : this._(FacebookLoginSubmissionType.busy);
 
   final FacebookLoginSubmissionType type;
   final AuthLoginResult? result;
+  final Object? error;
 }
 
 class FacebookLoginController extends Notifier<FacebookLoginState> {
@@ -71,11 +72,12 @@ class FacebookLoginController extends Notifier<FacebookLoginState> {
         FacebookIdentityErrorCode.unavailable =>
           const FacebookLoginSubmission.unavailable(),
         FacebookIdentityErrorCode.invalidCredential ||
-        FacebookIdentityErrorCode.failed =>
-          const FacebookLoginSubmission.failed(),
+        FacebookIdentityErrorCode.failed => FacebookLoginSubmission.failed(
+          error,
+        ),
       };
-    } on Object {
-      return const FacebookLoginSubmission.failed();
+    } on Object catch (error) {
+      return FacebookLoginSubmission.failed(error);
     } finally {
       state = state.copyWith(isSubmitting: false);
     }

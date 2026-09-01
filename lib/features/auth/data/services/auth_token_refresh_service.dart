@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../../../../core/network/api_envelope_dto.dart';
 import '../../../../core/network/dio_factory.dart';
 import '../../../../core/network/session_expired_handler.dart';
 import '../../../account/domain/entities/account_token_set.dart';
@@ -64,8 +65,7 @@ class AuthTokenRefreshService {
         'deviceId': deviceContext.deviceId,
       }, Options(extra: {NetworkRequestExtras.requestId: requestId}));
       final data = response.data;
-      if (response.code != 0 ||
-          !response.success ||
+      if (!response.isBusinessSuccess ||
           data == null ||
           !_hasUsableTokens(data)) {
         return TokenRefreshResult.sessionExpired;

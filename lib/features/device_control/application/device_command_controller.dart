@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/errors/app_error_message.dart';
+
 import '../../add_device/application/ble_auth_token.dart';
 import '../../add_device/application/providers.dart';
 import '../../add_device/domain/entities/onboarding_device_key.dart';
@@ -501,7 +503,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
       }
       state = state.copyWith(
         isLoadingDoorDetail: false,
-        doorDetailErrorMessage: error.toString(),
+        doorDetailErrorMessage: appErrorMessage(error, ''),
       );
     }
   }
@@ -1651,7 +1653,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
       }
       state = state.copyWith(
         clearPendingRemotePairingAction: true,
-        errorMessage: error.toString(),
+        errorMessage: appErrorMessage(error, ''),
         clearInfoMessage: true,
       );
       return false;
@@ -1690,7 +1692,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
     } catch (error) {
       state = state.copyWith(
         clearPendingRemoteManagementAction: true,
-        errorMessage: error.toString(),
+        errorMessage: appErrorMessage(error, ''),
         clearInfoMessage: true,
       );
     }
@@ -1747,7 +1749,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
     } catch (error) {
       state = state.copyWith(
         clearPendingRemoteManagementAction: true,
-        errorMessage: error.toString(),
+        errorMessage: appErrorMessage(error, ''),
         clearInfoMessage: true,
       );
     }
@@ -1809,7 +1811,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
     } catch (error) {
       state = state.copyWith(
         clearPendingRemoteManagementAction: true,
-        errorMessage: error.toString(),
+        errorMessage: appErrorMessage(error, ''),
         clearInfoMessage: true,
       );
     }

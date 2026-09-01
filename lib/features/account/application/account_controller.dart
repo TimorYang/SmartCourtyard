@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/errors/app_error.dart';
+
 import '../domain/entities/account_profile.dart';
 import '../domain/entities/account_avatar_code.dart';
 import '../domain/repositories/account_repository.dart';
@@ -7,6 +9,9 @@ import 'providers.dart';
 
 class AccountController extends AsyncNotifier<AccountProfile?> {
   late final AccountRepository _repository;
+  AppError? _lastUpdateError;
+
+  AppError? get lastUpdateError => _lastUpdateError;
 
   @override
   Future<AccountProfile?> build() async {
@@ -69,6 +74,7 @@ class AccountController extends AsyncNotifier<AccountProfile?> {
       return false;
     }
     final current = state.whenOrNull(data: (value) => value);
+    _lastUpdateError = null;
     state = const AsyncLoading<AccountProfile?>();
     try {
       await _repository.updateProfile(
@@ -83,6 +89,7 @@ class AccountController extends AsyncNotifier<AccountProfile?> {
       state = AsyncData(await _repository.readCachedProfile());
       return true;
     } catch (error, stackTrace) {
+      _lastUpdateError = error is AppError ? error : null;
       state = AsyncError(error, stackTrace);
       state = AsyncData(current);
       return false;

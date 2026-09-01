@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/errors/app_error_message.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/app_toast.dart';
@@ -84,15 +85,18 @@ class _NotificationListPageState extends ConsumerState<NotificationListPage> {
             onPressed: _isBusy(messagesState)
                 ? null
                 : () async {
-                    final succeeded = await controller.markAllRead();
+                    final error = await controller.markAllRead();
                     if (context.mounted) {
-                      if (succeeded) {
+                      if (error == null) {
                         AppToast.success(
                           context,
                           l10n.notificationAllReadMessage,
                         );
                       } else {
-                        AppToast.error(context, l10n.notificationLoadFailed);
+                        AppToast.error(
+                          context,
+                          appErrorMessage(error, l10n.notificationLoadFailed),
+                        );
                       }
                     }
                   },

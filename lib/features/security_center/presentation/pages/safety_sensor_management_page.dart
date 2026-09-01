@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/errors/app_error_message.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/app_toast.dart';
@@ -133,9 +134,15 @@ class _SafetySensorManagementPageState
         AppLocalizations.of(context).safetySensorManagementDeleteSuccess,
       );
     } else {
+      final error = ref
+          .read(safetySensorManagementControllerProvider(widget.deviceId))
+          .error;
       AppToast.error(
         context,
-        AppLocalizations.of(context).safetySensorManagementDeleteFailed,
+        appErrorMessage(
+          error,
+          AppLocalizations.of(context).safetySensorManagementDeleteFailed,
+        ),
       );
     }
   }

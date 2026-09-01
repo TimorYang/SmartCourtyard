@@ -43,7 +43,7 @@ void main() {
     );
   });
 
-  test('rejects a non-zero business code', () async {
+  test('rejects obsolete business code zero', () async {
     final api = _FakeManagedDevicesApi(code: 0);
     final dataSource = ManagedDevicesRemoteDataSourceImpl(api: api);
 

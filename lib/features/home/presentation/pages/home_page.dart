@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/errors/app_error_message.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../core/config/app_api_configuration.dart';
 import '../../../../core/network/access_token_cache.dart';
@@ -1257,9 +1258,9 @@ class _DeviceEditingSheetState extends ConsumerState<_DeviceEditingSheet> {
       if (mounted) {
         Navigator.of(context).pop();
       }
-    } catch (_) {
+    } catch (error) {
       if (mounted) {
-        _showTopFailure();
+        _showTopFailure(error);
       }
     } finally {
       if (mounted) {
@@ -1290,8 +1291,14 @@ class _DeviceEditingSheetState extends ConsumerState<_DeviceEditingSheet> {
     }
   }
 
-  void _showTopFailure() {
-    AppToast.error(widget.parentContext, 'Failed to top device');
+  void _showTopFailure([Object? error]) {
+    AppToast.error(
+      widget.parentContext,
+      appErrorMessage(
+        error,
+        AppLocalizations.of(widget.parentContext).deviceTopFailed,
+      ),
+    );
   }
 }
 

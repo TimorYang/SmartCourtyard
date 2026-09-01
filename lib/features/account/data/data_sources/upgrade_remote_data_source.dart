@@ -39,7 +39,7 @@ class UpgradeRemoteDataSourceImpl implements UpgradeRemoteDataSource {
       final request = await appReleaseContextProvider.read();
       final response = await api.checkAppRelease(request, _options(requestId));
       final data = response.data;
-      if (!_isSuccessful(response.code, response.success)) {
+      if (!response.isBusinessSuccess) {
         throw UpgradeRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -64,7 +64,7 @@ class UpgradeRemoteDataSourceImpl implements UpgradeRemoteDataSource {
     try {
       final response = await api.fetchFirmwareUpgrades(_options(requestId));
       final data = response.data;
-      if (!_isSuccessful(response.code, response.success)) {
+      if (!response.isBusinessSuccess) {
         throw UpgradeRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -93,7 +93,7 @@ class UpgradeRemoteDataSourceImpl implements UpgradeRemoteDataSource {
         _options(requestId),
       );
       final data = response.data;
-      if (!_isSuccessful(response.code, response.success)) {
+      if (!response.isBusinessSuccess) {
         throw UpgradeRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -113,10 +113,6 @@ class UpgradeRemoteDataSourceImpl implements UpgradeRemoteDataSource {
 
   Options _options(String requestId) =>
       Options(extra: {NetworkRequestExtras.requestId: requestId});
-
-  bool _isSuccessful(int code, bool success) {
-    return success && (code == 0 || code == 200);
-  }
 }
 
 class UpgradeRemoteException implements Exception {

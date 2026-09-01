@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/config/app_links.dart';
 import '../../../../app/theme/app_design_tokens.dart';
+import '../../../../core/errors/app_error_message.dart';
 import '../../../../core/errors/app_error.dart';
 import '../../../account/application/providers.dart';
 import '../../../home/presentation/pages/home_page.dart';
@@ -71,7 +72,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       case AppleLoginSubmissionType.unavailable:
         AppToast.info(context, l10n.appleLoginUnavailable);
       case AppleLoginSubmissionType.failed:
-        AppToast.error(context, l10n.appleLoginFailed);
+        AppToast.error(
+          context,
+          appErrorMessage(submission.error, l10n.appleLoginFailed),
+        );
       case AppleLoginSubmissionType.canceled:
       case AppleLoginSubmissionType.busy:
         break;
@@ -101,7 +105,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       case GoogleLoginSubmissionType.unavailable:
         AppToast.info(context, l10n.googleLoginUnavailable);
       case GoogleLoginSubmissionType.failed:
-        AppToast.error(context, l10n.googleLoginFailed);
+        AppToast.error(
+          context,
+          appErrorMessage(submission.error, l10n.googleLoginFailed),
+        );
       case GoogleLoginSubmissionType.canceled:
       case GoogleLoginSubmissionType.busy:
         break;
@@ -131,7 +138,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       case FacebookLoginSubmissionType.unavailable:
         AppToast.info(context, l10n.facebookLoginUnavailable);
       case FacebookLoginSubmissionType.failed:
-        AppToast.error(context, l10n.facebookLoginFailed);
+        AppToast.error(
+          context,
+          appErrorMessage(submission.error, l10n.facebookLoginFailed),
+        );
       case FacebookLoginSubmissionType.canceled:
       case FacebookLoginSubmissionType.busy:
         break;
@@ -327,10 +337,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                     }
                                     AppToast.error(
                                       context,
-                                      error.userMessage?.trim().isNotEmpty ==
-                                              true
-                                          ? error.userMessage!.trim()
-                                          : l10n.loginFailed,
+                                      appErrorMessage(error, l10n.loginFailed),
                                     );
                                   } catch (_) {
                                     if (!context.mounted) return;

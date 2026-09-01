@@ -28,7 +28,7 @@ void main() {
   test('fetches settings using the door id and request id', () async {
     final api = _FakeDoorSettingsApi(
       const ApiEnvelopeDto(
-        code: 0,
+        code: 200,
         success: true,
         data: [
           DoorSettingResponseDto(

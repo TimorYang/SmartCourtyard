@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/errors/app_error_message.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/l10n/app_localizations.dart';
@@ -9,11 +10,16 @@ import '../../application/providers.dart';
 class SceneNameDialogAssetPaths {
   const SceneNameDialogAssetPaths._();
 
-  static const nameInputPlaceholder = 'assets/icons/home/device_name_input_placeholder.png';
+  static const nameInputPlaceholder =
+      'assets/icons/home/device_name_input_placeholder.png';
 }
 
 Future<void> showSceneNameDialog(BuildContext context) {
-  return showDialog<void>(context: context, barrierColor: AppColors.overlaySoft, builder: (context) => const SceneNameDialog());
+  return showDialog<void>(
+    context: context,
+    barrierColor: AppColors.overlaySoft,
+    builder: (context) => const SceneNameDialog(),
+  );
 }
 
 class SceneNameDialog extends ConsumerStatefulWidget {
@@ -73,7 +79,10 @@ class _SceneNameDialogState extends ConsumerState<SceneNameDialog> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(l10n.sceneNameDialogTitle, style: AppTextTokens.sceneDialogTitle(textTheme)),
+                  Text(
+                    l10n.sceneNameDialogTitle,
+                    style: AppTextTokens.sceneDialogTitle(textTheme),
+                  ),
                   const SizedBox(height: 16),
                   _SceneNameTextField(controller: _controller),
                   const SizedBox(height: 26),
@@ -83,12 +92,17 @@ class _SceneNameDialogState extends ConsumerState<SceneNameDialog> {
                         child: SizedBox(
                           height: 52,
                           child: FilledButton(
-                            onPressed: _isSubmitting ? null : () => Navigator.pop(context),
+                            onPressed: _isSubmitting
+                                ? null
+                                : () => Navigator.pop(context),
                             style: FilledButton.styleFrom(
-                              backgroundColor: AppColors.sceneDialogCancelButton,
+                              backgroundColor:
+                                  AppColors.sceneDialogCancelButton,
                               foregroundColor: AppColors.textPrimary,
                               shape: const StadiumBorder(),
-                              textStyle: AppTextTokens.sceneDialogButton(textTheme),
+                              textStyle: AppTextTokens.sceneDialogButton(
+                                textTheme,
+                              ),
                             ),
                             child: Text(l10n.sceneNameCancelAction),
                           ),
@@ -99,17 +113,30 @@ class _SceneNameDialogState extends ConsumerState<SceneNameDialog> {
                         child: SizedBox(
                           height: 52,
                           child: FilledButton(
-                            onPressed: _isSubmitting || !_hasName ? null : _submit,
+                            onPressed: _isSubmitting || !_hasName
+                                ? null
+                                : _submit,
                             style: FilledButton.styleFrom(
                               backgroundColor: AppColors.brandPrimary,
-                              disabledBackgroundColor: AppColors.brandPrimaryDisabled,
+                              disabledBackgroundColor:
+                                  AppColors.brandPrimaryDisabled,
                               foregroundColor: AppColors.backgroundPrimary,
-                              disabledForegroundColor: AppColors.authPrimaryButtonDisabledForeground,
+                              disabledForegroundColor:
+                                  AppColors.authPrimaryButtonDisabledForeground,
                               shape: const StadiumBorder(),
-                              textStyle: AppTextTokens.sceneDialogButton(textTheme),
+                              textStyle: AppTextTokens.sceneDialogButton(
+                                textTheme,
+                              ),
                             ),
                             child: _isSubmitting
-                                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.backgroundPrimary))
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppColors.backgroundPrimary,
+                                    ),
+                                  )
                                 : Text(l10n.sceneNameConfirmAction),
                           ),
                         ),
@@ -128,22 +155,35 @@ class _SceneNameDialogState extends ConsumerState<SceneNameDialog> {
   Future<void> _submit() async {
     final name = _controller.text.trim();
     if (name.isEmpty) {
-      AppToast.error(context, 'input scene name');
+      AppToast.error(
+        context,
+        AppLocalizations.of(context).sceneNameInputPlaceholder,
+      );
       return;
     }
     setState(() {
       _isSubmitting = true;
     });
-    final requestId = 'home-create-scene-${DateTime.now().toUtc().microsecondsSinceEpoch}';
+    final requestId =
+        'home-create-scene-${DateTime.now().toUtc().microsecondsSinceEpoch}';
     try {
-      await ref.read(createHomeSceneUseCaseProvider)(name: name, requestId: requestId);
+      await ref.read(createHomeSceneUseCaseProvider)(
+        name: name,
+        requestId: requestId,
+      );
       ref.invalidate(homeScenesProvider);
       if (mounted) {
         Navigator.pop(context);
       }
-    } catch (_) {
+    } catch (error) {
       if (mounted) {
-        AppToast.error(context, 'Failed to create scene');
+        AppToast.error(
+          context,
+          appErrorMessage(
+            error,
+            AppLocalizations.of(context).sceneCreateFailed,
+          ),
+        );
       }
     } finally {
       if (mounted) {
@@ -181,7 +221,10 @@ class _SceneNameTextField extends StatelessWidget {
             child: TextField(
               controller: controller,
               style: AppTextTokens.sceneDialogInput(textTheme),
-              decoration: InputDecoration.collapsed(hintText: l10n.sceneNameInputPlaceholder, hintStyle: AppTextTokens.sceneDialogInputHint(textTheme)),
+              decoration: InputDecoration.collapsed(
+                hintText: l10n.sceneNameInputPlaceholder,
+                hintStyle: AppTextTokens.sceneDialogInputHint(textTheme),
+              ),
             ),
           ),
         ],

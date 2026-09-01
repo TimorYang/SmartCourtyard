@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:flinx/core/errors/app_error.dart';
 import 'package:flinx/core/logging/app_logger.dart';
 import 'package:flinx/core/network/api_business_failure.dart';
-import 'package:flinx/core/network/api_envelope_dto.dart';
 import 'package:flinx/core/network/dio_factory.dart';
 import 'package:flinx/features/device_control/data/data_sources/remote_door_command_api.dart';
 import 'package:flinx/features/device_control/data/data_sources/remote_door_command_remote_data_source.dart';
@@ -209,7 +208,7 @@ void main() {
 class _FakeRemoteDoorCommandApi implements RemoteDoorCommandApi {
   _FakeRemoteDoorCommandApi({
     this.response = const ApiEnvelopeDto(
-      code: 0,
+      code: 200,
       success: true,
       data: RemoteDoorCommandResponseDto(
         commandId: 'command-1',

@@ -117,8 +117,15 @@ final featureApiProvider = Provider<FeatureApi>((ref) {
 
 - `code`：服务端业务响应码。
 - `success`：服务端业务成功标志。
-- `msg`：服务端提供的用户可读业务失败文案。服务端必须保证内容不含敏感信息、技术实现细节或原始异常文本，并使用适合当前用户的语言。
+- `msg`：服务端提供的用户可读业务失败文案；客户端同时兼容读取
+  `message`，但 `msg` 优先。空白字符串按缺失处理。服务端必须保证内容不含
+  敏感信息、技术实现细节或原始异常文本，并使用适合当前用户的语言。
 - `data`：接口数据。
+
+REST 信封只有在 `code == 200 && success == true` 时才表示业务成功。
+`code == 0`、任意非 200 code，以及 `success == false` 都是业务失败。
+`ApiEnvelopeDto` 仅在业务成功时解析强类型 `data`，因此失败响应即使携带与成功
+DTO 不兼容的 `data`，也必须能够保留并向上透传错误消息。
 
 有固定结构的 `data` 必须定义强类型 DTO。只有服务端明确返回布尔值或暂时没有固定结构时，才使用 `dynamic`。
 
@@ -196,8 +203,13 @@ Future<ExampleResponseDto> fetchExample({
         extra: {NetworkRequestExtras.requestId: requestId},
       ),
     );
+    if (!response.isBusinessSuccess) {
+      throw ExampleRemoteException.businessFailure(
+        ApiBusinessFailure.fromEnvelope(response),
+      );
+    }
     final data = response.data;
-    if (response.code != 200 || !response.success || data == null) {
+    if (data == null) {
       throw const ExampleRemoteException.invalidResponse();
     }
     return data;
@@ -388,19 +400,30 @@ DioException
 - Controller：将错误转换成页面状态或本地化 message key。
 - UI：展示本地化文案，不解析底层异常。
 
-服务端返回 `success: false` 即使 HTTP 状态为 200，也应视为业务失败并由 DataSource 校验。
+服务端返回 `success: false` 即使业务 `code` 为 200，也应视为业务失败并由
+DataSource 校验；历史业务 `code: 0` 同样必须拒绝。
 
 HTTP 200 的错误必须区分两类：
 
 - 业务失败：业务 `code` 或 `success` 不满足接口成功条件。DataSource
   通过 `ApiBusinessFailure` 保留 `code`、`msg` 和 `messageKey`，Repository
-  优先映射已知错误为客户端本地化文案；未知错误才回退使用非空 `msg`。
+  将其映射到 `AppError.businessCode`、`businessMessageKey` 和 `userMessage`。
+  用户主动触发的操作优先展示非空 `AppError.userMessage`，缺失时才使用对应的
+  本地化 fallback。自动加载、Provider 刷新和后台刷新只更新错误态，不额外弹出
+  Toast。
 - 响应格式错误：业务状态成功，但必需的 `data`、字段或类型不符合接口协议。
   此类错误使用 `invalidResponse`，不得携带或展示服务端 `msg`。
 
-HTTP 4xx/5xx 必须继续作为 `DioException`/`NetworkException` 处理。即使响应体
-包含 `msg`，也不得直接展示；Repository 应按会话失效、无权限、请求超时、限流、
-请求失败或服务暂不可用等稳定类别映射成本地化 `AppError`。
+HTTP 4xx/5xx 必须继续作为 `DioException`/`NetworkException` 处理。所有 REST 接口
+收到 HTTP 400 时，由公共 `NetworkException.fromDio` 从 JSON 响应体提取非空 `msg`，
+为空时回退到 `message`，并保留类型合法的数值 `code` 与字符串 `messageKey`。
+Repository 通过公共 mapper 将这些字段映射到 `AppError.businessCode`、
+`businessMessageKey` 和 `userMessage`。用户主动操作可优先展示该 `userMessage`；
+自动加载和后台刷新仍只更新错误态，不主动弹 Toast。
+
+HTTP 400 响应不是 JSON、消息字段类型错误或消息为空时，继续按普通请求失败处理，
+使用页面已有的本地化 fallback。HTTP 401、403、408、429 和 5xx 不读取响应体消息，
+继续使用现有会话、权限、超时、限流及服务异常策略。
 
 ## 11. 日志规范
 

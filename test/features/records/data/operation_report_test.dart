@@ -4,7 +4,6 @@ import 'package:dio/dio.dart';
 import 'package:flinx/core/errors/app_error.dart';
 import 'package:flinx/core/logging/app_logger.dart';
 import 'package:flinx/core/network/api_business_failure.dart';
-import 'package:flinx/core/network/api_envelope_dto.dart';
 import 'package:flinx/core/network/dio_factory.dart';
 import 'package:flinx/core/network/network_exception.dart';
 import 'package:flinx/features/records/data/data_sources/operation_record_api.dart';
@@ -61,40 +60,35 @@ void main() {
     );
   });
 
-  test(
-    'remote data source accepts code zero and code 200 success responses',
-    () async {
-      for (final code in [0, 200]) {
-        final api = _FakeOperationRecordApi(
-          reportResponse: ApiEnvelopeDto<bool>(
-            code: code,
-            success: true,
-            data: true,
-          ),
-        );
-        final dataSource = OperationRecordRemoteDataSourceImpl(api: api);
+  test('remote data source accepts a code 200 success response', () async {
+    final api = _FakeOperationRecordApi(
+      reportResponse: const ApiEnvelopeDto<bool>(
+        code: 200,
+        success: true,
+        data: true,
+      ),
+    );
+    final dataSource = OperationRecordRemoteDataSourceImpl(api: api);
 
-        await dataSource.reportOperation(
-          doorId: 10001,
-          body: const OperationReportRequestDto(
-            action: OperationReportAction.close,
-            operationSource: OperationReportSource.app,
-          ),
-          requestId: 'report-$code',
-        );
+    await dataSource.reportOperation(
+      doorId: 10001,
+      body: const OperationReportRequestDto(
+        action: OperationReportAction.close,
+        operationSource: OperationReportSource.app,
+      ),
+      requestId: 'report-200',
+    );
 
-        expect(api.reportedDoorId, 10001);
-        expect(api.reportedBody?.toJson(), {
-          'action': 'CLOSE',
-          'operationSource': 'APP',
-        });
-        expect(
-          api.reportedOptions?.extra?[NetworkRequestExtras.requestId],
-          'report-$code',
-        );
-      }
-    },
-  );
+    expect(api.reportedDoorId, 10001);
+    expect(api.reportedBody?.toJson(), {
+      'action': 'CLOSE',
+      'operationSource': 'APP',
+    });
+    expect(
+      api.reportedOptions?.extra?[NetworkRequestExtras.requestId],
+      'report-200',
+    );
+  });
 
   test('remote data source rejects an unsuccessful envelope', () async {
     final dataSource = OperationRecordRemoteDataSourceImpl(

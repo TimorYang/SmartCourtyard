@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/errors/app_error.dart';
+import '../../../../core/errors/app_error_message.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../core/config/app_api_configuration.dart';
 import '../../../../core/network/access_token_cache.dart';
@@ -129,12 +131,7 @@ class _AccountProfilePageState extends ConsumerState<AccountProfilePage> {
     try {
       await ref.read(accountOverviewControllerProvider.notifier).refresh();
     } on Object {
-      if (mounted) {
-        AppToast.error(
-          context,
-          AppLocalizations.of(context).accountOverviewRefreshFailed,
-        );
-      }
+      // Automatic refresh failures are represented by the overview state only.
     }
   }
 
@@ -188,16 +185,24 @@ class _AccountProfilePageState extends ConsumerState<AccountProfilePage> {
                   }
                 },
                 onLocaleConfirmed: (locale, serverLocale) async {
-                  final updated = await ref
-                      .read(accountControllerProvider.notifier)
-                      .updateLocale(serverLocale);
-                  if (updated) {
-                    await ref
-                        .read(appLocaleControllerProvider.notifier)
-                        .selectLocale(locale);
-                    ref.invalidate(regionSelectionControllerProvider);
+                  final accountController = ref.read(
+                    accountControllerProvider.notifier,
+                  );
+                  final updated = await accountController.updateLocale(
+                    serverLocale,
+                  );
+                  if (!updated) {
+                    return accountController.lastUpdateError ??
+                        const AppError(
+                          code: AppErrorCode.unknown,
+                          messageKey: 'account.localeUpdateFailed',
+                        );
                   }
-                  return updated;
+                  await ref
+                      .read(appLocaleControllerProvider.notifier)
+                      .selectLocale(locale);
+                  ref.invalidate(regionSelectionControllerProvider);
+                  return null;
                 },
                 onLogout: () async {
                   final authSessionController = ref.read(
@@ -291,7 +296,10 @@ class _AccountProfileContent extends StatelessWidget {
   final double maxHeight;
   final Future<void> Function() onRefresh;
   final Future<void> Function() onReceivingDevicesPressed;
-  final Future<bool> Function(AppLocalePreference locale, String serverLocale)
+  final Future<AppError?> Function(
+    AppLocalePreference locale,
+    String serverLocale,
+  )
   onLocaleConfirmed;
   final Future<void> Function() onLogout;
 
@@ -527,7 +535,10 @@ class _LanguageDialog extends StatefulWidget {
 
   final AppLocalePreference initialLocale;
   final List<_LanguageOptionData> languages;
-  final Future<bool> Function(AppLocalePreference locale, String serverLocale)
+  final Future<AppError?> Function(
+    AppLocalePreference locale,
+    String serverLocale,
+  )
   onConfirm;
 
   @override
@@ -633,17 +644,20 @@ class _LanguageDialogState extends State<_LanguageDialog> {
     final selectedLanguage = widget.languages.firstWhere(
       (language) => language.serverLocale == _selectedServerLocale,
     );
-    final updated = await widget.onConfirm(
+    final error = await widget.onConfirm(
       selectedLanguage.locale,
       selectedLanguage.serverLocale,
     );
-    if (updated && mounted) {
+    if (error == null && mounted) {
       Navigator.of(context).pop();
     } else if (mounted) {
       setState(() => _isConfirming = false);
       AppToast.error(
         context,
-        AppLocalizations.of(context).accountLanguageSaveFailed,
+        appErrorMessage(
+          error,
+          AppLocalizations.of(context).accountLanguageSaveFailed,
+        ),
       );
     }
   }

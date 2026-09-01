@@ -1,7 +1,13 @@
 import 'package:dio/dio.dart';
 
 class NetworkException implements Exception {
-  const NetworkException._(this.kind, {this.statusCode});
+  const NetworkException._(
+    this.kind, {
+    this.statusCode,
+    this.businessCode,
+    this.businessMessageKey,
+    this.userMessage,
+  });
 
   factory NetworkException.fromDio(DioException exception) {
     return switch (exception.type) {
@@ -23,9 +29,8 @@ class NetworkException implements Exception {
       DioExceptionType.connectionError => const NetworkException._(
         NetworkErrorKind.connection,
       ),
-      DioExceptionType.badResponse => NetworkException._(
-        NetworkErrorKind.httpStatus,
-        statusCode: exception.response?.statusCode,
+      DioExceptionType.badResponse => NetworkException._fromBadResponse(
+        exception,
       ),
       DioExceptionType.badCertificate => const NetworkException._(
         NetworkErrorKind.certificate,
@@ -36,8 +41,40 @@ class NetworkException implements Exception {
     };
   }
 
+  factory NetworkException._fromBadResponse(DioException exception) {
+    final statusCode = exception.response?.statusCode;
+    if (statusCode != 400) {
+      return NetworkException._(
+        NetworkErrorKind.httpStatus,
+        statusCode: statusCode,
+      );
+    }
+
+    final responseData = exception.response?.data;
+    if (responseData is! Map) {
+      return const NetworkException._(
+        NetworkErrorKind.httpStatus,
+        statusCode: 400,
+      );
+    }
+
+    final rawBusinessCode = responseData['code'];
+    return NetworkException._(
+      NetworkErrorKind.httpStatus,
+      statusCode: 400,
+      businessCode: rawBusinessCode is num ? rawBusinessCode.toInt() : null,
+      businessMessageKey: _normalizedString(responseData['messageKey']),
+      userMessage:
+          _normalizedString(responseData['msg']) ??
+          _normalizedString(responseData['message']),
+    );
+  }
+
   final NetworkErrorKind kind;
   final int? statusCode;
+  final int? businessCode;
+  final String? businessMessageKey;
+  final String? userMessage;
 
   NetworkFailureCategory get category {
     if (kind == NetworkErrorKind.cancelled) {
@@ -71,6 +108,12 @@ class NetworkException implements Exception {
     }
     return NetworkFailureCategory.unknown;
   }
+}
+
+String? _normalizedString(Object? value) {
+  if (value is! String) return null;
+  final normalized = value.trim();
+  return normalized.isEmpty ? null : normalized;
 }
 
 enum NetworkFailureCategory {

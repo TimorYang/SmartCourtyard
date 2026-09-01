@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 
-import '../../../../core/network/api_envelope_dto.dart';
 import '../../../../core/network/api_business_failure.dart';
 import '../../../../core/network/dio_factory.dart';
 import '../../../../core/network/network_exception.dart';
@@ -112,7 +111,7 @@ class AuthLoginRemoteDataSourceImpl implements AuthLoginRemoteDataSource {
         _authorizationOptions(requestId),
       );
       final data = response.data;
-      if (response.code != 200 || !response.success) {
+      if (!response.isBusinessSuccess) {
         throw AuthLoginRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -143,7 +142,7 @@ class AuthLoginRemoteDataSourceImpl implements AuthLoginRemoteDataSource {
         _authorizationOptions(requestId),
       );
       final data = response.data;
-      if (response.code != 200 || !response.success) {
+      if (!response.isBusinessSuccess) {
         throw AuthLoginRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -174,7 +173,7 @@ class AuthLoginRemoteDataSourceImpl implements AuthLoginRemoteDataSource {
         _authorizationOptions(requestId),
       );
       final data = response.data;
-      if (response.code != 200 || !response.success) {
+      if (!response.isBusinessSuccess) {
         throw AuthLoginRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );
@@ -209,7 +208,7 @@ class AuthLoginRemoteDataSourceImpl implements AuthLoginRemoteDataSource {
       final response = await submit(request, _authorizationOptions(requestId));
       // The login endpoint's business contract defines code 200 as success.
       final data = response.data;
-      if (response.code != 200 || !response.success) {
+      if (!response.isBusinessSuccess) {
         throw AuthLoginRemoteException.businessFailure(
           ApiBusinessFailure.fromEnvelope(response),
         );

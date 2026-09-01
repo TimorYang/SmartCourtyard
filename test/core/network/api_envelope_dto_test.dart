@@ -1,8 +1,51 @@
-import 'package:flinx/core/network/api_envelope_dto.dart';
 import 'package:flinx/core/network/api_business_failure.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('code zero is a business failure and skips typed data parsing', () {
+    var parserCalled = false;
+
+    final envelope = ApiEnvelopeDto<Map<String, dynamic>>.fromJson(
+      const {
+        'code': 0,
+        'success': true,
+        'data': {'id': 7},
+        'msg': 'Legacy success code is no longer accepted',
+      },
+      (json) {
+        parserCalled = true;
+        return json as Map<String, dynamic>;
+      },
+    );
+
+    expect(envelope.isBusinessSuccess, isFalse);
+    expect(parserCalled, isFalse);
+    expect(envelope.data, isNull);
+    expect(envelope.msg, 'Legacy success code is no longer accepted');
+  });
+
+  test('code 200 with success false is a business failure', () {
+    var parserCalled = false;
+
+    final envelope = ApiEnvelopeDto<Map<String, dynamic>>.fromJson(
+      const {
+        'code': 200,
+        'success': false,
+        'data': {'id': 7},
+        'message': 'Operation was rejected',
+      },
+      (json) {
+        parserCalled = true;
+        return json as Map<String, dynamic>;
+      },
+    );
+
+    expect(envelope.isBusinessSuccess, isFalse);
+    expect(parserCalled, isFalse);
+    expect(envelope.data, isNull);
+    expect(envelope.msg, 'Operation was rejected');
+  });
+
   test('failed envelope with string data skips typed data parsing', () {
     var parserCalled = false;
 
@@ -36,6 +79,33 @@ void main() {
     }, (json) => json as Map<String, dynamic>);
 
     expect(envelope.data, {'id': 7});
+    expect(envelope.isBusinessSuccess, isTrue);
+  });
+
+  test('msg takes precedence over message and blank values fall back', () {
+    final preferredMsg = ApiEnvelopeDto<void>.fromJson(
+      const {
+        'code': 500,
+        'success': false,
+        'msg': ' Primary message ',
+        'message': 'Secondary message',
+      },
+      (_) {},
+    );
+    final fallbackMessage = ApiEnvelopeDto<void>.fromJson(
+      const {
+        'code': 500,
+        'success': false,
+        'msg': '   ',
+        'message': ' Fallback message ',
+        'messageKey': '   ',
+      },
+      (_) {},
+    );
+
+    expect(preferredMsg.msg, 'Primary message');
+    expect(fallbackMessage.msg, 'Fallback message');
+    expect(fallbackMessage.messageKey, isNull);
   });
 
   test('business failure normalizes server-provided fields', () {

@@ -24,7 +24,7 @@ enum GoogleLoginSubmissionType {
 }
 
 class GoogleLoginSubmission {
-  const GoogleLoginSubmission._(this.type, [this.result]);
+  const GoogleLoginSubmission._(this.type, [this.result, this.error]);
 
   const GoogleLoginSubmission.success(AuthLoginResult result)
     : this._(GoogleLoginSubmissionType.success, result);
@@ -38,13 +38,14 @@ class GoogleLoginSubmission {
   const GoogleLoginSubmission.unavailable()
     : this._(GoogleLoginSubmissionType.unavailable);
 
-  const GoogleLoginSubmission.failed()
-    : this._(GoogleLoginSubmissionType.failed);
+  const GoogleLoginSubmission.failed([Object? error])
+    : this._(GoogleLoginSubmissionType.failed, null, error);
 
   const GoogleLoginSubmission.busy() : this._(GoogleLoginSubmissionType.busy);
 
   final GoogleLoginSubmissionType type;
   final AuthLoginResult? result;
+  final Object? error;
 }
 
 class GoogleLoginController extends Notifier<GoogleLoginState> {
@@ -70,10 +71,10 @@ class GoogleLoginController extends Notifier<GoogleLoginState> {
         GoogleIdentityErrorCode.unavailable =>
           const GoogleLoginSubmission.unavailable(),
         GoogleIdentityErrorCode.invalidCredential ||
-        GoogleIdentityErrorCode.failed => const GoogleLoginSubmission.failed(),
+        GoogleIdentityErrorCode.failed => GoogleLoginSubmission.failed(error),
       };
-    } on Object {
-      return const GoogleLoginSubmission.failed();
+    } on Object catch (error) {
+      return GoogleLoginSubmission.failed(error);
     } finally {
       state = state.copyWith(isSubmitting: false);
     }

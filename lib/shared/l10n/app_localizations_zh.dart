@@ -2520,4 +2520,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String deviceCommandNetworkFailure(String action) {
     return '$action发送失败，请检查网络后重试。';
   }
+
+  @override
+  String get sceneCreateFailed => '创建场景失败，请重试。';
+
+  @override
+  String get sceneRenameFailed => '重命名场景失败，请重试。';
+
+  @override
+  String get sceneDeleteFailed => '删除场景失败，请重试。';
+
+  @override
+  String get deviceRenameFailed => '重命名设备失败，请重试。';
+
+  @override
+  String get deviceUnbindFailed => '解绑设备失败，请重试。';
+
+  @override
+  String get deviceTopFailed => '置顶设备失败，请重试。';
 }
