@@ -143,6 +143,66 @@ void main() {
     semantics.dispose();
   });
 
+  testWidgets('scrolls to the selected region when the page opens', (
+    tester,
+  ) async {
+    final profileCompletion = Completer<AccountProfileDto?>();
+    final regionOptions = [
+      for (var index = 0; index < 24; index++)
+        AppRegionOptionDto(
+          regionCode: 'R${index + 1}',
+          displayName: 'Region ${index + 1}',
+        ),
+    ];
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          accountLocalDataSourceProvider.overrideWithValue(
+            _DelayedAccountLocalDataSource(profileCompletion.future),
+          ),
+          accountProfileRemoteDataSourceProvider.overrideWithValue(
+            _AvatarProfileRemoteDataSource(
+              regionCode: 'R18',
+              regionOptions: regionOptions,
+            ),
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const RegionPage(),
+        ),
+      ),
+    );
+
+    await tester.pump();
+
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byKey(RegionPageKeys.optionsList), findsNothing);
+
+    profileCompletion.complete(
+      const AccountProfileDto(
+        schemaVersion: AccountProfileDto.currentSchemaVersion,
+        userId: 'user-1',
+        email: 'alex@example.com',
+        nickname: 'Alex',
+        registeredAtIso8601: '',
+        country: 'R18',
+        regionCode: 'R18',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final listRect = tester.getRect(find.byKey(RegionPageKeys.optionsList));
+    final selectedRegionRect = tester.getRect(
+      find.byKey(RegionPageKeys.option('r18')),
+    );
+    expect(selectedRegionRect.top, greaterThanOrEqualTo(listRect.top));
+    expect(selectedRegionRect.bottom, lessThanOrEqualTo(listRect.bottom));
+  });
+
   testWidgets('shows a loading indicator while saving a region', (
     tester,
   ) async {
@@ -1408,6 +1468,15 @@ class _PendingRegionProfileRemoteDataSource
     await updateCompletion.future;
     await super.updateRegion(regionCode: regionCode, requestId: requestId);
   }
+}
+
+class _DelayedAccountLocalDataSource extends InMemoryAccountLocalDataSource {
+  _DelayedAccountLocalDataSource(this.profileFuture);
+
+  final Future<AccountProfileDto?> profileFuture;
+
+  @override
+  Future<AccountProfileDto?> readProfile() => profileFuture;
 }
 
 class _FakeManagedDevicesRepository implements ManagedDevicesRepository {

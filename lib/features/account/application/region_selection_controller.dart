@@ -39,14 +39,14 @@ class RegionSelectionController extends AsyncNotifier<RegionSelectionState> {
       );
     });
 
-    final regions = await repository.fetchRegionOptions(
+    final regionsFuture = repository.fetchRegionOptions(
       requestId:
           'account-region-options-${DateTime.now().microsecondsSinceEpoch}',
     );
-    final accountProfile = ref
-        .read(accountControllerProvider)
-        .maybeWhen(data: (value) => value, orElse: () => null);
-    final profile = accountProfile ?? await repository.readCachedProfile();
+    final profileFuture = ref.read(accountControllerProvider.future);
+
+    final regions = await regionsFuture;
+    final profile = await profileFuture;
 
     return RegionSelectionState(
       regions: regions,
