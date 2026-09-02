@@ -3,6 +3,10 @@ import 'dart:typed_data';
 import 'package:flinx/features/device_control/presentation/pages/device_settings_page.dart';
 import 'package:flinx/features/device_control/presentation/widgets/device_setting_options_sheet.dart';
 import 'package:flinx/features/device_control/application/device_command_controller.dart';
+import 'package:flinx/features/device_control/domain/entities/about_device_info.dart';
+import 'package:flinx/features/device_control/domain/entities/door_detail.dart';
+import 'package:flinx/features/device_control/domain/entities/door_device.dart';
+import 'package:flinx/features/device_control/domain/repositories/door_detail_repository.dart';
 import 'package:flinx/features/records/application/providers.dart';
 import 'package:flinx/features/records/domain/entities/operation_record_page_result.dart';
 import 'package:flinx/features/records/domain/repositories/operation_record_repository.dart';
@@ -463,6 +467,56 @@ void main() {
     expect(doorSettingsRepository.fetchCount, 1);
   });
 
+  testWidgets('preselects the configured option when opening its editor', (
+    tester,
+  ) async {
+    await _pumpSettingsRouter(
+      tester,
+      capabilities: const [DeviceCapabilityCode.autoClose],
+      capabilityDefinitions: const [
+        DeviceCapability(
+          code: DeviceCapabilityCode.autoClose,
+          label: 'Auto close',
+          unit: 'min',
+          options: [
+            DeviceCapabilityOption(value: 1, label: '1'),
+            DeviceCapabilityOption(value: 3, label: '3'),
+            DeviceCapabilityOption(value: 5, label: '5'),
+          ],
+        ),
+      ],
+      settingSnapshots: const [
+        DoorSettingSnapshot(
+          code: DeviceCapabilityCode.autoClose,
+          label: 'Auto close',
+          supported: true,
+          configured: true,
+          currentValue: 3,
+          unit: 'min',
+        ),
+      ],
+    );
+
+    await tester.tap(find.text('Auto close'));
+    await tester.pumpAndSettle();
+
+    final selectionList = tester
+        .widget<DeviceSettingsFixedSelectionList<DeviceCapabilityOption>>(
+          find.byType(DeviceSettingsFixedSelectionList<DeviceCapabilityOption>),
+        );
+    final controller =
+        tester
+                .widget<ListWheelScrollView>(
+                  find.descendant(
+                    of: find.byWidget(selectionList),
+                    matching: find.byType(ListWheelScrollView),
+                  ),
+                )
+                .controller!
+            as FixedExtentScrollController;
+    expect(controller.selectedItem, 1);
+  });
+
   testWidgets('renders current settings returned for the door', (tester) async {
     await _pumpSettingsRouter(
       tester,
@@ -520,6 +574,36 @@ void main() {
     await _pumpSettingsRouter(tester, capabilities: const []);
 
     expect(find.text('About the device'), findsOneWidget);
+  });
+
+  testWidgets('shows the complete Bluetooth name on the about-device page', (
+    tester,
+  ) async {
+    const bluetoothName = 'opener_B8F86211A9DC';
+    await _pumpSettingsRouter(
+      tester,
+      doorDetailRepository: const _AboutDeviceInfoRepository(
+        AboutDeviceInfo(
+          deviceId: 'mock-device',
+          sn: 'B8F86211A9DC',
+          deviceType: 'opener',
+          deviceTypeLabel: 'Opener',
+          bluetoothName: bluetoothName,
+          hardwareVersion: '1.0.0',
+          firmwareVersion: '1.0.0',
+          updateAvailable: false,
+          availableVersion: '',
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('About the device'));
+    await tester.pumpAndSettle();
+
+    final bluetoothNameText = tester.widget<Text>(find.text(bluetoothName));
+    expect(bluetoothNameText.maxLines, isNull);
+    expect(bluetoothNameText.overflow, isNull);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('renders on a compact screen without overflow', (tester) async {
@@ -594,6 +678,7 @@ Future<void> _pumpSettingsRouter(
   OperationRecordRepository? operationRecordRepository,
   MockHardwareGateway? gateway,
   DeviceSettingsCapabilityScope? capabilityScope,
+  DoorDetailRepository? doorDetailRepository,
 }) async {
   if (setDefaultSize) {
     tester.view.physicalSize = const Size(393, 852);
@@ -643,6 +728,8 @@ Future<void> _pumpSettingsRouter(
           operationRecordRepository ??
               const _RecordingOperationRecordRepository(),
         ),
+        if (doorDetailRepository != null)
+          doorDetailRepositoryProvider.overrideWithValue(doorDetailRepository),
       ],
       child: MaterialApp.router(
         locale: locale,
@@ -734,6 +821,38 @@ class _OtherDeviceCommandController extends DeviceCommandController {
       bleTargetName: 'other-device',
     );
   }
+}
+
+class _AboutDeviceInfoRepository implements DoorDetailRepository {
+  const _AboutDeviceInfoRepository(this.info);
+
+  final AboutDeviceInfo info;
+
+  @override
+  Future<AboutDeviceInfo> fetchAboutDeviceInfo({
+    required String doorId,
+    required String deviceId,
+    required String requestId,
+  }) async => info;
+
+  @override
+  Future<DoorDetail> fetchDoorDetail({
+    required String doorId,
+    required String requestId,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<List<DoorDevice>> fetchDoorDevices({
+    required String doorId,
+    required String requestId,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<void> unbindDoorDevice({
+    required String doorId,
+    required String deviceId,
+    required String requestId,
+  }) => throw UnimplementedError();
 }
 
 class _FakeDoorSettingsRepository implements DoorSettingsRepository {
