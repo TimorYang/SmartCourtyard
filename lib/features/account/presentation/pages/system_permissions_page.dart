@@ -135,6 +135,7 @@ class _PermissionCard extends StatelessWidget {
       SystemPermission.microphone => l10n.systemPermissionsMicrophone,
       SystemPermission.storage => l10n.systemPermissionsStorage,
       SystemPermission.bluetooth => l10n.systemPermissionsBluetooth,
+      SystemPermission.notification => l10n.systemPermissionsNotification,
     };
 
     return Semantics(

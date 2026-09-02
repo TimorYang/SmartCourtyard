@@ -12,8 +12,8 @@ import '../core/storage/app_storage_paths.dart';
 import '../features/account/application/providers.dart';
 import '../features/auth/application/providers.dart';
 import '../features/auth/data/services/platform_login_device_context_provider.dart';
-import '../features/home/application/providers.dart';
 import 'flinx_app.dart';
+import 'session/session_cleanup_coordinator.dart';
 
 Future<void> bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,16 +43,11 @@ Future<void> bootstrap() async {
               return;
             }
             isClearingSession = true;
-            final invalidateHomeDeviceLists = ref.read(
-              homeDeviceListsInvalidatorProvider,
-            );
             try {
-              await ref.read(accountControllerProvider.notifier).clearAccount();
+              await ref
+                  .read(sessionCleanupCoordinatorProvider)
+                  .clearExpiredSession();
             } finally {
-              ref.read(activeAuthSessionProvider.notifier).clear();
-              ref.invalidate(authSessionProvider);
-              ref.invalidate(cachedAccountProfileProvider);
-              invalidateHomeDeviceLists();
               isClearingSession = false;
             }
           };

@@ -27,6 +27,14 @@ abstract interface class HardwareGateway {
     required List<PermissionKind> permissions,
   });
 
+  Future<PermissionStatus> getNotificationPermission({
+    required String requestId,
+  });
+
+  Future<PermissionStatus> requestNotificationPermission({
+    required String requestId,
+  });
+
   Future<void> openAppSettings({required String requestId});
 
   Future<List<DeviceSummary>> readDevices();

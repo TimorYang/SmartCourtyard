@@ -48,6 +48,9 @@ flutter build apk --release --dart-define-from-file=config/env/prod.json
 - `FLINX_GOOGLE_SERVER_CLIENT_ID`：GCP Web OAuth Client ID，同时作为 Google 登录的
   `serverClientId`，用于 Android 登录及后端授权码校验。
 - `FLINX_GOOGLE_HOSTED_DOMAIN`：可选的 Google Workspace 托管域限制；普通账号登录保持为空。
+- `FLINX_ENGAGELAB_APP_KEY`：极光 EngageLab AppKey；为空时推送能力安全禁用。
+- `FLINX_ENGAGELAB_CHANNEL`：EngageLab 渠道名，例如 `developer` 或 `production`。
+- `FLINX_ENGAGELAB_IOS_PRODUCTION`：iOS 是否使用生产 APNs 环境，开发/测试填写 `false`，正式包填写 `true`。
 
 Facebook 的 App ID、Client Token、Display Name 和平台回调配置还需要同步填写到 Meta
 开发者后台。iOS `Info.plist` 与 Android Facebook resources 会在 Flutter 构建时，

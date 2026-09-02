@@ -22,7 +22,7 @@ enum PermissionKindDto {
   notification,
 }
 
-enum PermissionStatusDto { granted, denied, blocked }
+enum PermissionStatusDto { granted, denied, blocked, notDetermined }
 
 enum DoorCommandDto { open, stop, close, partialOpen, lightOn, lightOff, pb }
 
@@ -52,7 +52,6 @@ class PermissionSnapshotDto {
     required this.microphoneStatus,
     required this.storageStatus,
     required this.localNetworkGranted,
-    required this.notificationGranted,
   });
 
   final PermissionStatusDto bluetoothStatus;
@@ -61,7 +60,6 @@ class PermissionSnapshotDto {
   final PermissionStatusDto microphoneStatus;
   final PermissionStatusDto storageStatus;
   final bool localNetworkGranted;
-  final bool notificationGranted;
 }
 
 class BleScanFilterDto {
@@ -511,6 +509,12 @@ abstract class HardwareHostApi {
     String requestId,
     List<PermissionKindDto> permissions,
   );
+
+  @async
+  PermissionStatusDto getNotificationPermission(String requestId);
+
+  @async
+  PermissionStatusDto requestNotificationPermission(String requestId);
 
   void openAppSettings(String requestId);
 

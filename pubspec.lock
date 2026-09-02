@@ -387,6 +387,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.35"
+  flutter_plugin_engagelab:
+    dependency: "direct main"
+    description:
+      name: flutter_plugin_engagelab
+      sha256: "0f9f01424ae3d6665a3668ce2997872851c4e0ce78953210c66a4522701b849f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.4.6+5431544"
   flutter_riverpod:
     dependency: "direct main"
     description:

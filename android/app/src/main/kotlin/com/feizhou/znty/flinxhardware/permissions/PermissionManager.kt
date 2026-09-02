@@ -24,6 +24,8 @@ class PermissionManager(
   private val activityProvider: () -> Activity?,
 ) {
   private var pendingBleScanReadyCallback: ((BleScanReadiness) -> Unit)? = null
+  private var pendingNotificationPermissionCallback:
+    ((Result<PermissionStatusDto>) -> Unit)? = null
   /** 读取当前权限快照，供 Flutter 侧展示和前置校验使用。 */
   fun getPermissionSnapshot(): PermissionSnapshotDto {
     val bluetoothStatus = statusFor(PermissionKindDto.BLUETOOTH)
@@ -32,11 +34,6 @@ class PermissionManager(
     val microphoneStatus = statusFor(PermissionKindDto.MICROPHONE)
     val storageStatus = statusFor(PermissionKindDto.STORAGE)
     val localNetworkGranted = true
-    val notificationGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-      isGranted(Manifest.permission.POST_NOTIFICATIONS)
-    } else {
-      true
-    }
     return PermissionSnapshotDto(
       bluetoothStatus = bluetoothStatus,
       cameraStatus = cameraStatus,
@@ -44,7 +41,6 @@ class PermissionManager(
       microphoneStatus = microphoneStatus,
       storageStatus = storageStatus,
       localNetworkGranted = localNetworkGranted,
-      notificationGranted = notificationGranted,
     )
   }
 
@@ -53,10 +49,13 @@ class PermissionManager(
     val activity = activityProvider()
     if (activity != null) {
       val missingPermissions = permissions
+        .filter { it != PermissionKindDto.NOTIFICATION }
         .flatMap { mapPermissionKind(it) }
         .distinct()
         .filterNot(::isGranted)
-      permissions.forEach(::markRequested)
+      permissions
+        .filter { it != PermissionKindDto.NOTIFICATION }
+        .forEach(::markRequested)
       if (missingPermissions.isNotEmpty()) {
         ActivityCompat.requestPermissions(
           activity,
@@ -66,6 +65,47 @@ class PermissionManager(
       }
     }
     return getPermissionSnapshot()
+  }
+
+  /** 读取通知权限，独立于硬件权限快照以支持 iOS 异步授权状态。 */
+  fun getNotificationPermission(): PermissionStatusDto {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+      return PermissionStatusDto.GRANTED
+    }
+    return notificationStatus()
+  }
+
+  /** 请求 Android 13+ 通知权限，并在系统弹窗结束后回调 Flutter。 */
+  fun requestNotificationPermission(
+    callback: (Result<PermissionStatusDto>) -> Unit,
+  ) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+      callback(Result.success(PermissionStatusDto.GRANTED))
+      return
+    }
+    if (pendingNotificationPermissionCallback != null) {
+      callback(Result.success(getNotificationPermission()))
+      return
+    }
+
+    val activity = activityProvider()
+    if (activity == null) {
+      callback(Result.success(getNotificationPermission()))
+      return
+    }
+    val permission = Manifest.permission.POST_NOTIFICATIONS
+    if (isGranted(permission)) {
+      callback(Result.success(PermissionStatusDto.GRANTED))
+      return
+    }
+
+    markRequested(PermissionKindDto.NOTIFICATION)
+    pendingNotificationPermissionCallback = callback
+    ActivityCompat.requestPermissions(
+      activity,
+      arrayOf(permission),
+      REQUEST_NOTIFICATION_PERMISSION,
+    )
   }
 
   /** 准备 BLE 扫描：先申请权限，再请求用户开启系统蓝牙。 */
@@ -115,6 +155,12 @@ class PermissionManager(
   }
 
   fun onRequestPermissionsResult(requestCode: Int): Boolean {
+    if (requestCode == REQUEST_NOTIFICATION_PERMISSION) {
+      val callback = pendingNotificationPermissionCallback
+      pendingNotificationPermissionCallback = null
+      callback?.invoke(Result.success(getNotificationPermission()))
+      return true
+    }
     if (requestCode != REQUEST_BLE_SCAN_PERMISSION) {
       return false
     }
@@ -214,6 +260,26 @@ class PermissionManager(
     }
   }
 
+  /** 区分通知权限尚未申请与用户已经拒绝的状态。 */
+  private fun notificationStatus(): PermissionStatusDto {
+    val permission = Manifest.permission.POST_NOTIFICATIONS
+    if (isGranted(permission)) return PermissionStatusDto.GRANTED
+
+    val wasRequested = context
+      .getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)
+      .getBoolean("requested_${PermissionKindDto.NOTIFICATION.name}", false)
+    if (!wasRequested) return PermissionStatusDto.NOT_DETERMINED
+
+    val activity = activityProvider()
+    val canRequestAgain = activity != null &&
+      ActivityCompat.shouldShowRequestPermissionRationale(activity, permission)
+    return if (canRequestAgain) {
+      PermissionStatusDto.DENIED
+    } else {
+      PermissionStatusDto.BLOCKED
+    }
+  }
+
   private fun markRequested(kind: PermissionKindDto) {
     context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)
       .edit()
@@ -275,6 +341,7 @@ class PermissionManager(
     const val REQUEST_CODE = 9001
     const val REQUEST_BLE_SCAN_PERMISSION = 9002
     const val REQUEST_ENABLE_BLUETOOTH = 9003
+    const val REQUEST_NOTIFICATION_PERMISSION = 9004
     const val PREFERENCES = "flinx_permission_requests"
   }
 }

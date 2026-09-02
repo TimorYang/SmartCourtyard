@@ -892,6 +892,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get systemPermissionsBluetooth => 'Access mobile Bluetooth';
 
   @override
+  String get systemPermissionsNotification => 'Access notification permissions';
+
+  @override
   String get systemPermissionsGranted => 'Granted';
 
   @override

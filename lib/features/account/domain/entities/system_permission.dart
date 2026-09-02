@@ -1,4 +1,11 @@
-enum SystemPermission { location, camera, microphone, storage, bluetooth }
+enum SystemPermission {
+  location,
+  camera,
+  microphone,
+  storage,
+  bluetooth,
+  notification,
+}
 
 enum SystemPermissionStatus { granted, denied, blocked }
 

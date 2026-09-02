@@ -31,8 +31,8 @@ private fun decodeDartDefines(encodedDefines: String?): Map<String, String> {
         .toMap()
 }
 
-private const val facebookPlaceholderAppId = "123456789012345"
-private const val facebookPlaceholderClientToken = "not-configured"
+private val facebookPlaceholderAppId = "123456789012345"
+private val facebookPlaceholderClientToken = "not-configured"
 
 val dartDefines = decodeDartDefines(project.findProperty("dart-defines")?.toString())
 val facebookAppIdDefine = dartDefines["FLINX_FACEBOOK_APP_ID"].orEmpty().trim()
@@ -68,6 +68,11 @@ val facebookClientToken = if (hasFacebookConfiguration) {
 }
 val facebookLoginProtocolScheme = "fb$facebookAppId"
 
+val engageLabAppKey = dartDefines["FLINX_ENGAGELAB_APP_KEY"].orEmpty().trim()
+val engageLabChannel = dartDefines["FLINX_ENGAGELAB_CHANNEL"].orEmpty().trim()
+    .ifEmpty { "developer" }
+val engageLabPrivateProcess = ":remote"
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
@@ -89,7 +94,8 @@ android {
         applicationId = "com.feizhou.znty"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        // EngageLab's Android SDK supports API 23 and above.
+        minSdk = maxOf(flutter.minSdkVersion, 23)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -100,6 +106,23 @@ android {
         resValue("string", "facebook_app_id", facebookAppId)
         resValue("string", "facebook_client_token", facebookClientToken)
         resValue("string", "fb_login_protocol_scheme", facebookLoginProtocolScheme)
+
+        manifestPlaceholders["ENGAGELAB_PRIVATES_APPKEY"] = engageLabAppKey
+        manifestPlaceholders["ENGAGELAB_PRIVATES_CHANNEL"] = engageLabChannel
+        manifestPlaceholders["ENGAGELAB_PRIVATES_PROCESS"] = engageLabPrivateProcess
+        manifestPlaceholders["XIAOMI_APPID"] = ""
+        manifestPlaceholders["XIAOMI_APPKEY"] = ""
+        manifestPlaceholders["MEIZU_APPID"] = ""
+        manifestPlaceholders["MEIZU_APPKEY"] = ""
+        manifestPlaceholders["OPPO_APPID"] = ""
+        manifestPlaceholders["OPPO_APPKEY"] = ""
+        manifestPlaceholders["OPPO_APPSECRET"] = ""
+        manifestPlaceholders["VIVO_APPID"] = ""
+        manifestPlaceholders["VIVO_APPKEY"] = ""
+        manifestPlaceholders["HONOR_APPID"] = ""
+        manifestPlaceholders["APP_TCP_SSL"] = "true"
+        manifestPlaceholders["APP_DEBUG"] = "false"
+        manifestPlaceholders["COUNTRY_CODE"] = "CN"
 
     }
 

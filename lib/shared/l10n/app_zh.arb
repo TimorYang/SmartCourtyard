@@ -275,6 +275,7 @@
   "systemPermissionsMicrophone": "访问录音权限",
   "systemPermissionsStorage": "访问手机存储",
   "systemPermissionsBluetooth": "访问手机蓝牙",
+  "systemPermissionsNotification": "访问通知权限",
   "systemPermissionsGranted": "已授权",
   "systemPermissionsDenied": "未授权",
   "systemPermissionsLoadError": "无法读取系统权限。",

@@ -104,7 +104,7 @@ enum PermissionKind {
   notification,
 }
 
-enum PermissionStatus { granted, denied, blocked }
+enum PermissionStatus { granted, denied, blocked, notDetermined }
 
 class PermissionSnapshot {
   const PermissionSnapshot({
@@ -114,7 +114,6 @@ class PermissionSnapshot {
     required this.microphoneStatus,
     required this.storageStatus,
     required this.localNetworkGranted,
-    required this.notificationGranted,
   });
 
   final PermissionStatus bluetoothStatus;
@@ -123,7 +122,6 @@ class PermissionSnapshot {
   final PermissionStatus microphoneStatus;
   final PermissionStatus storageStatus;
   final bool localNetworkGranted;
-  final bool notificationGranted;
 
   bool get bluetoothGranted => bluetoothStatus == PermissionStatus.granted;
   bool get cameraGranted => cameraStatus == PermissionStatus.granted;

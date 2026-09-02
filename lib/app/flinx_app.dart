@@ -11,6 +11,7 @@ import '../shared/l10n/app_localizations.dart';
 import '../core/diagnostics/diagnostic_logging.dart';
 import '../features/account/application/providers.dart';
 import '../features/account/domain/entities/app_locale_preference.dart';
+import '../features/push/application/providers.dart';
 import 'router/app_router.dart';
 import 'theme/app_design_tokens.dart';
 import 'theme/app_theme.dart';
@@ -35,6 +36,7 @@ class _FlinxAppState extends ConsumerState<FlinxApp> {
   @override
   Widget build(BuildContext context) {
     ref.watch(diagnosticLoggingControllerProvider);
+    ref.watch(pushServiceProvider);
     final localeState = ref.watch(appLocaleControllerProvider);
     final locale = localeState.value;
     if (locale == null) {

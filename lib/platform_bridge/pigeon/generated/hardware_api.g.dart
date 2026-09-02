@@ -121,6 +121,7 @@ enum PermissionStatusDto {
   granted,
   denied,
   blocked,
+  notDetermined,
 }
 
 enum DoorCommandDto {
@@ -192,7 +193,6 @@ class PermissionSnapshotDto {
     required this.microphoneStatus,
     required this.storageStatus,
     required this.localNetworkGranted,
-    required this.notificationGranted,
   });
 
   PermissionStatusDto bluetoothStatus;
@@ -207,8 +207,6 @@ class PermissionSnapshotDto {
 
   bool localNetworkGranted;
 
-  bool notificationGranted;
-
   List<Object?> _toList() {
     return <Object?>[
       bluetoothStatus,
@@ -217,7 +215,6 @@ class PermissionSnapshotDto {
       microphoneStatus,
       storageStatus,
       localNetworkGranted,
-      notificationGranted,
     ];
   }
 
@@ -233,7 +230,6 @@ class PermissionSnapshotDto {
       microphoneStatus: result[3]! as PermissionStatusDto,
       storageStatus: result[4]! as PermissionStatusDto,
       localNetworkGranted: result[5]! as bool,
-      notificationGranted: result[6]! as bool,
     );
   }
 
@@ -246,7 +242,7 @@ class PermissionSnapshotDto {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(bluetoothStatus, other.bluetoothStatus) && _deepEquals(cameraStatus, other.cameraStatus) && _deepEquals(locationStatus, other.locationStatus) && _deepEquals(microphoneStatus, other.microphoneStatus) && _deepEquals(storageStatus, other.storageStatus) && _deepEquals(localNetworkGranted, other.localNetworkGranted) && _deepEquals(notificationGranted, other.notificationGranted);
+    return _deepEquals(bluetoothStatus, other.bluetoothStatus) && _deepEquals(cameraStatus, other.cameraStatus) && _deepEquals(locationStatus, other.locationStatus) && _deepEquals(microphoneStatus, other.microphoneStatus) && _deepEquals(storageStatus, other.storageStatus) && _deepEquals(localNetworkGranted, other.localNetworkGranted);
   }
 
   @override
@@ -2210,6 +2206,44 @@ class HardwareHostApi {
     )
     ;
     return pigeonVar_replyValue! as PermissionSnapshotDto;
+  }
+
+  Future<PermissionStatusDto> getNotificationPermission(String requestId) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.getNotificationPermission$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[requestId]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
+    return pigeonVar_replyValue! as PermissionStatusDto;
+  }
+
+  Future<PermissionStatusDto> requestNotificationPermission(String requestId) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flinx.HardwareHostApi.requestNotificationPermission$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[requestId]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
+    return pigeonVar_replyValue! as PermissionStatusDto;
   }
 
   Future<void> openAppSettings(String requestId) async {

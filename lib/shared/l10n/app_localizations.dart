@@ -1712,6 +1712,12 @@ abstract class AppLocalizations {
   /// **'Access mobile Bluetooth'**
   String get systemPermissionsBluetooth;
 
+  /// No description provided for @systemPermissionsNotification.
+  ///
+  /// In en, this message translates to:
+  /// **'Access notification permissions'**
+  String get systemPermissionsNotification;
+
   /// No description provided for @systemPermissionsGranted.
   ///
   /// In en, this message translates to:

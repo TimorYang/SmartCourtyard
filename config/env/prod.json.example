@@ -7,5 +7,8 @@
   "FLINX_FACEBOOK_DISPLAY_NAME": "",
   "FLINX_GOOGLE_IOS_CLIENT_ID": "replace-with-google-ios-client-id",
   "FLINX_GOOGLE_SERVER_CLIENT_ID": "replace-with-google-server-client-id",
-  "FLINX_GOOGLE_HOSTED_DOMAIN": ""
+  "FLINX_GOOGLE_HOSTED_DOMAIN": "",
+  "FLINX_ENGAGELAB_APP_KEY": "",
+  "FLINX_ENGAGELAB_CHANNEL": "developer",
+  "FLINX_ENGAGELAB_IOS_PRODUCTION": "true"
 }

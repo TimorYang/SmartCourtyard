@@ -76,7 +76,9 @@ class AppleLoginController extends Notifier<AppleLoginState> {
     } on Object catch (error) {
       return AppleLoginSubmission.failed(error);
     } finally {
-      state = state.copyWith(isSubmitting: false);
+      if (ref.mounted) {
+        state = state.copyWith(isSubmitting: false);
+      }
     }
   }
 }

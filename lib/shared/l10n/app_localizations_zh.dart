@@ -837,6 +837,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get systemPermissionsBluetooth => '访问手机蓝牙';
 
   @override
+  String get systemPermissionsNotification => '访问通知权限';
+
+  @override
   String get systemPermissionsGranted => '已授权';
 
   @override

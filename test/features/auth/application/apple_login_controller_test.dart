@@ -80,6 +80,27 @@ void main() {
     blocker.complete();
     expect((await firstSubmission).type, AppleLoginSubmissionType.success);
   });
+
+  test('does not write state after the controller is disposed', () async {
+    final blocker = Completer<void>();
+    final identityProvider = _FakeAppleIdentityProvider(blocker: blocker);
+    final container = _createContainer(identityProvider);
+    final subscription = container.listen(
+      appleLoginControllerProvider,
+      (_, _) {},
+    );
+
+    final submission = container
+        .read(appleLoginControllerProvider.notifier)
+        .submit(agreedToTerms: true);
+    await Future<void>.delayed(Duration.zero);
+    subscription.close();
+    await Future<void>.delayed(Duration.zero);
+
+    blocker.complete();
+
+    expect((await submission).type, AppleLoginSubmissionType.success);
+  });
 }
 
 ProviderContainer _createContainer(

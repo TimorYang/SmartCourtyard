@@ -192,6 +192,7 @@ enum PermissionStatusDto: Int {
   case granted = 0
   case denied = 1
   case blocked = 2
+  case notDetermined = 3
 }
 
 enum DoorCommandDto: Int {
@@ -263,7 +264,6 @@ struct PermissionSnapshotDto: Hashable {
   var microphoneStatus: PermissionStatusDto
   var storageStatus: PermissionStatusDto
   var localNetworkGranted: Bool
-  var notificationGranted: Bool
 
 
   // swift-format-ignore: AlwaysUseLowerCamelCase
@@ -274,7 +274,6 @@ struct PermissionSnapshotDto: Hashable {
     let microphoneStatus = pigeonVar_list[3] as! PermissionStatusDto
     let storageStatus = pigeonVar_list[4] as! PermissionStatusDto
     let localNetworkGranted = pigeonVar_list[5] as! Bool
-    let notificationGranted = pigeonVar_list[6] as! Bool
 
     return PermissionSnapshotDto(
       bluetoothStatus: bluetoothStatus,
@@ -282,8 +281,7 @@ struct PermissionSnapshotDto: Hashable {
       locationStatus: locationStatus,
       microphoneStatus: microphoneStatus,
       storageStatus: storageStatus,
-      localNetworkGranted: localNetworkGranted,
-      notificationGranted: notificationGranted
+      localNetworkGranted: localNetworkGranted
     )
   }
   func toList() -> [Any?] {
@@ -294,14 +292,13 @@ struct PermissionSnapshotDto: Hashable {
       microphoneStatus,
       storageStatus,
       localNetworkGranted,
-      notificationGranted,
     ]
   }
   static func == (lhs: PermissionSnapshotDto, rhs: PermissionSnapshotDto) -> Bool {
     if Swift.type(of: lhs) != Swift.type(of: rhs) {
       return false
     }
-    return deepEqualsHardwareApi(lhs.bluetoothStatus, rhs.bluetoothStatus) && deepEqualsHardwareApi(lhs.cameraStatus, rhs.cameraStatus) && deepEqualsHardwareApi(lhs.locationStatus, rhs.locationStatus) && deepEqualsHardwareApi(lhs.microphoneStatus, rhs.microphoneStatus) && deepEqualsHardwareApi(lhs.storageStatus, rhs.storageStatus) && deepEqualsHardwareApi(lhs.localNetworkGranted, rhs.localNetworkGranted) && deepEqualsHardwareApi(lhs.notificationGranted, rhs.notificationGranted)
+    return deepEqualsHardwareApi(lhs.bluetoothStatus, rhs.bluetoothStatus) && deepEqualsHardwareApi(lhs.cameraStatus, rhs.cameraStatus) && deepEqualsHardwareApi(lhs.locationStatus, rhs.locationStatus) && deepEqualsHardwareApi(lhs.microphoneStatus, rhs.microphoneStatus) && deepEqualsHardwareApi(lhs.storageStatus, rhs.storageStatus) && deepEqualsHardwareApi(lhs.localNetworkGranted, rhs.localNetworkGranted)
   }
 
   func hash(into hasher: inout Hasher) {
@@ -312,7 +309,6 @@ struct PermissionSnapshotDto: Hashable {
     deepHashHardwareApi(value: microphoneStatus, hasher: &hasher)
     deepHashHardwareApi(value: storageStatus, hasher: &hasher)
     deepHashHardwareApi(value: localNetworkGranted, hasher: &hasher)
-    deepHashHardwareApi(value: notificationGranted, hasher: &hasher)
   }
 }
 
@@ -2013,6 +2009,8 @@ protocol HardwareHostApi {
   func configureHardwareLogging(flutterConsoleEnabled: Bool, nativeConsoleEnabled: Bool) throws
   func getPermissionSnapshot(requestId: String) throws -> PermissionSnapshotDto
   func requestPermissions(requestId: String, permissions: [PermissionKindDto]) throws -> PermissionSnapshotDto
+  func getNotificationPermission(requestId: String, completion: @escaping (Result<PermissionStatusDto, Error>) -> Void)
+  func requestNotificationPermission(requestId: String, completion: @escaping (Result<PermissionStatusDto, Error>) -> Void)
   func openAppSettings(requestId: String) throws
   func startBleScan(requestId: String, filter: BleScanFilterDto) throws
   func stopBleScan(requestId: String) throws
@@ -2092,6 +2090,40 @@ class HardwareHostApiSetup {
       }
     } else {
       requestPermissionsChannel.setMessageHandler(nil)
+    }
+    let getNotificationPermissionChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flinx.HardwareHostApi.getNotificationPermission\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      getNotificationPermissionChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let requestIdArg = args[0] as! String
+        api.getNotificationPermission(requestId: requestIdArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      getNotificationPermissionChannel.setMessageHandler(nil)
+    }
+    let requestNotificationPermissionChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flinx.HardwareHostApi.requestNotificationPermission\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      requestNotificationPermissionChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let requestIdArg = args[0] as! String
+        api.requestNotificationPermission(requestId: requestIdArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      requestNotificationPermissionChannel.setMessageHandler(nil)
     }
     let openAppSettingsChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flinx.HardwareHostApi.openAppSettings\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {

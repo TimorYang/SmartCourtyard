@@ -13,7 +13,10 @@ class SystemPermissionsRepositoryImpl implements SystemPermissionsRepository {
     required String requestId,
   }) async {
     final snapshot = await _gateway.getPermissionSnapshot(requestId: requestId);
-    return _mapSnapshot(snapshot);
+    final notificationStatus = await _gateway.getNotificationPermission(
+      requestId: requestId,
+    );
+    return _mapSnapshot(snapshot, notificationStatus: notificationStatus);
   }
 
   @override
@@ -21,6 +24,16 @@ class SystemPermissionsRepositoryImpl implements SystemPermissionsRepository {
     required SystemPermission permission,
     required String requestId,
   }) async {
+    if (permission == SystemPermission.notification) {
+      final snapshot = await _gateway.getPermissionSnapshot(
+        requestId: requestId,
+      );
+      final notificationStatus = await _gateway.requestNotificationPermission(
+        requestId: requestId,
+      );
+      return _mapSnapshot(snapshot, notificationStatus: notificationStatus);
+    }
+
     final snapshot = await _gateway.requestPermissions(
       requestId: requestId,
       permissions: [_toHardwarePermission(permission)],
@@ -33,7 +46,10 @@ class SystemPermissionsRepositoryImpl implements SystemPermissionsRepository {
     return _gateway.openAppSettings(requestId: requestId);
   }
 
-  List<SystemPermissionState> _mapSnapshot(PermissionSnapshot snapshot) {
+  List<SystemPermissionState> _mapSnapshot(
+    PermissionSnapshot snapshot, {
+    PermissionStatus? notificationStatus,
+  }) {
     return [
       SystemPermissionState(
         permission: SystemPermission.location,
@@ -55,6 +71,10 @@ class SystemPermissionsRepositoryImpl implements SystemPermissionsRepository {
         permission: SystemPermission.bluetooth,
         status: _toStatus(snapshot.bluetoothStatus),
       ),
+      SystemPermissionState(
+        permission: SystemPermission.notification,
+        status: _toStatus(notificationStatus ?? PermissionStatus.denied),
+      ),
     ];
   }
 
@@ -65,6 +85,7 @@ class SystemPermissionsRepositoryImpl implements SystemPermissionsRepository {
       SystemPermission.microphone => PermissionKind.microphone,
       SystemPermission.storage => PermissionKind.storage,
       SystemPermission.bluetooth => PermissionKind.bluetooth,
+      SystemPermission.notification => PermissionKind.notification,
     };
   }
 
@@ -73,6 +94,7 @@ class SystemPermissionsRepositoryImpl implements SystemPermissionsRepository {
       PermissionStatus.granted => SystemPermissionStatus.granted,
       PermissionStatus.denied => SystemPermissionStatus.denied,
       PermissionStatus.blocked => SystemPermissionStatus.blocked,
+      PermissionStatus.notDetermined => SystemPermissionStatus.denied,
     };
   }
 }

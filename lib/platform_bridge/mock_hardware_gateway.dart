@@ -124,7 +124,6 @@ class MockHardwareGateway implements HardwareGateway {
       microphoneStatus: PermissionStatus.denied,
       storageStatus: PermissionStatus.granted,
       localNetworkGranted: true,
-      notificationGranted: true,
     );
   }
 
@@ -134,6 +133,20 @@ class MockHardwareGateway implements HardwareGateway {
     required List<PermissionKind> permissions,
   }) async {
     return getPermissionSnapshot(requestId: requestId);
+  }
+
+  @override
+  Future<PermissionStatus> getNotificationPermission({
+    required String requestId,
+  }) async {
+    return PermissionStatus.granted;
+  }
+
+  @override
+  Future<PermissionStatus> requestNotificationPermission({
+    required String requestId,
+  }) async {
+    return PermissionStatus.granted;
   }
 
   @override

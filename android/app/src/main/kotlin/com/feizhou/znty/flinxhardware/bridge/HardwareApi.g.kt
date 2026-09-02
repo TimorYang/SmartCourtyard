@@ -214,7 +214,8 @@ enum class PermissionKindDto(val raw: Int) {
 enum class PermissionStatusDto(val raw: Int) {
   GRANTED(0),
   DENIED(1),
-  BLOCKED(2);
+  BLOCKED(2),
+  NOT_DETERMINED(3);
 
   companion object {
     fun ofRaw(raw: Int): PermissionStatusDto? {
@@ -351,8 +352,7 @@ data class PermissionSnapshotDto (
   val locationStatus: PermissionStatusDto,
   val microphoneStatus: PermissionStatusDto,
   val storageStatus: PermissionStatusDto,
-  val localNetworkGranted: Boolean,
-  val notificationGranted: Boolean
+  val localNetworkGranted: Boolean
 )
  {
   companion object {
@@ -363,8 +363,7 @@ data class PermissionSnapshotDto (
       val microphoneStatus = pigeonVar_list[3] as PermissionStatusDto
       val storageStatus = pigeonVar_list[4] as PermissionStatusDto
       val localNetworkGranted = pigeonVar_list[5] as Boolean
-      val notificationGranted = pigeonVar_list[6] as Boolean
-      return PermissionSnapshotDto(bluetoothStatus, cameraStatus, locationStatus, microphoneStatus, storageStatus, localNetworkGranted, notificationGranted)
+      return PermissionSnapshotDto(bluetoothStatus, cameraStatus, locationStatus, microphoneStatus, storageStatus, localNetworkGranted)
     }
   }
   fun toList(): List<Any?> {
@@ -375,7 +374,6 @@ data class PermissionSnapshotDto (
       microphoneStatus,
       storageStatus,
       localNetworkGranted,
-      notificationGranted,
     )
   }
   override fun equals(other: Any?): Boolean {
@@ -386,7 +384,7 @@ data class PermissionSnapshotDto (
       return true
     }
     val other = other as PermissionSnapshotDto
-    return HardwareApiPigeonUtils.deepEquals(this.bluetoothStatus, other.bluetoothStatus) && HardwareApiPigeonUtils.deepEquals(this.cameraStatus, other.cameraStatus) && HardwareApiPigeonUtils.deepEquals(this.locationStatus, other.locationStatus) && HardwareApiPigeonUtils.deepEquals(this.microphoneStatus, other.microphoneStatus) && HardwareApiPigeonUtils.deepEquals(this.storageStatus, other.storageStatus) && HardwareApiPigeonUtils.deepEquals(this.localNetworkGranted, other.localNetworkGranted) && HardwareApiPigeonUtils.deepEquals(this.notificationGranted, other.notificationGranted)
+    return HardwareApiPigeonUtils.deepEquals(this.bluetoothStatus, other.bluetoothStatus) && HardwareApiPigeonUtils.deepEquals(this.cameraStatus, other.cameraStatus) && HardwareApiPigeonUtils.deepEquals(this.locationStatus, other.locationStatus) && HardwareApiPigeonUtils.deepEquals(this.microphoneStatus, other.microphoneStatus) && HardwareApiPigeonUtils.deepEquals(this.storageStatus, other.storageStatus) && HardwareApiPigeonUtils.deepEquals(this.localNetworkGranted, other.localNetworkGranted)
   }
 
   override fun hashCode(): Int {
@@ -397,7 +395,6 @@ data class PermissionSnapshotDto (
     result = 31 * result + HardwareApiPigeonUtils.deepHash(this.microphoneStatus)
     result = 31 * result + HardwareApiPigeonUtils.deepHash(this.storageStatus)
     result = 31 * result + HardwareApiPigeonUtils.deepHash(this.localNetworkGranted)
-    result = 31 * result + HardwareApiPigeonUtils.deepHash(this.notificationGranted)
     return result
   }
 }
@@ -2158,6 +2155,8 @@ interface HardwareHostApi {
   fun configureHardwareLogging(flutterConsoleEnabled: Boolean, nativeConsoleEnabled: Boolean)
   fun getPermissionSnapshot(requestId: String): PermissionSnapshotDto
   fun requestPermissions(requestId: String, permissions: List<PermissionKindDto>): PermissionSnapshotDto
+  fun getNotificationPermission(requestId: String, callback: (Result<PermissionStatusDto>) -> Unit)
+  fun requestNotificationPermission(requestId: String, callback: (Result<PermissionStatusDto>) -> Unit)
   fun openAppSettings(requestId: String)
   fun startBleScan(requestId: String, filter: BleScanFilterDto)
   fun stopBleScan(requestId: String)
@@ -2242,6 +2241,46 @@ interface HardwareHostApi {
               HardwareApiPigeonUtils.wrapError(exception)
             }
             reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flinx.HardwareHostApi.getNotificationPermission$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val requestIdArg = args[0] as String
+            api.getNotificationPermission(requestIdArg) { result: Result<PermissionStatusDto> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(HardwareApiPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(HardwareApiPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flinx.HardwareHostApi.requestNotificationPermission$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val requestIdArg = args[0] as String
+            api.requestNotificationPermission(requestIdArg) { result: Result<PermissionStatusDto> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(HardwareApiPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(HardwareApiPigeonUtils.wrapResult(data))
+              }
+            }
           }
         } else {
           channel.setMessageHandler(null)

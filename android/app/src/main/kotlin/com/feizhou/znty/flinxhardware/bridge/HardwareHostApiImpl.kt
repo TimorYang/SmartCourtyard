@@ -53,6 +53,20 @@ class HardwareHostApiImpl(
     return permissionManager.requestPermissions(permissions)
   }
 
+  override fun getNotificationPermission(
+    requestId: String,
+    callback: (Result<PermissionStatusDto>) -> Unit,
+  ) {
+    callback(Result.success(permissionManager.getNotificationPermission()))
+  }
+
+  override fun requestNotificationPermission(
+    requestId: String,
+    callback: (Result<PermissionStatusDto>) -> Unit,
+  ) {
+    permissionManager.requestNotificationPermission(callback)
+  }
+
   override fun openAppSettings(requestId: String) {
     permissionManager.openAppSettings()
   }

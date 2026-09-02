@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/errors/app_error.dart';
+import '../../push/application/providers.dart';
 import '../domain/entities/system_permission.dart';
 import '../domain/use_cases/open_system_permission_settings_use_case.dart';
 import '../domain/use_cases/read_system_permissions_use_case.dart';
@@ -16,6 +17,7 @@ class SystemPermissionsController extends Notifier<SystemPermissionsViewState> {
   late final ReadSystemPermissionsUseCase _readPermissions;
   late final RequestSystemPermissionUseCase _requestPermission;
   late final OpenSystemPermissionSettingsUseCase _openSettings;
+  late final PushService _pushService;
   var _requestCounter = 0;
 
   @override
@@ -23,6 +25,7 @@ class SystemPermissionsController extends Notifier<SystemPermissionsViewState> {
     _readPermissions = ref.watch(readSystemPermissionsUseCaseProvider);
     _requestPermission = ref.watch(requestSystemPermissionUseCaseProvider);
     _openSettings = ref.watch(openSystemPermissionSettingsUseCaseProvider);
+    _pushService = ref.watch(pushServiceProvider.notifier);
     Future.microtask(refresh);
     return const SystemPermissionsViewState(isLoading: true);
   }
@@ -74,6 +77,9 @@ class SystemPermissionsController extends Notifier<SystemPermissionsViewState> {
         permissions: permissions,
         pendingPermission: null,
       );
+      if (permission == SystemPermission.notification) {
+        await _pushService.retryInitialization();
+      }
     } catch (_) {
       state = state.copyWith(
         clearPendingPermission: true,

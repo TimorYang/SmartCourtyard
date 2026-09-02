@@ -9,6 +9,7 @@ import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../core/config/app_api_configuration.dart';
 import '../../../../core/network/access_token_cache.dart';
 import '../../../../core/network/dio_factory.dart';
+import '../../../../app/session/session_cleanup_coordinator.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
@@ -21,9 +22,7 @@ import '../../domain/entities/account_avatar_code.dart';
 import '../../domain/entities/region_option.dart';
 import '../widgets/account_avatar_code_assets.dart';
 import '../../domain/entities/account_overview.dart';
-import '../../../auth/application/providers.dart';
 import '../../../auth/presentation/pages/welcome_page.dart';
-import '../../../home/application/providers.dart';
 import 'account_details_page.dart';
 import 'check_upgraded_version_page.dart';
 import 'hardware_diagnostics_page.dart';
@@ -205,20 +204,7 @@ class _AccountProfilePageState extends ConsumerState<AccountProfilePage> {
                   return null;
                 },
                 onLogout: () async {
-                  final authSessionController = ref.read(
-                    activeAuthSessionProvider.notifier,
-                  );
-                  final accountController = ref.read(
-                    accountControllerProvider.notifier,
-                  );
-                  final invalidateHomeDeviceLists = ref.read(
-                    homeDeviceListsInvalidatorProvider,
-                  );
-
-                  await accountController.clearAccount();
-                  ref.invalidate(cachedAccountProfileProvider);
-                  authSessionController.clear();
-                  invalidateHomeDeviceLists();
+                  await ref.read(sessionCleanupCoordinatorProvider).signOut();
                   if (context.mounted) {
                     context.go(WelcomePage.routePath);
                   }

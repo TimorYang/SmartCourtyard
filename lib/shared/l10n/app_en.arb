@@ -928,6 +928,7 @@
   "systemPermissionsMicrophone": "Access recording permission",
   "systemPermissionsStorage": "Access phone storage",
   "systemPermissionsBluetooth": "Access mobile Bluetooth",
+  "systemPermissionsNotification": "Access notification permissions",
   "systemPermissionsGranted": "Granted",
   "systemPermissionsDenied": "Not granted",
   "systemPermissionsLoadError": "Unable to load system permissions.",

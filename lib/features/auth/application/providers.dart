@@ -29,7 +29,6 @@ import '../data/repositories/auth_crypto_repository_impl.dart';
 import '../data/repositories/auth_login_repository_impl.dart';
 import '../data/repositories/auth_password_reset_repository_impl.dart';
 import '../data/services/rsa_oaep_password_ciphertext_encryptor.dart';
-import '../data/services/platform_login_device_context_provider.dart';
 import '../data/services/auth_token_refresh_service.dart';
 import '../data/services/sign_in_with_apple_identity_provider.dart';
 import '../data/services/facebook_sign_in_identity_provider.dart';
@@ -41,7 +40,6 @@ import '../domain/repositories/auth_login_repository.dart';
 import '../domain/repositories/auth_password_reset_repository.dart';
 import '../domain/repositories/auth_registration_repository.dart';
 import '../domain/services/password_ciphertext_encryptor.dart';
-import '../domain/services/login_device_context_provider.dart';
 import '../domain/services/apple_identity_provider.dart';
 import '../domain/services/facebook_identity_provider.dart';
 import '../domain/services/google_identity_provider.dart';
@@ -57,6 +55,9 @@ import '../domain/use_cases/verify_registration_email_code_use_case.dart';
 import '../domain/use_cases/verify_password_reset_email_code_use_case.dart';
 import 'registration_flow_store.dart';
 import 'password_reset_flow_store.dart';
+import 'login_device_context_provider.dart';
+
+export 'login_device_context_provider.dart';
 
 final authSessionProvider = FutureProvider<AuthSession>((ref) async {
   final activeSession = ref.watch(activeAuthSessionProvider);
@@ -189,10 +190,6 @@ final passwordCiphertextEncryptorProvider =
     Provider<PasswordCiphertextEncryptor>((ref) {
       return RsaOaepPasswordCiphertextEncryptor();
     });
-
-final loginDeviceContextProvider = Provider<LoginDeviceContextProvider>((ref) {
-  return PlatformLoginDeviceContextProvider();
-});
 
 final registrationFlowStoreProvider = Provider<RegistrationFlowStore>((ref) {
   return RegistrationFlowStore();

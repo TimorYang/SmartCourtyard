@@ -411,6 +411,12 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('Access mobile Bluetooth'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Access notification permissions'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Access notification permissions'), findsOneWidget);
     expect(
       find.byKey(SystemPermissionsPageKeys.card(SystemPermission.microphone)),
       findsOneWidget,
@@ -421,7 +427,7 @@ void main() {
     );
     expect(
       find.byIcon(Icons.check_rounded, skipOffstage: false),
-      findsNWidgets(4),
+      findsNWidgets(5),
     );
   });
 
@@ -1329,7 +1335,6 @@ class _CameraPermissionBlockedGateway extends MockHardwareGateway {
     microphoneStatus: PermissionStatus.denied,
     storageStatus: PermissionStatus.granted,
     localNetworkGranted: true,
-    notificationGranted: true,
   );
 
   @override

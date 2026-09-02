@@ -4,6 +4,7 @@ import AVFoundation
 import CoreLocation
 import Photos
 import UIKit
+import UserNotifications
 
 #warning("FLINX-SAFETY-DOOR-SENSOR-NAME: 0x01 暂命名为“无线门磁”，发布前请确认最终产品文案与切图。")
 
@@ -43,8 +44,7 @@ final class HardwareBridge: HardwareHostApi {
             locationStatus: locationPermissionStatus(),
             microphoneStatus: microphonePermissionStatus(),
             storageStatus: storagePermissionStatus(),
-            localNetworkGranted: false,
-            notificationGranted: false
+            localNetworkGranted: false
         )
     }
     
@@ -70,6 +70,40 @@ final class HardwareBridge: HardwareHostApi {
             manager.requestWhenInUseAuthorization()
         }
         return try getPermissionSnapshot(requestId: requestId)
+    }
+
+    func getNotificationPermission(
+        requestId: String,
+        completion: @escaping (Result<PermissionStatusDto, Error>) -> Void
+    ) {
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            completion(.success(self.notificationPermissionStatus(settings.authorizationStatus)))
+        }
+    }
+
+    func requestNotificationPermission(
+        requestId: String,
+        completion: @escaping (Result<PermissionStatusDto, Error>) -> Void
+    ) {
+        let center = UNUserNotificationCenter.current()
+        center.getNotificationSettings { settings in
+            switch settings.authorizationStatus {
+            case .authorized, .provisional, .ephemeral:
+                completion(.success(.granted))
+            case .denied:
+                completion(.success(.blocked))
+            case .notDetermined:
+                center.requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
+                    if let error = error {
+                        completion(.failure(error))
+                        return
+                    }
+                    completion(.success(granted ? .granted : .blocked))
+                }
+            @unknown default:
+                completion(.success(.blocked))
+            }
+        }
     }
 
     func openAppSettings(requestId: String) throws {
@@ -109,6 +143,17 @@ final class HardwareBridge: HardwareHostApi {
         case .authorized, .limited: return .granted
         case .notDetermined: return .denied
         case .denied, .restricted: return .blocked
+        @unknown default: return .blocked
+        }
+    }
+
+    private func notificationPermissionStatus(
+        _ authorizationStatus: UNAuthorizationStatus
+    ) -> PermissionStatusDto {
+        switch authorizationStatus {
+        case .authorized, .provisional, .ephemeral: return .granted
+        case .notDetermined: return .notDetermined
+        case .denied: return .blocked
         @unknown default: return .blocked
         }
     }

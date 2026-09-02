@@ -3,17 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../app/session/session_cleanup_coordinator.dart';
 import '../../../../core/errors/app_error.dart';
 import '../../../../core/errors/app_error_message.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../core/config/app_api_configuration.dart';
 import '../../../../core/network/access_token_cache.dart';
 import '../../../../core/network/dio_factory.dart';
-import '../../../auth/application/providers.dart';
 import '../../../auth/presentation/pages/welcome_page.dart';
 import '../../../auth/presentation/pages/forgot_password_page.dart';
 import '../../../auth/presentation/pages/login_page.dart';
-import '../../../home/application/providers.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
@@ -38,21 +37,7 @@ class AccountDetailsPage extends ConsumerWidget {
         .maybeWhen(data: (value) => value, orElse: () => null);
 
     Future<void> clearAccountAndNavigate(String routePath) async {
-      final authSessionController = ref.read(
-        activeAuthSessionProvider.notifier,
-      );
-      final accountController = ref.read(accountControllerProvider.notifier);
-      final invalidateHomeDeviceLists = ref.read(
-        homeDeviceListsInvalidatorProvider,
-      );
-
-      await accountController.clearAccount();
-      ref.invalidate(cachedAccountProfileProvider);
-
-      // Clearing the active session redirects away from this page and disposes
-      // its WidgetRef. Do it only after all ref work is done.
-      authSessionController.clear();
-      invalidateHomeDeviceLists();
+      await ref.read(sessionCleanupCoordinatorProvider).signOut();
       if (context.mounted) {
         context.go(routePath);
       }

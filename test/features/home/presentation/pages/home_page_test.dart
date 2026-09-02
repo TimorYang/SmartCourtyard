@@ -590,7 +590,6 @@ class _HomeStartupPermissionGateway extends MockHardwareGateway {
       microphoneStatus: PermissionStatus.granted,
       storageStatus: PermissionStatus.granted,
       localNetworkGranted: true,
-      notificationGranted: true,
     );
   }
 

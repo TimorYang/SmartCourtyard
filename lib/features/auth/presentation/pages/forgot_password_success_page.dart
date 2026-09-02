@@ -4,9 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
+import '../../../../app/session/session_cleanup_coordinator.dart';
 import '../../../../shared/l10n/app_localizations.dart';
-import '../../../account/application/providers.dart';
-import '../../application/providers.dart';
 import '../widgets/auth_flow_widgets.dart';
 import 'login_page.dart';
 
@@ -29,8 +28,7 @@ class _ForgotPasswordSuccessPageState
     if (_isReturningToLogin) return;
     _isReturningToLogin = true;
 
-    await ref.read(accountControllerProvider.notifier).clearAccount();
-    ref.read(activeAuthSessionProvider.notifier).clear();
+    await ref.read(sessionCleanupCoordinatorProvider).signOut();
     if (mounted) context.go(LoginPage.routePath);
   }
 

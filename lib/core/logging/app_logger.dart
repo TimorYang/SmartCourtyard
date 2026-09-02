@@ -5,7 +5,8 @@ import 'package:flutter/foundation.dart';
 enum AppLogTag {
   general('FLINX'),
   binding('FLINX_BIND'),
-  ble('FLINX_BLE');
+  ble('FLINX_BLE'),
+  push('FLINX_PUSH');
 
   const AppLogTag(this.value);
 

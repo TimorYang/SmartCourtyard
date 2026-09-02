@@ -82,6 +82,28 @@ class PigeonHardwareGateway implements HardwareGateway {
   }
 
   @override
+  Future<PermissionStatus> getNotificationPermission({
+    required String requestId,
+  }) async {
+    final status = await _mapPigeonCall(
+      () => _hostApi.getNotificationPermission(requestId),
+      requestId: requestId,
+    );
+    return status.toModel();
+  }
+
+  @override
+  Future<PermissionStatus> requestNotificationPermission({
+    required String requestId,
+  }) async {
+    final status = await _mapPigeonCall(
+      () => _hostApi.requestNotificationPermission(requestId),
+      requestId: requestId,
+    );
+    return status.toModel();
+  }
+
+  @override
   Future<void> openAppSettings({required String requestId}) {
     return _mapPigeonCall(
       () => _hostApi.openAppSettings(requestId),
@@ -886,7 +908,6 @@ extension _PermissionSnapshotDtoMapper on pigeon.PermissionSnapshotDto {
       microphoneStatus: microphoneStatus.toModel(),
       storageStatus: storageStatus.toModel(),
       localNetworkGranted: localNetworkGranted,
-      notificationGranted: notificationGranted,
     );
   }
 }
@@ -897,6 +918,8 @@ extension _PermissionStatusDtoMapper on pigeon.PermissionStatusDto {
       pigeon.PermissionStatusDto.granted => PermissionStatus.granted,
       pigeon.PermissionStatusDto.denied => PermissionStatus.denied,
       pigeon.PermissionStatusDto.blocked => PermissionStatus.blocked,
+      pigeon.PermissionStatusDto.notDetermined =>
+        PermissionStatus.notDetermined,
     };
   }
 }
