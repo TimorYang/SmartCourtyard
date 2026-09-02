@@ -70,6 +70,21 @@ void main() {
     expect(find.text('123'), findsOneWidget);
   });
 
+  testWidgets('shows the configured door open reminder duration', (
+    tester,
+  ) async {
+    await _pumpDevicePage(
+      tester,
+      _RecordingHardwareGateway(),
+      doorSettingsRepository: const _CommandDoorSettingsRepository(
+        doorOpenReminderValue: 5,
+      ),
+    );
+
+    expect(find.text('5 min'), findsOneWidget);
+    expect(find.text('10 min'), findsNothing);
+  });
+
   testWidgets('shows a standalone retry state when initial loading fails', (
     tester,
   ) async {
@@ -1957,14 +1972,16 @@ class _SettingsDeviceCapabilityRepository
 }
 
 class _CommandDoorSettingsRepository implements DoorSettingsRepository {
-  const _CommandDoorSettingsRepository();
+  const _CommandDoorSettingsRepository({this.doorOpenReminderValue});
+
+  final int? doorOpenReminderValue;
 
   @override
   Future<List<DoorSettingSnapshot>> fetchSettings({
     required String doorId,
     required String requestId,
-  }) async => const [
-    DoorSettingSnapshot(
+  }) async => [
+    const DoorSettingSnapshot(
       code: DeviceCapabilityCode.partialOpen,
       label: 'Partial open',
       supported: true,
@@ -1972,7 +1989,7 @@ class _CommandDoorSettingsRepository implements DoorSettingsRepository {
       currentValue: 1,
       unit: 'cm',
     ),
-    DoorSettingSnapshot(
+    const DoorSettingSnapshot(
       code: DeviceCapabilityCode.autoClose,
       label: 'Auto close',
       supported: true,
@@ -1980,6 +1997,15 @@ class _CommandDoorSettingsRepository implements DoorSettingsRepository {
       currentValue: 15,
       unit: 's',
     ),
+    if (doorOpenReminderValue != null)
+      DoorSettingSnapshot(
+        code: DeviceCapabilityCode.doorOpenReminder,
+        label: 'Open reminder',
+        supported: true,
+        configured: true,
+        currentValue: doorOpenReminderValue,
+        unit: 'min',
+      ),
   ];
 }
 

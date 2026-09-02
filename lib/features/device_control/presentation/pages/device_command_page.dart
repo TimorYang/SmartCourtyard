@@ -325,6 +325,14 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     final autoCloseSetting = doorSettingsState.settingFor(
       DeviceCapabilityCode.autoClose,
     );
+    final openReminderMinutes =
+        doorSettingsState
+            .settingFor(DeviceCapabilityCode.doorOpenReminder)
+            ?.currentValue ??
+        deviceSettingsState
+            .values[DeviceSettingKey.doorOpenReminder]
+            ?.rawValue ??
+        DeviceSettingKey.doorOpenReminder.defaultEnabledValue;
     final autoCloseAllowedValues =
         autoCloseCapability?.options.map((option) => option.value).toList() ??
         const <int>[];
@@ -597,6 +605,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                                   ledEnabled: ledEnabled,
                                   autoCloseEnabled: autoCloseEnabled,
                                   openReminderEnabled: openReminderEnabled,
+                                  openReminderMinutes: openReminderMinutes,
                                   partialOpenValueLabel: partialOpenValueLabel,
                                   ledAvailable: canControlLed,
                                   autoCloseAvailable: canUseAutoClose,
@@ -2040,6 +2049,7 @@ class _QuickActionGrid extends StatelessWidget {
     required this.ledEnabled,
     required this.autoCloseEnabled,
     required this.openReminderEnabled,
+    required this.openReminderMinutes,
     required this.partialOpenValueLabel,
     required this.ledAvailable,
     required this.autoCloseAvailable,
@@ -2065,6 +2075,7 @@ class _QuickActionGrid extends StatelessWidget {
   final bool ledEnabled;
   final bool autoCloseEnabled;
   final bool openReminderEnabled;
+  final int openReminderMinutes;
   final String? partialOpenValueLabel;
   final bool ledAvailable;
   final bool autoCloseAvailable;
@@ -2138,7 +2149,7 @@ class _QuickActionGrid extends StatelessWidget {
                     ).deviceCommandOpenReminderTitle,
                     subtitle: AppLocalizations.of(
                       context,
-                    ).deviceCommandMinutes(10),
+                    ).deviceCommandMinutes(openReminderMinutes),
                     enabled: openReminderEnabled,
                     available: openReminderAvailable,
                     busy: busy || settingsBusy,

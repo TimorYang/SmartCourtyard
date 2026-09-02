@@ -618,6 +618,9 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
                   ?.rawValue ??
               value,
         );
+    ref
+        .read(doorDetailRefreshRequestProvider.notifier)
+        .notify(DoorDetailRefreshRequest(doorId: widget.doorId));
     final reportAction = switch (key) {
       DeviceSettingKey.ledOffDelay => OperationReportAction.ledOffDelayChanged,
       DeviceSettingKey.partialOpen => OperationReportAction.partialOpenChanged,

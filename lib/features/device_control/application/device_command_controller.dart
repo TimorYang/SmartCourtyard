@@ -125,6 +125,28 @@ final doorDevicesRefreshRequestProvider =
       DoorDevicesRefreshRequest?
     >(DoorDevicesRefreshRequestNotifier.new);
 
+final doorDetailRefreshRequestProvider =
+    NotifierProvider<
+      DoorDetailRefreshRequestNotifier,
+      DoorDetailRefreshRequest?
+    >(DoorDetailRefreshRequestNotifier.new);
+
+class DoorDetailRefreshRequest {
+  const DoorDetailRefreshRequest({required this.doorId});
+
+  final String doorId;
+}
+
+class DoorDetailRefreshRequestNotifier
+    extends Notifier<DoorDetailRefreshRequest?> {
+  @override
+  DoorDetailRefreshRequest? build() => null;
+
+  void notify(DoorDetailRefreshRequest request) {
+    state = request;
+  }
+}
+
 class DoorDevicesRefreshRequest {
   const DoorDevicesRefreshRequest({
     required this.doorId,
@@ -422,6 +444,20 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
         return;
       }
       unawaited(refreshDoorDevices(doorId: request.doorId));
+    });
+    ref.listen<DoorDetailRefreshRequest?>(doorDetailRefreshRequestProvider, (
+      _,
+      request,
+    ) {
+      if (request == null || state.doorDetail?.id != request.doorId) {
+        return;
+      }
+      unawaited(
+        loadDoorDetail(
+          doorId: request.doorId,
+          preferredDeviceId: state.selectedDeviceId ?? '',
+        ),
+      );
     });
     _subscriptions.add(_gateway.bleScanResults.listen(_onBleDeviceFound));
     _subscriptions.add(

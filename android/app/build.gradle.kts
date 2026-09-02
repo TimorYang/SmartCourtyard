@@ -1,3 +1,4 @@
+import com.android.build.api.dsl.ApplicationExtension
 import java.io.FileInputStream
 import java.util.Properties
 import java.util.Base64
@@ -31,8 +32,8 @@ private fun decodeDartDefines(encodedDefines: String?): Map<String, String> {
         .toMap()
 }
 
-private const val facebookPlaceholderAppId = "123456789012345"
-private const val facebookPlaceholderClientToken = "not-configured"
+private val facebookPlaceholderAppId = "123456789012345"
+private val facebookPlaceholderClientToken = "not-configured"
 
 val dartDefines = decodeDartDefines(project.findProperty("dart-defines")?.toString())
 val facebookAppIdDefine = dartDefines["FLINX_FACEBOOK_APP_ID"].orEmpty().trim()
@@ -74,7 +75,7 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-android {
+extensions.configure<ApplicationExtension> {
     namespace = "com.feizhou.znty"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
@@ -82,6 +83,10 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    buildFeatures {
+        resValues = true
     }
 
     defaultConfig {
