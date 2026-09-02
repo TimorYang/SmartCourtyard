@@ -334,6 +334,11 @@ class AppLayoutTokens {
 class AppSpacingTokens {
   const AppSpacingTokens._();
 
+  static const deviceSettingsRowHeight = 77.0;
+  static const deviceSettingsRowIconToTitle = 10.0;
+  static const deviceSettingsRowValueWidth = 112.0;
+  static const deviceSettingsAboutBluetoothNameValueWidth = 230.0;
+  static const deviceSettingsRowValueHorizontalPadding = 12.0;
   static const homeNotificationUnreadBadgeSize = 8.0;
   static const homeNotificationUnreadBadgeTop = -2.0;
   static const homeNotificationUnreadBadgeRight = -2.0;

@@ -444,6 +444,7 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
         key: key,
         title: title,
         capability: capability,
+        setting: setting,
       ),
     );
   }
@@ -452,6 +453,7 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
     required DeviceSettingKey key,
     required String title,
     required DeviceCapability? capability,
+    required DoorSettingSnapshot? setting,
   }) async {
     if (!_isCurrentBleDeviceConnected()) {
       _showBluetoothConnectionRequired();
@@ -469,9 +471,10 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
     }
 
     final rawValue = state.values[key]?.rawValue;
+    final currentValue = setting?.currentValue ?? rawValue;
     final initialValue =
-        capability.options.any((option) => option.value == rawValue)
-        ? rawValue!
+        capability.options.any((option) => option.value == currentValue)
+        ? currentValue!
         : capability.options.first.value;
     final value = await showModalBottomSheet<int>(
       context: context,
@@ -484,7 +487,7 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
         initialValue: initialValue,
       ),
     );
-    if (value == null || !mounted || value == rawValue) {
+    if (value == null || !mounted || value == currentValue) {
       return;
     }
     await _saveSetting(key, value);
@@ -733,6 +736,10 @@ class _AboutDevicePageState extends ConsumerState<AboutDevicePage> {
                         fallbackIcon: Icons.bluetooth,
                         title: l10n.deviceSettingsBluetoothName,
                         value: info.bluetoothName,
+                        valueWidth: AppSpacingTokens
+                            .deviceSettingsAboutBluetoothNameValueWidth,
+                        valueMaxLines: null,
+                        valueOverflow: null,
                         showChevron: false,
                       ),
                       _SettingsRowData(
@@ -854,6 +861,9 @@ class _SettingsRowData {
     required this.fallbackIcon,
     required this.title,
     this.value,
+    this.valueWidth = AppSpacingTokens.deviceSettingsRowValueWidth,
+    this.valueMaxLines = 1,
+    this.valueOverflow = TextOverflow.ellipsis,
     this.showChevron = true,
     this.onTap,
   });
@@ -862,6 +872,9 @@ class _SettingsRowData {
   final IconData fallbackIcon;
   final String title;
   final String? value;
+  final double valueWidth;
+  final int? valueMaxLines;
+  final TextOverflow? valueOverflow;
   final bool showChevron;
   final VoidCallback? onTap;
 }
@@ -889,8 +902,10 @@ class _SettingsRow extends StatelessWidget {
               bottom: const BorderSide(color: AppColors.deviceSettingsDivider),
             ),
           ),
-          child: SizedBox(
-            height: 77,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              minHeight: AppSpacingTokens.deviceSettingsRowHeight,
+            ),
             child: Row(
               children: [
                 Expanded(
@@ -900,7 +915,9 @@ class _SettingsRow extends StatelessWidget {
                         assetPath: data.assetPath,
                         fallbackIcon: data.fallbackIcon,
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(
+                        width: AppSpacingTokens.deviceSettingsRowIconToTitle,
+                      ),
                       Expanded(
                         child: Text(
                           data.title,
@@ -916,13 +933,16 @@ class _SettingsRow extends StatelessWidget {
                 ),
                 if (data.value != null)
                   SizedBox(
-                    width: 112,
+                    width: data.valueWidth,
                     child: Padding(
-                      padding: const EdgeInsets.only(left: 12, right: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacingTokens
+                            .deviceSettingsRowValueHorizontalPadding,
+                      ),
                       child: Text(
                         data.value!,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        maxLines: data.valueMaxLines,
+                        overflow: data.valueOverflow,
                         textAlign: TextAlign.end,
                         style: AppTextTokens.deviceSettingsRowValue(textTheme),
                       ),
