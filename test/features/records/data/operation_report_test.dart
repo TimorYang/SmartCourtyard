@@ -30,6 +30,16 @@ void main() {
     }
   });
 
+  test('serializes partial-open operation reports with the backend action', () {
+    expect(
+      const OperationReportRequestDto(
+        action: OperationReportAction.partialOpen,
+        operationSource: OperationReportSource.bluetooth,
+      ).toJson(),
+      {'action': 'PARTIAL_OPEN', 'operationSource': 'BLUETOOTH'},
+    );
+  });
+
   test('generated API uses the report path, body, and request ID', () async {
     final adapter = _CapturingHttpClientAdapter();
     final dio = Dio(BaseOptions(baseUrl: 'https://example.test/force-door/'))

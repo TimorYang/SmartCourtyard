@@ -20,6 +20,7 @@
   "operationRecordActionOpen": "开门",
   "operationRecordActionClose": "关门",
   "operationRecordActionStop": "停止",
+  "operationRecordActionPartialOpen": "部分开门",
   "operationRecordActionAutoCloseToggle": "切换自动关门",
   "operationRecordActionLedOn": "开灯",
   "operationRecordActionLedOff": "关灯",

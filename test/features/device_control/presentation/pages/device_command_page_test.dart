@@ -680,7 +680,9 @@ void main() {
 
     expect(gateway.commands.last, DoorCommand.partialOpen);
     expect(find.text('Partial open command sent (0x1004).'), findsOneWidget);
-    expect(reports, hasLength(1));
+    expect(reports, hasLength(2));
+    expect(reports.last.action, OperationReportAction.partialOpen);
+    expect(reports.last.operationSource, OperationReportSource.bluetooth);
 
     final moreSettingsAction = find.byKey(
       const ValueKey<String>('more-settings-action'),

@@ -14,6 +14,7 @@ void main() {
     OperationRecordAction.open: 'Open door',
     OperationRecordAction.close: 'Close door',
     OperationRecordAction.stop: 'Stop door',
+    OperationRecordAction.partialOpen: 'Partial open',
     OperationRecordAction.autoCloseToggle: 'Toggle auto close',
     OperationRecordAction.ledOn: 'LED on',
     OperationRecordAction.ledOff: 'LED off',
@@ -27,6 +28,7 @@ void main() {
   };
   const expectedNewChineseActionLabels = <OperationRecordAction, String>{
     OperationRecordAction.autoCloseToggle: '切换自动关门',
+    OperationRecordAction.partialOpen: '部分开门',
     OperationRecordAction.ledOffDelayChanged: '修改延迟关灯',
     OperationRecordAction.partialOpenChanged: '修改部分开门',
     OperationRecordAction.autoCloseDelayChanged: '修改自动关门延迟',

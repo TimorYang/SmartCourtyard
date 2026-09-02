@@ -1076,9 +1076,10 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
       DeviceCommandAction.openDoor => OperationReportAction.open,
       DeviceCommandAction.closeDoor => OperationReportAction.close,
       DeviceCommandAction.stopDoor => OperationReportAction.stop,
+      DeviceCommandAction.partialOpenDoor => OperationReportAction.partialOpen,
       DeviceCommandAction.turnLightOn => OperationReportAction.ledOn,
       DeviceCommandAction.turnLightOff => OperationReportAction.ledOff,
-      DeviceCommandAction.partialOpenDoor || DeviceCommandAction.pb => null,
+      DeviceCommandAction.pb => null,
     };
     final operationSource = switch (result!.transport) {
       DeviceCommandTransport.bluetooth => OperationReportSource.bluetooth,
