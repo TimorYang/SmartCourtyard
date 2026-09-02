@@ -32,7 +32,9 @@ enum DeviceSettingKey {
       this == DeviceSettingKey.doorOpenReminder;
 
   int get defaultEnabledValue => switch (this) {
-    DeviceSettingKey.autoCloseTime => 1,
+    DeviceSettingKey.autoCloseTime => throw UnsupportedError(
+      'Auto-close requires a value from the device capability options.',
+    ),
     DeviceSettingKey.doorOpenReminder => 10,
     _ => throw UnsupportedError('$name does not support enabled toggles.'),
   };
@@ -46,7 +48,7 @@ enum DeviceSettingKey {
       DeviceSettingKey.partialOpen => value >= 0 && value <= 0x12,
       DeviceSettingKey.ledOffDelay => value >= 1 && value <= 9,
       DeviceSettingKey.autoCloseCondition => value >= 0 && value <= 0xFF,
-      DeviceSettingKey.autoCloseTime => value >= 0 && value <= 9,
+      DeviceSettingKey.autoCloseTime => value >= 0 && value <= 0xFF,
       DeviceSettingKey.openingForce => value >= 1 && value <= 9,
       DeviceSettingKey.openingSpeed => value >= 60 && value <= 100,
       DeviceSettingKey.doorOpenReminder =>
@@ -56,10 +58,15 @@ enum DeviceSettingKey {
 }
 
 class DeviceSettingValue {
-  const DeviceSettingValue({required this.key, required this.rawValue});
+  const DeviceSettingValue({
+    required this.key,
+    required this.rawValue,
+    this.candidateValues = const <int>[],
+  });
 
   final DeviceSettingKey key;
   final int rawValue;
+  final List<int> candidateValues;
 
   String get hexValue =>
       '0x${rawValue.toRadixString(16).padLeft(key.byteWidth * 2, '0').toUpperCase()}';

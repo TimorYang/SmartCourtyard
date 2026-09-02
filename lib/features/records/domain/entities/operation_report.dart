@@ -2,6 +2,7 @@ enum OperationReportAction {
   open('OPEN'),
   close('CLOSE'),
   stop('STOP'),
+  partialOpen('PARTIAL_OPEN'),
   autoCloseToggle('AUTO_CLOSE_TOGGLE'),
   ledOn('LED_ON'),
   ledOff('LED_OFF'),

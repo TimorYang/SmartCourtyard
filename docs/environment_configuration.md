@@ -43,14 +43,15 @@ flutter build apk --release --dart-define-from-file=config/env/prod.json
 - `FLINX_CLIENT_AUTHORIZATION`：当前 auth 握手使用的 Basic 凭据部分。
 - `FLINX_FACEBOOK_APP_ID`：Facebook App ID。未配置时 Facebook 按钮保留，但不会调用 SDK。
 - `FLINX_FACEBOOK_CLIENT_TOKEN`：Facebook Client Token。真实值只放在本机忽略的环境文件中。
+- `FLINX_FACEBOOK_DISPLAY_NAME`：Meta 应用显示名称；启用 Facebook 登录时需与 App ID、Client Token 一起提供。
 - `FLINX_GOOGLE_IOS_CLIENT_ID`：GCP 中登记 `com.feizhou.znty` 的 iOS OAuth Client ID；iOS 构建阶段会从该值自动生成 reversed client ID 回调 Scheme。
 - `FLINX_GOOGLE_SERVER_CLIENT_ID`：GCP Web OAuth Client ID，同时作为 Google 登录的
   `serverClientId`，用于 Android 登录及后端授权码校验。
 - `FLINX_GOOGLE_HOSTED_DOMAIN`：可选的 Google Workspace 托管域限制；普通账号登录保持为空。
 
-Facebook 的 App ID、Client Token 和平台回调配置还需要同步填写到 Meta
-开发者后台以及 Android `strings.xml`、iOS `Info.plist`。仓库中的原生值是
-仅用于保证无配置构建可启动的占位值，不要提交真实凭据。
+Facebook 的 App ID、Client Token、Display Name 和平台回调配置还需要同步填写到 Meta
+开发者后台。iOS `Info.plist` 与 Android Facebook resources 会在 Flutter 构建时，
+从同一份 `DART_DEFINES` 自动生成；仓库中的原生模板只保留占位标记，不要手工写入真实凭据。
 
 Google 登录使用 Dart 编译期环境变量传入 Client ID，不需要提交
 `GoogleService-Info.plist`。iOS 的 `Info.plist` 只保留回调 Scheme 模板，Flutter

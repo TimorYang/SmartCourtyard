@@ -1,11 +1,72 @@
 import java.io.FileInputStream
 import java.util.Properties
+import java.util.Base64
 
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.exists()) {
     FileInputStream(keystorePropertiesFile).use(keystoreProperties::load)
 }
+
+private fun decodeDartDefines(encodedDefines: String?): Map<String, String> {
+    if (encodedDefines.isNullOrBlank()) {
+        return emptyMap()
+    }
+
+    return encodedDefines
+        .split(',')
+        .filter(String::isNotBlank)
+        .map { encodedDefine ->
+            val decodedDefine = runCatching {
+                String(Base64.getDecoder().decode(encodedDefine), Charsets.UTF_8)
+            }.getOrElse {
+                error("Unable to decode a Flutter dart-define for the Android build.")
+            }
+            val separator = decodedDefine.indexOf('=')
+            check(separator > 0) {
+                "Malformed Flutter dart-define for the Android build."
+            }
+            decodedDefine.substring(0, separator) to decodedDefine.substring(separator + 1)
+        }
+        .toMap()
+}
+
+private const val facebookPlaceholderAppId = "123456789012345"
+private const val facebookPlaceholderClientToken = "not-configured"
+
+val dartDefines = decodeDartDefines(project.findProperty("dart-defines")?.toString())
+val facebookAppIdDefine = dartDefines["FLINX_FACEBOOK_APP_ID"].orEmpty().trim()
+val facebookClientTokenDefine = dartDefines["FLINX_FACEBOOK_CLIENT_TOKEN"].orEmpty().trim()
+val facebookDisplayNameDefine = dartDefines["FLINX_FACEBOOK_DISPLAY_NAME"].orEmpty().trim()
+val hasFacebookConfiguration = facebookAppIdDefine.isNotEmpty() ||
+    facebookClientTokenDefine.isNotEmpty() ||
+    facebookDisplayNameDefine.isNotEmpty()
+
+if (hasFacebookConfiguration) {
+    check(Regex("^[0-9]+$").matches(facebookAppIdDefine) &&
+        facebookAppIdDefine != facebookPlaceholderAppId) {
+        "Missing or invalid FLINX_FACEBOOK_APP_ID in Flutter dart-defines."
+    }
+    check(facebookClientTokenDefine.isNotEmpty() &&
+        facebookClientTokenDefine != facebookPlaceholderClientToken) {
+        "Missing or invalid FLINX_FACEBOOK_CLIENT_TOKEN in Flutter dart-defines."
+    }
+    check(facebookDisplayNameDefine.isNotEmpty()) {
+        "Missing FLINX_FACEBOOK_DISPLAY_NAME in Flutter dart-defines."
+    }
+}
+
+val facebookAppId = if (hasFacebookConfiguration) {
+    facebookAppIdDefine
+} else {
+    facebookPlaceholderAppId
+}
+val facebookClientToken = if (hasFacebookConfiguration) {
+    facebookClientTokenDefine
+} else {
+    facebookPlaceholderClientToken
+}
+val facebookLoginProtocolScheme = "fb$facebookAppId"
 
 plugins {
     id("com.android.application")
@@ -32,6 +93,13 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // Keep native Facebook configuration in sync with Flutter's dart-defines.
+        // The fallback values allow an unconfigured build to start safely while
+        // FacebookLoginConfiguration keeps the Flutter action unavailable.
+        resValue("string", "facebook_app_id", facebookAppId)
+        resValue("string", "facebook_client_token", facebookClientToken)
+        resValue("string", "fb_login_protocol_scheme", facebookLoginProtocolScheme)
 
     }
 

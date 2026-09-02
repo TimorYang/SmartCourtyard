@@ -218,6 +218,12 @@ abstract class AppLocalizations {
   /// **'Stop door'**
   String get operationRecordActionStop;
 
+  /// No description provided for @operationRecordActionPartialOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Partial open'**
+  String get operationRecordActionPartialOpen;
+
   /// No description provided for @operationRecordActionAutoCloseToggle.
   ///
   /// In en, this message translates to:

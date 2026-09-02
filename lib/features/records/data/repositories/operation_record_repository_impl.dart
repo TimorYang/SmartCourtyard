@@ -178,6 +178,7 @@ extension OperationRecordResponseDtoMapper on OperationRecordResponseDto {
       'OPEN' => OperationRecordAction.open,
       'CLOSE' => OperationRecordAction.close,
       'STOP' => OperationRecordAction.stop,
+      'PARTIAL_OPEN' => OperationRecordAction.partialOpen,
       'AUTO_CLOSE_TOGGLE' => OperationRecordAction.autoCloseToggle,
       'LED_ON' => OperationRecordAction.ledOn,
       'LED_OFF' => OperationRecordAction.ledOff,

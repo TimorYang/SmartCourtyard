@@ -206,6 +206,111 @@ void main() {
     expect(find.text('Select Wi-Fi'), findsWidgets);
   });
 
+  testWidgets('BLE scan window starts before native scan startup completes', (
+    tester,
+  ) async {
+    final gateway = _DelayedStartHardwareGateway();
+    const scanDuration = Duration(milliseconds: 80);
+
+    await _pumpScanFlowTestApp(
+      tester,
+      SmartOpenerBleScanPage.routePath,
+      gateway: gateway,
+      scanDuration: scanDuration,
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 20));
+
+    gateway.startCompleter.complete();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 60));
+    await tester.pump();
+
+    expect(find.text('SCAN RESULTS'), findsOneWidget);
+  });
+
+  testWidgets('BLE scan start failure opens not found immediately', (
+    tester,
+  ) async {
+    await _pumpScanFlowTestApp(
+      tester,
+      SmartOpenerBleScanPage.routePath,
+      gateway: _StartFailingHardwareGateway(),
+      scanDuration: const Duration(seconds: 30),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('Device not found'), findsOneWidget);
+  });
+
+  testWidgets('scan stop failure does not block scan results navigation', (
+    tester,
+  ) async {
+    await _pumpScanFlowTestApp(
+      tester,
+      SmartOpenerBleScanPage.routePath,
+      gateway: _StopFailingHardwareGateway(),
+      scanDuration: scanDuration,
+    );
+    await tester.pump();
+    await tester.pump(scanDuration);
+    await tester.pump();
+
+    expect(find.text('SCAN RESULTS'), findsOneWidget);
+  });
+
+  testWidgets('adding a device cancels a pending scan completion', (
+    tester,
+  ) async {
+    final gateway = _DelayedConnectHardwareGateway();
+    await _pumpScanFlowTestApp(
+      tester,
+      SmartOpenerBleScanPage.routePath,
+      gateway: gateway,
+      scanDuration: scanDuration,
+    );
+    await tester.pump();
+
+    await _tapAddDevice(tester);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(find.byType(SmartOpenerBleScanPage), findsOneWidget);
+    expect(find.text('SCAN RESULTS'), findsNothing);
+    expect(find.text('Device not found'), findsNothing);
+
+    gateway.connectCompleter.complete();
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    expect(find.text('CHOOSE WIFI'), findsOneWidget);
+  });
+
+  testWidgets('pairing failure stays on scan page and can be retried', (
+    tester,
+  ) async {
+    final gateway = _AuthenticationFailingHardwareGateway();
+    await _pumpScanFlowTestApp(
+      tester,
+      SmartOpenerBleScanPage.routePath,
+      gateway: gateway,
+      scanDuration: const Duration(seconds: 30),
+    );
+    await tester.pump();
+
+    await _tapAddDevice(tester);
+    await tester.pumpAndSettle();
+    expect(find.byType(SmartOpenerBleScanPage), findsOneWidget);
+    expect(gateway.authenticationCalls, 1);
+
+    await _tapAddDevice(tester);
+    await tester.pumpAndSettle();
+    expect(find.byType(SmartOpenerBleScanPage), findsOneWidget);
+    expect(gateway.authenticationCalls, 2);
+    await tester.pump(const Duration(seconds: 2));
+  });
+
   testWidgets(
     'QR-targeted BLE scan automatically connects the matching device',
     (tester) async {
@@ -941,6 +1046,71 @@ class _NoDeviceHardwareGateway extends MockHardwareGateway {
     required String requestId,
     BleScanFilter filter = const BleScanFilter(),
   }) async {}
+}
+
+class _DelayedStartHardwareGateway extends MockHardwareGateway {
+  final Completer<void> startCompleter = Completer<void>();
+
+  @override
+  Future<void> startBleScan({
+    required String requestId,
+    BleScanFilter filter = const BleScanFilter(),
+  }) async {
+    await startCompleter.future;
+    return super.startBleScan(requestId: requestId, filter: filter);
+  }
+}
+
+class _StartFailingHardwareGateway extends MockHardwareGateway {
+  @override
+  Future<void> startBleScan({
+    required String requestId,
+    BleScanFilter filter = const BleScanFilter(),
+  }) async {
+    throw StateError('test_scan_start_failure');
+  }
+}
+
+class _StopFailingHardwareGateway extends MockHardwareGateway {
+  @override
+  Future<void> stopBleScan({required String requestId}) async {
+    throw StateError('test_scan_stop_failure');
+  }
+}
+
+class _DelayedConnectHardwareGateway extends MockHardwareGateway {
+  final Completer<void> connectCompleter = Completer<void>();
+
+  @override
+  Future<BleConnectionEvent> connectBleDevice({
+    required String requestId,
+    required String deviceId,
+  }) async {
+    await connectCompleter.future;
+    return super.connectBleDevice(requestId: requestId, deviceId: deviceId);
+  }
+}
+
+class _AuthenticationFailingHardwareGateway extends MockHardwareGateway {
+  var authenticationCalls = 0;
+
+  @override
+  Future<BleAuthenticationResult> authenticateBleDevice({
+    required String requestId,
+    required String deviceId,
+    required String token,
+    required String aesKey,
+    required String aesKeyVersion,
+  }) async {
+    authenticationCalls += 1;
+    return BleAuthenticationResult(
+      requestId: requestId,
+      deviceId: deviceId,
+      authenticated: false,
+      bindingState: 0xF1,
+      nativeCode: 'test_authentication_failure',
+    );
+  }
 }
 
 class _FailingWifiHardwareGateway extends MockHardwareGateway {

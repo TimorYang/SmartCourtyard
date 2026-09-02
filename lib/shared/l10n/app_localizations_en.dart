@@ -79,6 +79,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get operationRecordActionStop => 'Stop door';
 
   @override
+  String get operationRecordActionPartialOpen => 'Partial open';
+
+  @override
   String get operationRecordActionAutoCloseToggle => 'Toggle auto close';
 
   @override

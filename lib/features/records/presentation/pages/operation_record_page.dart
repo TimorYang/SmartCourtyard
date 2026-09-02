@@ -387,6 +387,7 @@ extension on OperationRecordAction {
     OperationRecordAction.open => l10n.operationRecordActionOpen,
     OperationRecordAction.close => l10n.operationRecordActionClose,
     OperationRecordAction.stop => l10n.operationRecordActionStop,
+    OperationRecordAction.partialOpen => l10n.operationRecordActionPartialOpen,
     OperationRecordAction.autoCloseToggle =>
       l10n.operationRecordActionAutoCloseToggle,
     OperationRecordAction.ledOn => l10n.operationRecordActionLedOn,

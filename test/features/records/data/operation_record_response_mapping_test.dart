@@ -10,6 +10,7 @@ void main() {
       OperationReportAction.open: OperationRecordAction.open,
       OperationReportAction.close: OperationRecordAction.close,
       OperationReportAction.stop: OperationRecordAction.stop,
+      OperationReportAction.partialOpen: OperationRecordAction.partialOpen,
       OperationReportAction.autoCloseToggle:
           OperationRecordAction.autoCloseToggle,
       OperationReportAction.ledOn: OperationRecordAction.ledOn,

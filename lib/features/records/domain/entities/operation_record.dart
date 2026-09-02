@@ -50,6 +50,7 @@ enum OperationRecordAction {
   open,
   close,
   stop,
+  partialOpen,
   autoCloseToggle,
   ledOn,
   ledOff,

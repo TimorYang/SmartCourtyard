@@ -69,6 +69,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get operationRecordActionStop => '停止';
 
   @override
+  String get operationRecordActionPartialOpen => '部分开门';
+
+  @override
   String get operationRecordActionAutoCloseToggle => '切换自动关门';
 
   @override

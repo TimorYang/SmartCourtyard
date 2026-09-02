@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/errors/app_error_message.dart';
+import '../../../core/logging/app_logger.dart';
+import '../../../core/logging/providers.dart';
 
 import '../domain/entities/device_setting.dart';
 import '../domain/repositories/device_settings_repository.dart';
@@ -16,6 +18,25 @@ final deviceSettingsControllerProvider =
       DeviceSettingsState,
       String
     >((deviceId) => DeviceSettingsController(deviceId));
+
+int? matchingDeviceSettingCandidate(
+  DeviceSettingValue? value,
+  Iterable<int> allowedValues,
+) {
+  if (value == null) {
+    return null;
+  }
+  final allowed = allowedValues.toSet();
+  final candidates = value.candidateValues.isEmpty
+      ? <int>[value.rawValue]
+      : value.candidateValues;
+  for (final candidate in candidates) {
+    if (allowed.contains(candidate)) {
+      return candidate;
+    }
+  }
+  return null;
+}
 
 class DeviceSettingsState {
   const DeviceSettingsState({
@@ -54,6 +75,7 @@ class DeviceSettingsController extends Notifier<DeviceSettingsState> {
   late final QueryDeviceSettingsUseCase _query;
   late final SetDeviceSettingUseCase _set;
   late final DeviceSettingsRepository _repository;
+  late final AppLogger _logger;
   StreamSubscription<Map<DeviceSettingKey, DeviceSettingValue>>? _subscription;
   int _requestCounter = 0;
 
@@ -62,6 +84,7 @@ class DeviceSettingsController extends Notifier<DeviceSettingsState> {
     _query = ref.watch(queryDeviceSettingsUseCaseProvider);
     _set = ref.watch(setDeviceSettingUseCaseProvider);
     _repository = ref.watch(deviceSettingsRepositoryProvider);
+    _logger = ref.watch(appLoggerProvider);
     _subscription = _repository
         .watchSettings(deviceId: deviceId)
         .listen(_applyValues, onError: _applyStreamError);
@@ -99,30 +122,28 @@ class DeviceSettingsController extends Notifier<DeviceSettingsState> {
     }
   }
 
-  Future<bool> setRawValue(DeviceSettingKey key, int rawValue) async {
+  Future<bool> setRawValue(
+    DeviceSettingKey key,
+    int rawValue, {
+    Iterable<int>? allowedValues,
+  }) async {
     if (deviceId.trim().isEmpty || state.pendingKey != null) {
       return false;
     }
+    Set<int>? autoCloseAllowedValues;
+    if (key == DeviceSettingKey.autoCloseTime) {
+      final capabilityValues = allowedValues?.toSet() ?? const <int>{};
+      if (capabilityValues.isEmpty ||
+          (rawValue != 0 && !capabilityValues.contains(rawValue))) {
+        return false;
+      }
+      autoCloseAllowedValues = <int>{0, ...capabilityValues};
+    }
+    final value = DeviceSettingValue(key: key, rawValue: rawValue);
     state = state.copyWith(pendingKey: key, clearError: true);
+    final writeRequestId = _nextRequestId('set-${key.name}');
     try {
-      await _set(
-        requestId: _nextRequestId('set-${key.name}'),
-        deviceId: deviceId,
-        key: key,
-        rawValue: rawValue,
-      );
-      if (!ref.mounted) {
-        return false;
-      }
-      final values = await _query(
-        requestId: _nextRequestId('refresh'),
-        deviceId: deviceId,
-      );
-      if (!ref.mounted) {
-        return false;
-      }
-      _applyValues(values);
-      return true;
+      await _set(requestId: writeRequestId, deviceId: deviceId, value: value);
     } catch (error) {
       if (!ref.mounted) {
         return false;
@@ -133,11 +154,77 @@ class DeviceSettingsController extends Notifier<DeviceSettingsState> {
       );
       return false;
     }
+    if (!ref.mounted) {
+      return false;
+    }
+
+    final readRequestId = _nextRequestId('refresh');
+    try {
+      final reportedValues = await _query(
+        requestId: readRequestId,
+        deviceId: deviceId,
+      );
+      if (!ref.mounted) {
+        return false;
+      }
+      final values = key == DeviceSettingKey.autoCloseTime
+          ? _resolveAutoCloseValues(
+              reportedValues,
+              allowedValues: autoCloseAllowedValues!,
+              fallbackValue: value,
+              requestId: readRequestId,
+              logMismatch: true,
+            )
+          : reportedValues;
+      _applyValues(values);
+      return true;
+    } catch (error) {
+      if (!ref.mounted) {
+        return false;
+      }
+      if (key == DeviceSettingKey.autoCloseTime) {
+        _logger.warning(
+          'auto_close_attribute_readback_failed',
+          tag: AppLogTag.ble,
+          requestId: readRequestId,
+          context: {'deviceId': deviceId, 'errorType': error.runtimeType},
+        );
+        state = state.copyWith(
+          values: Map<DeviceSettingKey, DeviceSettingValue>.unmodifiable({
+            ...state.values,
+            key: value,
+          }),
+          clearPendingKey: true,
+          clearError: true,
+        );
+        return true;
+      }
+      state = state.copyWith(
+        errorMessage: appErrorMessage(error, ''),
+        clearPendingKey: true,
+      );
+      return false;
+    }
   }
 
-  Future<bool> setEnabled(DeviceSettingKey key, {required bool enabled}) {
+  Future<bool> setEnabled(
+    DeviceSettingKey key, {
+    required bool enabled,
+    int? enabledValue,
+    Iterable<int>? allowedValues,
+  }) {
     if (!key.supportsEnabledToggle) {
       return Future<bool>.value(false);
+    }
+    if (key == DeviceSettingKey.autoCloseTime) {
+      if (enabled && (enabledValue == null || enabledValue == 0)) {
+        return Future<bool>.value(false);
+      }
+      return setRawValue(
+        key,
+        enabled ? enabledValue! : 0,
+        allowedValues: allowedValues,
+      );
     }
     final currentValue = state.values[key]?.rawValue;
     final rawValue = enabled
@@ -158,6 +245,52 @@ class DeviceSettingsController extends Notifier<DeviceSettingsState> {
       clearPendingKey: true,
       clearError: true,
     );
+  }
+
+  Map<DeviceSettingKey, DeviceSettingValue> _resolveAutoCloseValues(
+    Map<DeviceSettingKey, DeviceSettingValue> values, {
+    required Set<int> allowedValues,
+    DeviceSettingValue? fallbackValue,
+    String? requestId,
+    bool logMismatch = false,
+  }) {
+    if (allowedValues.isEmpty) {
+      return values;
+    }
+    final reportedValue = values[DeviceSettingKey.autoCloseTime];
+    final resolvedRawValue = matchingDeviceSettingCandidate(
+      reportedValue,
+      allowedValues,
+    );
+    if (reportedValue != null && resolvedRawValue != null) {
+      return <DeviceSettingKey, DeviceSettingValue>{
+        ...values,
+        DeviceSettingKey.autoCloseTime: DeviceSettingValue(
+          key: reportedValue.key,
+          rawValue: resolvedRawValue,
+          candidateValues: reportedValue.candidateValues,
+        ),
+      };
+    }
+    if (logMismatch) {
+      _logger.warning(
+        'auto_close_attribute_value_unmatched',
+        tag: AppLogTag.ble,
+        requestId: requestId,
+        context: {
+          'deviceId': deviceId,
+          'reportedValues': reportedValue?.candidateValues,
+          'allowedValues': allowedValues.toList(growable: false),
+        },
+      );
+    }
+    if (fallbackValue == null) {
+      return values;
+    }
+    return <DeviceSettingKey, DeviceSettingValue>{
+      ...values,
+      DeviceSettingKey.autoCloseTime: fallbackValue,
+    };
   }
 
   void _applyStreamError(Object error, StackTrace stackTrace) {

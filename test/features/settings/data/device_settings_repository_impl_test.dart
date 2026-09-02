@@ -44,18 +44,70 @@ void main() {
     expect(attribute.value, Uint8List.fromList(<int>[0x09]));
   });
 
-  test('does not map legacy attribute 0x2725 to auto-close time', () async {
+  test('maps 0x2725 to auto-close time with its two-byte protocol', () async {
     final repository = DeviceSettingsRepositoryImpl(
-      _LegacyAutoCloseMockHardwareGateway(),
+      MockHardwareGateway(autoCloseAttributeId: 0x2725, autoCloseValue: 75),
     );
 
     final values = await repository.querySettings(
-      requestId: 'query-legacy',
+      requestId: 'query-2725',
       deviceId: 'device-1',
     );
 
-    expect(values, isNot(contains(DeviceSettingKey.autoCloseTime)));
-    expect(values, isNot(contains(DeviceSettingKey.doorOpenReminder)));
+    final value = values[DeviceSettingKey.autoCloseTime];
+    expect(value?.rawValue, 75);
+    expect(value?.candidateValues, <int>[75]);
+  });
+
+  test(
+    'keeps both reported auto-close values and matches 0x2712 first',
+    () async {
+      final repository = DeviceSettingsRepositoryImpl(
+        _BothAutoCloseMockHardwareGateway(),
+      );
+
+      final values = await repository.querySettings(
+        requestId: 'query-both',
+        deviceId: 'device-1',
+      );
+
+      final value = values[DeviceSettingKey.autoCloseTime];
+      expect(value?.rawValue, 3);
+      expect(value?.candidateValues, <int>[3, 75]);
+    },
+  );
+
+  test('always writes auto-close values to one-byte 0x2712', () async {
+    final gateway = MockHardwareGateway(
+      autoCloseAttributeId: 0x2725,
+      autoCloseValue: 75,
+    );
+    final repository = DeviceSettingsRepositoryImpl(gateway);
+
+    for (final rawValue in <int>[0, 1, 15, 90, 255]) {
+      await repository.setSetting(
+        requestId: 'set-2725-$rawValue',
+        deviceId: 'device-1',
+        value: DeviceSettingValue(
+          key: DeviceSettingKey.autoCloseTime,
+          rawValue: rawValue,
+        ),
+      );
+
+      final snapshot = await gateway.queryDeviceAttributes(
+        requestId: 'query-2725-after-$rawValue',
+        deviceId: 'device-1',
+      );
+      final attribute2712 = snapshot.attributes.singleWhere(
+        (value) => value.id == 0x2712,
+      );
+      final attribute2725 = snapshot.attributes.singleWhere(
+        (value) => value.id == 0x2725,
+      );
+
+      expect(attribute2712.value, Uint8List.fromList(<int>[rawValue]));
+      expect(attribute2725.value, Uint8List.fromList(<int>[0x00, 0x4B]));
+    }
   });
 
   test(
@@ -119,7 +171,10 @@ void main() {
   });
 }
 
-class _LegacyAutoCloseMockHardwareGateway extends MockHardwareGateway {
+class _BothAutoCloseMockHardwareGateway extends MockHardwareGateway {
+  _BothAutoCloseMockHardwareGateway()
+    : super(autoCloseAttributeId: 0x2725, autoCloseValue: 75);
+
   @override
   Future<DeviceAttributeSnapshot> queryDeviceAttributes({
     required String requestId,
@@ -136,13 +191,8 @@ class _LegacyAutoCloseMockHardwareGateway extends MockHardwareGateway {
       timestampMillis: snapshot.timestampMillis,
       origin: snapshot.origin,
       attributes: <DeviceAttribute>[
-        for (final attribute in snapshot.attributes)
-          if (attribute.id != 0x2712) attribute,
-        DeviceAttribute(
-          id: 0x2725,
-          value: Uint8List.fromList(<int>[0x00, 0x09]),
-        ),
-        DeviceAttribute(id: 0x2728, value: Uint8List.fromList(<int>[0x0A])),
+        for (final attribute in snapshot.attributes) attribute,
+        DeviceAttribute(id: 0x2712, value: Uint8List.fromList(<int>[0x03])),
       ],
     );
   }
