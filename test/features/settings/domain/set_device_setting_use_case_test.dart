@@ -11,8 +11,10 @@ void main() {
       () => useCase(
         requestId: 'request',
         deviceId: 'device',
-        key: DeviceSettingKey.openingForce,
-        rawValue: 256,
+        value: const DeviceSettingValue(
+          key: DeviceSettingKey.openingForce,
+          rawValue: 256,
+        ),
       ),
       throwsRangeError,
     );
@@ -25,8 +27,10 @@ void main() {
       () => useCase(
         requestId: 'request',
         deviceId: 'device',
-        key: DeviceSettingKey.openingSpeed,
-        rawValue: 59,
+        value: const DeviceSettingValue(
+          key: DeviceSettingKey.openingSpeed,
+          rawValue: 59,
+        ),
       ),
       throwsRangeError,
     );
@@ -34,8 +38,10 @@ void main() {
       () => useCase(
         requestId: 'request',
         deviceId: 'device',
-        key: DeviceSettingKey.doorOpenReminder,
-        rawValue: 6,
+        value: const DeviceSettingValue(
+          key: DeviceSettingKey.doorOpenReminder,
+          rawValue: 6,
+        ),
       ),
       throwsRangeError,
     );
@@ -43,8 +49,10 @@ void main() {
       () => useCase(
         requestId: 'request',
         deviceId: 'device',
-        key: DeviceSettingKey.autoCloseTime,
-        rawValue: -1,
+        value: const DeviceSettingValue(
+          key: DeviceSettingKey.autoCloseTime,
+          rawValue: -1,
+        ),
       ),
       throwsRangeError,
     );
@@ -52,27 +60,63 @@ void main() {
       () => useCase(
         requestId: 'request',
         deviceId: 'device',
-        key: DeviceSettingKey.autoCloseTime,
-        rawValue: 10,
+        value: const DeviceSettingValue(
+          key: DeviceSettingKey.autoCloseTime,
+          rawValue: 256,
+        ),
       ),
       throwsRangeError,
     );
   });
 
-  test('accepts auto-close values from 0 through 9', () async {
+  test('accepts one-byte auto-close option values for 0x2712', () async {
     final useCase = SetDeviceSettingUseCase(_Repository());
 
-    for (final rawValue in <int>[0, 1, 9]) {
+    for (final rawValue in <int>[0, 15, 90, 255]) {
       await expectLater(
         useCase(
           requestId: 'request-$rawValue',
           deviceId: 'device',
-          key: DeviceSettingKey.autoCloseTime,
-          rawValue: rawValue,
+          value: DeviceSettingValue(
+            key: DeviceSettingKey.autoCloseTime,
+            rawValue: rawValue,
+          ),
         ),
         completes,
       );
     }
+  });
+
+  test('rejects auto-close values that do not fit one-byte 0x2712', () {
+    final useCase = SetDeviceSettingUseCase(_Repository());
+
+    expect(
+      () => useCase(
+        requestId: 'request-2712-invalid',
+        deviceId: 'device',
+        value: const DeviceSettingValue(
+          key: DeviceSettingKey.autoCloseTime,
+          rawValue: 256,
+        ),
+      ),
+      throwsRangeError,
+    );
+  });
+
+  test('does not require a reported BLE route for auto-close writes', () async {
+    final useCase = SetDeviceSettingUseCase(_Repository());
+
+    await expectLater(
+      useCase(
+        requestId: 'request-auto-close-without-route',
+        deviceId: 'device',
+        value: const DeviceSettingValue(
+          key: DeviceSettingKey.autoCloseTime,
+          rawValue: 1,
+        ),
+      ),
+      completes,
+    );
   });
 }
 

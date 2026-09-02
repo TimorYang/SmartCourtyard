@@ -5,15 +5,21 @@ import 'hardware_gateway.dart';
 import 'hardware_models.dart';
 
 class MockHardwareGateway implements HardwareGateway {
-  MockHardwareGateway()
-    : _scanController = StreamController<BleDevice>.broadcast(),
-      _connectionController = StreamController<BleConnectionEvent>.broadcast(),
-      _notificationController = StreamController<BleNotification>.broadcast(),
-      _nativeErrorController =
-          StreamController<NativeHardwareError>.broadcast(),
-      _diagnosticController = StreamController<BleDiagnosticEvent>.broadcast(),
-      _attributeController =
-          StreamController<DeviceAttributeSnapshot>.broadcast();
+  MockHardwareGateway({
+    this.autoCloseAttributeId = 0x2712,
+    this.autoCloseValue = 0,
+  }) : _scanController = StreamController<BleDevice>.broadcast(),
+       _connectionController = StreamController<BleConnectionEvent>.broadcast(),
+       _notificationController = StreamController<BleNotification>.broadcast(),
+       _nativeErrorController =
+           StreamController<NativeHardwareError>.broadcast(),
+       _diagnosticController = StreamController<BleDiagnosticEvent>.broadcast(),
+       _attributeController =
+           StreamController<DeviceAttributeSnapshot>.broadcast(),
+       _attributes = _buildAttributes(
+         autoCloseAttributeId: autoCloseAttributeId,
+         autoCloseValue: autoCloseValue,
+       );
 
   final StreamController<BleDevice> _scanController;
   final StreamController<BleConnectionEvent> _connectionController;
@@ -21,14 +27,9 @@ class MockHardwareGateway implements HardwareGateway {
   final StreamController<NativeHardwareError> _nativeErrorController;
   final StreamController<BleDiagnosticEvent> _diagnosticController;
   final StreamController<DeviceAttributeSnapshot> _attributeController;
-  final Map<int, DeviceAttribute> _attributes = <int, DeviceAttribute>{
-    0x2711: DeviceAttribute(id: 0x2711, value: Uint8List.fromList([0x07])),
-    0x2713: DeviceAttribute(id: 0x2713, value: Uint8List.fromList([0x05])),
-    0x2714: DeviceAttribute(id: 0x2714, value: Uint8List.fromList([0x01])),
-    0x2712: DeviceAttribute(id: 0x2712, value: Uint8List.fromList([0x00])),
-    0x2726: DeviceAttribute(id: 0x2726, value: Uint8List.fromList([0x05])),
-    0x2727: DeviceAttribute(id: 0x2727, value: Uint8List.fromList([0x50])),
-  };
+  final int autoCloseAttributeId;
+  final int autoCloseValue;
+  final Map<int, DeviceAttribute> _attributes;
   final List<int> doorOpenReminderValues = <int>[];
   bool flutterConsoleLoggingEnabled = false;
   bool nativeConsoleLoggingEnabled = false;
@@ -48,6 +49,30 @@ class MockHardwareGateway implements HardwareGateway {
   final List<int> deletedSafetyAccessorySerialNumbers = <int>[];
   final Map<String, ConnectedBleDevice> connectedBleDevices =
       <String, ConnectedBleDevice>{};
+
+  static Map<int, DeviceAttribute> _buildAttributes({
+    required int autoCloseAttributeId,
+    required int autoCloseValue,
+  }) {
+    final autoCloseWidth = autoCloseAttributeId == 0x2725 ? 2 : 1;
+    final autoCloseBytes = Uint8List(autoCloseWidth);
+    var remaining = autoCloseValue;
+    for (var index = autoCloseBytes.length - 1; index >= 0; index--) {
+      autoCloseBytes[index] = remaining & 0xFF;
+      remaining >>= 8;
+    }
+    return <int, DeviceAttribute>{
+      0x2711: DeviceAttribute(id: 0x2711, value: Uint8List.fromList([0x07])),
+      0x2713: DeviceAttribute(id: 0x2713, value: Uint8List.fromList([0x05])),
+      0x2714: DeviceAttribute(id: 0x2714, value: Uint8List.fromList([0x01])),
+      autoCloseAttributeId: DeviceAttribute(
+        id: autoCloseAttributeId,
+        value: autoCloseBytes,
+      ),
+      0x2726: DeviceAttribute(id: 0x2726, value: Uint8List.fromList([0x05])),
+      0x2727: DeviceAttribute(id: 0x2727, value: Uint8List.fromList([0x50])),
+    };
+  }
 
   @override
   Stream<BleDevice> get bleScanResults => _scanController.stream;

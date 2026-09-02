@@ -83,14 +83,49 @@ class DeviceSettingsRepositoryImpl implements DeviceSettingsRepository {
     final byId = <int, DeviceAttribute>{
       for (final attribute in snapshot.attributes) attribute.id: attribute,
     };
-    return <DeviceSettingKey, DeviceSettingValue>{
-      for (final key in DeviceSettingKey.values)
-        if (key.attributeId case final attributeId?)
-          if (byId[attributeId] case final attribute?)
-            key: DeviceSettingValue(
-              key: key,
-              rawValue: attribute.unsignedValue,
-            ),
-    };
+    final values = <DeviceSettingKey, DeviceSettingValue>{};
+    for (final key in DeviceSettingKey.values) {
+      if (key == DeviceSettingKey.autoCloseTime) {
+        final autoCloseValue = _mapAutoCloseValue(byId);
+        if (autoCloseValue != null) {
+          values[key] = autoCloseValue;
+        }
+        continue;
+      }
+      final attributeId = key.attributeId;
+      if (attributeId == null) {
+        continue;
+      }
+      final attribute = byId[attributeId];
+      if (attribute == null) {
+        continue;
+      }
+      values[key] = DeviceSettingValue(
+        key: key,
+        rawValue: attribute.unsignedValue,
+      );
+    }
+    return values;
+  }
+
+  DeviceSettingValue? _mapAutoCloseValue(Map<int, DeviceAttribute> attributes) {
+    final attribute2712 = attributes[0x2712];
+    final attribute2725 = attributes[0x2725];
+    final value2712 = attribute2712?.value.length == 1
+        ? attribute2712!.unsignedValue
+        : null;
+    final value2725 = attribute2725?.value.length == 2
+        ? attribute2725!.unsignedValue
+        : null;
+    final preferredValue = value2712 ?? value2725;
+    if (preferredValue == null) {
+      return null;
+    }
+    final candidateValues = <int>[?value2712, ?value2725];
+    return DeviceSettingValue(
+      key: DeviceSettingKey.autoCloseTime,
+      rawValue: preferredValue,
+      candidateValues: List<int>.unmodifiable(candidateValues),
+    );
   }
 }

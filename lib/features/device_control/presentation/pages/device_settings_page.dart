@@ -405,14 +405,22 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
       }
       return _valueWithUnit(currentValue, setting.unit);
     }
-    final rawValue = state.values[key]?.rawValue;
+    final reportedSetting = state.values[key];
+    final rawValue = key == DeviceSettingKey.autoCloseTime
+        ? matchingDeviceSettingCandidate(
+                reportedSetting,
+                capability?.options.map((option) => option.value) ??
+                    const <int>[],
+              ) ??
+              reportedSetting?.rawValue
+        : reportedSetting?.rawValue;
     final option = capability?.options.where(
       (option) => option.value == rawValue,
     );
     if (option != null && option.isNotEmpty) {
       return _optionLabel(option.first, capability?.unit);
     }
-    final rawSettingValue = state.values[key];
+    final rawSettingValue = reportedSetting;
     if (rawSettingValue == null) {
       return l10n.deviceSettingsRawUnavailable;
     }
@@ -435,16 +443,23 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
       deviceSettingsControllerProvider(widget.bleDeviceId),
     );
     final title = localizedTitle;
+    final canEdit =
+        key != DeviceSettingKey.autoCloseTime ||
+        (capability != null && capability.options.isNotEmpty);
     return _SettingsRowData(
       assetPath: assetPath,
       fallbackIcon: fallbackIcon,
       title: title,
       value: _settingValue(settingsState, key, l10n, capability, setting),
-      onTap: () => _showCapabilityValueEditor(
-        key: key,
-        title: title,
-        capability: capability,
-      ),
+      showChevron: canEdit,
+      onTap: canEdit
+          ? () => _showCapabilityValueEditor(
+              key: key,
+              title: title,
+              capability: capability,
+              currentValue: setting?.currentValue,
+            )
+          : null,
     );
   }
 
@@ -452,6 +467,7 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
     required DeviceSettingKey key,
     required String title,
     required DeviceCapability? capability,
+    int? currentValue,
   }) async {
     if (!_isCurrentBleDeviceConnected()) {
       _showBluetoothConnectionRequired();
@@ -464,11 +480,18 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
       return;
     }
     if (capability == null || capability.options.isEmpty) {
+      if (key == DeviceSettingKey.autoCloseTime) {
+        return;
+      }
       await _showRawValueEditor(key, title);
       return;
     }
 
-    final rawValue = state.values[key]?.rawValue;
+    final allowedValues = capability.options.map((option) => option.value);
+    final reportedValue = key == DeviceSettingKey.autoCloseTime
+        ? matchingDeviceSettingCandidate(state.values[key], allowedValues)
+        : state.values[key]?.rawValue;
+    final rawValue = currentValue ?? reportedValue;
     final initialValue =
         capability.options.any((option) => option.value == rawValue)
         ? rawValue!
@@ -487,7 +510,7 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
     if (value == null || !mounted || value == rawValue) {
       return;
     }
-    await _saveSetting(key, value);
+    await _saveSetting(key, value, allowedValues: allowedValues);
   }
 
   Future<void> _showRawValueEditor(DeviceSettingKey key, String title) async {
@@ -502,8 +525,9 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
     if (state.loading || state.pendingKey != null) {
       return;
     }
+    final currentSetting = state.values[key];
     final controller = TextEditingController(
-      text: state.values[key]?.rawValue.toString() ?? '',
+      text: currentSetting?.rawValue.toString() ?? '',
     );
     final value = await showDialog<int>(
       context: context,
@@ -540,7 +564,8 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
                     final parsed = text.toLowerCase().startsWith('0x')
                         ? int.tryParse(text.substring(2), radix: 16)
                         : int.tryParse(text);
-                    final maximum = (1 << (key.byteWidth * 8)) - 1;
+                    final byteWidth = key.byteWidth;
+                    final maximum = (1 << (byteWidth * 8)) - 1;
                     if (parsed == null || parsed < 0 || parsed > maximum) {
                       setDialogState(() {
                         validationMessage = l10n.deviceSettingsRawValueInvalid(
@@ -572,16 +597,27 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
     await _saveSetting(key, value);
   }
 
-  Future<void> _saveSetting(DeviceSettingKey key, int value) async {
+  Future<void> _saveSetting(
+    DeviceSettingKey key,
+    int value, {
+    Iterable<int>? allowedValues,
+  }) async {
     final saved = await ref
         .read(deviceSettingsControllerProvider(widget.bleDeviceId).notifier)
-        .setRawValue(key, value);
+        .setRawValue(key, value, allowedValues: allowedValues);
     if (!saved || !mounted) {
       return;
     }
     ref
         .read(doorSettingsControllerProvider(widget.doorId).notifier)
-        .updateCurrentValue(key.capabilityCode, value);
+        .updateCurrentValue(
+          key.capabilityCode,
+          ref
+                  .read(deviceSettingsControllerProvider(widget.bleDeviceId))
+                  .values[key]
+                  ?.rawValue ??
+              value,
+        );
     final reportAction = switch (key) {
       DeviceSettingKey.ledOffDelay => OperationReportAction.ledOffDelayChanged,
       DeviceSettingKey.partialOpen => OperationReportAction.partialOpenChanged,

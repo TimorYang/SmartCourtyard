@@ -9,24 +9,23 @@ class SetDeviceSettingUseCase {
   Future<void> call({
     required String requestId,
     required String deviceId,
-    required DeviceSettingKey key,
-    required int rawValue,
+    required DeviceSettingValue value,
   }) {
-    final maximum = (1 << (key.byteWidth * 8)) - 1;
-    if (rawValue < 0 || rawValue > maximum) {
-      throw RangeError.range(rawValue, 0, maximum, key.name);
+    final maximum = (1 << (value.key.byteWidth * 8)) - 1;
+    if (value.rawValue < 0 || value.rawValue > maximum) {
+      throw RangeError.range(value.rawValue, 0, maximum, value.key.name);
     }
-    if (!key.supportsValue(rawValue)) {
+    if (!value.key.supportsValue(value.rawValue)) {
       throw RangeError.value(
-        rawValue,
-        key.name,
+        value.rawValue,
+        value.key.name,
         'Value is not supported by the device attribute protocol.',
       );
     }
     return _repository.setSetting(
       requestId: requestId,
       deviceId: deviceId,
-      value: DeviceSettingValue(key: key, rawValue: rawValue),
+      value: value,
     );
   }
 }

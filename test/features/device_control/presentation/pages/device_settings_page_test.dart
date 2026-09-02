@@ -1,4 +1,7 @@
+import 'dart:typed_data';
+
 import 'package:flinx/features/device_control/presentation/pages/device_settings_page.dart';
+import 'package:flinx/features/device_control/presentation/widgets/device_setting_options_sheet.dart';
 import 'package:flinx/features/device_control/application/device_command_controller.dart';
 import 'package:flinx/features/records/application/providers.dart';
 import 'package:flinx/features/records/domain/entities/operation_record_page_result.dart';
@@ -28,6 +31,136 @@ void main() {
     expect(find.text('Auto close'), findsOneWidget);
     expect(find.text('0x00 (0)'), findsOneWidget);
     expect(find.text('Force margin'), findsOneWidget);
+  });
+
+  testWidgets('reads 0x2725 but always writes the selected value to 0x2712', (
+    tester,
+  ) async {
+    final gateway = MockHardwareGateway(
+      autoCloseAttributeId: 0x2725,
+      autoCloseValue: 75,
+    );
+    await _pumpSettingsRouter(
+      tester,
+      gateway: gateway,
+      capabilityDefinitions: const [
+        DeviceCapability(
+          code: DeviceCapabilityCode.autoClose,
+          label: 'Auto close',
+          unit: 's',
+          options: [
+            DeviceCapabilityOption(value: 15, label: '15'),
+            DeviceCapabilityOption(value: 30, label: '30'),
+            DeviceCapabilityOption(value: 75, label: '75'),
+            DeviceCapabilityOption(value: 90, label: '90'),
+          ],
+        ),
+      ],
+    );
+
+    expect(find.text('75 s'), findsOneWidget);
+    await tester.tap(find.text('Auto close'));
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<DeviceCapabilityOptionsSheet>(
+            find.byType(DeviceCapabilityOptionsSheet),
+          )
+          .initialValue,
+      75,
+    );
+    await tester.drag(find.byType(ListWheelScrollView), const Offset(0, -50));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Confirm'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('90 s'), findsOneWidget);
+    final snapshot = await gateway.queryDeviceAttributes(
+      requestId: 'verify-settings-page-2725',
+      deviceId: 'mock-device',
+    );
+    final attribute2712 = snapshot.attributes.singleWhere(
+      (value) => value.id == 0x2712,
+    );
+    final attribute2725 = snapshot.attributes.singleWhere(
+      (value) => value.id == 0x2725,
+    );
+    expect(attribute2712.value, Uint8List.fromList(<int>[0x5A]));
+    expect(attribute2725.value, Uint8List.fromList(<int>[0x00, 0x4B]));
+  });
+
+  testWidgets('uses the server current value as the initial option', (
+    tester,
+  ) async {
+    final gateway = MockHardwareGateway(
+      autoCloseAttributeId: 0x2725,
+      autoCloseValue: 75,
+    );
+    await _pumpSettingsRouter(
+      tester,
+      gateway: gateway,
+      capabilityDefinitions: const [
+        DeviceCapability(
+          code: DeviceCapabilityCode.autoClose,
+          label: 'Auto close',
+          unit: 's',
+          options: [
+            DeviceCapabilityOption(value: 15, label: '15'),
+            DeviceCapabilityOption(value: 30, label: '30'),
+            DeviceCapabilityOption(value: 75, label: '75'),
+          ],
+        ),
+      ],
+      settingSnapshots: const [
+        DoorSettingSnapshot(
+          code: DeviceCapabilityCode.autoClose,
+          label: 'Auto close',
+          supported: true,
+          configured: true,
+          currentValue: 30,
+          unit: 's',
+        ),
+      ],
+    );
+
+    expect(find.text('30 s'), findsOneWidget);
+    await tester.tap(find.text('Auto close'));
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<DeviceCapabilityOptionsSheet>(
+            find.byType(DeviceCapabilityOptionsSheet),
+          )
+          .initialValue,
+      30,
+    );
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('shows unavailable when the server auto-close value is null', (
+    tester,
+  ) async {
+    final gateway = MockHardwareGateway(
+      autoCloseAttributeId: 0x2725,
+      autoCloseValue: 75,
+    );
+    await _pumpSettingsRouter(
+      tester,
+      gateway: gateway,
+      settingSnapshots: const [
+        DoorSettingSnapshot(
+          code: DeviceCapabilityCode.autoClose,
+          label: 'Auto close',
+          supported: true,
+          configured: false,
+          unit: 's',
+        ),
+      ],
+    );
+
+    expect(find.text('Not reported'), findsWidgets);
+    expect(find.text('0x004B (75)'), findsNothing);
   });
 
   testWidgets('localizes known setting titles instead of server labels', (
@@ -122,7 +255,7 @@ void main() {
 
     await _saveRawSetting(tester, 'LED off delay', '9');
     await _saveRawSetting(tester, 'Partial open', '8');
-    await _saveRawSetting(tester, 'Auto close', '1');
+    await _saveOptionSetting(tester, 'Auto close');
     await _saveRawSetting(tester, 'Door open reminder', '5');
 
     expect(reports.map((report) => report.action), [
@@ -242,6 +375,92 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('9 s'), findsOneWidget);
+  });
+
+  testWidgets('preserves server-driven auto-close option counts and order', (
+    tester,
+  ) async {
+    for (final optionCount in <int>[7, 9]) {
+      final options = List<DeviceCapabilityOption>.generate(
+        optionCount,
+        (index) => DeviceCapabilityOption(
+          value: (index + 1) * 15,
+          label: 'Level ${index + 1}',
+        ),
+      );
+      await _pumpSettingsRouter(
+        tester,
+        capabilityDefinitions: [
+          DeviceCapability(
+            code: DeviceCapabilityCode.autoClose,
+            label: 'Auto close',
+            unit: 's',
+            options: options,
+          ),
+        ],
+      );
+
+      await tester.tap(find.text('Auto close'));
+      await tester.pumpAndSettle();
+      final sheet = tester.widget<DeviceCapabilityOptionsSheet>(
+        find.byType(DeviceCapabilityOptionsSheet),
+      );
+      expect(sheet.options.map((option) => option.value), [
+        for (var index = 1; index <= optionCount; index++) index * 15,
+      ]);
+      expect(sheet.options.map((option) => option.label), [
+        for (var index = 1; index <= optionCount; index++) 'Level $index',
+      ]);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+    }
+  });
+
+  testWidgets('does not open a raw editor when auto-close options are empty', (
+    tester,
+  ) async {
+    await _pumpSettingsRouter(
+      tester,
+      capabilityDefinitions: const [
+        DeviceCapability(
+          code: DeviceCapabilityCode.autoClose,
+          label: 'Auto close',
+        ),
+      ],
+    );
+
+    await tester.tap(find.text('Auto close'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(DeviceCapabilityOptionsSheet), findsNothing);
+    expect(find.text('Raw value'), findsNothing);
+  });
+
+  testWidgets('does not refetch door settings after a BLE auto-close write', (
+    tester,
+  ) async {
+    final doorSettingsRepository = _CountingDoorSettingsRepository();
+    await _pumpSettingsRouter(
+      tester,
+      doorSettingsRepository: doorSettingsRepository,
+      capabilityDefinitions: const [
+        DeviceCapability(
+          code: DeviceCapabilityCode.autoClose,
+          label: 'Auto close',
+          unit: 's',
+          options: [
+            DeviceCapabilityOption(value: 15, label: '15'),
+            DeviceCapabilityOption(value: 30, label: '30'),
+          ],
+        ),
+      ],
+    );
+    expect(doorSettingsRepository.fetchCount, 1);
+
+    await _saveOptionSetting(tester, 'Auto close');
+
+    expect(doorSettingsRepository.fetchCount, 1);
   });
 
   testWidgets('renders current settings returned for the door', (tester) async {
@@ -371,6 +590,7 @@ Future<void> _pumpSettingsRouter(
   ],
   List<DeviceCapability>? capabilityDefinitions,
   List<DoorSettingSnapshot> settingSnapshots = const [],
+  DoorSettingsRepository? doorSettingsRepository,
   OperationRecordRepository? operationRecordRepository,
   MockHardwareGateway? gateway,
   DeviceSettingsCapabilityScope? capabilityScope,
@@ -404,12 +624,20 @@ Future<void> _pumpSettingsRouter(
                     DeviceCapability(
                       code: code,
                       label: _FakeDeviceCapabilityRepository.labelFor(code),
+                      unit: code == DeviceCapabilityCode.autoClose ? 's' : null,
+                      options: code == DeviceCapabilityCode.autoClose
+                          ? const [
+                              DeviceCapabilityOption(value: 15, label: '15'),
+                              DeviceCapabilityOption(value: 30, label: '30'),
+                            ]
+                          : const [],
                     ),
                 ],
           ),
         ),
         doorSettingsRepositoryProvider.overrideWithValue(
-          _FakeDoorSettingsRepository(settingSnapshots),
+          doorSettingsRepository ??
+              _FakeDoorSettingsRepository(settingSnapshots),
         ),
         operationRecordRepositoryProvider.overrideWithValue(
           operationRecordRepository ??
@@ -473,6 +701,16 @@ Future<void> _saveRawSetting(
   await tester.pumpAndSettle();
 }
 
+Future<void> _saveOptionSetting(WidgetTester tester, String title) async {
+  await tester.tap(find.text(title).first);
+  await tester.pumpAndSettle();
+  expect(find.byType(DeviceCapabilityOptionsSheet), findsOneWidget);
+  await tester.drag(find.byType(ListWheelScrollView), const Offset(0, -50));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Confirm'));
+  await tester.pumpAndSettle();
+}
+
 class _ConnectedDeviceCommandController extends DeviceCommandController {
   @override
   DeviceCommandState build() {
@@ -508,6 +746,28 @@ class _FakeDoorSettingsRepository implements DoorSettingsRepository {
     required String doorId,
     required String requestId,
   }) async => settings;
+}
+
+class _CountingDoorSettingsRepository implements DoorSettingsRepository {
+  int fetchCount = 0;
+
+  @override
+  Future<List<DoorSettingSnapshot>> fetchSettings({
+    required String doorId,
+    required String requestId,
+  }) async {
+    fetchCount += 1;
+    return const [
+      DoorSettingSnapshot(
+        code: DeviceCapabilityCode.autoClose,
+        label: 'Auto close',
+        supported: true,
+        configured: true,
+        currentValue: 15,
+        unit: 's',
+      ),
+    ];
+  }
 }
 
 class _FakeDeviceCapabilityRepository implements DeviceCapabilityRepository {

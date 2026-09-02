@@ -934,7 +934,7 @@ void main() {
                   attribute.id == DeviceSettingKey.autoCloseTime.attributeId,
             )
             .unsignedValue,
-        1,
+        15,
       );
       expect(
         snapshot.attributes.any((attribute) => attribute.id == 0x2728),
@@ -946,7 +946,7 @@ void main() {
       );
       expect(autoCloseWrites.map((attribute) => attribute.unsignedValue), <int>[
         0,
-        1,
+        15,
       ]);
       expect(gateway.attributeWriteCount, 2);
       expect(reports.map((report) => report.action), [
@@ -957,6 +957,37 @@ void main() {
       ]);
     },
   );
+
+  testWidgets('reads 0x2725 but writes auto-close toggles to 0x2712', (
+    tester,
+  ) async {
+    final gateway = _RecordingHardwareGateway(
+      autoCloseAttributeId: 0x2725,
+      autoCloseValue: 75,
+    );
+    await _pumpDevicePage(tester, gateway);
+
+    final autoCloseSwitch = find.byKey(
+      const ValueKey<String>('auto-close-switch'),
+    );
+    expect(tester.widget<FlinxSwitch>(autoCloseSwitch).value, isTrue);
+
+    await tester.tap(autoCloseSwitch);
+    await tester.pumpAndSettle();
+    await tester.tap(autoCloseSwitch);
+    await tester.pumpAndSettle();
+
+    final writes = gateway.writtenAttributes
+        .where((attribute) => attribute.id == 0x2712)
+        .toList();
+    expect(writes, hasLength(2));
+    expect(writes[0].value, Uint8List.fromList(<int>[0x00]));
+    expect(writes[1].value, Uint8List.fromList(<int>[0x0F]));
+    expect(
+      gateway.writtenAttributes.any((attribute) => attribute.id == 0x2725),
+      isFalse,
+    );
+  });
 
   testWidgets('restores reminder switch when cmd 0x0E09 is rejected', (
     tester,
@@ -1910,6 +1941,16 @@ class _SettingsDeviceCapabilityRepository
       unit: 'cm',
       options: partialOpenOptions,
     ),
+    const DeviceCapability(
+      code: DeviceCapabilityCode.autoClose,
+      label: 'Auto close',
+      unit: 's',
+      options: [
+        DeviceCapabilityOption(value: 15, label: '15'),
+        DeviceCapabilityOption(value: 30, label: '30'),
+        DeviceCapabilityOption(value: 75, label: '75'),
+      ],
+    ),
   ];
 }
 
@@ -1928,6 +1969,14 @@ class _CommandDoorSettingsRepository implements DoorSettingsRepository {
       configured: true,
       currentValue: 1,
       unit: 'cm',
+    ),
+    DoorSettingSnapshot(
+      code: DeviceCapabilityCode.autoClose,
+      label: 'Auto close',
+      supported: true,
+      configured: true,
+      currentValue: 15,
+      unit: 's',
     ),
   ];
 }
@@ -2010,6 +2059,11 @@ GestureTapCallback? _connectionTap(WidgetTester tester, String deviceType) {
 }
 
 class _RecordingHardwareGateway extends MockHardwareGateway {
+  _RecordingHardwareGateway({
+    super.autoCloseAttributeId = 0x2712,
+    super.autoCloseValue = 0,
+  });
+
   final List<DoorCommand> commands = <DoorCommand>[];
   final List<String> deviceIds = <String>[];
   final List<DeviceAttribute> writtenAttributes = <DeviceAttribute>[];

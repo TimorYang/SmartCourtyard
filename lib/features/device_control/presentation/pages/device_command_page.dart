@@ -271,6 +271,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     void showPermissionDenied() {
       AppToast.info(context, l10n.deviceCommandPermissionDenied);
     }
+
     VoidCallback? permissionDeniedFor(String capabilityCode) {
       if (isOwner || effectiveCapabilities.contains(capabilityCode)) {
         return null;
@@ -318,6 +319,31 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     final partialOpenSetting = doorSettingsState.settingFor(
       DeviceCapabilityCode.partialOpen,
     );
+    final autoCloseCapability = deviceCapabilitiesState.capabilityFor(
+      DeviceCapabilityCode.autoClose,
+    );
+    final autoCloseSetting = doorSettingsState.settingFor(
+      DeviceCapabilityCode.autoClose,
+    );
+    final autoCloseAllowedValues =
+        autoCloseCapability?.options.map((option) => option.value).toList() ??
+        const <int>[];
+    final reportedAutoCloseValue =
+        deviceSettingsState.values[DeviceSettingKey.autoCloseTime];
+    final matchingAutoCloseValue = matchingDeviceSettingCandidate(
+      reportedAutoCloseValue,
+      autoCloseAllowedValues,
+    );
+    final configuredAutoCloseValue =
+        autoCloseSetting?.currentValue ?? matchingAutoCloseValue;
+    final autoCloseEnabledValue =
+        autoCloseAllowedValues.contains(configuredAutoCloseValue) &&
+            configuredAutoCloseValue != 0
+        ? configuredAutoCloseValue
+        : autoCloseAllowedValues.cast<int?>().firstWhere(
+            (value) => value != 0,
+            orElse: () => null,
+          );
     final partialOpenLevel =
         partialOpenSetting?.currentValue ??
         deviceSettingsState.values[DeviceSettingKey.partialOpen]?.rawValue;
@@ -343,7 +369,10 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
         capabilities.contains(DeviceCapabilityCode.partialOpenLevel) &&
         partialOpenCapability != null &&
         partialOpenCapability.options.isNotEmpty;
-    final canUseAutoClose = capabilities.contains('AUTO_CLOSE');
+    final canUseAutoClose =
+        capabilities.contains('AUTO_CLOSE') &&
+        autoCloseAllowedValues.isNotEmpty &&
+        autoCloseEnabledValue != null;
     final canUseOpenReminder = capabilities.contains('DOOR_OPEN_REMINDER');
     final settingsCapabilityScope = doorDetail?.relationType == 0
         ? null
@@ -619,6 +648,8 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                                         bleDeviceId: connectedBleDeviceId,
                                         key: DeviceSettingKey.autoCloseTime,
                                         enabled: enabled,
+                                        enabledValue: autoCloseEnabledValue,
+                                        allowedValues: autoCloseAllowedValues,
                                         actionLabel:
                                             l10n.deviceCommandAutoCloseTitle,
                                       ),
@@ -959,6 +990,8 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     required String bleDeviceId,
     required DeviceSettingKey key,
     required bool enabled,
+    int? enabledValue,
+    Iterable<int>? allowedValues,
     required String actionLabel,
   }) async {
     if (!_requireBluetoothConnection(
@@ -977,7 +1010,12 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     });
     final saved = await ref
         .read(deviceSettingsControllerProvider(bleDeviceId).notifier)
-        .setEnabled(key, enabled: enabled);
+        .setEnabled(
+          key,
+          enabled: enabled,
+          enabledValue: enabledValue,
+          allowedValues: allowedValues,
+        );
     if (!mounted) {
       return;
     }
@@ -999,7 +1037,8 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
         .read(doorSettingsControllerProvider(widget.doorId).notifier)
         .updateCurrentValue(
           key.capabilityCode,
-          appliedValue ?? (enabled ? key.defaultEnabledValue : 0),
+          appliedValue ??
+              (enabled ? enabledValue ?? key.defaultEnabledValue : 0),
         );
     final reportAction = switch (key) {
       DeviceSettingKey.autoCloseTime => OperationReportAction.autoCloseToggle,
