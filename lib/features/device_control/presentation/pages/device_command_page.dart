@@ -325,6 +325,12 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     final autoCloseSetting = doorSettingsState.settingFor(
       DeviceCapabilityCode.autoClose,
     );
+    final ledOffDelayMinutes =
+        doorSettingsState
+            .settingFor(DeviceCapabilityCode.ledOffDelay)
+            ?.currentValue ??
+        deviceSettingsState.values[DeviceSettingKey.ledOffDelay]?.rawValue ??
+        1;
     final openReminderMinutes =
         doorSettingsState
             .settingFor(DeviceCapabilityCode.doorOpenReminder)
@@ -603,6 +609,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                                 ],
                                 _QuickActionGrid(
                                   ledEnabled: ledEnabled,
+                                  ledOffDelayMinutes: ledOffDelayMinutes,
                                   autoCloseEnabled: autoCloseEnabled,
                                   openReminderEnabled: openReminderEnabled,
                                   openReminderMinutes: openReminderMinutes,
@@ -2075,6 +2082,7 @@ class _CommandFeedback extends StatelessWidget {
 class _QuickActionGrid extends StatelessWidget {
   const _QuickActionGrid({
     required this.ledEnabled,
+    required this.ledOffDelayMinutes,
     required this.autoCloseEnabled,
     required this.openReminderEnabled,
     required this.openReminderMinutes,
@@ -2101,6 +2109,7 @@ class _QuickActionGrid extends StatelessWidget {
   });
 
   final bool ledEnabled;
+  final int ledOffDelayMinutes;
   final bool autoCloseEnabled;
   final bool openReminderEnabled;
   final int openReminderMinutes;
@@ -2139,6 +2148,7 @@ class _QuickActionGrid extends StatelessWidget {
                 Expanded(
                   child: _LedActionCard(
                     enabled: ledEnabled,
+                    offDelayMinutes: ledOffDelayMinutes,
                     available: ledAvailable,
                     busy: busy,
                     textTheme: textTheme,
@@ -2239,6 +2249,7 @@ class _QuickActionGrid extends StatelessWidget {
 class _LedActionCard extends StatelessWidget {
   const _LedActionCard({
     required this.enabled,
+    required this.offDelayMinutes,
     required this.available,
     required this.busy,
     required this.textTheme,
@@ -2247,6 +2258,7 @@ class _LedActionCard extends StatelessWidget {
   });
 
   final bool enabled;
+  final int offDelayMinutes;
   final bool available;
   final bool busy;
   final TextTheme textTheme;
@@ -2286,7 +2298,7 @@ class _LedActionCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            AppLocalizations.of(context).deviceCommandMinutes(1),
+            AppLocalizations.of(context).deviceCommandMinutes(offDelayMinutes),
             maxLines: 1,
             style: AppTextTokens.deviceControlQuickActionMeta(textTheme),
           ),

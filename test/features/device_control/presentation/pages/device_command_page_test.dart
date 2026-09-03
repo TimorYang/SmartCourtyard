@@ -23,6 +23,7 @@ import 'package:flinx/features/records/application/providers.dart';
 import 'package:flinx/features/records/domain/entities/operation_record_page_result.dart';
 import 'package:flinx/features/records/domain/repositories/operation_record_repository.dart';
 import 'package:flinx/features/settings/application/providers.dart';
+import 'package:flinx/features/settings/application/door_settings_controller.dart';
 import 'package:flinx/features/settings/domain/entities/device_capability.dart';
 import 'package:flinx/features/settings/domain/entities/device_setting.dart';
 import 'package:flinx/features/settings/domain/entities/door_setting_snapshot.dart';
@@ -81,8 +82,42 @@ void main() {
       ),
     );
 
-    expect(find.text('5 min'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey<String>('open-reminder-action')),
+        matching: find.text('5 min'),
+      ),
+      findsOneWidget,
+    );
     expect(find.text('10 min'), findsNothing);
+  });
+
+  testWidgets('refreshes the LED off delay after settings update', (
+    tester,
+  ) async {
+    await _pumpDevicePage(
+      tester,
+      _RecordingHardwareGateway(),
+      doorSettingsRepository: const _CommandDoorSettingsRepository(
+        ledOffDelayValue: 1,
+      ),
+    );
+
+    expect(find.text('1 min'), findsOneWidget);
+
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(DeviceCommandPage)),
+    );
+    container
+        .read(doorSettingsControllerProvider('12').notifier)
+        .updateCurrentValue(DeviceCapabilityCode.ledOffDelay, 3);
+    container
+        .read(doorDetailRefreshRequestProvider.notifier)
+        .notify(const DoorDetailRefreshRequest(doorId: '12'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('3 min'), findsOneWidget);
+    expect(find.text('1 min'), findsNothing);
   });
 
   testWidgets('shows a standalone retry state when initial loading fails', (
@@ -2086,9 +2121,13 @@ class _SettingsDeviceCapabilityRepository
 }
 
 class _CommandDoorSettingsRepository implements DoorSettingsRepository {
-  const _CommandDoorSettingsRepository({this.doorOpenReminderValue});
+  const _CommandDoorSettingsRepository({
+    this.doorOpenReminderValue,
+    this.ledOffDelayValue,
+  });
 
   final int? doorOpenReminderValue;
+  final int? ledOffDelayValue;
 
   @override
   Future<List<DoorSettingSnapshot>> fetchSettings({
@@ -2111,6 +2150,15 @@ class _CommandDoorSettingsRepository implements DoorSettingsRepository {
       currentValue: 15,
       unit: 's',
     ),
+    if (ledOffDelayValue != null)
+      DoorSettingSnapshot(
+        code: DeviceCapabilityCode.ledOffDelay,
+        label: 'LED off delay',
+        supported: true,
+        configured: true,
+        currentValue: ledOffDelayValue,
+        unit: 'min',
+      ),
     if (doorOpenReminderValue != null)
       DoorSettingSnapshot(
         code: DeviceCapabilityCode.doorOpenReminder,
