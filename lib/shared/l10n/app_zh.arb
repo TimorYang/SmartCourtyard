@@ -289,6 +289,14 @@
   "upgradeCheckAppUpdateName": "应用版本更新",
   "upgradeCheckFirmwareSection": "固件",
   "upgradeCheckStartAction": "开始升级",
+  "upgradeCheckStartActionWithCount": "开始升级({count})",
+  "@upgradeCheckStartActionWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "upgradeCheckUpgrading": "正在升级",
   "upgradeCheckCompleted": "已完成",
   "upgradeCheckDoorDeviceName": "门设备名称：{name}",

@@ -62,22 +62,15 @@ class CheckUpgradedVersionPage extends ConsumerWidget {
         child: asyncState.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (_, _) => const SizedBox.expand(),
-          data: (state) => state.isShowingProgress
-              ? _UpgradeProgressList(state: state)
-              : _UpgradeContentList(
-                  state: state,
-                  onApplicationTap: () =>
-                      _openApplicationUpdate(context, controller),
-                  onDoorChanged: (doorId) => _handleSelectionResult(
-                    context,
-                    controller.toggleDoor(doorId),
-                  ),
-                  onDoorExpanded: controller.toggleExpanded,
-                  onTargetChanged: (key) => _handleSelectionResult(
-                    context,
-                    controller.toggleTarget(key),
-                  ),
-                ),
+          data: (state) => _UpgradeContentList(
+            state: state,
+            onApplicationTap: () => _openApplicationUpdate(context, controller),
+            onDoorChanged: (doorId) =>
+                _handleSelectionResult(context, controller.toggleDoor(doorId)),
+            onDoorExpanded: controller.toggleExpanded,
+            onTargetChanged: (key) =>
+                _handleSelectionResult(context, controller.toggleTarget(key)),
+          ),
         ),
       ),
       bottomNavigationBar: SafeArea(
@@ -91,7 +84,6 @@ class CheckUpgradedVersionPage extends ConsumerWidget {
               onPressed:
                   current != null &&
                       current.hasFirmwareSelection &&
-                      !current.isShowingProgress &&
                       !current.isSubmitting
                   ? () => _startUpgrade(context, current, controller)
                   : null,
@@ -101,7 +93,11 @@ class CheckUpgradedVersionPage extends ConsumerWidget {
                 shape: const StadiumBorder(),
               ),
               child: Text(
-                l10n.upgradeCheckStartAction,
+                current != null && current.hasFirmwareSelection
+                    ? l10n.upgradeCheckStartActionWithCount(
+                        current.selectedTargetKeys.length,
+                      )
+                    : l10n.upgradeCheckStartAction,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: Colors.white,
                   fontSize: 18,
@@ -231,6 +227,7 @@ class _UpgradeContentList extends StatelessWidget {
               fullySelected: state.isDoorFullySelected(door),
               partiallySelected: state.isDoorPartiallySelected(door),
               selectedTargetKeys: state.selectedTargetKeys,
+              progressByTarget: state.progressByTarget,
               submitting: state.isSubmitting,
               onDoorChanged: () => onDoorChanged(door.doorId),
               onExpanded: () => onDoorExpanded(door.doorId),
@@ -324,6 +321,7 @@ class _DoorUpgradeCard extends StatelessWidget {
     required this.fullySelected,
     required this.partiallySelected,
     required this.selectedTargetKeys,
+    required this.progressByTarget,
     required this.submitting,
     required this.onDoorChanged,
     required this.onExpanded,
@@ -335,6 +333,7 @@ class _DoorUpgradeCard extends StatelessWidget {
   final bool fullySelected;
   final bool partiallySelected;
   final Set<String> selectedTargetKeys;
+  final Map<String, int> progressByTarget;
   final bool submitting;
   final VoidCallback onDoorChanged;
   final VoidCallback onExpanded;
@@ -344,20 +343,27 @@ class _DoorUpgradeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final hasSelectable = door.upgrades.any((target) => target.isSelectable);
+    final allUpgrading =
+        door.upgrades.isNotEmpty &&
+        door.upgrades.every(
+          (target) => target.status == FirmwareUpgradeStatus.upgrading,
+        );
     return _UpdateCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              _SelectionBox(
-                key: CheckUpgradedVersionKeys.deviceCheckbox(door.doorId),
-                selected: fullySelected,
-                mixed: partiallySelected,
-                onTap: hasSelectable && !submitting ? onDoorChanged : null,
-                label: door.doorName,
-              ),
-              const SizedBox(width: 10),
+              if (!allUpgrading) ...[
+                _SelectionBox(
+                  key: CheckUpgradedVersionKeys.deviceCheckbox(door.doorId),
+                  selected: fullySelected,
+                  mixed: partiallySelected,
+                  onTap: hasSelectable && !submitting ? onDoorChanged : null,
+                  label: door.doorName,
+                ),
+                const SizedBox(width: 10),
+              ],
               Expanded(
                 child: Text(
                   door.doorName,
@@ -395,6 +401,7 @@ class _DoorUpgradeCard extends StatelessWidget {
                 target: door.upgrades[index],
                 selected: selectedTargetKeys.contains(door.upgrades[index].key),
                 submitting: submitting,
+                progress: progressByTarget[door.upgrades[index].key],
                 onChanged: () => onTargetChanged(door.upgrades[index].key),
               ),
               if (index != door.upgrades.length - 1)
@@ -419,6 +426,7 @@ class _FirmwareUpgradeRow extends StatelessWidget {
     required this.target,
     required this.selected,
     required this.submitting,
+    required this.progress,
     required this.onChanged,
   });
 
@@ -426,23 +434,31 @@ class _FirmwareUpgradeRow extends StatelessWidget {
   final FirmwareUpgradeTarget target;
   final bool selected;
   final bool submitting;
+  final int? progress;
   final VoidCallback onChanged;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final isUpgrading = target.status == FirmwareUpgradeStatus.upgrading;
+    final hideCheckbox = !target.isSelectable;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            _SelectionBox(
-              key: CheckUpgradedVersionKeys.packageCheckbox(doorId, target.key),
-              selected: selected,
-              onTap: target.isSelectable && !submitting ? onChanged : null,
-              label: target.deviceTypeLabel,
-            ),
-            const SizedBox(width: 14),
+            if (!hideCheckbox) ...[
+              _SelectionBox(
+                key: CheckUpgradedVersionKeys.packageCheckbox(
+                  doorId,
+                  target.key,
+                ),
+                selected: selected,
+                onTap: target.isSelectable && !submitting ? onChanged : null,
+                label: target.deviceTypeLabel,
+              ),
+              const SizedBox(width: 14),
+            ],
             Expanded(
               child: Text(
                 target.deviceTypeLabel,
@@ -455,7 +471,7 @@ class _FirmwareUpgradeRow extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Padding(
-          padding: const EdgeInsets.only(left: 36),
+          padding: EdgeInsets.only(left: hideCheckbox ? 0 : 36),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -492,6 +508,13 @@ class _FirmwareUpgradeRow extends StatelessWidget {
                   ),
                 ],
               ),
+              if (isUpgrading) ...[
+                const SizedBox(height: 12),
+                _FirmwareUpgradeProgress(
+                  id: target.key,
+                  progress: progress ?? 1,
+                ),
+              ],
               if (target.status == FirmwareUpgradeStatus.scheduled &&
                   target.scheduledAt != null) ...[
                 const SizedBox(height: 8),
@@ -942,105 +965,50 @@ class _DialogButton extends StatelessWidget {
   }
 }
 
-class _UpgradeProgressList extends StatelessWidget {
-  const _UpgradeProgressList({required this.state});
-
-  final CheckUpgradedVersionState state;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return ListView(
-      padding: const EdgeInsets.all(24),
-      children: [
-        Text(
-          l10n.upgradeCheckFirmwareSection,
-          style: AppTextTokens.upgradeCheckSectionTitle(
-            Theme.of(context).textTheme,
-          ),
-        ),
-        const SizedBox(height: 10),
-        for (final entry in state.upgradingEntries) ...[
-          _ProgressCard(
-            id: entry.target.key,
-            title: '${entry.doorName} · ${entry.target.deviceTypeLabel}',
-            serialNumber: entry.target.serialNumber,
-            progress: state.progressByTarget[entry.target.key] ?? 1,
-          ),
-          const SizedBox(height: 18),
-        ],
-      ],
-    );
-  }
-}
-
-class _ProgressCard extends StatelessWidget {
-  const _ProgressCard({
-    required this.id,
-    required this.title,
-    required this.serialNumber,
-    required this.progress,
-  });
+class _FirmwareUpgradeProgress extends StatelessWidget {
+  const _FirmwareUpgradeProgress({required this.id, required this.progress});
 
   final String id;
-  final String title;
-  final String serialNumber;
   final int progress;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return _UpdateCard(
-      child: Semantics(
-        key: CheckUpgradedVersionKeys.progressCard(id),
-        label: title,
-        value: l10n.upgradeCheckProgressPercent(progress),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: AppTextTokens.upgradeCheckCardTitle(
-                Theme.of(context).textTheme,
-              ),
+    return Semantics(
+      key: CheckUpgradedVersionKeys.progressCard(id),
+      label: l10n.upgradeCheckUpgrading,
+      value: l10n.upgradeCheckProgressPercent(progress),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: LinearProgressIndicator(
+              value: progress / 100,
+              minHeight: 14,
+              backgroundColor: AppColors.upgradeCheckProgressTrack,
+              color: AppColors.upgradeCheckProgress,
             ),
-            const SizedBox(height: 6),
-            Text(
-              l10n.upgradeCheckSerialNumber(serialNumber),
-              style: AppTextTokens.upgradeCheckMeta(
-                Theme.of(context).textTheme,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: LinearProgressIndicator(
-                value: progress / 100,
-                minHeight: 14,
-                backgroundColor: AppColors.upgradeCheckProgressTrack,
-                color: AppColors.upgradeCheckProgress,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Text(
-                  l10n.upgradeCheckUpgrading,
-                  style: AppTextTokens.upgradeCheckBody(
-                    Theme.of(context).textTheme,
-                  ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Text(
+                l10n.upgradeCheckUpgrading,
+                style: AppTextTokens.upgradeCheckBody(
+                  Theme.of(context).textTheme,
                 ),
-                const Spacer(),
-                Text(
-                  l10n.upgradeCheckProgressPercent(progress),
-                  style: AppTextTokens.upgradeCheckBody(
-                    Theme.of(context).textTheme,
-                  ).copyWith(color: AppColors.upgradeCheckProgress),
-                ),
-              ],
-            ),
-          ],
-        ),
+              ),
+              const Spacer(),
+              Text(
+                l10n.upgradeCheckProgressPercent(progress),
+                style: AppTextTokens.upgradeCheckBody(
+                  Theme.of(context).textTheme,
+                ).copyWith(color: AppColors.upgradeCheckProgress),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

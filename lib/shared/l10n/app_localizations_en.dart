@@ -935,6 +935,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get upgradeCheckStartAction => 'Start upgrading';
 
   @override
+  String upgradeCheckStartActionWithCount(int count) {
+    return 'Start upgrading ($count)';
+  }
+
+  @override
   String get upgradeCheckUpgrading => 'Upgrading';
 
   @override
