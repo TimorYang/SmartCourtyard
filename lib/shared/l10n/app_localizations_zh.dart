@@ -879,6 +879,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get upgradeCheckStartAction => '开始升级';
 
   @override
+  String upgradeCheckStartActionWithCount(int count) {
+    return '开始升级($count)';
+  }
+
+  @override
   String get upgradeCheckUpgrading => '正在升级';
 
   @override

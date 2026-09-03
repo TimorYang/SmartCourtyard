@@ -151,7 +151,7 @@ class FirmwareUpgradeTargetDto {
       ),
       status: status,
       scheduledAt: _nullableNumericString(json['scheduledAt']),
-      upgradeExpireAt: _nullableString(json['upgradeExpireAt']),
+      upgradeExpireAt: _nullableTimestampString(json['upgradeExpireAt']),
     );
   }
 
@@ -169,7 +169,9 @@ class FirmwareUpgradeTargetDto {
         : int.parse(lastFirmwareUpgradedAt!),
     'status': status,
     'scheduledAt': scheduledAt == null ? null : int.parse(scheduledAt!),
-    'upgradeExpireAt': upgradeExpireAt,
+    'upgradeExpireAt': upgradeExpireAt == null
+        ? null
+        : int.parse(upgradeExpireAt!),
   };
 }
 
@@ -258,7 +260,7 @@ class FirmwareUpgradeSubmitResponseDto {
       firmwareReleaseId: _requiredNumericString(json, 'firmwareReleaseId'),
       accepted: accepted,
       scheduledAt: _nullableNumericString(json['scheduledAt']),
-      upgradeExpireAt: _nullableString(json['upgradeExpireAt']),
+      upgradeExpireAt: _nullableTimestampString(json['upgradeExpireAt']),
       failureMessage: _nullableString(json['failureMessage']),
     );
   }
@@ -268,7 +270,9 @@ class FirmwareUpgradeSubmitResponseDto {
     'firmwareReleaseId': int.parse(firmwareReleaseId),
     'accepted': accepted,
     'scheduledAt': scheduledAt == null ? null : int.parse(scheduledAt!),
-    'upgradeExpireAt': upgradeExpireAt,
+    'upgradeExpireAt': upgradeExpireAt == null
+        ? null
+        : int.parse(upgradeExpireAt!),
     'failureMessage': failureMessage,
   };
 }

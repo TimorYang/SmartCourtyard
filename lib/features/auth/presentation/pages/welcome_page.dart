@@ -73,7 +73,6 @@ class WelcomePage extends StatelessWidget {
                     width: double.infinity,
                     child: FilledButton(
                       onPressed: () => context.push(LoginPage.routePath),
-                      // onPressed: () => context.push(RegisterPasswordPage.routePath),
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.brandPrimary,
                         foregroundColor: AppColors.backgroundPrimary,

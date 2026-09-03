@@ -1796,6 +1796,12 @@ abstract class AppLocalizations {
   /// **'Start upgrading'**
   String get upgradeCheckStartAction;
 
+  /// No description provided for @upgradeCheckStartActionWithCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Start upgrading ({count})'**
+  String upgradeCheckStartActionWithCount(int count);
+
   /// No description provided for @upgradeCheckUpgrading.
   ///
   /// In en, this message translates to:

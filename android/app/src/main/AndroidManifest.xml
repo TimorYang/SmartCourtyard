@@ -16,7 +16,7 @@
 
     <application
         android:label="F-linx"
-        android:name="${applicationName}"
+        android:name="com.engagelab.privates.flutter_plugin_engagelab.MTApplication"
         android:allowBackup="false"
         android:requestLegacyExternalStorage="true"
         android:icon="@mipmap/ic_launcher">

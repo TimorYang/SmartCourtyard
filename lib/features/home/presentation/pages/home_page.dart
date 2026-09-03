@@ -132,7 +132,7 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
     }
 
     // Android maps the Bluetooth request to both Bluetooth and location grants.
-    await controller.activate(SystemPermission.bluetooth);
+    await controller.requestIfDenied(SystemPermission.bluetooth);
   }
 
   @override

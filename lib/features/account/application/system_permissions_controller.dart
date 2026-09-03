@@ -55,7 +55,24 @@ class SystemPermissionsController extends Notifier<SystemPermissionsViewState> {
     }
   }
 
-  Future<void> activate(SystemPermission permission) async {
+  Future<void> activate(SystemPermission permission) {
+    return _requestPermissionIfAllowed(
+      permission,
+      openSettingsWhenBlocked: true,
+    );
+  }
+
+  Future<void> requestIfDenied(SystemPermission permission) {
+    return _requestPermissionIfAllowed(
+      permission,
+      openSettingsWhenBlocked: false,
+    );
+  }
+
+  Future<void> _requestPermissionIfAllowed(
+    SystemPermission permission, {
+    required bool openSettingsWhenBlocked,
+  }) async {
     final current = state.permissionFor(permission);
     if (current == null ||
         current.isGranted ||
@@ -63,7 +80,9 @@ class SystemPermissionsController extends Notifier<SystemPermissionsViewState> {
       return;
     }
     if (current.status == SystemPermissionStatus.blocked) {
-      await _openSettings(requestId: _nextRequestId('settings'));
+      if (openSettingsWhenBlocked) {
+        await _openSettings(requestId: _nextRequestId('settings'));
+      }
       return;
     }
 

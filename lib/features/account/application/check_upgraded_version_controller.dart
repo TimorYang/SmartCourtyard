@@ -91,7 +91,7 @@ class CheckUpgradedVersionController
 
   Future<bool> openApplicationUpdate() {
     final current = state.value;
-    if (current == null || current.isShowingProgress) {
+    if (current == null) {
       return Future.value(false);
     }
     final updateUrl = current.application?.updateUrl;
@@ -101,7 +101,7 @@ class CheckUpgradedVersionController
 
   UpgradeSelectionResult toggleDoor(String doorId) {
     final current = state.value;
-    if (current == null || current.isSubmitting || current.isShowingProgress) {
+    if (current == null || current.isSubmitting) {
       return UpgradeSelectionResult.ignored;
     }
     final door = current.doors
@@ -142,7 +142,7 @@ class CheckUpgradedVersionController
 
   UpgradeSelectionResult toggleTarget(String targetKey) {
     final current = state.value;
-    if (current == null || current.isSubmitting || current.isShowingProgress) {
+    if (current == null || current.isSubmitting) {
       return UpgradeSelectionResult.ignored;
     }
     final target = current.targetForKey(targetKey);
@@ -165,7 +165,7 @@ class CheckUpgradedVersionController
 
   void toggleExpanded(String doorId) {
     final current = state.value;
-    if (current == null || current.isSubmitting || current.isShowingProgress) {
+    if (current == null || current.isSubmitting) {
       return;
     }
     final next = Set<String>.from(current.expandedDoorIds);

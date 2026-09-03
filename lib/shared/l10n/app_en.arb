@@ -951,6 +951,14 @@
   "upgradeCheckAppUpdateName": "App version update",
   "upgradeCheckFirmwareSection": "firmware",
   "upgradeCheckStartAction": "Start upgrading",
+  "upgradeCheckStartActionWithCount": "Start upgrading ({count})",
+  "@upgradeCheckStartActionWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "upgradeCheckUpgrading": "Upgrading",
   "upgradeCheckCompleted": "Completed",
   "upgradeCheckDoorDeviceName": "Door Device Name : {name}",

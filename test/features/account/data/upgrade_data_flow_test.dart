@@ -62,6 +62,25 @@ void main() {
     );
   });
 
+  test('parses the immediate firmware upgrade response timestamp', () {
+    final dto = FirmwareUpgradeSubmitResponseDto.fromJson({
+      'deviceId': '10',
+      'firmwareReleaseId': '5',
+      'accepted': true,
+      'scheduledAt': null,
+      'upgradeExpireAt': 1788421950225,
+      'failureMessage': '',
+    });
+
+    expect(dto.upgradeExpireAt, '1788421950225');
+    expect(dto.failureMessage, isNull);
+    expect(dto.toJson()['upgradeExpireAt'], 1788421950225);
+    expect(
+      dto.toDomain().upgradeExpireAt,
+      DateTime.fromMillisecondsSinceEpoch(1788421950225, isUtc: true),
+    );
+  });
+
   test('rejects unknown firmware statuses', () {
     final target = Map<String, dynamic>.from(
       (_firmwareDoorJson['upgrades'] as List).single as Map,

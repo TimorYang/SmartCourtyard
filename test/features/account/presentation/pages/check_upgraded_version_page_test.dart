@@ -135,6 +135,16 @@ void main() {
       find.byKey(CheckUpgradedVersionKeys.progressCard(target.key)),
       findsOneWidget,
     );
+    expect(
+      find.byKey(
+        CheckUpgradedVersionKeys.packageCheckbox('door-1', target.key),
+      ),
+      findsNothing,
+    );
+    expect(
+      find.byKey(CheckUpgradedVersionKeys.deviceCheckbox('door-1')),
+      findsNothing,
+    );
     expect(find.text('1%'), findsOneWidget);
 
     await tester.pump(const Duration(seconds: 3));
@@ -147,6 +157,109 @@ void main() {
     expect(find.text('99%'), findsOneWidget);
     expect(find.text('100%'), findsNothing);
     expect(repository.progresses, {target.key: 99});
+  });
+
+  testWidgets('keeps available firmware selectable beside upgrading firmware', (
+    tester,
+  ) async {
+    final upgrading = _target(
+      deviceId: '101',
+      firmwareReleaseId: '1001',
+      status: FirmwareUpgradeStatus.upgrading,
+    );
+    final available = _target(deviceId: '102', firmwareReleaseId: '1002');
+    final repository = _FakeUpgradeRepository(
+      doors: [
+        _door([upgrading, available]),
+      ],
+      progresses: {upgrading.key: 37},
+    );
+
+    await tester.pumpWidget(_TestApp(repository: repository));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(CheckUpgradedVersionKeys.progressCard(upgrading.key)),
+      findsOneWidget,
+    );
+    expect(find.text('37%'), findsOneWidget);
+    expect(
+      find.byKey(
+        CheckUpgradedVersionKeys.packageCheckbox('door-1', upgrading.key),
+      ),
+      findsNothing,
+    );
+    expect(
+      find.byKey(CheckUpgradedVersionKeys.deviceCheckbox('door-1')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(
+        CheckUpgradedVersionKeys.packageCheckbox('door-1', available.key),
+      ),
+      findsOneWidget,
+    );
+
+    await tester.tap(
+      find.byKey(
+        CheckUpgradedVersionKeys.packageCheckbox('door-1', available.key),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('Start upgrading (1)'), findsOneWidget);
+    expect(
+      tester
+          .widget<FilledButton>(
+            find.byKey(CheckUpgradedVersionKeys.startButton),
+          )
+          .onPressed,
+      isNotNull,
+    );
+  });
+
+  testWidgets('keeps scheduled firmware selectable for reconfiguration', (
+    tester,
+  ) async {
+    final scheduled = _target(
+      status: FirmwareUpgradeStatus.scheduled,
+      scheduledAt: DateTime.now().add(const Duration(days: 1)),
+    );
+    final repository = _FakeUpgradeRepository(
+      doors: [
+        _door([scheduled]),
+      ],
+    );
+
+    await tester.pumpWidget(_TestApp(repository: repository));
+    await tester.pumpAndSettle();
+
+    final packageCheckbox = CheckUpgradedVersionKeys.packageCheckbox(
+      'door-1',
+      scheduled.key,
+    );
+    expect(find.byKey(packageCheckbox), findsOneWidget);
+
+    await tester.tap(find.byKey(packageCheckbox));
+    await tester.pump();
+
+    expect(find.text('Start upgrading (1)'), findsOneWidget);
+    expect(
+      tester
+          .widget<FilledButton>(
+            find.byKey(CheckUpgradedVersionKeys.startButton),
+          )
+          .onPressed,
+      isNotNull,
+    );
+
+    await tester.tap(find.byKey(CheckUpgradedVersionKeys.startButton));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(CheckUpgradedVersionKeys.scheduleDialog), findsOneWidget);
+    await tester.tap(find.text('postpone'));
+    await tester.pumpAndSettle();
+    expect(find.text('immediate').last, findsOneWidget);
   });
 
   testWidgets('keeps the middle area blank when neither API has content', (
@@ -210,10 +323,15 @@ FirmwareUpgradeDoor _door(List<FirmwareUpgradeTarget> targets) {
   );
 }
 
-FirmwareUpgradeTarget _target() {
-  return const FirmwareUpgradeTarget(
-    deviceId: '101',
-    firmwareReleaseId: '1001',
+FirmwareUpgradeTarget _target({
+  String deviceId = '101',
+  String firmwareReleaseId = '1001',
+  FirmwareUpgradeStatus status = FirmwareUpgradeStatus.available,
+  DateTime? scheduledAt,
+}) {
+  return FirmwareUpgradeTarget(
+    deviceId: deviceId,
+    firmwareReleaseId: firmwareReleaseId,
     serialNumber: 'SN-101',
     currentVersion: null,
     deviceType: 'opener',
@@ -221,8 +339,8 @@ FirmwareUpgradeTarget _target() {
     packageSizeBytes: 19188941,
     availableVersion: '1.2.5',
     lastFirmwareUpgradedAt: null,
-    status: FirmwareUpgradeStatus.available,
-    scheduledAt: null,
+    status: status,
+    scheduledAt: scheduledAt,
     upgradeExpireAt: null,
   );
 }
@@ -249,14 +367,15 @@ class _FakeUpgradeRepository implements UpgradeRepository {
     ),
     this.doors = const [],
     this.submitResults = const [],
-  });
+    Map<String, int> progresses = const {},
+  }) : progresses = Map<String, int>.from(progresses);
 
   final AppReleaseUpdate application;
   final List<FirmwareUpgradeDoor> doors;
   final List<FirmwareUpgradeSubmissionResult> submitResults;
   var submitCount = 0;
   List<String> submittedTargetKeys = const [];
-  Map<String, int> progresses = const {};
+  Map<String, int> progresses;
 
   @override
   Future<AppReleaseUpdate> checkAppRelease({required String requestId}) async {

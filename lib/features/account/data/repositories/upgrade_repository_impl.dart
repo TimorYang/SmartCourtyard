@@ -242,7 +242,7 @@ extension FirmwareUpgradeTargetDtoMapper on FirmwareUpgradeTargetDto {
         _ => throw const FormatException('Unknown firmware upgrade status.'),
       },
       scheduledAt: _parseMilliseconds(scheduledAt),
-      upgradeExpireAt: _parseIsoDateTime(upgradeExpireAt),
+      upgradeExpireAt: _parseMilliseconds(upgradeExpireAt),
     );
   }
 }
@@ -255,7 +255,7 @@ extension FirmwareUpgradeSubmitResponseDtoMapper
       firmwareReleaseId: firmwareReleaseId,
       accepted: accepted,
       scheduledAt: _parseMilliseconds(scheduledAt),
-      upgradeExpireAt: _parseIsoDateTime(upgradeExpireAt),
+      upgradeExpireAt: _parseMilliseconds(upgradeExpireAt),
       failureMessage: failureMessage,
     );
   }
@@ -268,9 +268,4 @@ DateTime? _parseMilliseconds(String? value) {
     throw const FormatException('Invalid millisecond timestamp.');
   }
   return DateTime.fromMillisecondsSinceEpoch(milliseconds, isUtc: true);
-}
-
-DateTime? _parseIsoDateTime(String? value) {
-  if (value == null) return null;
-  return DateTime.tryParse(value)?.toUtc();
 }

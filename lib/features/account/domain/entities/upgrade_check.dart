@@ -73,7 +73,9 @@ class FirmwareUpgradeTarget {
 
   String get key => '$deviceId:$firmwareReleaseId';
 
-  bool get isSelectable => status == FirmwareUpgradeStatus.available;
+  bool get isSelectable =>
+      status == FirmwareUpgradeStatus.available ||
+      status == FirmwareUpgradeStatus.scheduled;
 
   FirmwareUpgradeTarget copyWith({
     FirmwareUpgradeStatus? status,
