@@ -12,6 +12,8 @@ import android.location.LocationManager
 import android.provider.Settings
 import android.net.Uri
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.feizhou.znty.flinxhardware.bridge.PermissionKindDto
@@ -24,8 +26,14 @@ class PermissionManager(
   private val activityProvider: () -> Activity?,
 ) {
   private var pendingBleScanReadyCallback: ((BleScanReadiness) -> Unit)? = null
+  private val mainHandler = Handler(Looper.getMainLooper())
+  private var pendingHardwarePermissionKinds: List<PermissionKindDto>? = null
+  private var queuedHardwarePermissionKinds: List<PermissionKindDto>? = null
   private var pendingNotificationPermissionCallback:
     ((Result<PermissionStatusDto>) -> Unit)? = null
+  private var queuedNotificationPermissionCallback:
+    ((Result<PermissionStatusDto>) -> Unit)? = null
+
   /** 读取当前权限快照，供 Flutter 侧展示和前置校验使用。 */
   fun getPermissionSnapshot(): PermissionSnapshotDto {
     val bluetoothStatus = statusFor(PermissionKindDto.BLUETOOTH)
@@ -44,27 +52,79 @@ class PermissionManager(
     )
   }
 
-  /** 触发权限请求（异步系统弹窗），并立即返回当前快照。 */
+  /** 触发硬件权限请求；与通知权限请求串行化，避免 Android 丢弃并发弹窗。 */
   fun requestPermissions(permissions: List<PermissionKindDto>): PermissionSnapshotDto {
+    val hardwarePermissionKinds = permissions
+      .filter { it != PermissionKindDto.NOTIFICATION }
+      .distinct()
+    if (hardwarePermissionKinds.isEmpty()) {
+      return getPermissionSnapshot()
+    }
+
+    if (hasPendingRuntimePermissionRequest()) {
+      queueHardwarePermissionRequest(hardwarePermissionKinds)
+      return getPermissionSnapshot()
+    }
+
+    startHardwarePermissionRequest(hardwarePermissionKinds)
+    return getPermissionSnapshot()
+  }
+
+  private fun startHardwarePermissionRequest(
+    permissionKinds: List<PermissionKindDto>,
+  ): Boolean {
     val activity = activityProvider()
-    if (activity != null) {
-      val missingPermissions = permissions
-        .filter { it != PermissionKindDto.NOTIFICATION }
-        .flatMap { mapPermissionKind(it) }
-        .distinct()
-        .filterNot(::isGranted)
-      permissions
-        .filter { it != PermissionKindDto.NOTIFICATION }
-        .forEach(::markRequested)
-      if (missingPermissions.isNotEmpty()) {
-        ActivityCompat.requestPermissions(
-          activity,
-          missingPermissions.toTypedArray(),
-          REQUEST_CODE,
-        )
+    if (activity == null) return false
+
+    val missingPermissions = permissionKinds
+      .flatMap(::mapPermissionKind)
+      .distinct()
+      .filterNot(::isGranted)
+    if (missingPermissions.isEmpty()) return false
+
+    pendingHardwarePermissionKinds = permissionKinds
+    ActivityCompat.requestPermissions(
+      activity,
+      missingPermissions.toTypedArray(),
+      REQUEST_CODE,
+    )
+    return true
+  }
+
+  private fun queueHardwarePermissionRequest(
+    permissionKinds: List<PermissionKindDto>,
+  ) {
+    queuedHardwarePermissionKinds = (
+      queuedHardwarePermissionKinds.orEmpty() + permissionKinds
+    ).distinct()
+  }
+
+  private fun hasPendingRuntimePermissionRequest(): Boolean {
+    return pendingHardwarePermissionKinds != null ||
+      pendingNotificationPermissionCallback != null
+  }
+
+  private fun continueQueuedRuntimePermissionRequest() {
+    mainHandler.post {
+      if (hasPendingRuntimePermissionRequest()) {
+        return@post
+      }
+
+      val hardwarePermissionKinds = queuedHardwarePermissionKinds
+      if (hardwarePermissionKinds != null) {
+        queuedHardwarePermissionKinds = null
+        if (!startHardwarePermissionRequest(hardwarePermissionKinds)) {
+          continueQueuedRuntimePermissionRequest()
+        }
+        return@post
+      }
+
+      val notificationCallback = queuedNotificationPermissionCallback ?: return@post
+      queuedNotificationPermissionCallback = null
+      if (!startNotificationPermissionRequest(notificationCallback)) {
+        continueQueuedRuntimePermissionRequest()
       }
     }
-    return getPermissionSnapshot()
   }
 
   /** 读取通知权限，独立于硬件权限快照以支持 iOS 异步授权状态。 */
@@ -87,25 +147,41 @@ class PermissionManager(
       callback(Result.success(getNotificationPermission()))
       return
     }
+    if (pendingHardwarePermissionKinds != null) {
+      if (queuedNotificationPermissionCallback == null) {
+        queuedNotificationPermissionCallback = callback
+      } else {
+        callback(Result.success(getNotificationPermission()))
+      }
+      return
+    }
 
+    if (!startNotificationPermissionRequest(callback)) {
+      continueQueuedRuntimePermissionRequest()
+    }
+  }
+
+  private fun startNotificationPermissionRequest(
+    callback: (Result<PermissionStatusDto>) -> Unit,
+  ): Boolean {
     val activity = activityProvider()
     if (activity == null) {
       callback(Result.success(getNotificationPermission()))
-      return
+      return false
     }
     val permission = Manifest.permission.POST_NOTIFICATIONS
     if (isGranted(permission)) {
       callback(Result.success(PermissionStatusDto.GRANTED))
-      return
+      return false
     }
 
-    markRequested(PermissionKindDto.NOTIFICATION)
     pendingNotificationPermissionCallback = callback
     ActivityCompat.requestPermissions(
       activity,
       arrayOf(permission),
       REQUEST_NOTIFICATION_PERMISSION,
     )
+    return true
   }
 
   /** 准备 BLE 扫描：先申请权限，再请求用户开启系统蓝牙。 */
@@ -158,7 +234,15 @@ class PermissionManager(
     if (requestCode == REQUEST_NOTIFICATION_PERMISSION) {
       val callback = pendingNotificationPermissionCallback
       pendingNotificationPermissionCallback = null
+      markRequested(PermissionKindDto.NOTIFICATION)
       callback?.invoke(Result.success(getNotificationPermission()))
+      continueQueuedRuntimePermissionRequest()
+      return true
+    }
+    if (requestCode == REQUEST_CODE) {
+      pendingHardwarePermissionKinds?.forEach(::markPermissionRequestCompleted)
+      pendingHardwarePermissionKinds = null
+      continueQueuedRuntimePermissionRequest()
       return true
     }
     if (requestCode != REQUEST_BLE_SCAN_PERMISSION) {
@@ -247,13 +331,13 @@ class PermissionManager(
     if (permissions.isEmpty()) return PermissionStatusDto.GRANTED
     if (permissions.all(::isGranted)) return PermissionStatusDto.GRANTED
     val activity = activityProvider()
-    val wasRequested = context
+    val wasRequestCompleted = context
       .getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)
-      .getBoolean("requested_${kind.name}", false)
+      .getBoolean("completed_${kind.name}", false)
     val canRequestAgain = activity != null && permissions.any {
       ActivityCompat.shouldShowRequestPermissionRationale(activity, it)
     }
-    return if (wasRequested && !canRequestAgain) {
+    return if (wasRequestCompleted && !canRequestAgain) {
       PermissionStatusDto.BLOCKED
     } else {
       PermissionStatusDto.DENIED
@@ -284,6 +368,13 @@ class PermissionManager(
     context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)
       .edit()
       .putBoolean("requested_${kind.name}", true)
+      .apply()
+  }
+
+  private fun markPermissionRequestCompleted(kind: PermissionKindDto) {
+    context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)
+      .edit()
+      .putBoolean("completed_${kind.name}", true)
       .apply()
   }
 
