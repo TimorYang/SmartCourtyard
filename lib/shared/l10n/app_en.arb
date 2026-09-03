@@ -1275,6 +1275,10 @@
   "@fBoxWiringTestCommandFailed": {
     "description": "Shown when an F-box wiring test command fails"
   },
+  "fBoxWiringTestControlModeReportFailed": "Unable to save the control mode. Please try again.",
+  "@fBoxWiringTestControlModeReportFailed": {
+    "description": "Shown when reporting the F-box control mode fails"
+  },
   "addDeviceUsbWifiModule": "USB WIFI module",
   "@addDeviceUsbWifiModule": {
     "description": "USB WIFI module option on the add device page"

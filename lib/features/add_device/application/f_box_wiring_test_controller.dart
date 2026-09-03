@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/errors/app_error.dart';
 import '../../../core/logging/app_logger.dart';
 import '../../../core/logging/providers.dart';
-import '../../device_control/application/device_command_controller.dart';
 import '../../../platform_bridge/hardware_models.dart';
+import '../../device_control/application/device_command_controller.dart';
+import '../../device_control/domain/entities/f_box_control_mode.dart';
+import '../../device_control/domain/use_cases/update_door_control_mode_use_case.dart';
 import '../presentation/navigation/f_box_wiring_test_route.dart';
 import 'providers.dart';
 
@@ -26,9 +28,21 @@ enum FBoxWiringTestAction {
   DoorCommand get doorCommand => deviceCommandAction.doorCommand;
 }
 
-enum FBoxWiringTestStatus { idle, sending, succeeded, rejected, failed }
+enum FBoxWiringTestStatus {
+  idle,
+  sending,
+  reportingControlMode,
+  succeeded,
+  rejected,
+  failed,
+}
 
-enum FBoxWiringTestError { noConnectedDevice, commandRejected, commandFailed }
+enum FBoxWiringTestError {
+  noConnectedDevice,
+  commandRejected,
+  commandFailed,
+  controlModeReportFailed,
+}
 
 class FBoxWiringTestState {
   const FBoxWiringTestState({
@@ -36,14 +50,19 @@ class FBoxWiringTestState {
     this.lastAction,
     this.hasTested = false,
     this.error,
+    this.errorMessage,
   });
 
   final FBoxWiringTestStatus status;
   final FBoxWiringTestAction? lastAction;
   final bool hasTested;
   final FBoxWiringTestError? error;
+  final String? errorMessage;
 
   bool get isSending => status == FBoxWiringTestStatus.sending;
+  bool get isReportingControlMode =>
+      status == FBoxWiringTestStatus.reportingControlMode;
+  bool get isBusy => isSending || isReportingControlMode;
 
   FBoxWiringTestState copyWith({
     FBoxWiringTestStatus? status,
@@ -51,24 +70,33 @@ class FBoxWiringTestState {
     bool? hasTested,
     FBoxWiringTestError? error,
     bool clearError = false,
+    String? errorMessage,
+    bool clearErrorMessage = false,
   }) {
     return FBoxWiringTestState(
       status: status ?? this.status,
       lastAction: lastAction ?? this.lastAction,
       hasTested: hasTested ?? this.hasTested,
       error: clearError ? null : error ?? this.error,
+      errorMessage: clearErrorMessage
+          ? null
+          : errorMessage ?? this.errorMessage,
     );
   }
 }
 
 class FBoxWiringTestController extends Notifier<FBoxWiringTestState> {
   late final LocalDoorCommandExecutor _commandExecutor;
+  late final UpdateDoorControlModeUseCase _updateDoorControlModeUseCase;
   late final AppLogger _logger;
   int _requestCounter = 0;
 
   @override
   FBoxWiringTestState build() {
     _commandExecutor = ref.watch(localDoorCommandExecutorProvider);
+    _updateDoorControlModeUseCase = ref.watch(
+      updateDoorControlModeUseCaseProvider,
+    );
     _logger = ref.watch(appLoggerProvider);
     return const FBoxWiringTestState();
   }
@@ -77,7 +105,7 @@ class FBoxWiringTestController extends Notifier<FBoxWiringTestState> {
     required FBoxWiringTestRouteData routeData,
     required FBoxWiringTestAction action,
   }) async {
-    if (state.isSending) {
+    if (state.isBusy) {
       return;
     }
 
@@ -92,6 +120,7 @@ class FBoxWiringTestController extends Notifier<FBoxWiringTestState> {
       status: FBoxWiringTestStatus.sending,
       lastAction: action,
       clearError: true,
+      clearErrorMessage: true,
     );
     _logger.info(
       'fbox_wiring_command_started',
@@ -120,6 +149,7 @@ class FBoxWiringTestController extends Notifier<FBoxWiringTestState> {
           lastAction: action,
           hasTested: true,
           clearError: true,
+          clearErrorMessage: true,
         );
         _logger.info(
           'fbox_wiring_command_completed',
@@ -133,6 +163,7 @@ class FBoxWiringTestController extends Notifier<FBoxWiringTestState> {
           status: FBoxWiringTestStatus.rejected,
           lastAction: action,
           error: FBoxWiringTestError.commandRejected,
+          clearErrorMessage: true,
         );
         _logger.warning(
           'fbox_wiring_command_rejected',
@@ -150,6 +181,7 @@ class FBoxWiringTestController extends Notifier<FBoxWiringTestState> {
         status: FBoxWiringTestStatus.failed,
         lastAction: action,
         error: _mapError(error),
+        clearErrorMessage: true,
       );
       _logger.error(
         'fbox_wiring_command_failed',
@@ -168,6 +200,7 @@ class FBoxWiringTestController extends Notifier<FBoxWiringTestState> {
         status: FBoxWiringTestStatus.failed,
         lastAction: action,
         error: FBoxWiringTestError.commandFailed,
+        clearErrorMessage: true,
       );
       _logger.error(
         'fbox_wiring_command_failed',
@@ -179,6 +212,168 @@ class FBoxWiringTestController extends Notifier<FBoxWiringTestState> {
         context: {'action': action.name},
       );
     }
+  }
+
+  Future<bool> updateControlMode({
+    required FBoxWiringTestRouteData routeData,
+    required FBoxControlMode mode,
+  }) async {
+    if (state.isBusy) {
+      return false;
+    }
+
+    final requestId = _nextControlModeRequestId(routeData, mode);
+    final flowId = routeData.onboardingFlowId?.trim();
+    final sn = _resolveControlModeSn(routeData);
+    if (sn == null) {
+      state = state.copyWith(
+        status: FBoxWiringTestStatus.failed,
+        error: FBoxWiringTestError.controlModeReportFailed,
+        clearErrorMessage: true,
+      );
+      _logger.warning(
+        'fbox_control_mode_update_ignored',
+        tag: AppLogTag.general,
+        flowId: flowId?.isEmpty == true ? null : flowId,
+        requestId: requestId,
+        context: {
+          'source': routeData.entryPoint.queryValue,
+          'controlMode': mode.apiValue,
+          'reason': 'missing_serial_number',
+        },
+      );
+      return false;
+    }
+
+    state = state.copyWith(
+      status: FBoxWiringTestStatus.reportingControlMode,
+      clearError: true,
+      clearErrorMessage: true,
+    );
+    _logger.info(
+      'fbox_control_mode_update_started',
+      tag: AppLogTag.general,
+      flowId: flowId?.isEmpty == true ? null : flowId,
+      requestId: requestId,
+      context: {
+        'source': routeData.entryPoint.queryValue,
+        'controlMode': mode.apiValue,
+      },
+    );
+
+    try {
+      await _updateDoorControlModeUseCase(
+        sn: sn,
+        mode: mode,
+        requestId: requestId,
+      );
+      if (!ref.mounted) {
+        return false;
+      }
+      state = state.copyWith(
+        status: FBoxWiringTestStatus.succeeded,
+        clearError: true,
+        clearErrorMessage: true,
+      );
+      _logger.info(
+        'fbox_control_mode_update_completed',
+        tag: AppLogTag.general,
+        flowId: flowId?.isEmpty == true ? null : flowId,
+        requestId: requestId,
+        context: {
+          'source': routeData.entryPoint.queryValue,
+          'controlMode': mode.apiValue,
+          'result': 'accepted',
+        },
+      );
+      return true;
+    } on AppError catch (error, stackTrace) {
+      if (!ref.mounted) {
+        return false;
+      }
+      state = state.copyWith(
+        status: FBoxWiringTestStatus.failed,
+        error: FBoxWiringTestError.controlModeReportFailed,
+        errorMessage: _serverMessage(error),
+      );
+      _logger.error(
+        'fbox_control_mode_update_failed',
+        tag: AppLogTag.general,
+        flowId: flowId?.isEmpty == true ? null : flowId,
+        requestId: requestId,
+        error: error,
+        stackTrace: stackTrace,
+        context: {
+          'source': routeData.entryPoint.queryValue,
+          'controlMode': mode.apiValue,
+        },
+      );
+      return false;
+    } catch (error, stackTrace) {
+      if (!ref.mounted) {
+        return false;
+      }
+      state = state.copyWith(
+        status: FBoxWiringTestStatus.failed,
+        error: FBoxWiringTestError.controlModeReportFailed,
+        clearErrorMessage: true,
+      );
+      _logger.error(
+        'fbox_control_mode_update_failed',
+        tag: AppLogTag.general,
+        flowId: flowId?.isEmpty == true ? null : flowId,
+        requestId: requestId,
+        error: error,
+        stackTrace: stackTrace,
+        context: {
+          'source': routeData.entryPoint.queryValue,
+          'controlMode': mode.apiValue,
+        },
+      );
+      return false;
+    }
+  }
+
+  String? _resolveControlModeSn(FBoxWiringTestRouteData routeData) {
+    final sn = routeData.entryPoint == FBoxWiringTestEntryPoint.deviceCommand
+        ? _resolveDeviceCommandSn(routeData)
+        : _resolveOnboardingSn(routeData);
+    final normalized = sn?.trim();
+    return normalized == null || normalized.isEmpty ? null : normalized;
+  }
+
+  String? _resolveOnboardingSn(FBoxWiringTestRouteData routeData) {
+    final addDeviceState = ref.read(addDeviceControllerProvider);
+    final routeDeviceId = routeData.deviceId.trim();
+    final routeDevice = routeDeviceId.isEmpty
+        ? null
+        : addDeviceState.devices[routeDeviceId];
+    final routeSn = routeDevice?.sn?.trim();
+    if (routeSn?.isNotEmpty == true) {
+      return routeSn;
+    }
+    return addDeviceState.selectedDevice?.sn;
+  }
+
+  String? _resolveDeviceCommandSn(FBoxWiringTestRouteData routeData) {
+    final commandState = ref.read(deviceCommandControllerProvider);
+    final routeDeviceId = routeData.deviceId.trim();
+    final selectedDeviceId = commandState.selectedDeviceId?.trim() ?? '';
+    final targetDeviceId = routeDeviceId.isNotEmpty
+        ? routeDeviceId
+        : selectedDeviceId;
+    if (targetDeviceId.isEmpty) {
+      return null;
+    }
+    return commandState.doorDevices
+        .where((device) => device.deviceId == targetDeviceId)
+        .firstOrNull
+        ?.sn;
+  }
+
+  String? _serverMessage(AppError error) {
+    final message = error.userMessage?.trim();
+    return message == null || message.isEmpty ? null : message;
   }
 
   _FBoxWiringCommandTarget? _resolveTarget(FBoxWiringTestRouteData routeData) {
@@ -245,6 +440,17 @@ class FBoxWiringTestController extends Notifier<FBoxWiringTestState> {
     final flowId = routeData.onboardingFlowId?.trim();
     final scope = flowId == null || flowId.isEmpty ? 'fbox-wiring' : flowId;
     return '$scope:${action.name}:${DateTime.now().toUtc().microsecondsSinceEpoch}-$_requestCounter';
+  }
+
+  String _nextControlModeRequestId(
+    FBoxWiringTestRouteData routeData,
+    FBoxControlMode mode,
+  ) {
+    _requestCounter += 1;
+    final flowId = routeData.onboardingFlowId?.trim();
+    final scope = flowId == null || flowId.isEmpty ? 'fbox-wiring' : flowId;
+    return '$scope:control-mode:${mode.name}:'
+        '${DateTime.now().toUtc().microsecondsSinceEpoch}-$_requestCounter';
   }
 }
 

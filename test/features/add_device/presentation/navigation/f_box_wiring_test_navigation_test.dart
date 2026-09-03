@@ -1,6 +1,13 @@
+import 'package:flinx/features/add_device/application/add_device_controller.dart';
+import 'package:flinx/features/add_device/application/providers.dart';
 import 'package:flinx/features/add_device/presentation/navigation/f_box_wiring_test_route.dart';
 import 'package:flinx/features/add_device/presentation/pages/f_box_wiring_test_page.dart';
 import 'package:flinx/features/device_control/application/device_command_controller.dart';
+import 'package:flinx/features/device_control/domain/entities/door_device.dart';
+import 'package:flinx/features/device_control/domain/entities/f_box_control_mode.dart';
+import 'package:flinx/features/device_control/domain/repositories/door_control_mode_repository.dart';
+import 'package:flinx/features/device_control/domain/use_cases/update_door_control_mode_use_case.dart';
+import 'package:flinx/platform_bridge/hardware_models.dart';
 import 'package:flinx/platform_bridge/mock_hardware_gateway.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
 import 'package:flinx/shared/widgets/flinx_navigation_bar.dart';
@@ -272,11 +279,32 @@ Future<void> _pumpNavigationApp(
     ],
   );
   addTearDown(router.dispose);
+  final addDeviceState = AddDeviceState.initial().copyWith(
+    selectedDevice: BleDevice(
+      requestId: 'navigation-request',
+      scanSessionId: 'navigation-session',
+      id: 'fbox-device',
+      sn: 'SN-NAVIGATION-FBOX',
+      rssi: -35,
+      seenAtMillis: 1,
+    ),
+  );
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
+        addDeviceControllerProvider.overrideWith(
+          () => _NavigationAddDeviceController(addDeviceState),
+        ),
+        deviceCommandControllerProvider.overrideWith(
+          _NavigationDeviceCommandController.new,
+        ),
         deviceCommandHardwareGatewayProvider.overrideWithValue(
           MockHardwareGateway(),
+        ),
+        updateDoorControlModeUseCaseProvider.overrideWithValue(
+          UpdateDoorControlModeUseCase(
+            repository: _NavigationDoorControlModeRepository(),
+          ),
         ),
       ],
       child: MaterialApp.router(
@@ -314,4 +342,39 @@ class _TestAction extends StatelessWidget {
   Widget build(BuildContext context) {
     return FilledButton(onPressed: onPressed, child: Text(label));
   }
+}
+
+class _NavigationAddDeviceController extends AddDeviceController {
+  _NavigationAddDeviceController(this.initialState);
+
+  final AddDeviceState initialState;
+
+  @override
+  AddDeviceState build() => initialState;
+}
+
+class _NavigationDeviceCommandController extends DeviceCommandController {
+  @override
+  DeviceCommandState build() {
+    return const DeviceCommandState(
+      selectedDeviceId: 'parent-device',
+      doorDevices: [
+        DoorDevice(
+          deviceId: 'parent-device',
+          sn: 'SN-NAVIGATION-PARENT',
+          deviceType: 'fbox',
+        ),
+      ],
+    );
+  }
+}
+
+class _NavigationDoorControlModeRepository
+    implements DoorControlModeRepository {
+  @override
+  Future<void> updateControlMode({
+    required String sn,
+    required FBoxControlMode mode,
+    required String requestId,
+  }) async {}
 }

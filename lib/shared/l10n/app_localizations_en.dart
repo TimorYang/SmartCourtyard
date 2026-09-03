@@ -1304,6 +1304,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'The test failed. Check the connection and try again.';
 
   @override
+  String get fBoxWiringTestControlModeReportFailed =>
+      'Unable to save the control mode. Please try again.';
+
+  @override
   String get addDeviceUsbWifiModule => 'USB WIFI module';
 
   @override

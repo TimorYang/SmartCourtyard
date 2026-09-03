@@ -382,6 +382,8 @@ class AppSpacingTokens {
   static const fBoxWiringTestBottomPadding = 28.0;
   static const fBoxWiringTestStatusToAction = 32.0;
   static const fBoxWiringTestActionHeight = 52.0;
+  static const fBoxWiringTestProgressIndicatorSize = 20.0;
+  static const fBoxWiringTestProgressIndicatorStrokeWidth = 2.0;
   static const fBoxWiringTestMinimumPageHeight = 620.0;
   static const safetySensorPairingContentTop = 48.0;
   static const safetySensorPairingIllustrationSize = 230.0;

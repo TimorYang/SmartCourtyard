@@ -16,21 +16,26 @@ import '../../../platform_bridge/hardware_gateway.dart';
 import '../../../platform_bridge/hardware_models.dart';
 import '../data/data_sources/door_detail_api.dart';
 import '../data/data_sources/door_detail_remote_data_source.dart';
+import '../data/data_sources/door_control_mode_api.dart';
+import '../data/data_sources/door_control_mode_remote_data_source.dart';
 import '../data/data_sources/remote_door_command_api.dart';
 import '../data/data_sources/remote_door_command_remote_data_source.dart';
 import '../data/mappers/door_realtime_state_mapper.dart';
+import '../data/repositories/door_control_mode_repository_impl.dart';
 import '../data/repositories/door_detail_repository_impl.dart';
 import '../data/repositories/remote_door_command_repository_impl.dart';
 import '../domain/entities/door_detail.dart';
 import '../domain/entities/door_device.dart';
 import '../domain/entities/door_realtime_state.dart';
 import '../domain/entities/remote_door_command.dart';
+import '../domain/repositories/door_control_mode_repository.dart';
 import '../domain/repositories/door_detail_repository.dart';
 import '../domain/repositories/remote_door_command_repository.dart';
 import '../domain/use_cases/fetch_door_detail_use_case.dart';
 import '../domain/use_cases/fetch_door_devices_use_case.dart';
 import '../domain/use_cases/fetch_about_device_info_use_case.dart';
 import '../domain/use_cases/submit_remote_door_command_use_case.dart';
+import '../domain/use_cases/update_door_control_mode_use_case.dart';
 import '../domain/use_cases/unbind_door_device_use_case.dart';
 import 'local_door_command_executor.dart';
 
@@ -92,6 +97,33 @@ final unbindDoorDeviceUseCaseProvider = Provider<UnbindDoorDeviceUseCase>((
     repository: ref.watch(doorDetailRepositoryProvider),
   );
 });
+
+final doorControlModeApiProvider = Provider<DoorControlModeApi>((ref) {
+  return DoorControlModeApi(ref.watch(dioProvider));
+});
+
+final doorControlModeRemoteDataSourceProvider =
+    Provider<DoorControlModeRemoteDataSource>((ref) {
+      return DoorControlModeRemoteDataSourceImpl(
+        api: ref.watch(doorControlModeApiProvider),
+      );
+    });
+
+final doorControlModeRepositoryProvider = Provider<DoorControlModeRepository>((
+  ref,
+) {
+  return DoorControlModeRepositoryImpl(
+    remoteDataSource: ref.watch(doorControlModeRemoteDataSourceProvider),
+    logger: ref.watch(appLoggerProvider),
+  );
+});
+
+final updateDoorControlModeUseCaseProvider =
+    Provider<UpdateDoorControlModeUseCase>((ref) {
+      return UpdateDoorControlModeUseCase(
+        repository: ref.watch(doorControlModeRepositoryProvider),
+      );
+    });
 
 final remoteDoorCommandApiProvider = Provider<RemoteDoorCommandApi>((ref) {
   return RemoteDoorCommandApi(ref.watch(dioProvider));

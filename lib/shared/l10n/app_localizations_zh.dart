@@ -1238,6 +1238,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get fBoxWiringTestCommandFailed => '测试失败，请检查连接后重试。';
 
   @override
+  String get fBoxWiringTestControlModeReportFailed => '控制模式上报失败，请重试。';
+
+  @override
   String get addDeviceUsbWifiModule => 'USB WIFI 模块';
 
   @override

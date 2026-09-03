@@ -433,6 +433,7 @@
   "fBoxWiringTestCloseAction": "关门",
   "fBoxWiringTestCommandRejected": "命令未被接受，请重试。",
   "fBoxWiringTestCommandFailed": "测试失败，请检查连接后重试。",
+  "fBoxWiringTestControlModeReportFailed": "控制模式上报失败，请重试。",
   "addDeviceUsbWifiModule": "USB WIFI 模块",
   "usbDongleGuideTitle": "USB Dongle 安装",
   "usbDongleGuideDescription": "请根据所选门型查看对应的安装指引。",

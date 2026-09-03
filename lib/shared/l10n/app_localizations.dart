@@ -2462,6 +2462,12 @@ abstract class AppLocalizations {
   /// **'The test failed. Check the connection and try again.'**
   String get fBoxWiringTestCommandFailed;
 
+  /// Shown when reporting the F-box control mode fails
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to save the control mode. Please try again.'**
+  String get fBoxWiringTestControlModeReportFailed;
+
   /// USB WIFI module option on the add device page
   ///
   /// In en, this message translates to:

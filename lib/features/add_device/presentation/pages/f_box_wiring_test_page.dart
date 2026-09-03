@@ -10,6 +10,7 @@ import '../../../../shared/widgets/flinx_fbox_control_assets.dart';
 import '../../../../shared/widgets/flinx_door_command_button.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/f_box_wiring_test_controller.dart';
+import '../../../device_control/domain/entities/f_box_control_mode.dart';
 import '../navigation/f_box_wiring_test_route.dart';
 import '../navigation/onboarding_device_navigation.dart';
 
@@ -42,6 +43,27 @@ class _FBoxWiringTestPageState extends ConsumerState<FBoxWiringTestPage> {
       ref
           .read(fBoxWiringTestControllerProvider.notifier)
           .send(routeData: widget.routeData, action: action),
+    );
+  }
+
+  void _reportControlModeAndFinish() {
+    final mode = switch (_wiring) {
+      _FBoxWiring.pb => FBoxControlMode.pb,
+      _FBoxWiring.osc => FBoxControlMode.osc,
+    };
+    unawaited(_reportControlModeAndFinishAsync(mode));
+  }
+
+  Future<void> _reportControlModeAndFinishAsync(FBoxControlMode mode) async {
+    final succeeded = await ref
+        .read(fBoxWiringTestControllerProvider.notifier)
+        .updateControlMode(routeData: widget.routeData, mode: mode);
+    if (!mounted || !succeeded) {
+      return;
+    }
+    OnboardingDeviceNavigation.finishFBoxTest(
+      context,
+      routeData: widget.routeData,
     );
   }
 
@@ -200,7 +222,7 @@ class _FBoxWiringTestPageState extends ConsumerState<FBoxWiringTestPage> {
             child: _wiring == _FBoxWiring.pb
                 ? _PbWiringTestControl(
                     semanticsLabel: l10n.fBoxWiringTestPbAction,
-                    onPressed: commandState.isSending
+                    onPressed: commandState.isBusy
                         ? null
                         : () => _sendTest(FBoxWiringTestAction.pb),
                     pending:
@@ -212,6 +234,7 @@ class _FBoxWiringTestPageState extends ConsumerState<FBoxWiringTestPage> {
                     stopLabel: l10n.fBoxWiringTestStopAction,
                     openLabel: l10n.fBoxWiringTestOpenAction,
                     isSending: commandState.isSending,
+                    isBusy: commandState.isBusy,
                     pendingAction: commandState.lastAction,
                     onPressed: _sendTest,
                   ),
@@ -230,6 +253,8 @@ class _FBoxWiringTestPageState extends ConsumerState<FBoxWiringTestPage> {
       FBoxWiringTestError.noConnectedDevice => null,
       FBoxWiringTestError.commandRejected => l10n.fBoxWiringTestCommandRejected,
       FBoxWiringTestError.commandFailed => l10n.fBoxWiringTestCommandFailed,
+      FBoxWiringTestError.controlModeReportFailed =>
+        commandState.errorMessage ?? l10n.fBoxWiringTestControlModeReportFailed,
       null => null,
     };
 
@@ -283,17 +308,25 @@ class _FBoxWiringTestPageState extends ConsumerState<FBoxWiringTestPage> {
           height: AppSpacingTokens.fBoxWiringTestActionHeight,
           child: FilledButton(
             key: const Key('fBoxWiringTestNextButton'),
-            onPressed: () => OnboardingDeviceNavigation.finishFBoxTest(
-              context,
-              routeData: widget.routeData,
-            ),
+            onPressed: commandState.isBusy ? null : _reportControlModeAndFinish,
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.fBoxWiringTestPrimaryAction,
               foregroundColor: AppColors.fBoxWiringTestPrimaryActionForeground,
               shape: const StadiumBorder(),
               textStyle: AppTextTokens.fBoxWiringTestPrimaryButton(textTheme),
             ),
-            child: Text(l10n.fBoxConnectionGuideNextAction),
+            child: commandState.isReportingControlMode
+                ? const SizedBox(
+                    width: AppSpacingTokens.fBoxWiringTestProgressIndicatorSize,
+                    height:
+                        AppSpacingTokens.fBoxWiringTestProgressIndicatorSize,
+                    child: CircularProgressIndicator(
+                      strokeWidth: AppSpacingTokens
+                          .fBoxWiringTestProgressIndicatorStrokeWidth,
+                      color: AppColors.fBoxWiringTestPrimaryActionForeground,
+                    ),
+                  )
+                : Text(l10n.fBoxConnectionGuideNextAction),
           ),
         ),
       ],
@@ -451,6 +484,7 @@ class _OscWiringTestControls extends StatelessWidget {
     required this.stopLabel,
     required this.openLabel,
     required this.isSending,
+    required this.isBusy,
     required this.pendingAction,
     required this.onPressed,
   });
@@ -459,6 +493,7 @@ class _OscWiringTestControls extends StatelessWidget {
   final String stopLabel;
   final String openLabel;
   final bool isSending;
+  final bool isBusy;
   final FBoxWiringTestAction? pendingAction;
   final ValueChanged<FBoxWiringTestAction> onPressed;
 
@@ -472,7 +507,7 @@ class _OscWiringTestControls extends StatelessWidget {
           semanticsLabel: closeLabel,
           icon: Icons.keyboard_arrow_down,
           pending: isSending && pendingAction == FBoxWiringTestAction.close,
-          onPressed: isSending
+          onPressed: isBusy
               ? null
               : () => onPressed(FBoxWiringTestAction.close),
         ),
@@ -482,9 +517,7 @@ class _OscWiringTestControls extends StatelessWidget {
           semanticsLabel: stopLabel,
           icon: Icons.pause,
           pending: isSending && pendingAction == FBoxWiringTestAction.stop,
-          onPressed: isSending
-              ? null
-              : () => onPressed(FBoxWiringTestAction.stop),
+          onPressed: isBusy ? null : () => onPressed(FBoxWiringTestAction.stop),
         ),
         const SizedBox(width: AppSpacingTokens.fBoxWiringTestControlGap),
         _OscControlButton(
@@ -492,9 +525,7 @@ class _OscWiringTestControls extends StatelessWidget {
           semanticsLabel: openLabel,
           icon: Icons.keyboard_arrow_up,
           pending: isSending && pendingAction == FBoxWiringTestAction.open,
-          onPressed: isSending
-              ? null
-              : () => onPressed(FBoxWiringTestAction.open),
+          onPressed: isBusy ? null : () => onPressed(FBoxWiringTestAction.open),
         ),
       ],
     );
