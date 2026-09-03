@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 
+import '../../../core/config/providers.dart';
 import '../../../core/logging/providers.dart';
 import '../../../core/network/providers.dart';
 import '../../../core/network/session_expired_handler.dart';
@@ -103,10 +104,7 @@ final activeAuthSessionProvider =
     );
 
 final authClientAuthorizationProvider = Provider<String>((ref) {
-  return const String.fromEnvironment(
-    'FLINX_CLIENT_AUTHORIZATION',
-    defaultValue: 'c2FiZXI6c2FiZXJfc2VjcmV0',
-  );
+  return ref.watch(appApiConfigurationProvider).clientAuthorization;
 });
 
 final authApiProvider = Provider<AuthApi>((ref) {

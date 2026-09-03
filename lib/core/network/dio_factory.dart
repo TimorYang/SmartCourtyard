@@ -22,6 +22,7 @@ abstract final class NetworkRequestExtras {
 
 abstract final class NetworkHeaders {
   static const requestId = 'X-Request-Id';
+  static const authorization = 'Authorization';
   static const bladeAuth = 'Blade-Auth';
   static const acceptLanguage = 'Accept-Language';
 }
@@ -64,6 +65,7 @@ class DioFactory {
       );
     }
     dio.interceptors.addAll([
+      _ClientAuthorizationInterceptor(configuration.clientAuthorization),
       _AcceptLanguageInterceptor(
         acceptLanguageResolver ?? () => CurrentAppLocaleStore.defaultLocale,
       ),
@@ -76,6 +78,26 @@ class DioFactory {
       _SafeNetworkLogInterceptor(logger),
     ]);
     return dio;
+  }
+}
+
+class _ClientAuthorizationInterceptor extends Interceptor {
+  _ClientAuthorizationInterceptor(this._clientAuthorization);
+
+  final String _clientAuthorization;
+
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    final clientAuthorization = _clientAuthorization.trim();
+    if (clientAuthorization.isNotEmpty) {
+      options.headers.removeWhere(
+        (key, _) =>
+            key.toLowerCase() == NetworkHeaders.authorization.toLowerCase(),
+      );
+      options.headers[NetworkHeaders.authorization] =
+          'Basic $clientAuthorization';
+    }
+    handler.next(options);
   }
 }
 

@@ -85,6 +85,8 @@ flutter build appbundle --dart-define-from-file=config/env/prod.json
 当前统一配置包括：
 
 - 连接、发送、接收超时均为 15 秒。
+- 从 `AppApiConfiguration` 读取 `FLINX_CLIENT_AUTHORIZATION`，为每个通过共享 Dio
+  发送的 FLINX REST 请求统一添加 `Authorization: Basic <凭据>`。
 - 请求与响应默认使用 JSON。
 - 从请求 `extra` 读取 `requestId`，写入 `X-Request-Id` 请求头。
 - 记录请求开始、完成和失败日志。
@@ -331,13 +333,10 @@ register-verify-code-1783843200000000
 
 ## 8. Authorization 与敏感信息
 
-需要认证信息时，由 DataSource 通过 `Options.headers` 添加：
+所有通过 `dioProvider` 获取的 FLINX REST 请求都会由共享 Dio 统一添加：
 
 ```dart
 Options(
-  headers: {
-    'authorization': 'Basic $clientAuthorization',
-  },
   extra: {
     NetworkRequestExtras.requestId: requestId,
   },
@@ -346,6 +345,8 @@ Options(
 
 规则：
 
+- `/app/auth/refresh` 与其他 `app/auth/`、业务接口使用同一个 Basic Header 注入逻辑。
+- 共享拦截器会覆盖同名的单请求 Header，确保所有请求使用当前环境配置的客户端凭据。
 - 不在 Widget、Controller 或 UseCase 中拼接 Authorization。
 - 用户 token 和设备密钥必须从安全存储读取。
 - 不记录 Authorization、token、密码、密钥、nonce 或完整请求体。

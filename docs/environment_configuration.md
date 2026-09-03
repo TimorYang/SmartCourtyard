@@ -40,7 +40,7 @@ flutter build apk --release --dart-define-from-file=config/env/prod.json
 
 - `FLINX_API_ORIGIN`：仅包含 `http` 或 `https` 的服务 origin，例如 `https://api.example.com`。
 - `FLINX_API_PATH_PREFIX`：所有 REST 接口共享的路径前缀，例如 `/api/force-door`。
-- `FLINX_CLIENT_AUTHORIZATION`：当前 auth 握手使用的 Basic 凭据部分。
+- `FLINX_CLIENT_AUTHORIZATION`：所有 FLINX REST 请求携带的 Basic 凭据部分。
 - `FLINX_FACEBOOK_APP_ID`：Facebook App ID。未配置时 Facebook 按钮保留，但不会调用 SDK。
 - `FLINX_FACEBOOK_CLIENT_TOKEN`：Facebook Client Token。真实值只放在本机忽略的环境文件中。
 - `FLINX_FACEBOOK_DISPLAY_NAME`：Meta 应用显示名称；启用 Facebook 登录时需与 App ID、Client Token 一起提供。
