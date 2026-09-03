@@ -218,7 +218,9 @@ void main() {
     );
   });
 
-  testWidgets('hides the checkbox for scheduled firmware', (tester) async {
+  testWidgets('keeps scheduled firmware selectable for reconfiguration', (
+    tester,
+  ) async {
     final scheduled = _target(
       status: FirmwareUpgradeStatus.scheduled,
       scheduledAt: DateTime.now().add(const Duration(days: 1)),
@@ -236,16 +238,28 @@ void main() {
       'door-1',
       scheduled.key,
     );
-    expect(find.byKey(packageCheckbox), findsNothing);
+    expect(find.byKey(packageCheckbox), findsOneWidget);
 
+    await tester.tap(find.byKey(packageCheckbox));
+    await tester.pump();
+
+    expect(find.text('Start upgrading (1)'), findsOneWidget);
     expect(
       tester
           .widget<FilledButton>(
             find.byKey(CheckUpgradedVersionKeys.startButton),
           )
           .onPressed,
-      isNull,
+      isNotNull,
     );
+
+    await tester.tap(find.byKey(CheckUpgradedVersionKeys.startButton));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(CheckUpgradedVersionKeys.scheduleDialog), findsOneWidget);
+    await tester.tap(find.text('postpone'));
+    await tester.pumpAndSettle();
+    expect(find.text('immediate').last, findsOneWidget);
   });
 
   testWidgets('keeps the middle area blank when neither API has content', (

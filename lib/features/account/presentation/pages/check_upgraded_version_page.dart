@@ -441,7 +441,7 @@ class _FirmwareUpgradeRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final isUpgrading = target.status == FirmwareUpgradeStatus.upgrading;
-    final hideCheckbox = !target.isSelectable;
+    final hideCheckbox = isUpgrading;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -910,6 +910,7 @@ class _DateTimeSelector extends StatelessWidget {
     final time = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(value),
+      initialEntryMode: TimePickerEntryMode.input,
     );
     if (time == null) return;
     onChanged(
