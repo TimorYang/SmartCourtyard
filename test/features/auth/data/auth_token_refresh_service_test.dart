@@ -2,7 +2,9 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flinx/core/config/app_api_configuration.dart';
+import 'package:flinx/core/logging/app_logger.dart';
 import 'package:flinx/core/network/access_token_cache.dart';
+import 'package:flinx/core/network/dio_factory.dart';
 import 'package:flinx/core/network/session_expired_handler.dart';
 import 'package:flinx/features/account/data/data_sources/account_local_data_source.dart';
 import 'package:flinx/features/account/data/data_sources/account_secure_data_source.dart';
@@ -43,13 +45,13 @@ void main() {
       );
       final service = AuthTokenRefreshService(
         api: AuthApi(
-          Dio(
-            BaseOptions(
-              baseUrl: const AppApiConfiguration(
-                apiOrigin: 'https://api.flinx.example',
-                apiPathPrefix: '/force-door',
-              ).apiBaseUri.toString(),
+          DioFactory.create(
+            configuration: const AppApiConfiguration(
+              apiOrigin: 'https://api.flinx.example',
+              apiPathPrefix: '/force-door',
+              clientAuthorization: 'encoded-client-credentials',
             ),
+            logger: const _TestLogger(),
           )..httpClientAdapter = adapter,
         ),
         accountRepository: repository,
@@ -69,6 +71,10 @@ void main() {
       expect(tokenSet?.isUsableAt(DateTime.now()), isTrue);
       expect(tokenSet?.isRefreshUsableAt(DateTime.now()), isTrue);
       expect(AccessTokenCache.value, 'new-access-token');
+      expect(
+        adapter.requestOptions.headers[NetworkHeaders.authorization],
+        'Basic encoded-client-credentials',
+      );
     },
   );
 
@@ -128,6 +134,7 @@ class _RefreshResponseAdapter implements HttpClientAdapter {
 
   final Map<String, dynamic> body;
   Map<String, dynamic>? requestBody;
+  late RequestOptions requestOptions;
   bool wasCalled = false;
 
   @override
@@ -140,6 +147,7 @@ class _RefreshResponseAdapter implements HttpClientAdapter {
     Future<void>? cancelFuture,
   ) async {
     wasCalled = true;
+    requestOptions = options;
     requestBody = Map<String, dynamic>.from(options.data as Map);
     return ResponseBody.fromString(
       jsonEncode(body),
@@ -149,4 +157,37 @@ class _RefreshResponseAdapter implements HttpClientAdapter {
       },
     );
   }
+}
+
+class _TestLogger implements AppLogger {
+  const _TestLogger();
+
+  @override
+  void error(
+    String message, {
+    AppLogTag tag = AppLogTag.general,
+    String? flowId,
+    String? requestId,
+    Object? error,
+    StackTrace? stackTrace,
+    Map<String, Object?> context = const {},
+  }) {}
+
+  @override
+  void info(
+    String message, {
+    AppLogTag tag = AppLogTag.general,
+    String? flowId,
+    String? requestId,
+    Map<String, Object?> context = const {},
+  }) {}
+
+  @override
+  void warning(
+    String message, {
+    AppLogTag tag = AppLogTag.general,
+    String? flowId,
+    String? requestId,
+    Map<String, Object?> context = const {},
+  }) {}
 }

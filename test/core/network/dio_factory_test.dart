@@ -44,6 +44,41 @@ void main() {
     },
   );
 
+  test(
+    'adds Basic client authorization to auth and business requests',
+    () async {
+      final adapter = _CapturingAdapter();
+      final dio = DioFactory.create(
+        configuration: const AppApiConfiguration(
+          apiOrigin: 'https://api.flinx.example',
+          apiPathPrefix: '/api/force-door',
+          clientAuthorization: 'encoded-client-credentials',
+        ),
+        logger: _FakeLogger(),
+      )..httpClientAdapter = adapter;
+
+      await dio.post<void>(
+        'app/auth/refresh',
+        data: const <String, dynamic>{
+          'refreshToken': 'refresh-token',
+          'deviceId': 'device-id',
+        },
+      );
+
+      expect(
+        adapter.requestOptions.headers[NetworkHeaders.authorization],
+        'Basic encoded-client-credentials',
+      );
+
+      await dio.get<void>('app/home/scenes');
+
+      expect(
+        adapter.requestOptions.headers[NetworkHeaders.authorization],
+        'Basic encoded-client-credentials',
+      );
+    },
+  );
+
   test('reads the current Accept-Language value for each request', () async {
     var currentLocale = 'zh-CN';
     final adapter = _CapturingAdapter();

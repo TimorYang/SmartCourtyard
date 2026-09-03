@@ -1,7 +1,10 @@
+const _defaultClientAuthorization = 'c2FiZXI6c2FiZXJfc2VjcmV0';
+
 class AppApiConfiguration {
   const AppApiConfiguration({
     required this.apiOrigin,
     required this.apiPathPrefix,
+    this.clientAuthorization = _defaultClientAuthorization,
   });
 
   factory AppApiConfiguration.fromEnvironment() {
@@ -13,14 +16,22 @@ class AppApiConfiguration {
       'FLINX_API_PATH_PREFIX',
       defaultValue: '/api/force-door',
     );
+    const clientAuthorization = String.fromEnvironment(
+      'FLINX_CLIENT_AUTHORIZATION',
+      defaultValue: _defaultClientAuthorization,
+    );
     return const AppApiConfiguration(
       apiOrigin: apiOrigin,
       apiPathPrefix: apiPathPrefix,
+      clientAuthorization: clientAuthorization,
     );
   }
 
   final String apiOrigin;
   final String apiPathPrefix;
+
+  /// Base64-encoded client credentials used by every FLINX API request.
+  final String clientAuthorization;
 
   Uri get apiBaseUri {
     final origin = _validatedOrigin();

@@ -764,6 +764,120 @@ void main() {
     },
   );
 
+  testWidgets('reports close when partial-open is tapped on an open door', (
+    tester,
+  ) async {
+    final gateway = _RecordingHardwareGateway();
+    final reports = <_ReportedOperation>[];
+
+    await _pumpDevicePage(
+      tester,
+      gateway,
+      repository: const _FakeDoorDetailRepository(
+        doorState: DoorState.open,
+        doorStateLabel: 'Open',
+        positionPercent: 100,
+      ),
+      operationRecordRepository: _EmptyOperationRecordRepository(
+        reports: reports,
+      ),
+    );
+
+    final partialOpenAction = find.byKey(
+      const ValueKey<String>('partial-open-action'),
+    );
+    await tester.ensureVisible(partialOpenAction);
+    await tester.tap(partialOpenAction);
+    await tester.pumpAndSettle();
+
+    expect(gateway.commands, [DoorCommand.partialOpen]);
+    expect(reports.single.action, OperationReportAction.close);
+    expect(reports.single.operationSource, OperationReportSource.bluetooth);
+  });
+
+  testWidgets('uses the live non-closed state for partial-open reporting', (
+    tester,
+  ) async {
+    final gateway = _RecordingHardwareGateway();
+    final reports = <_ReportedOperation>[];
+
+    await _pumpDevicePage(
+      tester,
+      gateway,
+      operationRecordRepository: _EmptyOperationRecordRepository(
+        reports: reports,
+      ),
+    );
+
+    final partialOpenAction = find.byKey(
+      const ValueKey<String>('partial-open-action'),
+    );
+    await tester.ensureVisible(partialOpenAction);
+
+    const nonClosedStates = <(int, int)>[
+      (0x00, 50), // opening
+      (0x01, 50), // stopped and partially open
+      (0x02, 50), // closing
+      (0xFF, 50), // unknown
+    ];
+    for (final (rawMotorState, rawPosition) in nonClosedStates) {
+      gateway.emitDeviceAttributeSnapshot(
+        DeviceAttributeSnapshot(
+          deviceId: 'mock-ble-device',
+          sequence: rawMotorState + 10,
+          timestampMillis: rawMotorState + 10,
+          origin: DeviceAttributeReportOrigin.activeReport,
+          attributes: [
+            DeviceAttribute(
+              id: 0x2715,
+              value: Uint8List.fromList([rawMotorState]),
+            ),
+            DeviceAttribute(
+              id: 0x271C,
+              value: Uint8List.fromList([rawPosition]),
+            ),
+          ],
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      await tester.tap(partialOpenAction);
+      await tester.pumpAndSettle();
+    }
+
+    expect(gateway.commands, hasLength(nonClosedStates.length));
+    expect(
+      reports.map((report) => report.action),
+      everyElement(OperationReportAction.close),
+    );
+  });
+
+  testWidgets('does not report a rejected partial-open command', (
+    tester,
+  ) async {
+    final gateway = _RejectingDoorCommandHardwareGateway();
+    final reports = <_ReportedOperation>[];
+
+    await _pumpDevicePage(
+      tester,
+      gateway,
+      operationRecordRepository: _EmptyOperationRecordRepository(
+        reports: reports,
+      ),
+    );
+
+    final partialOpenAction = find.byKey(
+      const ValueKey<String>('partial-open-action'),
+    );
+    await tester.ensureVisible(partialOpenAction);
+    await tester.tap(partialOpenAction);
+    await tester.pumpAndSettle();
+
+    expect(gateway.commands, [DoorCommand.partialOpen]);
+    expect(reports, isEmpty);
+  });
+
   testWidgets('partial-open position badge blocks duplicate writes', (
     tester,
   ) async {
@@ -2166,6 +2280,25 @@ class _RecordingHardwareGateway extends MockHardwareGateway {
   }
 }
 
+class _RejectingDoorCommandHardwareGateway extends _RecordingHardwareGateway {
+  @override
+  Future<CommandResult> sendDoorCommand({
+    required String requestId,
+    required String deviceId,
+    required DoorCommand command,
+  }) async {
+    commands.add(command);
+    deviceIds.add(deviceId);
+    return CommandResult(
+      requestId: requestId,
+      deviceId: deviceId,
+      command: command,
+      accepted: false,
+      domainCode: 'command_rejected',
+    );
+  }
+}
+
 class _FailingAttributeWriteHardwareGateway extends _RecordingHardwareGateway {
   @override
   Future<DeviceAttributeWriteResult> setDeviceAttributes({
@@ -2483,6 +2616,8 @@ class _FakeDoorDetailRepository implements DoorDetailRepository {
     this.controlModeLabel,
     this.relationType = 0,
     this.effectiveCapabilities = const <String>[],
+    this.doorState = DoorState.closed,
+    this.doorStateLabel = 'Closed',
   });
 
   final List<String> capabilities;
@@ -2492,6 +2627,8 @@ class _FakeDoorDetailRepository implements DoorDetailRepository {
   final String? controlModeLabel;
   final int? relationType;
   final List<String> effectiveCapabilities;
+  final DoorState doorState;
+  final String doorStateLabel;
 
   @override
   Future<DoorDetail> fetchDoorDetail({
@@ -2501,8 +2638,8 @@ class _FakeDoorDetailRepository implements DoorDetailRepository {
     return DoorDetail(
       id: '12',
       name: 'Garage door',
-      doorState: DoorState.closed,
-      doorStateLabel: 'Closed',
+      doorState: doorState,
+      doorStateLabel: doorStateLabel,
       doorType: doorType,
       relationType: relationType,
       effectiveCapabilities: effectiveCapabilities,

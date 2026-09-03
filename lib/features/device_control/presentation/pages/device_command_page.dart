@@ -679,11 +679,18 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                                     )) {
                                       return;
                                     }
+                                    final reportAction =
+                                        _partialOpenReportAction(
+                                          ref.read(
+                                            deviceCommandControllerProvider,
+                                          ),
+                                        );
                                     unawaited(
                                       _runCommandAndReport(
                                         deviceId: hardwareDeviceId,
                                         action:
                                             DeviceCommandAction.partialOpenDoor,
+                                        reportActionOverride: reportAction,
                                       ),
                                     );
                                   },
@@ -1066,30 +1073,39 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
   Future<void> _runCommandAndReport({
     required String deviceId,
     required DeviceCommandAction action,
+    OperationReportAction? reportActionOverride,
   }) async {
     final result = await _controller.runAction(
       deviceId: deviceId,
       action: action,
     );
-    _reportSuccessfulCommand(action, result);
+    _reportSuccessfulCommand(
+      action,
+      result,
+      reportActionOverride: reportActionOverride,
+    );
   }
 
   void _reportSuccessfulCommand(
     DeviceCommandAction action,
-    DeviceCommandExecutionResult? result,
-  ) {
+    DeviceCommandExecutionResult? result, {
+    OperationReportAction? reportActionOverride,
+  }) {
     if (!mounted || result?.succeeded != true) {
       return;
     }
-    final reportAction = switch (action) {
-      DeviceCommandAction.openDoor => OperationReportAction.open,
-      DeviceCommandAction.closeDoor => OperationReportAction.close,
-      DeviceCommandAction.stopDoor => OperationReportAction.stop,
-      DeviceCommandAction.partialOpenDoor => OperationReportAction.partialOpen,
-      DeviceCommandAction.turnLightOn => OperationReportAction.ledOn,
-      DeviceCommandAction.turnLightOff => OperationReportAction.ledOff,
-      DeviceCommandAction.pb => null,
-    };
+    final reportAction =
+        reportActionOverride ??
+        switch (action) {
+          DeviceCommandAction.openDoor => OperationReportAction.open,
+          DeviceCommandAction.closeDoor => OperationReportAction.close,
+          DeviceCommandAction.stopDoor => OperationReportAction.stop,
+          DeviceCommandAction.partialOpenDoor =>
+            OperationReportAction.partialOpen,
+          DeviceCommandAction.turnLightOn => OperationReportAction.ledOn,
+          DeviceCommandAction.turnLightOff => OperationReportAction.ledOff,
+          DeviceCommandAction.pb => null,
+        };
     final operationSource = switch (result!.transport) {
       DeviceCommandTransport.bluetooth => OperationReportSource.bluetooth,
       DeviceCommandTransport.app => OperationReportSource.app,
@@ -1102,6 +1118,18 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
       action: reportAction,
       operationSource: operationSource,
     );
+  }
+
+  OperationReportAction _partialOpenReportAction(
+    DeviceCommandState commandState,
+  ) {
+    final realtimeStatus = commandState.doorRealtimeState?.status;
+    final isClosed = realtimeStatus != null
+        ? realtimeStatus == DoorRealtimeStatus.closed
+        : commandState.doorDetail?.doorState == DoorState.closed;
+    return isClosed
+        ? OperationReportAction.partialOpen
+        : OperationReportAction.close;
   }
 
   void _reportSuccessfulOperation({
