@@ -18,6 +18,17 @@ void main() {
       ),
       throwsRangeError,
     );
+    expect(
+      () => useCase(
+        requestId: 'request-led-delay-invalid',
+        deviceId: 'device',
+        value: const DeviceSettingValue(
+          key: DeviceSettingKey.ledOffDelay,
+          rawValue: 0x0B,
+        ),
+      ),
+      throwsRangeError,
+    );
   });
 
   test('rejects values outside the BLE attribute definitions', () async {

@@ -155,7 +155,8 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
         ),
         SecurityCenterPage(
           doorId: widget.doorId,
-          deviceId: _hardwareDeviceId(commandState),
+          deviceId: _selectedBusinessDeviceId(commandState),
+          hardwareDeviceId: _hardwareDeviceId(commandState),
           onTabSelected: _selectTab,
           isActive: _selectedTab == DeviceDetailTab.securityCenter,
         ),
@@ -187,20 +188,29 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
 
   String _hardwareDeviceId(DeviceCommandState commandState) {
     final selectedDeviceId = commandState.selectedDeviceId;
-    if (selectedDeviceId != null) {
-      final nativeId = commandState.bleDeviceIds[selectedDeviceId]?.trim();
-      if (nativeId?.isNotEmpty == true) {
-        return nativeId!;
-      }
+    if (selectedDeviceId == null ||
+        commandState.bleConnectionStatuses[selectedDeviceId] !=
+            DeviceBleConnectionStatus.connected) {
+      return '';
     }
-    final detailDeviceId = commandState.doorDetail?.name ?? '';
-    if (detailDeviceId.trim().isNotEmpty) {
-      return detailDeviceId.trim();
+    final nativeId = commandState.bleDeviceIds[selectedDeviceId]?.trim();
+    if (nativeId?.isNotEmpty == true) {
+      return nativeId!;
     }
-    if (widget.deviceId.trim().isNotEmpty) {
-      return widget.deviceId.trim();
+    return '';
+  }
+
+  String _selectedBusinessDeviceId(DeviceCommandState commandState) {
+    final selectedDeviceId = commandState.selectedDeviceId?.trim();
+    if (selectedDeviceId?.isNotEmpty == true) {
+      return selectedDeviceId!;
     }
-    return widget.doorId.trim();
+    final selectedDeviceIdFromRecord = _selectedDoorDevice(
+      commandState,
+    )?.deviceId.trim();
+    return selectedDeviceIdFromRecord?.isNotEmpty == true
+        ? selectedDeviceIdFromRecord!
+        : widget.deviceId.trim();
   }
 
   DoorDevice? _selectedDoorDevice(DeviceCommandState commandState) {
@@ -213,9 +223,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
       }
     }
     final candidates = <String>{
-      commandState.bleDeviceId?.trim() ?? '',
       commandState.bleTargetName?.trim() ?? '',
-      commandState.doorDetail?.name.trim() ?? '',
       widget.deviceId.trim(),
     }..remove('');
 
@@ -280,30 +288,23 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     }
 
     final ledEnabled = _ledEnabledOverride ?? doorDetail?.isLedEnabled ?? false;
-    final autoCloseEnabled =
-        _autoCloseEnabledOverride ?? doorDetail?.autoCloseEnabled ?? false;
     final openReminderEnabled =
         _openReminderEnabledOverride ??
         doorDetail?.openReminderEnabled ??
         false;
-    final hardwareDeviceId = _hardwareDeviceId(commandState);
     final selectedDevice = _selectedDoorDevice(commandState);
-    final selectedDeviceId =
-        selectedDevice?.deviceId.trim() ?? widget.deviceId.trim();
-    final selectedBleName = selectedDevice?.bleName?.trim() ?? '';
+    final selectedDeviceId = _selectedBusinessDeviceId(commandState);
+    final selectedBleName = selectedDevice?.bleName?.trim().isNotEmpty == true
+        ? selectedDevice!.bleName!.trim()
+        : commandState.bleTargetName?.trim() ?? '';
+    final hardwareDeviceId = _hardwareDeviceId(commandState);
     final isFBox = selectedDevice?.deviceType.trim().toLowerCase() == 'fbox';
     final controlMode = DoorControlMode.fromBackend(
       value: doorDetail?.controlMode,
       label: doorDetail?.controlModeLabel,
     );
-    final connectedBleDeviceId =
-        commandState.bleConnectionStatus == DeviceBleConnectionStatus.connected
-        ? commandState.bleDeviceId?.trim() ?? ''
-        : '';
-    final selectedDeviceUsesBle =
-        commandState.selectedDeviceId != null &&
-        commandState.bleConnectionStatuses[commandState.selectedDeviceId] ==
-            DeviceBleConnectionStatus.connected;
+    final connectedBleDeviceId = hardwareDeviceId;
+    final selectedDeviceUsesBle = hardwareDeviceId.isNotEmpty;
     final deviceSettingsState = ref.watch(
       deviceSettingsControllerProvider(connectedBleDeviceId),
     );
@@ -319,18 +320,36 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     final partialOpenSetting = doorSettingsState.settingFor(
       DeviceCapabilityCode.partialOpen,
     );
+    final ledOffDelayCapability = deviceCapabilitiesState.capabilityFor(
+      DeviceCapabilityCode.ledOffDelay,
+    );
+    final ledOffDelaySetting = doorSettingsState.settingFor(
+      DeviceCapabilityCode.ledOffDelay,
+    );
     final autoCloseCapability = deviceCapabilitiesState.capabilityFor(
       DeviceCapabilityCode.autoClose,
     );
     final autoCloseSetting = doorSettingsState.settingFor(
       DeviceCapabilityCode.autoClose,
     );
-    final ledOffDelayMinutes =
-        doorSettingsState
-            .settingFor(DeviceCapabilityCode.ledOffDelay)
-            ?.currentValue ??
-        deviceSettingsState.values[DeviceSettingKey.ledOffDelay]?.rawValue ??
-        1;
+    final ledOffDelayReportedValue =
+        deviceSettingsState.values[DeviceSettingKey.ledOffDelay]?.rawValue;
+    final ledOffDelayValue = ledOffDelayReportedValue == null
+        ? ledOffDelaySetting?.currentValue ?? 1
+        : DeviceSettingKey.ledOffDelay.fromProtocolValue(
+            ledOffDelayReportedValue,
+          );
+    final ledOffDelayOption = matchingDeviceSettingCapabilityOption(
+      capability: ledOffDelayCapability,
+      key: DeviceSettingKey.ledOffDelay,
+      reportedValue: ledOffDelayReportedValue ?? ledOffDelayValue,
+    );
+    final ledOffDelayLabel = ledOffDelayOption == null
+        ? l10n.deviceCommandMinutes(ledOffDelayValue)
+        : formatDeviceCapabilityOption(
+            ledOffDelayOption,
+            ledOffDelayCapability?.unit ?? ledOffDelaySetting?.unit,
+          );
     final openReminderMinutes =
         doorSettingsState
             .settingFor(DeviceCapabilityCode.doorOpenReminder)
@@ -344,12 +363,43 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
         const <int>[];
     final reportedAutoCloseValue =
         deviceSettingsState.values[DeviceSettingKey.autoCloseTime];
+    final isLegacyAutoCloseReport =
+        reportedAutoCloseValue?.sourceAttributeId ==
+        DeviceSettingKey.autoCloseTime.legacyAttributeId;
     final matchingAutoCloseValue = matchingDeviceSettingCandidate(
-      reportedAutoCloseValue,
+      isLegacyAutoCloseReport ? null : reportedAutoCloseValue,
       autoCloseAllowedValues,
     );
     final configuredAutoCloseValue =
-        autoCloseSetting?.currentValue ?? matchingAutoCloseValue;
+        matchingAutoCloseValue ?? autoCloseSetting?.currentValue;
+    final displayedAutoCloseValue = reportedAutoCloseValue == null
+        ? autoCloseSetting?.currentValue
+        : matchingAutoCloseValue ?? reportedAutoCloseValue.rawValue;
+    final autoCloseOption =
+        !isLegacyAutoCloseReport &&
+            displayedAutoCloseValue != null &&
+            displayedAutoCloseValue != 0
+        ? _capabilityOptionForValue(
+            autoCloseCapability,
+            displayedAutoCloseValue,
+          )
+        : null;
+    final autoCloseValueLabel =
+        displayedAutoCloseValue == null || displayedAutoCloseValue == 0
+        ? null
+        : isLegacyAutoCloseReport
+        ? _formatValueWithUnit(displayedAutoCloseValue, 's')
+        : autoCloseOption == null
+        ? null
+        : formatDeviceCapabilityOption(
+            autoCloseOption,
+            autoCloseCapability?.unit ?? autoCloseSetting?.unit,
+          );
+    final autoCloseEnabled =
+        _autoCloseEnabledOverride ??
+        (reportedAutoCloseValue == null
+            ? doorDetail?.autoCloseEnabled ?? false
+            : reportedAutoCloseValue.rawValue != 0);
     final autoCloseEnabledValue =
         autoCloseAllowedValues.contains(configuredAutoCloseValue) &&
             configuredAutoCloseValue != 0
@@ -359,8 +409,8 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
             orElse: () => null,
           );
     final partialOpenLevel =
-        partialOpenSetting?.currentValue ??
-        deviceSettingsState.values[DeviceSettingKey.partialOpen]?.rawValue;
+        deviceSettingsState.values[DeviceSettingKey.partialOpen]?.rawValue ??
+        partialOpenSetting?.currentValue;
     final partialOpenOption = _capabilityOptionForValue(
       partialOpenCapability,
       partialOpenLevel,
@@ -373,7 +423,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                 ).deviceCommandCentimeters(doorDetail!.partialOpenValue!)
         : formatDeviceCapabilityOption(
             partialOpenOption,
-            partialOpenSetting?.unit ?? partialOpenCapability?.unit,
+            partialOpenCapability?.unit ?? partialOpenSetting?.unit,
           );
     final capabilities = _capabilitiesForCurrentDevice(commandState);
     final canControlDoor = capabilities.contains('DOOR_CONTROL');
@@ -609,8 +659,9 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                                 ],
                                 _QuickActionGrid(
                                   ledEnabled: ledEnabled,
-                                  ledOffDelayMinutes: ledOffDelayMinutes,
+                                  ledOffDelayLabel: ledOffDelayLabel,
                                   autoCloseEnabled: autoCloseEnabled,
+                                  autoCloseValueLabel: autoCloseValueLabel,
                                   openReminderEnabled: openReminderEnabled,
                                   openReminderMinutes: openReminderMinutes,
                                   partialOpenValueLabel: partialOpenValueLabel,
@@ -952,6 +1003,13 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     return null;
   }
 
+  String _formatValueWithUnit(int value, String? unit) {
+    final normalizedUnit = unit?.trim();
+    return normalizedUnit == null || normalizedUnit.isEmpty
+        ? '$value'
+        : '$value $normalizedUnit';
+  }
+
   Future<void> _showPartialOpenLevelEditor({
     required bool connected,
     required String bleDeviceId,
@@ -1042,14 +1100,13 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     if (!mounted) {
       return;
     }
+    if (key == DeviceSettingKey.autoCloseTime) {
+      setState(() => _autoCloseEnabledOverride = null);
+    }
     if (!saved) {
-      setState(() {
-        if (key == DeviceSettingKey.autoCloseTime) {
-          _autoCloseEnabledOverride = null;
-        } else {
-          _openReminderEnabledOverride = null;
-        }
-      });
+      if (key != DeviceSettingKey.autoCloseTime) {
+        setState(() => _openReminderEnabledOverride = null);
+      }
       return;
     }
     final appliedValue = ref
@@ -2082,8 +2139,9 @@ class _CommandFeedback extends StatelessWidget {
 class _QuickActionGrid extends StatelessWidget {
   const _QuickActionGrid({
     required this.ledEnabled,
-    required this.ledOffDelayMinutes,
+    required this.ledOffDelayLabel,
     required this.autoCloseEnabled,
+    required this.autoCloseValueLabel,
     required this.openReminderEnabled,
     required this.openReminderMinutes,
     required this.partialOpenValueLabel,
@@ -2109,8 +2167,9 @@ class _QuickActionGrid extends StatelessWidget {
   });
 
   final bool ledEnabled;
-  final int ledOffDelayMinutes;
+  final String ledOffDelayLabel;
   final bool autoCloseEnabled;
+  final String? autoCloseValueLabel;
   final bool openReminderEnabled;
   final int openReminderMinutes;
   final String? partialOpenValueLabel;
@@ -2148,7 +2207,7 @@ class _QuickActionGrid extends StatelessWidget {
                 Expanded(
                   child: _LedActionCard(
                     enabled: ledEnabled,
-                    offDelayMinutes: ledOffDelayMinutes,
+                    offDelayLabel: ledOffDelayLabel,
                     available: ledAvailable,
                     busy: busy,
                     textTheme: textTheme,
@@ -2161,11 +2220,13 @@ class _QuickActionGrid extends StatelessWidget {
                 const SizedBox(height: 10),
                 Expanded(
                   child: _ToggleActionCard(
+                    key: const ValueKey<String>('auto-close-action'),
                     switchKey: const ValueKey<String>('auto-close-switch'),
                     iconAssetPath: _DeviceCommandAssetPaths.autoClose,
                     title: AppLocalizations.of(
                       context,
                     ).deviceCommandAutoCloseTitle,
+                    subtitle: autoCloseValueLabel,
                     enabled: autoCloseEnabled,
                     available: autoCloseAvailable,
                     busy: busy || settingsBusy,
@@ -2249,7 +2310,7 @@ class _QuickActionGrid extends StatelessWidget {
 class _LedActionCard extends StatelessWidget {
   const _LedActionCard({
     required this.enabled,
-    required this.offDelayMinutes,
+    required this.offDelayLabel,
     required this.available,
     required this.busy,
     required this.textTheme,
@@ -2258,7 +2319,7 @@ class _LedActionCard extends StatelessWidget {
   });
 
   final bool enabled;
-  final int offDelayMinutes;
+  final String offDelayLabel;
   final bool available;
   final bool busy;
   final TextTheme textTheme;
@@ -2298,7 +2359,7 @@ class _LedActionCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            AppLocalizations.of(context).deviceCommandMinutes(offDelayMinutes),
+            offDelayLabel,
             maxLines: 1,
             style: AppTextTokens.deviceControlQuickActionMeta(textTheme),
           ),

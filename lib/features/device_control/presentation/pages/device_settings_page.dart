@@ -124,7 +124,11 @@ class DeviceSettingsPage extends ConsumerStatefulWidget {
 
   final String deviceId;
   final String doorId;
+
+  /// The backend-provided unique BLE identity (prefix + SN).
   final String bleName;
+
+  /// The native platform handle for the already-established BLE connection.
   final String bleDeviceId;
   final DeviceSettingsCapabilityScope? capabilityScope;
   final int forceMarginDialogState;
@@ -413,6 +417,15 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
                     const <int>[],
               ) ??
               reportedSetting?.rawValue
+        : key == DeviceSettingKey.ledOffDelay
+        ? matchingDeviceSettingCapabilityOption(
+                capability: capability,
+                key: key,
+                reportedValue: reportedSetting?.rawValue,
+              )?.value ??
+              (reportedSetting == null
+                  ? null
+                  : key.fromProtocolValue(reportedSetting.rawValue))
         : reportedSetting?.rawValue;
     final option = capability?.options.where(
       (option) => option.value == rawValue,
@@ -490,6 +503,15 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
     final allowedValues = capability.options.map((option) => option.value);
     final reportedValue = key == DeviceSettingKey.autoCloseTime
         ? matchingDeviceSettingCandidate(state.values[key], allowedValues)
+        : key == DeviceSettingKey.ledOffDelay
+        ? matchingDeviceSettingCapabilityOption(
+                capability: capability,
+                key: key,
+                reportedValue: state.values[key]?.rawValue,
+              )?.value ??
+              (state.values[key] == null
+                  ? null
+                  : key.fromProtocolValue(state.values[key]!.rawValue))
         : state.values[key]?.rawValue;
     final rawValue = currentValue ?? reportedValue;
     final initialValue =
@@ -608,19 +630,28 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
     if (!saved || !mounted) {
       return;
     }
+    // The BLE setting controller receives the device's attribute report and
+    // the command page consumes that live value. Reloading door detail here
+    // would reset the active BLE session.
+    final appliedRawValue = ref
+        .read(deviceSettingsControllerProvider(widget.bleDeviceId))
+        .values[key]
+        ?.rawValue;
+    final appliedValue = key == DeviceSettingKey.ledOffDelay
+        ? matchingDeviceSettingCapabilityOption(
+                capability: ref
+                    .read(deviceCapabilitiesControllerProvider(widget.deviceId))
+                    .capabilityFor(DeviceCapabilityCode.ledOffDelay),
+                key: key,
+                reportedValue: appliedRawValue,
+              )?.value ??
+              (appliedRawValue == null
+                  ? value
+                  : key.fromProtocolValue(appliedRawValue))
+        : appliedRawValue ?? value;
     ref
         .read(doorSettingsControllerProvider(widget.doorId).notifier)
-        .updateCurrentValue(
-          key.capabilityCode,
-          ref
-                  .read(deviceSettingsControllerProvider(widget.bleDeviceId))
-                  .values[key]
-                  ?.rawValue ??
-              value,
-        );
-    ref
-        .read(doorDetailRefreshRequestProvider.notifier)
-        .notify(DoorDetailRefreshRequest(doorId: widget.doorId));
+        .updateCurrentValue(key.capabilityCode, appliedValue);
     final reportAction = switch (key) {
       DeviceSettingKey.ledOffDelay => OperationReportAction.ledOffDelayChanged,
       DeviceSettingKey.partialOpen => OperationReportAction.partialOpenChanged,
@@ -644,15 +675,12 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
   }
 
   bool _isCurrentBleDeviceConnected() {
-    final bleName = widget.bleName.trim();
-    final bleDeviceId = widget.bleDeviceId.trim();
-    if (bleName.isEmpty || bleDeviceId.isEmpty) {
-      return false;
-    }
-    final commandState = ref.read(deviceCommandControllerProvider);
-    return commandState.bleConnectionStatus ==
-            DeviceBleConnectionStatus.connected &&
-        commandState.bleTargetName?.trim() == bleName;
+    return ref
+        .read(deviceCommandControllerProvider.notifier)
+        .isSelectedBleDeviceConnected(
+          bleName: widget.bleName,
+          nativeDeviceId: widget.bleDeviceId,
+        );
   }
 
   void _showBluetoothConnectionRequired() {

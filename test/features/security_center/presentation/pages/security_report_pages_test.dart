@@ -1713,6 +1713,7 @@ GoRouter _buildRouter() {
         builder: (context, state) => SecurityCenterPage(
           doorId: '12',
           deviceId: 'mock-device',
+          hardwareDeviceId: 'mock-device',
           onTabSelected: (_) {},
         ),
       ),

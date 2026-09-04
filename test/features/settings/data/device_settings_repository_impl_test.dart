@@ -20,6 +20,34 @@ void main() {
     expect(values[DeviceSettingKey.autoCloseTime]?.displayValue, '0x00 (0)');
   });
 
+  test(
+    'encodes LED off delay levels using the original 0x2713 values',
+    () async {
+      final gateway = MockHardwareGateway();
+      final repository = DeviceSettingsRepositoryImpl(gateway);
+
+      await repository.setSetting(
+        requestId: 'set-led-delay',
+        deviceId: 'device-1',
+        value: const DeviceSettingValue(
+          key: DeviceSettingKey.ledOffDelay,
+          rawValue: 5,
+        ),
+      );
+
+      final snapshot = await gateway.queryDeviceAttributes(
+        requestId: 'query-led-delay',
+        deviceId: 'device-1',
+      );
+      expect(
+        snapshot.attributes
+            .singleWhere((attribute) => attribute.id == 0x2713)
+            .value,
+        Uint8List.fromList(<int>[0x05]),
+      );
+    },
+  );
+
   test('encodes auto-close time as one byte at attribute 0x2712', () async {
     final gateway = MockHardwareGateway();
     final repository = DeviceSettingsRepositoryImpl(gateway);
@@ -57,6 +85,10 @@ void main() {
     final value = values[DeviceSettingKey.autoCloseTime];
     expect(value?.rawValue, 75);
     expect(value?.candidateValues, <int>[75]);
+    expect(
+      value?.sourceAttributeId,
+      DeviceSettingKey.autoCloseTime.legacyAttributeId,
+    );
   });
 
   test(
@@ -74,6 +106,10 @@ void main() {
       final value = values[DeviceSettingKey.autoCloseTime];
       expect(value?.rawValue, 3);
       expect(value?.candidateValues, <int>[3, 75]);
+      expect(
+        value?.sourceAttributeId,
+        DeviceSettingKey.autoCloseTime.attributeId,
+      );
     },
   );
 
@@ -166,7 +202,10 @@ void main() {
       final attribute = snapshot.attributes.singleWhere(
         (attribute) => attribute.id == value.key.attributeId,
       );
-      expect(attribute.unsignedValue, value.rawValue);
+      expect(
+        attribute.unsignedValue,
+        value.key.toProtocolValue(value.rawValue),
+      );
     }
   });
 }

@@ -6,12 +6,10 @@ import '../domain/entities/device_capability.dart';
 import '../domain/use_cases/fetch_device_capabilities_use_case.dart';
 import 'providers.dart';
 
-final deviceCapabilitiesControllerProvider =
-    NotifierProvider.family<
-      DeviceCapabilitiesController,
-      DeviceCapabilitiesState,
-      String
-    >((deviceId) => DeviceCapabilitiesController(deviceId));
+final deviceCapabilitiesControllerProvider = NotifierProvider.autoDispose
+    .family<DeviceCapabilitiesController, DeviceCapabilitiesState, String>(
+      (deviceId) => DeviceCapabilitiesController(deviceId),
+    );
 
 class DeviceCapabilitiesState {
   const DeviceCapabilitiesState({

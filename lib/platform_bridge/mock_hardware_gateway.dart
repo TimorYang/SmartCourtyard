@@ -64,6 +64,7 @@ class MockHardwareGateway implements HardwareGateway {
     }
     return <int, DeviceAttribute>{
       0x2711: DeviceAttribute(id: 0x2711, value: Uint8List.fromList([0x07])),
+      // 0x2713 writes/reports use the original 0x01-0x09 level values here.
       0x2713: DeviceAttribute(id: 0x2713, value: Uint8List.fromList([0x05])),
       0x2714: DeviceAttribute(id: 0x2714, value: Uint8List.fromList([0x01])),
       autoCloseAttributeId: DeviceAttribute(

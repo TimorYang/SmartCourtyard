@@ -6,6 +6,7 @@ import '../../../core/errors/app_error_message.dart';
 import '../../../core/logging/app_logger.dart';
 import '../../../core/logging/providers.dart';
 
+import '../domain/entities/device_capability.dart';
 import '../domain/entities/device_setting.dart';
 import '../domain/repositories/device_settings_repository.dart';
 import '../domain/use_cases/query_device_settings_use_case.dart';
@@ -33,6 +34,25 @@ int? matchingDeviceSettingCandidate(
   for (final candidate in candidates) {
     if (allowed.contains(candidate)) {
       return candidate;
+    }
+  }
+  return null;
+}
+
+DeviceCapabilityOption? matchingDeviceSettingCapabilityOption({
+  required DeviceCapability? capability,
+  required DeviceSettingKey key,
+  required int? reportedValue,
+}) {
+  if (capability == null || reportedValue == null) {
+    return null;
+  }
+  // 0x2713 may be reported in the upgraded tens representation. Normalize
+  // that report before matching the capability's original 0x01-0x09 values.
+  final normalizedValue = key.fromProtocolValue(reportedValue);
+  for (final option in capability.options) {
+    if (option.value == normalizedValue) {
+      return option;
     }
   }
   return null;
@@ -139,7 +159,10 @@ class DeviceSettingsController extends Notifier<DeviceSettingsState> {
       }
       autoCloseAllowedValues = <int>{0, ...capabilityValues};
     }
-    final value = DeviceSettingValue(key: key, rawValue: rawValue);
+    final value = DeviceSettingValue(
+      key: key,
+      rawValue: key.toProtocolValue(rawValue),
+    );
     state = state.copyWith(pendingKey: key, clearError: true);
     final writeRequestId = _nextRequestId('set-${key.name}');
     try {
@@ -258,6 +281,10 @@ class DeviceSettingsController extends Notifier<DeviceSettingsState> {
       return values;
     }
     final reportedValue = values[DeviceSettingKey.autoCloseTime];
+    if (reportedValue?.sourceAttributeId ==
+        DeviceSettingKey.autoCloseTime.legacyAttributeId) {
+      return values;
+    }
     final resolvedRawValue = matchingDeviceSettingCandidate(
       reportedValue,
       allowedValues,
@@ -269,6 +296,7 @@ class DeviceSettingsController extends Notifier<DeviceSettingsState> {
           key: reportedValue.key,
           rawValue: resolvedRawValue,
           candidateValues: reportedValue.candidateValues,
+          sourceAttributeId: reportedValue.sourceAttributeId,
         ),
       };
     }

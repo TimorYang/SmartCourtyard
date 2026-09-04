@@ -20,12 +20,18 @@ import 'general_evaluation_page.dart';
 import 'safety_sensors_evaluation_page.dart';
 
 class SecurityCenterPage extends ConsumerStatefulWidget {
-  const SecurityCenterPage({required this.doorId, required this.deviceId, required this.onTabSelected, this.isActive = true, super.key});
+  const SecurityCenterPage({required this.doorId, required this.deviceId, required this.onTabSelected, this.hardwareDeviceId, this.isActive = true, super.key});
 
   static const _heroAsset = 'assets/icons/security_center/security_center_protecting_hero.png';
   static const _download = 'assets/icons/security_center/security_center_download.png';
 
   final String doorId;
+  /// Native BLE identifier used only by safety-sensor hardware actions.
+  ///
+  /// [deviceId] remains the business device identifier used by the security
+  /// center and report flow. It is nullable because report-only callers do not
+  /// necessarily have an active BLE session.
+  final String? hardwareDeviceId;
   final String deviceId;
   final ValueChanged<DeviceDetailTab> onTabSelected;
   final bool isActive;
@@ -48,10 +54,12 @@ class _SecurityCenterPageState extends ConsumerState<SecurityCenterPage> {
   @override
   void didUpdateWidget(covariant SecurityCenterPage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.isActive && (!oldWidget.isActive || oldWidget.doorId != widget.doorId)) {
+    if (widget.isActive && (!oldWidget.isActive || oldWidget.doorId != widget.doorId || oldWidget.deviceId != widget.deviceId || oldWidget.hardwareDeviceId != widget.hardwareDeviceId)) {
       _triggerActivation();
     }
   }
+
+  String get _hardwareDeviceId => widget.hardwareDeviceId?.trim() ?? '';
 
   void _triggerActivation() {
     unawaited(Future<void>.microtask(_checkConnectionThenRefresh));
@@ -161,7 +169,7 @@ class _SecurityCenterPageState extends ConsumerState<SecurityCenterPage> {
               textTheme: textTheme,
               l10n: l10n,
               evaluation: sensorEvaluation,
-              onTap: () => context.pushNamed(SafetySensorsEvaluationPage.routeName, queryParameters: {'doorId': widget.doorId, 'deviceId': widget.deviceId}),
+              onTap: () => context.pushNamed(SafetySensorsEvaluationPage.routeName, queryParameters: {'doorId': widget.doorId, 'deviceId': _hardwareDeviceId}),
             ),
           ),
           const SizedBox(height: 30),

@@ -157,28 +157,6 @@ final doorDevicesRefreshRequestProvider =
       DoorDevicesRefreshRequest?
     >(DoorDevicesRefreshRequestNotifier.new);
 
-final doorDetailRefreshRequestProvider =
-    NotifierProvider<
-      DoorDetailRefreshRequestNotifier,
-      DoorDetailRefreshRequest?
-    >(DoorDetailRefreshRequestNotifier.new);
-
-class DoorDetailRefreshRequest {
-  const DoorDetailRefreshRequest({required this.doorId});
-
-  final String doorId;
-}
-
-class DoorDetailRefreshRequestNotifier
-    extends Notifier<DoorDetailRefreshRequest?> {
-  @override
-  DoorDetailRefreshRequest? build() => null;
-
-  void notify(DoorDetailRefreshRequest request) {
-    state = request;
-  }
-}
-
 class DoorDevicesRefreshRequest {
   const DoorDevicesRefreshRequest({
     required this.doorId,
@@ -477,20 +455,6 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
       }
       unawaited(refreshDoorDevices(doorId: request.doorId));
     });
-    ref.listen<DoorDetailRefreshRequest?>(doorDetailRefreshRequestProvider, (
-      _,
-      request,
-    ) {
-      if (request == null || state.doorDetail?.id != request.doorId) {
-        return;
-      }
-      unawaited(
-        loadDoorDetail(
-          doorId: request.doorId,
-          preferredDeviceId: state.selectedDeviceId ?? '',
-        ),
-      );
-    });
     _subscriptions.add(_gateway.bleScanResults.listen(_onBleDeviceFound));
     _subscriptions.add(
       _gateway.bleConnectionEvents.listen(_onBleConnectionChanged),
@@ -715,6 +679,8 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
         bleConnectionStatuses: const <String, DeviceBleConnectionStatus>{},
         bleDeviceIds: const <String, String>{},
         bleConnectionErrors: const <String>{},
+        clearLastSelectedAttributeSnapshot: true,
+        clearDoorRealtimeState: true,
       );
     }
   }
@@ -755,6 +721,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
       if (preferred.isNotEmpty &&
           (device.deviceId.trim() == preferred ||
               device.sn.trim() == preferred ||
+              device.bleName?.trim() == preferred ||
               device.bleUuid?.trim() == preferred ||
               device.bleMac?.trim() == preferred)) {
         selected = device;
@@ -822,6 +789,37 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
       return null;
     }
     return state.bleDeviceIds[selectedDeviceId];
+  }
+
+  /// Checks the identity passed from a page against the currently selected
+  /// BLE session.
+  ///
+  /// The backend's unique BLE name (prefix + SN) is the correlation key. The
+  /// native device id is only the platform handle used after that correlation
+  /// has been established; it must never be compared with the backend device
+  /// id.
+  bool isSelectedBleDeviceConnected({
+    required String bleName,
+    required String nativeDeviceId,
+  }) {
+    final expectedBleName = bleName.trim();
+    final expectedNativeDeviceId = nativeDeviceId.trim();
+    if (expectedBleName.isEmpty || expectedNativeDeviceId.isEmpty) {
+      return false;
+    }
+
+    final selectedDeviceId = state.selectedDeviceId?.trim();
+    if (selectedDeviceId != null && selectedDeviceId.isNotEmpty) {
+      return state.bleConnectionStatuses[selectedDeviceId] ==
+              DeviceBleConnectionStatus.connected &&
+          state.bleTargetName?.trim() == expectedBleName &&
+          state.bleDeviceIds[selectedDeviceId]?.trim() ==
+              expectedNativeDeviceId;
+    }
+
+    return state.bleConnectionStatus == DeviceBleConnectionStatus.connected &&
+        state.bleTargetName?.trim() == expectedBleName &&
+        state.bleDeviceId?.trim() == expectedNativeDeviceId;
   }
 
   Future<void> _startBlePool(List<DoorDevice> devices) async {
@@ -1264,14 +1262,9 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
     DoorDevice device,
     ConnectedBleDevice connected,
   ) {
-    final connectedId = connected.deviceId.trim().toLowerCase();
-    final ids = <String>{
-      device.bleUuid?.trim().toLowerCase() ?? '',
-      device.bleMac?.trim().toLowerCase() ?? '',
-    }..remove('');
-    return ids.contains(connectedId) ||
-        (connected.name?.trim().isNotEmpty == true &&
-            connected.name!.trim() == _targetBleName(device));
+    final expectedBleName = _targetBleName(device);
+    final connectedBleName = connected.name?.trim() ?? '';
+    return expectedBleName.isNotEmpty && connectedBleName == expectedBleName;
   }
 
   String _targetBleName(DoorDevice device) {

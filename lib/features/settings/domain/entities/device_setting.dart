@@ -2,7 +2,7 @@ enum DeviceSettingKey {
   partialOpen(attributeId: 0x2711, byteWidth: 1),
   ledOffDelay(attributeId: 0x2713, byteWidth: 1),
   autoCloseCondition(attributeId: 0x2714, byteWidth: 1),
-  autoCloseTime(attributeId: 0x2712, byteWidth: 1),
+  autoCloseTime(attributeId: 0x2712, byteWidth: 1, legacyAttributeId: 0x2725),
   openingForce(attributeId: 0x2726, byteWidth: 1),
   openingSpeed(attributeId: 0x2727, byteWidth: 1),
   doorOpenReminder(byteWidth: 1, commandCode: 0x0E09);
@@ -11,11 +11,13 @@ enum DeviceSettingKey {
     this.attributeId,
     required this.byteWidth,
     this.commandCode,
+    this.legacyAttributeId,
   });
 
   final int? attributeId;
   final int byteWidth;
   final int? commandCode;
+  final int? legacyAttributeId;
 
   String get capabilityCode => switch (this) {
     DeviceSettingKey.partialOpen => 'PARTIAL_OPEN',
@@ -38,6 +40,23 @@ enum DeviceSettingKey {
     DeviceSettingKey.doorOpenReminder => 10,
     _ => throw UnsupportedError('$name does not support enabled toggles.'),
   };
+
+  /// Converts the app/capability value to the value carried by BLE.
+  ///
+  /// 0x2713 writes continue to use the original 0x01-0x09 values. The newer
+  /// firmware representation is handled only when decoding a 0x0202 report.
+  int toProtocolValue(int value) => value;
+
+  /// Converts a 0x2713 value from a 0x0202 report to the capability level.
+  ///
+  /// Older firmware reports 0x01-0x09 directly. Newer firmware can report
+  /// the same level in tens (0x0A, 0x14, ...), so values above 0x09 are
+  /// normalized by dividing by ten before matching capability options.
+  int fromProtocolValue(int value) {
+    return this == DeviceSettingKey.ledOffDelay && value > 0x09
+        ? value ~/ 0x0A
+        : value;
+  }
 
   /// Range defined by the door BLE protocol's attribute table.
   ///
@@ -62,11 +81,13 @@ class DeviceSettingValue {
     required this.key,
     required this.rawValue,
     this.candidateValues = const <int>[],
+    this.sourceAttributeId,
   });
 
   final DeviceSettingKey key;
   final int rawValue;
   final List<int> candidateValues;
+  final int? sourceAttributeId;
 
   String get hexValue =>
       '0x${rawValue.toRadixString(16).padLeft(key.byteWidth * 2, '0').toUpperCase()}';

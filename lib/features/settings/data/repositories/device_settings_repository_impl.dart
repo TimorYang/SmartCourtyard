@@ -57,7 +57,9 @@ class DeviceSettingsRepositoryImpl implements DeviceSettingsRepository {
       throw StateError('Setting ${value.key.name} has no attribute protocol.');
     }
     final bytes = Uint8List(value.key.byteWidth);
-    var remaining = value.rawValue;
+    // 0x2713 write values remain 0x01-0x09. The tens representation is only
+    // normalized when a newer firmware reports it through 0x0202.
+    var remaining = value.key.toProtocolValue(value.rawValue);
     for (var index = bytes.length - 1; index >= 0; index--) {
       bytes[index] = remaining & 0xFF;
       remaining >>= 8;
@@ -100,9 +102,12 @@ class DeviceSettingsRepositoryImpl implements DeviceSettingsRepository {
       if (attribute == null) {
         continue;
       }
+      // Keep the report's raw value for diagnostics; presentation normalizes
+      // upgraded 0x2713 values through DeviceSettingKey.fromProtocolValue.
       values[key] = DeviceSettingValue(
         key: key,
         rawValue: attribute.unsignedValue,
+        sourceAttributeId: attributeId,
       );
     }
     return values;
@@ -118,6 +123,9 @@ class DeviceSettingsRepositoryImpl implements DeviceSettingsRepository {
         ? attribute2725!.unsignedValue
         : null;
     final preferredValue = value2712 ?? value2725;
+    final sourceAttributeId = value2712 != null
+        ? DeviceSettingKey.autoCloseTime.attributeId
+        : DeviceSettingKey.autoCloseTime.legacyAttributeId;
     if (preferredValue == null) {
       return null;
     }
@@ -126,6 +134,7 @@ class DeviceSettingsRepositoryImpl implements DeviceSettingsRepository {
       key: DeviceSettingKey.autoCloseTime,
       rawValue: preferredValue,
       candidateValues: List<int>.unmodifiable(candidateValues),
+      sourceAttributeId: sourceAttributeId,
     );
   }
 }

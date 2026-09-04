@@ -9,6 +9,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('normalizes upgraded 0x2713 report values only when reading', () {
+    expect(DeviceSettingKey.ledOffDelay.toProtocolValue(1), 1);
+    expect(DeviceSettingKey.ledOffDelay.toProtocolValue(9), 9);
+    expect(DeviceSettingKey.ledOffDelay.fromProtocolValue(1), 1);
+    expect(DeviceSettingKey.ledOffDelay.fromProtocolValue(9), 9);
+    expect(DeviceSettingKey.ledOffDelay.fromProtocolValue(0x0A), 1);
+    expect(DeviceSettingKey.ledOffDelay.fromProtocolValue(0x1E), 3);
+    expect(DeviceSettingKey.ledOffDelay.fromProtocolValue(0x5A), 9);
+  });
+
   test('matches reported setting candidates in source priority order', () {
     const value = DeviceSettingValue(
       key: DeviceSettingKey.autoCloseTime,
@@ -413,6 +423,35 @@ void main() {
     },
   );
 
+  test('keeps a 0x2725 readback as the reported seconds value', () async {
+    final gateway = _LegacyOnlyAutoCloseHardwareGateway();
+    final container = ProviderContainer(
+      overrides: [
+        deviceSettingsHardwareGatewayProvider.overrideWithValue(gateway),
+      ],
+    );
+    addTearDown(container.dispose);
+    final provider = deviceSettingsControllerProvider('device-1');
+    final subscription = container.listen(provider, (_, _) {});
+    addTearDown(subscription.close);
+    await _waitUntil(() => !container.read(provider).loading);
+
+    final saved = await container
+        .read(provider.notifier)
+        .setRawValue(
+          DeviceSettingKey.autoCloseTime,
+          1,
+          allowedValues: const <int>[0, 1, 2],
+        );
+
+    expect(saved, isTrue);
+    final value = container
+        .read(provider)
+        .values[DeviceSettingKey.autoCloseTime];
+    expect(value?.rawValue, 75);
+    expect(value?.sourceAttributeId, 0x2725);
+  });
+
   test('uses cmd 0x0E09 for door reminder enable and disable', () async {
     final gateway = MockHardwareGateway();
     final container = ProviderContainer(
@@ -507,6 +546,25 @@ class _FailingAutoCloseReadbackHardwareGateway extends MockHardwareGateway {
     return super.queryDeviceAttributes(
       requestId: requestId,
       deviceId: deviceId,
+    );
+  }
+}
+
+class _LegacyOnlyAutoCloseHardwareGateway extends MockHardwareGateway {
+  _LegacyOnlyAutoCloseHardwareGateway()
+    : super(autoCloseAttributeId: 0x2725, autoCloseValue: 75);
+
+  @override
+  Future<DeviceAttributeWriteResult> setDeviceAttributes({
+    required String requestId,
+    required String deviceId,
+    required List<DeviceAttribute> attributes,
+  }) async {
+    return DeviceAttributeWriteResult(
+      requestId: requestId,
+      deviceId: deviceId,
+      success: true,
+      sequence: 2,
     );
   }
 }

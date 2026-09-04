@@ -257,7 +257,7 @@ void main() {
       operationRecordRepository: _RecordingOperationRecordRepository(reports),
     );
 
-    await _saveRawSetting(tester, 'LED off delay', '9');
+    await _saveRawSetting(tester, 'LED off delay', '0x09');
     await _saveRawSetting(tester, 'Partial open', '8');
     await _saveOptionSetting(tester, 'Auto close');
     await _saveRawSetting(tester, 'Door open reminder', '5');
@@ -286,7 +286,7 @@ void main() {
 
     await _saveRawSetting(tester, 'Opening speed', '70');
     await _saveRawSetting(tester, 'Force margin', '2');
-    await _saveRawSetting(tester, 'LED off delay', '9');
+    await _saveRawSetting(tester, 'LED off delay', '0x09');
     expect(reports, isEmpty);
   });
 
@@ -309,16 +309,14 @@ void main() {
 
     await tester.tap(find.text('LED off delay'));
     await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextField), '10');
+    await tester.enterText(find.byType(TextField), '11');
     await tester.tap(find.text('Save'));
     await tester.pump();
 
     expect(find.text('Enter a value supported by the device.'), findsOneWidget);
   });
 
-  testWidgets('requires the selected Bluetooth name to be connected', (
-    tester,
-  ) async {
+  testWidgets('requires the selected BLE name to be connected', (tester) async {
     await _pumpSettingsRouter(tester, bleConnected: false);
 
     await tester.tap(find.text('LED off delay'));
@@ -328,7 +326,17 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
   });
 
-  testWidgets('requires the connected Bluetooth name to match the device', (
+  testWidgets('requires the backend BLE name to be present', (tester) async {
+    await _pumpSettingsRouter(tester, includeBleName: false);
+
+    await tester.tap(find.text('LED off delay'));
+    await tester.pump();
+
+    expect(find.text('Raw value'), findsNothing);
+    await tester.pump(const Duration(seconds: 3));
+  });
+
+  testWidgets('requires the native handle mapped to the selected BLE name', (
     tester,
   ) async {
     await _pumpSettingsRouter(tester, matchingBleName: false);
@@ -343,16 +351,18 @@ void main() {
   testWidgets('uses option labels and units while saving option values', (
     tester,
   ) async {
+    final gateway = MockHardwareGateway();
     await _pumpSettingsRouter(
       tester,
+      gateway: gateway,
       capabilityDefinitions: const [
         DeviceCapability(
           code: DeviceCapabilityCode.ledOffDelay,
           label: 'LED off delay',
           unit: 's',
           options: [
-            DeviceCapabilityOption(value: 5, label: '5'),
-            DeviceCapabilityOption(value: 9, label: '9'),
+            DeviceCapabilityOption(value: 5, label: '10'),
+            DeviceCapabilityOption(value: 9, label: '18'),
           ],
         ),
       ],
@@ -368,17 +378,27 @@ void main() {
       ],
     );
 
-    expect(find.text('5 s'), findsOneWidget);
+    expect(find.text('10 s'), findsOneWidget);
     await tester.tap(find.text('LED off delay'));
     await tester.pumpAndSettle();
-    expect(find.text('9 s'), findsOneWidget);
+    expect(find.text('18 s'), findsOneWidget);
 
     await tester.drag(find.byType(ListWheelScrollView), const Offset(0, -50));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Confirm'));
     await tester.pumpAndSettle();
 
-    expect(find.text('9 s'), findsOneWidget);
+    expect(find.text('18 s'), findsOneWidget);
+    final snapshot = await gateway.queryDeviceAttributes(
+      requestId: 'verify-led-option-value',
+      deviceId: 'mock-device',
+    );
+    expect(
+      snapshot.attributes
+          .singleWhere((attribute) => attribute.id == 0x2713)
+          .unsignedValue,
+      9,
+    );
   });
 
   testWidgets('preserves server-driven auto-close option counts and order', (
@@ -663,6 +683,7 @@ Future<void> _pumpSettingsRouter(
   Locale? locale,
   bool bleConnected = true,
   bool matchingBleName = true,
+  bool includeBleName = true,
   List<String> capabilities = const [
     DeviceCapabilityCode.transmitterPairing,
     DeviceCapabilityCode.ledOffDelay,
@@ -687,6 +708,7 @@ Future<void> _pumpSettingsRouter(
     addTearDown(tester.view.resetDevicePixelRatio);
   }
   final hardwareGateway = gateway ?? MockHardwareGateway();
+  final bleNameQuery = includeBleName ? '&bleName=mock-device' : '';
 
   await tester.pumpWidget(
     ProviderScope(
@@ -738,7 +760,8 @@ Future<void> _pumpSettingsRouter(
         routerConfig: GoRouter(
           initialLocation:
               '${DeviceSettingsPage.routePath}'
-              '?doorId=12&deviceId=mock-device&bleName=mock-device',
+              '?doorId=12&deviceId=mock-device$bleNameQuery'
+              '&bleDeviceId=mock-device',
           initialExtra: capabilityScope,
           routes: [
             GoRoute(
@@ -747,8 +770,7 @@ Future<void> _pumpSettingsRouter(
                 doorId: state.uri.queryParameters['doorId'] ?? '',
                 deviceId: state.uri.queryParameters['deviceId'] ?? '',
                 bleName: state.uri.queryParameters['bleName'] ?? '',
-                bleDeviceId:
-                    state.uri.queryParameters['bleDeviceId'] ?? 'mock-device',
+                bleDeviceId: state.uri.queryParameters['bleDeviceId'] ?? '',
                 capabilityScope: state.extra is DeviceSettingsCapabilityScope
                     ? state.extra as DeviceSettingsCapabilityScope
                     : null,
@@ -803,6 +825,7 @@ class _ConnectedDeviceCommandController extends DeviceCommandController {
   DeviceCommandState build() {
     return const DeviceCommandState(
       bleConnectionStatus: DeviceBleConnectionStatus.connected,
+      bleDeviceId: 'mock-device',
       bleTargetName: 'mock-device',
     );
   }
@@ -818,6 +841,7 @@ class _OtherDeviceCommandController extends DeviceCommandController {
   DeviceCommandState build() {
     return const DeviceCommandState(
       bleConnectionStatus: DeviceBleConnectionStatus.connected,
+      bleDeviceId: 'other-device',
       bleTargetName: 'other-device',
     );
   }

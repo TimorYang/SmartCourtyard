@@ -23,6 +23,7 @@ import 'package:flinx/features/records/application/providers.dart';
 import 'package:flinx/features/records/domain/entities/operation_record_page_result.dart';
 import 'package:flinx/features/records/domain/repositories/operation_record_repository.dart';
 import 'package:flinx/features/settings/application/providers.dart';
+import 'package:flinx/features/settings/application/device_settings_controller.dart';
 import 'package:flinx/features/settings/application/door_settings_controller.dart';
 import 'package:flinx/features/settings/domain/entities/device_capability.dart';
 import 'package:flinx/features/settings/domain/entities/device_setting.dart';
@@ -92,32 +93,194 @@ void main() {
     expect(find.text('10 min'), findsNothing);
   });
 
-  testWidgets('refreshes the LED off delay after settings update', (
+  testWidgets(
+    'updates LED off delay after a settings write without BLE reset',
+    (tester) async {
+      final gateway = _RecordingHardwareGateway();
+      await _pumpDevicePage(
+        tester,
+        gateway,
+        doorSettingsRepository: const _CommandDoorSettingsRepository(
+          ledOffDelayValue: 1,
+        ),
+      );
+
+      expect(find.text('5 min'), findsOneWidget);
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(DeviceCommandPage)),
+      );
+      final disconnectAllCount = gateway.disconnectAllCount;
+      expect(
+        await container
+            .read(deviceSettingsControllerProvider('mock-ble-device').notifier)
+            .setRawValue(DeviceSettingKey.ledOffDelay, 3),
+        isTrue,
+      );
+      container
+          .read(doorSettingsControllerProvider('12').notifier)
+          .updateCurrentValue(DeviceCapabilityCode.ledOffDelay, 3);
+      await tester.pumpAndSettle();
+
+      expect(find.text('3 min'), findsOneWidget);
+      expect(find.text('5 min'), findsNothing);
+      expect(gateway.disconnectAllCount, disconnectAllCount);
+      expect(
+        gateway.writtenAttributes
+            .singleWhere((attribute) => attribute.id == 0x2713)
+            .unsignedValue,
+        3,
+      );
+    },
+  );
+
+  testWidgets('updates the LED off delay from an active attribute report', (
     tester,
   ) async {
+    final gateway = _RecordingHardwareGateway();
     await _pumpDevicePage(
       tester,
-      _RecordingHardwareGateway(),
+      gateway,
       doorSettingsRepository: const _CommandDoorSettingsRepository(
         ledOffDelayValue: 1,
       ),
     );
 
-    expect(find.text('1 min'), findsOneWidget);
+    expect(find.text('5 min'), findsOneWidget);
 
-    final container = ProviderScope.containerOf(
-      tester.element(find.byType(DeviceCommandPage)),
+    gateway.emitDeviceAttributeSnapshot(
+      DeviceAttributeSnapshot(
+        deviceId: 'mock-ble-device',
+        sequence: 2,
+        timestampMillis: 2,
+        origin: DeviceAttributeReportOrigin.activeReport,
+        attributes: [
+          DeviceAttribute(id: 0x2713, value: Uint8List.fromList([0x1E])),
+        ],
+      ),
     );
-    container
-        .read(doorSettingsControllerProvider('12').notifier)
-        .updateCurrentValue(DeviceCapabilityCode.ledOffDelay, 3);
-    container
-        .read(doorDetailRefreshRequestProvider.notifier)
-        .notify(const DoorDetailRefreshRequest(doorId: '12'));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump();
 
     expect(find.text('3 min'), findsOneWidget);
-    expect(find.text('1 min'), findsNothing);
+    expect(find.text('5 min'), findsNothing);
+
+    gateway.emitDeviceAttributeSnapshot(
+      DeviceAttributeSnapshot(
+        deviceId: 'mock-ble-device',
+        sequence: 3,
+        timestampMillis: 3,
+        origin: DeviceAttributeReportOrigin.activeReport,
+        attributes: [
+          DeviceAttribute(id: 0x2715, value: Uint8List.fromList([0x01])),
+          DeviceAttribute(id: 0x271C, value: Uint8List.fromList([50])),
+        ],
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('1 min'), findsOneWidget);
+    expect(find.text('3 min'), findsNothing);
+  });
+
+  testWidgets('uses capability labels for command setting values', (
+    tester,
+  ) async {
+    final gateway = _RecordingHardwareGateway(autoCloseValue: 1);
+    await _pumpDevicePage(
+      tester,
+      gateway,
+      capabilityRepository: const _SettingsDeviceCapabilityRepository(
+        ledOffDelayOptions: [DeviceCapabilityOption(value: 3, label: '6')],
+        autoCloseOptions: [
+          DeviceCapabilityOption(value: 0, label: '0'),
+          DeviceCapabilityOption(value: 1, label: '15'),
+        ],
+        partialOpenOptions: [DeviceCapabilityOption(value: 1, label: '2')],
+      ),
+    );
+
+    gateway.emitDeviceAttributeSnapshot(
+      DeviceAttributeSnapshot(
+        deviceId: 'mock-ble-device',
+        sequence: 2,
+        timestampMillis: 2,
+        origin: DeviceAttributeReportOrigin.activeReport,
+        attributes: [
+          DeviceAttribute(id: 0x2711, value: Uint8List.fromList([0x01])),
+          DeviceAttribute(id: 0x2713, value: Uint8List.fromList([0x1E])),
+          DeviceAttribute(id: 0x2712, value: Uint8List.fromList([0x01])),
+        ],
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('6 min'), findsOneWidget);
+    expect(find.text('2 cm'), findsOneWidget);
+    final autoCloseAction = find.byKey(
+      const ValueKey<String>('auto-close-action'),
+    );
+    expect(
+      find.descendant(of: autoCloseAction, matching: find.text('15 s')),
+      findsOneWidget,
+    );
+
+    final autoCloseSwitch = find.byKey(
+      const ValueKey<String>('auto-close-switch'),
+    );
+    await tester.tap(autoCloseSwitch);
+    await tester.pumpAndSettle();
+    expect(
+      find.descendant(of: autoCloseAction, matching: find.text('30 s')),
+      findsNothing,
+    );
+
+    await tester.tap(autoCloseSwitch);
+    await tester.pumpAndSettle();
+    expect(
+      gateway.writtenAttributes
+          .where((attribute) => attribute.id == 0x2712)
+          .map((attribute) => attribute.unsignedValue),
+      <int>[0, 1],
+    );
+    expect(
+      find.descendant(of: autoCloseAction, matching: find.text('15 s')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('displays legacy 0x2725 auto-close reports as seconds', (
+    tester,
+  ) async {
+    final gateway = _RecordingHardwareGateway(
+      autoCloseAttributeId: 0x2725,
+      autoCloseValue: 15,
+    );
+    await _pumpDevicePage(
+      tester,
+      gateway,
+      capabilityRepository: const _SettingsDeviceCapabilityRepository(
+        autoCloseOptions: [
+          DeviceCapabilityOption(value: 0, label: '0'),
+          DeviceCapabilityOption(value: 1, label: '15'),
+          DeviceCapabilityOption(value: 2, label: '30'),
+        ],
+      ),
+    );
+
+    final autoCloseAction = find.byKey(
+      const ValueKey<String>('auto-close-action'),
+    );
+    expect(
+      find.descendant(of: autoCloseAction, matching: find.text('15 s')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: autoCloseAction, matching: find.text('30 s')),
+      findsNothing,
+    );
   });
 
   testWidgets('shows a standalone retry state when initial loading fails', (
@@ -202,7 +365,7 @@ void main() {
             find.byKey(const ValueKey<String>('auto-close-switch')),
           )
           .value,
-      isTrue,
+      isFalse,
     );
 
     await tester.tap(find.byTooltip('Open'));
@@ -1100,7 +1263,7 @@ void main() {
                   attribute.id == DeviceSettingKey.autoCloseTime.attributeId,
             )
             .unsignedValue,
-        15,
+        0,
       );
       expect(
         snapshot.attributes.any((attribute) => attribute.id == 0x2728),
@@ -1111,8 +1274,8 @@ void main() {
         (attribute) => attribute.id == 0x2712,
       );
       expect(autoCloseWrites.map((attribute) => attribute.unsignedValue), <int>[
-        0,
         15,
+        0,
       ]);
       expect(gateway.attributeWriteCount, 2);
       expect(reports.map((report) => report.action), [
@@ -1148,7 +1311,7 @@ void main() {
         .toList();
     expect(writes, hasLength(2));
     expect(writes[0].value, Uint8List.fromList(<int>[0x00]));
-    expect(writes[1].value, Uint8List.fromList(<int>[0x0F]));
+    expect(writes[1].value, Uint8List.fromList(<int>[0x4B]));
     expect(
       gateway.writtenAttributes.any((attribute) => attribute.id == 0x2725),
       isFalse,
@@ -2084,12 +2247,30 @@ class _RouteResultPage extends StatelessWidget {
 class _SettingsDeviceCapabilityRepository
     implements DeviceCapabilityRepository {
   const _SettingsDeviceCapabilityRepository({
+    this.ledOffDelayOptions = const [
+      DeviceCapabilityOption(value: 1, label: '1'),
+      DeviceCapabilityOption(value: 2, label: '2'),
+      DeviceCapabilityOption(value: 3, label: '3'),
+      DeviceCapabilityOption(value: 4, label: '4'),
+      DeviceCapabilityOption(value: 5, label: '5'),
+      DeviceCapabilityOption(value: 6, label: '6'),
+      DeviceCapabilityOption(value: 7, label: '7'),
+      DeviceCapabilityOption(value: 8, label: '8'),
+      DeviceCapabilityOption(value: 9, label: '9'),
+    ],
+    this.autoCloseOptions = const [
+      DeviceCapabilityOption(value: 15, label: '15'),
+      DeviceCapabilityOption(value: 30, label: '30'),
+      DeviceCapabilityOption(value: 75, label: '75'),
+    ],
     this.partialOpenOptions = const [
       DeviceCapabilityOption(value: 1, label: '60'),
       DeviceCapabilityOption(value: 2, label: '80'),
     ],
   });
 
+  final List<DeviceCapabilityOption> ledOffDelayOptions;
+  final List<DeviceCapabilityOption> autoCloseOptions;
   final List<DeviceCapabilityOption> partialOpenOptions;
 
   @override
@@ -2107,15 +2288,17 @@ class _SettingsDeviceCapabilityRepository
       unit: 'cm',
       options: partialOpenOptions,
     ),
-    const DeviceCapability(
+    DeviceCapability(
+      code: DeviceCapabilityCode.ledOffDelay,
+      label: 'LED off delay',
+      unit: 'min',
+      options: ledOffDelayOptions,
+    ),
+    DeviceCapability(
       code: DeviceCapabilityCode.autoClose,
       label: 'Auto close',
       unit: 's',
-      options: [
-        DeviceCapabilityOption(value: 15, label: '15'),
-        DeviceCapabilityOption(value: 30, label: '30'),
-        DeviceCapabilityOption(value: 75, label: '75'),
-      ],
+      options: autoCloseOptions,
     ),
   ];
 }

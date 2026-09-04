@@ -375,28 +375,6 @@ void main() {
     },
   );
 
-  test('refreshes door detail when a settings change requests it', () async {
-    final repository = _DoorDetailRepository(_doorDetail());
-    final container = _createContainer(
-      gateway: _BleSessionGateway(),
-      repository: repository,
-    );
-    addTearDown(container.dispose);
-
-    await container
-        .read(deviceCommandControllerProvider.notifier)
-        .loadDoorDetail(doorId: '12');
-    await _settleBleSession();
-    expect(repository.doorDetailRequestCount, 1);
-
-    container
-        .read(doorDetailRefreshRequestProvider.notifier)
-        .notify(const DoorDetailRefreshRequest(doorId: '12'));
-    await _settleBleSession();
-
-    expect(repository.doorDetailRequestCount, 2);
-  });
-
   test(
     'refresh reconciles the BLE pool and disconnects a removed device',
     () async {
