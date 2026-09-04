@@ -69,6 +69,26 @@ void main() {
     await connectionEvents;
   });
 
+  test('preserves the scanned BLE name on connected devices', () async {
+    final gateway = MockHardwareGateway();
+
+    await gateway.startBleScan(
+      requestId: 'scan-1',
+      filter: const BleScanFilter(exactName: 'Test door'),
+    );
+    await gateway.connectBleDevice(
+      requestId: 'connect-1',
+      deviceId: 'mock-ble-device',
+    );
+
+    final connectedDevices = await gateway.getConnectedBleDevices(
+      requestId: 'connected-1',
+    );
+
+    expect(connectedDevices, hasLength(1));
+    expect(connectedDevices.single.name, 'Test door');
+  });
+
   test('supports ble authentication and wifi provisioning workflow', () async {
     final gateway = MockHardwareGateway();
 

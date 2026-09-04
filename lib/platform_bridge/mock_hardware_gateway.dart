@@ -49,6 +49,7 @@ class MockHardwareGateway implements HardwareGateway {
   final List<int> deletedSafetyAccessorySerialNumbers = <int>[];
   final Map<String, ConnectedBleDevice> connectedBleDevices =
       <String, ConnectedBleDevice>{};
+  final Map<String, String> _bleNamesByDeviceId = <String, String>{};
 
   static Map<int, DeviceAttribute> _buildAttributes({
     required int autoCloseAttributeId,
@@ -169,11 +170,15 @@ class MockHardwareGateway implements HardwareGateway {
         : const <String>['Garage door', 'Test door', 'opener_MOCK-SN-001'];
     for (var index = 0; index < names.length; index += 1) {
       final name = names[index];
+      final deviceId = index == 0
+          ? 'mock-ble-device'
+          : 'mock-ble-device-$index';
+      _bleNamesByDeviceId[deviceId] = name;
       _scanController.add(
         BleDevice(
           requestId: requestId,
           scanSessionId: '$requestId-mock-session',
-          id: index == 0 ? 'mock-ble-device' : 'mock-ble-device-$index',
+          id: deviceId,
           name: name,
           sn: name,
           rssi: -52 - index,
@@ -239,6 +244,7 @@ class MockHardwareGateway implements HardwareGateway {
     _connectionController.add(connected);
     connectedBleDevices[deviceId] = ConnectedBleDevice(
       deviceId: deviceId,
+      name: _bleNamesByDeviceId[deviceId],
       state: BleConnectionState.connected,
     );
     return connected;
