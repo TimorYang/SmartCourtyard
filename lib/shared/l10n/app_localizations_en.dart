@@ -1851,6 +1851,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deviceSettingsAutoCloseCondition => 'Auto close condition';
 
   @override
+  String get deviceSettingsAutoCloseNotAllowedMessage =>
+      'The infrared device is not activated, so auto close cannot be enabled. Please ensure the infrared device is installed correctly and activated.';
+
+  @override
+  String get deviceSettingsAutoCloseCheckFailed =>
+      'Unable to check whether auto close is available. Please try again.';
+
+  @override
   String get deviceSettingsLoading => 'Reading device attributes…';
 
   @override

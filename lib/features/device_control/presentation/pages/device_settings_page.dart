@@ -10,6 +10,7 @@ import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../../records/application/providers.dart';
 import '../../../records/domain/entities/operation_report.dart';
+import '../../../settings/application/auto_close_check_controller.dart';
 import '../../application/device_command_controller.dart';
 import '../../application/about_device_controller.dart';
 import '../../../settings/application/device_settings_controller.dart';
@@ -19,6 +20,7 @@ import '../../../settings/domain/entities/device_capability.dart';
 import '../../../settings/domain/entities/device_setting.dart';
 import '../../../settings/domain/entities/door_setting_snapshot.dart';
 import '../widgets/device_setting_options_sheet.dart';
+import '../../../../shared/widgets/flinx_warning_dialog.dart';
 import 'transmitter_learning_page.dart';
 import 'transmitter_list_page.dart';
 
@@ -151,6 +153,13 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
     );
     final doorSettingsState = ref.watch(
       doorSettingsControllerProvider(widget.doorId),
+    );
+    final autoCloseCheckRequest = (
+      doorId: widget.doorId,
+      deviceId: widget.deviceId,
+    );
+    final autoCloseCheckState = ref.watch(
+      autoCloseCheckControllerProvider(autoCloseCheckRequest),
     );
     final showsForceMargin = _supportsCapability(
       capabilitiesState,
@@ -292,6 +301,7 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
                         setting: doorSettingsState.settingFor(
                           DeviceCapabilityCode.autoClose,
                         ),
+                        checking: autoCloseCheckState.checking,
                       ),
                     if (_supportsCapability(
                       capabilitiesState,
@@ -450,6 +460,7 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
     required DeviceSettingKey key,
     required DeviceCapability? capability,
     required DoorSettingSnapshot? setting,
+    bool checking = false,
   }) {
     final l10n = AppLocalizations.of(context);
     final settingsState = ref.read(
@@ -464,8 +475,8 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
       fallbackIcon: fallbackIcon,
       title: title,
       value: _settingValue(settingsState, key, l10n, capability, setting),
-      showChevron: canEdit,
-      onTap: canEdit
+      showChevron: canEdit && !checking,
+      onTap: canEdit && !checking
           ? () => _showCapabilityValueEditor(
               key: key,
               title: title,
@@ -482,6 +493,7 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
     required DeviceCapability? capability,
     int? currentValue,
   }) async {
+    final l10n = AppLocalizations.of(context);
     if (!_isCurrentBleDeviceConnected()) {
       _showBluetoothConnectionRequired();
       return;
@@ -491,6 +503,34 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
     );
     if (state.loading || state.pendingKey != null) {
       return;
+    }
+    if (key == DeviceSettingKey.autoCloseTime) {
+      final request = (doorId: widget.doorId, deviceId: widget.deviceId);
+      final checkController = ref.read(
+        autoCloseCheckControllerProvider(request).notifier,
+      );
+      if (ref.read(autoCloseCheckControllerProvider(request)).checking) {
+        return;
+      }
+      final allowed = await checkController.checkAllowed();
+      if (!mounted) {
+        return;
+      }
+      final checkState = ref.read(autoCloseCheckControllerProvider(request));
+      if (!allowed) {
+        if (checkState.hasError) {
+          AppToast.error(context, l10n.deviceSettingsAutoCloseCheckFailed);
+        } else {
+          await showFlinxWarningDialog(
+            context,
+            message: l10n.deviceSettingsAutoCloseNotAllowedMessage,
+            confirmLabel: l10n.deviceSettingsConfirmAction,
+            iconAssetPath:
+                DeviceSettingsAssetPaths.forceMarginWarningPlaceholder,
+          );
+        }
+        return;
+      }
     }
     if (capability == null || capability.options.isEmpty) {
       if (key == DeviceSettingKey.autoCloseTime) {

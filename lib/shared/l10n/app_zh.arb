@@ -606,6 +606,8 @@
   "deviceSettingsPartialOpenHeight": "部分开启高度",
   "deviceSettingsAutoClose": "自动关闭",
   "deviceSettingsAutoCloseCondition": "自动关闭条件",
+  "deviceSettingsAutoCloseNotAllowedMessage": "红外线装置未启动，自动关门功能不允许开启。请确保红外设备已正确安装且功能已激活。",
+  "deviceSettingsAutoCloseCheckFailed": "无法检查自动关门功能是否可用，请重试。",
   "deviceSettingsLoading": "正在读取设备属性…",
   "deviceSettingsLoadFailed": "无法读取设备属性。",
   "deviceSettingsRetry": "重试",

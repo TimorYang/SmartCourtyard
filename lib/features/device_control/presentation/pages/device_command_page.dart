@@ -20,6 +20,7 @@ import '../../../records/application/providers.dart';
 import '../../../records/domain/entities/operation_report.dart';
 import '../../../records/presentation/pages/operation_record_page.dart';
 import '../../../security_center/presentation/pages/security_center_page.dart';
+import '../../../settings/application/auto_close_check_controller.dart';
 import '../../../settings/application/device_settings_controller.dart';
 import '../../../settings/application/device_capabilities_controller.dart';
 import '../../../settings/application/door_settings_controller.dart';
@@ -312,6 +313,13 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     );
     final doorSettingsState = ref.watch(
       doorSettingsControllerProvider(widget.doorId),
+    );
+    final autoCloseCheckRequest = (
+      doorId: widget.doorId,
+      deviceId: selectedDeviceId,
+    );
+    final autoCloseCheckState = ref.watch(
+      autoCloseCheckControllerProvider(autoCloseCheckRequest),
     );
     final partialOpenCapability = deviceCapabilitiesState.capabilityFor(
       DeviceCapabilityCode.partialOpenLevel,
@@ -685,7 +693,8 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                                       ),
                                   busy: isBusy,
                                   settingsBusy:
-                                      deviceSettingsState.pendingKey != null,
+                                      deviceSettingsState.pendingKey != null ||
+                                      autoCloseCheckState.checking,
                                   partialOpenSettingBusy:
                                       deviceCapabilitiesState.loading ||
                                       doorSettingsState.loading ||
@@ -712,6 +721,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                                       _setBluetoothToggle(
                                         connected: selectedDeviceUsesBle,
                                         bleDeviceId: connectedBleDeviceId,
+                                        businessDeviceId: selectedDeviceId,
                                         key: DeviceSettingKey.autoCloseTime,
                                         enabled: enabled,
                                         enabledValue: autoCloseEnabledValue,
@@ -723,6 +733,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                                       _setBluetoothToggle(
                                         connected: selectedDeviceUsesBle,
                                         bleDeviceId: connectedBleDeviceId,
+                                        businessDeviceId: selectedDeviceId,
                                         key: DeviceSettingKey.doorOpenReminder,
                                         enabled: enabled,
                                         actionLabel:
@@ -1073,6 +1084,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
   Future<void> _setBluetoothToggle({
     required bool connected,
     required String bleDeviceId,
+    required String businessDeviceId,
     required DeviceSettingKey key,
     required bool enabled,
     int? enabledValue,
@@ -1084,6 +1096,18 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
       actionLabel: actionLabel,
     )) {
       return;
+    }
+
+    if (key == DeviceSettingKey.autoCloseTime && enabled) {
+      final request = (doorId: widget.doorId, deviceId: businessDeviceId);
+      final checkProvider = autoCloseCheckControllerProvider(request);
+      if (ref.read(checkProvider).checking) {
+        return;
+      }
+      final allowed = await ref.read(checkProvider.notifier).checkAllowed();
+      if (!mounted || !allowed) {
+        return;
+      }
     }
 
     setState(() {

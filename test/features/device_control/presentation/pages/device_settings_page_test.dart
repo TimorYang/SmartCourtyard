@@ -11,8 +11,10 @@ import 'package:flinx/features/records/application/providers.dart';
 import 'package:flinx/features/records/domain/entities/operation_record_page_result.dart';
 import 'package:flinx/features/records/domain/repositories/operation_record_repository.dart';
 import 'package:flinx/features/settings/application/providers.dart';
+import 'package:flinx/features/settings/domain/entities/auto_close_check_result.dart';
 import 'package:flinx/features/settings/domain/entities/device_capability.dart';
 import 'package:flinx/features/settings/domain/entities/door_setting_snapshot.dart';
+import 'package:flinx/features/settings/domain/repositories/auto_close_check_repository.dart';
 import 'package:flinx/features/settings/domain/repositories/device_capability_repository.dart';
 import 'package:flinx/features/settings/domain/repositories/door_settings_repository.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
@@ -22,8 +24,74 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:toastification/toastification.dart';
 
 void main() {
+  testWidgets('blocks auto close and shows the warning dialog when unavailable', (
+    tester,
+  ) async {
+    final gateway = MockHardwareGateway();
+    await _pumpSettingsRouter(
+      tester,
+      gateway: gateway,
+      autoCloseCheckRepository: const _FakeAutoCloseCheckRepository(false),
+    );
+
+    await tester.tap(find.text('Auto close'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(
+        'The infrared device is not activated, so auto close cannot be enabled. '
+        'Please ensure the infrared device is installed correctly and activated.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.byType(DeviceCapabilityOptionsSheet), findsNothing);
+    final beforeConfirm = await gateway.queryDeviceAttributes(
+      requestId: 'verify-blocked-auto-close-before-confirm',
+      deviceId: 'mock-device',
+    );
+    expect(
+      beforeConfirm.attributes
+          .singleWhere((attribute) => attribute.id == 0x2712)
+          .unsignedValue,
+      0,
+    );
+
+    await tester.tap(find.text('Confirm'));
+    await tester.pumpAndSettle();
+    expect(find.byType(DeviceCapabilityOptionsSheet), findsNothing);
+    final afterConfirm = await gateway.queryDeviceAttributes(
+      requestId: 'verify-blocked-auto-close-after-confirm',
+      deviceId: 'mock-device',
+    );
+    expect(
+      afterConfirm.attributes
+          .singleWhere((attribute) => attribute.id == 0x2712)
+          .unsignedValue,
+      0,
+    );
+  });
+
+  testWidgets('keeps the auto-close editor closed when its check fails', (
+    tester,
+  ) async {
+    await _pumpSettingsRouter(
+      tester,
+      autoCloseCheckRepository: const _FailingAutoCloseCheckRepository(),
+    );
+
+    await tester.tap(find.text('Auto close'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.byType(DeviceCapabilityOptionsSheet), findsNothing);
+    expect(tester.takeException(), isNull);
+    toastification.dismissAll(delayForAnimation: false);
+    await tester.pump(const Duration(milliseconds: 500));
+  });
+
   testWidgets('renders queried raw device setting values', (tester) async {
     await _pumpSettingsRouter(tester);
 
@@ -697,6 +765,7 @@ Future<void> _pumpSettingsRouter(
   List<DoorSettingSnapshot> settingSnapshots = const [],
   DoorSettingsRepository? doorSettingsRepository,
   OperationRecordRepository? operationRecordRepository,
+  AutoCloseCheckRepository? autoCloseCheckRepository,
   MockHardwareGateway? gateway,
   DeviceSettingsCapabilityScope? capabilityScope,
   DoorDetailRepository? doorDetailRepository,
@@ -746,6 +815,9 @@ Future<void> _pumpSettingsRouter(
           doorSettingsRepository ??
               _FakeDoorSettingsRepository(settingSnapshots),
         ),
+        autoCloseCheckRepositoryProvider.overrideWithValue(
+          autoCloseCheckRepository ?? const _FakeAutoCloseCheckRepository(true),
+        ),
         operationRecordRepositoryProvider.overrideWithValue(
           operationRecordRepository ??
               const _RecordingOperationRecordRepository(),
@@ -753,43 +825,52 @@ Future<void> _pumpSettingsRouter(
         if (doorDetailRepository != null)
           doorDetailRepositoryProvider.overrideWithValue(doorDetailRepository),
       ],
-      child: MaterialApp.router(
-        locale: locale,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        routerConfig: GoRouter(
-          initialLocation:
-              '${DeviceSettingsPage.routePath}'
-              '?doorId=12&deviceId=mock-device$bleNameQuery'
-              '&bleDeviceId=mock-device',
-          initialExtra: capabilityScope,
-          routes: [
-            GoRoute(
-              path: DeviceSettingsPage.routePath,
-              builder: (context, state) => DeviceSettingsPage(
-                doorId: state.uri.queryParameters['doorId'] ?? '',
-                deviceId: state.uri.queryParameters['deviceId'] ?? '',
-                bleName: state.uri.queryParameters['bleName'] ?? '',
-                bleDeviceId: state.uri.queryParameters['bleDeviceId'] ?? '',
-                capabilityScope: state.extra is DeviceSettingsCapabilityScope
-                    ? state.extra as DeviceSettingsCapabilityScope
-                    : null,
-              ),
+      child: ToastificationWrapper(
+        child: MaterialApp.router(
+          locale: locale,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          builder: (context, child) => ToastificationConfigProvider(
+            config: const ToastificationConfig(
+              alignment: Alignment.topCenter,
+              animationDuration: Duration(milliseconds: 220),
             ),
-            GoRoute(
-              path: AboutDevicePage.routePath,
-              builder: (context, state) => AboutDevicePage(
-                doorId: state.uri.queryParameters['doorId'] ?? '',
-                deviceId: state.uri.queryParameters['deviceId'] ?? '',
+            child: child!,
+          ),
+          routerConfig: GoRouter(
+            initialLocation:
+                '${DeviceSettingsPage.routePath}'
+                '?doorId=12&deviceId=mock-device$bleNameQuery'
+                '&bleDeviceId=mock-device',
+            initialExtra: capabilityScope,
+            routes: [
+              GoRoute(
+                path: DeviceSettingsPage.routePath,
+                builder: (context, state) => DeviceSettingsPage(
+                  doorId: state.uri.queryParameters['doorId'] ?? '',
+                  deviceId: state.uri.queryParameters['deviceId'] ?? '',
+                  bleName: state.uri.queryParameters['bleName'] ?? '',
+                  bleDeviceId: state.uri.queryParameters['bleDeviceId'] ?? '',
+                  capabilityScope: state.extra is DeviceSettingsCapabilityScope
+                      ? state.extra as DeviceSettingsCapabilityScope
+                      : null,
+                ),
               ),
-            ),
-            GoRoute(
-              path: TransmitterManagementPage.routePath,
-              builder: (context, state) => TransmitterManagementPage(
-                deviceId: state.uri.queryParameters['deviceId'] ?? '',
+              GoRoute(
+                path: AboutDevicePage.routePath,
+                builder: (context, state) => AboutDevicePage(
+                  doorId: state.uri.queryParameters['doorId'] ?? '',
+                  deviceId: state.uri.queryParameters['deviceId'] ?? '',
+                ),
               ),
-            ),
-          ],
+              GoRoute(
+                path: TransmitterManagementPage.routePath,
+                builder: (context, state) => TransmitterManagementPage(
+                  deviceId: state.uri.queryParameters['deviceId'] ?? '',
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     ),
@@ -889,6 +970,32 @@ class _FakeDoorSettingsRepository implements DoorSettingsRepository {
     required String doorId,
     required String requestId,
   }) async => settings;
+}
+
+class _FakeAutoCloseCheckRepository implements AutoCloseCheckRepository {
+  const _FakeAutoCloseCheckRepository(this.allowed);
+
+  final bool allowed;
+
+  @override
+  Future<AutoCloseCheckResult> checkAutoClose({
+    required String doorId,
+    required String deviceId,
+    required String requestId,
+  }) async => AutoCloseCheckResult(autoCloseAllowed: allowed);
+}
+
+class _FailingAutoCloseCheckRepository implements AutoCloseCheckRepository {
+  const _FailingAutoCloseCheckRepository();
+
+  @override
+  Future<AutoCloseCheckResult> checkAutoClose({
+    required String doorId,
+    required String deviceId,
+    required String requestId,
+  }) async {
+    throw StateError('check failed');
+  }
 }
 
 class _CountingDoorSettingsRepository implements DoorSettingsRepository {

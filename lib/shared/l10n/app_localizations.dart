@@ -3398,6 +3398,18 @@ abstract class AppLocalizations {
   /// **'Auto close condition'**
   String get deviceSettingsAutoCloseCondition;
 
+  /// No description provided for @deviceSettingsAutoCloseNotAllowedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The infrared device is not activated, so auto close cannot be enabled. Please ensure the infrared device is installed correctly and activated.'**
+  String get deviceSettingsAutoCloseNotAllowedMessage;
+
+  /// No description provided for @deviceSettingsAutoCloseCheckFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to check whether auto close is available. Please try again.'**
+  String get deviceSettingsAutoCloseCheckFailed;
+
   /// No description provided for @deviceSettingsLoading.
   ///
   /// In en, this message translates to:

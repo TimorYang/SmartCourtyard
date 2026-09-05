@@ -4,16 +4,21 @@ import '../../../core/logging/providers.dart';
 import '../../../core/network/providers.dart';
 import '../../../platform_bridge/hardware_gateway.dart';
 import '../../../platform_bridge/providers.dart';
+import '../data/data_sources/auto_close_check_api.dart';
+import '../data/data_sources/auto_close_check_remote_data_source.dart';
 import '../data/data_sources/device_capability_api.dart';
 import '../data/data_sources/device_capability_remote_data_source.dart';
 import '../data/data_sources/door_settings_api.dart';
 import '../data/data_sources/door_settings_remote_data_source.dart';
+import '../data/repositories/auto_close_check_repository_impl.dart';
 import '../data/repositories/device_capability_repository_impl.dart';
 import '../data/repositories/device_settings_repository_impl.dart';
 import '../data/repositories/door_settings_repository_impl.dart';
+import '../domain/repositories/auto_close_check_repository.dart';
 import '../domain/repositories/device_capability_repository.dart';
 import '../domain/repositories/device_settings_repository.dart';
 import '../domain/repositories/door_settings_repository.dart';
+import '../domain/use_cases/check_auto_close_allowed_use_case.dart';
 import '../domain/use_cases/fetch_device_capabilities_use_case.dart';
 import '../domain/use_cases/fetch_door_settings_use_case.dart';
 import '../domain/use_cases/query_device_settings_use_case.dart';
@@ -22,6 +27,31 @@ import '../domain/use_cases/set_device_setting_use_case.dart';
 final deviceSettingsHardwareGatewayProvider = Provider<HardwareGateway>((ref) {
   return ref.watch(nativeHardwareGatewayProvider);
 });
+
+final autoCloseCheckApiProvider = Provider<AutoCloseCheckApi>((ref) {
+  return AutoCloseCheckApi(ref.watch(dioProvider));
+});
+
+final autoCloseCheckRemoteDataSourceProvider =
+    Provider<AutoCloseCheckRemoteDataSource>((ref) {
+      return AutoCloseCheckRemoteDataSourceImpl(
+        api: ref.watch(autoCloseCheckApiProvider),
+      );
+    });
+
+final autoCloseCheckRepositoryProvider = Provider<AutoCloseCheckRepository>(
+  (ref) => AutoCloseCheckRepositoryImpl(
+    remoteDataSource: ref.watch(autoCloseCheckRemoteDataSourceProvider),
+    logger: ref.watch(appLoggerProvider),
+  ),
+);
+
+final checkAutoCloseAllowedUseCaseProvider =
+    Provider<CheckAutoCloseAllowedUseCase>(
+      (ref) => CheckAutoCloseAllowedUseCase(
+        ref.watch(autoCloseCheckRepositoryProvider),
+      ),
+    );
 
 final deviceSettingsRepositoryProvider = Provider<DeviceSettingsRepository>((
   ref,

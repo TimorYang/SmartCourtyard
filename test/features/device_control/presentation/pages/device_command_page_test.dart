@@ -25,9 +25,11 @@ import 'package:flinx/features/records/domain/repositories/operation_record_repo
 import 'package:flinx/features/settings/application/providers.dart';
 import 'package:flinx/features/settings/application/device_settings_controller.dart';
 import 'package:flinx/features/settings/application/door_settings_controller.dart';
+import 'package:flinx/features/settings/domain/entities/auto_close_check_result.dart';
 import 'package:flinx/features/settings/domain/entities/device_capability.dart';
 import 'package:flinx/features/settings/domain/entities/device_setting.dart';
 import 'package:flinx/features/settings/domain/entities/door_setting_snapshot.dart';
+import 'package:flinx/features/settings/domain/repositories/auto_close_check_repository.dart';
 import 'package:flinx/features/settings/domain/repositories/device_capability_repository.dart';
 import 'package:flinx/features/settings/domain/repositories/door_settings_repository.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
@@ -280,6 +282,75 @@ void main() {
     expect(
       find.descendant(of: autoCloseAction, matching: find.text('30 s')),
       findsNothing,
+    );
+  });
+
+  testWidgets('does not enable auto close when the safety check is denied', (
+    tester,
+  ) async {
+    final gateway = _RecordingHardwareGateway();
+    await _pumpDevicePage(
+      tester,
+      gateway,
+      autoCloseCheckRepository: const _FakeAutoCloseCheckRepository(false),
+    );
+
+    final autoCloseSwitch = find.byKey(
+      const ValueKey<String>('auto-close-switch'),
+    );
+    expect(tester.widget<FlinxSwitch>(autoCloseSwitch).value, isFalse);
+
+    await tester.tap(autoCloseSwitch);
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<FlinxSwitch>(autoCloseSwitch).value, isFalse);
+    expect(gateway.writtenAttributes, isEmpty);
+  });
+
+  testWidgets('keeps auto close unchanged when the safety check fails', (
+    tester,
+  ) async {
+    final gateway = _RecordingHardwareGateway();
+    await _pumpDevicePage(
+      tester,
+      gateway,
+      autoCloseCheckRepository: const _FailingAutoCloseCheckRepository(),
+    );
+
+    final autoCloseSwitch = find.byKey(
+      const ValueKey<String>('auto-close-switch'),
+    );
+    await tester.tap(autoCloseSwitch);
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<FlinxSwitch>(autoCloseSwitch).value, isFalse);
+    expect(gateway.writtenAttributes, isEmpty);
+  });
+
+  testWidgets('disabling auto close skips the safety check', (tester) async {
+    final gateway = _RecordingHardwareGateway(autoCloseValue: 15);
+    final repository = _TrackingAutoCloseCheckRepository(false);
+    await _pumpDevicePage(
+      tester,
+      gateway,
+      autoCloseCheckRepository: repository,
+    );
+
+    final autoCloseSwitch = find.byKey(
+      const ValueKey<String>('auto-close-switch'),
+    );
+    expect(tester.widget<FlinxSwitch>(autoCloseSwitch).value, isTrue);
+
+    await tester.tap(autoCloseSwitch);
+    await tester.pumpAndSettle();
+
+    expect(repository.calls, 0);
+    expect(tester.widget<FlinxSwitch>(autoCloseSwitch).value, isFalse);
+    expect(
+      gateway.writtenAttributes
+          .where((attribute) => attribute.id == 0x2712)
+          .map((attribute) => attribute.unsignedValue),
+      <int>[0],
     );
   });
 
@@ -2238,6 +2309,7 @@ Widget _buildPage(
   RemoteDoorCommandRepository? remoteRepository,
   DoorControlMode? fBoxControlModeResult,
   OperationRecordRepository? operationRecordRepository,
+  AutoCloseCheckRepository? autoCloseCheckRepository,
   Duration remotePollInterval = const Duration(seconds: 1),
   int remotePollMaxAttempts = 6,
 }) {
@@ -2264,6 +2336,9 @@ Widget _buildPage(
         capabilityRepository,
       ),
       doorSettingsRepositoryProvider.overrideWithValue(doorSettingsRepository),
+      autoCloseCheckRepositoryProvider.overrideWithValue(
+        autoCloseCheckRepository ?? const _FakeAutoCloseCheckRepository(true),
+      ),
     ],
     child: ToastificationWrapper(
       child: MaterialApp.router(
@@ -2474,6 +2549,49 @@ class _CommandDoorSettingsRepository implements DoorSettingsRepository {
   ];
 }
 
+class _FakeAutoCloseCheckRepository implements AutoCloseCheckRepository {
+  const _FakeAutoCloseCheckRepository(this.allowed);
+
+  final bool allowed;
+
+  @override
+  Future<AutoCloseCheckResult> checkAutoClose({
+    required String doorId,
+    required String deviceId,
+    required String requestId,
+  }) async => AutoCloseCheckResult(autoCloseAllowed: allowed);
+}
+
+class _TrackingAutoCloseCheckRepository implements AutoCloseCheckRepository {
+  _TrackingAutoCloseCheckRepository(this.allowed);
+
+  final bool allowed;
+  int calls = 0;
+
+  @override
+  Future<AutoCloseCheckResult> checkAutoClose({
+    required String doorId,
+    required String deviceId,
+    required String requestId,
+  }) async {
+    calls++;
+    return AutoCloseCheckResult(autoCloseAllowed: allowed);
+  }
+}
+
+class _FailingAutoCloseCheckRepository implements AutoCloseCheckRepository {
+  const _FailingAutoCloseCheckRepository();
+
+  @override
+  Future<AutoCloseCheckResult> checkAutoClose({
+    required String doorId,
+    required String deviceId,
+    required String requestId,
+  }) async {
+    throw StateError('check failed');
+  }
+}
+
 Future<void> _pumpDevicePage(
   WidgetTester tester,
   MockHardwareGateway gateway, {
@@ -2486,6 +2604,7 @@ Future<void> _pumpDevicePage(
   RemoteDoorCommandRepository? remoteRepository,
   DoorControlMode? fBoxControlModeResult,
   OperationRecordRepository? operationRecordRepository,
+  AutoCloseCheckRepository? autoCloseCheckRepository,
   Duration remotePollInterval = const Duration(seconds: 1),
   int remotePollMaxAttempts = 6,
 }) async {
@@ -2503,6 +2622,7 @@ Future<void> _pumpDevicePage(
       remoteRepository: remoteRepository,
       fBoxControlModeResult: fBoxControlModeResult,
       operationRecordRepository: operationRecordRepository,
+      autoCloseCheckRepository: autoCloseCheckRepository,
       remotePollInterval: remotePollInterval,
       remotePollMaxAttempts: remotePollMaxAttempts,
     ),

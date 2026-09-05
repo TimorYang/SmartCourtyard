@@ -111,6 +111,11 @@ class AppColors {
   static const securityCenterDialogWarning = Color(0xFFFF7B00);
   static const securityCenterDialogPrimaryAction = Color(0xFF006DFF);
   static const securityCenterDialogSurface = Color(0xFFFFFFFF);
+  static const warningDialogScrim = Color(0x80000000);
+  static const warningDialogSurface = Color(0xFFFFFFFF);
+  static const warningDialogIcon = Color(0xFFFF7B00);
+  static const warningDialogPrimaryAction = Color(0xFF006DFF);
+  static const warningDialogPrimaryActionForeground = Color(0xFFFFFFFF);
   static const securityReportHeroBlue = Color(0xFF2478F5);
   static const securityReportHeroFade = Color(0xFFDCE9FF);
   static const securityReportWarning = Color(0xFFFF7B00);
@@ -315,6 +320,7 @@ class AppShapeTokens {
   static const upgradeCheckCardRadius = 16.0;
   static const upgradeCheckDialogRadius = 16.0;
   static const upgradeCheckActionRadius = 28.0;
+  static const warningDialogRadius = 16.0;
   static const deviceControlCommandButtonRadius = 8.0;
   static const deviceControlCardRadius = 7.0;
   static const fBoxWiringTestControlRadius = 12.0;
@@ -478,6 +484,15 @@ class AppSpacingTokens {
   static const accountLanguageDialogWheelItemExtent = 68.0;
   static const accountLanguageDialogWheelHeight = 204.0;
   static const accountLanguageDialogSelectionLineThickness = 1.0;
+  static const warningDialogHorizontalInset = 20.0;
+  static const warningDialogMaxWidth = 430.0;
+  static const warningDialogContentHorizontal = 28.0;
+  static const warningDialogContentTop = 44.0;
+  static const warningDialogIconSize = 96.0;
+  static const warningDialogIconToMessage = 30.0;
+  static const warningDialogMessageToAction = 40.0;
+  static const warningDialogActionHeight = 54.0;
+  static const warningDialogContentBottom = 36.0;
 }
 
 class AppOpacityTokens {
@@ -2690,6 +2705,23 @@ class AppTextTokens {
     return (textTheme.titleLarge ?? const TextStyle()).copyWith(
       fontSize: 18,
       fontWeight: FontWeight.w400,
+    );
+  }
+
+  static TextStyle warningDialogMessage(TextTheme textTheme) {
+    return (textTheme.bodyLarge ?? const TextStyle()).copyWith(
+      color: AppColors.textPrimary,
+      fontSize: 17,
+      fontWeight: FontWeight.w400,
+      height: 1.45,
+    );
+  }
+
+  static TextStyle warningDialogAction(TextTheme textTheme) {
+    return (textTheme.titleMedium ?? const TextStyle()).copyWith(
+      color: AppColors.warningDialogPrimaryActionForeground,
+      fontSize: 18,
+      fontWeight: FontWeight.w500,
     );
   }
 }

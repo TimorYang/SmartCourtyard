@@ -1723,6 +1723,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get deviceSettingsAutoCloseCondition => '自动关闭条件';
 
   @override
+  String get deviceSettingsAutoCloseNotAllowedMessage =>
+      '红外线装置未启动，自动关门功能不允许开启。请确保红外设备已正确安装且功能已激活。';
+
+  @override
+  String get deviceSettingsAutoCloseCheckFailed => '无法检查自动关门功能是否可用，请重试。';
+
+  @override
   String get deviceSettingsLoading => '正在读取设备属性…';
 
   @override
