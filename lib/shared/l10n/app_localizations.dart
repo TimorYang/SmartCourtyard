@@ -4814,6 +4814,12 @@ abstract class AppLocalizations {
   /// **'Control method'**
   String get deviceCommandControlMethod;
 
+  /// No description provided for @deviceCommandControlModeUnset.
+  ///
+  /// In en, this message translates to:
+  /// **'Control method is not set. Open Control method to configure it.'**
+  String get deviceCommandControlModeUnset;
+
   /// No description provided for @deviceCommandActionOpen.
   ///
   /// In en, this message translates to:

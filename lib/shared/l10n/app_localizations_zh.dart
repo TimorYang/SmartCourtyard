@@ -2469,6 +2469,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get deviceCommandControlMethod => '控制方式';
 
   @override
+  String get deviceCommandControlModeUnset => '控制方式未设置，请进入“控制方式”完成配置。';
+
+  @override
   String get deviceCommandActionOpen => '开门';
 
   @override

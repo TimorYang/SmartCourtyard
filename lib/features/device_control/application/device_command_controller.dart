@@ -24,6 +24,7 @@ import '../data/mappers/door_realtime_state_mapper.dart';
 import '../data/repositories/door_control_mode_repository_impl.dart';
 import '../data/repositories/door_detail_repository_impl.dart';
 import '../data/repositories/remote_door_command_repository_impl.dart';
+import '../domain/entities/door_control_mode.dart';
 import '../domain/entities/door_detail.dart';
 import '../domain/entities/door_device.dart';
 import '../domain/entities/door_realtime_state.dart';
@@ -538,6 +539,23 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
         doorDetailErrorMessage: appErrorMessage(error, ''),
       );
     }
+  }
+
+  void applyDoorControlMode({
+    required String doorId,
+    required DoorControlMode mode,
+  }) {
+    final detail = state.doorDetail;
+    final normalizedDoorId = doorId.trim();
+    if (detail == null ||
+        normalizedDoorId.isEmpty ||
+        detail.id.trim() != normalizedDoorId) {
+      return;
+    }
+
+    state = state.copyWith(
+      doorDetail: detail.copyWith(controlMode: mode.backendValue),
+    );
   }
 
   Future<void> refreshDoorDevices({required String doorId}) async {

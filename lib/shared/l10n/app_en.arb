@@ -2042,6 +2042,7 @@
   "deviceCommandPartialOpenSettingFailed": "Unable to save the partial-open position. Please try again.",
   "deviceCommandMoreSettingsTitle": "More settings",
   "deviceCommandControlMethod": "Control method",
+  "deviceCommandControlModeUnset": "Control method is not set. Open Control method to configure it.",
   "deviceCommandActionOpen": "Open",
   "deviceCommandActionClose": "Close",
   "deviceCommandActionStop": "Stop",

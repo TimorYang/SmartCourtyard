@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../device_control/domain/entities/door_control_mode.dart';
 import '../../../device_control/presentation/pages/already_added_devices_page.dart';
 import '../../../device_control/presentation/pages/device_command_page.dart';
 import '../pages/add_new_doors_page.dart';
@@ -52,10 +53,11 @@ class OnboardingDeviceNavigation {
   static void finishFBoxTest(
     BuildContext context, {
     required FBoxWiringTestRouteData routeData,
+    DoorControlMode? controlMode,
   }) {
     final navigator = Navigator.of(context);
     if (routeData.entryPoint == FBoxWiringTestEntryPoint.deviceCommand) {
-      navigator.pop(routeData.deviceId);
+      navigator.pop(controlMode);
       return;
     }
 

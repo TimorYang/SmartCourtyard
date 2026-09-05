@@ -89,6 +89,40 @@ void main() {
     expect(dto.partialOpenValue, 60);
   });
 
+  test('parses control mode codes from the string response contract', () {
+    final pb = DoorDetailResponseDto.fromJson(const {
+      'id': '12',
+      'name': 'Main Gate',
+      'controlMode': '0',
+      'controlModeLabel': 'PB',
+    });
+    final osc = DoorDetailResponseDto.fromJson(const {
+      'id': '12',
+      'name': 'Main Gate',
+      'controlMode': '1',
+      'controlModeLabel': 'OSC',
+    });
+    final unset = DoorDetailResponseDto.fromJson(const {
+      'id': '12',
+      'name': 'Main Gate',
+      'controlMode': '2',
+      'controlModeLabel': '未设置',
+    });
+    final legacyNumeric = DoorDetailResponseDto.fromJson(const {
+      'id': '12',
+      'name': 'Main Gate',
+      'controlMode': 1,
+    });
+
+    expect(pb.controlMode, 0);
+    expect(pb.controlModeLabel, 'PB');
+    expect(osc.controlMode, 1);
+    expect(osc.controlModeLabel, 'OSC');
+    expect(unset.controlMode, 2);
+    expect(unset.controlModeLabel, '未设置');
+    expect(legacyNumeric.controlMode, 1);
+  });
+
   test('defaults missing or empty effective capabilities to an empty list', () {
     final missing = DoorDetailResponseDto.fromJson(const {
       'id': '12',

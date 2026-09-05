@@ -49,6 +49,33 @@ class DoorDetail {
   final int operatedCycles;
   final int remainingCycles;
   bool get isLedEnabled => ledStatus == 2;
+
+  DoorDetail copyWith({int? controlMode, String? controlModeLabel}) {
+    return DoorDetail(
+      id: id,
+      name: name,
+      doorType: doorType,
+      doorTypeLabel: doorTypeLabel,
+      controlMode: controlMode ?? this.controlMode,
+      controlModeLabel: controlModeLabel ?? this.controlModeLabel,
+      onlineStatus: onlineStatus,
+      onlineStatusLabel: onlineStatusLabel,
+      relationType: relationType,
+      effectiveCapabilities: effectiveCapabilities,
+      doorState: doorState,
+      doorStateLabel: doorStateLabel,
+      positionPercent: positionPercent,
+      coverFileId: coverFileId,
+      operatorAvatarFileId: operatorAvatarFileId,
+      ledStatus: ledStatus,
+      ledStatusLabel: ledStatusLabel,
+      autoCloseEnabled: autoCloseEnabled,
+      openReminderEnabled: openReminderEnabled,
+      partialOpenValue: partialOpenValue,
+      operatedCycles: operatedCycles,
+      remainingCycles: remainingCycles,
+    );
+  }
 }
 
 class DoorAssociatedDevice {

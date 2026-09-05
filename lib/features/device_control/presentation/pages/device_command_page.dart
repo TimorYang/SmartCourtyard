@@ -301,7 +301,6 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     final isFBox = selectedDevice?.deviceType.trim().toLowerCase() == 'fbox';
     final controlMode = DoorControlMode.fromBackend(
       value: doorDetail?.controlMode,
-      label: doorDetail?.controlModeLabel,
     );
     final connectedBleDeviceId = hardwareDeviceId;
     final selectedDeviceUsesBle = hardwareDeviceId.isNotEmpty;
@@ -837,8 +836,8 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                   ),
                   const SizedBox(height: 12),
                 ],
-                if (controlMode == DoorControlMode.pb)
-                  _FBoxPbControl(
+                switch (controlMode) {
+                  DoorControlMode.pb => _FBoxPbControl(
                     key: const ValueKey<String>('fbox-device-command-pb'),
                     tooltip: l10n.deviceCommandActionPb,
                     pending:
@@ -854,9 +853,8 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                     onDisabled: !canControlDoor && !isBusy
                         ? onPermissionDenied
                         : null,
-                  )
-                else
-                  _DoorCommandRow(
+                  ),
+                  DoorControlMode.osc => _DoorCommandRow(
                     key: const ValueKey<String>('fbox-device-command-osc'),
                     enabled: canControlDoor,
                     busy: isBusy,
@@ -892,6 +890,12 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                       );
                     },
                   ),
+                  DoorControlMode.unset => _CommandFeedback(
+                    message: l10n.deviceCommandControlModeUnset,
+                    icon: Icons.info_outline,
+                    foregroundColor: AppColors.textMuted,
+                  ),
+                },
                 const SizedBox(height: 18),
                 if (commandFeedback != null) ...[
                   _CommandFeedback(
@@ -960,7 +964,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
   }
 
   Future<void> _openFBoxControlMethod({required String deviceId}) async {
-    await context.push<String>(
+    final mode = await context.push<DoorControlMode>(
       FBoxWiringTestRoute.location(
         doorId: widget.doorId,
         deviceId: deviceId,
@@ -968,10 +972,10 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
         entryPoint: FBoxWiringTestEntryPoint.deviceCommand,
       ),
     );
-    if (!mounted) {
+    if (!mounted || mode == null) {
       return;
     }
-    await _loadDoorDetail(preferredDeviceId: deviceId);
+    _controller.applyDoorControlMode(doorId: widget.doorId, mode: mode);
   }
 
   bool _requireBluetoothConnection({

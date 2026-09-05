@@ -3,8 +3,11 @@ import 'dart:async';
 import 'package:flinx/app/theme/app_design_tokens.dart';
 import 'package:flinx/features/add_device/application/add_device_controller.dart';
 import 'package:flinx/features/add_device/application/providers.dart';
+import 'package:flinx/features/add_device/presentation/navigation/f_box_wiring_test_route.dart';
 import 'package:flinx/features/add_device/presentation/pages/f_box_wiring_test_page.dart';
 import 'package:flinx/features/device_control/application/device_command_controller.dart';
+import 'package:flinx/features/device_control/domain/entities/door_control_mode.dart';
+import 'package:flinx/features/device_control/domain/entities/door_device.dart';
 import 'package:flinx/features/device_control/domain/entities/f_box_control_mode.dart';
 import 'package:flinx/features/device_control/domain/repositories/door_control_mode_repository.dart';
 import 'package:flinx/features/device_control/domain/use_cases/update_door_control_mode_use_case.dart';
@@ -226,6 +229,66 @@ void main() {
     expect(repository.calls.last.mode, FBoxControlMode.osc);
   });
 
+  testWidgets('returns the selected PB mode for a device-command entry', (
+    tester,
+  ) async {
+    late Future<DoorControlMode?> result;
+    await _pumpPage(
+      tester,
+      deviceCommandState: const DeviceCommandState(
+        selectedDeviceId: 'fbox-device',
+        doorDevices: [
+          DoorDevice(
+            deviceId: 'fbox-device',
+            sn: 'SN-FBOX-DEVICE-COMMAND',
+            deviceType: 'fbox',
+          ),
+        ],
+      ),
+      home: Builder(
+        builder: (context) => Scaffold(
+          body: FilledButton(
+            key: const Key('open-fbox-for-result'),
+            onPressed: () {
+              result = Navigator.of(context).push<DoorControlMode>(
+                MaterialPageRoute(
+                  builder: (_) => const FBoxWiringTestPage(
+                    routeData: FBoxWiringTestRouteData(
+                      doorId: '42',
+                      deviceId: 'fbox-device',
+                      entryPoint: FBoxWiringTestEntryPoint.deviceCommand,
+                    ),
+                  ),
+                ),
+              );
+            },
+            child: const Text('Open F-box'),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('open-fbox-for-result')));
+    await tester.pumpAndSettle();
+    final nextButton = find.byKey(const Key('fBoxWiringTestNextButton'));
+    await tester.ensureVisible(nextButton);
+    await tester.tap(nextButton);
+    await tester.pumpAndSettle();
+
+    expect(await result, DoorControlMode.pb);
+
+    await tester.tap(find.byKey(const Key('open-fbox-for-result')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('fBoxWiringTestOscSegment')));
+    await tester.pump();
+    final oscNextButton = find.byKey(const Key('fBoxWiringTestNextButton'));
+    await tester.ensureVisible(oscNextButton);
+    await tester.tap(oscNextButton);
+    await tester.pumpAndSettle();
+
+    expect(await result, DoorControlMode.osc);
+  });
+
   testWidgets('disables NEXT and shows progress while reporting', (
     tester,
   ) async {
@@ -279,6 +342,8 @@ Future<void> _pumpPage(
   _RecordingHardwareGateway? gateway,
   DoorControlModeRepository? controlModeRepository,
   BleConnectionState connectionState = BleConnectionState.connected,
+  DeviceCommandState? deviceCommandState,
+  Widget home = const FBoxWiringTestPage(),
 }) async {
   if (surfaceSize != null) {
     await tester.binding.setSurfaceSize(surfaceSize);
@@ -300,6 +365,7 @@ Future<void> _pumpPage(
   final hardwareGateway = gateway ?? _RecordingHardwareGateway();
   final modeRepository =
       controlModeRepository ?? _RecordingDoorControlModeRepository();
+  final commandState = deviceCommandState;
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
@@ -307,6 +373,10 @@ Future<void> _pumpPage(
           () => _FBoxAddDeviceController(initialState),
         ),
         deviceCommandHardwareGatewayProvider.overrideWithValue(hardwareGateway),
+        if (commandState != null)
+          deviceCommandControllerProvider.overrideWith(
+            () => _FBoxDeviceCommandController(commandState),
+          ),
         updateDoorControlModeUseCaseProvider.overrideWithValue(
           UpdateDoorControlModeUseCase(repository: modeRepository),
         ),
@@ -315,7 +385,7 @@ Future<void> _pumpPage(
         locale: locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: const FBoxWiringTestPage(),
+        home: home,
       ),
     ),
   );
@@ -329,6 +399,15 @@ class _FBoxAddDeviceController extends AddDeviceController {
 
   @override
   AddDeviceState build() => initialState;
+}
+
+class _FBoxDeviceCommandController extends DeviceCommandController {
+  _FBoxDeviceCommandController(this.initialState);
+
+  final DeviceCommandState initialState;
+
+  @override
+  DeviceCommandState build() => initialState;
 }
 
 class _RecordingDoorControlModeRepository implements DoorControlModeRepository {

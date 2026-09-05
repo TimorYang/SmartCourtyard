@@ -1,20 +1,22 @@
 enum DoorControlMode {
+  pb,
   osc,
-  pb;
+  unset;
 
-  static DoorControlMode fromBackend({int? value, String? label}) {
-    final normalizedLabel = label
-        ?.trim()
-        .toUpperCase()
-        .replaceAll(RegExp(r'[^A-Z0-9]'), '');
-    if (normalizedLabel?.contains('PB') == true) {
-      return DoorControlMode.pb;
-    }
-    if (normalizedLabel?.contains('OSC') == true ||
-        normalizedLabel?.contains('OPENSTOPCLOSE') == true) {
-      return DoorControlMode.osc;
-    }
+  static DoorControlMode fromBackend({int? value}) {
+    return switch (value) {
+      0 => DoorControlMode.pb,
+      1 => DoorControlMode.osc,
+      2 => DoorControlMode.unset,
+      _ => DoorControlMode.unset,
+    };
+  }
 
-    return value == 2 ? DoorControlMode.pb : DoorControlMode.osc;
+  int get backendValue {
+    return switch (this) {
+      DoorControlMode.pb => 0,
+      DoorControlMode.osc => 1,
+      DoorControlMode.unset => 2,
+    };
   }
 }

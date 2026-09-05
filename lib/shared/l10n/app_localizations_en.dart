@@ -2637,6 +2637,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deviceCommandControlMethod => 'Control method';
 
   @override
+  String get deviceCommandControlModeUnset =>
+      'Control method is not set. Open Control method to configure it.';
+
+  @override
   String get deviceCommandActionOpen => 'Open';
 
   @override

@@ -937,6 +937,7 @@
   "deviceCommandPartialOpenSettingFailed": "无法保存半开门位置，请重试。",
   "deviceCommandMoreSettingsTitle": "更多设置",
   "deviceCommandControlMethod": "控制方式",
+  "deviceCommandControlModeUnset": "控制方式未设置，请进入“控制方式”完成配置。",
   "deviceCommandActionOpen": "开门",
   "deviceCommandActionClose": "关门",
   "deviceCommandActionStop": "暂停",

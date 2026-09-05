@@ -10,6 +10,7 @@ import '../../../../shared/widgets/flinx_fbox_control_assets.dart';
 import '../../../../shared/widgets/flinx_door_command_button.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../application/f_box_wiring_test_controller.dart';
+import '../../../device_control/domain/entities/door_control_mode.dart';
 import '../../../device_control/domain/entities/f_box_control_mode.dart';
 import '../navigation/f_box_wiring_test_route.dart';
 import '../navigation/onboarding_device_navigation.dart';
@@ -64,6 +65,10 @@ class _FBoxWiringTestPageState extends ConsumerState<FBoxWiringTestPage> {
     OnboardingDeviceNavigation.finishFBoxTest(
       context,
       routeData: widget.routeData,
+      controlMode: switch (mode) {
+        FBoxControlMode.pb => DoorControlMode.pb,
+        FBoxControlMode.osc => DoorControlMode.osc,
+      },
     );
   }
 
