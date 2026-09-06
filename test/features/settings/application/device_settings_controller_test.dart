@@ -62,7 +62,7 @@ void main() {
     );
   });
 
-  test('writes 0x2712 and matches readback against allowed options', () async {
+  test('writes a level to combined 0x2712 and matches readback', () async {
     final gateway = MockHardwareGateway(
       autoCloseAttributeId: 0x2725,
       autoCloseValue: 75,
@@ -88,8 +88,8 @@ void main() {
     expect(
       await controller.setRawValue(
         DeviceSettingKey.autoCloseTime,
-        90,
-        allowedValues: const <int>[15, 75, 90],
+        4,
+        allowedValues: const <int>[1, 3, 4],
       ),
       isTrue,
     );
@@ -101,7 +101,7 @@ void main() {
       snapshot.attributes
           .singleWhere((attribute) => attribute.id == 0x2712)
           .value,
-      Uint8List.fromList(<int>[0x5A]),
+      Uint8List.fromList(<int>[0x14]),
     );
     expect(
       snapshot.attributes
@@ -111,14 +111,14 @@ void main() {
     );
     expect(
       container.read(provider).values[DeviceSettingKey.autoCloseTime]?.rawValue,
-      90,
+      4,
     );
 
     expect(
       await controller.setEnabled(
         DeviceSettingKey.autoCloseTime,
         enabled: false,
-        allowedValues: const <int>[15, 75, 90],
+        allowedValues: const <int>[1, 3, 4],
       ),
       isTrue,
     );
@@ -130,8 +130,104 @@ void main() {
       snapshot.attributes
           .singleWhere((attribute) => attribute.id == 0x2712)
           .value,
-      Uint8List.fromList(<int>[0x00]),
+      Uint8List.fromList(<int>[0x10]),
     );
+  });
+
+  test('writes auto-close position and level in one 0x2712 write', () async {
+    final gateway = _RecordingHardwareGateway();
+    final container = ProviderContainer(
+      overrides: [
+        deviceSettingsHardwareGatewayProvider.overrideWithValue(gateway),
+      ],
+    );
+    addTearDown(container.dispose);
+    final provider = deviceSettingsControllerProvider('device-1');
+    final subscription = container.listen(provider, (_, _) {});
+    addTearDown(subscription.close);
+    await _waitUntil(() => !container.read(provider).loading);
+
+    final result = await container
+        .read(provider.notifier)
+        .setAutoCloseConfiguration(
+          position: AutoClosePosition.anyPosition,
+          time: 2,
+          allowedTimeValues: const <int>[1, 2],
+        );
+
+    expect(result.saved, isTrue);
+    expect(result.positionChanged, isTrue);
+    expect(result.timeChanged, isTrue);
+    expect(gateway.attributeWrites.map((attributes) => attributes.single.id), [
+      0x2712,
+    ]);
+    expect(
+      gateway.attributeWrites[0].single.value,
+      Uint8List.fromList(<int>[0x22]),
+    );
+  });
+
+  test('does not write unchanged auto-close configuration', () async {
+    final gateway = _RecordingHardwareGateway();
+    final container = ProviderContainer(
+      overrides: [
+        deviceSettingsHardwareGatewayProvider.overrideWithValue(gateway),
+      ],
+    );
+    addTearDown(container.dispose);
+    final provider = deviceSettingsControllerProvider('device-1');
+    final subscription = container.listen(provider, (_, _) {});
+    addTearDown(subscription.close);
+    await _waitUntil(() => !container.read(provider).loading);
+
+    final result = await container
+        .read(provider.notifier)
+        .setAutoCloseConfiguration(
+          position: AutoClosePosition.upLimit,
+          time: 0,
+          allowedTimeValues: const <int>[1, 2],
+        );
+
+    expect(result.saved, isTrue);
+    expect(result.positionChanged, isFalse);
+    expect(result.timeChanged, isFalse);
+    expect(gateway.attributeWrites, isEmpty);
+    expect(container.read(provider).pendingKey, isNull);
+  });
+
+  test('clears pending when the combined auto-close write fails', () async {
+    final gateway = _RecordingHardwareGateway(failAutoCloseWrite: true);
+    final container = ProviderContainer(
+      overrides: [
+        deviceSettingsHardwareGatewayProvider.overrideWithValue(gateway),
+      ],
+    );
+    addTearDown(container.dispose);
+    final provider = deviceSettingsControllerProvider('device-1');
+    final subscription = container.listen(provider, (_, _) {});
+    addTearDown(subscription.close);
+    await _waitUntil(() => !container.read(provider).loading);
+
+    final result = await container
+        .read(provider.notifier)
+        .setAutoCloseConfiguration(
+          position: AutoClosePosition.anyPosition,
+          time: 2,
+          allowedTimeValues: const <int>[1, 2],
+        );
+
+    expect(result.saved, isFalse);
+    expect(gateway.attributeWrites.map((attributes) => attributes.single.id), [
+      0x2712,
+    ]);
+    expect(container.read(provider).pendingKey, isNull);
+  });
+
+  test('rejects unsupported auto-close positions', () {
+    expect(DeviceSettingKey.autoCloseCondition.supportsValue(0), isFalse);
+    expect(DeviceSettingKey.autoCloseCondition.supportsValue(1), isTrue);
+    expect(DeviceSettingKey.autoCloseCondition.supportsValue(2), isTrue);
+    expect(DeviceSettingKey.autoCloseCondition.supportsValue(3), isFalse);
   });
 
   test(
@@ -187,8 +283,8 @@ void main() {
             .read(provider.notifier)
             .setRawValue(
               DeviceSettingKey.autoCloseTime,
-              15,
-              allowedValues: const <int>[15, 30],
+              1,
+              allowedValues: const <int>[1, 2],
             ),
         isTrue,
       );
@@ -239,14 +335,14 @@ void main() {
           .setEnabled(
             DeviceSettingKey.autoCloseTime,
             enabled: true,
-            enabledValue: 15,
-            allowedValues: const <int>[15, 30],
+            enabledValue: 1,
+            allowedValues: const <int>[1, 2],
           ),
       isTrue,
     );
     expect(
       container.read(provider).values[DeviceSettingKey.autoCloseTime]?.rawValue,
-      15,
+      1,
     );
     expect(
       await container
@@ -278,14 +374,14 @@ void main() {
         .read(provider.notifier)
         .setRawValue(
           DeviceSettingKey.autoCloseTime,
-          15,
-          allowedValues: const <int>[15, 30],
+          1,
+          allowedValues: const <int>[1, 2],
         );
 
     expect(saved, isTrue);
     expect(
       container.read(provider).values[DeviceSettingKey.autoCloseTime]?.rawValue,
-      15,
+      1,
     );
   });
 
@@ -306,14 +402,14 @@ void main() {
         .read(provider.notifier)
         .setRawValue(
           DeviceSettingKey.autoCloseTime,
-          30,
-          allowedValues: const <int>[15, 30],
+          2,
+          allowedValues: const <int>[1, 2],
         );
 
     expect(saved, isTrue);
     expect(
       container.read(provider).values[DeviceSettingKey.autoCloseTime]?.rawValue,
-      30,
+      2,
     );
     expect(container.read(provider).pendingKey, isNull);
   });
@@ -370,8 +466,8 @@ void main() {
             .read(provider.notifier)
             .setRawValue(
               DeviceSettingKey.autoCloseTime,
-              30,
-              allowedValues: const <int>[15, 30],
+              2,
+              allowedValues: const <int>[1, 2],
             ),
         isTrue,
       );
@@ -380,7 +476,7 @@ void main() {
             .read(provider)
             .values[DeviceSettingKey.autoCloseTime]
             ?.rawValue,
-        30,
+        2,
       );
 
       gateway.emitDeviceAttributeSnapshot(
@@ -496,7 +592,11 @@ Future<void> _waitUntil(bool Function() condition) async {
 }
 
 class _RecordingHardwareGateway extends MockHardwareGateway {
+  _RecordingHardwareGateway({this.failAutoCloseWrite = false});
+
   int attributeWriteCount = 0;
+  final bool failAutoCloseWrite;
+  final List<List<DeviceAttribute>> attributeWrites = [];
 
   @override
   Future<DeviceAttributeWriteResult> setDeviceAttributes({
@@ -505,6 +605,17 @@ class _RecordingHardwareGateway extends MockHardwareGateway {
     required List<DeviceAttribute> attributes,
   }) async {
     attributeWriteCount += 1;
+    attributeWrites.add(attributes);
+    final attributeId = attributes.single.id;
+    if (failAutoCloseWrite && attributeId == 0x2712) {
+      return DeviceAttributeWriteResult(
+        requestId: requestId,
+        deviceId: deviceId,
+        success: false,
+        sequence: 2,
+        reasonCode: 1,
+      );
+    }
     return super.setDeviceAttributes(
       requestId: requestId,
       deviceId: deviceId,

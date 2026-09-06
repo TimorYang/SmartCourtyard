@@ -52,14 +52,26 @@ class DeviceSettingsRepositoryImpl implements DeviceSettingsRepository {
       return;
     }
 
+    if (!value.key.writable) {
+      throw StateError('Setting ${value.key.name} is read-only.');
+    }
+
     final attributeId = value.key.attributeId;
     if (attributeId == null) {
       throw StateError('Setting ${value.key.name} has no attribute protocol.');
     }
-    final bytes = Uint8List(value.key.byteWidth);
+    final protocolValue = value.key == DeviceSettingKey.autoCloseTime
+        ? value.wireValue
+        : value.key.toProtocolValue(value.rawValue);
+    if (protocolValue == null) {
+      throw StateError(
+        'Auto-close writes require a complete 0x2712 wire value.',
+      );
+    }
+    final bytes = Uint8List(value.key.protocolByteWidth);
     // 0x2713 write values remain 0x01-0x09. The tens representation is only
     // normalized when a newer firmware reports it through 0x0202.
-    var remaining = value.key.toProtocolValue(value.rawValue);
+    var remaining = protocolValue;
     for (var index = bytes.length - 1; index >= 0; index--) {
       bytes[index] = remaining & 0xFF;
       remaining >>= 8;
@@ -87,11 +99,8 @@ class DeviceSettingsRepositoryImpl implements DeviceSettingsRepository {
     };
     final values = <DeviceSettingKey, DeviceSettingValue>{};
     for (final key in DeviceSettingKey.values) {
-      if (key == DeviceSettingKey.autoCloseTime) {
-        final autoCloseValue = _mapAutoCloseValue(byId);
-        if (autoCloseValue != null) {
-          values[key] = autoCloseValue;
-        }
+      if (key == DeviceSettingKey.autoCloseCondition ||
+          key == DeviceSettingKey.autoCloseTime) {
         continue;
       }
       final attributeId = key.attributeId;
@@ -110,31 +119,73 @@ class DeviceSettingsRepositoryImpl implements DeviceSettingsRepository {
         sourceAttributeId: attributeId,
       );
     }
+    values.addAll(_mapAutoCloseValues(byId));
     return values;
   }
 
-  DeviceSettingValue? _mapAutoCloseValue(Map<int, DeviceAttribute> attributes) {
+  Map<DeviceSettingKey, DeviceSettingValue> _mapAutoCloseValues(
+    Map<int, DeviceAttribute> attributes,
+  ) {
     final attribute2712 = attributes[0x2712];
     final attribute2725 = attributes[0x2725];
-    final value2712 = attribute2712?.value.length == 1
+    final rawValue2712 = attribute2712?.value.length == 1
         ? attribute2712!.unsignedValue
+        : null;
+    final combinedPosition = AutoClosePosition.fromWireValue(rawValue2712);
+    final combinedLevel = combinedPosition == null
+        ? null
+        : rawValue2712! & 0x0F;
+    final hasCombinedValue = combinedPosition != null && combinedLevel != null;
+    final value2712 = rawValue2712 != null && !hasCombinedValue
+        ? rawValue2712
         : null;
     final value2725 = attribute2725?.value.length == 2
         ? attribute2725!.unsignedValue
         : null;
-    final preferredValue = value2712 ?? value2725;
-    final sourceAttributeId = value2712 != null
+    final preferredValue = hasCombinedValue
+        ? combinedLevel
+        : value2712 ?? value2725;
+    final sourceAttributeId = hasCombinedValue || value2712 != null
         ? DeviceSettingKey.autoCloseTime.attributeId
         : DeviceSettingKey.autoCloseTime.legacyAttributeId;
-    if (preferredValue == null) {
-      return null;
+    final autoCloseTime = preferredValue == null
+        ? null
+        : DeviceSettingValue(
+            key: DeviceSettingKey.autoCloseTime,
+            rawValue: preferredValue,
+            candidateValues: List<int>.unmodifiable(
+              <int?>[
+                if (hasCombinedValue) combinedLevel,
+                if (!hasCombinedValue) value2712,
+                value2725,
+              ].whereType<int>(),
+            ),
+            sourceAttributeId: sourceAttributeId,
+            wireValue: hasCombinedValue ? rawValue2712 : null,
+          );
+
+    final conditionAttribute = attributes[0x2714];
+    final conditionValue = combinedPosition != null && hasCombinedValue
+        ? DeviceSettingValue(
+            key: DeviceSettingKey.autoCloseCondition,
+            rawValue: combinedPosition.protocolValue,
+            sourceAttributeId: DeviceSettingKey.autoCloseTime.attributeId,
+          )
+        : conditionAttribute?.value.length == 1
+        ? DeviceSettingValue(
+            key: DeviceSettingKey.autoCloseCondition,
+            rawValue: conditionAttribute!.unsignedValue,
+            sourceAttributeId: DeviceSettingKey.autoCloseCondition.attributeId,
+          )
+        : null;
+
+    final values = <DeviceSettingKey, DeviceSettingValue>{};
+    if (conditionValue != null) {
+      values[DeviceSettingKey.autoCloseCondition] = conditionValue;
     }
-    final candidateValues = <int>[?value2712, ?value2725];
-    return DeviceSettingValue(
-      key: DeviceSettingKey.autoCloseTime,
-      rawValue: preferredValue,
-      candidateValues: List<int>.unmodifiable(candidateValues),
-      sourceAttributeId: sourceAttributeId,
-    );
+    if (autoCloseTime != null) {
+      values[DeviceSettingKey.autoCloseTime] = autoCloseTime;
+    }
+    return values;
   }
 }

@@ -1810,16 +1810,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get deviceSettingsManagement => '管理';
 
   @override
-  String get deviceSettingsAutoClosingSetting => '自动关闭设置';
+  String get deviceSettingsAutoClosingSetting => '自动关门设置';
 
   @override
-  String get deviceSettingsAutoCloseCaption => '当前设置：120 秒（电机设置）\n自动关闭位置';
+  String deviceSettingsAutoCloseCaption(String value) {
+    return '当前设置：$value';
+  }
 
   @override
-  String get deviceSettingsAutoCloseTime => '自动关闭时间';
+  String get deviceSettingsAutoCloseTime => '自动关门时间';
 
   @override
-  String get deviceSettingsUpLimit => '上限位置';
+  String get deviceSettingsUpLimit => '上限位';
 
   @override
   String get deviceSettingsAnyPosition => '任意位置';

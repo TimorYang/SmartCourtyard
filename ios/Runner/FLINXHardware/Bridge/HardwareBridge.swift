@@ -3296,7 +3296,7 @@ private enum DeviceAttributeProtocol {
     ]
 
     static let writableAttributes: Set<UInt16> = [
-        0x2711, 0x2712, 0x2713, 0x2714, 0x2726, 0x2727,
+        0x2711, 0x2712, 0x2713, 0x2726, 0x2727,
     ]
 
     static func hex(_ value: UInt16) -> String {

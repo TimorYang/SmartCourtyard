@@ -17,7 +17,60 @@ void main() {
 
     expect(values[DeviceSettingKey.partialOpen]?.rawValue, 7);
     expect(values[DeviceSettingKey.ledOffDelay]?.displayValue, '0x05 (5)');
+    expect(values[DeviceSettingKey.autoCloseCondition]?.rawValue, 1);
     expect(values[DeviceSettingKey.autoCloseTime]?.displayValue, '0x00 (0)');
+  });
+
+  test(
+    'encodes auto-close position and level as one-byte 0x2712 values',
+    () async {
+      final gateway = MockHardwareGateway();
+      final repository = DeviceSettingsRepositoryImpl(gateway);
+
+      for (final position in AutoClosePosition.values) {
+        await repository.setSetting(
+          requestId: 'set-auto-close-position-${position.name}',
+          deviceId: 'device-1',
+          value: DeviceSettingValue(
+            key: DeviceSettingKey.autoCloseTime,
+            rawValue: 9,
+            wireValue: encodeAutoCloseProtocolValue(
+              position: position,
+              level: 9,
+            ),
+          ),
+        );
+
+        final snapshot = await gateway.queryDeviceAttributes(
+          requestId: 'query-auto-close-position-${position.name}',
+          deviceId: 'device-1',
+        );
+        final attribute = snapshot.attributes.singleWhere(
+          (value) => value.id == 0x2712,
+        );
+        expect(
+          attribute.value,
+          Uint8List.fromList([position.wireValueBase | 0x09]),
+        );
+        expect(snapshot.attributes.any((value) => value.id == 0x2714), isTrue);
+      }
+    },
+  );
+
+  test('rejects direct auto-close condition writes', () async {
+    final repository = DeviceSettingsRepositoryImpl(MockHardwareGateway());
+
+    await expectLater(
+      repository.setSetting(
+        requestId: 'set-auto-close-condition',
+        deviceId: 'device-1',
+        value: const DeviceSettingValue(
+          key: DeviceSettingKey.autoCloseCondition,
+          rawValue: 2,
+        ),
+      ),
+      throwsStateError,
+    );
   });
 
   test(
@@ -48,7 +101,7 @@ void main() {
     },
   );
 
-  test('encodes auto-close time as one byte at attribute 0x2712', () async {
+  test('encodes auto-close level as one byte at attribute 0x2712', () async {
     final gateway = MockHardwareGateway();
     final repository = DeviceSettingsRepositoryImpl(gateway);
 
@@ -58,6 +111,7 @@ void main() {
       value: const DeviceSettingValue(
         key: DeviceSettingKey.autoCloseTime,
         rawValue: 9,
+        wireValue: 0x19,
       ),
     );
     final snapshot = await gateway.queryDeviceAttributes(
@@ -69,7 +123,7 @@ void main() {
     );
 
     expect(attribute.id, 0x2712);
-    expect(attribute.value, Uint8List.fromList(<int>[0x09]));
+    expect(attribute.value, Uint8List.fromList(<int>[0x19]));
   });
 
   test('maps 0x2725 to auto-close time with its two-byte protocol', () async {
@@ -90,6 +144,54 @@ void main() {
       DeviceSettingKey.autoCloseTime.legacyAttributeId,
     );
   });
+
+  test('maps new 0x2712 position and level ahead of 0x2714', () async {
+    final repository = DeviceSettingsRepositoryImpl(
+      MockHardwareGateway(autoClosePosition: 0x02, autoCloseValue: 9),
+    );
+
+    final values = await repository.querySettings(
+      requestId: 'query-combined',
+      deviceId: 'device-1',
+    );
+
+    expect(values[DeviceSettingKey.autoCloseTime]?.rawValue, 9);
+    expect(values[DeviceSettingKey.autoCloseTime]?.wireValue, 0x29);
+    expect(values[DeviceSettingKey.autoCloseTime]?.candidateValues, <int>[9]);
+    expect(
+      values[DeviceSettingKey.autoCloseCondition]?.rawValue,
+      AutoClosePosition.anyPosition.protocolValue,
+    );
+    expect(
+      values[DeviceSettingKey.autoCloseCondition]?.sourceAttributeId,
+      0x2712,
+    );
+  });
+
+  test(
+    'maps legacy one-byte 0x2712 while retaining 0x2714 condition',
+    () async {
+      final repository = DeviceSettingsRepositoryImpl(
+        MockHardwareGateway(autoCloseRawBytes: const <int>[0x03]),
+      );
+
+      final values = await repository.querySettings(
+        requestId: 'query-legacy-2712',
+        deviceId: 'device-1',
+      );
+
+      expect(values[DeviceSettingKey.autoCloseTime]?.rawValue, 3);
+      expect(values[DeviceSettingKey.autoCloseTime]?.wireValue, isNull);
+      expect(
+        values[DeviceSettingKey.autoCloseCondition]?.rawValue,
+        AutoClosePosition.upLimit.protocolValue,
+      );
+      expect(
+        values[DeviceSettingKey.autoCloseCondition]?.sourceAttributeId,
+        0x2714,
+      );
+    },
+  );
 
   test(
     'keeps both reported auto-close values and matches 0x2712 first',
@@ -120,13 +222,17 @@ void main() {
     );
     final repository = DeviceSettingsRepositoryImpl(gateway);
 
-    for (final rawValue in <int>[0, 1, 15, 90, 255]) {
+    for (final rawValue in <int>[0, 1, 9]) {
       await repository.setSetting(
         requestId: 'set-2725-$rawValue',
         deviceId: 'device-1',
         value: DeviceSettingValue(
           key: DeviceSettingKey.autoCloseTime,
           rawValue: rawValue,
+          wireValue: encodeAutoCloseProtocolValue(
+            position: AutoClosePosition.anyPosition,
+            level: rawValue,
+          ),
         ),
       );
 
@@ -141,8 +247,12 @@ void main() {
         (value) => value.id == 0x2725,
       );
 
-      expect(attribute2712.value, Uint8List.fromList(<int>[rawValue]));
+      expect(attribute2712.value, Uint8List.fromList(<int>[0x20 | rawValue]));
       expect(attribute2725.value, Uint8List.fromList(<int>[0x00, 0x4B]));
+      expect(
+        snapshot.attributes.any((attribute) => attribute.id == 0x2714),
+        isTrue,
+      );
     }
   });
 
@@ -181,12 +291,19 @@ void main() {
     const values = <DeviceSettingValue>[
       DeviceSettingValue(key: DeviceSettingKey.ledOffDelay, rawValue: 5),
       DeviceSettingValue(key: DeviceSettingKey.partialOpen, rawValue: 7),
-      DeviceSettingValue(key: DeviceSettingKey.autoCloseTime, rawValue: 9),
+      DeviceSettingValue(key: DeviceSettingKey.autoCloseCondition, rawValue: 1),
+      DeviceSettingValue(
+        key: DeviceSettingKey.autoCloseTime,
+        rawValue: 9,
+        wireValue: 0x19,
+      ),
       DeviceSettingValue(key: DeviceSettingKey.openingSpeed, rawValue: 80),
       DeviceSettingValue(key: DeviceSettingKey.openingForce, rawValue: 5),
     ];
 
-    for (final value in values) {
+    for (final value in values.where(
+      (value) => value.key != DeviceSettingKey.autoCloseCondition,
+    )) {
       await repository.setSetting(
         requestId: 'set-${value.key.name}',
         deviceId: 'device-1',
@@ -202,10 +319,7 @@ void main() {
       final attribute = snapshot.attributes.singleWhere(
         (attribute) => attribute.id == value.key.attributeId,
       );
-      expect(
-        attribute.unsignedValue,
-        value.key.toProtocolValue(value.rawValue),
-      );
+      expect(attribute.unsignedValue, value.wireValue ?? value.rawValue);
     }
   });
 }

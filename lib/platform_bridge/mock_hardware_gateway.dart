@@ -8,6 +8,8 @@ class MockHardwareGateway implements HardwareGateway {
   MockHardwareGateway({
     this.autoCloseAttributeId = 0x2712,
     this.autoCloseValue = 0,
+    this.autoClosePosition = 0x01,
+    this.autoCloseRawBytes,
   }) : _scanController = StreamController<BleDevice>.broadcast(),
        _connectionController = StreamController<BleConnectionEvent>.broadcast(),
        _notificationController = StreamController<BleNotification>.broadcast(),
@@ -19,6 +21,8 @@ class MockHardwareGateway implements HardwareGateway {
        _attributes = _buildAttributes(
          autoCloseAttributeId: autoCloseAttributeId,
          autoCloseValue: autoCloseValue,
+         autoClosePosition: autoClosePosition,
+         autoCloseRawBytes: autoCloseRawBytes,
        );
 
   final StreamController<BleDevice> _scanController;
@@ -29,6 +33,8 @@ class MockHardwareGateway implements HardwareGateway {
   final StreamController<DeviceAttributeSnapshot> _attributeController;
   final int autoCloseAttributeId;
   final int autoCloseValue;
+  final int autoClosePosition;
+  final List<int>? autoCloseRawBytes;
   final Map<int, DeviceAttribute> _attributes;
   final List<int> doorOpenReminderValues = <int>[];
   bool flutterConsoleLoggingEnabled = false;
@@ -54,14 +60,16 @@ class MockHardwareGateway implements HardwareGateway {
   static Map<int, DeviceAttribute> _buildAttributes({
     required int autoCloseAttributeId,
     required int autoCloseValue,
+    required int autoClosePosition,
+    required List<int>? autoCloseRawBytes,
   }) {
-    final autoCloseWidth = autoCloseAttributeId == 0x2725 ? 2 : 1;
-    final autoCloseBytes = Uint8List(autoCloseWidth);
-    var remaining = autoCloseValue;
-    for (var index = autoCloseBytes.length - 1; index >= 0; index--) {
-      autoCloseBytes[index] = remaining & 0xFF;
-      remaining >>= 8;
-    }
+    final autoCloseBytes = autoCloseRawBytes == null
+        ? autoCloseAttributeId == 0x2712
+              ? Uint8List.fromList(<int>[
+                  _autoCloseWireBase(autoClosePosition) | autoCloseValue,
+                ])
+              : _unsignedBytes(autoCloseValue, 2)
+        : Uint8List.fromList(autoCloseRawBytes);
     return <int, DeviceAttribute>{
       0x2711: DeviceAttribute(id: 0x2711, value: Uint8List.fromList([0x07])),
       // 0x2713 writes/reports use the original 0x01-0x09 level values here.
@@ -73,6 +81,24 @@ class MockHardwareGateway implements HardwareGateway {
       ),
       0x2726: DeviceAttribute(id: 0x2726, value: Uint8List.fromList([0x05])),
       0x2727: DeviceAttribute(id: 0x2727, value: Uint8List.fromList([0x50])),
+    };
+  }
+
+  static Uint8List _unsignedBytes(int value, int width) {
+    final bytes = Uint8List(width);
+    var remaining = value;
+    for (var index = width - 1; index >= 0; index--) {
+      bytes[index] = remaining & 0xFF;
+      remaining >>= 8;
+    }
+    return bytes;
+  }
+
+  static int _autoCloseWireBase(int position) {
+    return switch (position) {
+      0x01 => 0x10,
+      0x02 => 0x20,
+      _ => position,
     };
   }
 

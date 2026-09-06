@@ -1,7 +1,42 @@
+enum AutoClosePosition {
+  upLimit(1, 0x10),
+  anyPosition(2, 0x20);
+
+  const AutoClosePosition(this.protocolValue, this.wireValueBase);
+
+  /// Value used by the legacy read-only 0x2714 condition attribute.
+  final int protocolValue;
+
+  /// High-nibble base used by the one-byte 0x2712 value.
+  final int wireValueBase;
+
+  static AutoClosePosition? fromProtocolValue(int? value) {
+    for (final position in values) {
+      if (position.protocolValue == value) {
+        return position;
+      }
+    }
+    return null;
+  }
+
+  static AutoClosePosition? fromWireValue(int? value) {
+    if (value == null) {
+      return null;
+    }
+    for (final position in values) {
+      if (value >= position.wireValueBase &&
+          value <= position.wireValueBase + 0x09) {
+        return position;
+      }
+    }
+    return null;
+  }
+}
+
 enum DeviceSettingKey {
   partialOpen(attributeId: 0x2711, byteWidth: 1),
   ledOffDelay(attributeId: 0x2713, byteWidth: 1),
-  autoCloseCondition(attributeId: 0x2714, byteWidth: 1),
+  autoCloseCondition(attributeId: 0x2714, byteWidth: 1, writable: false),
   autoCloseTime(attributeId: 0x2712, byteWidth: 1, legacyAttributeId: 0x2725),
   openingForce(attributeId: 0x2726, byteWidth: 1),
   openingSpeed(attributeId: 0x2727, byteWidth: 1),
@@ -10,14 +45,18 @@ enum DeviceSettingKey {
   const DeviceSettingKey({
     this.attributeId,
     required this.byteWidth,
+    int? protocolByteWidth,
     this.commandCode,
     this.legacyAttributeId,
-  });
+    this.writable = true,
+  }) : protocolByteWidth = protocolByteWidth ?? byteWidth;
 
   final int? attributeId;
   final int byteWidth;
+  final int protocolByteWidth;
   final int? commandCode;
   final int? legacyAttributeId;
+  final bool writable;
 
   String get capabilityCode => switch (this) {
     DeviceSettingKey.partialOpen => 'PARTIAL_OPEN',
@@ -66,8 +105,10 @@ enum DeviceSettingKey {
     return switch (this) {
       DeviceSettingKey.partialOpen => value >= 0 && value <= 0x12,
       DeviceSettingKey.ledOffDelay => value >= 1 && value <= 9,
-      DeviceSettingKey.autoCloseCondition => value >= 0 && value <= 0xFF,
-      DeviceSettingKey.autoCloseTime => value >= 0 && value <= 0xFF,
+      DeviceSettingKey.autoCloseCondition =>
+        value == AutoClosePosition.upLimit.protocolValue ||
+            value == AutoClosePosition.anyPosition.protocolValue,
+      DeviceSettingKey.autoCloseTime => value >= 0 && value <= 9,
       DeviceSettingKey.openingForce => value >= 1 && value <= 9,
       DeviceSettingKey.openingSpeed => value >= 60 && value <= 100,
       DeviceSettingKey.doorOpenReminder =>
@@ -82,6 +123,7 @@ class DeviceSettingValue {
     required this.rawValue,
     this.candidateValues = const <int>[],
     this.sourceAttributeId,
+    this.wireValue,
   });
 
   final DeviceSettingKey key;
@@ -89,8 +131,22 @@ class DeviceSettingValue {
   final List<int> candidateValues;
   final int? sourceAttributeId;
 
+  /// Complete protocol value when the semantic value is encoded as a
+  /// composite value, such as auto-close position plus level in 0x2712.
+  final int? wireValue;
+
   String get hexValue =>
       '0x${rawValue.toRadixString(16).padLeft(key.byteWidth * 2, '0').toUpperCase()}';
 
   String get displayValue => '$hexValue ($rawValue)';
+}
+
+int encodeAutoCloseProtocolValue({
+  required AutoClosePosition position,
+  required int level,
+}) {
+  if (level < 0 || level > 9) {
+    throw RangeError.range(level, 0, 9, 'level');
+  }
+  return position.wireValueBase | level;
 }

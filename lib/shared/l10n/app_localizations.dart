@@ -3563,14 +3563,14 @@ abstract class AppLocalizations {
   /// No description provided for @deviceSettingsAutoClosingSetting.
   ///
   /// In en, this message translates to:
-  /// **'Auto closing setting'**
+  /// **'Auto close settings'**
   String get deviceSettingsAutoClosingSetting;
 
   /// No description provided for @deviceSettingsAutoCloseCaption.
   ///
   /// In en, this message translates to:
-  /// **'Current setting: 120s (motor setting)\nAuto close position'**
-  String get deviceSettingsAutoCloseCaption;
+  /// **'Current setting: {value}'**
+  String deviceSettingsAutoCloseCaption(String value);
 
   /// No description provided for @deviceSettingsAutoCloseTime.
   ///
@@ -3581,7 +3581,7 @@ abstract class AppLocalizations {
   /// No description provided for @deviceSettingsUpLimit.
   ///
   /// In en, this message translates to:
-  /// **'Up limit'**
+  /// **'Upper limit'**
   String get deviceSettingsUpLimit;
 
   /// No description provided for @deviceSettingsAnyPosition.

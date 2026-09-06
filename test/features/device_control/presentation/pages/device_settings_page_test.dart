@@ -55,8 +55,8 @@ void main() {
     expect(
       beforeConfirm.attributes
           .singleWhere((attribute) => attribute.id == 0x2712)
-          .unsignedValue,
-      0,
+          .value,
+      Uint8List.fromList(<int>[0x10]),
     );
 
     await tester.tap(find.text('Confirm'));
@@ -69,8 +69,8 @@ void main() {
     expect(
       afterConfirm.attributes
           .singleWhere((attribute) => attribute.id == 0x2712)
-          .unsignedValue,
-      0,
+          .value,
+      Uint8List.fromList(<int>[0x10]),
     );
   });
 
@@ -121,10 +121,10 @@ void main() {
           label: 'Auto close',
           unit: 's',
           options: [
-            DeviceCapabilityOption(value: 15, label: '15'),
-            DeviceCapabilityOption(value: 30, label: '30'),
-            DeviceCapabilityOption(value: 75, label: '75'),
-            DeviceCapabilityOption(value: 90, label: '90'),
+            DeviceCapabilityOption(value: 1, label: '15'),
+            DeviceCapabilityOption(value: 2, label: '30'),
+            DeviceCapabilityOption(value: 3, label: '75'),
+            DeviceCapabilityOption(value: 4, label: '90'),
           ],
         ),
       ],
@@ -133,20 +133,24 @@ void main() {
     expect(find.text('75 s'), findsOneWidget);
     await tester.tap(find.text('Auto close'));
     await tester.pumpAndSettle();
+    expect(find.text('Current setting: 75 s'), findsOneWidget);
     expect(
       tester
-          .widget<DeviceCapabilityOptionsSheet>(
-            find.byType(DeviceCapabilityOptionsSheet),
+          .widget<DeviceSettingsFixedSelectionList<DeviceCapabilityOption>>(
+            find.byType(
+              DeviceSettingsFixedSelectionList<DeviceCapabilityOption>,
+            ),
           )
-          .initialValue,
-      75,
+          .initialValue
+          .value,
+      1,
     );
     await tester.drag(find.byType(ListWheelScrollView), const Offset(0, -50));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Confirm'));
     await tester.pumpAndSettle();
 
-    expect(find.text('90 s'), findsOneWidget);
+    expect(find.text('30 s'), findsOneWidget);
     final snapshot = await gateway.queryDeviceAttributes(
       requestId: 'verify-settings-page-2725',
       deviceId: 'mock-device',
@@ -157,7 +161,7 @@ void main() {
     final attribute2725 = snapshot.attributes.singleWhere(
       (value) => value.id == 0x2725,
     );
-    expect(attribute2712.value, Uint8List.fromList(<int>[0x5A]));
+    expect(attribute2712.value, Uint8List.fromList(<int>[0x12]));
     expect(attribute2725.value, Uint8List.fromList(<int>[0x00, 0x4B]));
   });
 
@@ -177,9 +181,9 @@ void main() {
           label: 'Auto close',
           unit: 's',
           options: [
-            DeviceCapabilityOption(value: 15, label: '15'),
-            DeviceCapabilityOption(value: 30, label: '30'),
-            DeviceCapabilityOption(value: 75, label: '75'),
+            DeviceCapabilityOption(value: 1, label: '15'),
+            DeviceCapabilityOption(value: 2, label: '30'),
+            DeviceCapabilityOption(value: 3, label: '75'),
           ],
         ),
       ],
@@ -189,7 +193,7 @@ void main() {
           label: 'Auto close',
           supported: true,
           configured: true,
-          currentValue: 30,
+          currentValue: 2,
           unit: 's',
         ),
       ],
@@ -200,14 +204,38 @@ void main() {
     await tester.pumpAndSettle();
     expect(
       tester
-          .widget<DeviceCapabilityOptionsSheet>(
-            find.byType(DeviceCapabilityOptionsSheet),
+          .widget<DeviceSettingsFixedSelectionList<DeviceCapabilityOption>>(
+            find.byType(
+              DeviceSettingsFixedSelectionList<DeviceCapabilityOption>,
+            ),
           )
-          .initialValue,
-      30,
+          .initialValue
+          .value,
+      2,
     );
+    expect(find.text('Current setting: 30 s'), findsOneWidget);
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
+  });
+
+  testWidgets('writes auto-close position and time as one 0x2712 value', (
+    tester,
+  ) async {
+    final gateway = _RecordingAutoCloseHardwareGateway();
+    await _pumpSettingsRouter(tester, gateway: gateway);
+
+    await tester.tap(find.text('Auto close'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Any position'));
+    await tester.drag(find.byType(ListWheelScrollView), const Offset(0, -50));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Confirm'));
+    await tester.pumpAndSettle();
+
+    expect(gateway.attributeWrites, [0x2712]);
+    expect(gateway.attributeValues, [
+      [0x22],
+    ]);
   });
 
   testWidgets('shows unavailable when the server auto-close value is null', (
@@ -476,7 +504,7 @@ void main() {
       final options = List<DeviceCapabilityOption>.generate(
         optionCount,
         (index) => DeviceCapabilityOption(
-          value: (index + 1) * 15,
+          value: index + 1,
           label: 'Level ${index + 1}',
         ),
       );
@@ -494,13 +522,16 @@ void main() {
 
       await tester.tap(find.text('Auto close'));
       await tester.pumpAndSettle();
-      final sheet = tester.widget<DeviceCapabilityOptionsSheet>(
-        find.byType(DeviceCapabilityOptionsSheet),
-      );
-      expect(sheet.options.map((option) => option.value), [
-        for (var index = 1; index <= optionCount; index++) index * 15,
+      final selectionList = tester
+          .widget<DeviceSettingsFixedSelectionList<DeviceCapabilityOption>>(
+            find.byType(
+              DeviceSettingsFixedSelectionList<DeviceCapabilityOption>,
+            ),
+          );
+      expect(selectionList.values.map((option) => option.value), [
+        for (var index = 1; index <= optionCount; index++) index,
       ]);
-      expect(sheet.options.map((option) => option.label), [
+      expect(selectionList.values.map((option) => option.label), [
         for (var index = 1; index <= optionCount; index++) 'Level $index',
       ]);
 
@@ -542,8 +573,8 @@ void main() {
           label: 'Auto close',
           unit: 's',
           options: [
-            DeviceCapabilityOption(value: 15, label: '15'),
-            DeviceCapabilityOption(value: 30, label: '30'),
+            DeviceCapabilityOption(value: 1, label: '15'),
+            DeviceCapabilityOption(value: 2, label: '30'),
           ],
         ),
       ],
@@ -702,6 +733,9 @@ void main() {
 
     await _pumpSettingsRouter(tester, setDefaultSize: false);
 
+    await tester.tap(find.text('Auto close').first);
+    await tester.pumpAndSettle();
+
     expect(tester.takeException(), isNull);
   });
 
@@ -803,8 +837,8 @@ Future<void> _pumpSettingsRouter(
                       unit: code == DeviceCapabilityCode.autoClose ? 's' : null,
                       options: code == DeviceCapabilityCode.autoClose
                           ? const [
-                              DeviceCapabilityOption(value: 15, label: '15'),
-                              DeviceCapabilityOption(value: 30, label: '30'),
+                              DeviceCapabilityOption(value: 1, label: '15'),
+                              DeviceCapabilityOption(value: 2, label: '30'),
                             ]
                           : const [],
                     ),
@@ -894,7 +928,10 @@ Future<void> _saveRawSetting(
 Future<void> _saveOptionSetting(WidgetTester tester, String title) async {
   await tester.tap(find.text(title).first);
   await tester.pumpAndSettle();
-  expect(find.byType(DeviceCapabilityOptionsSheet), findsOneWidget);
+  expect(
+    find.byType(DeviceSettingsFixedSelectionList<DeviceCapabilityOption>),
+    findsOneWidget,
+  );
   await tester.drag(find.byType(ListWheelScrollView), const Offset(0, -50));
   await tester.pumpAndSettle();
   await tester.tap(find.text('Confirm'));
@@ -924,6 +961,28 @@ class _OtherDeviceCommandController extends DeviceCommandController {
       bleConnectionStatus: DeviceBleConnectionStatus.connected,
       bleDeviceId: 'other-device',
       bleTargetName: 'other-device',
+    );
+  }
+}
+
+class _RecordingAutoCloseHardwareGateway extends MockHardwareGateway {
+  final List<int> attributeWrites = [];
+  final List<List<int>> attributeValues = [];
+
+  @override
+  Future<DeviceAttributeWriteResult> setDeviceAttributes({
+    required String requestId,
+    required String deviceId,
+    required List<DeviceAttribute> attributes,
+  }) async {
+    for (final attribute in attributes) {
+      attributeWrites.add(attribute.id);
+      attributeValues.add(List<int>.from(attribute.value));
+    }
+    return super.setDeviceAttributes(
+      requestId: requestId,
+      deviceId: deviceId,
+      attributes: attributes,
     );
   }
 }
@@ -1013,7 +1072,7 @@ class _CountingDoorSettingsRepository implements DoorSettingsRepository {
         label: 'Auto close',
         supported: true,
         configured: true,
-        currentValue: 15,
+        currentValue: 1,
         unit: 's',
       ),
     ];

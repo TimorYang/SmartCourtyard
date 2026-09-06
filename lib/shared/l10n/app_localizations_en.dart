@@ -1941,17 +1941,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deviceSettingsManagement => 'Management';
 
   @override
-  String get deviceSettingsAutoClosingSetting => 'Auto closing setting';
+  String get deviceSettingsAutoClosingSetting => 'Auto close settings';
 
   @override
-  String get deviceSettingsAutoCloseCaption =>
-      'Current setting: 120s (motor setting)\nAuto close position';
+  String deviceSettingsAutoCloseCaption(String value) {
+    return 'Current setting: $value';
+  }
 
   @override
   String get deviceSettingsAutoCloseTime => 'Auto close time';
 
   @override
-  String get deviceSettingsUpLimit => 'Up limit';
+  String get deviceSettingsUpLimit => 'Upper limit';
 
   @override
   String get deviceSettingsAnyPosition => 'Any position';

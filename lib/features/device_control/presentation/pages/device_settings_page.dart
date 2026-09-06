@@ -420,6 +420,11 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
       return _valueWithUnit(currentValue, setting.unit);
     }
     final reportedSetting = state.values[key];
+    if (key == DeviceSettingKey.autoCloseTime &&
+        reportedSetting?.sourceAttributeId ==
+            DeviceSettingKey.autoCloseTime.legacyAttributeId) {
+      return _valueWithUnit(reportedSetting!.rawValue, capability?.unit);
+    }
     final rawValue = key == DeviceSettingKey.autoCloseTime
         ? matchingDeviceSettingCandidate(
                 reportedSetting,
@@ -532,10 +537,58 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
         return;
       }
     }
-    if (capability == null || capability.options.isEmpty) {
-      if (key == DeviceSettingKey.autoCloseTime) {
+    if (key == DeviceSettingKey.autoCloseTime) {
+      if (capability == null || capability.options.isEmpty) {
         return;
       }
+
+      final allowedValues = capability.options
+          .map((option) => option.value)
+          .toList(growable: false);
+      final reportedValue = matchingDeviceSettingCandidate(
+        state.values[key],
+        allowedValues,
+      );
+      final reportedRawValue = state.values[key]?.rawValue;
+      final currentTimeValue =
+          currentValue ?? reportedValue ?? reportedRawValue;
+      final initialTime =
+          capability.options.any((option) => option.value == currentTimeValue)
+          ? currentTimeValue!
+          : capability.options.first.value;
+      final currentTimeLabel = _autoCloseCurrentValueLabel(
+        currentTimeValue,
+        capability: capability,
+        l10n: l10n,
+      );
+      final initialPosition =
+          AutoClosePosition.fromProtocolValue(
+            state.values[DeviceSettingKey.autoCloseCondition]?.rawValue,
+          ) ??
+          AutoClosePosition.upLimit;
+      final selection = await showModalBottomSheet<_AutoCloseSelection>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => _AutoCloseSheet(
+          initialPosition: initialPosition,
+          initialTime: initialTime,
+          currentTimeLabel: currentTimeLabel,
+          timeOptions: capability.options,
+          unit: capability.unit,
+          heightFactor: 0.70,
+        ),
+      );
+      if (selection == null || !mounted) {
+        return;
+      }
+      await _saveAutoCloseConfiguration(
+        selection,
+        allowedValues: allowedValues,
+      );
+      return;
+    }
+    if (capability == null || capability.options.isEmpty) {
       await _showRawValueEditor(key, title);
       return;
     }
@@ -714,6 +767,46 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
     }
   }
 
+  Future<void> _saveAutoCloseConfiguration(
+    _AutoCloseSelection selection, {
+    required Iterable<int> allowedValues,
+  }) async {
+    final result = await ref
+        .read(deviceSettingsControllerProvider(widget.bleDeviceId).notifier)
+        .setAutoCloseConfiguration(
+          position: selection.position,
+          time: selection.time,
+          allowedTimeValues: allowedValues,
+        );
+    if (!result.saved || !mounted) {
+      return;
+    }
+
+    final settingsState = ref.read(
+      deviceSettingsControllerProvider(widget.bleDeviceId),
+    );
+    final appliedSetting = settingsState.values[DeviceSettingKey.autoCloseTime];
+    final appliedValue =
+        matchingDeviceSettingCandidate(appliedSetting, allowedValues) ??
+        appliedSetting?.rawValue ??
+        selection.time;
+    ref
+        .read(doorSettingsControllerProvider(widget.doorId).notifier)
+        .updateCurrentValue(DeviceCapabilityCode.autoClose, appliedValue);
+
+    if (result.timeChanged) {
+      unawaited(
+        ref
+            .read(operationReportControllerProvider)
+            .report(
+              doorId: widget.doorId,
+              action: OperationReportAction.autoCloseDelayChanged,
+              operationSource: OperationReportSource.bluetooth,
+            ),
+      );
+    }
+  }
+
   bool _isCurrentBleDeviceConnected() {
     return ref
         .read(deviceCommandControllerProvider.notifier)
@@ -730,12 +823,6 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
     );
   }
 }
-
-final _autoCloseTimeOptions = [
-  '0s',
-  '30s',
-  for (var minute = 1; minute <= 60; minute++) '${minute}min',
-];
 
 const _doorOpenReminderTimeOptions = ['5min', '10min', '15min'];
 
@@ -1104,6 +1191,22 @@ String _optionLabel(DeviceCapabilityOption option, String? unit) {
   return formatDeviceCapabilityOption(option, unit);
 }
 
+String _autoCloseCurrentValueLabel(
+  int? value, {
+  required DeviceCapability capability,
+  required AppLocalizations l10n,
+}) {
+  if (value == null) {
+    return l10n.deviceSettingsRawUnavailable;
+  }
+  for (final option in capability.options) {
+    if (option.value == value) {
+      return _optionLabel(option, capability.unit);
+    }
+  }
+  return _valueWithUnit(value, capability.unit);
+}
+
 String _valueWithUnit(int value, String? unit) {
   final normalizedUnit = unit?.trim();
   return normalizedUnit == null || normalizedUnit.isEmpty
@@ -1166,11 +1269,17 @@ class _AutoCloseSheet extends StatefulWidget {
   const _AutoCloseSheet({
     required this.initialPosition,
     required this.initialTime,
+    required this.currentTimeLabel,
+    required this.timeOptions,
+    required this.unit,
     required this.heightFactor,
   });
 
-  final _AutoClosePosition initialPosition;
-  final String initialTime;
+  final AutoClosePosition initialPosition;
+  final int initialTime;
+  final String currentTimeLabel;
+  final List<DeviceCapabilityOption> timeOptions;
+  final String? unit;
   final double heightFactor;
 
   @override
@@ -1179,12 +1288,12 @@ class _AutoCloseSheet extends StatefulWidget {
 
 class _AutoCloseSheetState extends State<_AutoCloseSheet> {
   static const _positions = [
-    _AutoClosePosition.upLimit,
-    _AutoClosePosition.anyPosition,
+    AutoClosePosition.upLimit,
+    AutoClosePosition.anyPosition,
   ];
 
-  late _AutoClosePosition _position = widget.initialPosition;
-  late String _time = widget.initialTime;
+  late AutoClosePosition _position = widget.initialPosition;
+  late int _time = widget.initialTime;
 
   @override
   Widget build(BuildContext context) {
@@ -1205,11 +1314,19 @@ class _AutoCloseSheetState extends State<_AutoCloseSheet> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14),
             child: Text(
-              l10n.deviceSettingsAutoCloseCaption,
+              l10n.deviceSettingsAutoCloseCaption(widget.currentTimeLabel),
               style: AppTextTokens.deviceSettingsSheetCaption(textTheme),
             ),
           ),
           const SizedBox(height: 18),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: Text(
+              l10n.deviceSettingsAutoClosingSetting,
+              style: AppTextTokens.deviceSettingsSheetCaption(textTheme),
+            ),
+          ),
+          const SizedBox(height: 12),
           Row(
             children: [
               for (final position in _positions) ...[
@@ -1225,6 +1342,11 @@ class _AutoCloseSheetState extends State<_AutoCloseSheet> {
             ],
           ),
           const SizedBox(height: 28),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 14),
+            child: Divider(height: 1, color: AppColors.deviceSettingsDivider),
+          ),
+          const SizedBox(height: 24),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14),
             child: Text(
@@ -1234,11 +1356,15 @@ class _AutoCloseSheetState extends State<_AutoCloseSheet> {
           ),
           const SizedBox(height: 18),
           Expanded(
-            child: DeviceSettingsFixedSelectionList<String>(
-              values: _autoCloseTimeOptions,
-              initialValue: _time,
-              labelBuilder: (time) => _formatDuration(l10n, time),
-              onSelected: (time) => setState(() => _time = time),
+            child: DeviceSettingsFixedSelectionList<DeviceCapabilityOption>(
+              values: widget.timeOptions,
+              initialValue: widget.timeOptions.firstWhere(
+                (option) => option.value == _time,
+                orElse: () => widget.timeOptions.first,
+              ),
+              labelBuilder: (option) =>
+                  formatDeviceCapabilityOption(option, widget.unit),
+              onSelected: (option) => setState(() => _time = option.value),
             ),
           ),
           const SizedBox(height: 20),
@@ -1254,19 +1380,17 @@ class _AutoCloseSheetState extends State<_AutoCloseSheet> {
   }
 }
 
-String _positionLabel(AppLocalizations l10n, _AutoClosePosition position) =>
+String _positionLabel(AppLocalizations l10n, AutoClosePosition position) =>
     switch (position) {
-      _AutoClosePosition.upLimit => l10n.deviceSettingsUpLimit,
-      _AutoClosePosition.anyPosition => l10n.deviceSettingsAnyPosition,
+      AutoClosePosition.upLimit => l10n.deviceSettingsUpLimit,
+      AutoClosePosition.anyPosition => l10n.deviceSettingsAnyPosition,
     };
-
-enum _AutoClosePosition { upLimit, anyPosition }
 
 class _AutoCloseSelection {
   const _AutoCloseSelection({required this.position, required this.time});
 
-  final _AutoClosePosition position;
-  final String time;
+  final AutoClosePosition position;
+  final int time;
 }
 
 class _SpeedAdjustmentSheet extends StatefulWidget {
@@ -1803,23 +1927,30 @@ class _SegmentButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return SizedBox(
-      height: 45,
-      child: TextButton(
-        onPressed: onTap,
-        style: TextButton.styleFrom(
-          backgroundColor: selected
-              ? AppColors.brandPrimary
-              : AppColors.deviceSettingsSheetCancel,
-          foregroundColor: selected
-              ? AppColors.backgroundPrimary
-              : AppColors.textMuted,
-          shape: const StadiumBorder(),
-        ),
-        child: Text(
-          label,
-          style: AppTextTokens.deviceSettingsSheetButton(textTheme).copyWith(
-            color: selected ? AppColors.backgroundPrimary : AppColors.textMuted,
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      child: SizedBox(
+        height: 45,
+        child: TextButton(
+          onPressed: onTap,
+          style: TextButton.styleFrom(
+            backgroundColor: selected
+                ? AppColors.brandPrimary
+                : AppColors.deviceSettingsSheetCancel,
+            foregroundColor: selected
+                ? AppColors.backgroundPrimary
+                : AppColors.textMuted,
+            shape: const StadiumBorder(),
+          ),
+          child: Text(
+            label,
+            style: AppTextTokens.deviceSettingsSheetButton(textTheme).copyWith(
+              color: selected
+                  ? AppColors.backgroundPrimary
+                  : AppColors.textMuted,
+            ),
           ),
         ),
       ),

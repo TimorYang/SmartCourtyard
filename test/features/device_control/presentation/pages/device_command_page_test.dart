@@ -244,8 +244,11 @@ void main() {
     expect(
       gateway.writtenAttributes
           .where((attribute) => attribute.id == 0x2712)
-          .map((attribute) => attribute.unsignedValue),
-      <int>[0, 1],
+          .map((attribute) => attribute.value),
+      <Uint8List>[
+        Uint8List.fromList(<int>[0x10]),
+        Uint8List.fromList(<int>[0x11]),
+      ],
     );
     expect(
       find.descendant(of: autoCloseAction, matching: find.text('15 s')),
@@ -328,7 +331,7 @@ void main() {
   });
 
   testWidgets('disabling auto close skips the safety check', (tester) async {
-    final gateway = _RecordingHardwareGateway(autoCloseValue: 15);
+    final gateway = _RecordingHardwareGateway(autoCloseValue: 1);
     final repository = _TrackingAutoCloseCheckRepository(false);
     await _pumpDevicePage(
       tester,
@@ -349,8 +352,10 @@ void main() {
     expect(
       gateway.writtenAttributes
           .where((attribute) => attribute.id == 0x2712)
-          .map((attribute) => attribute.unsignedValue),
-      <int>[0],
+          .map((attribute) => attribute.value),
+      <Uint8List>[
+        Uint8List.fromList(<int>[0x10]),
+      ],
     );
   });
 
@@ -1422,8 +1427,8 @@ void main() {
               (attribute) =>
                   attribute.id == DeviceSettingKey.autoCloseTime.attributeId,
             )
-            .unsignedValue,
-        0,
+            .value,
+        Uint8List.fromList(<int>[0x10]),
       );
       expect(
         snapshot.attributes.any((attribute) => attribute.id == 0x2728),
@@ -1433,9 +1438,9 @@ void main() {
       final autoCloseWrites = gateway.writtenAttributes.where(
         (attribute) => attribute.id == 0x2712,
       );
-      expect(autoCloseWrites.map((attribute) => attribute.unsignedValue), <int>[
-        15,
-        0,
+      expect(autoCloseWrites.map((attribute) => attribute.value), <Uint8List>[
+        Uint8List.fromList(<int>[0x11]),
+        Uint8List.fromList(<int>[0x10]),
       ]);
       expect(gateway.attributeWriteCount, 2);
       expect(reports.map((report) => report.action), [
@@ -1470,8 +1475,8 @@ void main() {
         .where((attribute) => attribute.id == 0x2712)
         .toList();
     expect(writes, hasLength(2));
-    expect(writes[0].value, Uint8List.fromList(<int>[0x00]));
-    expect(writes[1].value, Uint8List.fromList(<int>[0x4B]));
+    expect(writes[0].value, Uint8List.fromList(<int>[0x10]));
+    expect(writes[1].value, Uint8List.fromList(<int>[0x11]));
     expect(
       gateway.writtenAttributes.any((attribute) => attribute.id == 0x2725),
       isFalse,
@@ -2454,9 +2459,9 @@ class _SettingsDeviceCapabilityRepository
       DeviceCapabilityOption(value: 9, label: '9'),
     ],
     this.autoCloseOptions = const [
-      DeviceCapabilityOption(value: 15, label: '15'),
-      DeviceCapabilityOption(value: 30, label: '30'),
-      DeviceCapabilityOption(value: 75, label: '75'),
+      DeviceCapabilityOption(value: 1, label: '15'),
+      DeviceCapabilityOption(value: 2, label: '30'),
+      DeviceCapabilityOption(value: 3, label: '75'),
     ],
     this.partialOpenOptions = const [
       DeviceCapabilityOption(value: 1, label: '60'),
@@ -2525,7 +2530,7 @@ class _CommandDoorSettingsRepository implements DoorSettingsRepository {
       label: 'Auto close',
       supported: true,
       configured: true,
-      currentValue: 15,
+      currentValue: 1,
       unit: 's',
     ),
     if (ledOffDelayValue != null)

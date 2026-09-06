@@ -352,18 +352,38 @@ class RunnerTests: XCTestCase {
     XCTAssertEqual(values[0x273D], Data([0x01]))
   }
 
+  func testParsesCombinedAutoCloseAttributeBeforeLegacyCondition() throws {
+    let attributes = try HardwareBridge.parseDeviceAttributesForTesting(
+      Data([0x27, 0x12, 0x29, 0x27, 0x14, 0x01])
+    )
+    let values = Dictionary(uniqueKeysWithValues: attributes.map { ($0.id, $0.value) })
+
+    XCTAssertEqual(values[0x2712], Data([0x29]))
+    XCTAssertEqual(values[0x2714], Data([0x01]))
+  }
+
   func testBuildsSingleAndMultipleAttributeWritePayloads() throws {
     let payload = try HardwareBridge.makeAttributeWritePayloadForTesting([
       (id: 0x2713, value: Data([0x1E])),
-      (id: 0x2712, value: Data([0x09])),
+      (id: 0x2712, value: Data([0x29])),
     ])
-    XCTAssertEqual(payload, Data([0x27, 0x13, 0x1E, 0x27, 0x12, 0x09]))
+    XCTAssertEqual(payload, Data([0x27, 0x13, 0x1E, 0x27, 0x12, 0x29]))
   }
 
-  func testRejectsLegacyAutoCloseAttributeWrite() {
+  func testRejectsLegacyAndReadOnlyAutoCloseAttributeWrites() {
     XCTAssertThrowsError(
       try HardwareBridge.makeAttributeWritePayloadForTesting([
         (id: 0x2725, value: Data([0x00, 0x09])),
+      ])
+    )
+    XCTAssertThrowsError(
+      try HardwareBridge.makeAttributeWritePayloadForTesting([
+        (id: 0x2712, value: Data([0x01, 0x09])),
+      ])
+    )
+    XCTAssertThrowsError(
+      try HardwareBridge.makeAttributeWritePayloadForTesting([
+        (id: 0x2714, value: Data([0x01])),
       ])
     )
   }

@@ -88,6 +88,18 @@ class DeviceSettingsState {
   }
 }
 
+class AutoCloseConfigurationResult {
+  const AutoCloseConfigurationResult({
+    required this.saved,
+    required this.positionChanged,
+    required this.timeChanged,
+  });
+
+  final bool saved;
+  final bool positionChanged;
+  final bool timeChanged;
+}
+
 class DeviceSettingsController extends Notifier<DeviceSettingsState> {
   DeviceSettingsController(this.deviceId);
 
@@ -153,16 +165,24 @@ class DeviceSettingsController extends Notifier<DeviceSettingsState> {
     Set<int>? autoCloseAllowedValues;
     if (key == DeviceSettingKey.autoCloseTime) {
       final capabilityValues = allowedValues?.toSet() ?? const <int>{};
-      if (capabilityValues.isEmpty ||
+      if (rawValue < 0 ||
+          rawValue > 9 ||
+          capabilityValues.isEmpty ||
           (rawValue != 0 && !capabilityValues.contains(rawValue))) {
         return false;
       }
       autoCloseAllowedValues = <int>{0, ...capabilityValues};
     }
-    final value = DeviceSettingValue(
-      key: key,
-      rawValue: key.toProtocolValue(rawValue),
-    );
+    final value = key == DeviceSettingKey.autoCloseTime
+        ? DeviceSettingValue(
+            key: key,
+            rawValue: rawValue,
+            wireValue: encodeAutoCloseProtocolValue(
+              position: _currentAutoClosePosition(),
+              level: rawValue,
+            ),
+          )
+        : DeviceSettingValue(key: key, rawValue: key.toProtocolValue(rawValue));
     state = state.copyWith(pendingKey: key, clearError: true);
     final writeRequestId = _nextRequestId('set-${key.name}');
     try {
@@ -227,6 +247,141 @@ class DeviceSettingsController extends Notifier<DeviceSettingsState> {
         clearPendingKey: true,
       );
       return false;
+    }
+  }
+
+  Future<AutoCloseConfigurationResult> setAutoCloseConfiguration({
+    required AutoClosePosition position,
+    required int time,
+    required Iterable<int> allowedTimeValues,
+  }) async {
+    const failed = AutoCloseConfigurationResult(
+      saved: false,
+      positionChanged: false,
+      timeChanged: false,
+    );
+    if (deviceId.trim().isEmpty || state.pendingKey != null) {
+      return failed;
+    }
+
+    final allowedValues = allowedTimeValues.toSet();
+    if (allowedValues.isEmpty || (time != 0 && !allowedValues.contains(time))) {
+      return failed;
+    }
+
+    final currentPosition = _currentAutoClosePosition();
+    final currentTimeSetting = state.values[DeviceSettingKey.autoCloseTime];
+    final currentTime =
+        matchingDeviceSettingCandidate(currentTimeSetting, allowedValues) ??
+        currentTimeSetting?.rawValue;
+    final positionChanged = currentPosition != position;
+    final timeChanged = currentTime != time;
+    if (!positionChanged && !timeChanged) {
+      return const AutoCloseConfigurationResult(
+        saved: true,
+        positionChanged: false,
+        timeChanged: false,
+      );
+    }
+
+    final timeValue = DeviceSettingValue(
+      key: DeviceSettingKey.autoCloseTime,
+      rawValue: time,
+      sourceAttributeId: DeviceSettingKey.autoCloseTime.attributeId,
+      wireValue: encodeAutoCloseProtocolValue(position: position, level: time),
+    );
+    final operationRequestId = _nextRequestId('set-auto-close');
+
+    state = state.copyWith(
+      pendingKey: DeviceSettingKey.autoCloseTime,
+      clearError: true,
+    );
+    try {
+      await _set(
+        requestId: operationRequestId,
+        deviceId: deviceId,
+        value: timeValue,
+      );
+
+      if (!ref.mounted) {
+        return failed;
+      }
+
+      final readRequestId = '$operationRequestId-refresh';
+      try {
+        final reportedValues = await _query(
+          requestId: readRequestId,
+          deviceId: deviceId,
+        );
+        if (!ref.mounted) {
+          return failed;
+        }
+        final values = _resolveAutoCloseValues(
+          reportedValues,
+          allowedValues: <int>{0, ...allowedValues},
+          fallbackValue: timeValue,
+          requestId: readRequestId,
+          logMismatch: true,
+        );
+        final valuesWithCondition =
+            values.containsKey(DeviceSettingKey.autoCloseCondition)
+            ? values
+            : <DeviceSettingKey, DeviceSettingValue>{
+                ...values,
+                DeviceSettingKey.autoCloseCondition: DeviceSettingValue(
+                  key: DeviceSettingKey.autoCloseCondition,
+                  rawValue: position.protocolValue,
+                  sourceAttributeId: DeviceSettingKey.autoCloseTime.attributeId,
+                ),
+              };
+        _applyValues(valuesWithCondition);
+        return AutoCloseConfigurationResult(
+          saved: true,
+          positionChanged: positionChanged,
+          timeChanged: timeChanged,
+        );
+      } catch (error) {
+        if (!ref.mounted) {
+          return failed;
+        }
+        _logger.warning(
+          'auto_close_configuration_readback_failed',
+          tag: AppLogTag.ble,
+          requestId: readRequestId,
+          context: {'deviceId': deviceId, 'errorType': error.runtimeType},
+        );
+        state = state.copyWith(
+          values: Map<DeviceSettingKey, DeviceSettingValue>.unmodifiable({
+            ...state.values,
+            DeviceSettingKey.autoCloseTime: timeValue,
+            DeviceSettingKey.autoCloseCondition: DeviceSettingValue(
+              key: DeviceSettingKey.autoCloseCondition,
+              rawValue: position.protocolValue,
+              sourceAttributeId: DeviceSettingKey.autoCloseTime.attributeId,
+            ),
+          }),
+          clearPendingKey: true,
+          clearError: true,
+        );
+        return AutoCloseConfigurationResult(
+          saved: true,
+          positionChanged: positionChanged,
+          timeChanged: timeChanged,
+        );
+      }
+    } catch (error) {
+      if (!ref.mounted) {
+        return failed;
+      }
+      state = state.copyWith(
+        errorMessage: appErrorMessage(error, ''),
+        clearPendingKey: true,
+      );
+      return AutoCloseConfigurationResult(
+        saved: false,
+        positionChanged: positionChanged,
+        timeChanged: timeChanged,
+      );
     }
   }
 
@@ -297,6 +452,7 @@ class DeviceSettingsController extends Notifier<DeviceSettingsState> {
           rawValue: resolvedRawValue,
           candidateValues: reportedValue.candidateValues,
           sourceAttributeId: reportedValue.sourceAttributeId,
+          wireValue: reportedValue.wireValue,
         ),
       };
     }
@@ -334,5 +490,12 @@ class DeviceSettingsController extends Notifier<DeviceSettingsState> {
   String _nextRequestId(String operation) {
     _requestCounter++;
     return 'device-settings-$operation-${DateTime.now().microsecondsSinceEpoch}-$_requestCounter';
+  }
+
+  AutoClosePosition _currentAutoClosePosition() {
+    return AutoClosePosition.fromProtocolValue(
+          state.values[DeviceSettingKey.autoCloseCondition]?.rawValue,
+        ) ??
+        AutoClosePosition.upLimit;
   }
 }

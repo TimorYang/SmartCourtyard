@@ -673,7 +673,7 @@ internal object DeviceAttributeProtocol {
   )
 
   private val writableAttributes = setOf(
-    0x2711, 0x2712, 0x2713, 0x2714, 0x2726, 0x2727,
+    0x2711, 0x2712, 0x2713, 0x2726, 0x2727,
   )
 
   fun parse(data: ByteArray): List<DeviceAttributeDto> {
