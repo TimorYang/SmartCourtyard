@@ -144,10 +144,10 @@ class _TransmitterLearningPageState
           showBottomDivider: false,
           onBackPressed: _handleBack,
           actions: [
-            IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.qr_code_scanner_outlined),
-            ),
+            // IconButton(
+            //   onPressed: () {},
+            //   icon: const Icon(Icons.qr_code_scanner_outlined),
+            // ),
           ],
         ),
         body: SafeArea(
