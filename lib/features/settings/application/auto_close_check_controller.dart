@@ -49,6 +49,9 @@ class AutoCloseCheckController extends Notifier<AutoCloseCheckState> {
       return false;
     }
 
+    // The UI no longer binds this checking state to shared setting controls.
+    // Keep the auto-dispose controller alive until this request completes.
+    final keepAliveLink = ref.keepAlive();
     final requestId = _nextRequestId();
     state = AutoCloseCheckState(
       checking: true,
@@ -78,6 +81,8 @@ class AutoCloseCheckController extends Notifier<AutoCloseCheckState> {
       );
       state = AutoCloseCheckState(errorMessage: appErrorMessage(error, ''));
       return false;
+    } finally {
+      keepAliveLink.close();
     }
   }
 

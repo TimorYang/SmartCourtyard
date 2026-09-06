@@ -20,6 +20,7 @@ import 'package:flinx/features/settings/domain/repositories/door_settings_reposi
 import 'package:flinx/platform_bridge/hardware_models.dart';
 import 'package:flinx/platform_bridge/mock_hardware_gateway.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
+import 'package:flinx/shared/widgets/flinx_blocking_loading_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -143,9 +144,9 @@ void main() {
           )
           .initialValue
           .value,
-      1,
+      3,
     );
-    await tester.drag(find.byType(ListWheelScrollView), const Offset(0, -50));
+    await tester.drag(find.byType(ListWheelScrollView), const Offset(0, 50));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Confirm'));
     await tester.pumpAndSettle();
@@ -165,7 +166,7 @@ void main() {
     expect(attribute2725.value, Uint8List.fromList(<int>[0x00, 0x4B]));
   });
 
-  testWidgets('uses the server current value as the initial option', (
+  testWidgets('prefers the BLE report over the server current value', (
     tester,
   ) async {
     final gateway = MockHardwareGateway(
@@ -199,7 +200,7 @@ void main() {
       ],
     );
 
-    expect(find.text('30 s'), findsOneWidget);
+    expect(find.text('75 s'), findsOneWidget);
     await tester.tap(find.text('Auto close'));
     await tester.pumpAndSettle();
     expect(
@@ -211,9 +212,9 @@ void main() {
           )
           .initialValue
           .value,
-      2,
+      3,
     );
-    expect(find.text('Current setting: 30 s'), findsOneWidget);
+    expect(find.text('Current setting: 75 s'), findsOneWidget);
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
   });
@@ -238,7 +239,63 @@ void main() {
     ]);
   });
 
-  testWidgets('shows unavailable when the server auto-close value is null', (
+  testWidgets('reports a position-only auto-close change once', (tester) async {
+    final reports = <_ReportedOperation>[];
+    final gateway = MockHardwareGateway(autoCloseValue: 1);
+    await _pumpSettingsRouter(
+      tester,
+      gateway: gateway,
+      operationRecordRepository: _RecordingOperationRecordRepository(reports),
+      settingSnapshots: const [
+        DoorSettingSnapshot(
+          code: DeviceCapabilityCode.autoClose,
+          label: 'Auto close',
+          supported: true,
+          configured: true,
+          currentValue: 1,
+          unit: 's',
+        ),
+      ],
+    );
+
+    await tester.tap(find.text('Auto close'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Any position'));
+    await tester.tap(find.text('Confirm'));
+    await tester.pumpAndSettle();
+
+    expect(reports, hasLength(1));
+    expect(reports.single.action, OperationReportAction.autoCloseDelayChanged);
+    final snapshot = await gateway.queryDeviceAttributes(
+      requestId: 'verify-position-only-auto-close',
+      deviceId: 'mock-device',
+    );
+    expect(
+      snapshot.attributes.singleWhere((value) => value.id == 0x2712).value,
+      Uint8List.fromList(<int>[0x21]),
+    );
+  });
+
+  testWidgets('stops blocking loading after the write ack', (tester) async {
+    final gateway = MockHardwareGateway(
+      attributeReportAfterWriteDelay: const Duration(milliseconds: 500),
+    );
+    await _pumpSettingsRouter(tester, gateway: gateway);
+
+    await tester.tap(find.text('Auto close'));
+    await tester.pumpAndSettle();
+    await tester.drag(find.byType(ListWheelScrollView), const Offset(0, -50));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Confirm'));
+    await tester.pump();
+
+    expect(find.byType(FlinxBlockingLoadingOverlay), findsNothing);
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pumpAndSettle();
+    expect(find.byType(FlinxBlockingLoadingOverlay), findsNothing);
+  });
+
+  testWidgets('shows the BLE value when the server auto-close value is null', (
     tester,
   ) async {
     final gateway = MockHardwareGateway(
@@ -259,8 +316,7 @@ void main() {
       ],
     );
 
-    expect(find.text('Not reported'), findsWidgets);
-    expect(find.text('0x004B (75)'), findsNothing);
+    expect(find.text('75 s'), findsOneWidget);
   });
 
   testWidgets('localizes known setting titles instead of server labels', (
@@ -586,11 +642,12 @@ void main() {
     expect(doorSettingsRepository.fetchCount, 1);
   });
 
-  testWidgets('preselects the configured option when opening its editor', (
+  testWidgets('preselects the BLE-reported option when opening its editor', (
     tester,
   ) async {
     await _pumpSettingsRouter(
       tester,
+      gateway: MockHardwareGateway(autoCloseValue: 3),
       capabilities: const [DeviceCapabilityCode.autoClose],
       capabilityDefinitions: const [
         DeviceCapability(

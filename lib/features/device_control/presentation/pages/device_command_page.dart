@@ -15,6 +15,7 @@ import '../../../../shared/widgets/flinx_door_command_button.dart';
 import '../../../../shared/widgets/flinx_fbox_control_assets.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../../../shared/widgets/flinx_switch.dart';
+import '../../../../shared/widgets/flinx_warning_dialog.dart';
 import '../../../add_device/presentation/navigation/f_box_wiring_test_route.dart';
 import '../../../records/application/providers.dart';
 import '../../../records/domain/entities/operation_report.dart';
@@ -73,8 +74,9 @@ class DeviceCommandPage extends ConsumerStatefulWidget {
 
 class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
   bool? _ledEnabledOverride;
-  bool? _autoCloseEnabledOverride;
   bool? _openReminderEnabledOverride;
+  final Map<String, bool> _autoCloseOptimisticValues = <String, bool>{};
+  final Set<String> _autoClosePendingDeviceIds = <String>{};
   bool _isAwaitingDoorDetail = true;
   int _doorDetailLoadSequence = 0;
   DeviceDetailTab _selectedTab = DeviceDetailTab.command;
@@ -108,7 +110,8 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.doorId != widget.doorId) {
       _ledEnabledOverride = null;
-      _autoCloseEnabledOverride = null;
+      _autoCloseOptimisticValues.clear();
+      _autoClosePendingDeviceIds.clear();
       _openReminderEnabledOverride = null;
       _isAwaitingDoorDetail = true;
       Future.microtask(_loadDoorDetail);
@@ -314,13 +317,6 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     final doorSettingsState = ref.watch(
       doorSettingsControllerProvider(widget.doorId),
     );
-    final autoCloseCheckRequest = (
-      doorId: widget.doorId,
-      deviceId: selectedDeviceId,
-    );
-    final autoCloseCheckState = ref.watch(
-      autoCloseCheckControllerProvider(autoCloseCheckRequest),
-    );
     final partialOpenCapability = deviceCapabilitiesState.capabilityFor(
       DeviceCapabilityCode.partialOpenLevel,
     );
@@ -373,13 +369,19 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     final isLegacyAutoCloseReport =
         reportedAutoCloseValue?.sourceAttributeId ==
         DeviceSettingKey.autoCloseTime.legacyAttributeId;
-    final matchingAutoCloseValue = matchingDeviceSettingCandidate(
-      isLegacyAutoCloseReport ? null : reportedAutoCloseValue,
-      autoCloseAllowedValues,
-    );
+    final matchingAutoCloseValue = matchingAutoCloseReportedOption(
+      capability: autoCloseCapability,
+      reportedValues: reportedAutoCloseValue == null
+          ? const <int>[]
+          : reportedAutoCloseValue.candidateValues.isEmpty
+          ? <int>[reportedAutoCloseValue.rawValue]
+          : reportedAutoCloseValue.candidateValues,
+    )?.value;
     final configuredAutoCloseValue =
         matchingAutoCloseValue ?? autoCloseSetting?.currentValue;
-    final displayedAutoCloseValue = reportedAutoCloseValue == null
+    final displayedAutoCloseValue = isLegacyAutoCloseReport
+        ? reportedAutoCloseValue?.rawValue
+        : reportedAutoCloseValue == null
         ? autoCloseSetting?.currentValue
         : matchingAutoCloseValue ?? reportedAutoCloseValue.rawValue;
     final autoCloseOption =
@@ -403,7 +405,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
             autoCloseCapability?.unit ?? autoCloseSetting?.unit,
           );
     final autoCloseEnabled =
-        _autoCloseEnabledOverride ??
+        _autoCloseOptimisticValues[selectedDeviceId] ??
         (reportedAutoCloseValue == null
             ? doorDetail?.autoCloseEnabled ?? false
             : reportedAutoCloseValue.rawValue != 0);
@@ -693,8 +695,11 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                                       ),
                                   busy: isBusy,
                                   settingsBusy:
-                                      deviceSettingsState.pendingKey != null ||
-                                      autoCloseCheckState.checking,
+                                      deviceSettingsState.pendingKey != null &&
+                                      deviceSettingsState.pendingKey !=
+                                          DeviceSettingKey.autoCloseTime,
+                                  autoCloseBusy: _autoClosePendingDeviceIds
+                                      .contains(selectedDeviceId),
                                   partialOpenSettingBusy:
                                       deviceCapabilitiesState.loading ||
                                       doorSettingsState.loading ||
@@ -1098,25 +1103,18 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
       return;
     }
 
-    if (key == DeviceSettingKey.autoCloseTime && enabled) {
-      final request = (doorId: widget.doorId, deviceId: businessDeviceId);
-      final checkProvider = autoCloseCheckControllerProvider(request);
-      if (ref.read(checkProvider).checking) {
-        return;
-      }
-      final allowed = await ref.read(checkProvider.notifier).checkAllowed();
-      if (!mounted || !allowed) {
-        return;
-      }
+    if (key == DeviceSettingKey.autoCloseTime) {
+      await _setAutoCloseToggle(
+        bleDeviceId: bleDeviceId,
+        businessDeviceId: businessDeviceId,
+        enabled: enabled,
+        enabledValue: enabledValue,
+        allowedValues: allowedValues ?? const <int>[],
+      );
+      return;
     }
 
-    setState(() {
-      if (key == DeviceSettingKey.autoCloseTime) {
-        _autoCloseEnabledOverride = enabled;
-      } else {
-        _openReminderEnabledOverride = enabled;
-      }
-    });
+    setState(() => _openReminderEnabledOverride = enabled);
     final saved = await ref
         .read(deviceSettingsControllerProvider(bleDeviceId).notifier)
         .setEnabled(
@@ -1128,13 +1126,8 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     if (!mounted) {
       return;
     }
-    if (key == DeviceSettingKey.autoCloseTime) {
-      setState(() => _autoCloseEnabledOverride = null);
-    }
     if (!saved) {
-      if (key != DeviceSettingKey.autoCloseTime) {
-        setState(() => _openReminderEnabledOverride = null);
-      }
+      setState(() => _openReminderEnabledOverride = null);
       return;
     }
     final appliedValue = ref
@@ -1148,18 +1141,93 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
           appliedValue ??
               (enabled ? enabledValue ?? key.defaultEnabledValue : 0),
         );
-    final reportAction = switch (key) {
-      DeviceSettingKey.autoCloseTime => OperationReportAction.autoCloseToggle,
-      DeviceSettingKey.doorOpenReminder =>
-        OperationReportAction.doorOpenReminderToggle,
-      _ => null,
-    };
-    if (reportAction != null) {
+    _reportSuccessfulOperation(
+      action: OperationReportAction.doorOpenReminderToggle,
+      operationSource: OperationReportSource.bluetooth,
+    );
+  }
+
+  Future<void> _setAutoCloseToggle({
+    required String bleDeviceId,
+    required String businessDeviceId,
+    required bool enabled,
+    required int? enabledValue,
+    required Iterable<int> allowedValues,
+  }) async {
+    if (_autoClosePendingDeviceIds.contains(businessDeviceId)) {
+      return;
+    }
+    setState(() {
+      _autoCloseOptimisticValues[businessDeviceId] = enabled;
+      _autoClosePendingDeviceIds.add(businessDeviceId);
+    });
+
+    if (enabled) {
+      final request = (doorId: widget.doorId, deviceId: businessDeviceId);
+      final checkProvider = autoCloseCheckControllerProvider(request);
+      final allowed = await ref.read(checkProvider.notifier).checkAllowed();
+      if (!mounted) {
+        return;
+      }
+      if (!allowed) {
+        final checkState = ref.read(checkProvider);
+        _clearAutoCloseOptimisticState(businessDeviceId);
+        await _showAutoCloseDialog(
+          checkState.hasError
+              ? AppLocalizations.of(context).deviceSettingsAutoCloseCheckFailed
+              : AppLocalizations.of(
+                  context,
+                ).deviceSettingsAutoCloseNotAllowedMessage,
+        );
+        return;
+      }
+    }
+
+    final result = await ref
+        .read(deviceSettingsControllerProvider(bleDeviceId).notifier)
+        .setAutoCloseEnabled(
+          enabled: enabled,
+          enabledValue: enabledValue,
+          allowedValues: allowedValues,
+        );
+    if (!mounted) {
+      return;
+    }
+    _clearAutoCloseOptimisticState(businessDeviceId);
+    if (!result.saved) {
+      await _showAutoCloseDialog(
+        AppLocalizations.of(context).deviceSettingsAutoCloseSaveFailed,
+      );
+      return;
+    }
+    // The confirmed value already lives in the BLE-device-scoped settings
+    // controller. Do not copy it into the door-wide server snapshot because
+    // that fallback is shared by every selectable device on this page.
+    if (result.status == AutoCloseSaveStatus.confirmed) {
       _reportSuccessfulOperation(
-        action: reportAction,
+        action: OperationReportAction.autoCloseToggle,
         operationSource: OperationReportSource.bluetooth,
       );
     }
+  }
+
+  void _clearAutoCloseOptimisticState(String businessDeviceId) {
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _autoCloseOptimisticValues.remove(businessDeviceId);
+      _autoClosePendingDeviceIds.remove(businessDeviceId);
+    });
+  }
+
+  Future<void> _showAutoCloseDialog(String message) {
+    return showFlinxWarningDialog(
+      context,
+      message: message,
+      confirmLabel: AppLocalizations.of(context).deviceSettingsConfirmAction,
+      iconAssetPath: DeviceSettingsAssetPaths.autoCloseSafetyWarningPlaceholder,
+    );
   }
 
   Future<void> _runCommandAndReport({
@@ -2185,6 +2253,7 @@ class _QuickActionGrid extends StatelessWidget {
     required this.partialOpenSettingPermissionDenied,
     required this.busy,
     required this.settingsBusy,
+    required this.autoCloseBusy,
     required this.partialOpenSettingBusy,
     required this.onLedChanged,
     required this.onAutoCloseChanged,
@@ -2213,6 +2282,7 @@ class _QuickActionGrid extends StatelessWidget {
   final VoidCallback? partialOpenSettingPermissionDenied;
   final bool busy;
   final bool settingsBusy;
+  final bool autoCloseBusy;
   final bool partialOpenSettingBusy;
   final ValueChanged<bool> onLedChanged;
   final ValueChanged<bool> onAutoCloseChanged;
@@ -2257,10 +2327,14 @@ class _QuickActionGrid extends StatelessWidget {
                     subtitle: autoCloseValueLabel,
                     enabled: autoCloseEnabled,
                     available: autoCloseAvailable,
-                    busy: busy || settingsBusy,
+                    busy: busy || settingsBusy || autoCloseBusy,
                     textTheme: textTheme,
                     onChanged: onAutoCloseChanged,
-                    onDisabled: !autoCloseAvailable && !busy && !settingsBusy
+                    onDisabled:
+                        !autoCloseAvailable &&
+                            !busy &&
+                            !settingsBusy &&
+                            !autoCloseBusy
                         ? autoClosePermissionDenied
                         : null,
                   ),

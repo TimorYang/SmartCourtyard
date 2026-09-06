@@ -1,9 +1,10 @@
 import '../entities/device_setting.dart';
+import '../entities/device_settings_snapshot.dart';
 
 abstract interface class DeviceSettingsRepository {
-  Stream<Map<DeviceSettingKey, DeviceSettingValue>> watchSettings({
-    required String deviceId,
-  });
+  Stream<DeviceSettingsSnapshot> watchSettings({required String deviceId});
+
+  Stream<void> watchDisconnections({required String deviceId});
 
   Future<Map<DeviceSettingKey, DeviceSettingValue>> querySettings({
     required String requestId,

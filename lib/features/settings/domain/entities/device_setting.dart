@@ -4,7 +4,7 @@ enum AutoClosePosition {
 
   const AutoClosePosition(this.protocolValue, this.wireValueBase);
 
-  /// Value used by the legacy read-only 0x2714 condition attribute.
+  /// Value reported independently by the read-only 0x2714 attribute.
   final int protocolValue;
 
   /// High-nibble base used by the one-byte 0x2712 value.

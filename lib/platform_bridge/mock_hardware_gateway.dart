@@ -10,6 +10,10 @@ class MockHardwareGateway implements HardwareGateway {
     this.autoCloseValue = 0,
     this.autoClosePosition = 0x01,
     this.autoCloseRawBytes,
+    this.emitAttributeReportAfterWrite = true,
+    this.attributeReportAfterWriteDelay = Duration.zero,
+    this.autoCloseReportBytesOverride,
+    this.autoClosePositionReportOverride,
   }) : _scanController = StreamController<BleDevice>.broadcast(),
        _connectionController = StreamController<BleConnectionEvent>.broadcast(),
        _notificationController = StreamController<BleNotification>.broadcast(),
@@ -35,6 +39,10 @@ class MockHardwareGateway implements HardwareGateway {
   final int autoCloseValue;
   final int autoClosePosition;
   final List<int>? autoCloseRawBytes;
+  final bool emitAttributeReportAfterWrite;
+  final Duration attributeReportAfterWriteDelay;
+  final List<int>? autoCloseReportBytesOverride;
+  final int? autoClosePositionReportOverride;
   final Map<int, DeviceAttribute> _attributes;
   final List<int> doorOpenReminderValues = <int>[];
   bool flutterConsoleLoggingEnabled = false;
@@ -74,7 +82,10 @@ class MockHardwareGateway implements HardwareGateway {
       0x2711: DeviceAttribute(id: 0x2711, value: Uint8List.fromList([0x07])),
       // 0x2713 writes/reports use the original 0x01-0x09 level values here.
       0x2713: DeviceAttribute(id: 0x2713, value: Uint8List.fromList([0x05])),
-      0x2714: DeviceAttribute(id: 0x2714, value: Uint8List.fromList([0x01])),
+      0x2714: DeviceAttribute(
+        id: 0x2714,
+        value: Uint8List.fromList(<int>[autoClosePosition]),
+      ),
       autoCloseAttributeId: DeviceAttribute(
         id: autoCloseAttributeId,
         value: autoCloseBytes,
@@ -473,6 +484,54 @@ class MockHardwareGateway implements HardwareGateway {
   }) async {
     for (final attribute in attributes) {
       _attributes[attribute.id] = attribute;
+      if (attribute.id == 0x2712 && attribute.value.length == 1) {
+        final position = attribute.value.first & 0xF0;
+        final protocolPosition = switch (position) {
+          0x10 => 0x01,
+          0x20 => 0x02,
+          _ => null,
+        };
+        if (protocolPosition != null) {
+          _attributes[0x2714] = DeviceAttribute(
+            id: 0x2714,
+            value: Uint8List.fromList(<int>[protocolPosition]),
+          );
+        }
+      }
+    }
+    if (emitAttributeReportAfterWrite) {
+      unawaited(
+        Future<void>.delayed(attributeReportAfterWriteDelay, () {
+          final reportedAttributes = <DeviceAttribute>[
+            for (final attribute in _attributes.values)
+              if (attribute.id == 0x2712 &&
+                  autoCloseReportBytesOverride != null)
+                DeviceAttribute(
+                  id: attribute.id,
+                  value: Uint8List.fromList(autoCloseReportBytesOverride!),
+                )
+              else if (attribute.id == 0x2714 &&
+                  autoClosePositionReportOverride != null)
+                DeviceAttribute(
+                  id: attribute.id,
+                  value: Uint8List.fromList(<int>[
+                    autoClosePositionReportOverride!,
+                  ]),
+                )
+              else
+                attribute,
+          ];
+          _attributeController.add(
+            DeviceAttributeSnapshot(
+              deviceId: deviceId,
+              sequence: 3,
+              timestampMillis: DateTime.now().millisecondsSinceEpoch,
+              origin: DeviceAttributeReportOrigin.activeReport,
+              attributes: reportedAttributes,
+            ),
+          );
+        }),
+      );
     }
     return DeviceAttributeWriteResult(
       requestId: requestId,

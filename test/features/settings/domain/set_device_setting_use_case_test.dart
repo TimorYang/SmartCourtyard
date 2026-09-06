@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flinx/features/settings/domain/entities/device_setting.dart';
+import 'package:flinx/features/settings/domain/entities/device_settings_snapshot.dart';
 import 'package:flinx/features/settings/domain/repositories/device_settings_repository.dart';
 import 'package:flinx/features/settings/domain/use_cases/set_device_setting_use_case.dart';
 
@@ -236,7 +237,10 @@ class _Repository implements DeviceSettingsRepository {
   }) async {}
 
   @override
-  Stream<Map<DeviceSettingKey, DeviceSettingValue>> watchSettings({
-    required String deviceId,
-  }) => const Stream<Map<DeviceSettingKey, DeviceSettingValue>>.empty();
+  Stream<DeviceSettingsSnapshot> watchSettings({required String deviceId}) =>
+      const Stream<DeviceSettingsSnapshot>.empty();
+
+  @override
+  Stream<void> watchDisconnections({required String deviceId}) =>
+      const Stream<void>.empty();
 }

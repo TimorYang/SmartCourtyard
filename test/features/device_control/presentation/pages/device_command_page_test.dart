@@ -35,6 +35,7 @@ import 'package:flinx/features/settings/domain/repositories/door_settings_reposi
 import 'package:flinx/platform_bridge/hardware_models.dart';
 import 'package:flinx/platform_bridge/mock_hardware_gateway.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
+import 'package:flinx/shared/widgets/flinx_blocking_loading_overlay.dart';
 import 'package:flinx/shared/widgets/flinx_door_command_button.dart';
 import 'package:flinx/shared/widgets/flinx_switch.dart';
 import 'package:flutter/material.dart';
@@ -136,7 +137,7 @@ void main() {
     },
   );
 
-  testWidgets('updates the LED off delay from an active attribute report', (
+  testWidgets('keeps incremental setting values across active reports', (
     tester,
   ) async {
     final gateway = _RecordingHardwareGateway();
@@ -182,8 +183,8 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    expect(find.text('1 min'), findsOneWidget);
-    expect(find.text('3 min'), findsNothing);
+    expect(find.text('3 min'), findsOneWidget);
+    expect(find.text('1 min'), findsNothing);
   });
 
   testWidgets('uses capability labels for command setting values', (
@@ -358,6 +359,38 @@ void main() {
       ],
     );
   });
+
+  testWidgets(
+    'optimistically disables only auto close without showing loading',
+    (tester) async {
+      final gateway = _DelayedAttributeWriteHardwareGateway();
+      await _pumpDevicePage(tester, gateway);
+
+      final autoCloseSwitch = find.byKey(
+        const ValueKey<String>('auto-close-switch'),
+      );
+      await tester.tap(autoCloseSwitch);
+      await tester.pump();
+      await tester.pump();
+
+      expect(tester.widget<FlinxSwitch>(autoCloseSwitch).value, isTrue);
+      expect(tester.widget<FlinxSwitch>(autoCloseSwitch).enabled, isFalse);
+      expect(find.byType(FlinxBlockingLoadingOverlay), findsNothing);
+      expect(
+        tester
+            .widget<FlinxSwitch>(
+              find.byKey(const ValueKey<String>('open-reminder-switch')),
+            )
+            .enabled,
+        isTrue,
+      );
+
+      gateway.completeWrite();
+      await tester.pumpAndSettle();
+      expect(tester.widget<FlinxSwitch>(autoCloseSwitch).value, isTrue);
+      expect(tester.widget<FlinxSwitch>(autoCloseSwitch).enabled, isTrue);
+    },
+  );
 
   testWidgets('shows a standalone retry state when initial loading fails', (
     tester,
@@ -1476,7 +1509,7 @@ void main() {
         .toList();
     expect(writes, hasLength(2));
     expect(writes[0].value, Uint8List.fromList(<int>[0x10]));
-    expect(writes[1].value, Uint8List.fromList(<int>[0x11]));
+    expect(writes[1].value, Uint8List.fromList(<int>[0x13]));
     expect(
       gateway.writtenAttributes.any((attribute) => attribute.id == 0x2725),
       isFalse,

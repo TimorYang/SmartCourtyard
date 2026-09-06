@@ -1859,6 +1859,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Unable to check whether auto close is available. Please try again.';
 
   @override
+  String get deviceSettingsAutoCloseSaveFailed =>
+      'The auto close setting did not take effect. Please try again.';
+
+  @override
   String get deviceSettingsLoading => 'Reading device attributes…';
 
   @override

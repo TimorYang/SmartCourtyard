@@ -3,10 +3,70 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flinx/features/settings/data/repositories/device_settings_repository_impl.dart';
 import 'package:flinx/features/settings/domain/entities/device_setting.dart';
+import 'package:flinx/features/settings/domain/entities/device_settings_snapshot.dart';
 import 'package:flinx/platform_bridge/mock_hardware_gateway.dart';
 import 'package:flinx/platform_bridge/hardware_models.dart';
 
 void main() {
+  test('preserves active report metadata in settings snapshots', () async {
+    final gateway = MockHardwareGateway();
+    final repository = DeviceSettingsRepositoryImpl(gateway);
+    final snapshotFuture = repository.watchSettings(deviceId: 'device-1').first;
+
+    gateway.emitDeviceAttributeSnapshot(
+      DeviceAttributeSnapshot(
+        deviceId: 'device-1',
+        sequence: 42,
+        timestampMillis: 1234,
+        origin: DeviceAttributeReportOrigin.activeReport,
+        attributes: [
+          DeviceAttribute(id: 0x2712, value: Uint8List.fromList(<int>[0x21])),
+        ],
+      ),
+    );
+
+    final snapshot = await snapshotFuture;
+    expect(snapshot.origin, DeviceSettingsSnapshotOrigin.activeReport);
+    expect(snapshot.sequence, 42);
+    expect(snapshot.timestampMillis, 1234);
+    expect(snapshot.values[DeviceSettingKey.autoCloseTime]?.rawValue, 1);
+  });
+
+  test('emits disconnection only for the requested BLE device', () async {
+    final gateway = MockHardwareGateway();
+    final repository = DeviceSettingsRepositoryImpl(gateway);
+    var disconnections = 0;
+    final subscription = repository
+        .watchDisconnections(deviceId: 'device-1')
+        .listen((_) => disconnections++);
+    addTearDown(subscription.cancel);
+
+    gateway.emitBleConnectionEvent(
+      const BleConnectionEvent(
+        requestId: 'other-disconnect',
+        deviceId: 'device-2',
+        state: BleConnectionState.disconnected,
+      ),
+    );
+    gateway.emitBleConnectionEvent(
+      const BleConnectionEvent(
+        requestId: 'target-connected',
+        deviceId: 'device-1',
+        state: BleConnectionState.connected,
+      ),
+    );
+    gateway.emitBleConnectionEvent(
+      const BleConnectionEvent(
+        requestId: 'target-disconnect',
+        deviceId: 'device-1',
+        state: BleConnectionState.disconnected,
+      ),
+    );
+    await Future<void>.delayed(Duration.zero);
+
+    expect(disconnections, 1);
+  });
+
   test('maps queried attributes to semantic settings', () async {
     final repository = DeviceSettingsRepositoryImpl(MockHardwareGateway());
 
@@ -145,7 +205,7 @@ void main() {
     );
   });
 
-  test('maps new 0x2712 position and level ahead of 0x2714', () async {
+  test('reads 0x2712 time separately from the 0x2714 position', () async {
     final repository = DeviceSettingsRepositoryImpl(
       MockHardwareGateway(autoClosePosition: 0x02, autoCloseValue: 9),
     );
@@ -156,7 +216,7 @@ void main() {
     );
 
     expect(values[DeviceSettingKey.autoCloseTime]?.rawValue, 9);
-    expect(values[DeviceSettingKey.autoCloseTime]?.wireValue, 0x29);
+    expect(values[DeviceSettingKey.autoCloseTime]?.wireValue, isNull);
     expect(values[DeviceSettingKey.autoCloseTime]?.candidateValues, <int>[9]);
     expect(
       values[DeviceSettingKey.autoCloseCondition]?.rawValue,
@@ -164,7 +224,7 @@ void main() {
     );
     expect(
       values[DeviceSettingKey.autoCloseCondition]?.sourceAttributeId,
-      0x2712,
+      0x2714,
     );
   });
 

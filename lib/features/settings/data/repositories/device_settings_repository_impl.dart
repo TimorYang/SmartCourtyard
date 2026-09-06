@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import '../../../../platform_bridge/hardware_gateway.dart';
 import '../../../../platform_bridge/hardware_models.dart';
 import '../../domain/entities/device_setting.dart';
+import '../../domain/entities/device_settings_snapshot.dart';
 import '../../domain/repositories/device_settings_repository.dart';
 
 class DeviceSettingsRepositoryImpl implements DeviceSettingsRepository {
@@ -11,12 +12,33 @@ class DeviceSettingsRepositoryImpl implements DeviceSettingsRepository {
   final HardwareGateway _gateway;
 
   @override
-  Stream<Map<DeviceSettingKey, DeviceSettingValue>> watchSettings({
-    required String deviceId,
-  }) {
+  Stream<DeviceSettingsSnapshot> watchSettings({required String deviceId}) {
     return _gateway.deviceAttributeSnapshots
         .where((snapshot) => snapshot.deviceId == deviceId)
-        .map(_mapSnapshot);
+        .map(
+          (snapshot) => DeviceSettingsSnapshot(
+            values: _mapSnapshot(snapshot),
+            origin: switch (snapshot.origin) {
+              DeviceAttributeReportOrigin.activeReport =>
+                DeviceSettingsSnapshotOrigin.activeReport,
+              DeviceAttributeReportOrigin.queryResult =>
+                DeviceSettingsSnapshotOrigin.queryResult,
+            },
+            sequence: snapshot.sequence,
+            timestampMillis: snapshot.timestampMillis,
+          ),
+        );
+  }
+
+  @override
+  Stream<void> watchDisconnections({required String deviceId}) {
+    return _gateway.bleConnectionEvents
+        .where(
+          (event) =>
+              event.deviceId == deviceId &&
+              event.state == BleConnectionState.disconnected,
+        )
+        .map((_) {});
   }
 
   @override
@@ -131,21 +153,17 @@ class DeviceSettingsRepositoryImpl implements DeviceSettingsRepository {
     final rawValue2712 = attribute2712?.value.length == 1
         ? attribute2712!.unsignedValue
         : null;
-    final combinedPosition = AutoClosePosition.fromWireValue(rawValue2712);
-    final combinedLevel = combinedPosition == null
-        ? null
-        : rawValue2712! & 0x0F;
-    final hasCombinedValue = combinedPosition != null && combinedLevel != null;
-    final value2712 = rawValue2712 != null && !hasCombinedValue
+    // 0x2712 uses a composite value when written, but in a settings snapshot
+    // it is a time source only. Position is always read independently from
+    // 0x2714.
+    final value2712 = AutoClosePosition.fromWireValue(rawValue2712) == null
         ? rawValue2712
-        : null;
+        : rawValue2712! & 0x0F;
     final value2725 = attribute2725?.value.length == 2
         ? attribute2725!.unsignedValue
         : null;
-    final preferredValue = hasCombinedValue
-        ? combinedLevel
-        : value2712 ?? value2725;
-    final sourceAttributeId = hasCombinedValue || value2712 != null
+    final preferredValue = value2712 ?? value2725;
+    final sourceAttributeId = value2712 != null
         ? DeviceSettingKey.autoCloseTime.attributeId
         : DeviceSettingKey.autoCloseTime.legacyAttributeId;
     final autoCloseTime = preferredValue == null
@@ -154,24 +172,13 @@ class DeviceSettingsRepositoryImpl implements DeviceSettingsRepository {
             key: DeviceSettingKey.autoCloseTime,
             rawValue: preferredValue,
             candidateValues: List<int>.unmodifiable(
-              <int?>[
-                if (hasCombinedValue) combinedLevel,
-                if (!hasCombinedValue) value2712,
-                value2725,
-              ].whereType<int>(),
+              <int?>[value2712, value2725].whereType<int>(),
             ),
             sourceAttributeId: sourceAttributeId,
-            wireValue: hasCombinedValue ? rawValue2712 : null,
           );
 
     final conditionAttribute = attributes[0x2714];
-    final conditionValue = combinedPosition != null && hasCombinedValue
-        ? DeviceSettingValue(
-            key: DeviceSettingKey.autoCloseCondition,
-            rawValue: combinedPosition.protocolValue,
-            sourceAttributeId: DeviceSettingKey.autoCloseTime.attributeId,
-          )
-        : conditionAttribute?.value.length == 1
+    final conditionValue = conditionAttribute?.value.length == 1
         ? DeviceSettingValue(
             key: DeviceSettingKey.autoCloseCondition,
             rawValue: conditionAttribute!.unsignedValue,

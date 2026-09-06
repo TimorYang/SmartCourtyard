@@ -1740,6 +1740,7 @@
   "deviceSettingsAutoCloseCondition": "Auto close condition",
   "deviceSettingsAutoCloseNotAllowedMessage": "The infrared device is not activated, so auto close cannot be enabled. Please ensure the infrared device is installed correctly and activated.",
   "deviceSettingsAutoCloseCheckFailed": "Unable to check whether auto close is available. Please try again.",
+  "deviceSettingsAutoCloseSaveFailed": "The auto close setting did not take effect. Please try again.",
   "deviceSettingsLoading": "Reading device attributes…",
   "deviceSettingsLoadFailed": "Unable to read device attributes.",
   "deviceSettingsRetry": "Retry",

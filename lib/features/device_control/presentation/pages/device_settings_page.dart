@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/app_toast.dart';
+import '../../../../shared/widgets/flinx_blocking_loading_overlay.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 import '../../../records/application/providers.dart';
 import '../../../records/domain/entities/operation_report.dart';
@@ -49,6 +50,8 @@ class DeviceSettingsAssetPaths {
       'assets/icons/device_settings/opening_speed_indicator_placeholder.png';
   static const forceMarginWarningPlaceholder =
       'assets/icons/device_settings/force_margin_warning_placeholder.png';
+  static const autoCloseSafetyWarningPlaceholder =
+      'assets/icons/device_settings/auto_close_safety_warning_placeholder.png';
   static const forceMarginIndicatorPlaceholder =
       'assets/icons/device_settings/force_margin_indicator_placeholder.png';
   static const transmitterRenamePlaceholder =
@@ -141,6 +144,8 @@ class DeviceSettingsPage extends ConsumerStatefulWidget {
 }
 
 class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
+  bool _autoCloseBlocking = false;
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
@@ -154,235 +159,242 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
     final doorSettingsState = ref.watch(
       doorSettingsControllerProvider(widget.doorId),
     );
-    final autoCloseCheckRequest = (
-      doorId: widget.doorId,
-      deviceId: widget.deviceId,
-    );
-    final autoCloseCheckState = ref.watch(
-      autoCloseCheckControllerProvider(autoCloseCheckRequest),
-    );
     final showsForceMargin = _supportsCapability(
       capabilitiesState,
       DeviceCapabilityCode.forceMargin,
     );
 
-    return Scaffold(
-      appBar: const FlinxNavigationBar(title: '', showBottomDivider: false),
-      backgroundColor: AppColors.backgroundPrimary,
-      body: SafeArea(
-        top: false,
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 430),
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 25, 20, 24),
-              children: [
-                Text(
-                  l10n.deviceSettingsTitle,
-                  style: AppTextTokens.deviceSettingsTitle(textTheme),
-                ),
-                if (settingsState.loading ||
-                    capabilitiesState.loading ||
-                    doorSettingsState.loading)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(l10n.deviceSettingsLoading),
-                  ),
-                if (settingsState.errorMessage != null ||
-                    capabilitiesState.errorMessage != null ||
-                    doorSettingsState.errorMessage != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Row(
-                      children: [
-                        Expanded(child: Text(l10n.deviceSettingsLoadFailed)),
-                        TextButton(
-                          onPressed:
-                              settingsState.loading ||
-                                  capabilitiesState.loading ||
-                                  doorSettingsState.loading
-                              ? null
-                              : () {
-                                  ref
-                                      .read(
-                                        deviceSettingsControllerProvider(
-                                          widget.bleDeviceId,
-                                        ).notifier,
-                                      )
-                                      .load();
-                                  ref
-                                      .read(
-                                        doorSettingsControllerProvider(
-                                          widget.doorId,
-                                        ).notifier,
-                                      )
-                                      .load();
-                                  ref
-                                      .read(
-                                        deviceCapabilitiesControllerProvider(
-                                          widget.deviceId,
-                                        ).notifier,
-                                      )
-                                      .load();
-                                },
-                          child: Text(l10n.deviceSettingsRetry),
-                        ),
-                      ],
-                    ),
-                  ),
-                const SizedBox(height: 4),
-                Text(
-                  l10n.deviceSettingsForUsers,
-                  style: AppTextTokens.deviceSettingsMainSectionLabel(
-                    textTheme,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                _SettingsRows(
-                  rows: [
-                    if (_supportsCapability(
-                      capabilitiesState,
-                      DeviceCapabilityCode.transmitterPairing,
-                    ))
-                      _SettingsRowData(
-                        assetPath:
-                            DeviceSettingsAssetPaths.transmitterManagement,
-                        fallbackIcon: Icons.settings_remote_outlined,
-                        title: l10n.deviceSettingsTransmitterManagement,
-                        onTap: () => context.push(
-                          '${TransmitterManagementPage.routePath}'
-                          '?deviceId=${Uri.encodeComponent(widget.deviceId)}',
-                        ),
+    return PopScope(
+      canPop: !_autoCloseBlocking,
+      child: Scaffold(
+        appBar: const FlinxNavigationBar(title: '', showBottomDivider: false),
+        backgroundColor: AppColors.backgroundPrimary,
+        body: Stack(
+          children: [
+            SafeArea(
+              top: false,
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 430),
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(20, 25, 20, 24),
+                    children: [
+                      Text(
+                        l10n.deviceSettingsTitle,
+                        style: AppTextTokens.deviceSettingsTitle(textTheme),
                       ),
-                    if (_supportsCapability(
-                      capabilitiesState,
-                      DeviceCapabilityCode.ledOffDelay,
-                    ))
-                      _capabilitySettingsRow(
-                        assetPath: DeviceSettingsAssetPaths.ledOffDelay,
-                        fallbackIcon: Icons.light_mode_outlined,
-                        localizedTitle: l10n.deviceSettingsLedOffDelay,
-                        key: DeviceSettingKey.ledOffDelay,
-                        capability: capabilitiesState.capabilityFor(
-                          DeviceCapabilityCode.ledOffDelay,
+                      if (settingsState.loading ||
+                          capabilitiesState.loading ||
+                          doorSettingsState.loading)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(l10n.deviceSettingsLoading),
                         ),
-                        setting: doorSettingsState.settingFor(
-                          DeviceCapabilityCode.ledOffDelay,
-                        ),
-                      ),
-                    if (_supportsCapability(
-                      capabilitiesState,
-                      DeviceCapabilityCode.partialOpenLevel,
-                    ))
-                      _capabilitySettingsRow(
-                        assetPath: DeviceSettingsAssetPaths.partialOpen,
-                        fallbackIcon: Icons.sensor_door_outlined,
-                        localizedTitle: l10n.deviceSettingsPartialOpen,
-                        key: DeviceSettingKey.partialOpen,
-                        capability: capabilitiesState.capabilityFor(
-                          DeviceCapabilityCode.partialOpenLevel,
-                        ),
-                        setting: doorSettingsState.settingFor(
-                          DeviceCapabilityCode.partialOpen,
-                        ),
-                      ),
-                    if (_supportsCapability(
-                      capabilitiesState,
-                      DeviceCapabilityCode.autoClose,
-                    ))
-                      _capabilitySettingsRow(
-                        assetPath: DeviceSettingsAssetPaths.autoClose,
-                        fallbackIcon: Icons.door_back_door_outlined,
-                        localizedTitle: l10n.deviceSettingsAutoClose,
-                        key: DeviceSettingKey.autoCloseTime,
-                        capability: capabilitiesState.capabilityFor(
-                          DeviceCapabilityCode.autoClose,
-                        ),
-                        setting: doorSettingsState.settingFor(
-                          DeviceCapabilityCode.autoClose,
-                        ),
-                        checking: autoCloseCheckState.checking,
-                      ),
-                    if (_supportsCapability(
-                      capabilitiesState,
-                      DeviceCapabilityCode.openingSpeed,
-                    ))
-                      _capabilitySettingsRow(
-                        assetPath: DeviceSettingsAssetPaths.openingSpeed,
-                        fallbackIcon: Icons.speed_outlined,
-                        localizedTitle: l10n.deviceSettingsOpeningSpeed,
-                        key: DeviceSettingKey.openingSpeed,
-                        capability: capabilitiesState.capabilityFor(
-                          DeviceCapabilityCode.openingSpeed,
-                        ),
-                        setting: doorSettingsState.settingFor(
-                          DeviceCapabilityCode.openingSpeed,
-                        ),
-                      ),
-                    _SettingsRowData(
-                      assetPath: DeviceSettingsAssetPaths.aboutDevice,
-                      fallbackIcon: Icons.info_outline,
-                      title: l10n.deviceSettingsAboutDevice,
-                      onTap: () => context.push(
-                        AboutDevicePage.location(
-                          doorId: widget.doorId,
-                          deviceId: widget.deviceId,
-                        ),
-                      ),
-                    ),
-                    if (_supportsCapability(
-                      capabilitiesState,
-                      DeviceCapabilityCode.doorOpenReminder,
-                    ))
-                      _capabilitySettingsRow(
-                        assetPath: DeviceSettingsAssetPaths.doorOpenReminder,
-                        fallbackIcon: Icons.notifications_active_outlined,
-                        localizedTitle: l10n.deviceSettingsDoorOpenReminder,
-                        key: DeviceSettingKey.doorOpenReminder,
-                        capability: capabilitiesState.capabilityFor(
-                          DeviceCapabilityCode.doorOpenReminder,
-                        ),
-                        setting: doorSettingsState.settingFor(
-                          DeviceCapabilityCode.doorOpenReminder,
-                        ),
-                      ),
-                  ],
-                ),
-                if (showsForceMargin) ...[
-                  const SizedBox(height: 22),
-                  Text(
-                    l10n.deviceSettingsForInstallers,
-                    style: AppTextTokens.deviceSettingsMainSectionLabel(
-                      textTheme,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  _SettingsRows(
-                    rows: [
-                      _SettingsRowData(
-                        assetPath: DeviceSettingsAssetPaths.forceMargin,
-                        fallbackIcon: Icons.tune_rounded,
-                        title: l10n.deviceSettingsForceMargin,
-                        value: _settingValue(
-                          settingsState,
-                          DeviceSettingKey.openingForce,
-                          l10n,
-                          null,
-                          doorSettingsState.settingFor(
-                            DeviceCapabilityCode.forceMargin,
+                      if (settingsState.errorMessage != null ||
+                          capabilitiesState.errorMessage != null ||
+                          doorSettingsState.errorMessage != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(l10n.deviceSettingsLoadFailed),
+                              ),
+                              TextButton(
+                                onPressed:
+                                    settingsState.loading ||
+                                        capabilitiesState.loading ||
+                                        doorSettingsState.loading
+                                    ? null
+                                    : () {
+                                        ref
+                                            .read(
+                                              deviceSettingsControllerProvider(
+                                                widget.bleDeviceId,
+                                              ).notifier,
+                                            )
+                                            .load();
+                                        ref
+                                            .read(
+                                              doorSettingsControllerProvider(
+                                                widget.doorId,
+                                              ).notifier,
+                                            )
+                                            .load();
+                                        ref
+                                            .read(
+                                              deviceCapabilitiesControllerProvider(
+                                                widget.deviceId,
+                                              ).notifier,
+                                            )
+                                            .load();
+                                      },
+                                child: Text(l10n.deviceSettingsRetry),
+                              ),
+                            ],
                           ),
                         ),
-                        onTap: () => _showRawValueEditor(
-                          DeviceSettingKey.openingForce,
-                          l10n.deviceSettingsForceMargin,
+                      const SizedBox(height: 4),
+                      Text(
+                        l10n.deviceSettingsForUsers,
+                        style: AppTextTokens.deviceSettingsMainSectionLabel(
+                          textTheme,
                         ),
                       ),
+                      const SizedBox(height: 10),
+                      _SettingsRows(
+                        rows: [
+                          if (_supportsCapability(
+                            capabilitiesState,
+                            DeviceCapabilityCode.transmitterPairing,
+                          ))
+                            _SettingsRowData(
+                              assetPath: DeviceSettingsAssetPaths
+                                  .transmitterManagement,
+                              fallbackIcon: Icons.settings_remote_outlined,
+                              title: l10n.deviceSettingsTransmitterManagement,
+                              onTap: () => context.push(
+                                '${TransmitterManagementPage.routePath}'
+                                '?deviceId=${Uri.encodeComponent(widget.deviceId)}',
+                              ),
+                            ),
+                          if (_supportsCapability(
+                            capabilitiesState,
+                            DeviceCapabilityCode.ledOffDelay,
+                          ))
+                            _capabilitySettingsRow(
+                              assetPath: DeviceSettingsAssetPaths.ledOffDelay,
+                              fallbackIcon: Icons.light_mode_outlined,
+                              localizedTitle: l10n.deviceSettingsLedOffDelay,
+                              key: DeviceSettingKey.ledOffDelay,
+                              capability: capabilitiesState.capabilityFor(
+                                DeviceCapabilityCode.ledOffDelay,
+                              ),
+                              setting: doorSettingsState.settingFor(
+                                DeviceCapabilityCode.ledOffDelay,
+                              ),
+                            ),
+                          if (_supportsCapability(
+                            capabilitiesState,
+                            DeviceCapabilityCode.partialOpenLevel,
+                          ))
+                            _capabilitySettingsRow(
+                              assetPath: DeviceSettingsAssetPaths.partialOpen,
+                              fallbackIcon: Icons.sensor_door_outlined,
+                              localizedTitle: l10n.deviceSettingsPartialOpen,
+                              key: DeviceSettingKey.partialOpen,
+                              capability: capabilitiesState.capabilityFor(
+                                DeviceCapabilityCode.partialOpenLevel,
+                              ),
+                              setting: doorSettingsState.settingFor(
+                                DeviceCapabilityCode.partialOpen,
+                              ),
+                            ),
+                          if (_supportsCapability(
+                            capabilitiesState,
+                            DeviceCapabilityCode.autoClose,
+                          ))
+                            _capabilitySettingsRow(
+                              assetPath: DeviceSettingsAssetPaths.autoClose,
+                              fallbackIcon: Icons.door_back_door_outlined,
+                              localizedTitle: l10n.deviceSettingsAutoClose,
+                              key: DeviceSettingKey.autoCloseTime,
+                              capability: capabilitiesState.capabilityFor(
+                                DeviceCapabilityCode.autoClose,
+                              ),
+                              setting: doorSettingsState.settingFor(
+                                DeviceCapabilityCode.autoClose,
+                              ),
+                            ),
+                          if (_supportsCapability(
+                            capabilitiesState,
+                            DeviceCapabilityCode.openingSpeed,
+                          ))
+                            _capabilitySettingsRow(
+                              assetPath: DeviceSettingsAssetPaths.openingSpeed,
+                              fallbackIcon: Icons.speed_outlined,
+                              localizedTitle: l10n.deviceSettingsOpeningSpeed,
+                              key: DeviceSettingKey.openingSpeed,
+                              capability: capabilitiesState.capabilityFor(
+                                DeviceCapabilityCode.openingSpeed,
+                              ),
+                              setting: doorSettingsState.settingFor(
+                                DeviceCapabilityCode.openingSpeed,
+                              ),
+                            ),
+                          _SettingsRowData(
+                            assetPath: DeviceSettingsAssetPaths.aboutDevice,
+                            fallbackIcon: Icons.info_outline,
+                            title: l10n.deviceSettingsAboutDevice,
+                            onTap: () => context.push(
+                              AboutDevicePage.location(
+                                doorId: widget.doorId,
+                                deviceId: widget.deviceId,
+                              ),
+                            ),
+                          ),
+                          if (_supportsCapability(
+                            capabilitiesState,
+                            DeviceCapabilityCode.doorOpenReminder,
+                          ))
+                            _capabilitySettingsRow(
+                              assetPath:
+                                  DeviceSettingsAssetPaths.doorOpenReminder,
+                              fallbackIcon: Icons.notifications_active_outlined,
+                              localizedTitle:
+                                  l10n.deviceSettingsDoorOpenReminder,
+                              key: DeviceSettingKey.doorOpenReminder,
+                              capability: capabilitiesState.capabilityFor(
+                                DeviceCapabilityCode.doorOpenReminder,
+                              ),
+                              setting: doorSettingsState.settingFor(
+                                DeviceCapabilityCode.doorOpenReminder,
+                              ),
+                            ),
+                        ],
+                      ),
+                      if (showsForceMargin) ...[
+                        const SizedBox(height: 22),
+                        Text(
+                          l10n.deviceSettingsForInstallers,
+                          style: AppTextTokens.deviceSettingsMainSectionLabel(
+                            textTheme,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        _SettingsRows(
+                          rows: [
+                            _SettingsRowData(
+                              assetPath: DeviceSettingsAssetPaths.forceMargin,
+                              fallbackIcon: Icons.tune_rounded,
+                              title: l10n.deviceSettingsForceMargin,
+                              value: _settingValue(
+                                settingsState,
+                                DeviceSettingKey.openingForce,
+                                l10n,
+                                null,
+                                doorSettingsState.settingFor(
+                                  DeviceCapabilityCode.forceMargin,
+                                ),
+                              ),
+                              onTap: () => _showRawValueEditor(
+                                DeviceSettingKey.openingForce,
+                                l10n.deviceSettingsForceMargin,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
-                ],
-              ],
+                ),
+              ),
             ),
-          ),
+            if (_autoCloseBlocking)
+              FlinxBlockingLoadingOverlay(
+                semanticsLabel: l10n.deviceSettingsWriting,
+              ),
+          ],
         ),
       ),
     );
@@ -406,24 +418,43 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
     if (state.pendingKey == key) {
       return l10n.deviceSettingsWriting;
     }
+    final reportedSetting = state.values[key];
+    if (key == DeviceSettingKey.autoCloseTime && reportedSetting != null) {
+      final reportedOption = matchingAutoCloseReportedOption(
+        capability: capability,
+        reportedValues: reportedSetting.candidateValues.isEmpty
+            ? <int>[reportedSetting.rawValue]
+            : reportedSetting.candidateValues,
+      );
+      if (reportedOption != null) {
+        return _optionLabel(reportedOption, capability?.unit);
+      }
+      if (reportedSetting.sourceAttributeId ==
+          DeviceSettingKey.autoCloseTime.legacyAttributeId) {
+        return _valueWithUnit(reportedSetting.rawValue, capability?.unit);
+      }
+      return l10n.deviceSettingsRawValueDisplay(
+        reportedSetting.hexValue,
+        reportedSetting.rawValue,
+      );
+    }
     if (setting != null) {
       final currentValue = setting.currentValue;
       if (currentValue == null) {
         return l10n.deviceSettingsRawUnavailable;
       }
-      final option = capability?.options.where(
-        (option) => option.value == currentValue,
-      );
-      if (option != null && option.isNotEmpty) {
-        return _optionLabel(option.first, setting.unit ?? capability?.unit);
+      final option = key == DeviceSettingKey.autoCloseTime
+          ? matchingAutoCloseReportedOption(
+              capability: capability,
+              reportedValues: <int>[currentValue],
+            )
+          : capability?.options
+                .where((option) => option.value == currentValue)
+                .firstOrNull;
+      if (option != null) {
+        return _optionLabel(option, setting.unit ?? capability?.unit);
       }
       return _valueWithUnit(currentValue, setting.unit);
-    }
-    final reportedSetting = state.values[key];
-    if (key == DeviceSettingKey.autoCloseTime &&
-        reportedSetting?.sourceAttributeId ==
-            DeviceSettingKey.autoCloseTime.legacyAttributeId) {
-      return _valueWithUnit(reportedSetting!.rawValue, capability?.unit);
     }
     final rawValue = key == DeviceSettingKey.autoCloseTime
         ? matchingDeviceSettingCandidate(
@@ -517,23 +548,23 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
       if (ref.read(autoCloseCheckControllerProvider(request)).checking) {
         return;
       }
+      setState(() => _autoCloseBlocking = true);
       final allowed = await checkController.checkAllowed();
       if (!mounted) {
         return;
       }
+      setState(() => _autoCloseBlocking = false);
       final checkState = ref.read(autoCloseCheckControllerProvider(request));
       if (!allowed) {
-        if (checkState.hasError) {
-          AppToast.error(context, l10n.deviceSettingsAutoCloseCheckFailed);
-        } else {
-          await showFlinxWarningDialog(
-            context,
-            message: l10n.deviceSettingsAutoCloseNotAllowedMessage,
-            confirmLabel: l10n.deviceSettingsConfirmAction,
-            iconAssetPath:
-                DeviceSettingsAssetPaths.forceMarginWarningPlaceholder,
-          );
-        }
+        await showFlinxWarningDialog(
+          context,
+          message: checkState.hasError
+              ? l10n.deviceSettingsAutoCloseCheckFailed
+              : l10n.deviceSettingsAutoCloseNotAllowedMessage,
+          confirmLabel: l10n.deviceSettingsConfirmAction,
+          iconAssetPath:
+              DeviceSettingsAssetPaths.autoCloseSafetyWarningPlaceholder,
+        );
         return;
       }
     }
@@ -545,13 +576,18 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
       final allowedValues = capability.options
           .map((option) => option.value)
           .toList(growable: false);
-      final reportedValue = matchingDeviceSettingCandidate(
-        state.values[key],
-        allowedValues,
+      final reportedSetting = state.values[key];
+      final currentOption = matchingAutoCloseReportedOption(
+        capability: capability,
+        reportedValues: reportedSetting == null
+            ? <int>[?currentValue]
+            : reportedSetting.candidateValues.isEmpty
+            ? <int>[reportedSetting.rawValue]
+            : reportedSetting.candidateValues,
       );
       final reportedRawValue = state.values[key]?.rawValue;
       final currentTimeValue =
-          currentValue ?? reportedValue ?? reportedRawValue;
+          currentOption?.value ?? reportedRawValue ?? currentValue;
       final initialTime =
           capability.options.any((option) => option.value == currentTimeValue)
           ? currentTimeValue!
@@ -771,6 +807,7 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
     _AutoCloseSelection selection, {
     required Iterable<int> allowedValues,
   }) async {
+    setState(() => _autoCloseBlocking = true);
     final result = await ref
         .read(deviceSettingsControllerProvider(widget.bleDeviceId).notifier)
         .setAutoCloseConfiguration(
@@ -778,23 +815,16 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
           time: selection.time,
           allowedTimeValues: allowedValues,
         );
-    if (!result.saved || !mounted) {
+    if (!mounted) {
+      return;
+    }
+    setState(() => _autoCloseBlocking = false);
+    if (!result.saved) {
+      await _showAutoCloseSaveFailure(result.status);
       return;
     }
 
-    final settingsState = ref.read(
-      deviceSettingsControllerProvider(widget.bleDeviceId),
-    );
-    final appliedSetting = settingsState.values[DeviceSettingKey.autoCloseTime];
-    final appliedValue =
-        matchingDeviceSettingCandidate(appliedSetting, allowedValues) ??
-        appliedSetting?.rawValue ??
-        selection.time;
-    ref
-        .read(doorSettingsControllerProvider(widget.doorId).notifier)
-        .updateCurrentValue(DeviceCapabilityCode.autoClose, appliedValue);
-
-    if (result.timeChanged) {
+    if (result.timeChanged || result.positionChanged) {
       unawaited(
         ref
             .read(operationReportControllerProvider)
@@ -805,6 +835,16 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
             ),
       );
     }
+  }
+
+  Future<void> _showAutoCloseSaveFailure(AutoCloseSaveStatus status) {
+    final l10n = AppLocalizations.of(context);
+    return showFlinxWarningDialog(
+      context,
+      message: l10n.deviceSettingsAutoCloseSaveFailed,
+      confirmLabel: l10n.deviceSettingsConfirmAction,
+      iconAssetPath: DeviceSettingsAssetPaths.autoCloseSafetyWarningPlaceholder,
+    );
   }
 
   bool _isCurrentBleDeviceConnected() {

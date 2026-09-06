@@ -3410,6 +3410,12 @@ abstract class AppLocalizations {
   /// **'Unable to check whether auto close is available. Please try again.'**
   String get deviceSettingsAutoCloseCheckFailed;
 
+  /// No description provided for @deviceSettingsAutoCloseSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The auto close setting did not take effect. Please try again.'**
+  String get deviceSettingsAutoCloseSaveFailed;
+
   /// No description provided for @deviceSettingsLoading.
   ///
   /// In en, this message translates to:

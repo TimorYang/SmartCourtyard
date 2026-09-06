@@ -1730,6 +1730,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get deviceSettingsAutoCloseCheckFailed => '无法检查自动关门功能是否可用，请重试。';
 
   @override
+  String get deviceSettingsAutoCloseSaveFailed => '自动关门设置未生效，请重试。';
+
+  @override
   String get deviceSettingsLoading => '正在读取设备属性…';
 
   @override
