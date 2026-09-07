@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flinx/features/settings/application/device_settings_controller.dart';
@@ -9,6 +10,103 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  for (final autoClose in [false, true]) {
+    for (final success in [false, true]) {
+      test(
+        'freezes settings until reply: autoClose=$autoClose success=$success',
+        () async {
+          final gateway = _DelayedReplyHardwareGateway();
+          final container = ProviderContainer(
+            overrides: [
+              deviceSettingsHardwareGatewayProvider.overrideWithValue(gateway),
+            ],
+          );
+          addTearDown(container.dispose);
+          final provider = deviceSettingsControllerProvider('device-1');
+          container.listen(provider, (_, _) {});
+          await _waitUntil(() => !container.read(provider).loading);
+          final before = container.read(provider).values;
+          final controller = container.read(provider.notifier);
+          final key = autoClose
+              ? DeviceSettingKey.autoCloseTime
+              : DeviceSettingKey.ledOffDelay;
+          final write = controller.setRawValue(key, 2, allowedValues: [1, 2]);
+          for (final value in [3, 4]) {
+            gateway.emitDeviceAttributeSnapshot(
+              DeviceAttributeSnapshot(
+                deviceId: 'device-1',
+                sequence: value,
+                timestampMillis: value,
+                origin: DeviceAttributeReportOrigin.activeReport,
+                attributes: [
+                  DeviceAttribute(
+                    id: key.attributeId!,
+                    value: Uint8List.fromList([value]),
+                  ),
+                  if (autoClose)
+                    DeviceAttribute(id: 0x2714, value: Uint8List.fromList([2])),
+                ],
+              ),
+            );
+            await Future<void>.delayed(Duration.zero);
+            expect(container.read(provider).values[key], before[key]);
+            if (autoClose) {
+              expect(
+                container
+                    .read(provider)
+                    .values[DeviceSettingKey.autoCloseCondition],
+                before[DeviceSettingKey.autoCloseCondition],
+              );
+            }
+            expect(container.read(provider).pendingKey, key);
+          }
+          // An unrelated partial report must not erase the buffered value.
+          gateway.emitDeviceAttributeSnapshot(
+            DeviceAttributeSnapshot(
+              deviceId: 'device-1',
+              sequence: 5,
+              timestampMillis: 5,
+              origin: DeviceAttributeReportOrigin.activeReport,
+              attributes: [
+                DeviceAttribute(
+                  id: DeviceSettingKey.openingForce.attributeId!,
+                  value: Uint8List.fromList([6]),
+                ),
+              ],
+            ),
+          );
+          await Future<void>.delayed(Duration.zero);
+          expect(
+            container
+                .read(provider)
+                .values[DeviceSettingKey.openingForce]
+                ?.rawValue,
+            6,
+          );
+          expect(
+            await controller.setRawValue(key, 1, allowedValues: [1, 2]),
+            isFalse,
+          );
+          gateway.reply.complete(success);
+          expect(await write, success);
+          expect(container.read(provider).pendingKey, isNull);
+          if (autoClose || !success) {
+            expect(container.read(provider).values[key]?.rawValue, 4);
+          }
+          if (autoClose) {
+            expect(
+              container
+                  .read(provider)
+                  .values[DeviceSettingKey.autoCloseCondition]
+                  ?.rawValue,
+              2,
+            );
+          }
+        },
+      );
+    }
+  }
+
   test('normalizes upgraded 0x2713 report values only when reading', () {
     expect(DeviceSettingKey.ledOffDelay.toProtocolValue(1), 1);
     expect(DeviceSettingKey.ledOffDelay.toProtocolValue(9), 9);
@@ -1022,6 +1120,24 @@ class _ImmediateAutoCloseReportHardwareGateway extends MockHardwareGateway {
       deviceId: deviceId,
       success: true,
       sequence: 3,
+    );
+  }
+}
+
+class _DelayedReplyHardwareGateway extends MockHardwareGateway {
+  final reply = Completer<bool>();
+
+  @override
+  Future<DeviceAttributeWriteResult> setDeviceAttributes({
+    required String requestId,
+    required String deviceId,
+    required List<DeviceAttribute> attributes,
+  }) async {
+    return DeviceAttributeWriteResult(
+      requestId: requestId,
+      deviceId: deviceId,
+      success: await reply.future,
+      sequence: 6,
     );
   }
 }

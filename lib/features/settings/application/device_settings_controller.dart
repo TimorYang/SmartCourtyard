@@ -155,6 +155,10 @@ class DeviceSettingsController extends Notifier<DeviceSettingsState> {
   late final AppLogger _logger;
   StreamSubscription<DeviceSettingsSnapshot>? _subscription;
   int _requestCounter = 0;
+  // Reports remain authoritative, but cannot move a setting while its write
+  // is awaiting a reply. Keep the latest report for reconciliation afterward.
+  final Map<DeviceSettingKey, DeviceSettingValue?> _lockedValues = {};
+  final Map<DeviceSettingKey, DeviceSettingValue?> _deferredValues = {};
 
   @override
   DeviceSettingsState build() {
@@ -228,14 +232,17 @@ class DeviceSettingsController extends Notifier<DeviceSettingsState> {
       key: key,
       rawValue: key.toProtocolValue(rawValue),
     );
+    _lockValues({key});
     state = state.copyWith(pendingKey: key, clearError: true);
     final writeRequestId = _nextRequestId('set-${key.name}');
     try {
       await _set(requestId: writeRequestId, deviceId: deviceId, value: value);
+      _unlockValues();
     } catch (error) {
       if (!ref.mounted) {
         return false;
       }
+      _unlockValues();
       state = state.copyWith(
         errorMessage: appErrorMessage(error, ''),
         clearPendingKey: true,
@@ -256,11 +263,13 @@ class DeviceSettingsController extends Notifier<DeviceSettingsState> {
         return false;
       }
       _applyValues(reportedValues);
+      state = state.copyWith(clearPendingKey: true);
       return true;
     } catch (error) {
       if (!ref.mounted) {
         return false;
       }
+      _unlockValues();
       state = state.copyWith(
         errorMessage: appErrorMessage(error, ''),
         clearPendingKey: true,
@@ -335,9 +344,8 @@ class DeviceSettingsController extends Notifier<DeviceSettingsState> {
       return;
     }
     state = state.copyWith(
-      values: Map<DeviceSettingKey, DeviceSettingValue>.unmodifiable(values),
+      values: _protectValues(values),
       loading: false,
-      clearPendingKey: true,
       clearError: true,
     );
   }
@@ -385,6 +393,10 @@ class DeviceSettingsController extends Notifier<DeviceSettingsState> {
       sourceAttributeId: DeviceSettingKey.autoCloseTime.attributeId,
       wireValue: wireValue,
     );
+    _lockValues({
+      DeviceSettingKey.autoCloseTime,
+      DeviceSettingKey.autoCloseCondition,
+    });
     state = state.copyWith(
       pendingKey: DeviceSettingKey.autoCloseTime,
       clearError: true,
@@ -392,6 +404,7 @@ class DeviceSettingsController extends Notifier<DeviceSettingsState> {
 
     try {
       await _set(requestId: requestId, deviceId: deviceId, value: value);
+      _unlockValues();
     } catch (error, stackTrace) {
       _logger.error(
         'auto_close_write_failed',
@@ -402,6 +415,7 @@ class DeviceSettingsController extends Notifier<DeviceSettingsState> {
         context: {'deviceId': deviceId, 'requestedWireValue': wireValue},
       );
       if (ref.mounted) {
+        _unlockValues();
         state = state.copyWith(clearPendingKey: true, clearError: true);
       }
       return result(AutoCloseSaveStatus.writeFailed);
@@ -423,18 +437,63 @@ class DeviceSettingsController extends Notifier<DeviceSettingsState> {
     return result(AutoCloseSaveStatus.confirmed);
   }
 
+  void _lockValues(Set<DeviceSettingKey> keys) {
+    _deferredValues.clear();
+    for (final key in keys) {
+      _lockedValues[key] = state.values[key];
+    }
+  }
+
+  Map<DeviceSettingKey, DeviceSettingValue> _protectValues(
+    Map<DeviceSettingKey, DeviceSettingValue> values,
+  ) {
+    final visible = {...values};
+    for (final entry in _lockedValues.entries) {
+      _deferredValues[entry.key] = values[entry.key];
+      final frozen = entry.value;
+      if (frozen == null) {
+        visible.remove(entry.key);
+      } else {
+        visible[entry.key] = frozen;
+      }
+    }
+    return Map.unmodifiable(visible);
+  }
+
+  void _unlockValues() {
+    if (!ref.mounted) {
+      return;
+    }
+    final values = {...state.values};
+    for (final entry in _deferredValues.entries) {
+      final reported = entry.value;
+      if (reported == null) {
+        values.remove(entry.key);
+      } else {
+        values[entry.key] = reported;
+      }
+    }
+    _lockedValues.clear();
+    _deferredValues.clear();
+    state = state.copyWith(values: Map.unmodifiable(values));
+  }
+
   void _applySnapshot(DeviceSettingsSnapshot snapshot) {
     if (!ref.mounted) {
       return;
     }
     final values = snapshot.origin == DeviceSettingsSnapshotOrigin.activeReport
         ? <DeviceSettingKey, DeviceSettingValue>{
-            ...state.values,
+            for (final entry in state.values.entries)
+              if (!_deferredValues.containsKey(entry.key))
+                entry.key: entry.value,
+            for (final entry in _deferredValues.entries)
+              if (entry.value != null) entry.key: entry.value!,
             ...snapshot.values,
           }
         : snapshot.values;
     state = state.copyWith(
-      values: Map<DeviceSettingKey, DeviceSettingValue>.unmodifiable(values),
+      values: _protectValues(values),
       loading: false,
       clearError: true,
     );
