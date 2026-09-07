@@ -47,6 +47,8 @@ object DeviceBleProtocolConfig {
   const val commandRemoteDelete: Int = 0x0009
   const val commandRemoteRename: Int = 0x000A
   const val commandSafetyAccessoryPairing: Int = 0x000B
+  const val commandSafetyAccessoryQuery: Int = 0x000C
+  const val commandSafetyAccessoryDelete: Int = 0x000D
   const val commandSafetyAccessoryPairingResult: Int = 0x0012
   const val controlSafetyAccessoryPairingStart: Int = 0x100A
   const val controlSafetyAccessoryPairingCancel: Int = 0x100B
@@ -138,6 +140,58 @@ object DeviceBleProtocolConfig {
     pairingFlowId: Int?,
     report: SafetyAccessoryPairingResponse,
   ): Boolean = pairingFlowId != null && pairingFlowId == report.pairingFlowId
+
+  fun parseSafetyAccessoryList(data: ByteArray): List<SafetyAccessoryProtocolEntry>? {
+    val compactCount = data.firstOrNull()?.toInt()?.and(0xFF) ?: return null
+    val layout = if (data.size == 1 + compactCount * 5) {
+      compactCount to 1
+    } else {
+      if (data.size < 2) return null
+      val legacyCount = ((data[0].toInt() and 0xFF) shl 8) or
+        (data[1].toInt() and 0xFF)
+      if (data.size != 2 + legacyCount * 5) return null
+      legacyCount to 2
+    }
+
+    val (count, entryOffset) = layout
+    return List(count) { index ->
+      val offset = entryOffset + index * 5
+      val serialNumber = ByteBuffer.wrap(data, offset, 4)
+        .order(ByteOrder.BIG_ENDIAN)
+        .int
+        .toLong() and 0xFFFFFFFFL
+      SafetyAccessoryProtocolEntry(
+        serialNumber = serialNumber,
+        statusCode = data[offset + 4].toInt() and 0xFF,
+      )
+    }
+  }
+
+  fun safetyAccessoryDeletePayload(serialNumber: Long): ByteArray = byteArrayOf(
+    0x01,
+    (serialNumber ushr 24).toByte(),
+    (serialNumber ushr 16).toByte(),
+    (serialNumber ushr 8).toByte(),
+    serialNumber.toByte(),
+  )
+
+  fun parseSafetyAccessoryDeleteResponse(
+    data: ByteArray,
+  ): SafetyAccessoryDeleteResponse? {
+    val resultCode = data.firstOrNull()?.toInt()?.and(0xFF) ?: return null
+    val reasonCode = if (data.size >= 5) {
+      ByteBuffer.wrap(data, 1, 4)
+        .order(ByteOrder.BIG_ENDIAN)
+        .int
+        .toLong() and 0xFFFFFFFFL
+    } else {
+      0L
+    }
+    return SafetyAccessoryDeleteResponse(
+      resultCode = resultCode,
+      reasonCode = reasonCode,
+    )
+  }
 
   const val authTokenHexLength: Int = 32
   const val authTokenBinaryLengthBytes: Int = 16
@@ -503,6 +557,18 @@ data class SafetyAccessoryPairingAcknowledgement(
   val pairingFlowId: Int,
   val reasonCode: Long,
 )
+
+data class SafetyAccessoryProtocolEntry(
+  val serialNumber: Long,
+  val statusCode: Int,
+)
+
+data class SafetyAccessoryDeleteResponse(
+  val resultCode: Int,
+  val reasonCode: Long,
+) {
+  val successful: Boolean get() = resultCode == 0x01
+}
 
 data class DeviceBleAesKeyCandidate(
   val label: String,

@@ -235,6 +235,88 @@ class DeviceBleProtocolConfigTest {
   }
 
   @Test
+  fun `safety accessory query parses protocol and compact count layouts`() {
+    assertEquals(0x000C, DeviceBleProtocolConfig.commandSafetyAccessoryQuery)
+
+    val protocolEntries = requireNotNull(
+      DeviceBleProtocolConfig.parseSafetyAccessoryList(
+        byteArrayOf(
+          0x00, 0x02,
+          0x01, 0x00, 0x00, 0x71, 0x01,
+          0x06, 0x00, 0x00, 0x72, 0x12,
+        ),
+      ),
+    )
+    assertEquals(2, protocolEntries.size)
+    assertEquals(0x01000071L, protocolEntries[0].serialNumber)
+    assertEquals(0x01, protocolEntries[0].statusCode)
+    assertEquals(0x06000072L, protocolEntries[1].serialNumber)
+    assertEquals(0x12, protocolEntries[1].statusCode)
+
+    val compactEntries = requireNotNull(
+      DeviceBleProtocolConfig.parseSafetyAccessoryList(
+        byteArrayOf(0x01, 0x06, 0x00, 0x25, 0xAC.toByte(), 0x01),
+      ),
+    )
+    assertEquals(1, compactEntries.size)
+    assertEquals(0x060025ACL, compactEntries.single().serialNumber)
+    assertEquals(0x01, compactEntries.single().statusCode)
+  }
+
+  @Test
+  fun `safety accessory query accepts empty lists and rejects mismatched payloads`() {
+    assertTrue(
+      requireNotNull(
+        DeviceBleProtocolConfig.parseSafetyAccessoryList(byteArrayOf(0x00)),
+      ).isEmpty(),
+    )
+    assertTrue(
+      requireNotNull(
+        DeviceBleProtocolConfig.parseSafetyAccessoryList(byteArrayOf(0x00, 0x00)),
+      ).isEmpty(),
+    )
+    assertEquals(
+      null,
+      DeviceBleProtocolConfig.parseSafetyAccessoryList(byteArrayOf(0x01)),
+    )
+    assertEquals(
+      null,
+      DeviceBleProtocolConfig.parseSafetyAccessoryList(
+        byteArrayOf(0x00, 0x02, 0x01, 0x00, 0x00, 0x71, 0x01),
+      ),
+    )
+  }
+
+  @Test
+  fun `safety accessory delete builds payload and parses result`() {
+    assertEquals(0x000D, DeviceBleProtocolConfig.commandSafetyAccessoryDelete)
+    assertArrayEquals(
+      byteArrayOf(0x01, 0x05, 0x00, 0x00, 0x71),
+      DeviceBleProtocolConfig.safetyAccessoryDeletePayload(0x05000071L),
+    )
+
+    val success = requireNotNull(
+      DeviceBleProtocolConfig.parseSafetyAccessoryDeleteResponse(
+        byteArrayOf(0x01, 0x00, 0x00, 0x00, 0x00),
+      ),
+    )
+    assertTrue(success.successful)
+    assertEquals(0L, success.reasonCode)
+
+    val failure = requireNotNull(
+      DeviceBleProtocolConfig.parseSafetyAccessoryDeleteResponse(
+        byteArrayOf(0xFF.toByte(), 0x01, 0x02, 0x00, 0x04),
+      ),
+    )
+    assertFalse(failure.successful)
+    assertEquals(0x01020004L, failure.reasonCode)
+    assertEquals(
+      null,
+      DeviceBleProtocolConfig.parseSafetyAccessoryDeleteResponse(byteArrayOf()),
+    )
+  }
+
+  @Test
   fun `request frame type is accepted for supported device reports`() {
     assertTrue(
       DeviceBleProtocolConfig.matchesProtocolResponse(

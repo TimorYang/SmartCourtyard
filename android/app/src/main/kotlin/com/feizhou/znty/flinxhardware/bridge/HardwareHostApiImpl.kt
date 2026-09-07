@@ -475,7 +475,30 @@ class HardwareHostApiImpl(
     deviceId: String,
     callback: (Result<SafetyAccessoryListResultDto>) -> Unit,
   ) {
-    callback(Result.failure(notImplemented("querySafetyAccessories", requestId, deviceId)))
+    executeProtocol(
+      requestId = requestId,
+      deviceId = deviceId,
+      command = DeviceBleProtocolConfig.commandSafetyAccessoryQuery,
+      operation = "Safety Accessory Query",
+      callback = callback,
+    ) { frame ->
+      val accessories = DeviceBleProtocolConfig.parseSafetyAccessoryList(frame.data)
+        ?: throw FlutterError(
+          "invalid_safety_accessory_query_response",
+          "Safety accessory query response length does not match a supported count layout.",
+        )
+      SafetyAccessoryListResultDto(
+        requestId = requestId,
+        deviceId = deviceId,
+        totalCount = accessories.size.toLong(),
+        accessories = accessories.map { accessory ->
+          SafetyAccessoryDto(
+            serialNumber = accessory.serialNumber,
+            statusCode = accessory.statusCode.toLong(),
+          )
+        },
+      )
+    }
   }
 
   override fun deleteSafetyAccessory(
@@ -484,7 +507,31 @@ class HardwareHostApiImpl(
     serialNumber: Long,
     callback: (Result<SafetyAccessoryDeleteResultDto>) -> Unit,
   ) {
-    callback(Result.failure(notImplemented("deleteSafetyAccessory", requestId, deviceId)))
+    executeProtocol(
+      requestId = requestId,
+      deviceId = deviceId,
+      command = DeviceBleProtocolConfig.commandSafetyAccessoryDelete,
+      data = DeviceBleProtocolConfig.safetyAccessoryDeletePayload(serialNumber),
+      operation = "Safety Accessory Delete",
+      callback = callback,
+    ) { frame ->
+      val response = DeviceBleProtocolConfig.parseSafetyAccessoryDeleteResponse(frame.data)
+        ?: throw FlutterError(
+          "invalid_safety_accessory_delete_response",
+          "Safety accessory delete response is empty.",
+        )
+      SafetyAccessoryDeleteResultDto(
+        requestId = requestId,
+        deviceId = deviceId,
+        success = response.successful,
+        reasonCode = response.reasonCode,
+        nativeCode = "command=0x000D,result=0x%02X,reason=0x%08X".format(
+          response.resultCode,
+          response.reasonCode,
+        ),
+        domainCode = if (response.successful) null else "safety_accessory_delete_failed",
+      )
+    }
   }
 
   override fun queryRemotes(
