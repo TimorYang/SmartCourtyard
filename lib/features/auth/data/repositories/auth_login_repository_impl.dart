@@ -162,6 +162,7 @@ class AuthLoginRepositoryImpl implements AuthLoginRepository {
       if (credential.kind == FacebookTokenKind.authenticationToken &&
           nonceId?.trim().isNotEmpty == true)
         'nonceId': nonceId!.trim(),
+      'credential': token,
       credentialField: token,
       'deviceId': deviceId,
       'deviceModel': deviceModel,

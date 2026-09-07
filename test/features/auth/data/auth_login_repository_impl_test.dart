@@ -99,6 +99,7 @@ void main() {
 
       expect(remoteDataSource.request, {
         'nonceId': 'facebook-nonce-id',
+        'credential': 'jwt-token',
         'authenticationToken': 'jwt-token',
         'deviceId': 'installation-id',
         'deviceModel': 'iPhone17,2',
@@ -130,6 +131,7 @@ void main() {
     );
 
     expect(remoteDataSource.request, {
+      'credential': 'access-token',
       'accessToken': 'access-token',
       'deviceId': 'installation-id',
       'deviceModel': 'Pixel 9',

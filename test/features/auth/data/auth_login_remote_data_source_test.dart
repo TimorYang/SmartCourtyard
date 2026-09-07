@@ -371,6 +371,7 @@ void main() {
     final result = await dataSource.loginWithFacebook(
       request: const {
         'nonceId': 'facebook-nonce-id',
+        'credential': 'jwt-token',
         'authenticationToken': 'jwt-token',
         'deviceId': 'installation-id',
         'deviceModel': 'iPhone17,2',
@@ -382,6 +383,7 @@ void main() {
 
     expect(api.body, {
       'nonceId': 'facebook-nonce-id',
+      'credential': 'jwt-token',
       'authenticationToken': 'jwt-token',
       'deviceId': 'installation-id',
       'deviceModel': 'iPhone17,2',
