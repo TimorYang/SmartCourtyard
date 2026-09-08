@@ -12,4 +12,20 @@ void main() {
       '/h5/legal/privacy-policy',
     );
   });
+
+  test('adds the selected language to localized H5 pages', () {
+    final aboutUri = AppLinks.uriFor(
+      AppLinkDestination.about,
+      queryParameters: const {'lang': 'de-DE'},
+    );
+    final helpCenterUri = AppLinks.uriFor(
+      AppLinkDestination.helpCenter,
+      queryParameters: const {'lang': 'de-DE'},
+    );
+
+    expect(aboutUri.path, '/h5/about');
+    expect(aboutUri.queryParameters['lang'], 'de-DE');
+    expect(helpCenterUri.path, '/h5/help-center');
+    expect(helpCenterUri.queryParameters['lang'], 'de-DE');
+  });
 }

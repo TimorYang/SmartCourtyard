@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flinx/app/config/app_links.dart';
 import 'package:flinx/app/theme/app_theme.dart';
 import 'package:flinx/features/account/application/providers.dart';
 import 'package:flinx/features/account/application/region_selection_controller.dart';
@@ -37,6 +38,7 @@ import 'package:flinx/platform_bridge/hardware_models.dart';
 import 'package:flinx/platform_bridge/mock_hardware_gateway.dart';
 import 'package:flinx/platform_bridge/providers.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
+import 'package:flinx/shared/webview/app_web_view_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -83,6 +85,86 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('Log out'), findsOneWidget);
+  });
+
+  testWidgets('opens localized H5 help center and about pages', (tester) async {
+    final openedUrls = <Uri>[];
+    final router = GoRouter(
+      initialLocation: AccountProfilePage.routePath,
+      routes: [
+        GoRoute(
+          path: AccountProfilePage.routePath,
+          name: AccountProfilePage.routeName,
+          builder: (context, state) => const AccountProfilePage(),
+        ),
+        GoRoute(
+          path: AppWebViewPage.routePath,
+          builder: (context, state) {
+            final url = state.uri.queryParameters['url'];
+            if (url != null) {
+              openedUrls.add(Uri.parse(url));
+            }
+            return const Scaffold(body: Text('H5 destination'));
+          },
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          accountOverviewAutoRefreshProvider.overrideWithValue(false),
+          appLocaleLocalDataSourceProvider.overrideWithValue(
+            InMemoryAppLocaleLocalDataSource(initialLanguageCode: 'de-DE'),
+          ),
+          accountProfileRemoteDataSourceProvider.overrideWithValue(
+            _AvatarProfileRemoteDataSource(),
+          ),
+        ],
+        child: MaterialApp.router(
+          theme: AppTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          routerConfig: router,
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.byKey(AccountProfileKeys.manualGuideMenuItem),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    final manualGuideMenuItem = find.byKey(
+      AccountProfileKeys.manualGuideMenuItem,
+    );
+    await tester.ensureVisible(manualGuideMenuItem);
+    await tester.pumpAndSettle();
+    await tester.tap(manualGuideMenuItem);
+    await tester.pumpAndSettle();
+
+    expect(openedUrls, hasLength(1));
+    expect(openedUrls.single.path, '/h5/help-center');
+    expect(openedUrls.single.queryParameters['lang'], 'de-DE');
+
+    router.go(AccountProfilePage.routePath);
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.byKey(AccountProfileKeys.aboutMenuItem),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    final aboutMenuItem = find.byKey(AccountProfileKeys.aboutMenuItem);
+    await tester.ensureVisible(aboutMenuItem);
+    await tester.pumpAndSettle();
+    await tester.tap(aboutMenuItem);
+    await tester.pumpAndSettle();
+
+    expect(openedUrls, hasLength(2));
+    expect(openedUrls.last.path, '/h5/about');
+    expect(openedUrls.last.queryParameters['lang'], 'de-DE');
   });
 
   testWidgets('opens the region page from the account profile', (tester) async {

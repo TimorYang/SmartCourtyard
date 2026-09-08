@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../app/config/app_links.dart';
 import '../../../../core/errors/app_error.dart';
 import '../../../../core/errors/app_error_message.dart';
 import '../../../../app/theme/app_design_tokens.dart';
@@ -25,7 +26,6 @@ import '../../domain/entities/account_overview.dart';
 import '../../../auth/presentation/pages/welcome_page.dart';
 import 'account_details_page.dart';
 import 'check_upgraded_version_page.dart';
-import 'hardware_diagnostics_page.dart';
 import 'manage_devices_page.dart';
 import 'receiving_devices_page.dart';
 import 'region_page.dart';
@@ -101,6 +101,7 @@ class AccountProfileKeys {
   static const manualGuideMenuItem = ValueKey(
     'account-profile-manual-guide-menu-item',
   );
+  static const aboutMenuItem = ValueKey('account-profile-about-menu-item');
   static const logoutButton = ValueKey('account-profile-logout-button');
 }
 
@@ -388,6 +389,13 @@ class _AccountProfileContent extends StatelessWidget {
         label: l10n.accountManualGuide,
         iconAssetPath: AccountProfileAssetPaths.menuManualGuide,
         key: AccountProfileKeys.manualGuideMenuItem,
+        onTap: () => context.push(
+          AppLinks.webViewLocation(
+            destination: AppLinkDestination.helpCenter,
+            title: l10n.accountManualGuide,
+            queryParameters: {'lang': localePreference.serverLocale},
+          ),
+        ),
       ),
       _AccountMenuItem(
         label: l10n.accountCheckForUpdates,
@@ -398,7 +406,14 @@ class _AccountProfileContent extends StatelessWidget {
       _AccountMenuItem(
         label: l10n.accountAbout,
         iconAssetPath: AccountProfileAssetPaths.menuAbout,
-        onTap: () => context.pushNamed(HardwareDiagnosticsPage.routeName),
+        key: AccountProfileKeys.aboutMenuItem,
+        onTap: () => context.push(
+          AppLinks.webViewLocation(
+            destination: AppLinkDestination.about,
+            title: l10n.accountAbout,
+            queryParameters: {'lang': localePreference.serverLocale},
+          ),
+        ),
       ),
     ];
 
