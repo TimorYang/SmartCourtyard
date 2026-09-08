@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 
 enum AppLinkDestination {
-  userAgreement('/user-agreement'),
-  privacyPolicy('/privacy-policy');
+  userAgreement('/h5/legal/user-agreement'),
+  privacyPolicy('/h5/legal/privacy-policy');
 
   const AppLinkDestination(this.path);
 
@@ -14,7 +14,7 @@ class AppLinks {
 
   static const baseUrl = String.fromEnvironment(
     'FLINX_WEB_BASE_URL',
-    defaultValue: 'https://www.flinx.com',
+    defaultValue: 'https://forcedoor.feizhoukeji.com:15429',
   );
 
   static Uri uriFor(AppLinkDestination destination) {

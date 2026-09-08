@@ -1,6 +1,6 @@
 # 环境配置
 
-REST 服务根地址默认指向当前联调环境；可通过 `--dart-define-from-file` 覆盖为其他环境。
+REST 服务和 H5 页面地址默认指向当前联调环境；可通过 `--dart-define-from-file` 覆盖为其他环境。
 
 1. 复制 `config/env/dev.json.example` 为本机忽略的 `config/env/dev.json`。
 2. 填写该环境的地址与授权值。
@@ -40,6 +40,7 @@ flutter build apk --release --dart-define-from-file=config/env/prod.json
 
 - `FLINX_API_ORIGIN`：仅包含 `http` 或 `https` 的服务 origin，例如 `https://api.example.com`。
 - `FLINX_API_PATH_PREFIX`：所有 REST 接口共享的路径前缀，例如 `/api/force-door`。
+- `FLINX_WEB_BASE_URL`：用户协议、隐私政策等 H5 页面的基础地址，例如 `https://h5.example.com`。
 - `FLINX_CLIENT_AUTHORIZATION`：所有 FLINX REST 请求携带的 Basic 凭据部分。
 - `FLINX_FACEBOOK_APP_ID`：Facebook App ID。未配置时 Facebook 按钮保留，但不会调用 SDK。
 - `FLINX_FACEBOOK_CLIENT_TOKEN`：Facebook Client Token。真实值只放在本机忽略的环境文件中。

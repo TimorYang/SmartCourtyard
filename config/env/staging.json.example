@@ -1,6 +1,7 @@
 {
   "FLINX_API_ORIGIN": "https://staging-api.example.com",
   "FLINX_API_PATH_PREFIX": "/api/force-door",
+  "FLINX_WEB_BASE_URL": "https://staging-h5.example.com",
   "FLINX_CLIENT_AUTHORIZATION": "replace-with-staging-client-authorization",
   "FLINX_FACEBOOK_APP_ID": "",
   "FLINX_FACEBOOK_CLIENT_TOKEN": "",

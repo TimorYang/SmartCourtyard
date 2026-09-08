@@ -50,6 +50,7 @@ lib/features/<feature>/application/  Riverpod 依赖组装和页面状态
 
 - `FLINX_API_ORIGIN`：服务 origin，例如 `https://api.example.com`。
 - `FLINX_API_PATH_PREFIX`：REST 公共路径前缀，例如 `/api/force-door`。
+- `FLINX_WEB_BASE_URL`：用户协议、隐私政策等 H5 页面的基础地址，例如 `https://h5.example.com`。
 - `FLINX_CLIENT_AUTHORIZATION`：当前认证握手所需的 Basic 凭据部分。
 
 本地开发时复制示例文件：
