@@ -292,10 +292,6 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     }
 
     final ledEnabled = _ledEnabledOverride ?? doorDetail?.isLedEnabled ?? false;
-    final openReminderEnabled =
-        _openReminderEnabledOverride ??
-        doorDetail?.openReminderEnabled ??
-        false;
     final selectedDevice = _selectedDoorDevice(commandState);
     final selectedDeviceId = _selectedBusinessDeviceId(commandState);
     final selectedBleName = selectedDevice?.bleName?.trim().isNotEmpty == true
@@ -311,6 +307,13 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     final deviceSettingsState = ref.watch(
       deviceSettingsControllerProvider(connectedBleDeviceId),
     );
+    final reportedOpenReminderValue =
+        deviceSettingsState.values[DeviceSettingKey.doorOpenReminder]?.rawValue;
+    final openReminderEnabled =
+        _openReminderEnabledOverride ??
+        (reportedOpenReminderValue != null
+            ? reportedOpenReminderValue != 0
+            : doorDetail?.openReminderEnabled ?? false);
     final deviceCapabilitiesState = ref.watch(
       deviceCapabilitiesControllerProvider(selectedDeviceId),
     );
@@ -353,14 +356,14 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
             ledOffDelayOption,
             ledOffDelayCapability?.unit ?? ledOffDelaySetting?.unit,
           );
+    final configuredOpenReminderMinutes = doorSettingsState
+        .settingFor(DeviceCapabilityCode.doorOpenReminder)
+        ?.currentValue;
     final openReminderMinutes =
-        doorSettingsState
-            .settingFor(DeviceCapabilityCode.doorOpenReminder)
-            ?.currentValue ??
-        deviceSettingsState
-            .values[DeviceSettingKey.doorOpenReminder]
-            ?.rawValue ??
-        DeviceSettingKey.doorOpenReminder.defaultEnabledValue;
+        reportedOpenReminderValue != null && reportedOpenReminderValue != 0
+        ? reportedOpenReminderValue
+        : configuredOpenReminderMinutes ??
+              DeviceSettingKey.doorOpenReminder.defaultEnabledValue;
     final autoCloseAllowedValues =
         autoCloseCapability?.options.map((option) => option.value).toList() ??
         const <int>[];
@@ -1141,6 +1144,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
           appliedValue ??
               (enabled ? enabledValue ?? key.defaultEnabledValue : 0),
         );
+    setState(() => _openReminderEnabledOverride = null);
     _reportSuccessfulOperation(
       action: OperationReportAction.doorOpenReminderToggle,
       operationSource: OperationReportSource.bluetooth,

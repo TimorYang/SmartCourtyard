@@ -80,7 +80,7 @@ void main() {
   ) async {
     await _pumpDevicePage(
       tester,
-      _RecordingHardwareGateway(),
+      _RecordingHardwareGateway(doorOpenReminderValue: 5),
       doorSettingsRepository: const _CommandDoorSettingsRepository(
         doorOpenReminderValue: 5,
       ),
@@ -1465,7 +1465,7 @@ void main() {
       );
       expect(
         snapshot.attributes.any((attribute) => attribute.id == 0x2728),
-        isFalse,
+        isTrue,
       );
       expect(gateway.doorOpenReminderValues, <int>[0, 10]);
       final autoCloseWrites = gateway.writtenAttributes.where(
@@ -1484,6 +1484,18 @@ void main() {
       ]);
     },
   );
+
+  testWidgets('uses 0x2728 value 0 to turn off the reminder switch', (
+    tester,
+  ) async {
+    final gateway = _RecordingHardwareGateway(doorOpenReminderValue: 0);
+    await _pumpDevicePage(tester, gateway);
+
+    final reminderSwitch = find.byKey(
+      const ValueKey<String>('open-reminder-switch'),
+    );
+    expect(tester.widget<FlinxSwitch>(reminderSwitch).value, isFalse);
+  });
 
   testWidgets('reads 0x2725 but writes auto-close toggles to 0x2712', (
     tester,
@@ -2715,6 +2727,7 @@ class _RecordingHardwareGateway extends MockHardwareGateway {
   _RecordingHardwareGateway({
     super.autoCloseAttributeId = 0x2712,
     super.autoCloseValue = 0,
+    super.doorOpenReminderValue = 10,
   });
 
   final List<DoorCommand> commands = <DoorCommand>[];

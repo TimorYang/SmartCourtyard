@@ -79,6 +79,7 @@ void main() {
     expect(values[DeviceSettingKey.ledOffDelay]?.displayValue, '0x05 (5)');
     expect(values[DeviceSettingKey.autoCloseCondition]?.rawValue, 1);
     expect(values[DeviceSettingKey.autoCloseTime]?.displayValue, '0x00 (0)');
+    expect(values[DeviceSettingKey.doorOpenReminder]?.rawValue, 10);
   });
 
   test(
@@ -340,7 +341,7 @@ void main() {
       );
       expect(
         snapshot.attributes.any((attribute) => attribute.id == 0x2728),
-        isFalse,
+        isTrue,
       );
     },
   );

@@ -40,7 +40,7 @@ enum DeviceSettingKey {
   autoCloseTime(attributeId: 0x2712, byteWidth: 1, legacyAttributeId: 0x2725),
   openingForce(attributeId: 0x2726, byteWidth: 1),
   openingSpeed(attributeId: 0x2727, byteWidth: 1),
-  doorOpenReminder(byteWidth: 1, commandCode: 0x0E09);
+  doorOpenReminder(attributeId: 0x2728, byteWidth: 1, commandCode: 0x0E09);
 
   const DeviceSettingKey({
     this.attributeId,

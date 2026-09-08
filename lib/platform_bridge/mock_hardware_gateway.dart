@@ -10,6 +10,7 @@ class MockHardwareGateway implements HardwareGateway {
     this.autoCloseValue = 0,
     this.autoClosePosition = 0x01,
     this.autoCloseRawBytes,
+    this.doorOpenReminderValue = 10,
     this.emitAttributeReportAfterWrite = true,
     this.attributeReportAfterWriteDelay = Duration.zero,
     this.autoCloseReportBytesOverride,
@@ -27,6 +28,7 @@ class MockHardwareGateway implements HardwareGateway {
          autoCloseValue: autoCloseValue,
          autoClosePosition: autoClosePosition,
          autoCloseRawBytes: autoCloseRawBytes,
+         doorOpenReminderValue: doorOpenReminderValue,
        );
 
   final StreamController<BleDevice> _scanController;
@@ -39,6 +41,7 @@ class MockHardwareGateway implements HardwareGateway {
   final int autoCloseValue;
   final int autoClosePosition;
   final List<int>? autoCloseRawBytes;
+  final int doorOpenReminderValue;
   final bool emitAttributeReportAfterWrite;
   final Duration attributeReportAfterWriteDelay;
   final List<int>? autoCloseReportBytesOverride;
@@ -70,6 +73,7 @@ class MockHardwareGateway implements HardwareGateway {
     required int autoCloseValue,
     required int autoClosePosition,
     required List<int>? autoCloseRawBytes,
+    required int doorOpenReminderValue,
   }) {
     final autoCloseBytes = autoCloseRawBytes == null
         ? autoCloseAttributeId == 0x2712
@@ -92,6 +96,10 @@ class MockHardwareGateway implements HardwareGateway {
       ),
       0x2726: DeviceAttribute(id: 0x2726, value: Uint8List.fromList([0x05])),
       0x2727: DeviceAttribute(id: 0x2727, value: Uint8List.fromList([0x50])),
+      0x2728: DeviceAttribute(
+        id: 0x2728,
+        value: Uint8List.fromList(<int>[doorOpenReminderValue]),
+      ),
     };
   }
 
@@ -550,6 +558,10 @@ class MockHardwareGateway implements HardwareGateway {
     final accepted = value == 0 || value == 5 || value == 10 || value == 15;
     if (accepted) {
       doorOpenReminderValues.add(value);
+      _attributes[0x2728] = DeviceAttribute(
+        id: 0x2728,
+        value: Uint8List.fromList(<int>[value]),
+      );
     }
     return CommandResult(
       requestId: requestId,

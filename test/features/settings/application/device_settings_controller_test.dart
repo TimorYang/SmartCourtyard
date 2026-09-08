@@ -524,8 +524,11 @@ void main() {
     );
     expect(gateway.doorOpenReminderValues, <int>[10]);
     expect(
-      container.read(provider).values,
-      isNot(contains(DeviceSettingKey.doorOpenReminder)),
+      container
+          .read(provider)
+          .values[DeviceSettingKey.doorOpenReminder]
+          ?.rawValue,
+      10,
     );
   });
 
@@ -994,8 +997,11 @@ void main() {
     );
     expect(gateway.doorOpenReminderValues, <int>[10, 0]);
     expect(
-      container.read(provider).values,
-      isNot(contains(DeviceSettingKey.doorOpenReminder)),
+      container
+          .read(provider)
+          .values[DeviceSettingKey.doorOpenReminder]
+          ?.rawValue,
+      0,
     );
   });
 }
