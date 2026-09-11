@@ -601,6 +601,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Unable to create the share. Please try again.';
 
   @override
+  String get deviceShareNetworkError => 'Network error';
+
+  @override
   String get accountProfileTitle => 'Account profile';
 
   @override

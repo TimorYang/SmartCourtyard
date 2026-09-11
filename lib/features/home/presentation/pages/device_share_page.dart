@@ -7,6 +7,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
+import '../../../../core/errors/app_error.dart';
+import '../../../../core/errors/app_error_message.dart';
 import '../../../../core/validation/input_validators.dart';
 import '../../../account/application/providers.dart';
 import '../../../account/application/shared_door_member_actions_controller.dart';
@@ -17,6 +19,7 @@ import '../../application/door_share_controller.dart';
 import '../../application/providers.dart';
 import '../../domain/entities/door_share.dart';
 import '../../../../shared/l10n/app_localizations.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
 
 class ChooseSceneAssetPaths {
@@ -300,15 +303,13 @@ class _DeviceSharePageState extends ConsumerState<DeviceSharePage> {
                             );
                           },
                         ),
-                      if (submitState.error != null) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          _submitErrorLabel(l10n, submitState.error!),
-                          style: context.appText.deviceShareFieldError(
-                            textTheme,
-                          ),
-                        ),
-                      ],
+                      // if (submitState.error != null) ...[
+                      //   const SizedBox(height: 8),
+                      //   Text(
+                      //     _submitErrorLabel(l10n, submitState.error!),
+                      //     style: AppTextTokens.deviceShareFieldError(textTheme),
+                      //   ),
+                      // ],
                     ],
                   ),
                 ),
@@ -539,10 +540,19 @@ class _DeviceSharePageState extends ConsumerState<DeviceSharePage> {
               sendEmail: _sendEmail,
             ),
           );
-    if (success && mounted) {
+    if (!mounted) return;
+    if (success) {
       ref.read(homeDeviceListsInvalidatorProvider)();
       if (_isEditing) ref.invalidate(sharedDoorMembersProvider(doorId));
       context.pop();
+    } else {
+      AppToast.error(
+        context,
+        _submitErrorLabel(
+          AppLocalizations.of(context),
+          ref.read(doorShareControllerProvider).error,
+        ),
+      );
     }
   }
 
@@ -596,8 +606,16 @@ class _DeviceSharePageState extends ConsumerState<DeviceSharePage> {
         ShareCapability.openingSpeed => l10n.deviceShareCapabilityDoorOpenSpeed,
       };
 
-  String _submitErrorLabel(AppLocalizations l10n, Object _) =>
-      l10n.deviceShareSubmitFailed;
+  String _submitErrorLabel(AppLocalizations l10n, Object? error) {
+    final message = appErrorMessage(error, '');
+    if (message.isNotEmpty) return message;
+    if (error is AppError &&
+        (error.code == AppErrorCode.networkUnavailable ||
+            error.messageKey == 'networkErrorRequestTimeout')) {
+      return l10n.deviceShareNetworkError;
+    }
+    return '';
+  }
 
   String _formatExpiry(DateTime value) {
     return DateFormat('HH:mm dd-MM-yyyy').format(value);

@@ -568,6 +568,10 @@
   "deviceShareDoorUnavailable": "This door is unavailable for sharing.",
   "deviceShareCapabilitiesLoadFailed": "Unable to load share capabilities. Tap to retry.",
   "deviceShareSubmitFailed": "Unable to create the share. Please try again.",
+  "deviceShareNetworkError": "Network error",
+  "@deviceShareNetworkError": {
+    "description": "Toast shown when a share request fails due to a network connection error or timeout"
+  },
   "@deviceShareConfirmAction": {
     "description": "Confirm button label on the device sharing page"
   },

@@ -186,6 +186,7 @@
   "deviceShareDoorUnavailable": "当前门不可分享。",
   "deviceShareCapabilitiesLoadFailed": "无法加载可分享能力，点击重试。",
   "deviceShareSubmitFailed": "创建分享失败，请重试。",
+  "deviceShareNetworkError": "网络异常",
   "accountProfileTitle": "账户资料",
   "accountDetailsTitle": "账户",
   "accountDetailsHeadPortrait": "头像",

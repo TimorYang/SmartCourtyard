@@ -1,4 +1,5 @@
 import 'package:flinx/app/theme/app_theme.dart';
+import 'package:flinx/core/errors/app_error.dart';
 import 'package:flinx/features/home/application/door_share_controller.dart';
 import 'package:flinx/features/home/application/providers.dart';
 import 'package:flinx/features/home/domain/entities/door_share.dart';
@@ -10,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
+import 'package:toastification/toastification.dart';
 
 void main() {
   testWidgets('loads share capabilities once when the page opens', (
@@ -144,7 +146,104 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(submittedCommand?.sendEmail, isTrue);
+    toastification.dismissAll(delayForAnimation: false);
+    await tester.pumpAndSettle();
   });
+
+  testWidgets('shows the share API message once in a toast', (tester) async {
+    await tester.pumpWidget(
+      _DeviceShareTestApp(
+        onCreateShare: (_) => throw const AppError(
+          code: AppErrorCode.serverError,
+          messageKey: 'doorShare.failed',
+          businessCode: 101403,
+          businessMessageKey: 'app.share.duplicate',
+          userMessage: '该门已分享给此邮箱',
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'alex@example.com');
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('device_share_confirm')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('该门已分享给此邮箱'), findsOneWidget);
+    expect(
+      find.text('Unable to create the share. Please try again.'),
+      findsNothing,
+    );
+    expect(find.text('Network error'), findsNothing);
+    expect(find.byType(DeviceSharePage), findsOneWidget);
+    expect(
+      tester.widget<TextField>(find.byType(TextField)).controller!.text,
+      'alex@example.com',
+    );
+    expect(_confirmTap(tester), isNotNull);
+
+    toastification.dismissAll(delayForAnimation: false);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'another@example.com');
+    await tester.pumpAndSettle();
+    expect(find.text('该门已分享给此邮箱'), findsNothing);
+  });
+
+  for (final scenario in [
+    (
+      name: 'missing API message',
+      message: '',
+      error: const AppError(
+        code: AppErrorCode.serverError,
+        messageKey: 'doorShare.failed',
+      ),
+    ),
+    (
+      name: 'blank API message',
+      message: '',
+      error: const AppError(
+        code: AppErrorCode.serverError,
+        messageKey: 'doorShare.failed',
+        userMessage: '   ',
+      ),
+    ),
+    (
+      name: 'no network connection',
+      message: '网络异常',
+      error: const AppError(
+        code: AppErrorCode.networkUnavailable,
+        messageKey: 'networkErrorUnavailable',
+      ),
+    ),
+    (
+      name: 'request timeout',
+      message: '网络异常',
+      error: const AppError(
+        code: AppErrorCode.serverError,
+        messageKey: 'networkErrorRequestTimeout',
+      ),
+    ),
+  ]) {
+    testWidgets('shows the expected toast for ${scenario.name}', (tester) async {
+      await tester.pumpWidget(
+        _DeviceShareTestApp(
+          locale: const Locale('zh'),
+          onCreateShare: (_) => throw scenario.error,
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'alex@example.com');
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('device_share_confirm')));
+      await tester.pumpAndSettle();
+
+      final toastContent = tester.widget<ToastContent>(find.byType(ToastContent));
+      expect((toastContent.title! as Text).data, scenario.message);
+      expect(find.text('创建分享失败，请重试。'), findsNothing);
+      toastification.dismissAll(delayForAnimation: false);
+      await tester.pumpAndSettle();
+      expect(find.byType(ToastContent), findsNothing);
+    });
+  }
 
   testWidgets('customize access end requires a confirmed time', (tester) async {
     await tester.pumpWidget(_DeviceShareTestApp());
@@ -295,10 +394,15 @@ Semantics _sendEmailSemantics(WidgetTester tester) {
 }
 
 class _DeviceShareTestApp extends StatelessWidget {
-  const _DeviceShareTestApp({this.onCapabilitiesLoad, this.onCreateShare});
+  const _DeviceShareTestApp({
+    this.onCapabilitiesLoad,
+    this.onCreateShare,
+    this.locale,
+  });
 
   final VoidCallback? onCapabilitiesLoad;
   final ValueChanged<CreateDoorShareCommand>? onCreateShare;
+  final Locale? locale;
 
   @override
   Widget build(BuildContext context) {
@@ -316,6 +420,7 @@ class _DeviceShareTestApp extends StatelessWidget {
       ],
       child: MaterialApp(
         theme: AppTheme.light(),
+        locale: locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: const DeviceSharePage(doorId: 1),
