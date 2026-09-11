@@ -555,6 +555,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get deviceShareSubmitFailed => '创建分享失败，请重试。';
 
   @override
+  String get deviceShareNetworkError => '网络异常';
+
+  @override
   String get accountProfileTitle => '账户资料';
 
   @override
