@@ -1172,6 +1172,12 @@ abstract class AppLocalizations {
   /// **'Unable to create the share. Please try again.'**
   String get deviceShareSubmitFailed;
 
+  /// Toast shown when a share request fails due to a network connection error or timeout
+  ///
+  /// In en, this message translates to:
+  /// **'Network error'**
+  String get deviceShareNetworkError;
+
   /// Title and accessibility label for the account profile menu page
   ///
   /// In en, this message translates to:
