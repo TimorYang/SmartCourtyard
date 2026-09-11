@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -139,7 +140,7 @@ class _DeviceSharePageState extends ConsumerState<DeviceSharePage> {
     final isDeleting = ref.watch(sharedDoorMemberActionsControllerProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       appBar: FlinxNavigationBar(
         title: '',
         showBottomDivider: false,
@@ -157,12 +158,13 @@ class _DeviceSharePageState extends ConsumerState<DeviceSharePage> {
                       child: SizedBox.square(
                         key: DeviceSharePageKeys.editDeleteAction,
                         dimension: AppSpacingTokens.deviceShareEditActionSize,
-                        child: Image.asset(
+                        child: SkinAssetImage.themed(
+                          context,
                           SharedDeviceMemberAssetPaths.deleteAction,
                           fit: BoxFit.contain,
-                          errorBuilder: (_, _, _) => const Icon(
+                          errorBuilder: (_, _, _) => Icon(
                             Icons.delete_outline,
-                            color: AppColors.sharedDeviceMemberActionIcon,
+                            color: context.colors.sharedDeviceMemberActionIcon,
                           ),
                         ),
                       ),
@@ -194,12 +196,12 @@ class _DeviceSharePageState extends ConsumerState<DeviceSharePage> {
                       ] else ...[
                         Text(
                           l10n.deviceShareTitle,
-                          style: AppTextTokens.deviceShareTitle(textTheme),
+                          style: context.appText.deviceShareTitle(textTheme),
                         ),
                         const SizedBox(height: 5),
                         Text(
                           l10n.deviceShareSubtitle,
-                          style: AppTextTokens.deviceShareSubtitle(textTheme),
+                          style: context.appText.deviceShareSubtitle(textTheme),
                         ),
                         const SizedBox(height: 38),
                       ],
@@ -255,13 +257,15 @@ class _DeviceSharePageState extends ConsumerState<DeviceSharePage> {
                       const SizedBox(height: 27),
                       Text(
                         l10n.deviceShareCapabilitiesTitle,
-                        style: AppTextTokens.deviceShareSectionTitle(textTheme),
+                        style: context.appText.deviceShareSectionTitle(
+                          textTheme,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       if (doorId == null && !_isEditing)
                         Text(
                           l10n.deviceShareDoorUnavailable,
-                          style: AppTextTokens.deviceShareField(textTheme),
+                          style: context.appText.deviceShareField(textTheme),
                         )
                       else
                         capabilitiesAsync.when(
@@ -300,7 +304,9 @@ class _DeviceSharePageState extends ConsumerState<DeviceSharePage> {
                         const SizedBox(height: 8),
                         Text(
                           _submitErrorLabel(l10n, submitState.error!),
-                          style: AppTextTokens.deviceShareFieldError(textTheme),
+                          style: context.appText.deviceShareFieldError(
+                            textTheme,
+                          ),
                         ),
                       ],
                     ],
@@ -313,8 +319,9 @@ class _DeviceSharePageState extends ConsumerState<DeviceSharePage> {
                       Expanded(
                         child: _ShareActionButton(
                           label: l10n.deviceShareCancelAction,
-                          foregroundColor: AppColors.textPrimary,
-                          backgroundColor: AppColors.deviceShareCancelButton,
+                          foregroundColor: context.colors.textPrimary,
+                          backgroundColor:
+                              context.colors.deviceShareCancelButton,
                           onPressed: () => context.pop(),
                         ),
                       ),
@@ -322,10 +329,12 @@ class _DeviceSharePageState extends ConsumerState<DeviceSharePage> {
                       Expanded(
                         child: _ShareActionButton(
                           label: l10n.deviceShareConfirmAction,
-                          foregroundColor: Colors.white,
+                          foregroundColor: context
+                              .colors
+                              .authPrimaryButtonDisabledForeground,
                           backgroundColor: _canSubmit
-                              ? AppColors.brandPrimary
-                              : AppColors.brandPrimaryDisabled,
+                              ? context.colors.brandPrimary
+                              : context.colors.brandPrimaryDisabled,
                           onPressed: _canSubmit ? _confirm : null,
                           buttonKey: const Key('device_share_confirm'),
                         ),
@@ -422,7 +431,7 @@ class _DeviceSharePageState extends ConsumerState<DeviceSharePage> {
   Future<DateTime?> _showCustomizeTimeDialog() {
     return showDialog<DateTime>(
       context: context,
-      barrierColor: AppColors.deviceShareDialogOverlay,
+      barrierColor: context.colors.deviceShareDialogOverlay,
       builder: (context) {
         final now = DateTime.now();
         return _CustomizeTimeDialog(
@@ -614,8 +623,8 @@ class _DeviceShareEditMemberSummary extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacingTokens.deviceShareEditSummaryHorizontal,
       ),
-      decoration: const BoxDecoration(
-        color: AppColors.deviceShareEditSummaryBackground,
+      decoration: BoxDecoration(
+        color: context.colors.deviceShareEditSummaryBackground,
         borderRadius: BorderRadius.all(
           Radius.circular(AppShapeTokens.deviceShareEditSummaryRadius),
         ),
@@ -626,7 +635,8 @@ class _DeviceShareEditMemberSummary extends ConsumerWidget {
             dimension: AppSpacingTokens.deviceShareEditSummaryAvatarSize,
             child: ClipOval(
               child: member.receiverAvatarCode != null
-                  ? Image.asset(
+                  ? SkinAssetImage.themed(
+                      context,
                       member.receiverAvatarCode!.assetPath,
                       fit: BoxFit.cover,
                     )
@@ -653,7 +663,7 @@ class _DeviceShareEditMemberSummary extends ConsumerWidget {
                   member.email,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextTokens.deviceShareEditSummaryEmail(textTheme),
+                  style: context.appText.deviceShareEditSummaryEmail(textTheme),
                 ),
                 const SizedBox(
                   height: AppSpacingTokens.deviceShareEditSummaryTextGap,
@@ -662,14 +672,14 @@ class _DeviceShareEditMemberSummary extends ConsumerWidget {
                     SharedDoorMemberExpiryType.neverExpired)
                   Text(
                     l10n.deviceShareNeverExpired,
-                    style: AppTextTokens.deviceShareEditSummaryMetadata(
+                    style: context.appText.deviceShareEditSummaryMetadata(
                       textTheme,
                     ),
                   )
                 else if (member.expiresAt != null)
                   Text(
                     DateFormat('yyyy-MM-dd HH:mm:ss').format(member.expiresAt!),
-                    style: AppTextTokens.deviceShareEditSummaryMetadata(
+                    style: context.appText.deviceShareEditSummaryMetadata(
                       textTheme,
                     ),
                   ),
@@ -687,12 +697,12 @@ class _DeviceShareEditMemberAvatarPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const ColoredBox(
-      color: AppColors.sharedDeviceMemberAvatarPlaceholder,
+    return ColoredBox(
+      color: context.colors.sharedDeviceMemberAvatarPlaceholder,
       child: Center(
         child: Icon(
           Icons.person_outline,
-          color: AppColors.sharedDeviceMemberAvatarPlaceholderIcon,
+          color: context.colors.sharedDeviceMemberAvatarPlaceholderIcon,
         ),
       ),
     );
@@ -713,7 +723,9 @@ class _ShareFormRow extends StatelessWidget {
           width: 100,
           child: Text(
             label,
-            style: AppTextTokens.deviceShareLabel(Theme.of(context).textTheme),
+            style: context.appText.deviceShareLabel(
+              Theme.of(context).textTheme,
+            ),
           ),
         ),
         Expanded(child: child),
@@ -739,14 +751,14 @@ class _ShareSelectField extends StatelessWidget {
             Expanded(
               child: Text(
                 value,
-                style: AppTextTokens.deviceShareInputValue(
+                style: context.appText.deviceShareInputValue(
                   Theme.of(context).textTheme,
                 ),
               ),
             ),
-            const Icon(
+            Icon(
               Icons.keyboard_arrow_down_rounded,
-              color: AppColors.brandPrimary,
+              color: context.colors.brandPrimary,
               size: 26,
             ),
           ],
@@ -776,13 +788,13 @@ class _ShareTextField extends StatelessWidget {
       children: [
         _ShareFieldShell(
           borderColor: hasError
-              ? AppColors.deviceShareFieldError
-              : AppColors.deviceShareFieldBorder,
+              ? context.colors.deviceShareFieldError
+              : context.colors.deviceShareFieldBorder,
           padding: const EdgeInsets.symmetric(horizontal: 14),
           child: TextField(
             controller: controller,
             readOnly: readOnly,
-            style: AppTextTokens.deviceShareInputValue(
+            style: context.appText.deviceShareInputValue(
               Theme.of(context).textTheme,
             ),
             decoration: const InputDecoration(
@@ -797,7 +809,7 @@ class _ShareTextField extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             errorText,
-            style: AppTextTokens.deviceShareFieldError(
+            style: context.appText.deviceShareFieldError(
               Theme.of(context).textTheme,
             ),
           ),
@@ -811,12 +823,12 @@ class _ShareFieldShell extends StatelessWidget {
   const _ShareFieldShell({
     required this.child,
     this.padding = const EdgeInsets.symmetric(horizontal: 14),
-    this.borderColor = AppColors.deviceShareFieldBorder,
+    this.borderColor,
   });
 
   final Widget child;
   final EdgeInsetsGeometry padding;
-  final Color borderColor;
+  final Color? borderColor;
 
   @override
   Widget build(BuildContext context) {
@@ -825,9 +837,11 @@ class _ShareFieldShell extends StatelessWidget {
       padding: padding,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: AppColors.backgroundPrimary,
+        color: context.colors.backgroundPrimary,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: borderColor),
+        border: Border.all(
+          color: borderColor ?? context.colors.deviceShareFieldBorder,
+        ),
       ),
       child: child,
     );
@@ -854,18 +868,19 @@ class _SharePeriodSummary extends StatelessWidget {
         height: 44,
         padding: const EdgeInsets.symmetric(horizontal: 10),
         decoration: BoxDecoration(
-          color: AppColors.deviceShareFieldDisabled,
+          color: context.colors.deviceShareFieldDisabled,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.deviceShareFieldBorder),
+          border: Border.all(color: context.colors.deviceShareFieldBorder),
         ),
         child: Row(
           children: [
-            Image.asset(
+            SkinAssetImage.themed(
+              context,
               ChooseSceneAssetPaths.deviceSharePageTime,
               errorBuilder: (context, error, stackTrace) {
                 return Icon(
                   Icons.schedule_rounded,
-                  color: AppColors.iconHomeAction,
+                  color: context.colors.iconHomeAction,
                   size: 22,
                 );
               },
@@ -874,21 +889,21 @@ class _SharePeriodSummary extends StatelessWidget {
             Expanded(
               child: Text(
                 title,
-                style: AppTextTokens.deviceShareField(textTheme),
+                style: context.appText.deviceShareField(textTheme),
               ),
             ),
             if (value != null) ...[
               Text(
                 value!,
-                style: AppTextTokens.deviceShareInputValue(textTheme),
+                style: context.appText.deviceShareInputValue(textTheme),
               ),
               const SizedBox(width: 8),
             ],
             Icon(
               Icons.keyboard_arrow_down_rounded,
               color: isEnabled
-                  ? AppColors.brandPrimary
-                  : AppColors.borderHomePlaceholder,
+                  ? context.colors.brandPrimary
+                  : context.colors.borderHomePlaceholder,
               size: 26,
             ),
           ],
@@ -926,7 +941,7 @@ class _SendEmailToggle extends StatelessWidget {
               Expanded(
                 child: Text(
                   label,
-                  style: AppTextTokens.deviceShareSectionTitle(
+                  style: context.appText.deviceShareSectionTitle(
                     Theme.of(context).textTheme,
                   ),
                 ),
@@ -937,22 +952,23 @@ class _SendEmailToggle extends StatelessWidget {
                 height: AppSpacingTokens.deviceShareSendEmailCheckboxSize,
                 decoration: BoxDecoration(
                   color: value
-                      ? AppColors.deviceShareCheckbox
+                      ? context.colors.deviceShareCheckbox
                       : Colors.transparent,
                   border: Border.all(
                     color: value
-                        ? AppColors.deviceShareCheckbox
-                        : AppColors.deviceShareUnavailable,
+                        ? context.colors.deviceShareCheckbox
+                        : context.colors.deviceShareUnavailable,
                   ),
                   borderRadius: BorderRadius.circular(
                     AppShapeTokens.deviceShareSendEmailCheckboxRadius,
                   ),
                 ),
                 child: value
-                    ? const Icon(
+                    ? Icon(
                         Icons.check_rounded,
                         size: AppSpacingTokens.deviceShareSendEmailCheckSize,
-                        color: Colors.white,
+                        color:
+                            context.colors.authPrimaryButtonDisabledForeground,
                       )
                     : null,
               ),
@@ -983,9 +999,9 @@ class _CapabilitiesPanel extends StatelessWidget {
       duration: const Duration(milliseconds: 160),
       padding: const EdgeInsets.fromLTRB(8, 12, 8, 12),
       decoration: BoxDecoration(
-        color: AppColors.backgroundPrimary,
+        color: context.colors.backgroundPrimary,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.deviceShareFieldBorder),
+        border: Border.all(color: context.colors.deviceShareFieldBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -998,7 +1014,7 @@ class _CapabilitiesPanel extends StatelessWidget {
                   Expanded(
                     child: Text(
                       item.label,
-                      style: AppTextTokens.deviceShareField(
+                      style: context.appText.deviceShareField(
                         Theme.of(context).textTheme,
                       ),
                     ),
@@ -1054,15 +1070,16 @@ class _CapabilityAvailabilityIcon extends StatelessWidget {
           child: SizedBox(
             width: 20,
             height: 20,
-            child: Image.asset(
+            child: SkinAssetImage.themed(
+              context,
               isSelected
                   ? ChooseSceneAssetPaths.capabilitiesSelected
                   : ChooseSceneAssetPaths.capabilitiesUnselected,
               errorBuilder: (context, error, stackTrace) => Icon(
                 isSelected ? Icons.check_rounded : Icons.close_rounded,
                 color: isSelected
-                    ? AppColors.deviceShareCheckbox
-                    : AppColors.deviceShareUnavailable,
+                    ? context.colors.deviceShareCheckbox
+                    : context.colors.deviceShareUnavailable,
                 size: 16,
               ),
             ),
@@ -1092,7 +1109,7 @@ Future<T?> _showShareOptionPopup<T>({
     context: context,
     barrierDismissible: true,
     barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-    barrierColor: AppColors.deviceShareDialogOverlay,
+    barrierColor: context.colors.deviceShareDialogOverlay,
     transitionDuration: const Duration(milliseconds: 120),
     pageBuilder: (context, animation, secondaryAnimation) {
       return Stack(
@@ -1119,7 +1136,7 @@ class _ShareOptionPopup<T> extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Material(
-      color: AppColors.backgroundPrimary,
+      color: context.colors.backgroundPrimary,
       elevation: 8,
       borderRadius: BorderRadius.circular(8),
       child: ClipRRect(
@@ -1139,7 +1156,7 @@ class _ShareOptionPopup<T> extends StatelessWidget {
                       child: Center(
                         child: Text(
                           options[index].label,
-                          style: AppTextTokens.deviceShareDialogOption(
+                          style: context.appText.deviceShareDialogOption(
                             textTheme,
                           ),
                         ),
@@ -1147,23 +1164,23 @@ class _ShareOptionPopup<T> extends StatelessWidget {
                     ),
                   ),
                   if (index != options.length - 1)
-                    const Divider(
+                    Divider(
                       height: 1,
                       thickness: 1,
                       indent: 12,
                       endIndent: 12,
-                      color: AppColors.deviceShareFieldBorder,
+                      color: context.colors.deviceShareFieldBorder,
                     ),
                 ],
               ],
             ),
-            const Positioned(
+            Positioned(
               top: 8,
               right: 8,
               child: IgnorePointer(
                 child: Icon(
                   Icons.keyboard_arrow_down_rounded,
-                  color: AppColors.brandPrimary,
+                  color: context.colors.brandPrimary,
                   size: 20,
                 ),
               ),
@@ -1225,7 +1242,7 @@ class _CustomizeTimeDialogState extends State<_CustomizeTimeDialog> {
         constraints: const BoxConstraints(maxWidth: 344),
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
         decoration: BoxDecoration(
-          color: AppColors.backgroundPrimary,
+          color: context.colors.backgroundPrimary,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Column(
@@ -1233,21 +1250,21 @@ class _CustomizeTimeDialogState extends State<_CustomizeTimeDialog> {
           children: [
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.schedule_rounded,
-                  color: AppColors.textIcon,
+                  color: context.colors.textIcon,
                   size: 22,
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     l10n.deviceShareTimeLabel,
-                    style: AppTextTokens.deviceShareSectionTitle(textTheme),
+                    style: context.appText.deviceShareSectionTitle(textTheme),
                   ),
                 ),
-                const Icon(
+                Icon(
                   Icons.keyboard_arrow_down_rounded,
-                  color: AppColors.brandPrimary,
+                  color: context.colors.brandPrimary,
                   size: 24,
                 ),
               ],
@@ -1266,7 +1283,7 @@ class _CustomizeTimeDialogState extends State<_CustomizeTimeDialog> {
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Text(
                     ':',
-                    style: AppTextTokens.deviceShareTimeSeparator(textTheme),
+                    style: context.appText.deviceShareTimeSeparator(textTheme),
                   ),
                 ),
                 SizedBox(
@@ -1286,7 +1303,9 @@ class _CustomizeTimeDialogState extends State<_CustomizeTimeDialog> {
                   child: Center(
                     child: Text(
                       DateFormat('MMMM yyyy').format(_visibleMonth),
-                      style: AppTextTokens.deviceShareCalendarTitle(textTheme),
+                      style: context.appText.deviceShareCalendarTitle(
+                        textTheme,
+                      ),
                     ),
                   ),
                 ),
@@ -1325,8 +1344,8 @@ class _CustomizeTimeDialogState extends State<_CustomizeTimeDialog> {
                 Expanded(
                   child: _ShareActionButton(
                     label: l10n.deviceShareCancelAction,
-                    foregroundColor: AppColors.textMuted,
-                    backgroundColor: AppColors.deviceShareCancelButton,
+                    foregroundColor: context.colors.textMuted,
+                    backgroundColor: context.colors.deviceShareCancelButton,
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ),
@@ -1334,8 +1353,9 @@ class _CustomizeTimeDialogState extends State<_CustomizeTimeDialog> {
                 Expanded(
                   child: _ShareActionButton(
                     label: l10n.deviceShareConfirmAction,
-                    foregroundColor: Colors.white,
-                    backgroundColor: AppColors.brandPrimary,
+                    foregroundColor:
+                        context.colors.authPrimaryButtonDisabledForeground,
+                    backgroundColor: context.colors.brandPrimary,
                     onPressed: _selectedDateTime.isAfter(DateTime.now())
                         ? _confirm
                         : null,
@@ -1433,9 +1453,9 @@ class _TimeTextBox extends StatelessWidget {
         onTap: onTap,
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: AppColors.backgroundPrimary,
+            color: context.colors.backgroundPrimary,
             borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: AppColors.brandPrimaryLight),
+            border: Border.all(color: context.colors.brandPrimaryLight),
           ),
           child: Align(
             alignment: Alignment.centerLeft,
@@ -1443,7 +1463,7 @@ class _TimeTextBox extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Text(
                 value,
-                style: AppTextTokens.deviceShareField(
+                style: context.appText.deviceShareField(
                   Theme.of(context).textTheme,
                 ),
               ),
@@ -1505,7 +1525,7 @@ class _TimeValuePickerDialogState extends State<_TimeValuePickerDialog> {
       child: Padding(
         padding: widget.padding,
         child: Material(
-          color: AppColors.backgroundPrimary,
+          color: context.colors.backgroundPrimary,
           elevation: 4,
           child: SizedBox(
             width: widget.width,
@@ -1531,15 +1551,17 @@ class _TimeValuePickerDialogState extends State<_TimeValuePickerDialog> {
                       alignment: Alignment.centerLeft,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       color: isSelected
-                          ? AppColors.deviceShareHourSelected
-                          : AppColors.backgroundPrimary,
+                          ? context.colors.deviceShareHourSelected
+                          : context.colors.backgroundPrimary,
                       child: Opacity(
                         opacity: isEnabled
                             ? 1
                             : AppOpacityTokens.deviceShareDisabled,
                         child: Text(
                           index.toString().padLeft(2, '0'),
-                          style: AppTextTokens.deviceShareHourOption(textTheme),
+                          style: context.appText.deviceShareHourOption(
+                            textTheme,
+                          ),
                         ),
                       ),
                     ),
@@ -1565,7 +1587,7 @@ class _CalendarNavButton extends StatelessWidget {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: Icon(icon, color: AppColors.textIcon, size: 24),
+      child: Icon(icon, color: context.colors.textIcon, size: 24),
     );
   }
 }
@@ -1585,7 +1607,7 @@ class _WeekdayHeader extends StatelessWidget {
             child: Center(
               child: Text(
                 label,
-                style: AppTextTokens.deviceShareCalendarWeekday(textTheme),
+                style: context.appText.deviceShareCalendarWeekday(textTheme),
               ),
             ),
           ),
@@ -1704,20 +1726,22 @@ class _CalendarDayCell extends StatelessWidget {
               height: 32,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.brandPrimary : Colors.transparent,
+                color: isSelected
+                    ? context.colors.brandPrimary
+                    : Colors.transparent,
                 shape: BoxShape.circle,
                 border: isSelected
                     ? null
                     : Border.all(
                         color: isToday
-                            ? AppColors.brandPrimary
+                            ? context.colors.brandPrimary
                             : Colors.transparent,
                         width: 1,
                       ),
               ),
               child: Text(
                 '${value.day}',
-                style: AppTextTokens.deviceShareCalendarDay(
+                style: context.appText.deviceShareCalendarDay(
                   textTheme,
                   isSelected: isSelected,
                   isToday: isToday,
@@ -1765,9 +1789,9 @@ class _ShareActionButton extends StatelessWidget {
             child: Center(
               child: Text(
                 label,
-                style: AppTextTokens.deviceShareButton(
-                  Theme.of(context).textTheme,
-                ).copyWith(color: foregroundColor),
+                style: context.appText
+                    .deviceShareButton(Theme.of(context).textTheme)
+                    .copyWith(color: foregroundColor),
               ),
             ),
           ),

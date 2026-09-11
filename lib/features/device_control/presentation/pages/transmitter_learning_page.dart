@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -98,11 +99,11 @@ class _TransmitterLearningPageState
     final isFailed = _state == _TransmitterLearningState.failed;
     final isSucceeded = _state == _TransmitterLearningState.succeeded;
     final primaryButtonStyle = FilledButton.styleFrom(
-      backgroundColor: AppColors.deviceSettingsForceMarginConfirm,
+      backgroundColor: context.colors.deviceSettingsForceMarginConfirm,
       minimumSize: const Size.fromHeight(50),
     );
     final cancelButtonStyle = TextButton.styleFrom(
-      backgroundColor: AppColors.deviceSettingsCancelAction,
+      backgroundColor: context.colors.deviceSettingsCancelAction,
       minimumSize: const Size.fromHeight(50),
     );
     final statusTitle = switch (_state) {
@@ -159,23 +160,25 @@ class _TransmitterLearningPageState
               children: [
                 Text(
                   l10n.transmitterLearningTitle,
-                  style: AppTextTokens.deviceSettingsTitle(textTheme),
+                  style: context.appText.deviceSettingsTitle(textTheme),
                 ),
                 const SizedBox(height: 5),
                 Text(
                   l10n.transmitterLearningOnSiteTip,
                   style: (textTheme.bodyLarge ?? const TextStyle()).copyWith(
                     fontSize: 13,
-                    color: AppColors.textMuted,
+                    color: context.colors.textMuted,
                   ),
                 ),
                 const Spacer(),
                 Expanded(
                   flex: 8,
-                  child: Image.asset(
+                  child: SkinAssetImage.themed(
+                    context,
                     illustrationPath,
                     fit: BoxFit.contain,
-                    errorBuilder: (_, _, _) => Image.asset(
+                    errorBuilder: (_, _, _) => SkinAssetImage.themed(
+                      context,
                       _TransmitterLearningAssetPaths.readyIllustration,
                       fit: BoxFit.contain,
                     ),
@@ -187,7 +190,7 @@ class _TransmitterLearningPageState
                   textAlign: TextAlign.center,
                   style: (textTheme.headlineSmall ?? const TextStyle())
                       .copyWith(
-                        color: AppColors.textPrimary,
+                        color: context.colors.textPrimary,
                         fontSize: 26,
                         fontWeight: FontWeight.w600,
                       ),
@@ -197,7 +200,7 @@ class _TransmitterLearningPageState
                   statusDescription,
                   textAlign: isReady ? TextAlign.start : TextAlign.center,
                   style: (textTheme.bodyLarge ?? const TextStyle()).copyWith(
-                    color: AppColors.textMuted,
+                    color: context.colors.textMuted,
                     fontSize: 13,
                     height: 1.45,
                   ),

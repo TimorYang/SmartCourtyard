@@ -116,12 +116,12 @@ class _OperationRecordPageState extends ConsumerState<OperationRecordPage> {
                   children: [
                     Text(
                       l10n.operationRecordTitle,
-                      style: AppTextTokens.operationRecordTitle(textTheme),
+                      style: context.appText.operationRecordTitle(textTheme),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       l10n.operationRecordLast14DaysDescription,
-                      style: AppTextTokens.operationRecordSubtitle(textTheme),
+                      style: context.appText.operationRecordSubtitle(textTheme),
                     ),
                     const SizedBox(height: 30),
                   ],
@@ -146,7 +146,7 @@ class _OperationRecordPageState extends ConsumerState<OperationRecordPage> {
                   child: Center(
                     child: Text(
                       l10n.operationRecordEmpty,
-                      style: AppTextTokens.operationRecordMeta(textTheme),
+                      style: context.appText.operationRecordMeta(textTheme),
                     ),
                   ),
                 )
@@ -232,7 +232,7 @@ class _LoadMoreFooter extends StatelessWidget {
         child: Center(
           child: Text(
             l10n.operationRecordNoMore,
-            style: AppTextTokens.operationRecordMeta(
+            style: context.appText.operationRecordMeta(
               Theme.of(context).textTheme,
             ),
           ),
@@ -264,9 +264,9 @@ class _OperationTimelineItem extends ConsumerWidget {
           Column(
             children: [
               const SizedBox(height: 5),
-              const DecoratedBox(
+              DecoratedBox(
                 decoration: BoxDecoration(
-                  color: AppColors.operationRecordTimeline,
+                  color: context.colors.operationRecordTimeline,
                   shape: BoxShape.circle,
                 ),
                 child: SizedBox.square(dimension: 12),
@@ -275,7 +275,7 @@ class _OperationTimelineItem extends ConsumerWidget {
                 Expanded(
                   child: Container(
                     width: 1,
-                    color: AppColors.operationRecordTimelineLine,
+                    color: context.colors.operationRecordTimelineLine,
                   ),
                 ),
             ],
@@ -292,13 +292,15 @@ class _OperationTimelineItem extends ConsumerWidget {
                       Expanded(
                         child: Text(
                           record.action.label(l10n),
-                          style: AppTextTokens.operationRecordAction(textTheme),
+                          style: context.appText.operationRecordAction(
+                            textTheme,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 4),
                       Text(
                         _formatOccurredAt(record.occurredAt, l10n),
-                        style: AppTextTokens.operationRecordTime(textTheme),
+                        style: context.appText.operationRecordTime(textTheme),
                       ),
                     ],
                   ),
@@ -309,7 +311,7 @@ class _OperationTimelineItem extends ConsumerWidget {
                       record.operationMethodLabel,
                       l10n,
                     ),
-                    style: AppTextTokens.operationRecordMeta(textTheme),
+                    style: context.appText.operationRecordMeta(textTheme),
                   ),
                   const SizedBox(height: 10),
                   Row(
@@ -317,7 +319,8 @@ class _OperationTimelineItem extends ConsumerWidget {
                       CircleAvatar(
                         key: const ValueKey<String>('operation-record-avatar'),
                         radius: 10,
-                        backgroundColor: AppColors.operationRecordAvatarSurface,
+                        backgroundColor:
+                            context.colors.operationRecordAvatarSurface,
                         backgroundImage: _avatarImage(ref),
                         onBackgroundImageError: (_, _) {},
                       ),
@@ -326,18 +329,18 @@ class _OperationTimelineItem extends ConsumerWidget {
                         child: Text(
                           record.operatorDisplayName ??
                               l10n.operationRecordUnknownOperator,
-                          style: AppTextTokens.operationRecordMeta(textTheme),
+                          style: context.appText.operationRecordMeta(textTheme),
                         ),
                       ),
                     ],
                   ),
                   if (!isLast) ...[
                     const SizedBox(height: 16),
-                    const Divider(
+                    Divider(
                       key: ValueKey<String>('operation-record-divider'),
                       height: 1,
                       thickness: 1,
-                      color: AppColors.operationRecordDivider,
+                      color: context.colors.operationRecordDivider,
                     ),
                   ],
                 ],

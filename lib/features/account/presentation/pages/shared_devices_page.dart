@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -41,7 +42,7 @@ class _SharedDevicesPageState extends ConsumerState<SharedDevicesPage> {
     final sharedDevices = ref.watch(sharedDevicesControllerProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       appBar: const FlinxNavigationBar(title: '', showBottomDivider: false),
       body: SafeArea(
         top: false,
@@ -60,7 +61,7 @@ class _SharedDevicesPageState extends ConsumerState<SharedDevicesPage> {
                   ),
                   child: Text(
                     l10n.sharedDevicesTitle,
-                    style: AppTextTokens.sharedDevicesTitle(textTheme),
+                    style: context.appText.sharedDevicesTitle(textTheme),
                   ),
                 ),
                 const SizedBox(
@@ -155,8 +156,8 @@ class _SharedDeviceCard extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacingTokens.sharedDevicesCardHorizontal,
           ),
-          decoration: const BoxDecoration(
-            color: AppColors.sharedDevicesCard,
+          decoration: BoxDecoration(
+            color: context.colors.sharedDevicesCard,
             borderRadius: BorderRadius.all(
               Radius.circular(AppShapeTokens.sharedDevicesCardRadius),
             ),
@@ -178,7 +179,7 @@ class _SharedDeviceCard extends ConsumerWidget {
                       device.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: AppTextTokens.sharedDevicesCardTitle(textTheme),
+                      style: context.appText.sharedDevicesCardTitle(textTheme),
                     ),
                     const SizedBox(
                       height: AppSpacingTokens.sharedDevicesCardTitleToSubtitle,
@@ -187,7 +188,9 @@ class _SharedDeviceCard extends ConsumerWidget {
                       shareDescription,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: AppTextTokens.sharedDevicesCardSubtitle(textTheme),
+                      style: context.appText.sharedDevicesCardSubtitle(
+                        textTheme,
+                      ),
                     ),
                   ],
                 ),
@@ -243,14 +246,15 @@ class _SharedDeviceDefaultCover extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
+    return SkinAssetImage.themed(
+      context,
       visual.assetPath,
       width: AppSpacingTokens.sharedDevicesIconSize,
       height: AppSpacingTokens.sharedDevicesIconSize,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) => Icon(
         visual.fallbackIcon,
-        color: AppColors.textPrimary,
+        color: context.colors.textPrimary,
         size: AppSpacingTokens.sharedDevicesIconSize,
       ),
     );

@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -45,7 +46,7 @@ class AccountDetailsPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: const FlinxNavigationBar(title: '', showBottomDivider: false),
-      backgroundColor: AppColors.accountProfileBackground,
+      backgroundColor: context.colors.accountProfileBackground,
       body: LayoutBuilder(
         builder: (context, constraints) {
           return Center(
@@ -148,7 +149,7 @@ class _AccountDetailsContent extends StatelessWidget {
                     const SizedBox(height: 27),
                     Text(
                       l10n.accountDetailsTitle,
-                      style: AppTextTokens.accountDetailsTitle(textTheme),
+                      style: context.appText.accountDetailsTitle(textTheme),
                     ),
                     const SizedBox(height: 36),
                     _AccountDetailsRows(
@@ -221,8 +222,9 @@ class _AccountDetailsContent extends StatelessWidget {
                   child: FilledButton(
                     onPressed: onLogout,
                     style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.accountDetailsLogoutSurface,
-                      foregroundColor: AppColors.textPrimary,
+                      backgroundColor:
+                          context.colors.accountDetailsLogoutSurface,
+                      foregroundColor: context.colors.textPrimary,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(28),
@@ -230,7 +232,7 @@ class _AccountDetailsContent extends StatelessWidget {
                     ),
                     child: Text(
                       l10n.accountDetailsLogout,
-                      style: AppTextTokens.accountDetailsLogout(textTheme),
+                      style: context.appText.accountDetailsLogout(textTheme),
                     ),
                   ),
                 ),
@@ -256,10 +258,10 @@ class _AccountDetailsRows extends StatelessWidget {
         for (var index = 0; index < rows.length; index++) ...[
           _AccountDetailsRow(data: rows[index]),
           if (index < rows.length - 1)
-            const Divider(
+            Divider(
               height: 1,
               thickness: 1,
-              color: AppColors.borderAccountDivider,
+              color: context.colors.borderAccountDivider,
             ),
         ],
       ],
@@ -314,7 +316,7 @@ class _AccountDetailsRow extends StatelessWidget {
                   data.label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextTokens.accountDetailsLabel(textTheme),
+                  style: context.appText.accountDetailsLabel(textTheme),
                 ),
               ),
               ?data.trailing,
@@ -324,13 +326,13 @@ class _AccountDetailsRow extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.right,
-                  style: AppTextTokens.accountDetailsValue(textTheme),
+                  style: context.appText.accountDetailsValue(textTheme),
                 ),
               if (data.showChevron) ...[
                 const SizedBox(width: 2),
-                const Icon(
+                Icon(
                   Icons.chevron_right_rounded,
-                  color: AppColors.navigationForeground,
+                  color: context.colors.navigationForeground,
                   size: 28,
                 ),
               ],
@@ -356,7 +358,7 @@ Future<void> _showAccountAvatarSheet(
     enableDrag: true,
     useSafeArea: true,
     isScrollControlled: true,
-    barrierColor: AppColors.overlaySoft,
+    barrierColor: context.colors.overlaySoft,
     backgroundColor: Colors.transparent,
     builder: (context) => _AvatarBottomSheet(
       initialAvatarCode: initialAvatarCode,
@@ -375,7 +377,7 @@ Future<void> _showAccountRenameDialog(
 }) {
   return showDialog<void>(
     context: context,
-    barrierColor: AppColors.overlaySoft,
+    barrierColor: context.colors.overlaySoft,
     builder: (context) =>
         _RenameDialog(initialName: initialName, onConfirm: onConfirm),
   );
@@ -384,7 +386,7 @@ Future<void> _showAccountRenameDialog(
 Future<void> _showAccountPasswordDialog(BuildContext context) {
   return showDialog<void>(
     context: context,
-    barrierColor: AppColors.overlaySoft,
+    barrierColor: context.colors.overlaySoft,
     builder: (context) => const _PasswordDialog(),
   );
 }
@@ -398,7 +400,7 @@ Future<void> _showAccountDeletionSheet(
     isDismissible: false,
     enableDrag: false,
     useSafeArea: true,
-    barrierColor: AppColors.overlaySoft,
+    barrierColor: context.colors.overlaySoft,
     backgroundColor: Colors.transparent,
     builder: (context) => _AccountDeletionSheet(onConfirm: onConfirm),
   );
@@ -446,7 +448,7 @@ class _AccountDeletionSheetState extends State<_AccountDeletionSheet> {
               Text(
                 l10n.accountDetailsDeletionPrompt,
                 textAlign: TextAlign.center,
-                style: AppTextTokens.accountDetailsSheetTitle(textTheme),
+                style: context.appText.accountDetailsSheetTitle(textTheme),
               ),
               const SizedBox(height: 54),
               Row(
@@ -454,9 +456,9 @@ class _AccountDeletionSheetState extends State<_AccountDeletionSheet> {
                   Expanded(
                     child: _AccountSheetActionButton(
                       label: l10n.accountDetailsDeletionNoAction,
-                      foregroundColor: AppColors.textPrimary,
+                      foregroundColor: context.colors.textPrimary,
                       backgroundColor:
-                          AppColors.accountDetailsSheetActionSurface,
+                          context.colors.accountDetailsSheetActionSurface,
                       textTheme: textTheme,
                       onPressed: _isSubmitting
                           ? null
@@ -469,10 +471,11 @@ class _AccountDeletionSheetState extends State<_AccountDeletionSheet> {
                       label: _isSubmitting
                           ? l10n.accountDetailsDeletionSubmitting
                           : l10n.accountDetailsDeletionYesAction,
-                      foregroundColor:
-                          AppColors.accountDetailsDeletionConfirmForeground,
+                      foregroundColor: context
+                          .colors
+                          .accountDetailsDeletionConfirmForeground,
                       backgroundColor:
-                          AppColors.accountDetailsDeletionConfirmSurface,
+                          context.colors.accountDetailsDeletionConfirmSurface,
                       textTheme: textTheme,
                       onPressed: _isSubmitting ? null : _confirm,
                     ),
@@ -505,7 +508,7 @@ class _AccountCenterDialogFrame extends StatelessWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 390),
           child: Material(
-            color: AppColors.accountDetailsSheetSurface,
+            color: context.colors.accountDetailsSheetSurface,
             borderRadius: BorderRadius.circular(
               AppShapeTokens.accountDetailsDialogRadius,
             ),
@@ -546,12 +549,12 @@ class _AccountBottomSheetFrame extends StatelessWidget {
                 right: 0,
                 bottom: -keyboardDockOverlap,
                 height: keyboardDockOverlap,
-                child: const ColoredBox(
-                  color: AppColors.accountDetailsSheetSurface,
+                child: ColoredBox(
+                  color: context.colors.accountDetailsSheetSurface,
                 ),
               ),
               Material(
-                color: AppColors.accountDetailsSheetSurface,
+                color: context.colors.accountDetailsSheetSurface,
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(8),
                 ),
@@ -636,8 +639,9 @@ class _AvatarBottomSheetState extends State<_AvatarBottomSheet> {
               const SizedBox(height: 28),
               _AccountSheetActionButton(
                 label: l10n.accountDetailsPhotoAlbumAction,
-                foregroundColor: AppColors.textPrimary,
-                backgroundColor: AppColors.accountDetailsSheetActionSurface,
+                foregroundColor: context.colors.textPrimary,
+                backgroundColor:
+                    context.colors.accountDetailsSheetActionSurface,
                 textTheme: textTheme,
                 preserveDisabledAppearance: true,
                 suppressPressEffect: true,
@@ -648,8 +652,9 @@ class _AvatarBottomSheetState extends State<_AvatarBottomSheet> {
               const SizedBox(height: 18),
               _AccountSheetActionButton(
                 label: l10n.accountDetailsPhotographAction,
-                foregroundColor: AppColors.textPrimary,
-                backgroundColor: AppColors.accountDetailsSheetActionSurface,
+                foregroundColor: context.colors.textPrimary,
+                backgroundColor:
+                    context.colors.accountDetailsSheetActionSurface,
                 textTheme: textTheme,
                 preserveDisabledAppearance: true,
                 suppressPressEffect: true,
@@ -660,8 +665,9 @@ class _AvatarBottomSheetState extends State<_AvatarBottomSheet> {
               const SizedBox(height: 34),
               _AccountSheetActionButton(
                 label: l10n.accountDetailsCancelAction,
-                foregroundColor: AppColors.textPrimary,
-                backgroundColor: AppColors.accountDetailsSheetActionSurface,
+                foregroundColor: context.colors.textPrimary,
+                backgroundColor:
+                    context.colors.accountDetailsSheetActionSurface,
                 textTheme: textTheme,
                 onPressed: () => Navigator.pop(context),
               ),
@@ -720,7 +726,7 @@ Future<void> _showCameraPermissionDeniedDialog(
 }) {
   return showDialog<void>(
     context: context,
-    barrierColor: AppColors.overlaySoft,
+    barrierColor: context.colors.overlaySoft,
     builder: (context) =>
         _CameraPermissionDeniedDialog(onOpenSettings: onOpenSettings),
   );
@@ -745,13 +751,13 @@ class _CameraPermissionDeniedDialog extends StatelessWidget {
             Text(
               l10n.accountDetailsCameraPermissionDeniedTitle,
               textAlign: TextAlign.center,
-              style: AppTextTokens.accountDetailsSheetTitle(textTheme),
+              style: context.appText.accountDetailsSheetTitle(textTheme),
             ),
             const SizedBox(height: 16),
             Text(
               l10n.accountDetailsCameraPermissionDeniedMessage,
               textAlign: TextAlign.center,
-              style: AppTextTokens.accountDetailsSheetInput(textTheme),
+              style: context.appText.accountDetailsSheetInput(textTheme),
             ),
             const SizedBox(height: 30),
             _AccountSheetButtonRow(
@@ -805,13 +811,14 @@ class _AvatarOptionButton extends StatelessWidget {
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: selected
-                      ? AppColors.brandPrimary
-                      : AppColors.accountDetailsAvatarOptionBorder,
+                      ? context.colors.brandPrimary
+                      : context.colors.accountDetailsAvatarOptionBorder,
                   width: selected ? 2 : 1,
                 ),
               ),
               child: ClipOval(
-                child: Image.asset(
+                child: SkinAssetImage.themed(
+                  context,
                   assetPath,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
@@ -821,12 +828,12 @@ class _AvatarOptionButton extends StatelessWidget {
               ),
             ),
             if (selected)
-              const Positioned(
+              Positioned(
                 right: -2,
                 bottom: -2,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    color: AppColors.authSuccess,
+                    color: context.colors.authSuccess,
                     shape: BoxShape.circle,
                   ),
                   child: SizedBox(
@@ -834,7 +841,7 @@ class _AvatarOptionButton extends StatelessWidget {
                     height: 24,
                     child: Icon(
                       Icons.check_rounded,
-                      color: AppColors.backgroundPrimary,
+                      color: context.colors.authPrimaryButtonDisabledForeground,
                       size: 18,
                     ),
                   ),
@@ -852,11 +859,11 @@ class _AvatarOptionFallback extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const ColoredBox(
-      color: AppColors.accountDetailsAvatarSurface,
+    return ColoredBox(
+      color: context.colors.accountDetailsAvatarSurface,
       child: Icon(
         Icons.person_outline_rounded,
-        color: AppColors.brandPrimary,
+        color: context.colors.brandPrimary,
         size: 32,
       ),
     );
@@ -907,7 +914,7 @@ class _RenameDialogState extends State<_RenameDialog> {
           children: [
             Text(
               l10n.accountDetailsRenameTitle,
-              style: AppTextTokens.accountDetailsSheetTitle(textTheme),
+              style: context.appText.accountDetailsSheetTitle(textTheme),
             ),
             const SizedBox(height: 24),
             _AccountDetailsTextField(
@@ -988,7 +995,7 @@ class _PasswordDialogState extends State<_PasswordDialog> {
           children: [
             Text(
               l10n.accountDetailsChangePasswordTitle,
-              style: AppTextTokens.accountDetailsSheetTitle(textTheme),
+              style: context.appText.accountDetailsSheetTitle(textTheme),
             ),
             const SizedBox(height: 26),
             _AccountDetailsTextField(
@@ -1073,33 +1080,33 @@ class _AccountDetailsTextField extends StatelessWidget {
         enableSuggestions: !obscureText,
         textInputAction: textInputAction,
         onSubmitted: onSubmitted,
-        style: AppTextTokens.accountDetailsSheetInput(textTheme),
+        style: context.appText.accountDetailsSheetInput(textTheme),
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: AppTextTokens.accountDetailsSheetInput(textTheme),
+          hintStyle: context.appText.accountDetailsSheetInput(textTheme),
           prefixIcon: Icon(
             prefixIcon,
-            color: AppColors.accountDetailsSheetInputIcon,
+            color: context.colors.accountDetailsSheetInputIcon,
             size: 24,
           ),
           suffixIcon: suffix,
           contentPadding: const EdgeInsets.symmetric(horizontal: 18),
-          border: const OutlineInputBorder(
+          border: OutlineInputBorder(
             borderRadius: BorderRadius.all(Radius.circular(28)),
             borderSide: BorderSide(
-              color: AppColors.accountDetailsSheetInputBorder,
+              color: context.colors.accountDetailsSheetInputBorder,
             ),
           ),
-          enabledBorder: const OutlineInputBorder(
+          enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.all(Radius.circular(28)),
             borderSide: BorderSide(
-              color: AppColors.accountDetailsSheetInputBorder,
+              color: context.colors.accountDetailsSheetInputBorder,
             ),
           ),
-          focusedBorder: const OutlineInputBorder(
+          focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.all(Radius.circular(28)),
             borderSide: BorderSide(
-              color: AppColors.accountDetailsSheetInputFocusedBorder,
+              color: context.colors.accountDetailsSheetInputFocusedBorder,
             ),
           ),
         ),
@@ -1126,7 +1133,7 @@ class _PasswordVisibilityButton extends StatelessWidget {
       onPressed: onPressed,
       icon: Icon(
         visible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-        color: AppColors.textIcon,
+        color: context.colors.textIcon,
         size: 24,
       ),
     );
@@ -1155,8 +1162,8 @@ class _AccountSheetButtonRow extends StatelessWidget {
         Expanded(
           child: _AccountSheetActionButton(
             label: cancelLabel,
-            foregroundColor: AppColors.textPrimary,
-            backgroundColor: AppColors.accountDetailsSheetActionSurface,
+            foregroundColor: context.colors.textPrimary,
+            backgroundColor: context.colors.accountDetailsSheetActionSurface,
             textTheme: textTheme,
             onPressed: onCancel,
           ),
@@ -1165,8 +1172,8 @@ class _AccountSheetButtonRow extends StatelessWidget {
         Expanded(
           child: _AccountSheetActionButton(
             label: confirmLabel,
-            foregroundColor: AppColors.backgroundPrimary,
-            backgroundColor: AppColors.brandPrimary,
+            foregroundColor: context.colors.authPrimaryButtonDisabledForeground,
+            backgroundColor: context.colors.brandPrimary,
             textTheme: textTheme,
             onPressed: onConfirm,
           ),
@@ -1214,7 +1221,7 @@ class _AccountSheetActionButton extends StatelessWidget {
           overlayColor: suppressPressEffect ? Colors.transparent : null,
           elevation: 0,
           shape: const StadiumBorder(),
-          textStyle: AppTextTokens.accountDetailsSheetButton(textTheme),
+          textStyle: context.appText.accountDetailsSheetButton(textTheme),
         ),
         child: FittedBox(child: Text(label)),
       ),
@@ -1249,9 +1256,14 @@ class _AccountDetailsAvatar extends StatelessWidget {
       height: 52,
       child: ClipOval(
         child: avatarCode != null
-            ? Image.asset(avatarCode!.assetPath, fit: BoxFit.cover)
+            ? SkinAssetImage.themed(
+                context,
+                avatarCode!.assetPath,
+                fit: BoxFit.cover,
+              )
             : imageSource == null || imageSource.isEmpty
-            ? Image.asset(
+            ? SkinAssetImage.themed(
+                context,
                 AccountProfileAssetPaths.avatarPlaceholder,
                 fit: BoxFit.cover,
                 errorBuilder: _buildFallback,
@@ -1273,11 +1285,11 @@ class _AccountDetailsAvatar extends StatelessWidget {
     Object error,
     StackTrace? stackTrace,
   ) {
-    return const ColoredBox(
-      color: AppColors.accountDetailsAvatarSurface,
+    return ColoredBox(
+      color: context.colors.accountDetailsAvatarSurface,
       child: Icon(
         Icons.person,
-        color: AppColors.accountDetailsAvatarForeground,
+        color: context.colors.accountDetailsAvatarForeground,
         size: 36,
       ),
     );

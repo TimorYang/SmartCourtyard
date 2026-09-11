@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -47,7 +48,7 @@ class _ScenePageState extends ConsumerState<ScenePage> {
     final sceneCount = scenesState.asData?.value.length ?? 0;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       appBar: FlinxNavigationBar(
         title: '',
         showBottomDivider: false,
@@ -80,14 +81,14 @@ class _ScenePageState extends ConsumerState<ScenePage> {
             padding: const EdgeInsets.fromLTRB(5, 10, 0, 10),
             child: Text(
               _isEditing ? l10n.sceneEditingTitle : l10n.sceneTitle,
-              style: AppTextTokens.sceneTitle(textTheme),
+              style: context.appText.sceneTitle(textTheme),
             ),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
             child: Text(
               l10n.sceneCount(sceneCount),
-              style: AppTextTokens.sceneBreadcrumb(textTheme),
+              style: context.appText.sceneBreadcrumb(textTheme),
             ),
           ),
           const SizedBox(height: 46),
@@ -230,7 +231,7 @@ class _SceneCard extends StatelessWidget {
       child: Container(
         height: 88,
         decoration: BoxDecoration(
-          color: AppColors.surfaceItemSceneCard,
+          color: context.colors.surfaceItemSceneCard,
           borderRadius: BorderRadius.circular(14),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 28),
@@ -254,12 +255,12 @@ class _SceneCard extends StatelessWidget {
                 children: [
                   Text(
                     scene.name.trim().isEmpty ? 'Home' : scene.name.trim(),
-                    style: AppTextTokens.sceneCardTitle(textTheme),
+                    style: context.appText.sceneCardTitle(textTheme),
                   ),
                   const SizedBox(height: 12),
                   Text(
                     l10n.sceneDeviceCount(scene.doorCount),
-                    style: AppTextTokens.sceneCardMeta(textTheme),
+                    style: context.appText.sceneCardMeta(textTheme),
                   ),
                 ],
               ),
@@ -300,7 +301,7 @@ class _SceneErrorState extends StatelessWidget {
           icon: const Icon(Icons.refresh_rounded),
           label: Text(
             'Failed to load scenes',
-            style: AppTextTokens.sceneCardMeta(textTheme),
+            style: context.appText.sceneCardMeta(textTheme),
           ),
         ),
       ),
@@ -316,7 +317,8 @@ class _SceneEditActionIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      child: Image.asset(
+      child: SkinAssetImage.themed(
+        context,
         assetPath,
         fit: BoxFit.contain,
         errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
@@ -339,21 +341,21 @@ class _DeleteSceneButton extends StatelessWidget {
       child: Container(
         width: 24,
         height: 24,
-        decoration: const BoxDecoration(
-          color: AppColors.sceneDeleteAction,
+        decoration: BoxDecoration(
+          color: context.colors.sceneDeleteAction,
           shape: BoxShape.circle,
         ),
         child: isDeleting
-            ? const Padding(
+            ? Padding(
                 padding: EdgeInsets.all(5),
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: AppColors.backgroundPrimary,
+                  color: context.colors.authPrimaryButtonDisabledForeground,
                 ),
               )
-            : const Icon(
+            : Icon(
                 Icons.remove_rounded,
-                color: AppColors.backgroundPrimary,
+                color: context.colors.authPrimaryButtonDisabledForeground,
                 size: 24,
               ),
       ),
@@ -369,13 +371,14 @@ class _SceneIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
+    return SkinAssetImage.themed(
+      context,
       assetPath,
       width: 48,
       height: 48,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) {
-        return Icon(icon, color: AppColors.iconHomeAction, size: 48);
+        return Icon(icon, color: context.colors.iconHomeAction, size: 48);
       },
     );
   }
@@ -394,7 +397,7 @@ class _NewSceneCard extends StatelessWidget {
       button: true,
       label: l10n.sceneNewSceneAction,
       child: Material(
-        color: AppColors.surfaceSceneCard,
+        color: context.colors.surfaceSceneCard,
         borderRadius: BorderRadius.circular(14),
         child: InkWell(
           borderRadius: BorderRadius.circular(14),
@@ -407,20 +410,20 @@ class _NewSceneCard extends StatelessWidget {
                 Container(
                   width: 24,
                   height: 24,
-                  decoration: const BoxDecoration(
-                    color: AppColors.authSuccess,
+                  decoration: BoxDecoration(
+                    color: context.colors.authSuccess,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.add_rounded,
-                    color: AppColors.backgroundPrimary,
+                    color: context.colors.authPrimaryButtonDisabledForeground,
                     size: 24,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   l10n.sceneNewSceneAction,
-                  style: AppTextTokens.sceneNewScene(
+                  style: context.appText.sceneNewScene(
                     Theme.of(context).textTheme,
                   ),
                 ),

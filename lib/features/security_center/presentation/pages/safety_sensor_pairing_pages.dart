@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -278,7 +279,7 @@ class _PairingScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     return Scaffold(
-      backgroundColor: AppColors.safetySensorPairingBackground,
+      backgroundColor: context.colors.safetySensorPairingBackground,
       appBar: FlinxNavigationBar(
         title: '',
         showBottomDivider: false,
@@ -294,7 +295,7 @@ class _PairingScaffold extends StatelessWidget {
                 alignment: Alignment.centerLeft,
                 child: Text(
                   title,
-                  style: AppTextTokens.sharedDevicesTitle(textTheme),
+                  style: context.appText.sharedDevicesTitle(textTheme),
                 ),
               ),
             ),
@@ -358,7 +359,7 @@ class _PairingContent extends StatelessWidget {
             Text(
               status,
               textAlign: TextAlign.center,
-              style: AppTextTokens.safetySensorPairingStatus(textTheme),
+              style: context.appText.safetySensorPairingStatus(textTheme),
             ),
             if (description != null) ...[
               SizedBox(
@@ -383,7 +384,7 @@ class _PairingContent extends StatelessWidget {
                   child: Text(
                     description!,
                     textAlign: TextAlign.left,
-                    style: AppTextTokens.safetySensorPairingBody(textTheme),
+                    style: context.appText.safetySensorPairingBody(textTheme),
                   ),
                 ),
               ),
@@ -402,7 +403,8 @@ class _PairingIllustration extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
+    return SkinAssetImage.themed(
+      context,
       assetPath,
       key: ValueKey<String>('safety-sensor-pairing-asset-$assetPath'),
       fit: BoxFit.contain,
@@ -427,14 +429,14 @@ class _PairingAssetPlaceholder extends StatelessWidget {
         width: 220,
         height: 180,
         decoration: BoxDecoration(
-          color: AppColors.safetySensorPairingPlaceholderSurface,
+          color: context.colors.safetySensorPairingPlaceholderSurface,
           borderRadius: BorderRadius.circular(
             AppShapeTokens.safetySensorPairingPlaceholderRadius,
           ),
         ),
         child: Icon(
           Icons.image_outlined,
-          color: AppColors.safetySensorPairingPlaceholderForeground,
+          color: context.colors.safetySensorPairingPlaceholderForeground,
           size: 56,
         ),
       ),
@@ -454,13 +456,13 @@ class _PairingResultIndicator extends StatelessWidget {
       height: AppSpacingTokens.safetySensorPairingResultIndicatorSize,
       decoration: BoxDecoration(
         color: success
-            ? AppColors.safetySensorPairingSuccess
-            : AppColors.safetySensorPairingFailure,
+            ? context.colors.safetySensorPairingSuccess
+            : context.colors.safetySensorPairingFailure,
         shape: BoxShape.circle,
       ),
       child: Icon(
         success ? Icons.check_rounded : Icons.close_rounded,
-        color: AppColors.safetySensorPairingResultForeground,
+        color: context.colors.safetySensorPairingResultForeground,
         size: AppSpacingTokens.safetySensorPairingResultIconSize,
       ),
     );
@@ -488,11 +490,11 @@ class _PairingActionButton extends StatelessWidget {
         onPressed: onPressed,
         style: FilledButton.styleFrom(
           backgroundColor: primary
-              ? AppColors.safetySensorPairingPrimaryAction
-              : AppColors.safetySensorPairingSecondaryAction,
+              ? context.colors.safetySensorPairingPrimaryAction
+              : context.colors.safetySensorPairingSecondaryAction,
           foregroundColor: primary
-              ? AppColors.safetySensorPairingPrimaryActionForeground
-              : AppColors.safetySensorPairingSecondaryForeground,
+              ? context.colors.safetySensorPairingPrimaryActionForeground
+              : context.colors.safetySensorPairingSecondaryForeground,
           overlayColor: Colors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(
@@ -503,8 +505,8 @@ class _PairingActionButton extends StatelessWidget {
         child: Text(
           label,
           style: primary
-              ? AppTextTokens.safetySensorPairingAction(textTheme)
-              : AppTextTokens.safetySensorPairingSecondaryAction(textTheme),
+              ? context.appText.safetySensorPairingAction(textTheme)
+              : context.appText.safetySensorPairingSecondaryAction(textTheme),
         ),
       ),
     );

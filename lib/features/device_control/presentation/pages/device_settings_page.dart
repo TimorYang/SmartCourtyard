@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -168,7 +169,7 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
       canPop: !_autoCloseBlocking,
       child: Scaffold(
         appBar: const FlinxNavigationBar(title: '', showBottomDivider: false),
-        backgroundColor: AppColors.backgroundPrimary,
+        backgroundColor: context.colors.backgroundPrimary,
         body: Stack(
           children: [
             SafeArea(
@@ -181,7 +182,7 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
                     children: [
                       Text(
                         l10n.deviceSettingsTitle,
-                        style: AppTextTokens.deviceSettingsTitle(textTheme),
+                        style: context.appText.deviceSettingsTitle(textTheme),
                       ),
                       if (settingsState.loading ||
                           capabilitiesState.loading ||
@@ -237,7 +238,7 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
                       const SizedBox(height: 4),
                       Text(
                         l10n.deviceSettingsForUsers,
-                        style: AppTextTokens.deviceSettingsMainSectionLabel(
+                        style: context.appText.deviceSettingsMainSectionLabel(
                           textTheme,
                         ),
                       ),
@@ -357,7 +358,7 @@ class _DeviceSettingsPageState extends ConsumerState<DeviceSettingsPage> {
                         const SizedBox(height: 22),
                         Text(
                           l10n.deviceSettingsForInstallers,
-                          style: AppTextTokens.deviceSettingsMainSectionLabel(
+                          style: context.appText.deviceSettingsMainSectionLabel(
                             textTheme,
                           ),
                         ),
@@ -928,7 +929,7 @@ class _AboutDevicePageState extends ConsumerState<AboutDevicePage> {
 
     return Scaffold(
       appBar: const FlinxNavigationBar(title: '', showBottomDivider: false),
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       body: SafeArea(
         top: false,
         child: Center(
@@ -941,7 +942,7 @@ class _AboutDevicePageState extends ConsumerState<AboutDevicePage> {
                   padding: EdgeInsetsGeometry.only(left: 20),
                   child: Text(
                     l10n.deviceSettingsAboutDevice,
-                    style: AppTextTokens.deviceSettingsTitle(textTheme),
+                    style: context.appText.deviceSettingsTitle(textTheme),
                   ),
                 ),
                 const SizedBox(height: 28),
@@ -1022,7 +1023,7 @@ class TransmitterManagementPage extends StatelessWidget {
 
     return Scaffold(
       appBar: const FlinxNavigationBar(title: '', showBottomDivider: false),
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       body: SafeArea(
         top: false,
         child: Center(
@@ -1033,12 +1034,12 @@ class TransmitterManagementPage extends StatelessWidget {
               children: [
                 Text(
                   l10n.deviceSettingsTitle,
-                  style: AppTextTokens.deviceSettingsTitle(textTheme),
+                  style: context.appText.deviceSettingsTitle(textTheme),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   l10n.deviceSettingsForUsers,
-                  style: AppTextTokens.deviceSettingsSectionLabel(textTheme),
+                  style: context.appText.deviceSettingsSectionLabel(textTheme),
                 ),
                 const SizedBox(height: 8),
                 _SettingsRows(
@@ -1128,9 +1129,9 @@ class _SettingsRow extends StatelessWidget {
           decoration: BoxDecoration(
             border: Border(
               top: showTopDivider
-                  ? const BorderSide(color: AppColors.deviceSettingsDivider)
+                  ? BorderSide(color: context.colors.deviceSettingsDivider)
                   : BorderSide.none,
-              bottom: const BorderSide(color: AppColors.deviceSettingsDivider),
+              bottom: BorderSide(color: context.colors.deviceSettingsDivider),
             ),
           ),
           child: ConstrainedBox(
@@ -1154,7 +1155,7 @@ class _SettingsRow extends StatelessWidget {
                           data.title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: AppTextTokens.deviceSettingsRowTitle(
+                          style: context.appText.deviceSettingsRowTitle(
                             textTheme,
                           ),
                         ),
@@ -1175,21 +1176,23 @@ class _SettingsRow extends StatelessWidget {
                         maxLines: data.valueMaxLines,
                         overflow: data.valueOverflow,
                         textAlign: TextAlign.end,
-                        style: AppTextTokens.deviceSettingsRowValue(textTheme),
+                        style: context.appText.deviceSettingsRowValue(
+                          textTheme,
+                        ),
                       ),
                     ),
                   )
                 else
                   const SizedBox(width: 12),
                 if (data.showChevron)
-                  const SizedBox(
+                  SizedBox(
                     width: 28,
                     child: Align(
                       alignment: Alignment.centerRight,
                       child: Icon(
                         Icons.chevron_right,
                         size: 28,
-                        color: AppColors.textPrimary,
+                        color: context.colors.textPrimary,
                       ),
                     ),
                   ),
@@ -1213,7 +1216,8 @@ class _DeviceSettingsAssetIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
+    return SkinAssetImage.themed(
+      context,
       assetPath,
       width: 34,
       height: 34,
@@ -1221,7 +1225,7 @@ class _DeviceSettingsAssetIcon extends StatelessWidget {
       errorBuilder: (context, error, stackTrace) => SizedBox(
         width: 34,
         height: 34,
-        child: Icon(fallbackIcon, size: 24, color: AppColors.textIcon),
+        child: Icon(fallbackIcon, size: 24, color: context.colors.textIcon),
       ),
     );
   }
@@ -1279,12 +1283,12 @@ class _DoorOpenReminderSheetState extends State<_DoorOpenReminderSheet> {
           Text(
             l10n.deviceSettingsDoorOpenReminder,
             textAlign: TextAlign.center,
-            style: AppTextTokens.deviceSettingsSheetTitle(textTheme),
+            style: context.appText.deviceSettingsSheetTitle(textTheme),
           ),
           const SizedBox(height: 16),
           Text(
             l10n.deviceSettingsDoorOpenReminderTime,
-            style: AppTextTokens.deviceSettingsSheetCaption(textTheme),
+            style: context.appText.deviceSettingsSheetCaption(textTheme),
           ),
           const SizedBox(height: 12),
           Expanded(
@@ -1348,14 +1352,14 @@ class _AutoCloseSheetState extends State<_AutoCloseSheet> {
           Text(
             l10n.deviceSettingsAutoClosingSetting,
             textAlign: TextAlign.center,
-            style: AppTextTokens.deviceSettingsSheetTitle(textTheme),
+            style: context.appText.deviceSettingsSheetTitle(textTheme),
           ),
           const SizedBox(height: 16),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14),
             child: Text(
               l10n.deviceSettingsAutoCloseCaption(widget.currentTimeLabel),
-              style: AppTextTokens.deviceSettingsSheetCaption(textTheme),
+              style: context.appText.deviceSettingsSheetCaption(textTheme),
             ),
           ),
           const SizedBox(height: 18),
@@ -1363,7 +1367,7 @@ class _AutoCloseSheetState extends State<_AutoCloseSheet> {
             padding: const EdgeInsets.symmetric(horizontal: 14),
             child: Text(
               l10n.deviceSettingsAutoClosingSetting,
-              style: AppTextTokens.deviceSettingsSheetCaption(textTheme),
+              style: context.appText.deviceSettingsSheetCaption(textTheme),
             ),
           ),
           const SizedBox(height: 12),
@@ -1382,16 +1386,19 @@ class _AutoCloseSheetState extends State<_AutoCloseSheet> {
             ],
           ),
           const SizedBox(height: 28),
-          const Padding(
+          Padding(
             padding: EdgeInsets.symmetric(horizontal: 14),
-            child: Divider(height: 1, color: AppColors.deviceSettingsDivider),
+            child: Divider(
+              height: 1,
+              color: context.colors.deviceSettingsDivider,
+            ),
           ),
           const SizedBox(height: 24),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14),
             child: Text(
               l10n.deviceSettingsAutoCloseTime,
-              style: AppTextTokens.deviceSettingsSheetCaption(textTheme),
+              style: context.appText.deviceSettingsSheetCaption(textTheme),
             ),
           ),
           const SizedBox(height: 18),
@@ -1461,14 +1468,14 @@ class _SpeedAdjustmentSheetState extends State<_SpeedAdjustmentSheet> {
         children: [
           Text(
             widget.title,
-            style: AppTextTokens.deviceSettingsSheetTitle(textTheme),
+            style: context.appText.deviceSettingsSheetTitle(textTheme),
           ),
           const SizedBox(height: 24),
           Align(
             alignment: Alignment.centerLeft,
             child: Text(
               l10n.deviceSettingsOpeningSpeedCurrent(_value),
-              style: AppTextTokens.deviceSettingsSheetCaption(textTheme),
+              style: context.appText.deviceSettingsSheetCaption(textTheme),
             ),
           ),
           const SizedBox(height: 35),
@@ -1565,7 +1572,7 @@ class _SliderScaleGuides extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textStyle = AppTextTokens.deviceSettingsSheetCaption(
+    final textStyle = context.appText.deviceSettingsSheetCaption(
       Theme.of(context).textTheme,
     );
     return Padding(
@@ -1583,7 +1590,7 @@ class _SliderScaleGuides extends StatelessWidget {
                       height: 1,
                       child: CustomPaint(
                         key: Key('$guideKeyPrefix-$index'),
-                        painter: const _DashedHorizontalLinePainter(),
+                        painter: _DashedHorizontalLinePainter(context.colors),
                       ),
                     ),
                   ),
@@ -1606,7 +1613,8 @@ class _SliderScaleGuides extends StatelessWidget {
 }
 
 class _DashedHorizontalLinePainter extends CustomPainter {
-  const _DashedHorizontalLinePainter();
+  const _DashedHorizontalLinePainter(this.colors);
+  final AppResolvedColors colors;
 
   static const _dashWidth = 3.0;
   static const _dashGap = 3.0;
@@ -1614,7 +1622,7 @@ class _DashedHorizontalLinePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppColors.deviceSettingsSliderGuide
+      ..color = colors.deviceSettingsSliderGuide
       ..strokeWidth = 1;
     for (var start = 0.0; start < size.width; start += _dashWidth + _dashGap) {
       canvas.drawLine(
@@ -1627,7 +1635,7 @@ class _DashedHorizontalLinePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _DashedHorizontalLinePainter oldDelegate) =>
-      false;
+      oldDelegate.colors.skin != colors.skin;
 }
 
 class _VerticalSpeedSlider extends StatelessWidget {
@@ -1679,7 +1687,7 @@ class _VerticalSpeedSlider extends StatelessWidget {
                 width: 56,
                 height: _height,
                 decoration: BoxDecoration(
-                  color: AppColors.deviceSettingsSheetCancel,
+                  color: context.colors.deviceSettingsSheetCancel,
                   borderRadius: BorderRadius.circular(28),
                 ),
               ),
@@ -1690,12 +1698,12 @@ class _VerticalSpeedSlider extends StatelessWidget {
                   height: _thumbHeight,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: AppColors.brandPrimary,
+                    color: context.colors.brandPrimary,
                     borderRadius: BorderRadius.circular(23),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.drag_handle,
-                    color: AppColors.backgroundPrimary,
+                    color: context.colors.authPrimaryButtonDisabledForeground,
                   ),
                 ),
               ),
@@ -1755,7 +1763,7 @@ class _DiscreteVerticalSpeedSlider extends StatelessWidget {
               width: 56,
               height: _height,
               decoration: BoxDecoration(
-                color: AppColors.deviceSettingsSheetCancel,
+                color: context.colors.deviceSettingsSheetCancel,
                 borderRadius: BorderRadius.circular(28),
               ),
             ),
@@ -1766,12 +1774,12 @@ class _DiscreteVerticalSpeedSlider extends StatelessWidget {
                 height: _thumbHeight,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: AppColors.brandPrimary,
+                  color: context.colors.brandPrimary,
                   borderRadius: BorderRadius.circular(23),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.drag_handle,
-                  color: AppColors.backgroundPrimary,
+                  color: context.colors.authPrimaryButtonDisabledForeground,
                 ),
               ),
             ),
@@ -1809,14 +1817,16 @@ class _ForceMarginAdjustmentSheetState
         children: [
           Text(
             AppLocalizations.of(context).deviceSettingsForceMargin,
-            style: AppTextTokens.deviceSettingsSheetTitle(textTheme),
+            style: context.appText.deviceSettingsSheetTitle(textTheme),
           ),
           const SizedBox(height: 24),
           Text(
             widget.description,
-            style: AppTextTokens.deviceSettingsSheetCaption(
-              textTheme,
-            ).copyWith(color: AppColors.deviceSettingsForceMarginWarningText),
+            style: context.appText
+                .deviceSettingsSheetCaption(textTheme)
+                .copyWith(
+                  color: context.colors.deviceSettingsForceMarginWarningText,
+                ),
           ),
           const SizedBox(height: 24),
           Expanded(
@@ -1908,14 +1918,14 @@ class _ForceMarginLevelSheetState extends State<_ForceMarginLevelSheet> {
         children: [
           Text(
             l10n.deviceSettingsForceMargin,
-            style: AppTextTokens.deviceSettingsSheetTitle(
+            style: context.appText.deviceSettingsSheetTitle(
               Theme.of(context).textTheme,
             ),
           ),
           const SizedBox(height: 10),
           Text(
             l10n.deviceSettingsForceMarginLevelCurrent(_level),
-            style: AppTextTokens.deviceSettingsSheetCaption(
+            style: context.appText.deviceSettingsSheetCaption(
               Theme.of(context).textTheme,
             ),
           ),
@@ -1943,7 +1953,8 @@ class _CutAssetPlaceholder extends StatelessWidget {
   final double? height;
 
   @override
-  Widget build(BuildContext context) => Image.asset(
+  Widget build(BuildContext context) => SkinAssetImage.themed(
+    context,
     assetPath,
     width: height,
     height: height,
@@ -1977,20 +1988,22 @@ class _SegmentButton extends StatelessWidget {
           onPressed: onTap,
           style: TextButton.styleFrom(
             backgroundColor: selected
-                ? AppColors.brandPrimary
-                : AppColors.deviceSettingsSheetCancel,
+                ? context.colors.brandPrimary
+                : context.colors.deviceSettingsSheetCancel,
             foregroundColor: selected
-                ? AppColors.backgroundPrimary
-                : AppColors.textMuted,
+                ? context.colors.onBrand
+                : context.colors.textMuted,
             shape: const StadiumBorder(),
           ),
           child: Text(
             label,
-            style: AppTextTokens.deviceSettingsSheetButton(textTheme).copyWith(
-              color: selected
-                  ? AppColors.backgroundPrimary
-                  : AppColors.textMuted,
-            ),
+            style: context.appText
+                .deviceSettingsSheetButton(textTheme)
+                .copyWith(
+                  color: selected
+                      ? context.colors.onBrand
+                      : context.colors.textMuted,
+                ),
           ),
         ),
       ),

@@ -1,3 +1,4 @@
+import 'skin_asset_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../app/theme/app_design_tokens.dart';
@@ -11,7 +12,7 @@ Future<void> showFlinxWarningDialog(
   return showDialog<void>(
     context: context,
     barrierDismissible: false,
-    barrierColor: AppColors.warningDialogScrim,
+    barrierColor: context.colors.warningDialogScrim,
     builder: (_) => FlinxWarningDialog(
       message: message,
       confirmLabel: confirmLabel,
@@ -48,7 +49,7 @@ class FlinxWarningDialog extends StatelessWidget {
           ),
           child: DecoratedBox(
             decoration: BoxDecoration(
-              color: AppColors.warningDialogSurface,
+              color: context.colors.warningDialogSurface,
               borderRadius: BorderRadius.circular(
                 AppShapeTokens.warningDialogRadius,
               ),
@@ -67,12 +68,13 @@ class FlinxWarningDialog extends StatelessWidget {
                   Center(
                     child: SizedBox.square(
                       dimension: AppSpacingTokens.warningDialogIconSize,
-                      child: Image.asset(
+                      child: SkinAssetImage.themed(
+                        context,
                         iconAssetPath,
                         fit: BoxFit.contain,
-                        errorBuilder: (_, _, _) => const Icon(
+                        errorBuilder: (_, _, _) => Icon(
                           Icons.error_outline,
-                          color: AppColors.warningDialogIcon,
+                          color: context.colors.warningDialogIcon,
                           size: AppSpacingTokens.warningDialogIconSize,
                         ),
                       ),
@@ -84,7 +86,7 @@ class FlinxWarningDialog extends StatelessWidget {
                   Text(
                     message,
                     textAlign: TextAlign.left,
-                    style: AppTextTokens.warningDialogMessage(textTheme),
+                    style: context.appText.warningDialogMessage(textTheme),
                   ),
                   const SizedBox(
                     height: AppSpacingTokens.warningDialogMessageToAction,
@@ -94,14 +96,15 @@ class FlinxWarningDialog extends StatelessWidget {
                     child: FilledButton(
                       onPressed: () => Navigator.of(context).pop(),
                       style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.warningDialogPrimaryAction,
+                        backgroundColor:
+                            context.colors.warningDialogPrimaryAction,
                         foregroundColor:
-                            AppColors.warningDialogPrimaryActionForeground,
+                            context.colors.warningDialogPrimaryActionForeground,
                         shape: const StadiumBorder(),
                       ),
                       child: Text(
                         confirmLabel,
-                        style: AppTextTokens.warningDialogAction(textTheme),
+                        style: context.appText.warningDialogAction(textTheme),
                       ),
                     ),
                   ),

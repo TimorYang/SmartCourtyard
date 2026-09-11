@@ -1,3 +1,7 @@
+import '../../../../support/skin_qa.dart';
+import 'package:flinx/app/theme/app_theme.dart';
+import 'package:flinx/app/theme/app_skin_catalog.dart';
+import 'package:flinx/features/appearance/domain/entities/app_skin_id.dart';
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -45,6 +49,53 @@ import 'package:go_router/go_router.dart';
 import 'package:toastification/toastification.dart';
 
 void main() {
+  setUpAll(loadSkinQaFont);
+  testWidgets(
+    'skin changes preserve the route and a pending hardware command',
+    (tester) async {
+      tester.view.physicalSize = const Size(393, 852);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final gateway = _PendingCommandGateway();
+      final skin = ValueNotifier(AppTheme.forSkin(AppSkinId.minimalist));
+      addTearDown(skin.dispose);
+      final key = GlobalKey();
+      await tester.pumpWidget(_buildPage(gateway, skin: skin, qaKey: key));
+      await tester.pumpAndSettle();
+      final pageState = tester.state(find.byType(DeviceCommandPage));
+      for (final id in AppSkinId.values) {
+        skin.value = AppTheme.forSkin(id);
+        await tester.pumpAndSettle();
+        expect(tester.state(find.byType(DeviceCommandPage)), same(pageState));
+        expect(
+          Theme.of(
+            tester.element(find.byType(DeviceCommandPage)),
+          ).extension<AppSkinTokens>()!.id,
+          id,
+        );
+        expect(find.text('Garage door'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        await captureSkinQa(tester, key, '${id.storageValue}_device_control');
+      }
+      await tester.tap(find.byTooltip('Open'));
+      await tester.pump();
+      expect(gateway.commandCount, 1);
+      for (final id in AppSkinId.values) {
+        skin.value = AppTheme.forSkin(id);
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(tester.state(find.byType(DeviceCommandPage)), same(pageState));
+        expect(find.byType(CircularProgressIndicator), findsOneWidget);
+        expect(gateway.commandCount, 1);
+        expect(tester.takeException(), isNull);
+        await captureSkinQa(tester, key, '${id.storageValue}_device_pending');
+      }
+      gateway.complete(DoorCommand.open);
+      await tester.pumpAndSettle();
+      expect(gateway.commandCount, 1);
+    },
+  );
+
   testWidgets('shows only loading until door detail requests complete', (
     tester,
   ) async {
@@ -2351,6 +2402,8 @@ void main() {
 
 Widget _buildPage(
   MockHardwareGateway gateway, {
+  ValueNotifier<ThemeData>? skin,
+  GlobalKey? qaKey,
   DoorDetailRepository repository = const _FakeDoorDetailRepository(),
   DeviceCapabilityRepository capabilityRepository =
       const _SettingsDeviceCapabilityRepository(),
@@ -2392,6 +2445,17 @@ Widget _buildPage(
     ],
     child: ToastificationWrapper(
       child: MaterialApp.router(
+        builder: (context, child) => RepaintBoundary(
+          key: qaKey,
+          child: skin == null
+              ? child!
+              : ValueListenableBuilder<ThemeData>(
+                  valueListenable: skin,
+                  child: child,
+                  builder: (context, theme, child) =>
+                      Theme(data: theme, child: child!),
+                ),
+        ),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         routerConfig: GoRouter(
@@ -3427,6 +3491,7 @@ class _ReportedOperation {
 }
 
 class _PendingCommandGateway extends MockHardwareGateway {
+  int commandCount = 0;
   final Completer<CommandResult> _commandCompleter = Completer<CommandResult>();
 
   @override
@@ -3435,6 +3500,7 @@ class _PendingCommandGateway extends MockHardwareGateway {
     required String deviceId,
     required DoorCommand command,
   }) {
+    commandCount++;
     return _commandCompleter.future;
   }
 

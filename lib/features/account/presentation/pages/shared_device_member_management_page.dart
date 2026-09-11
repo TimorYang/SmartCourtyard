@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -40,7 +41,7 @@ class _SharedDeviceMemberManagementPageState
         : ref.watch(sharedDoorMembersProvider(doorId));
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       appBar: const FlinxNavigationBar(title: '', showBottomDivider: false),
       body: SafeArea(
         top: false,
@@ -61,14 +62,16 @@ class _SharedDeviceMemberManagementPageState
                 children: [
                   Text(
                     share.doorName,
-                    style: AppTextTokens.sharedDeviceMemberPageTitle(textTheme),
+                    style: context.appText.sharedDeviceMemberPageTitle(
+                      textTheme,
+                    ),
                   ),
                   const SizedBox(
                     height: AppSpacingTokens.sharedDeviceMemberPageSubtitleGap,
                   ),
                   Text(
                     l10n.sharedDeviceMemberAdministrator,
-                    style: AppTextTokens.sharedDeviceMemberSectionTitle(
+                    style: context.appText.sharedDeviceMemberSectionTitle(
                       textTheme,
                     ),
                   ),
@@ -81,7 +84,7 @@ class _SharedDeviceMemberManagementPageState
                   ),
                   Text(
                     l10n.sharedDeviceMemberGuest,
-                    style: AppTextTokens.sharedDeviceMemberSectionTitle(
+                    style: context.appText.sharedDeviceMemberSectionTitle(
                       textTheme,
                     ),
                   ),
@@ -136,8 +139,8 @@ class _SharedDeviceMemberCard extends ConsumerWidget {
       key: SharedDeviceMemberManagementKeys.memberCard(member.id),
       height: AppSpacingTokens.sharedDeviceMemberCardHeight,
       padding: const EdgeInsets.only(left: 20, right: 15),
-      decoration: const BoxDecoration(
-        color: AppColors.sharedDeviceMemberCard,
+      decoration: BoxDecoration(
+        color: context.colors.sharedDeviceMemberCard,
         borderRadius: BorderRadius.all(
           Radius.circular(AppShapeTokens.sharedDeviceMemberCardRadius),
         ),
@@ -155,7 +158,7 @@ class _SharedDeviceMemberCard extends ConsumerWidget {
                   member.email,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextTokens.sharedDeviceMemberEmail(textTheme),
+                  style: context.appText.sharedDeviceMemberEmail(textTheme),
                 ),
                 const SizedBox(
                   height: AppSpacingTokens.sharedDeviceMemberEmailToTime,
@@ -164,7 +167,7 @@ class _SharedDeviceMemberCard extends ConsumerWidget {
                   _expiryLabel(l10n, member),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextTokens.sharedDeviceMemberMetadata(textTheme),
+                  style: context.appText.sharedDeviceMemberMetadata(textTheme),
                 ),
                 const SizedBox(
                   height: AppSpacingTokens.sharedDeviceMemberTimeToStatus,
@@ -173,7 +176,7 @@ class _SharedDeviceMemberCard extends ConsumerWidget {
                   l10n.sharedDeviceMemberAccepted,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextTokens.sharedDeviceMemberStatus(textTheme),
+                  style: context.appText.sharedDeviceMemberStatus(textTheme),
                 ),
               ],
             ),
@@ -243,7 +246,8 @@ class _SharedDeviceMemberAvatar extends ConsumerWidget {
         dimension: AppSpacingTokens.sharedDeviceMemberAvatarSize,
         child: ClipOval(
           child: member.receiverAvatarCode != null
-              ? Image.asset(
+              ? SkinAssetImage.themed(
+                  context,
                   member.receiverAvatarCode!.assetPath,
                   fit: BoxFit.cover,
                 )
@@ -267,12 +271,12 @@ class _SharedDeviceMemberAvatarPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const ColoredBox(
-      color: AppColors.sharedDeviceMemberAvatarPlaceholder,
+    return ColoredBox(
+      color: context.colors.sharedDeviceMemberAvatarPlaceholder,
       child: Center(
         child: Icon(
           Icons.person_outline,
-          color: AppColors.sharedDeviceMemberAvatarPlaceholderIcon,
+          color: context.colors.sharedDeviceMemberAvatarPlaceholderIcon,
           size: AppSpacingTokens.sharedDeviceMemberAvatarPlaceholderIconSize,
         ),
       ),
@@ -305,12 +309,13 @@ class _MemberActionButton extends StatelessWidget {
         child: SizedBox(
           width: AppSpacingTokens.sharedDeviceMemberActionSize,
           height: AppSpacingTokens.sharedDeviceMemberActionSize,
-          child: Image.asset(
+          child: SkinAssetImage.themed(
+            context,
             assetPath,
             fit: BoxFit.contain,
             errorBuilder: (_, _, _) => Icon(
               fallbackIcon,
-              color: AppColors.sharedDeviceMemberActionIcon,
+              color: context.colors.sharedDeviceMemberActionIcon,
             ),
           ),
         ),

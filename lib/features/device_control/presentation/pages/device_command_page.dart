@@ -1,3 +1,5 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
+import '../../../../app/theme/app_skin_catalog.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -458,11 +460,11 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
     final doorPositionPercent =
         realtimePositionPercent ?? doorDetail?.positionPercent;
     return Scaffold(
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       appBar: FlinxNavigationBar(
         title: doorDetail?.name ?? l10n.deviceCommandFallbackDoorName,
         showBottomDivider: false,
-        foregroundColor: AppColors.textPrimary,
+        foregroundColor: context.colors.textPrimary,
         actions: [
           IconButton(
             tooltip: l10n.deviceCommandMoreTooltip,
@@ -491,310 +493,331 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
         selectedTab: DeviceDetailTab.command,
         onSelected: _selectTab,
       ),
-      body: SafeArea(
-        top: false,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final contentWidth =
-                constraints.maxWidth >
-                    AppLayoutTokens.deviceControlLargeScreenMinWidth
-                ? math.min(
-                    constraints.maxWidth,
-                    AppLayoutTokens.deviceControlContentMaxWidth,
-                  )
-                : constraints.maxWidth;
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          color: context.skin.pageBackground,
+          gradient: context.skin.deviceControlBackgroundGradient,
+        ),
+        child: SafeArea(
+          top: false,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final contentWidth =
+                  constraints.maxWidth >
+                      AppLayoutTokens.deviceControlLargeScreenMinWidth
+                  ? math.min(
+                      constraints.maxWidth,
+                      AppLayoutTokens.deviceControlContentMaxWidth,
+                    )
+                  : constraints.maxWidth;
 
-            return Center(
-              child: SizedBox(
-                width: contentWidth,
-                child: Column(
-                  children: [
-                    if (isFBox)
-                      const _FBoxVideoHeader()
-                    else
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-                        child: DecoratedBox(
-                          decoration: const BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(
-                                color: AppColors.deviceControlDivider,
+              return Center(
+                child: SizedBox(
+                  width: contentWidth,
+                  child: Column(
+                    children: [
+                      if (isFBox)
+                        const _FBoxVideoHeader()
+                      else
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: context.colors.deviceControlDivider,
+                                ),
                               ),
                             ),
-                          ),
-                          child: _CycleSummary(
-                            operatedCycles: doorDetail?.operatedCycles,
-                            remainingCycles: doorDetail?.remainingCycles,
-                            textTheme: textTheme,
+                            child: _CycleSummary(
+                              operatedCycles: doorDetail?.operatedCycles,
+                              remainingCycles: doorDetail?.remainingCycles,
+                              textTheme: textTheme,
+                            ),
                           ),
                         ),
+                      _DeviceConnectionStrip(
+                        devices: commandState.doorDevices,
+                        connectionStatuses: commandState.bleConnectionStatuses,
+                        selectedDeviceId: commandState.selectedDeviceId,
+                        onDeviceTap: (device) =>
+                            controller.selectDevice(device.deviceId),
                       ),
-                    _DeviceConnectionStrip(
-                      devices: commandState.doorDevices,
-                      connectionStatuses: commandState.bleConnectionStatuses,
-                      selectedDeviceId: commandState.selectedDeviceId,
-                      onDeviceTap: (device) =>
-                          controller.selectDevice(device.deviceId),
-                    ),
-                    SizedBox(
-                      height: isFBox
-                          ? AppSpacingTokens
-                                .deviceControlFBoxConnectionToContent
-                          : 12,
-                    ),
-                    Expanded(
-                      child: isFBox
-                          ? _buildFBoxScrollableContent(
-                              commandState: commandState,
-                              controlMode: controlMode,
-                              doorDetail: doorDetail!,
-                              doorPositionPercent: doorPositionPercent,
-                              hardwareDeviceId: hardwareDeviceId,
-                              selectedDeviceId: selectedDeviceId,
-                              selectedDeviceUsesBle: selectedDeviceUsesBle,
-                              isBusy: isBusy,
-                              canControlDoor: canControlDoor,
-                              onPermissionDenied: permissionDeniedFor(
-                                'DOOR_CONTROL',
-                              ),
-                              textTheme: textTheme,
-                              l10n: l10n,
-                            )
-                          : ListView(
-                              key: const PageStorageKey<String>(
-                                'device-command-scroll',
-                              ),
-                              padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                              children: [
-                                _DoorHeroImage(
-                                  doorType: DoorType.fromWireValue(
-                                    doorDetail?.doorType,
-                                  ),
-                                  doorTypeWireValue: doorDetail?.doorType,
-                                  positionPercent: doorPositionPercent ?? 0,
-                                  logger: ref.read(appLoggerProvider),
+                      SizedBox(
+                        height: isFBox
+                            ? AppSpacingTokens
+                                  .deviceControlFBoxConnectionToContent
+                            : 12,
+                      ),
+                      Expanded(
+                        child: isFBox
+                            ? _buildFBoxScrollableContent(
+                                commandState: commandState,
+                                controlMode: controlMode,
+                                doorDetail: doorDetail!,
+                                doorPositionPercent: doorPositionPercent,
+                                hardwareDeviceId: hardwareDeviceId,
+                                selectedDeviceId: selectedDeviceId,
+                                selectedDeviceUsesBle: selectedDeviceUsesBle,
+                                isBusy: isBusy,
+                                canControlDoor: canControlDoor,
+                                onPermissionDenied: permissionDeniedFor(
+                                  'DOOR_CONTROL',
                                 ),
-                                const SizedBox(height: 4),
-                                Center(
-                                  child: Text(
-                                    _doorStateLabel(
-                                      l10n,
-                                      realtimeStatus: commandState
-                                          .doorRealtimeState
-                                          ?.status,
-                                      fallbackState: doorDetail?.doorState,
-                                      positionPercent: doorPositionPercent,
+                                textTheme: textTheme,
+                                l10n: l10n,
+                              )
+                            : ListView(
+                                key: const PageStorageKey<String>(
+                                  'device-command-scroll',
+                                ),
+                                padding: const EdgeInsets.fromLTRB(
+                                  20,
+                                  0,
+                                  20,
+                                  12,
+                                ),
+                                children: [
+                                  _DoorHeroImage(
+                                    doorType: DoorType.fromWireValue(
+                                      doorDetail?.doorType,
                                     ),
-                                    style: AppTextTokens.deviceControlDoorState(
-                                      textTheme,
+                                    doorTypeWireValue: doorDetail?.doorType,
+                                    positionPercent: doorPositionPercent ?? 0,
+                                    logger: ref.read(appLoggerProvider),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Center(
+                                    child: Text(
+                                      _doorStateLabel(
+                                        l10n,
+                                        realtimeStatus: commandState
+                                            .doorRealtimeState
+                                            ?.status,
+                                        fallbackState: doorDetail?.doorState,
+                                        positionPercent: doorPositionPercent,
+                                      ),
+                                      style: context.appText
+                                          .deviceControlDoorState(textTheme),
                                     ),
                                   ),
-                                ),
-                                const SizedBox(height: 16),
-                                if (commandState.doorDetailErrorMessage !=
-                                    null) ...[
-                                  _CommandFeedback(
-                                    message:
-                                        commandState.doorDetailErrorMessage!,
-                                    icon: Icons.error_outline,
-                                    foregroundColor: AppColors.textPrimary,
-                                  ),
-                                  const SizedBox(height: 12),
-                                ],
-                                _DoorCommandRow(
-                                  enabled: canControlDoor,
-                                  busy: isBusy,
-                                  pendingAction: commandState.pendingAction,
-                                  onPermissionDenied: permissionDeniedFor(
-                                    'DOOR_CONTROL',
-                                  ),
-                                  onClose: () {
-                                    unawaited(
-                                      _runCommandAndReport(
-                                        deviceId: hardwareDeviceId,
-                                        action: DeviceCommandAction.closeDoor,
-                                      ),
-                                    );
-                                  },
-                                  onStop: () {
-                                    unawaited(
-                                      _runCommandAndReport(
-                                        deviceId: hardwareDeviceId,
-                                        action: DeviceCommandAction.stopDoor,
-                                      ),
-                                    );
-                                  },
-                                  onOpen: () {
-                                    unawaited(
-                                      _runCommandAndReport(
-                                        deviceId: hardwareDeviceId,
-                                        action: DeviceCommandAction.openDoor,
-                                      ),
-                                    );
-                                  },
-                                ),
-                                const SizedBox(height: 18),
-                                if (commandState.commandFeedback != null) ...[
-                                  _CommandFeedback(
-                                    message: _commandFeedbackMessage(
-                                      l10n,
-                                      commandState.commandFeedback!,
+                                  const SizedBox(height: 16),
+                                  if (commandState.doorDetailErrorMessage !=
+                                      null) ...[
+                                    _CommandFeedback(
+                                      message:
+                                          commandState.doorDetailErrorMessage!,
+                                      icon: Icons.error_outline,
+                                      foregroundColor:
+                                          context.colors.textPrimary,
                                     ),
-                                    icon: commandState.commandFeedback!.isError
-                                        ? Icons.error_outline
-                                        : commandState.commandFeedback!.kind ==
-                                              DeviceCommandFeedbackKind.sending
-                                        ? Icons.sync
-                                        : Icons.check_circle_outline,
-                                    foregroundColor:
-                                        commandState.commandFeedback!.isError
-                                        ? AppColors.textPrimary
-                                        : AppColors.textMuted,
-                                  ),
-                                  const SizedBox(height: 12),
-                                ] else if (commandState.errorMessage !=
-                                    null) ...[
-                                  _CommandFeedback(
-                                    message: commandState.errorMessage!,
-                                    icon: Icons.error_outline,
-                                    foregroundColor: AppColors.textPrimary,
-                                  ),
-                                  const SizedBox(height: 12),
-                                ] else if (commandState.infoMessage !=
-                                    null) ...[
-                                  _CommandFeedback(
-                                    message: commandState.infoMessage!,
-                                    icon: Icons.check_circle_outline,
-                                    foregroundColor: AppColors.textMuted,
-                                  ),
-                                  const SizedBox(height: 12),
-                                ],
-                                _QuickActionGrid(
-                                  ledEnabled: ledEnabled,
-                                  ledOffDelayLabel: ledOffDelayLabel,
-                                  autoCloseEnabled: autoCloseEnabled,
-                                  autoCloseValueLabel: autoCloseValueLabel,
-                                  openReminderEnabled: openReminderEnabled,
-                                  openReminderMinutes: openReminderMinutes,
-                                  partialOpenValueLabel: partialOpenValueLabel,
-                                  ledAvailable: canControlLed,
-                                  autoCloseAvailable: canUseAutoClose,
-                                  partialOpenAvailable: canPartialOpen,
-                                  partialOpenSettingAvailable:
-                                      canSetPartialOpenLevel,
-                                  openReminderAvailable: canUseOpenReminder,
-                                  ledPermissionDenied: permissionDeniedFor(
-                                    'LED_CONTROL',
-                                  ),
-                                  autoClosePermissionDenied:
-                                      permissionDeniedFor('AUTO_CLOSE'),
-                                  openReminderPermissionDenied:
-                                      permissionDeniedFor('DOOR_OPEN_REMINDER'),
-                                  partialOpenPermissionDenied:
-                                      permissionDeniedFor('PARTIAL_OPEN'),
-                                  partialOpenSettingPermissionDenied:
-                                      permissionDeniedFor(
-                                        DeviceCapabilityCode.partialOpenLevel,
-                                      ),
-                                  busy: isBusy,
-                                  settingsBusy:
-                                      deviceSettingsState.pendingKey != null &&
-                                      deviceSettingsState.pendingKey !=
-                                          DeviceSettingKey.autoCloseTime,
-                                  autoCloseBusy: _autoClosePendingDeviceIds
-                                      .contains(selectedDeviceId),
-                                  partialOpenSettingBusy:
-                                      deviceCapabilitiesState.loading ||
-                                      doorSettingsState.loading ||
-                                      deviceSettingsState.loading,
-                                  onLedChanged: (enabled) async {
-                                    setState(
-                                      () => _ledEnabledOverride = enabled,
-                                    );
-                                    final action = enabled
-                                        ? DeviceCommandAction.turnLightOn
-                                        : DeviceCommandAction.turnLightOff;
-                                    final result = await controller.runAction(
-                                      deviceId: hardwareDeviceId,
-                                      action: action,
-                                    );
-                                    _reportSuccessfulCommand(action, result);
-                                    if (mounted && !selectedDeviceUsesBle) {
-                                      setState(
-                                        () => _ledEnabledOverride = null,
+                                    const SizedBox(height: 12),
+                                  ],
+                                  _DoorCommandRow(
+                                    enabled: canControlDoor,
+                                    busy: isBusy,
+                                    pendingAction: commandState.pendingAction,
+                                    onPermissionDenied: permissionDeniedFor(
+                                      'DOOR_CONTROL',
+                                    ),
+                                    onClose: () {
+                                      unawaited(
+                                        _runCommandAndReport(
+                                          deviceId: hardwareDeviceId,
+                                          action: DeviceCommandAction.closeDoor,
+                                        ),
                                       );
-                                    }
-                                  },
-                                  onAutoCloseChanged: (enabled) =>
-                                      _setBluetoothToggle(
-                                        connected: selectedDeviceUsesBle,
-                                        bleDeviceId: connectedBleDeviceId,
-                                        businessDeviceId: selectedDeviceId,
-                                        key: DeviceSettingKey.autoCloseTime,
-                                        enabled: enabled,
-                                        enabledValue: autoCloseEnabledValue,
-                                        allowedValues: autoCloseAllowedValues,
-                                        actionLabel:
-                                            l10n.deviceCommandAutoCloseTitle,
-                                      ),
-                                  onOpenReminderChanged: (enabled) =>
-                                      _setBluetoothToggle(
-                                        connected: selectedDeviceUsesBle,
-                                        bleDeviceId: connectedBleDeviceId,
-                                        businessDeviceId: selectedDeviceId,
-                                        key: DeviceSettingKey.doorOpenReminder,
-                                        enabled: enabled,
-                                        actionLabel:
-                                            l10n.deviceCommandOpenReminderTitle,
-                                      ),
-                                  onPartialOpen: () {
-                                    if (!_requireBluetoothConnection(
-                                      connected: selectedDeviceUsesBle,
-                                      actionLabel:
-                                          l10n.deviceCommandActionPartialOpen,
-                                    )) {
-                                      return;
-                                    }
-                                    final reportAction =
-                                        _partialOpenReportAction(
-                                          ref.read(
-                                            deviceCommandControllerProvider,
-                                          ),
-                                        );
-                                    unawaited(
-                                      _runCommandAndReport(
-                                        deviceId: hardwareDeviceId,
-                                        action:
-                                            DeviceCommandAction.partialOpenDoor,
-                                        reportActionOverride: reportAction,
-                                      ),
-                                    );
-                                  },
-                                  onPartialOpenSetting: () =>
-                                      _showPartialOpenLevelEditor(
-                                        connected: selectedDeviceUsesBle,
-                                        bleDeviceId: connectedBleDeviceId,
-                                        capability: partialOpenCapability,
-                                        currentLevel: partialOpenLevel,
-                                      ),
-                                  onMoreSettings: () => context.push(
-                                    '${DeviceSettingsPage.routePath}'
-                                    '?doorId=${Uri.encodeComponent(widget.doorId)}'
-                                    '&deviceId=${Uri.encodeComponent(selectedDeviceId)}'
-                                    '&bleName=${Uri.encodeComponent(selectedBleName)}'
-                                    '&bleDeviceId=${Uri.encodeComponent(connectedBleDeviceId)}',
-                                    extra: settingsCapabilityScope,
+                                    },
+                                    onStop: () {
+                                      unawaited(
+                                        _runCommandAndReport(
+                                          deviceId: hardwareDeviceId,
+                                          action: DeviceCommandAction.stopDoor,
+                                        ),
+                                      );
+                                    },
+                                    onOpen: () {
+                                      unawaited(
+                                        _runCommandAndReport(
+                                          deviceId: hardwareDeviceId,
+                                          action: DeviceCommandAction.openDoor,
+                                        ),
+                                      );
+                                    },
                                   ),
-                                ),
-                                const SizedBox(height: 22),
-                              ],
-                            ),
-                    ),
-                  ],
+                                  const SizedBox(height: 18),
+                                  if (commandState.commandFeedback != null) ...[
+                                    _CommandFeedback(
+                                      message: _commandFeedbackMessage(
+                                        l10n,
+                                        commandState.commandFeedback!,
+                                      ),
+                                      icon:
+                                          commandState.commandFeedback!.isError
+                                          ? Icons.error_outline
+                                          : commandState
+                                                    .commandFeedback!
+                                                    .kind ==
+                                                DeviceCommandFeedbackKind
+                                                    .sending
+                                          ? Icons.sync
+                                          : Icons.check_circle_outline,
+                                      foregroundColor:
+                                          commandState.commandFeedback!.isError
+                                          ? context.colors.textPrimary
+                                          : context.colors.textMuted,
+                                    ),
+                                    const SizedBox(height: 12),
+                                  ] else if (commandState.errorMessage !=
+                                      null) ...[
+                                    _CommandFeedback(
+                                      message: commandState.errorMessage!,
+                                      icon: Icons.error_outline,
+                                      foregroundColor:
+                                          context.colors.textPrimary,
+                                    ),
+                                    const SizedBox(height: 12),
+                                  ] else if (commandState.infoMessage !=
+                                      null) ...[
+                                    _CommandFeedback(
+                                      message: commandState.infoMessage!,
+                                      icon: Icons.check_circle_outline,
+                                      foregroundColor: context.colors.textMuted,
+                                    ),
+                                    const SizedBox(height: 12),
+                                  ],
+                                  _QuickActionGrid(
+                                    ledEnabled: ledEnabled,
+                                    ledOffDelayLabel: ledOffDelayLabel,
+                                    autoCloseEnabled: autoCloseEnabled,
+                                    autoCloseValueLabel: autoCloseValueLabel,
+                                    openReminderEnabled: openReminderEnabled,
+                                    openReminderMinutes: openReminderMinutes,
+                                    partialOpenValueLabel:
+                                        partialOpenValueLabel,
+                                    ledAvailable: canControlLed,
+                                    autoCloseAvailable: canUseAutoClose,
+                                    partialOpenAvailable: canPartialOpen,
+                                    partialOpenSettingAvailable:
+                                        canSetPartialOpenLevel,
+                                    openReminderAvailable: canUseOpenReminder,
+                                    ledPermissionDenied: permissionDeniedFor(
+                                      'LED_CONTROL',
+                                    ),
+                                    autoClosePermissionDenied:
+                                        permissionDeniedFor('AUTO_CLOSE'),
+                                    openReminderPermissionDenied:
+                                        permissionDeniedFor(
+                                          'DOOR_OPEN_REMINDER',
+                                        ),
+                                    partialOpenPermissionDenied:
+                                        permissionDeniedFor('PARTIAL_OPEN'),
+                                    partialOpenSettingPermissionDenied:
+                                        permissionDeniedFor(
+                                          DeviceCapabilityCode.partialOpenLevel,
+                                        ),
+                                    busy: isBusy,
+                                    settingsBusy:
+                                        deviceSettingsState.pendingKey !=
+                                            null &&
+                                        deviceSettingsState.pendingKey !=
+                                            DeviceSettingKey.autoCloseTime,
+                                    autoCloseBusy: _autoClosePendingDeviceIds
+                                        .contains(selectedDeviceId),
+                                    partialOpenSettingBusy:
+                                        deviceCapabilitiesState.loading ||
+                                        doorSettingsState.loading ||
+                                        deviceSettingsState.loading,
+                                    onLedChanged: (enabled) async {
+                                      setState(
+                                        () => _ledEnabledOverride = enabled,
+                                      );
+                                      final action = enabled
+                                          ? DeviceCommandAction.turnLightOn
+                                          : DeviceCommandAction.turnLightOff;
+                                      final result = await controller.runAction(
+                                        deviceId: hardwareDeviceId,
+                                        action: action,
+                                      );
+                                      _reportSuccessfulCommand(action, result);
+                                      if (mounted && !selectedDeviceUsesBle) {
+                                        setState(
+                                          () => _ledEnabledOverride = null,
+                                        );
+                                      }
+                                    },
+                                    onAutoCloseChanged: (enabled) =>
+                                        _setBluetoothToggle(
+                                          connected: selectedDeviceUsesBle,
+                                          bleDeviceId: connectedBleDeviceId,
+                                          businessDeviceId: selectedDeviceId,
+                                          key: DeviceSettingKey.autoCloseTime,
+                                          enabled: enabled,
+                                          enabledValue: autoCloseEnabledValue,
+                                          allowedValues: autoCloseAllowedValues,
+                                          actionLabel:
+                                              l10n.deviceCommandAutoCloseTitle,
+                                        ),
+                                    onOpenReminderChanged: (enabled) =>
+                                        _setBluetoothToggle(
+                                          connected: selectedDeviceUsesBle,
+                                          bleDeviceId: connectedBleDeviceId,
+                                          businessDeviceId: selectedDeviceId,
+                                          key:
+                                              DeviceSettingKey.doorOpenReminder,
+                                          enabled: enabled,
+                                          actionLabel: l10n
+                                              .deviceCommandOpenReminderTitle,
+                                        ),
+                                    onPartialOpen: () {
+                                      if (!_requireBluetoothConnection(
+                                        connected: selectedDeviceUsesBle,
+                                        actionLabel:
+                                            l10n.deviceCommandActionPartialOpen,
+                                      )) {
+                                        return;
+                                      }
+                                      final reportAction =
+                                          _partialOpenReportAction(
+                                            ref.read(
+                                              deviceCommandControllerProvider,
+                                            ),
+                                          );
+                                      unawaited(
+                                        _runCommandAndReport(
+                                          deviceId: hardwareDeviceId,
+                                          action: DeviceCommandAction
+                                              .partialOpenDoor,
+                                          reportActionOverride: reportAction,
+                                        ),
+                                      );
+                                    },
+                                    onPartialOpenSetting: () =>
+                                        _showPartialOpenLevelEditor(
+                                          connected: selectedDeviceUsesBle,
+                                          bleDeviceId: connectedBleDeviceId,
+                                          capability: partialOpenCapability,
+                                          currentLevel: partialOpenLevel,
+                                        ),
+                                    onMoreSettings: () => context.push(
+                                      '${DeviceSettingsPage.routePath}'
+                                      '?doorId=${Uri.encodeComponent(widget.doorId)}'
+                                      '&deviceId=${Uri.encodeComponent(selectedDeviceId)}'
+                                      '&bleName=${Uri.encodeComponent(selectedBleName)}'
+                                      '&bleDeviceId=${Uri.encodeComponent(connectedBleDeviceId)}',
+                                      extra: settingsCapabilityScope,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 22),
+                                ],
+                              ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );
@@ -841,7 +864,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                       fallbackState: doorDetail.doorState,
                       positionPercent: doorPositionPercent,
                     ),
-                    style: AppTextTokens.deviceControlDoorState(textTheme),
+                    style: context.appText.deviceControlDoorState(textTheme),
                   ),
                 ),
                 const SizedBox(
@@ -851,7 +874,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                   _CommandFeedback(
                     message: commandState.doorDetailErrorMessage!,
                     icon: Icons.error_outline,
-                    foregroundColor: AppColors.textPrimary,
+                    foregroundColor: context.colors.textPrimary,
                   ),
                   const SizedBox(height: 12),
                 ],
@@ -912,7 +935,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                   DoorControlMode.unset => _CommandFeedback(
                     message: l10n.deviceCommandControlModeUnset,
                     icon: Icons.info_outline,
-                    foregroundColor: AppColors.textMuted,
+                    foregroundColor: context.colors.textMuted,
                   ),
                 },
                 const SizedBox(height: 18),
@@ -926,20 +949,20 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
                         ? Icons.sync
                         : Icons.check_circle_outline,
                     foregroundColor: commandFeedback.isError
-                        ? AppColors.textPrimary
-                        : AppColors.textMuted,
+                        ? context.colors.textPrimary
+                        : context.colors.textMuted,
                   ),
                 ] else if (commandState.errorMessage != null) ...[
                   _CommandFeedback(
                     message: commandState.errorMessage!,
                     icon: Icons.error_outline,
-                    foregroundColor: AppColors.textPrimary,
+                    foregroundColor: context.colors.textPrimary,
                   ),
                 ] else if (commandState.infoMessage != null) ...[
                   _CommandFeedback(
                     message: commandState.infoMessage!,
                     icon: Icons.check_circle_outline,
-                    foregroundColor: AppColors.textMuted,
+                    foregroundColor: context.colors.textMuted,
                   ),
                 ],
               ],
@@ -1405,7 +1428,7 @@ class _DeviceCommandLoadingPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       key: const ValueKey<String>('device-command-loading'),
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       body: Center(
         child: Semantics(
           label: semanticsLabel,
@@ -1426,7 +1449,7 @@ class _DeviceCommandLoadFailurePage extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
       key: const ValueKey<String>('device-command-load-failure'),
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       body: SafeArea(
         child: Center(
           child: Padding(
@@ -1439,7 +1462,7 @@ class _DeviceCommandLoadFailurePage extends StatelessWidget {
                   Text(
                     l10n.deviceCommandLoadFailed,
                     textAlign: TextAlign.center,
-                    style: AppTextTokens.deviceControlLoadError(
+                    style: context.appText.deviceControlLoadError(
                       Theme.of(context).textTheme,
                     ),
                   ),
@@ -1614,7 +1637,7 @@ class _ConnectionGroup extends StatelessWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           border: hasConnectionBorder
-              ? Border.all(color: AppColors.deviceControlPrimaryAction)
+              ? Border.all(color: context.colors.deviceControlPrimaryAction)
               : null,
           borderRadius: BorderRadius.circular(5),
         ),
@@ -1680,7 +1703,7 @@ class _CycleSummary extends StatelessWidget {
             child: VerticalDivider(
               width: 58,
               thickness: 1,
-              color: AppColors.deviceControlDivider,
+              color: context.colors.deviceControlDivider,
             ),
           ),
           Expanded(
@@ -1720,7 +1743,7 @@ class _CycleMetric extends StatelessWidget {
           child: Text(
             label,
             maxLines: 1,
-            style: AppTextTokens.deviceControlMetricLabel(textTheme),
+            style: context.appText.deviceControlMetricLabel(textTheme),
           ),
         ),
         const SizedBox(height: 6),
@@ -1730,7 +1753,7 @@ class _CycleMetric extends StatelessWidget {
           child: Text(
             value,
             maxLines: 1,
-            style: AppTextTokens.deviceControlMetricValue(textTheme),
+            style: context.appText.deviceControlMetricValue(textTheme),
           ),
         ),
       ],
@@ -1747,8 +1770,8 @@ class _CommandVideoButton extends StatelessWidget {
       width: 30,
       height: 30,
       margin: const EdgeInsets.only(left: 8),
-      decoration: const BoxDecoration(
-        color: AppColors.deviceControlPanel,
+      decoration: BoxDecoration(
+        color: context.colors.deviceControlPanel,
         shape: BoxShape.circle,
       ),
       child: IconButton(
@@ -1771,7 +1794,8 @@ class _DeviceControlAssetIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
+    return SkinAssetImage.themed(
+      context,
       assetPath,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
@@ -1866,8 +1890,8 @@ class _DoorHeroImageState extends State<_DoorHeroImage> {
             gaplessPlayback: true,
             errorBuilder: (context, error, stackTrace) {
               return DecoratedBox(
-                decoration: const BoxDecoration(
-                  color: AppColors.backgroundPrimary,
+                decoration: BoxDecoration(
+                  color: context.colors.backgroundPrimary,
                 ),
                 child: Center(
                   child: Image.asset(
@@ -2075,19 +2099,20 @@ class _FBoxPbControl extends StatelessWidget {
             onPressed: onPressed ?? onDisabled,
             style: FilledButton.styleFrom(
               backgroundColor: Colors.transparent,
-              foregroundColor: AppColors.textHint,
+              foregroundColor: context.colors.textHint,
               elevation: 0,
               padding: EdgeInsets.zero,
               shape: const CircleBorder(),
             ),
             child: pending
-                ? const CircularProgressIndicator(color: AppColors.textHint)
-                : Image.asset(
+                ? CircularProgressIndicator(color: context.colors.textHint)
+                : SkinAssetImage.themed(
+                    context,
                     FlinxFBoxControlAssetPaths.pbControl,
                     fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => const Icon(
+                    errorBuilder: (context, error, stackTrace) => Icon(
                       Icons.image_not_supported_outlined,
-                      color: AppColors.textHint,
+                      color: context.colors.textHint,
                       size: 96,
                     ),
                   ),
@@ -2173,12 +2198,13 @@ class _FBoxEntryCard extends StatelessWidget {
             width: AppSpacingTokens.deviceControlFBoxEntryIconSize,
             height: AppSpacingTokens.deviceControlFBoxEntryIconSize,
             child: assetPath == null
-                ? Icon(icon, color: AppColors.textPrimary)
-                : Image.asset(
+                ? Icon(icon, color: context.colors.textPrimary)
+                : SkinAssetImage.themed(
+                    context,
                     assetPath!,
                     fit: BoxFit.contain,
                     errorBuilder: (context, error, stackTrace) =>
-                        Icon(icon, color: AppColors.textPrimary),
+                        Icon(icon, color: context.colors.textPrimary),
                   ),
           ),
           const SizedBox(width: AppSpacingTokens.deviceControlFBoxEntryIconGap),
@@ -2187,7 +2213,7 @@ class _FBoxEntryCard extends StatelessWidget {
               label,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: AppTextTokens.deviceControlQuickActionTitle(textTheme),
+              style: context.appText.deviceControlQuickActionTitle(textTheme),
             ),
           ),
         ],
@@ -2211,7 +2237,7 @@ class _CommandFeedback extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: AppColors.deviceControlPanel,
+        color: context.colors.deviceControlPanel,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(
@@ -2460,14 +2486,14 @@ class _LedActionCard extends StatelessWidget {
             child: Text(
               AppLocalizations.of(context).deviceCommandLedTitle,
               maxLines: 1,
-              style: AppTextTokens.deviceControlQuickActionTitle(textTheme),
+              style: context.appText.deviceControlQuickActionTitle(textTheme),
             ),
           ),
           const SizedBox(height: 4),
           Text(
             offDelayLabel,
             maxLines: 1,
-            style: AppTextTokens.deviceControlQuickActionMeta(textTheme),
+            style: context.appText.deviceControlQuickActionMeta(textTheme),
           ),
         ],
       ),
@@ -2526,14 +2552,14 @@ class _ToggleActionCard extends StatelessWidget {
             title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: AppTextTokens.deviceControlQuickActionTitle(textTheme),
+            style: context.appText.deviceControlQuickActionTitle(textTheme),
           ),
           if (subtitle != null) ...[
             const SizedBox(height: 2),
             Text(
               subtitle!,
               maxLines: 1,
-              style: AppTextTokens.deviceControlQuickActionMeta(textTheme),
+              style: context.appText.deviceControlQuickActionMeta(textTheme),
             ),
           ],
         ],
@@ -2599,7 +2625,7 @@ class _PartialOpenCard extends StatelessWidget {
                       shape: BoxShape.circle,
                       border: Border.all(
                         width: 1.4,
-                        color: AppColors.deviceControlPrimaryAction,
+                        color: context.colors.deviceControlPrimaryAction,
                       ),
                     ),
                     child: const Center(
@@ -2613,7 +2639,7 @@ class _PartialOpenCard extends StatelessWidget {
                   alignment: const Alignment(0, 1),
                   child: Text(
                     AppLocalizations.of(context).deviceCommandPartialOpenTitle,
-                    style: AppTextTokens.deviceControlQuickActionTitle(
+                    style: context.appText.deviceControlQuickActionTitle(
                       textTheme,
                     ),
                   ),
@@ -2640,7 +2666,7 @@ class _PartialOpenCard extends StatelessWidget {
                       : null,
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      color: AppColors.deviceControlInactive.withValues(
+                      color: context.colors.deviceControlInactive.withValues(
                         alpha: 0.42,
                       ),
                       borderRadius: BorderRadius.circular(8),
@@ -2652,7 +2678,7 @@ class _PartialOpenCard extends StatelessWidget {
                       ),
                       child: Text(
                         valueLabel!,
-                        style: AppTextTokens.deviceControlBadge(textTheme),
+                        style: context.appText.deviceControlBadge(textTheme),
                       ),
                     ),
                   ),
@@ -2691,7 +2717,7 @@ class _MoreSettingsCard extends StatelessWidget {
           Expanded(
             child: Text(
               AppLocalizations.of(context).deviceCommandMoreSettingsTitle,
-              style: AppTextTokens.deviceControlQuickActionTitle(textTheme),
+              style: context.appText.deviceControlQuickActionTitle(textTheme),
             ),
           ),
         ],
@@ -2715,7 +2741,7 @@ class _ControlCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.deviceControlPanel,
+      color: context.colors.deviceControlPanel,
       borderRadius: BorderRadius.circular(
         AppShapeTokens.deviceControlCardRadius,
       ),

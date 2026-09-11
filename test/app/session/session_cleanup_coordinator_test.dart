@@ -1,3 +1,5 @@
+import 'package:flinx/features/appearance/application/providers.dart';
+import 'package:flinx/features/appearance/domain/entities/app_skin_id.dart';
 import 'package:flinx/app/session/session_cleanup_coordinator.dart';
 import 'package:flinx/core/logging/app_logger.dart';
 import 'package:flinx/core/logging/providers.dart';
@@ -21,6 +23,34 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test(
+    'keeps appearance preference through sign-out, expiry and another account',
+    () async {
+      final harness = _createHarness();
+      addTearDown(harness.container.dispose);
+      await harness.container.read(appSkinControllerProvider.future);
+      await harness.container
+          .read(appSkinControllerProvider.notifier)
+          .applySkin(AppSkinId.dark);
+      await harness.container.read(sessionCleanupCoordinatorProvider).signOut();
+      expect(
+        harness.container.read(appSkinControllerProvider).value,
+        AppSkinId.dark,
+      );
+      await harness.container
+          .read(sessionCleanupCoordinatorProvider)
+          .clearExpiredSession();
+      harness.container
+          .read(activeAuthSessionProvider.notifier)
+          .markAuthenticated(userId: 'another-user');
+      harness.container.invalidate(appSkinControllerProvider);
+      expect(
+        await harness.container.read(appSkinControllerProvider.future),
+        AppSkinId.dark,
+      );
+    },
+  );
+
   test('unbinds before clearing the access token', () async {
     final harness = _createHarness();
     addTearDown(harness.container.dispose);

@@ -157,7 +157,7 @@ class _FullReportPageState extends ConsumerState<FullReportPage> {
     SafetySensorsEvaluation sensorEvaluation,
   ) {
     return Scaffold(
-      backgroundColor: AppColors.securityCenterBackground,
+      backgroundColor: context.colors.securityCenterBackground,
       appBar: FlinxNavigationBar(
         title: AppLocalizations.of(context).securityReportTitle,
         showBottomDivider: false,
@@ -167,7 +167,7 @@ class _FullReportPageState extends ConsumerState<FullReportPage> {
         child: RepaintBoundary(
           key: _reportBoundaryKey,
           child: ColoredBox(
-            color: AppColors.securityCenterBackground,
+            color: context.colors.securityCenterBackground,
             child: Stack(
               children: [
                 const Positioned(
@@ -250,7 +250,7 @@ class _FullReportPageState extends ConsumerState<FullReportPage> {
   }
 
   Widget _stateScaffold(Widget body) => Scaffold(
-    backgroundColor: AppColors.securityCenterBackground,
+    backgroundColor: context.colors.securityCenterBackground,
     appBar: FlinxNavigationBar(
       title: AppLocalizations.of(context).securityReportTitle,
       showBottomDivider: false,
@@ -380,10 +380,10 @@ class SecurityReportActionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        color: AppColors.securityReportBottomBar,
+      decoration: BoxDecoration(
+        color: context.colors.securityReportBottomBar,
         border: Border(
-          top: BorderSide(color: AppColors.securityReportBottomBarDivider),
+          top: BorderSide(color: context.colors.securityReportBottomBarDivider),
         ),
       ),
       child: SafeArea(

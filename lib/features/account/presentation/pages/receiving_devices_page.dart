@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -54,7 +55,7 @@ class _ReceivingDevicesPageState extends ConsumerState<ReceivingDevicesPage> {
     final receivingDevices = ref.watch(receivingDevicesControllerProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       appBar: FlinxNavigationBar(
         title: '',
         showBottomDivider: false,
@@ -105,7 +106,7 @@ class _ReceivingDevicesPageState extends ConsumerState<ReceivingDevicesPage> {
                     _isEditing
                         ? l10n.receivingDevicesEditingTitle
                         : l10n.receivingDevicesTitle,
-                    style: AppTextTokens.receivingDevicesTitle(
+                    style: context.appText.receivingDevicesTitle(
                       Theme.of(context).textTheme,
                     ),
                   ),
@@ -236,8 +237,8 @@ class _ReceivingDeviceCard extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacingTokens.receivingDevicesCardHorizontal,
       ),
-      decoration: const BoxDecoration(
-        color: AppColors.receivingDevicesCard,
+      decoration: BoxDecoration(
+        color: context.colors.receivingDevicesCard,
         borderRadius: BorderRadius.all(
           Radius.circular(AppShapeTokens.receivingDevicesCardRadius),
         ),
@@ -270,7 +271,7 @@ class _ReceivingDeviceCard extends ConsumerWidget {
                   device.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextTokens.receivingDevicesCardTitle(textTheme),
+                  style: context.appText.receivingDevicesCardTitle(textTheme),
                 ),
                 const SizedBox(
                   height: AppSpacingTokens.receivingDevicesCardTitleToSubtitle,
@@ -279,7 +280,9 @@ class _ReceivingDeviceCard extends ConsumerWidget {
                   l10n.receivingDevicesOwnerEmail(device.ownerEmail),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextTokens.receivingDevicesCardSubtitle(textTheme),
+                  style: context.appText.receivingDevicesCardSubtitle(
+                    textTheme,
+                  ),
                 ),
               ],
             ),
@@ -297,7 +300,8 @@ class _ReceivingDevicesEditActionIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
+    return SkinAssetImage.themed(
+      context,
       assetPath,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
@@ -329,24 +333,24 @@ class _DeleteReceivingDeviceButton extends StatelessWidget {
         child: Container(
           width: AppSpacingTokens.receivingDevicesDeleteActionSize,
           height: AppSpacingTokens.receivingDevicesDeleteActionSize,
-          decoration: const BoxDecoration(
-            color: AppColors.receivingDevicesDeleteAction,
+          decoration: BoxDecoration(
+            color: context.colors.receivingDevicesDeleteAction,
             shape: BoxShape.circle,
           ),
           child: isDeleting
-              ? const Padding(
+              ? Padding(
                   padding: EdgeInsets.all(
                     AppSpacingTokens.receivingDevicesDeleteProgressInset,
                   ),
                   child: CircularProgressIndicator(
                     strokeWidth: AppSpacingTokens
                         .receivingDevicesDeleteProgressStrokeWidth,
-                    color: AppColors.backgroundPrimary,
+                    color: context.colors.authPrimaryButtonDisabledForeground,
                   ),
                 )
-              : const Icon(
+              : Icon(
                   Icons.remove_rounded,
-                  color: AppColors.backgroundPrimary,
+                  color: context.colors.authPrimaryButtonDisabledForeground,
                   size: AppSpacingTokens.receivingDevicesDeleteActionSize,
                 ),
         ),
@@ -398,14 +402,15 @@ class _ReceivingDeviceDefaultCover extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
+    return SkinAssetImage.themed(
+      context,
       visual.assetPath,
       width: AppSpacingTokens.receivingDevicesIconSize,
       height: AppSpacingTokens.receivingDevicesIconSize,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) => Icon(
         visual.fallbackIcon,
-        color: AppColors.textPrimary,
+        color: context.colors.textPrimary,
         size: AppSpacingTokens.receivingDevicesIconSize,
       ),
     );

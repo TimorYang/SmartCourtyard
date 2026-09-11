@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
@@ -42,7 +43,7 @@ class _AfterSalesDetailPageState extends State<AfterSalesDetailPage> {
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      backgroundColor: AppColors.notificationBackground,
+      backgroundColor: context.colors.notificationBackground,
       appBar: FlinxNavigationBar(
         title: l10n.afterSalesDetailsTitle,
         showBottomDivider: false,
@@ -55,7 +56,7 @@ class _AfterSalesDetailPageState extends State<AfterSalesDetailPage> {
             children: [
               DecoratedBox(
                 decoration: BoxDecoration(
-                  color: AppColors.notificationCard,
+                  color: context.colors.notificationCard,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Padding(
@@ -96,7 +97,7 @@ class _AfterSalesDetailPageState extends State<AfterSalesDetailPage> {
                         controller: _remarkController,
                         minLines: 2,
                         maxLines: 4,
-                        style: AppTextTokens.afterSalesField(
+                        style: context.appText.afterSalesField(
                           Theme.of(context).textTheme,
                         ),
                         decoration: _fieldDecoration(),
@@ -109,7 +110,8 @@ class _AfterSalesDetailPageState extends State<AfterSalesDetailPage> {
                       const SizedBox(height: 10),
                       ClipRRect(
                         borderRadius: BorderRadius.circular(6),
-                        child: Image.asset(
+                        child: SkinAssetImage.themed(
+                          context,
                           _servicePhotoPlaceholder,
                           width: 66,
                           height: 66,
@@ -117,11 +119,11 @@ class _AfterSalesDetailPageState extends State<AfterSalesDetailPage> {
                           errorBuilder: (_, _, _) => Container(
                             width: 66,
                             height: 66,
-                            color: AppColors.afterSalesPhotoPlaceholder,
+                            color: context.colors.afterSalesPhotoPlaceholder,
                             alignment: Alignment.center,
-                            child: const Icon(
+                            child: Icon(
                               Icons.garage_outlined,
-                              color: AppColors.afterSalesPhotoIcon,
+                              color: context.colors.afterSalesPhotoIcon,
                             ),
                           ),
                         ),
@@ -134,7 +136,7 @@ class _AfterSalesDetailPageState extends State<AfterSalesDetailPage> {
                       const SizedBox(height: 10),
                       DecoratedBox(
                         decoration: BoxDecoration(
-                          color: AppColors.afterSalesConfirmedSurface,
+                          color: context.colors.afterSalesConfirmedSurface,
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Padding(
@@ -144,7 +146,7 @@ class _AfterSalesDetailPageState extends State<AfterSalesDetailPage> {
                           ),
                           child: Text(
                             l10n.afterSalesConfirmed,
-                            style: AppTextTokens.afterSalesConfirmed(
+                            style: context.appText.afterSalesConfirmed(
                               Theme.of(context).textTheme,
                             ),
                           ),
@@ -177,16 +179,16 @@ class _AfterSalesDetailPageState extends State<AfterSalesDetailPage> {
   }
 
   InputDecoration _fieldDecoration() {
-    return const InputDecoration(
+    return InputDecoration(
       contentPadding: EdgeInsets.all(10),
       filled: true,
-      fillColor: AppColors.notificationCard,
+      fillColor: context.colors.notificationCard,
       enabledBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: AppColors.afterSalesFieldBorder),
+        borderSide: BorderSide(color: context.colors.afterSalesFieldBorder),
         borderRadius: BorderRadius.all(Radius.circular(5)),
       ),
       focusedBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: AppColors.brandPrimary),
+        borderSide: BorderSide(color: context.colors.brandPrimary),
         borderRadius: BorderRadius.all(Radius.circular(5)),
       ),
     );
@@ -207,12 +209,12 @@ class _SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: AppColors.notificationIcon),
+        Icon(icon, size: 18, color: context.colors.notificationIcon),
         const SizedBox(width: 6),
         Expanded(
           child: Text(
             label,
-            style: AppTextTokens.afterSalesSectionTitle(
+            style: context.appText.afterSalesSectionTitle(
               Theme.of(context).textTheme,
             ),
           ),
@@ -235,12 +237,12 @@ class _ReadonlyBox extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        border: Border.all(color: AppColors.afterSalesFieldBorder),
+        border: Border.all(color: context.colors.afterSalesFieldBorder),
         borderRadius: BorderRadius.circular(5),
       ),
       child: Text(
         text,
-        style: AppTextTokens.afterSalesField(Theme.of(context).textTheme),
+        style: context.appText.afterSalesField(Theme.of(context).textTheme),
       ),
     );
   }
@@ -256,7 +258,7 @@ class _InstallerSummary extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.afterSalesSummarySurface,
+        color: context.colors.afterSalesSummarySurface,
         borderRadius: BorderRadius.circular(5),
       ),
       child: Row(
@@ -266,7 +268,7 @@ class _InstallerSummary extends StatelessWidget {
           Expanded(
             child: Text(
               '2026/6/17',
-              style: AppTextTokens.afterSalesMeta(textTheme),
+              style: context.appText.afterSalesMeta(textTheme),
             ),
           ),
           const Icon(Icons.engineering_outlined, size: 17),
@@ -276,7 +278,7 @@ class _InstallerSummary extends StatelessWidget {
             child: Text(
               'Installer: Mr. Zhang',
               overflow: TextOverflow.ellipsis,
-              style: AppTextTokens.afterSalesMeta(textTheme),
+              style: context.appText.afterSalesMeta(textTheme),
             ),
           ),
         ],
@@ -304,21 +306,24 @@ class _ActionButton extends StatelessWidget {
         onPressed: onPressed,
         style: FilledButton.styleFrom(
           backgroundColor: primary
-              ? AppColors.brandPrimary
-              : AppColors.notificationCard,
-          foregroundColor: primary ? Colors.white : AppColors.notificationIcon,
+              ? context.colors.brandPrimary
+              : context.colors.notificationCard,
+          foregroundColor: primary
+              ? context.colors.authPrimaryButtonDisabledForeground
+              : context.colors.notificationIcon,
           shape: const StadiumBorder(),
           side: primary
               ? BorderSide.none
-              : const BorderSide(color: AppColors.afterSalesSecondaryBorder),
+              : BorderSide(color: context.colors.afterSalesSecondaryBorder),
         ),
         child: Text(
           label,
-          style:
-              AppTextTokens.notificationPrimaryButton(
-                Theme.of(context).textTheme,
-              ).copyWith(
-                color: primary ? Colors.white : AppColors.notificationIcon,
+          style: context.appText
+              .notificationPrimaryButton(Theme.of(context).textTheme)
+              .copyWith(
+                color: primary
+                    ? context.colors.authPrimaryButtonDisabledForeground
+                    : context.colors.notificationIcon,
               ),
         ),
       ),

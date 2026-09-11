@@ -41,7 +41,7 @@ class ForgotPasswordPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: FlinxNavigationBar(title: '', showBottomDivider: false),
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       resizeToAvoidBottomInset: true,
       body: GestureDetector(
         key: const ValueKey('forgot_password_keyboard_dismiss_area'),
@@ -55,12 +55,12 @@ class ForgotPasswordPage extends ConsumerWidget {
               children: [
                 Text(
                   l10n.forgotPasswordTitle,
-                  style: AppTextTokens.forgotPasswordTitle(theme.textTheme),
+                  style: context.appText.forgotPasswordTitle(theme.textTheme),
                 ),
                 const SizedBox(height: 10),
                 Text(
                   l10n.forgotPasswordDescription,
-                  style: AppTextTokens.forgotPasswordDescription(
+                  style: context.appText.forgotPasswordDescription(
                     theme.textTheme,
                   ),
                 ),
@@ -68,13 +68,13 @@ class ForgotPasswordPage extends ConsumerWidget {
                 AuthTextField(
                   fieldKey: const ValueKey('forgot_password_email_input'),
                   hintText: l10n.registerEmailPlaceholder,
-                  icon: const AuthAssetIcon(
+                  icon: AuthAssetIcon(
                     assetPath: AuthAssetPaths.emailFieldIcon,
                     width: 22,
                     height: 22,
                     fallback: Icon(
                       Icons.mail_outline_rounded,
-                      color: AppColors.textIcon,
+                      color: context.colors.textIcon,
                       size: 22,
                     ),
                   ),
@@ -107,14 +107,16 @@ class ForgotPasswordPage extends ConsumerWidget {
                           }
                         : null,
                     style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.brandPrimaryLight,
-                      disabledBackgroundColor: AppColors.brandPrimaryDisabled,
-                      foregroundColor: Colors.white,
+                      backgroundColor: context.colors.brandPrimaryLight,
+                      disabledBackgroundColor:
+                          context.colors.brandPrimaryDisabled,
+                      foregroundColor:
+                          context.colors.authPrimaryButtonDisabledForeground,
                       disabledForegroundColor:
-                          AppColors.authPrimaryButtonDisabledForeground,
+                          context.colors.authPrimaryButtonDisabledForeground,
                       minimumSize: const Size.fromHeight(48),
                       shape: const StadiumBorder(),
-                      textStyle: AppTextTokens.loginPrimaryButton(
+                      textStyle: context.appText.loginPrimaryButton(
                         theme.textTheme,
                       ),
                     ),

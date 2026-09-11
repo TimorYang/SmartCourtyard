@@ -23,7 +23,7 @@ Future<void> showDeviceCustomizeDialog(
 }) {
   return showDialog<void>(
     context: context,
-    barrierColor: AppColors.overlaySoft,
+    barrierColor: context.colors.overlaySoft,
     builder: (context) => DeviceCustomizeDialog(
       device: device,
       parentContext: context,
@@ -62,7 +62,7 @@ class _DeviceCustomizeDialogState extends ConsumerState<DeviceCustomizeDialog> {
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 390),
         child: Material(
-          color: AppColors.backgroundPrimary,
+          color: context.colors.backgroundPrimary,
           borderRadius: BorderRadius.circular(10),
           clipBehavior: Clip.antiAlias,
           child: Padding(
@@ -72,7 +72,7 @@ class _DeviceCustomizeDialogState extends ConsumerState<DeviceCustomizeDialog> {
               children: [
                 Text(
                   l10n.deviceCustomizeTitle,
-                  style: AppTextTokens.deviceCustomizeTitle(textTheme),
+                  style: context.appText.deviceCustomizeTitle(textTheme),
                 ),
                 const SizedBox(height: 22),
                 _CustomizeActionRow(
@@ -89,7 +89,7 @@ class _DeviceCustomizeDialogState extends ConsumerState<DeviceCustomizeDialog> {
                         )
                       : null,
                 ),
-                const Divider(height: 1, color: AppColors.borderHomeDivider),
+                Divider(height: 1, color: context.colors.borderHomeDivider),
                 _CustomizeActionRow(
                   label: l10n.deviceCustomizeDefaultPictureAction,
                   onPressed: _isResetting || _isUpdatingCover
@@ -103,7 +103,7 @@ class _DeviceCustomizeDialogState extends ConsumerState<DeviceCustomizeDialog> {
                         )
                       : null,
                 ),
-                const Divider(height: 1, color: AppColors.borderHomeDivider),
+                Divider(height: 1, color: context.colors.borderHomeDivider),
               ],
             ),
           ),
@@ -249,16 +249,16 @@ class _CustomizeActionRow extends StatelessWidget {
             Expanded(
               child: Text(
                 label,
-                style: AppTextTokens.deviceCustomizeAction(
+                style: context.appText.deviceCustomizeAction(
                   Theme.of(context).textTheme,
                 ),
               ),
             ),
             if (trailing case final Widget trailing) trailing,
             if (showChevron)
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
-                color: AppColors.textPrimary,
+                color: context.colors.textPrimary,
                 size: 28,
               ),
           ],

@@ -1,3 +1,5 @@
+import '../../../../shared/widgets/flinx_system_ui.dart';
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -24,90 +26,104 @@ class WelcomePage extends StatelessWidget {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
 
-    return Scaffold(
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          Image.asset(
-            _WelcomeAssets.background,
-            fit: BoxFit.cover,
-            alignment: Alignment.center,
-            errorBuilder: (context, error, stackTrace) =>
-                const ColoredBox(color: AppColors.backgroundDarkMiddle),
-          ),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 50),
-                        Image.asset(
-                          _WelcomeAssets.logo,
-                          height: 40,
-                          fit: BoxFit.contain,
-                          alignment: Alignment.centerLeft,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const SizedBox(height: 62),
-                        ),
-                        const SizedBox(height: 40),
-                        Text(
-                          l10n.welcomeHeadline,
-                          style: AppTextTokens.welcomeHeadline(theme.textTheme),
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          l10n.welcomeSubtitle,
-                          style: AppTextTokens.welcomeSubtitle(theme.textTheme),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Spacer(),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: () => context.push(LoginPage.routePath),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.brandPrimary,
-                        foregroundColor: AppColors.backgroundPrimary,
-                        minimumSize: const Size.fromHeight(50),
-                        shape: const StadiumBorder(),
-                        textStyle: AppTextTokens.welcomePrimaryButton(
-                          theme.textTheme,
-                        ),
+    return FlinxSystemUi(
+      foregroundColor: context.colors.welcomeForeground,
+      child: Scaffold(
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            SkinAssetImage.themed(
+              context,
+              _WelcomeAssets.background,
+              fit: BoxFit.cover,
+              alignment: Alignment.center,
+              errorBuilder: (context, error, stackTrace) =>
+                  ColoredBox(color: context.colors.backgroundDarkMiddle),
+            ),
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 24,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 50),
+                          SkinAssetImage.themed(
+                            context,
+                            _WelcomeAssets.logo,
+                            height: 40,
+                            fit: BoxFit.contain,
+                            alignment: Alignment.centerLeft,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const SizedBox(height: 62),
+                          ),
+                          const SizedBox(height: 40),
+                          Text(
+                            l10n.welcomeHeadline,
+                            style: context.appText.welcomeHeadline(
+                              theme.textTheme,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            l10n.welcomeSubtitle,
+                            style: context.appText.welcomeSubtitle(
+                              theme.textTheme,
+                            ),
+                          ),
+                        ],
                       ),
-                      child: Text(l10n.loginAction),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: () => context.push(RegisterPage.routePath),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.backgroundPrimary,
-                        foregroundColor: AppColors.textMuted,
-                        minimumSize: const Size.fromHeight(50),
-                        shape: const StadiumBorder(),
-                        textStyle: AppTextTokens.welcomeSecondaryButton(
-                          theme.textTheme,
+                    const Spacer(),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: () => context.push(LoginPage.routePath),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: context.colors.brandPrimary,
+                          foregroundColor: context
+                              .colors
+                              .authPrimaryButtonDisabledForeground,
+                          minimumSize: const Size.fromHeight(50),
+                          shape: const StadiumBorder(),
+                          textStyle: context.appText.welcomePrimaryButton(
+                            theme.textTheme,
+                          ),
                         ),
+                        child: Text(l10n.loginAction),
                       ),
-                      child: Text(l10n.registerAction),
                     ),
-                  ),
-                  const SizedBox(height: 110),
-                ],
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: () => context.push(RegisterPage.routePath),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: context.colors.backgroundPrimary,
+                          foregroundColor: context.colors.textMuted,
+                          minimumSize: const Size.fromHeight(50),
+                          shape: const StadiumBorder(),
+                          textStyle: context.appText.welcomeSecondaryButton(
+                            theme.textTheme,
+                          ),
+                        ),
+                        child: Text(l10n.registerAction),
+                      ),
+                    ),
+                    const SizedBox(height: 110),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

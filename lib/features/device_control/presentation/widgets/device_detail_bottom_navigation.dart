@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
@@ -5,24 +6,36 @@ import '../../../../app/theme/app_design_tokens.dart';
 enum DeviceDetailTab { operationRecords, command, securityCenter }
 
 class DeviceDetailBottomNavigation extends StatelessWidget {
-  const DeviceDetailBottomNavigation({required this.selectedTab, required this.onSelected, super.key});
+  const DeviceDetailBottomNavigation({
+    required this.selectedTab,
+    required this.onSelected,
+    super.key,
+  });
 
   final DeviceDetailTab selectedTab;
   final ValueChanged<DeviceDetailTab> onSelected;
 
-  static const _operationRecordsSelectedIconAsset = 'assets/icons/device_control/device_detail_operation_records_tab_selected.png';
-  static const _operationRecordsUnselectedIconAsset = 'assets/icons/device_control/device_detail_operation_records_tab_unselected.png';
-  static const _commandSelectedIconAsset = 'assets/icons/device_control/device_detail_command_tab_selected.png';
-  static const _commandUnselectedIconAsset = 'assets/icons/device_control/device_detail_command_tab_unselected.png';
-  static const _securityCenterSelectedIconAsset = 'assets/icons/device_control/device_detail_security_center_tab_selected.png';
-  static const _securityCenterUnselectedIconAsset = 'assets/icons/device_control/device_detail_security_center_tab_unselected.png';
+  static const _operationRecordsSelectedIconAsset =
+      'assets/icons/device_control/device_detail_operation_records_tab_selected.png';
+  static const _operationRecordsUnselectedIconAsset =
+      'assets/icons/device_control/device_detail_operation_records_tab_unselected.png';
+  static const _commandSelectedIconAsset =
+      'assets/icons/device_control/device_detail_command_tab_selected.png';
+  static const _commandUnselectedIconAsset =
+      'assets/icons/device_control/device_detail_command_tab_unselected.png';
+  static const _securityCenterSelectedIconAsset =
+      'assets/icons/device_control/device_detail_security_center_tab_selected.png';
+  static const _securityCenterUnselectedIconAsset =
+      'assets/icons/device_control/device_detail_security_center_tab_unselected.png';
 
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        color: AppColors.deviceDetailNavigationBackground,
-        border: Border(top: BorderSide(color: AppColors.deviceDetailNavigationDivider)),
+      decoration: BoxDecoration(
+        color: context.colors.deviceDetailNavigationBackground,
+        border: Border(
+          top: BorderSide(color: context.colors.deviceDetailNavigationDivider),
+        ),
       ),
       child: SafeArea(
         top: false,
@@ -90,11 +103,13 @@ class _NavigationItem extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset(
+                SkinAssetImage.themed(
+                  context,
                   selected ? selectedIconAsset : unselectedIconAsset,
                   width: 50,
                   height: 50,
-                  errorBuilder: (context, error, stackTrace) => const SizedBox.square(dimension: 50),
+                  errorBuilder: (context, error, stackTrace) =>
+                      const SizedBox.square(dimension: 50),
                 ),
               ],
             ),

@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -45,7 +46,7 @@ class UsbDongleGuidePage extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       appBar: FlinxNavigationBar(
         title: '',
         showBottomDivider: false,
@@ -86,10 +87,11 @@ class UsbDongleGuidePage extends StatelessWidget {
                     },
                   ),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.brandPrimary,
-                    foregroundColor: Colors.white,
+                    backgroundColor: context.colors.brandPrimary,
+                    foregroundColor:
+                        context.colors.authPrimaryButtonDisabledForeground,
                     shape: const StadiumBorder(),
-                    textStyle: AppTextTokens.smartOpenerPrimaryButton(
+                    textStyle: context.appText.smartOpenerPrimaryButton(
                       textTheme,
                     ),
                   ),
@@ -122,21 +124,22 @@ class _GuideStep extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: AppTextTokens.smartOpenerScanTitle(textTheme)),
+        Text(title, style: context.appText.smartOpenerScanTitle(textTheme)),
         const SizedBox(height: 11),
         Text(
           description,
-          style: AppTextTokens.smartOpenerScanDescription(textTheme),
+          style: context.appText.smartOpenerScanDescription(textTheme),
         ),
         const SizedBox(height: 28),
         Center(
-          child: Image.asset(
+          child: SkinAssetImage.themed(
+            context,
             assetPath,
             width: double.infinity,
             fit: BoxFit.contain,
             errorBuilder: (context, error, stackTrace) => Icon(
               Icons.image_not_supported_outlined,
-              color: AppColors.iconHomeAction,
+              color: context.colors.iconHomeAction,
               size: 96,
             ),
           ),

@@ -4975,6 +4975,300 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unable to pin the device. Please try again.'**
   String get deviceTopFailed;
+
+  /// No description provided for @appearanceThemeEntryTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Change app appearance'**
+  String get appearanceThemeEntryTooltip;
+
+  /// No description provided for @appearanceGalleryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'skin change'**
+  String get appearanceGalleryTitle;
+
+  /// No description provided for @appearanceGallerySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Three color schemes'**
+  String get appearanceGallerySubtitle;
+
+  /// No description provided for @appearanceDarkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark style'**
+  String get appearanceDarkTitle;
+
+  /// No description provided for @appearanceDarkDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Deep Neon · Low Light Immersion'**
+  String get appearanceDarkDescription;
+
+  /// No description provided for @appearanceMinimalistTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimalist style'**
+  String get appearanceMinimalistTitle;
+
+  /// No description provided for @appearanceMinimalistDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Pure white to simplicity, breathing with white space'**
+  String get appearanceMinimalistDescription;
+
+  /// No description provided for @appearanceTechnologyWindTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Technology Wind'**
+  String get appearanceTechnologyWindTitle;
+
+  /// No description provided for @appearanceTechnologyWindDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Cyber Blue Youth · Future Sense'**
+  String get appearanceTechnologyWindDescription;
+
+  /// No description provided for @appearancePreviewAction.
+  ///
+  /// In en, this message translates to:
+  /// **'preview'**
+  String get appearancePreviewAction;
+
+  /// No description provided for @appearanceApplyAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Application Theme'**
+  String get appearanceApplyAction;
+
+  /// No description provided for @appearanceAppliedAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Current style'**
+  String get appearanceAppliedAction;
+
+  /// No description provided for @appearanceApplyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to save this style. Please try again.'**
+  String get appearanceApplyFailed;
+
+  /// No description provided for @appearanceSelectedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected'**
+  String get appearanceSelectedLabel;
+
+  /// No description provided for @appearanceArtworkPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview artwork placeholder — final artwork pending'**
+  String get appearanceArtworkPending;
+
+  /// No description provided for @appearancePaletteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme color palette'**
+  String get appearancePaletteLabel;
+
+  /// No description provided for @appearanceDarkTagMood.
+  ///
+  /// In en, this message translates to:
+  /// **'Neon Purple'**
+  String get appearanceDarkTagMood;
+
+  /// No description provided for @appearanceDarkTagComfort.
+  ///
+  /// In en, this message translates to:
+  /// **'eye protection'**
+  String get appearanceDarkTagComfort;
+
+  /// No description provided for @appearanceMinimalistTagClean.
+  ///
+  /// In en, this message translates to:
+  /// **'clean'**
+  String get appearanceMinimalistTagClean;
+
+  /// No description provided for @appearanceMinimalistTagFocus.
+  ///
+  /// In en, this message translates to:
+  /// **'focus'**
+  String get appearanceMinimalistTagFocus;
+
+  /// No description provided for @appearanceTechnologyTagShine.
+  ///
+  /// In en, this message translates to:
+  /// **'shine'**
+  String get appearanceTechnologyTagShine;
+
+  /// No description provided for @appearanceTechnologyTagData.
+  ///
+  /// In en, this message translates to:
+  /// **'data'**
+  String get appearanceTechnologyTagData;
+
+  /// No description provided for @appearancePreviewOperatedCycles.
+  ///
+  /// In en, this message translates to:
+  /// **'Operated cycles'**
+  String get appearancePreviewOperatedCycles;
+
+  /// No description provided for @appearancePreviewRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining'**
+  String get appearancePreviewRemaining;
+
+  /// No description provided for @appearancePreviewClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get appearancePreviewClosed;
+
+  /// No description provided for @appearancePreviewLed.
+  ///
+  /// In en, this message translates to:
+  /// **'LED'**
+  String get appearancePreviewLed;
+
+  /// No description provided for @appearancePreviewOneMinute.
+  ///
+  /// In en, this message translates to:
+  /// **'1 min'**
+  String get appearancePreviewOneMinute;
+
+  /// No description provided for @appearancePreviewAutoClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto close'**
+  String get appearancePreviewAutoClose;
+
+  /// No description provided for @appearancePreviewOpenReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Open reminder'**
+  String get appearancePreviewOpenReminder;
+
+  /// No description provided for @appearancePreviewTenMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'10 min'**
+  String get appearancePreviewTenMinutes;
+
+  /// No description provided for @appearancePreviewPartialOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Partial open'**
+  String get appearancePreviewPartialOpen;
+
+  /// No description provided for @appearancePreviewMoreSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'More setting'**
+  String get appearancePreviewMoreSettings;
+
+  /// No description provided for @deviceDetailOperationRecordsTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Operation records'**
+  String get deviceDetailOperationRecordsTab;
+
+  /// No description provided for @deviceDetailCommandTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Device command'**
+  String get deviceDetailCommandTab;
+
+  /// No description provided for @deviceDetailSecurityCenterTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Security center'**
+  String get deviceDetailSecurityCenterTab;
+
+  /// No description provided for @appearanceAssetPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Artwork pending'**
+  String get appearanceAssetPending;
+
+  /// No description provided for @wifiConfigurationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Wi-Fi configuration'**
+  String get wifiConfigurationTitle;
+
+  /// No description provided for @wifiConfigurationNoDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'No connected device. Return to Bluetooth scan and connect again.'**
+  String get wifiConfigurationNoDevice;
+
+  /// No description provided for @wifiConfigurationConnectedDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected device: {name}'**
+  String wifiConfigurationConnectedDevice(String name);
+
+  /// No description provided for @wifiConfigurationDeviceId.
+  ///
+  /// In en, this message translates to:
+  /// **'Device ID: {id}'**
+  String wifiConfigurationDeviceId(String id);
+
+  /// No description provided for @wifiConfigurationScanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning for Wi-Fi…'**
+  String get wifiConfigurationScanning;
+
+  /// No description provided for @wifiConfigurationScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan nearby Wi-Fi'**
+  String get wifiConfigurationScan;
+
+  /// No description provided for @wifiConfigurationNetworks.
+  ///
+  /// In en, this message translates to:
+  /// **'Available Wi-Fi networks'**
+  String get wifiConfigurationNetworks;
+
+  /// No description provided for @wifiConfigurationSsid.
+  ///
+  /// In en, this message translates to:
+  /// **'SSID'**
+  String get wifiConfigurationSsid;
+
+  /// No description provided for @wifiConfigurationSsidHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select or enter a Wi-Fi name'**
+  String get wifiConfigurationSsidHint;
+
+  /// No description provided for @wifiConfigurationPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Wi-Fi password'**
+  String get wifiConfigurationPassword;
+
+  /// No description provided for @wifiConfigurationPasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the Wi-Fi password'**
+  String get wifiConfigurationPasswordHint;
+
+  /// No description provided for @wifiConfigurationConnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting…'**
+  String get wifiConfigurationConnecting;
+
+  /// No description provided for @wifiConfigurationConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get wifiConfigurationConnect;
 }
 
 class _AppLocalizationsDelegate

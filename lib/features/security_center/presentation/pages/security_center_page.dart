@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -20,12 +21,22 @@ import 'general_evaluation_page.dart';
 import 'safety_sensors_evaluation_page.dart';
 
 class SecurityCenterPage extends ConsumerStatefulWidget {
-  const SecurityCenterPage({required this.doorId, required this.deviceId, required this.onTabSelected, this.hardwareDeviceId, this.isActive = true, super.key});
+  const SecurityCenterPage({
+    required this.doorId,
+    required this.deviceId,
+    required this.onTabSelected,
+    this.hardwareDeviceId,
+    this.isActive = true,
+    super.key,
+  });
 
-  static const _heroAsset = 'assets/icons/security_center/security_center_protecting_hero.png';
-  static const _download = 'assets/icons/security_center/security_center_download.png';
+  static const _heroAsset =
+      'assets/icons/security_center/security_center_protecting_hero.png';
+  static const _download =
+      'assets/icons/security_center/security_center_download.png';
 
   final String doorId;
+
   /// Native BLE identifier used only by safety-sensor hardware actions.
   ///
   /// [deviceId] remains the business device identifier used by the security
@@ -54,7 +65,11 @@ class _SecurityCenterPageState extends ConsumerState<SecurityCenterPage> {
   @override
   void didUpdateWidget(covariant SecurityCenterPage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.isActive && (!oldWidget.isActive || oldWidget.doorId != widget.doorId || oldWidget.deviceId != widget.deviceId || oldWidget.hardwareDeviceId != widget.hardwareDeviceId)) {
+    if (widget.isActive &&
+        (!oldWidget.isActive ||
+            oldWidget.doorId != widget.doorId ||
+            oldWidget.deviceId != widget.deviceId ||
+            oldWidget.hardwareDeviceId != widget.hardwareDeviceId)) {
       _triggerActivation();
     }
   }
@@ -69,13 +84,15 @@ class _SecurityCenterPageState extends ConsumerState<SecurityCenterPage> {
     if (_activationCheckInProgress) return;
     _activationCheckInProgress = true;
     try {
-      final isWifiDisconnected = await ref.read(securityCenterConnectionStatusControllerProvider.notifier).check(doorId: widget.doorId);
+      final isWifiDisconnected = await ref
+          .read(securityCenterConnectionStatusControllerProvider.notifier)
+          .check(doorId: widget.doorId);
       if (!mounted || !widget.isActive) return;
       if (isWifiDisconnected) {
         final shouldLeave = await showDialog<bool>(
           context: context,
           barrierDismissible: false,
-          barrierColor: AppColors.securityCenterDialogScrim,
+          barrierColor: context.colors.securityCenterDialogScrim,
           builder: (_) => const SecurityCenterWifiDisconnectedDialog(),
         );
         if (shouldLeave == true && mounted) {
@@ -83,7 +100,9 @@ class _SecurityCenterPageState extends ConsumerState<SecurityCenterPage> {
         }
         return;
       }
-      await ref.read(securityBalanceRefreshControllerProvider.notifier).trigger(doorId: widget.doorId);
+      await ref
+          .read(securityBalanceRefreshControllerProvider.notifier)
+          .trigger(doorId: widget.doorId);
     } finally {
       _activationCheckInProgress = false;
     }
@@ -94,13 +113,23 @@ class _SecurityCenterPageState extends ConsumerState<SecurityCenterPage> {
     final textTheme = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context);
     final overview = ref.watch(securityCenterOverviewProvider(widget.deviceId));
-    final connectionStatusState = ref.watch(securityCenterConnectionStatusControllerProvider);
-    final sensorEvaluation = connectionStatusState.connectionStatus?.sensorEvaluation ?? SecurityCenterConnectionStatus.offlineSensorEvaluation;
+    final connectionStatusState = ref.watch(
+      securityCenterConnectionStatusControllerProvider,
+    );
+    final sensorEvaluation =
+        connectionStatusState.connectionStatus?.sensorEvaluation ??
+        SecurityCenterConnectionStatus.offlineSensorEvaluation;
 
     return Scaffold(
-      backgroundColor: AppColors.securityCenterBackground,
-      appBar: FlinxNavigationBar(title: l10n.securityCenterTitle, showBottomDivider: false),
-      bottomNavigationBar: DeviceDetailBottomNavigation(selectedTab: DeviceDetailTab.securityCenter, onSelected: widget.onTabSelected),
+      backgroundColor: context.colors.securityCenterBackground,
+      appBar: FlinxNavigationBar(
+        title: l10n.securityCenterTitle,
+        showBottomDivider: false,
+      ),
+      bottomNavigationBar: DeviceDetailBottomNavigation(
+        selectedTab: DeviceDetailTab.securityCenter,
+        onSelected: widget.onTabSelected,
+      ),
       body: ListView(
         key: const PageStorageKey<String>('security-center-scroll'),
         children: [
@@ -111,12 +140,14 @@ class _SecurityCenterPageState extends ConsumerState<SecurityCenterPage> {
                 Positioned(
                   right: 0,
                   top: 20,
-                  child: Image.asset(
+                  child: SkinAssetImage.themed(
+                    context,
                     width: 168,
                     height: 115,
                     SecurityCenterPage._heroAsset,
                     fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => const _SecurityHeroFallback(),
+                    errorBuilder: (context, error, stackTrace) =>
+                        const _SecurityHeroFallback(),
                   ),
                 ),
                 Padding(
@@ -127,22 +158,40 @@ class _SecurityCenterPageState extends ConsumerState<SecurityCenterPage> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(l10n.securityCenterProtecting, style: AppTextTokens.securityCenterHeroTitle(textTheme)),
+                        Text(
+                          l10n.securityCenterProtecting,
+                          style: context.appText.securityCenterHeroTitle(
+                            textTheme,
+                          ),
+                        ),
                         TextButton.icon(
-                          onPressed: () => context.pushNamed(FullReportPage.routeName, queryParameters: {'doorId': widget.doorId, 'deviceId': widget.deviceId}),
+                          onPressed: () => context.pushNamed(
+                            FullReportPage.routeName,
+                            queryParameters: {
+                              'doorId': widget.doorId,
+                              'deviceId': widget.deviceId,
+                            },
+                          ),
                           style: TextButton.styleFrom(
                             padding: EdgeInsets.zero,
-                            foregroundColor: AppColors.securityCenterLink,
+                            foregroundColor: context.colors.securityCenterLink,
                             splashFactory: NoSplash.splashFactory,
                           ),
-                          icon: Image.asset(SecurityCenterPage._download, fit: BoxFit.contain),
+                          icon: SkinAssetImage.themed(
+                            context,
+                            SecurityCenterPage._download,
+                            fit: BoxFit.contain,
+                          ),
                           label: Text(
                             l10n.securityCenterDownloadFullReport,
-                            style: AppTextTokens.securityCenterHeroTitle2(textTheme).copyWith(
-                              color: AppColors.securityCenterLink,
-                              decoration: TextDecoration.underline,
-                              decorationColor: AppColors.securityCenterLink,
-                            ),
+                            style: context.appText
+                                .securityCenterHeroTitle2(textTheme)
+                                .copyWith(
+                                  color: context.colors.securityCenterLink,
+                                  decoration: TextDecoration.underline,
+                                  decorationColor:
+                                      context.colors.securityCenterLink,
+                                ),
                           ),
                         ),
                       ],
@@ -158,8 +207,17 @@ class _SecurityCenterPageState extends ConsumerState<SecurityCenterPage> {
             child: _EvaluationCard(
               title: l10n.securityCenterGeneralEvaluation,
               status: overview.generalEvaluation.status,
-              tags: [for (final item in overview.generalEvaluation.items) _evaluationItemLabel(l10n, item.type)],
-              onTap: () => context.pushNamed(GeneralEvaluationPage.routeName, queryParameters: {'doorId': widget.doorId, 'deviceId': widget.deviceId}),
+              tags: [
+                for (final item in overview.generalEvaluation.items)
+                  _evaluationItemLabel(l10n, item.type),
+              ],
+              onTap: () => context.pushNamed(
+                GeneralEvaluationPage.routeName,
+                queryParameters: {
+                  'doorId': widget.doorId,
+                  'deviceId': widget.deviceId,
+                },
+              ),
             ),
           ),
           const SizedBox(height: 20),
@@ -169,7 +227,13 @@ class _SecurityCenterPageState extends ConsumerState<SecurityCenterPage> {
               textTheme: textTheme,
               l10n: l10n,
               evaluation: sensorEvaluation,
-              onTap: () => context.pushNamed(SafetySensorsEvaluationPage.routeName, queryParameters: {'doorId': widget.doorId, 'deviceId': _hardwareDeviceId}),
+              onTap: () => context.pushNamed(
+                SafetySensorsEvaluationPage.routeName,
+                queryParameters: {
+                  'doorId': widget.doorId,
+                  'deviceId': _hardwareDeviceId,
+                },
+              ),
             ),
           ),
           const SizedBox(height: 30),
@@ -178,9 +242,14 @@ class _SecurityCenterPageState extends ConsumerState<SecurityCenterPage> {
     );
   }
 
-  String _evaluationItemLabel(AppLocalizations l10n, SecurityEvaluationItemType type) => switch (type) {
-    SecurityEvaluationItemType.doorOperationStatus => l10n.securityCenterDoorOperationStatus,
-    SecurityEvaluationItemType.doorOperationRecord => l10n.securityCenterDoorOperationRecord,
+  String _evaluationItemLabel(
+    AppLocalizations l10n,
+    SecurityEvaluationItemType type,
+  ) => switch (type) {
+    SecurityEvaluationItemType.doorOperationStatus =>
+      l10n.securityCenterDoorOperationStatus,
+    SecurityEvaluationItemType.doorOperationRecord =>
+      l10n.securityCenterDoorOperationRecord,
   };
 }
 
@@ -194,15 +263,26 @@ class _SecurityHeroFallback extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          Icon(Icons.garage_outlined, size: 155, color: AppColors.deviceControlInactive.withValues(alpha: 0.45)),
-          const Positioned(
+          Icon(
+            Icons.garage_outlined,
+            size: 155,
+            color: context.colors.deviceControlInactive.withValues(alpha: 0.45),
+          ),
+          Positioned(
             right: 8,
             bottom: 18,
             child: DecoratedBox(
-              decoration: BoxDecoration(color: AppColors.securityCenterShield, shape: BoxShape.circle),
+              decoration: BoxDecoration(
+                color: context.colors.securityCenterShield,
+                shape: BoxShape.circle,
+              ),
               child: Padding(
                 padding: EdgeInsets.all(13),
-                child: Icon(Icons.lock, color: Colors.white, size: 25),
+                child: Icon(
+                  Icons.lock,
+                  color: context.colors.authPrimaryButtonDisabledForeground,
+                  size: 25,
+                ),
               ),
             ),
           ),
@@ -213,7 +293,12 @@ class _SecurityHeroFallback extends StatelessWidget {
 }
 
 class _EvaluationCard extends StatelessWidget {
-  const _EvaluationCard({required this.title, required this.status, required this.tags, this.onTap});
+  const _EvaluationCard({
+    required this.title,
+    required this.status,
+    required this.tags,
+    this.onTap,
+  });
 
   final String title;
   final SecurityEvaluationStatus status;
@@ -225,7 +310,7 @@ class _EvaluationCard extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Material(
-      color: AppColors.securityCenterCard,
+      color: context.colors.securityCenterCard,
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
         onTap: onTap,
@@ -239,7 +324,12 @@ class _EvaluationCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Expanded(child: Text(title, style: AppTextTokens.securityCenterCardTitle(textTheme))),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: context.appText.securityCenterCardTitle(textTheme),
+                    ),
+                  ),
                   _EvaluationStatusIcon(status: status),
                 ],
               ),
@@ -251,12 +341,19 @@ class _EvaluationCard extends StatelessWidget {
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: [
-                          for (var index = 0; index < tags.length; index++) ...[if (index > 0) const SizedBox(width: 10), _EvaluationTag(label: tags[index])],
+                          for (var index = 0; index < tags.length; index++) ...[
+                            if (index > 0) const SizedBox(width: 10),
+                            _EvaluationTag(label: tags[index]),
+                          ],
                         ],
                       ),
                     ),
                   ),
-                  const Icon(Icons.chevron_right_rounded, color: AppColors.textPrimary, size: 26),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: context.colors.textPrimary,
+                    size: 26,
+                  ),
                 ],
               ),
             ],
@@ -275,17 +372,28 @@ class _EvaluationTag extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: BoxDecoration(color: AppColors.securityCenterTag, borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(
+        color: context.colors.securityCenterTag,
+        borderRadius: BorderRadius.circular(8),
+      ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6.5),
-        child: Text(label, style: AppTextTokens.securityCenterTag(Theme.of(context).textTheme)),
+        child: Text(
+          label,
+          style: context.appText.securityCenterTag(Theme.of(context).textTheme),
+        ),
       ),
     );
   }
 }
 
 class _SensorEvaluationCard extends StatelessWidget {
-  const _SensorEvaluationCard({required this.textTheme, required this.l10n, required this.evaluation, required this.onTap});
+  const _SensorEvaluationCard({
+    required this.textTheme,
+    required this.l10n,
+    required this.evaluation,
+    required this.onTap,
+  });
 
   final TextTheme textTheme;
   final AppLocalizations l10n;
@@ -298,7 +406,7 @@ class _SensorEvaluationCard extends StatelessWidget {
 
     return Material(
       key: const ValueKey<String>('safety-sensors-evaluation-card'),
-      color: AppColors.securityCenterCard,
+      color: context.colors.securityCenterCard,
       borderRadius: BorderRadius.circular(11),
       child: InkWell(
         onTap: onTap,
@@ -312,27 +420,58 @@ class _SensorEvaluationCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Expanded(child: Text(l10n.securityCenterSafetySensorsEvaluation, style: AppTextTokens.securityCenterCardTitle(textTheme))),
+                  Expanded(
+                    child: Text(
+                      l10n.securityCenterSafetySensorsEvaluation,
+                      style: context.appText.securityCenterCardTitle(textTheme),
+                    ),
+                  ),
                   _EvaluationStatusIcon(status: evaluation.status),
                 ],
               ),
               const SizedBox(height: 10),
               Row(
                 children: [
-                  if (highlightedSensors.isNotEmpty) Expanded(child: _EvaluationTag(label: _sensorLabel(l10n, highlightedSensors.first))),
+                  if (highlightedSensors.isNotEmpty)
+                    Expanded(
+                      child: _EvaluationTag(
+                        label: _sensorLabel(l10n, highlightedSensors.first),
+                      ),
+                    ),
                   const SizedBox(width: 10),
-                  if (highlightedSensors.length > 1) Expanded(child: _EvaluationTag(label: _sensorLabel(l10n, highlightedSensors[1]))),
+                  if (highlightedSensors.length > 1)
+                    Expanded(
+                      child: _EvaluationTag(
+                        label: _sensorLabel(l10n, highlightedSensors[1]),
+                      ),
+                    ),
                   const Icon(Icons.chevron_right_rounded, size: 26),
                 ],
               ),
               const SizedBox(height: 20),
-              Text(l10n.securityCenterWirelessSensors, style: AppTextTokens.securityCenterSectionTitle(textTheme)),
+              Text(
+                l10n.securityCenterWirelessSensors,
+                style: context.appText.securityCenterSectionTitle(textTheme),
+              ),
               const SizedBox(height: 16),
-              _SensorGrid(sensors: [for (final sensor in evaluation.wirelessSensors) _SensorItem.fromSnapshot(sensor, l10n)]),
+              _SensorGrid(
+                sensors: [
+                  for (final sensor in evaluation.wirelessSensors)
+                    _SensorItem.fromSnapshot(sensor, l10n),
+                ],
+              ),
               const SizedBox(height: 20),
-              Text(l10n.securityCenterWiredSensors, style: AppTextTokens.securityCenterSectionTitle(textTheme)),
+              Text(
+                l10n.securityCenterWiredSensors,
+                style: context.appText.securityCenterSectionTitle(textTheme),
+              ),
               const SizedBox(height: 16),
-              _SensorGrid(sensors: [for (final sensor in evaluation.wiredSensors) _SensorItem.fromSnapshot(sensor, l10n)]),
+              _SensorGrid(
+                sensors: [
+                  for (final sensor in evaluation.wiredSensors)
+                    _SensorItem.fromSnapshot(sensor, l10n),
+                ],
+              ),
             ],
           ),
         ),
@@ -344,8 +483,15 @@ class _SensorEvaluationCard extends StatelessWidget {
 class _SensorItem {
   const _SensorItem(this.imageAsset, this.label, this.snapshot);
 
-  factory _SensorItem.fromSnapshot(SecuritySensorSnapshot snapshot, AppLocalizations l10n) {
-    return _SensorItem(snapshot.type.imageAsset, _sensorLabel(l10n, snapshot.type), snapshot);
+  factory _SensorItem.fromSnapshot(
+    SecuritySensorSnapshot snapshot,
+    AppLocalizations l10n,
+  ) {
+    return _SensorItem(
+      snapshot.type.imageAsset,
+      _sensorLabel(l10n, snapshot.type),
+      snapshot,
+    );
   }
 
   final String imageAsset;
@@ -372,9 +518,12 @@ class _SensorGrid extends StatelessWidget {
 class _SensorTile extends StatelessWidget {
   const _SensorTile({required this.sensor});
 
-  static const _batteryFullAsset = 'assets/icons/security_center/security_center_sensor_battery_full.png';
-  static const _batteryLowAsset = 'assets/icons/security_center/security_center_sensor_battery_low.png';
-  static const _batteryOfflineAsset = 'assets/icons/security_center/security_center_sensor_battery_offline.png';
+  static const _batteryFullAsset =
+      'assets/icons/security_center/security_center_sensor_battery_full.png';
+  static const _batteryLowAsset =
+      'assets/icons/security_center/security_center_sensor_battery_low.png';
+  static const _batteryOfflineAsset =
+      'assets/icons/security_center/security_center_sensor_battery_offline.png';
 
   final _SensorItem sensor;
 
@@ -387,26 +536,37 @@ class _SensorTile extends StatelessWidget {
           children: [
             DecoratedBox(
               decoration: BoxDecoration(
-                color: sensor.snapshot.status == SecurityEvaluationStatus.offline ? AppColors.securityCenterSensorUnavailable : Colors.white,
+                color:
+                    sensor.snapshot.status == SecurityEvaluationStatus.offline
+                    ? context.colors.securityCenterSensorUnavailable
+                    : context.colors.authPrimaryButtonDisabledForeground,
                 shape: BoxShape.circle,
-                border: Border.all(color: _statusColor, width: 2),
+                border: Border.all(color: _statusColor(context), width: 2),
               ),
               child: SizedBox.square(
                 dimension: 44,
                 child: Center(
-                  child: Image.asset(
+                  child: SkinAssetImage.themed(
+                    context,
                     sensor.imageAsset,
                     width: 32,
                     height: 32,
                     fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => const SizedBox.square(dimension: 32),
+                    errorBuilder: (context, error, stackTrace) =>
+                        const SizedBox.square(dimension: 32),
                   ),
                 ),
               ),
             ),
             if (sensor.snapshot.hasBattery) ...[
               const SizedBox(height: 8),
-              Image.asset(_batteryAsset, fit: BoxFit.contain, errorBuilder: (context, error, stackTrace) => const SizedBox.square(dimension: 14)),
+              SkinAssetImage.themed(
+                context,
+                _batteryAsset,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) =>
+                    const SizedBox.square(dimension: 14),
+              ),
             ],
           ],
         ),
@@ -414,15 +574,17 @@ class _SensorTile extends StatelessWidget {
     );
   }
 
-  Color get _statusColor {
-    if (sensor.snapshot.hasBattery && sensor.snapshot.batteryStatus == SafetySensorBatteryStatus.low) {
-      return AppColors.securityCenterError;
+  Color _statusColor(BuildContext context) {
+    if (sensor.snapshot.hasBattery &&
+        sensor.snapshot.batteryStatus == SafetySensorBatteryStatus.low) {
+      return context.colors.securityCenterError;
     }
     return switch (sensor.snapshot.status) {
-      SecurityEvaluationStatus.normal => AppColors.securityCenterSuccess,
-      SecurityEvaluationStatus.warning => AppColors.securityReportWarning,
-      SecurityEvaluationStatus.critical => AppColors.securityCenterError,
-      SecurityEvaluationStatus.offline => AppColors.securityCenterSensorUnavailable,
+      SecurityEvaluationStatus.normal => context.colors.securityCenterSuccess,
+      SecurityEvaluationStatus.warning => context.colors.securityReportWarning,
+      SecurityEvaluationStatus.critical => context.colors.securityCenterError,
+      SecurityEvaluationStatus.offline =>
+        context.colors.securityCenterSensorUnavailable,
     };
   }
 
@@ -431,7 +593,9 @@ class _SensorTile extends StatelessWidget {
       return _batteryOfflineAsset;
     }
     return sensor.snapshot.batteryStatus == SafetySensorBatteryStatus.low ||
-            (sensor.snapshot.batteryStatus == SafetySensorBatteryStatus.unknown && sensor.snapshot.batteryPercentage <= 20)
+            (sensor.snapshot.batteryStatus ==
+                    SafetySensorBatteryStatus.unknown &&
+                sensor.snapshot.batteryPercentage <= 20)
         ? _batteryLowAsset
         : _batteryFullAsset;
   }
@@ -445,22 +609,35 @@ class _EvaluationStatusIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (icon, color) = switch (status) {
-      SecurityEvaluationStatus.normal => (Icons.check_circle, AppColors.securityCenterSuccess),
-      SecurityEvaluationStatus.warning => (Icons.warning_rounded, AppColors.securityReportWarning),
-      SecurityEvaluationStatus.critical => (Icons.error, AppColors.securityCenterError),
-      SecurityEvaluationStatus.offline => (Icons.cloud_off_rounded, AppColors.securityCenterSensorUnavailable),
+      SecurityEvaluationStatus.normal => (
+        Icons.check_circle,
+        context.colors.securityCenterSuccess,
+      ),
+      SecurityEvaluationStatus.warning => (
+        Icons.warning_rounded,
+        context.colors.securityReportWarning,
+      ),
+      SecurityEvaluationStatus.critical => (
+        Icons.error,
+        context.colors.securityCenterError,
+      ),
+      SecurityEvaluationStatus.offline => (
+        Icons.cloud_off_rounded,
+        context.colors.securityCenterSensorUnavailable,
+      ),
     };
     return Icon(icon, color: color, size: 13);
   }
 }
 
-String _sensorLabel(AppLocalizations l10n, SecuritySensorType type) => switch (type) {
-  SecuritySensorType.photoBeam => l10n.securityCenterPhotoBeam,
-  SecuritySensorType.eLock => l10n.securityCenterELock,
-  SecuritySensorType.doorSensor => l10n.securityCenterDoorSensor,
-  SecuritySensorType.radar => l10n.securityCenterRadar,
-  SecuritySensorType.remote => l10n.securityCenterRemote,
-  SecuritySensorType.safetyEdge => l10n.securityCenterSafetyEdge,
-  SecuritySensorType.wiredPhotoBeam => l10n.securityCenterWiredPhotoBeam,
-  SecuritySensorType.wiredELock => l10n.securityCenterWiredELock,
-};
+String _sensorLabel(AppLocalizations l10n, SecuritySensorType type) =>
+    switch (type) {
+      SecuritySensorType.photoBeam => l10n.securityCenterPhotoBeam,
+      SecuritySensorType.eLock => l10n.securityCenterELock,
+      SecuritySensorType.doorSensor => l10n.securityCenterDoorSensor,
+      SecuritySensorType.radar => l10n.securityCenterRadar,
+      SecuritySensorType.remote => l10n.securityCenterRemote,
+      SecuritySensorType.safetyEdge => l10n.securityCenterSafetyEdge,
+      SecuritySensorType.wiredPhotoBeam => l10n.securityCenterWiredPhotoBeam,
+      SecuritySensorType.wiredELock => l10n.securityCenterWiredELock,
+    };

@@ -66,6 +66,7 @@ flutter:
     - assets/images/account/
     - assets/images/auth/
     - assets/images/device_control/
+    - assets/images/skins/
     - assets/icons/
     - assets/icons/account/
     - assets/icons/auth/
@@ -76,3 +77,77 @@ flutter:
     - assets/icons/device_control/
     - assets/icons/device_settings/
     - assets/icons/security_center/
+    - assets/icons/skins/
+    - assets/icons/skins/dark/account/
+    - assets/icons/skins/dark/account/2.0x/
+    - assets/icons/skins/dark/account/3.0x/
+    - assets/icons/skins/dark/add_device/
+    - assets/icons/skins/dark/add_device/2.0x/
+    - assets/icons/skins/dark/add_device/3.0x/
+    - assets/icons/skins/dark/add_device/lottie_js_scan_device/
+    - assets/icons/skins/dark/auth/
+    - assets/icons/skins/dark/auth/2.0x/
+    - assets/icons/skins/dark/auth/3.0x/
+    - assets/icons/skins/dark/device_control/
+    - assets/icons/skins/dark/device_control/2.0x/
+    - assets/icons/skins/dark/device_control/3.0x/
+    - assets/icons/skins/dark/device_settings/
+    - assets/icons/skins/dark/device_settings/2.0x/
+    - assets/icons/skins/dark/device_settings/3.0x/
+    - assets/icons/skins/dark/home/
+    - assets/icons/skins/dark/home/2.0x/
+    - assets/icons/skins/dark/home/3.0x/
+    - assets/icons/skins/dark/notification/
+    - assets/icons/skins/dark/notification/2.0x/
+    - assets/icons/skins/dark/notification/3.0x/
+    - assets/icons/skins/dark/security_center/
+    - assets/icons/skins/dark/security_center/2.0x/
+    - assets/icons/skins/dark/security_center/3.0x/
+    - assets/icons/skins/technology_wind/account/
+    - assets/icons/skins/technology_wind/account/2.0x/
+    - assets/icons/skins/technology_wind/account/3.0x/
+    - assets/icons/skins/technology_wind/add_device/
+    - assets/icons/skins/technology_wind/add_device/2.0x/
+    - assets/icons/skins/technology_wind/add_device/3.0x/
+    - assets/icons/skins/technology_wind/add_device/lottie_js_scan_device/
+    - assets/icons/skins/technology_wind/auth/
+    - assets/icons/skins/technology_wind/auth/2.0x/
+    - assets/icons/skins/technology_wind/auth/3.0x/
+    - assets/icons/skins/technology_wind/device_control/
+    - assets/icons/skins/technology_wind/device_control/2.0x/
+    - assets/icons/skins/technology_wind/device_control/3.0x/
+    - assets/icons/skins/technology_wind/device_settings/
+    - assets/icons/skins/technology_wind/device_settings/2.0x/
+    - assets/icons/skins/technology_wind/device_settings/3.0x/
+    - assets/icons/skins/technology_wind/home/
+    - assets/icons/skins/technology_wind/home/2.0x/
+    - assets/icons/skins/technology_wind/home/3.0x/
+    - assets/icons/skins/technology_wind/notification/
+    - assets/icons/skins/technology_wind/notification/2.0x/
+    - assets/icons/skins/technology_wind/notification/3.0x/
+    - assets/icons/skins/technology_wind/security_center/
+    - assets/icons/skins/technology_wind/security_center/2.0x/
+    - assets/icons/skins/technology_wind/security_center/3.0x/
+    - assets/images/skins/dark/account/
+    - assets/images/skins/dark/account/2.0x/
+    - assets/images/skins/dark/account/3.0x/
+    - assets/images/skins/dark/auth/
+    - assets/images/skins/dark/auth/2.0x/
+    - assets/images/skins/dark/auth/3.0x/
+    - assets/images/skins/dark/device_control/
+    - assets/images/skins/technology_wind/account/
+    - assets/images/skins/technology_wind/account/2.0x/
+    - assets/images/skins/technology_wind/account/3.0x/
+    - assets/images/skins/technology_wind/auth/
+    - assets/images/skins/technology_wind/auth/2.0x/
+    - assets/images/skins/technology_wind/auth/3.0x/
+    - assets/images/skins/technology_wind/device_control/
+    - assets/images/skins/dark/
+    - assets/images/skins/dark/appearance/
+    - assets/images/skins/minimalist/
+    - assets/images/skins/minimalist/appearance/
+    - assets/images/skins/minimalist/device_control/
+    - assets/images/skins/technology_wind/
+    - assets/images/skins/technology_wind/appearance/
+    - assets/icons/skins/dark/
+    - assets/icons/skins/technology_wind/

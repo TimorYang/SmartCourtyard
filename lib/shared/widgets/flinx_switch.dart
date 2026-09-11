@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../app/theme/app_design_tokens.dart';
+import '../../app/theme/app_skin_catalog.dart';
 
 class FlinxSwitch extends StatelessWidget {
   const FlinxSwitch({
@@ -19,8 +20,9 @@ class FlinxSwitch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final trackColor = value
-        ? AppColors.toggleSelected
-        : AppColors.deviceControlInactive.withValues(alpha: 0.58);
+        ? context.skin.switchActive
+        : context.skin.switchInactive;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
 
     return Semantics(
       button: true,
@@ -30,10 +32,14 @@ class FlinxSwitch extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: enabled ? () => onChanged(!value) : onDisabled,
         child: AnimatedOpacity(
-          duration: const Duration(milliseconds: 120),
+          duration: reduceMotion
+              ? Duration.zero
+              : AppMotionTokens.switchFadeDuration,
           opacity: enabled ? 1 : 0.55,
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
+            duration: reduceMotion
+                ? Duration.zero
+                : AppMotionTokens.switchTransitionDuration,
             curve: Curves.easeOutCubic,
             width: 50,
             height: 26,
@@ -46,8 +52,8 @@ class FlinxSwitch extends StatelessWidget {
             child: Container(
               width: 22,
               height: 22,
-              decoration: const BoxDecoration(
-                color: AppColors.backgroundPrimary,
+              decoration: BoxDecoration(
+                color: context.skin.switchThumb,
                 shape: BoxShape.circle,
               ),
             ),

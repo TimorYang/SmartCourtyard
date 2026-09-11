@@ -48,7 +48,7 @@ class _ForgotPasswordSuccessPageState
           showBottomDivider: false,
           onBackPressed: _returnToLogin,
         ),
-        backgroundColor: AppColors.backgroundPrimary,
+        backgroundColor: context.colors.backgroundPrimary,
         body: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(32, 10, 32, 24),
@@ -71,13 +71,15 @@ class _ForgotPasswordSuccessPageState
                       Text(
                         l10n.passwordResetSucceededTitle,
                         textAlign: TextAlign.center,
-                        style: AppTextTokens.authSuccessTitle(theme.textTheme),
+                        style: context.appText.authSuccessTitle(
+                          theme.textTheme,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         l10n.passwordResetSucceededDescription,
                         textAlign: TextAlign.center,
-                        style: AppTextTokens.authSuccessDescription(
+                        style: context.appText.authSuccessDescription(
                           theme.textTheme,
                         ),
                       ),

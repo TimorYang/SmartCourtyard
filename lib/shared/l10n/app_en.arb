@@ -2118,5 +2118,68 @@
   "sceneDeleteFailed": "Unable to delete the scene. Please try again.",
   "deviceRenameFailed": "Unable to rename the device. Please try again.",
   "deviceUnbindFailed": "Unable to unbind the device. Please try again.",
-  "deviceTopFailed": "Unable to pin the device. Please try again."
+  "deviceTopFailed": "Unable to pin the device. Please try again.",
+  "appearanceThemeEntryTooltip": "Change app appearance",
+  "appearanceGalleryTitle": "skin change",
+  "appearanceGallerySubtitle": "Three color schemes",
+  "appearanceDarkTitle": "Dark style",
+  "appearanceDarkDescription": "Deep Neon · Low Light Immersion",
+  "appearanceMinimalistTitle": "Minimalist style",
+  "appearanceMinimalistDescription": "Pure white to simplicity, breathing with white space",
+  "appearanceTechnologyWindTitle": "Technology Wind",
+  "appearanceTechnologyWindDescription": "Cyber Blue Youth · Future Sense",
+  "appearancePreviewAction": "preview",
+  "appearanceApplyAction": "Application Theme",
+  "appearanceAppliedAction": "Current style",
+  "appearanceApplyFailed": "Unable to save this style. Please try again.",
+  "appearanceSelectedLabel": "Selected",
+  "appearanceArtworkPending": "Preview artwork placeholder — final artwork pending",
+  "appearancePaletteLabel": "Theme color palette",
+  "appearanceDarkTagMood": "Neon Purple",
+  "appearanceDarkTagComfort": "eye protection",
+  "appearanceMinimalistTagClean": "clean",
+  "appearanceMinimalistTagFocus": "focus",
+  "appearanceTechnologyTagShine": "shine",
+  "appearanceTechnologyTagData": "data",
+  "appearancePreviewOperatedCycles": "Operated cycles",
+  "appearancePreviewRemaining": "Remaining",
+  "appearancePreviewClosed": "Closed",
+  "appearancePreviewLed": "LED",
+  "appearancePreviewOneMinute": "1 min",
+  "appearancePreviewAutoClose": "Auto close",
+  "appearancePreviewOpenReminder": "Open reminder",
+  "appearancePreviewTenMinutes": "10 min",
+  "appearancePreviewPartialOpen": "Partial open",
+  "appearancePreviewMoreSettings": "More setting",
+  "deviceDetailOperationRecordsTab": "Operation records",
+  "deviceDetailCommandTab": "Device command",
+  "deviceDetailSecurityCenterTab": "Security center",
+  "appearanceAssetPending": "Artwork pending",
+  "wifiConfigurationTitle": "Wi-Fi configuration",
+  "wifiConfigurationNoDevice": "No connected device. Return to Bluetooth scan and connect again.",
+  "wifiConfigurationConnectedDevice": "Connected device: {name}",
+  "wifiConfigurationDeviceId": "Device ID: {id}",
+  "wifiConfigurationScanning": "Scanning for Wi-Fi…",
+  "wifiConfigurationScan": "Scan nearby Wi-Fi",
+  "wifiConfigurationNetworks": "Available Wi-Fi networks",
+  "wifiConfigurationSsid": "SSID",
+  "wifiConfigurationSsidHint": "Select or enter a Wi-Fi name",
+  "wifiConfigurationPassword": "Wi-Fi password",
+  "wifiConfigurationPasswordHint": "Enter the Wi-Fi password",
+  "wifiConfigurationConnecting": "Connecting…",
+  "wifiConfigurationConnect": "Connect",
+  "@wifiConfigurationConnectedDevice": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@wifiConfigurationDeviceId": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  }
 }

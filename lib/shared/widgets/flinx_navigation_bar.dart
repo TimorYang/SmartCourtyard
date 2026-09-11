@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../app/theme/app_skin_catalog.dart';
 
 class FlinxNavigationBar extends StatelessWidget
     implements PreferredSizeWidget {
@@ -29,6 +30,9 @@ class FlinxNavigationBar extends StatelessWidget
     final canPop = ModalRoute.of(context)?.canPop ?? false;
 
     return AppBar(
+      systemOverlayStyle: foregroundColor == null
+          ? context.skin.systemOverlayStyle
+          : context.skin.systemOverlayStyleForForeground(foregroundColor!),
       automaticallyImplyLeading: false,
       backgroundColor: isTransparent ? Colors.transparent : null,
       foregroundColor: foregroundColor,

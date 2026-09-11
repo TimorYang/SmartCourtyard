@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -21,7 +22,7 @@ Future<void> showDeviceNameDialog(
 }) {
   return showDialog<void>(
     context: context,
-    barrierColor: AppColors.overlaySoft,
+    barrierColor: context.colors.overlaySoft,
     builder: (context) =>
         DeviceNameDialog(device: device, parentContext: context),
   );
@@ -84,7 +85,7 @@ class _DeviceNameDialogState extends ConsumerState<DeviceNameDialog> {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 390),
           child: Material(
-            color: AppColors.backgroundPrimary,
+            color: context.colors.backgroundPrimary,
             borderRadius: BorderRadius.circular(18),
             clipBehavior: Clip.antiAlias,
             child: Padding(
@@ -94,7 +95,7 @@ class _DeviceNameDialogState extends ConsumerState<DeviceNameDialog> {
                 children: [
                   Text(
                     l10n.deviceNameDialogTitle,
-                    style: AppTextTokens.sceneDialogTitle(textTheme),
+                    style: context.appText.sceneDialogTitle(textTheme),
                   ),
                   const SizedBox(height: 16),
                   _DeviceNameTextField(controller: _controller),
@@ -110,10 +111,10 @@ class _DeviceNameDialogState extends ConsumerState<DeviceNameDialog> {
                                 : () => Navigator.pop(context),
                             style: FilledButton.styleFrom(
                               backgroundColor:
-                                  AppColors.sceneDialogCancelButton,
-                              foregroundColor: AppColors.textPrimary,
+                                  context.colors.sceneDialogCancelButton,
+                              foregroundColor: context.colors.textPrimary,
                               shape: const StadiumBorder(),
-                              textStyle: AppTextTokens.sceneDialogButton(
+                              textStyle: context.appText.sceneDialogButton(
                                 textTheme,
                               ),
                             ),
@@ -130,24 +131,29 @@ class _DeviceNameDialogState extends ConsumerState<DeviceNameDialog> {
                                 ? _submit
                                 : null,
                             style: FilledButton.styleFrom(
-                              backgroundColor: AppColors.brandPrimary,
+                              backgroundColor: context.colors.brandPrimary,
                               disabledBackgroundColor:
-                                  AppColors.brandPrimaryDisabled,
-                              foregroundColor: AppColors.backgroundPrimary,
-                              disabledForegroundColor:
-                                  AppColors.backgroundPrimary,
+                                  context.colors.brandPrimaryDisabled,
+                              foregroundColor: context
+                                  .colors
+                                  .authPrimaryButtonDisabledForeground,
+                              disabledForegroundColor: context
+                                  .colors
+                                  .authPrimaryButtonDisabledForeground,
                               shape: const StadiumBorder(),
-                              textStyle: AppTextTokens.sceneDialogButton(
+                              textStyle: context.appText.sceneDialogButton(
                                 textTheme,
                               ),
                             ),
                             child: _isSubmitting
-                                ? const SizedBox(
+                                ? SizedBox(
                                     width: 18,
                                     height: 18,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      color: AppColors.backgroundPrimary,
+                                      color: context
+                                          .colors
+                                          .authPrimaryButtonDisabledForeground,
                                     ),
                                   )
                                 : Text(l10n.sceneNameConfirmAction),
@@ -234,7 +240,7 @@ class _DeviceNameTextField extends StatelessWidget {
       height: 48,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: AppColors.sceneDialogInputBorder),
+        border: Border.all(color: context.colors.sceneDialogInputBorder),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 14),
       child: Row(
@@ -244,10 +250,10 @@ class _DeviceNameTextField extends StatelessWidget {
           Expanded(
             child: TextField(
               controller: controller,
-              style: AppTextTokens.sceneDialogInput(textTheme),
+              style: context.appText.sceneDialogInput(textTheme),
               decoration: InputDecoration.collapsed(
                 hintText: l10n.deviceNameInputPlaceholder,
-                hintStyle: AppTextTokens.sceneDialogInputHint(textTheme),
+                hintStyle: context.appText.sceneDialogInputHint(textTheme),
               ),
             ),
           ),
@@ -262,15 +268,16 @@ class _DeviceNameInputIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
+    return SkinAssetImage.themed(
+      context,
       DeviceNameDialogAssetPaths.nameInputPlaceholder,
       width: 15,
       height: 15,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) {
-        return const Icon(
+        return Icon(
           Icons.dns_outlined,
-          color: AppColors.textHint,
+          color: context.colors.textHint,
           size: 15,
         );
       },

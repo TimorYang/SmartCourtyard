@@ -2567,4 +2567,155 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get deviceTopFailed => '置顶设备失败，请重试。';
+
+  @override
+  String get appearanceThemeEntryTooltip => '切换应用外观';
+
+  @override
+  String get appearanceGalleryTitle => '换肤';
+
+  @override
+  String get appearanceGallerySubtitle => '三种配色方案';
+
+  @override
+  String get appearanceDarkTitle => '暗夜风格';
+
+  @override
+  String get appearanceDarkDescription => '深邃霓虹 · 低光沉浸';
+
+  @override
+  String get appearanceMinimalistTitle => '极简风格';
+
+  @override
+  String get appearanceMinimalistDescription => '纯白至简，以留白呼吸';
+
+  @override
+  String get appearanceTechnologyWindTitle => '科技风';
+
+  @override
+  String get appearanceTechnologyWindDescription => '赛博蓝调 · 未来感';
+
+  @override
+  String get appearancePreviewAction => '预览';
+
+  @override
+  String get appearanceApplyAction => '应用主题';
+
+  @override
+  String get appearanceAppliedAction => '当前风格';
+
+  @override
+  String get appearanceApplyFailed => '无法保存此风格，请重试。';
+
+  @override
+  String get appearanceSelectedLabel => '已选择';
+
+  @override
+  String get appearanceArtworkPending => '预览图占位资源——等待最终美术切图';
+
+  @override
+  String get appearancePaletteLabel => '主题配色';
+
+  @override
+  String get appearanceDarkTagMood => '霓虹紫';
+
+  @override
+  String get appearanceDarkTagComfort => '护眼';
+
+  @override
+  String get appearanceMinimalistTagClean => '洁净';
+
+  @override
+  String get appearanceMinimalistTagFocus => '专注';
+
+  @override
+  String get appearanceTechnologyTagShine => '光感';
+
+  @override
+  String get appearanceTechnologyTagData => '数据';
+
+  @override
+  String get appearancePreviewOperatedCycles => '运行周期';
+
+  @override
+  String get appearancePreviewRemaining => '剩余次数';
+
+  @override
+  String get appearancePreviewClosed => '已关闭';
+
+  @override
+  String get appearancePreviewLed => '照明灯';
+
+  @override
+  String get appearancePreviewOneMinute => '1 分钟';
+
+  @override
+  String get appearancePreviewAutoClose => '自动关门';
+
+  @override
+  String get appearancePreviewOpenReminder => '开门提醒';
+
+  @override
+  String get appearancePreviewTenMinutes => '10 分钟';
+
+  @override
+  String get appearancePreviewPartialOpen => '部分开启';
+
+  @override
+  String get appearancePreviewMoreSettings => '更多设置';
+
+  @override
+  String get deviceDetailOperationRecordsTab => '操作记录';
+
+  @override
+  String get deviceDetailCommandTab => '设备控制';
+
+  @override
+  String get deviceDetailSecurityCenterTab => '安全中心';
+
+  @override
+  String get appearanceAssetPending => '切图待补充';
+
+  @override
+  String get wifiConfigurationTitle => 'Wi-Fi 配置';
+
+  @override
+  String get wifiConfigurationNoDevice => '当前没有已连接设备，请返回蓝牙扫描页重新连接。';
+
+  @override
+  String wifiConfigurationConnectedDevice(String name) {
+    return '已连接设备：$name';
+  }
+
+  @override
+  String wifiConfigurationDeviceId(String id) {
+    return '设备 ID：$id';
+  }
+
+  @override
+  String get wifiConfigurationScanning => '正在扫描 Wi-Fi…';
+
+  @override
+  String get wifiConfigurationScan => '扫描附近 Wi-Fi';
+
+  @override
+  String get wifiConfigurationNetworks => '扫描到的 Wi-Fi';
+
+  @override
+  String get wifiConfigurationSsid => 'SSID';
+
+  @override
+  String get wifiConfigurationSsidHint => '选择或输入 Wi-Fi 名称';
+
+  @override
+  String get wifiConfigurationPassword => 'Wi-Fi 密码';
+
+  @override
+  String get wifiConfigurationPasswordHint => '请输入 Wi-Fi 密码';
+
+  @override
+  String get wifiConfigurationConnecting => '连接中…';
+
+  @override
+  String get wifiConfigurationConnect => '开始连接';
 }

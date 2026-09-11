@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -45,11 +46,11 @@ class AuthFlowScaffold extends StatelessWidget {
             if (shouldShowBodyBackButton)
               AuthBackButton(onPressed: () => context.pop()),
             SizedBox(height: effectiveHeadingTopSpacing),
-            Text(title, style: AppTextTokens.authFlowTitle(theme.textTheme)),
+            Text(title, style: context.appText.authFlowTitle(theme.textTheme)),
             const SizedBox(height: 12),
             Text(
               description,
-              style: AppTextTokens.authFlowDescription(theme.textTheme),
+              style: context.appText.authFlowDescription(theme.textTheme),
             ),
             ...children,
             const Spacer(),
@@ -60,7 +61,7 @@ class AuthFlowScaffold extends StatelessWidget {
 
     return Scaffold(
       appBar: appBar,
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       resizeToAvoidBottomInset: true,
       body: dismissKeyboardOnTap
           ? GestureDetector(
@@ -121,14 +122,16 @@ class AuthVerificationCodeInput extends StatelessWidget {
     final defaultPinTheme = PinTheme(
       width: 62,
       height: 44,
-      textStyle: AppTextTokens.verificationDigit(theme.textTheme),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.borderCodeCell)),
+      textStyle: context.appText.verificationDigit(theme.textTheme),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: context.colors.borderCodeCell),
+        ),
       ),
     );
     final focusedPinTheme = defaultPinTheme.copyWith(
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.brandPrimary)),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: context.colors.brandPrimary)),
       ),
     );
 
@@ -241,8 +244,8 @@ class AuthTextField extends StatelessWidget {
         border: Border(
           bottom: BorderSide(
             color: hasError
-                ? AppColors.authInputErrorBorder
-                : AppColors.borderSubtle,
+                ? context.colors.authInputErrorBorder
+                : context.colors.borderSubtle,
           ),
         ),
       ),
@@ -277,7 +280,7 @@ class AuthTextField extends StatelessWidget {
               decoration: InputDecoration(
                 border: InputBorder.none,
                 hintText: hintText,
-                hintStyle: AppTextTokens.loginInputHint.copyWith(
+                hintStyle: context.appText.loginInputHint.copyWith(
                   fontSize: ultraCompact ? 16 : 18,
                 ),
                 isDense: compact,
@@ -316,7 +319,7 @@ class AuthTextFieldAction extends StatelessWidget {
         onTap: onTap,
         child: SizedBox.square(
           dimension: 44,
-          child: Icon(icon, color: AppColors.textIcon, size: 22),
+          child: Icon(icon, color: context.colors.textIcon, size: 22),
         ),
       ),
     );
@@ -410,14 +413,14 @@ class AuthPrimaryButton extends StatelessWidget {
       child: FilledButton(
         onPressed: onPressed,
         style: FilledButton.styleFrom(
-          backgroundColor: AppColors.brandPrimaryLight,
-          disabledBackgroundColor: AppColors.brandPrimaryDisabled,
-          foregroundColor: Colors.white,
+          backgroundColor: context.colors.brandPrimaryLight,
+          disabledBackgroundColor: context.colors.brandPrimaryDisabled,
+          foregroundColor: context.colors.authPrimaryButtonDisabledForeground,
           disabledForegroundColor:
-              AppColors.authPrimaryButtonDisabledForeground,
+              context.colors.authPrimaryButtonDisabledForeground,
           minimumSize: const Size.fromHeight(48),
           shape: const StadiumBorder(),
-          textStyle: AppTextTokens.loginPrimaryButton(theme.textTheme),
+          textStyle: context.appText.loginPrimaryButton(theme.textTheme),
         ),
         child: Text(label),
       ),
@@ -441,7 +444,8 @@ class AuthAssetIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
+    return SkinAssetImage.themed(
+      context,
       assetPath,
       width: width,
       height: height,
@@ -488,7 +492,7 @@ class _CodeCursor extends StatelessWidget {
         width: 1.5,
         height: 28,
         margin: const EdgeInsets.only(top: 4),
-        color: AppColors.brandPrimary,
+        color: context.colors.brandPrimary,
       ),
     );
   }

@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -21,7 +22,7 @@ class AddNewDoorsPage extends ConsumerWidget {
     final doorTypes = DoorTypeOption.values;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       appBar: FlinxNavigationBar(
         title: '',
         showBottomDivider: false,
@@ -32,12 +33,12 @@ class AddNewDoorsPage extends ConsumerWidget {
         children: [
           Text(
             l10n.addNewDoorsTitle,
-            style: AppTextTokens.addNewDoorsTitle(textTheme),
+            style: context.appText.addNewDoorsTitle(textTheme),
           ),
           const SizedBox(height: 2),
           Text(
             l10n.addNewDoorsSubtitle,
-            style: AppTextTokens.addNewDoorsSubtitle(textTheme),
+            style: context.appText.addNewDoorsSubtitle(textTheme),
           ),
           const SizedBox(height: 46),
           for (final option in doorTypes) ...[
@@ -70,7 +71,7 @@ class _DoorTypeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.surfaceItemSceneCard,
+      color: context.colors.surfaceItemSceneCard,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
@@ -88,7 +89,7 @@ class _DoorTypeCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   option.localizedName(AppLocalizations.of(context)),
-                  style: AppTextTokens.addNewDoorsCardTitle(
+                  style: context.appText.addNewDoorsCardTitle(
                     Theme.of(context).textTheme,
                   ),
                 ),
@@ -110,13 +111,18 @@ class _DoorTypeIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
+    return SkinAssetImage.themed(
+      context,
       assetPath,
       width: 72,
       height: 72,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) {
-        return Icon(fallbackIcon, color: AppColors.iconHomeAction, size: 64);
+        return Icon(
+          fallbackIcon,
+          color: context.colors.iconHomeAction,
+          size: 64,
+        );
       },
     );
   }

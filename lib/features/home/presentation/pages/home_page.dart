@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'dart:async';
 
 import 'package:easy_refresh/easy_refresh.dart';
@@ -239,7 +240,7 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
       key: ValueKey(homes.map((home) => home.label).join('|')),
       length: homes.length,
       child: Scaffold(
-        backgroundColor: AppColors.homeBackground,
+        backgroundColor: context.colors.homeBackground,
         body: Stack(
           children: [
             SafeArea(
@@ -262,7 +263,7 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
                     },
                   ),
                   _HomeTabs(homes: homes),
-                  const Divider(height: 1, color: AppColors.borderHomeDivider),
+                  Divider(height: 1, color: context.colors.borderHomeDivider),
                   Expanded(
                     child: hasError
                         ? _HomeRefreshableState(
@@ -355,7 +356,7 @@ class _HomeAddMenuOverlay extends StatelessWidget {
           GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: onDismissed,
-            child: Container(color: AppColors.overlaySoft),
+            child: Container(color: context.colors.overlaySoft),
           ),
           SafeArea(
             child: Align(
@@ -407,7 +408,7 @@ class _HomeAddMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.backgroundPrimary,
+      color: context.colors.backgroundPrimary,
       borderRadius: BorderRadius.circular(8),
       clipBehavior: Clip.antiAlias,
       child: SizedBox(
@@ -418,9 +419,12 @@ class _HomeAddMenu extends StatelessWidget {
             for (var index = 0; index < items.length; index++) ...[
               _HomeAddMenuItem(item: items[index]),
               if (index != items.length - 1)
-                const Padding(
+                Padding(
                   padding: EdgeInsets.only(left: 20, right: 20),
-                  child: Divider(height: 1, color: AppColors.borderHomeDivider),
+                  child: Divider(
+                    height: 1,
+                    color: context.colors.borderHomeDivider,
+                  ),
                 ),
             ],
           ],
@@ -466,7 +470,7 @@ class _HomeAddMenuItem extends StatelessWidget {
             Expanded(
               child: Text(
                 item.label,
-                style: AppTextTokens.homeAddMenuItem(
+                style: context.appText.homeAddMenuItem(
                   Theme.of(context).textTheme,
                 ),
               ),
@@ -486,13 +490,18 @@ class _HomeAddMenuIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
+    return SkinAssetImage.themed(
+      context,
       assetPath,
       width: 20,
       height: 20,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) {
-        return Icon(fallbackIcon, color: AppColors.iconHomeAction, size: 20);
+        return Icon(
+          fallbackIcon,
+          color: context.colors.iconHomeAction,
+          size: 20,
+        );
       },
     );
   }
@@ -573,12 +582,12 @@ class _HomeHeader extends StatelessWidget {
               profile?.nickname.isNotEmpty == true
                   ? 'Hi ${profile!.nickname}'
                   : l10n.homeGreeting,
-              style: AppTextTokens.homeGreeting(textTheme),
+              style: context.appText.homeGreeting(textTheme),
             ),
             onTap: () => context.push(BleDebugPage.routePath),
           ),
           const SizedBox(height: 2),
-          Text(l10n.homeWelcome, style: AppTextTokens.homeWelcome(textTheme)),
+          Text(l10n.homeWelcome, style: context.appText.homeWelcome(textTheme)),
         ],
       ),
     );
@@ -624,21 +633,22 @@ class _HeaderIconButton extends StatelessWidget {
       icon: Stack(
         clipBehavior: Clip.none,
         children: [
-          Image.asset(
+          SkinAssetImage.themed(
+            context,
             assetPath,
             fit: BoxFit.contain,
             errorBuilder: (context, error, stackTrace) {
-              return Icon(fallbackIcon, color: AppColors.iconHomeAction);
+              return Icon(fallbackIcon, color: context.colors.iconHomeAction);
             },
           ),
           if (showUnreadBadge)
             Positioned(
               top: AppSpacingTokens.homeNotificationUnreadBadgeTop,
               right: AppSpacingTokens.homeNotificationUnreadBadgeRight,
-              child: const DecoratedBox(
+              child: DecoratedBox(
                 key: ValueKey<String>('home-notification-unread-badge'),
                 decoration: BoxDecoration(
-                  color: AppColors.homeNotificationUnreadBadge,
+                  color: context.colors.homeNotificationUnreadBadge,
                   shape: BoxShape.circle,
                 ),
                 child: SizedBox.square(
@@ -667,11 +677,11 @@ class _HomeTabs extends StatelessWidget {
         isScrollable: true,
         tabAlignment: TabAlignment.start,
         padding: const EdgeInsets.symmetric(horizontal: 18),
-        labelColor: Colors.black,
-        unselectedLabelColor: AppColors.textSecondary,
-        labelStyle: AppTextTokens.homeTabLabel(textTheme),
-        unselectedLabelStyle: AppTextTokens.homeUnselectedTabLabel(textTheme),
-        indicatorColor: AppColors.brandPrimary,
+        labelColor: context.colors.textPrimary,
+        unselectedLabelColor: context.colors.textSecondary,
+        labelStyle: context.appText.homeTabLabel(textTheme),
+        unselectedLabelStyle: context.appText.homeUnselectedTabLabel(textTheme),
+        indicatorColor: context.colors.brandPrimary,
         indicatorWeight: 1,
         dividerColor: Colors.transparent,
         labelPadding: const EdgeInsets.only(right: 28),
@@ -742,7 +752,7 @@ class _DoorCount extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       AppLocalizations.of(context).homeDoorCount(count),
-      style: AppTextTokens.homeDoorCount(Theme.of(context).textTheme),
+      style: context.appText.homeDoorCount(Theme.of(context).textTheme),
     );
   }
 }
@@ -780,13 +790,13 @@ class _EmptyHomeState extends StatelessWidget {
                 Text(
                   l10n.homeNoDoorsTitle,
                   textAlign: TextAlign.center,
-                  style: AppTextTokens.homeEmptyTitle(textTheme),
+                  style: context.appText.homeEmptyTitle(textTheme),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   l10n.homeNoDoorsSubtitle,
                   textAlign: TextAlign.center,
-                  style: AppTextTokens.homeEmptySubtitle(textTheme),
+                  style: context.appText.homeEmptySubtitle(textTheme),
                 ),
                 const SizedBox(height: 42),
                 Center(
@@ -796,12 +806,13 @@ class _EmptyHomeState extends StatelessWidget {
                     child: FilledButton.icon(
                       onPressed: () => context.push(AddNewDoorsPage.routePath),
                       style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.brandPrimary,
-                        foregroundColor: AppColors.backgroundPrimary,
+                        backgroundColor: context.colors.brandPrimary,
+                        foregroundColor:
+                            context.colors.authPrimaryButtonDisabledForeground,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(24),
                         ),
-                        textStyle: AppTextTokens.homePrimaryButton(textTheme),
+                        textStyle: context.appText.homePrimaryButton(textTheme),
                       ),
                       icon: const Icon(Icons.add_rounded),
                       label: Text(l10n.homeAddDoorAction),
@@ -895,9 +906,14 @@ class _AvatarPlaceholder extends StatelessWidget {
         width: size,
         height: size,
         child: avatarCode != null
-            ? Image.asset(avatarCode!.assetPath, fit: BoxFit.cover)
+            ? SkinAssetImage.themed(
+                context,
+                avatarCode!.assetPath,
+                fit: BoxFit.cover,
+              )
             : imageSource == null || imageSource.isEmpty
-            ? Image.asset(
+            ? SkinAssetImage.themed(
+                context,
                 assetPath,
                 fit: BoxFit.cover,
                 errorBuilder: _buildFallback,
@@ -937,11 +953,11 @@ class _AvatarPlaceholder extends StatelessWidget {
     StackTrace? stackTrace,
   ) {
     return Container(
-      color: AppColors.surfaceHomeAvatar,
+      color: context.colors.surfaceHomeAvatar,
       alignment: Alignment.center,
       child: Icon(
         Icons.person,
-        color: AppColors.iconHomePlaceholder,
+        color: context.colors.iconHomePlaceholder,
         size: size * 0.64,
       ),
     );
@@ -956,7 +972,8 @@ class _EmptyDoorsAsset extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
+    return SkinAssetImage.themed(
+      context,
       assetPath,
       width: size,
       height: size,
@@ -966,17 +983,17 @@ class _EmptyDoorsAsset extends StatelessWidget {
           width: size,
           height: size,
           decoration: BoxDecoration(
-            color: AppColors.surfaceHomeIcon,
+            color: context.colors.surfaceHomeIcon,
             shape: BoxShape.circle,
             border: Border.all(
-              color: AppColors.borderHomePlaceholder,
+              color: context.colors.borderHomePlaceholder,
               width: 1,
             ),
           ),
           alignment: Alignment.center,
           child: Icon(
             Icons.dns_outlined,
-            color: AppColors.iconHomePlaceholder,
+            color: context.colors.iconHomePlaceholder,
             size: size * 0.48,
           ),
         );
@@ -1013,7 +1030,7 @@ class _DeviceCard extends StatelessWidget {
         _showDeviceEditingSheet(context, device);
       },
       child: Material(
-        color: AppColors.surfaceItemSceneCard,
+        color: context.colors.surfaceItemSceneCard,
         borderRadius: BorderRadius.circular(12),
         clipBehavior: Clip.antiAlias,
         child: Stack(
@@ -1032,7 +1049,8 @@ class _DeviceCard extends StatelessWidget {
               Positioned(
                 top: -6,
                 right: 0,
-                child: Image.asset(
+                child: SkinAssetImage.themed(
+                  context,
                   HomeAssetPaths.deviceCardSharingBadge,
                   key: _sharingBadgeKey,
                   width: _sharingBadgeSize,
@@ -1057,7 +1075,7 @@ class _DeviceCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.center,
-                        style: AppTextTokens.homeDeviceCardTitle(
+                        style: context.appText.homeDeviceCardTitle(
                           Theme.of(context).textTheme,
                         ),
                       ),
@@ -1067,7 +1085,7 @@ class _DeviceCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.center,
-                        style: AppTextTokens.homeDeviceCardState(
+                        style: context.appText.homeDeviceCardState(
                           Theme.of(context).textTheme,
                         ),
                       ),
@@ -1188,7 +1206,7 @@ class _DeviceEditingSheetState extends ConsumerState<_DeviceEditingSheet> {
     ];
 
     return Material(
-      color: AppColors.backgroundPrimary,
+      color: context.colors.backgroundPrimary,
       borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
       clipBehavior: Clip.antiAlias,
       child: SafeArea(
@@ -1208,14 +1226,14 @@ class _DeviceEditingSheetState extends ConsumerState<_DeviceEditingSheet> {
                       children: [
                         Text(
                           l10n.homeDeviceEditingTitle,
-                          style: AppTextTokens.homeDeviceEditingTitle(
+                          style: context.appText.homeDeviceEditingTitle(
                             textTheme,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           widget.device.name,
-                          style: AppTextTokens.homeDeviceEditingSubtitle(
+                          style: context.appText.homeDeviceEditingSubtitle(
                             textTheme,
                           ),
                         ),
@@ -1228,7 +1246,7 @@ class _DeviceEditingSheetState extends ConsumerState<_DeviceEditingSheet> {
               for (var index = 0; index < items.length; index++) ...[
                 _DeviceEditingActionTile(action: items[index]),
                 if (index != items.length - 1)
-                  const Divider(height: 1, color: AppColors.borderHomeDivider),
+                  Divider(height: 1, color: context.colors.borderHomeDivider),
               ],
             ],
           ),
@@ -1336,7 +1354,7 @@ class _DeviceEditingActionTile extends StatelessWidget {
             Expanded(
               child: Text(
                 action.label,
-                style: AppTextTokens.homeDeviceEditingAction(
+                style: context.appText.homeDeviceEditingAction(
                   Theme.of(context).textTheme,
                 ),
               ),
@@ -1347,9 +1365,9 @@ class _DeviceEditingActionTile extends StatelessWidget {
                     height: 22,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Icon(
+                : Icon(
                     Icons.chevron_right_rounded,
-                    color: AppColors.textPrimary,
+                    color: context.colors.textPrimary,
                     size: 25,
                   ),
           ],
@@ -1366,13 +1384,18 @@ class _DeviceEditingActionIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
+    return SkinAssetImage.themed(
+      context,
       action.assetPath,
       width: 22,
       height: 22,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) {
-        return Icon(action.fallbackIcon, color: AppColors.textMuted, size: 22);
+        return Icon(
+          action.fallbackIcon,
+          color: context.colors.textMuted,
+          size: 22,
+        );
       },
     );
   }
@@ -1391,8 +1414,8 @@ class _DeviceStatusDot extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: onlineState == DeviceOnlineState.online
-            ? AppColors.homeDeviceOnlineStatus
-            : AppColors.homeDeviceUnavailableStatus,
+            ? context.colors.homeDeviceOnlineStatus
+            : context.colors.homeDeviceUnavailableStatus,
       ),
     );
   }
@@ -1440,7 +1463,8 @@ class _DefaultDeviceDoorIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
+    return SkinAssetImage.themed(
+      context,
       visual.assetPath,
       width: 64,
       height: 64,
@@ -1448,7 +1472,7 @@ class _DefaultDeviceDoorIcon extends StatelessWidget {
       errorBuilder: (context, error, stackTrace) {
         return Icon(
           visual.fallbackIcon,
-          color: AppColors.iconHomeAction,
+          color: context.colors.iconHomeAction,
           size: 64,
         );
       },

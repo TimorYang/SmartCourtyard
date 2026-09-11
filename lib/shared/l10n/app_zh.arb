@@ -1007,5 +1007,68 @@
   "sceneDeleteFailed": "删除场景失败，请重试。",
   "deviceRenameFailed": "重命名设备失败，请重试。",
   "deviceUnbindFailed": "解绑设备失败，请重试。",
-  "deviceTopFailed": "置顶设备失败，请重试。"
+  "deviceTopFailed": "置顶设备失败，请重试。",
+  "appearanceThemeEntryTooltip": "切换应用外观",
+  "appearanceGalleryTitle": "换肤",
+  "appearanceGallerySubtitle": "三种配色方案",
+  "appearanceDarkTitle": "暗夜风格",
+  "appearanceDarkDescription": "深邃霓虹 · 低光沉浸",
+  "appearanceMinimalistTitle": "极简风格",
+  "appearanceMinimalistDescription": "纯白至简，以留白呼吸",
+  "appearanceTechnologyWindTitle": "科技风",
+  "appearanceTechnologyWindDescription": "赛博蓝调 · 未来感",
+  "appearancePreviewAction": "预览",
+  "appearanceApplyAction": "应用主题",
+  "appearanceAppliedAction": "当前风格",
+  "appearanceApplyFailed": "无法保存此风格，请重试。",
+  "appearanceSelectedLabel": "已选择",
+  "appearanceArtworkPending": "预览图占位资源——等待最终美术切图",
+  "appearancePaletteLabel": "主题配色",
+  "appearanceDarkTagMood": "霓虹紫",
+  "appearanceDarkTagComfort": "护眼",
+  "appearanceMinimalistTagClean": "洁净",
+  "appearanceMinimalistTagFocus": "专注",
+  "appearanceTechnologyTagShine": "光感",
+  "appearanceTechnologyTagData": "数据",
+  "appearancePreviewOperatedCycles": "运行周期",
+  "appearancePreviewRemaining": "剩余次数",
+  "appearancePreviewClosed": "已关闭",
+  "appearancePreviewLed": "照明灯",
+  "appearancePreviewOneMinute": "1 分钟",
+  "appearancePreviewAutoClose": "自动关门",
+  "appearancePreviewOpenReminder": "开门提醒",
+  "appearancePreviewTenMinutes": "10 分钟",
+  "appearancePreviewPartialOpen": "部分开启",
+  "appearancePreviewMoreSettings": "更多设置",
+  "deviceDetailOperationRecordsTab": "操作记录",
+  "deviceDetailCommandTab": "设备控制",
+  "deviceDetailSecurityCenterTab": "安全中心",
+  "appearanceAssetPending": "切图待补充",
+  "wifiConfigurationTitle": "Wi-Fi 配置",
+  "wifiConfigurationNoDevice": "当前没有已连接设备，请返回蓝牙扫描页重新连接。",
+  "wifiConfigurationConnectedDevice": "已连接设备：{name}",
+  "wifiConfigurationDeviceId": "设备 ID：{id}",
+  "wifiConfigurationScanning": "正在扫描 Wi-Fi…",
+  "wifiConfigurationScan": "扫描附近 Wi-Fi",
+  "wifiConfigurationNetworks": "扫描到的 Wi-Fi",
+  "wifiConfigurationSsid": "SSID",
+  "wifiConfigurationSsidHint": "选择或输入 Wi-Fi 名称",
+  "wifiConfigurationPassword": "Wi-Fi 密码",
+  "wifiConfigurationPasswordHint": "请输入 Wi-Fi 密码",
+  "wifiConfigurationConnecting": "连接中…",
+  "wifiConfigurationConnect": "开始连接",
+  "@wifiConfigurationConnectedDevice": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@wifiConfigurationDeviceId": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  }
 }

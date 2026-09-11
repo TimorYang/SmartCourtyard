@@ -30,8 +30,8 @@ class AppToast {
       autoCloseDuration: const Duration(seconds: 2),
       alignment: Alignment.topCenter,
       animationDuration: const Duration(milliseconds: 220),
-      primaryColor: _primaryColor(type),
-      foregroundColor: AppColors.toastForeground,
+      primaryColor: _primaryColor(context, type),
+      foregroundColor: context.colors.toastForeground,
       showProgressBar: false,
       closeOnClick: true,
       dragToClose: true,
@@ -46,11 +46,11 @@ class AppToast {
     };
   }
 
-  static Color _primaryColor(AppToastType type) {
+  static Color _primaryColor(BuildContext context, AppToastType type) {
     return switch (type) {
-      AppToastType.info => AppColors.toastInfo,
-      AppToastType.success => AppColors.toastSuccess,
-      AppToastType.error => AppColors.toastError,
+      AppToastType.info => context.colors.toastInfo,
+      AppToastType.success => context.colors.toastSuccess,
+      AppToastType.error => context.colors.toastError,
     };
   }
 }

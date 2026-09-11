@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -69,19 +70,19 @@ class _AddDevicePageState extends ConsumerState<AddDevicePage> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       appBar: const FlinxNavigationBar(title: '', showBottomDivider: false),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 10, 18, 46),
         children: [
           Text(
             l10n.addDeviceTitle,
-            style: AppTextTokens.addDeviceTitle(textTheme),
+            style: context.appText.addDeviceTitle(textTheme),
           ),
           const SizedBox(height: 2),
           Text(
             l10n.addDeviceSubtitle,
-            style: AppTextTokens.addDeviceSubtitle(textTheme),
+            style: context.appText.addDeviceSubtitle(textTheme),
           ),
           const SizedBox(height: 42),
           _DeviceSectionTitle(label: l10n.addDeviceFBoxSection),
@@ -154,7 +155,7 @@ class _DeviceSectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       label,
-      style: AppTextTokens.addDeviceSectionTitle(Theme.of(context).textTheme),
+      style: context.appText.addDeviceSectionTitle(Theme.of(context).textTheme),
     );
   }
 }
@@ -175,7 +176,7 @@ class _DeviceOptionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.surfaceItemSceneCard,
+      color: context.colors.surfaceItemSceneCard,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
@@ -193,7 +194,7 @@ class _DeviceOptionCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   label,
-                  style: AppTextTokens.addDeviceCardTitle(
+                  style: context.appText.addDeviceCardTitle(
                     Theme.of(context).textTheme,
                   ),
                 ),
@@ -217,13 +218,18 @@ class _DeviceOptionIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
+    return SkinAssetImage.themed(
+      context,
       assetPath,
       width: 64,
       height: 64,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) {
-        return Icon(fallbackIcon, color: AppColors.iconHomeAction, size: 64);
+        return Icon(
+          fallbackIcon,
+          color: context.colors.iconHomeAction,
+          size: 64,
+        );
       },
     );
   }

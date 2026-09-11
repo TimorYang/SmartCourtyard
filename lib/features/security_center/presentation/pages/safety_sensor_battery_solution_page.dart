@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -68,7 +69,7 @@ class _SafetySensorBatterySolutionPageState
         : _findSensor(evaluation, widget.sensorId);
 
     return Scaffold(
-      backgroundColor: AppColors.securityCenterBackground,
+      backgroundColor: context.colors.securityCenterBackground,
       appBar: FlinxNavigationBar(
         title: sensor == null
             ? l10n.safetySensorDefaultName
@@ -83,7 +84,7 @@ class _SafetySensorBatterySolutionPageState
             padding: EdgeInsetsGeometry.only(left: 17),
             child: Text(
               l10n.safetySensorLowBatterySolution,
-              style: AppTextTokens.safetyBatterySolutionSectionTitle(
+              style: context.appText.safetyBatterySolutionSectionTitle(
                 Theme.of(context).textTheme,
               ),
             ),
@@ -100,7 +101,7 @@ class _SafetySensorBatterySolutionPageState
             padding: EdgeInsetsGeometry.only(left: 20),
             child: Text(
               l10n.batteryReplacementIllustration,
-              style: AppTextTokens.safetyBatterySolutionSectionTitle(
+              style: context.appText.safetyBatterySolutionSectionTitle(
                 Theme.of(context).textTheme,
               ),
             ),
@@ -108,7 +109,7 @@ class _SafetySensorBatterySolutionPageState
           const SizedBox(height: 10),
           DecoratedBox(
             decoration: BoxDecoration(
-              color: AppColors.securityCenterCard,
+              color: context.colors.securityCenterCard,
               borderRadius: BorderRadius.circular(
                 AppShapeTokens.safetyBatterySolutionCardRadius,
               ),
@@ -143,7 +144,7 @@ class _BatterySolutionSummaryCard extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: AppColors.securityCenterCard,
+        color: context.colors.securityCenterCard,
         borderRadius: BorderRadius.circular(
           AppShapeTokens.safetyBatterySolutionCardRadius,
         ),
@@ -157,15 +158,15 @@ class _BatterySolutionSummaryCard extends StatelessWidget {
             const SizedBox(height: 28),
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.error,
-                  color: AppColors.securityCenterError,
+                  color: context.colors.securityCenterError,
                   size: 13,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   l10n.safetySensorLowBatteryWarning,
-                  style: AppTextTokens.safetySensorItemAlert(textTheme),
+                  style: context.appText.safetySensorItemAlert(textTheme),
                 ),
               ],
             ),
@@ -189,7 +190,7 @@ class _BatterySolutionSummaryCard extends StatelessWidget {
                       const SizedBox(height: 12),
                       Text(
                         l10n.safetySensorLowBatteryInstruction,
-                        style: AppTextTokens.safetyBatterySolutionWarning(
+                        style: context.appText.safetyBatterySolutionWarning(
                           textTheme,
                         ),
                       ),
@@ -227,11 +228,11 @@ class _BatterySpecificationLine extends StatelessWidget {
         children: [
           TextSpan(
             text: label,
-            style: AppTextTokens.safetyBatterySolutionLabel(textTheme),
+            style: context.appText.safetyBatterySolutionLabel(textTheme),
           ),
           TextSpan(
             text: value,
-            style: AppTextTokens.safetyBatterySolutionValue(textTheme),
+            style: context.appText.safetyBatterySolutionValue(textTheme),
           ),
         ],
       ),
@@ -252,27 +253,28 @@ class _AssetPlaceholder extends StatelessWidget {
       borderRadius: BorderRadius.circular(
         AppShapeTokens.safetyBatterySolutionImageRadius,
       ),
-      child: Image.asset(
+      child: SkinAssetImage.themed(
+        context,
         assetPath,
         height: height,
         width: double.infinity,
         fit: BoxFit.contain,
         errorBuilder: (context, error, stackTrace) => Container(
           height: height,
-          color: AppColors.safetyBatterySolutionPlaceholderSurface,
+          color: context.colors.safetyBatterySolutionPlaceholderSurface,
           alignment: Alignment.center,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
+              Icon(
                 Icons.image_outlined,
-                color: AppColors.safetySensorPlaceholder,
+                color: context.colors.safetySensorPlaceholder,
                 size: 42,
               ),
               const SizedBox(height: 8),
               Text(
                 l10n.safetySensorImagePlaceholder,
-                style: AppTextTokens.safetySensorItemStatus(
+                style: context.appText.safetySensorItemStatus(
                   Theme.of(context).textTheme,
                 ),
               ),

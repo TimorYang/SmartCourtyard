@@ -110,7 +110,7 @@ class _RegisterPasswordPageState extends ConsumerState<RegisterPasswordPage> {
         const SizedBox(height: 8),
         Text(
           l10n.registerPasswordRule,
-          style: AppTextTokens.authPasswordRule(Theme.of(context).textTheme),
+          style: context.appText.authPasswordRule(Theme.of(context).textTheme),
         ),
         const SizedBox(height: 55),
         AuthPrimaryButton(

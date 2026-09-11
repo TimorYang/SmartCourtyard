@@ -109,9 +109,9 @@ class _RegisterCodePageState extends ConsumerState<RegisterCodePage> {
             padding: EdgeInsets.zero,
             minimumSize: const Size(0, 28),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            foregroundColor: AppColors.textCodeResend,
-            disabledForegroundColor: AppColors.textCodeResendDisabled,
-            textStyle: AppTextTokens.verificationResend(
+            foregroundColor: context.colors.textCodeResend,
+            disabledForegroundColor: context.colors.textCodeResendDisabled,
+            textStyle: context.appText.verificationResend(
               Theme.of(context).textTheme,
             ),
           ),

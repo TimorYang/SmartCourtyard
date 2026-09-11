@@ -385,7 +385,7 @@ class _SmartOpenerBleScanPageState extends ConsumerState<SmartOpenerBleScanPage>
     final devices = ref.watch(addDeviceControllerProvider).sortedDevices();
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       appBar: const FlinxNavigationBar(title: '', showBottomDivider: false),
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -400,12 +400,12 @@ class _SmartOpenerBleScanPageState extends ConsumerState<SmartOpenerBleScanPage>
               children: [
                 Text(
                   l10n.smartOpenerBleScanningTitle,
-                  style: AppTextTokens.smartOpenerScanningTitle(textTheme),
+                  style: context.appText.smartOpenerScanningTitle(textTheme),
                 ),
                 const SizedBox(height: 5),
                 Text(
                   l10n.smartOpenerBleScanningDescription,
-                  style: AppTextTokens.smartOpenerScanningDescription(
+                  style: context.appText.smartOpenerScanningDescription(
                     textTheme,
                   ),
                 ),
@@ -416,7 +416,7 @@ class _SmartOpenerBleScanPageState extends ConsumerState<SmartOpenerBleScanPage>
                   child: Text(
                     l10n.smartOpenerBleScanningStatus,
                     textAlign: TextAlign.center,
-                    style: AppTextTokens.smartOpenerScanningStatus(textTheme),
+                    style: context.appText.smartOpenerScanningStatus(textTheme),
                   ),
                 ),
                 if (devices.isNotEmpty) ...[
@@ -501,15 +501,15 @@ class _ScanningDevicePreviewCard extends StatelessWidget {
       constraints: const BoxConstraints(minHeight: 74),
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       decoration: BoxDecoration(
-        color: AppColors.smartOpenerCardSurface,
+        color: context.colors.smartOpenerCardSurface,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.door_front_door_outlined,
             size: 34,
-            color: AppColors.textIcon,
+            color: context.colors.textIcon,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -521,18 +521,18 @@ class _ScanningDevicePreviewCard extends StatelessWidget {
                   name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextTokens.smartOpenerResultCardTitle(
-                    textTheme,
-                  ).copyWith(fontSize: 14),
+                  style: context.appText
+                      .smartOpenerResultCardTitle(textTheme)
+                      .copyWith(fontSize: 14),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   l10n.smartOpenerDefaultDeviceSubtitle,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextTokens.smartOpenerResultCardSubtitle(
-                    textTheme,
-                  ).copyWith(fontSize: 11),
+                  style: context.appText
+                      .smartOpenerResultCardSubtitle(textTheme)
+                      .copyWith(fontSize: 11),
                 ),
               ],
             ),
@@ -544,25 +544,27 @@ class _ScanningDevicePreviewCard extends StatelessWidget {
             child: FilledButton(
               onPressed: onAddPressed,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.smartOpenerAddButton,
-                foregroundColor: Colors.white,
-                disabledBackgroundColor: AppColors.textHint,
+                backgroundColor: context.colors.smartOpenerAddButton,
+                foregroundColor:
+                    context.colors.authPrimaryButtonDisabledForeground,
+                disabledBackgroundColor: context.colors.textHint,
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(7),
                 ),
               ),
               child: isPending
-                  ? const SizedBox.square(
+                  ? SizedBox.square(
                       dimension: 18,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: Colors.white,
+                        color:
+                            context.colors.authPrimaryButtonDisabledForeground,
                       ),
                     )
                   : Text(
                       l10n.smartOpenerAddAction,
-                      style: AppTextTokens.smartOpenerSmallButton(textTheme),
+                      style: context.appText.smartOpenerSmallButton(textTheme),
                     ),
             ),
           ),

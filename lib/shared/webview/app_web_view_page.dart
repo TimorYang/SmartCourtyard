@@ -33,7 +33,6 @@ class _AppWebViewPageState extends ConsumerState<AppWebViewPage> {
   void initState() {
     super.initState();
     _controller = WebViewController()
-      ..setBackgroundColor(AppColors.backgroundPrimary)
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(
         NavigationDelegate(
@@ -63,10 +62,16 @@ class _AppWebViewPageState extends ConsumerState<AppWebViewPage> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _controller.setBackgroundColor(context.colors.backgroundPrimary);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: FlinxNavigationBar(title: widget.title),
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       body: Stack(
         children: [
           WebViewWidget(controller: _controller),

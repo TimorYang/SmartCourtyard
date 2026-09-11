@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -17,7 +18,7 @@ class SceneNameDialogAssetPaths {
 Future<void> showSceneNameDialog(BuildContext context) {
   return showDialog<void>(
     context: context,
-    barrierColor: AppColors.overlaySoft,
+    barrierColor: context.colors.overlaySoft,
     builder: (context) => const SceneNameDialog(),
   );
 }
@@ -71,7 +72,7 @@ class _SceneNameDialogState extends ConsumerState<SceneNameDialog> {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 390),
           child: Material(
-            color: AppColors.backgroundPrimary,
+            color: context.colors.backgroundPrimary,
             borderRadius: BorderRadius.circular(18),
             clipBehavior: Clip.antiAlias,
             child: Padding(
@@ -81,7 +82,7 @@ class _SceneNameDialogState extends ConsumerState<SceneNameDialog> {
                 children: [
                   Text(
                     l10n.sceneNameDialogTitle,
-                    style: AppTextTokens.sceneDialogTitle(textTheme),
+                    style: context.appText.sceneDialogTitle(textTheme),
                   ),
                   const SizedBox(height: 16),
                   _SceneNameTextField(controller: _controller),
@@ -97,10 +98,10 @@ class _SceneNameDialogState extends ConsumerState<SceneNameDialog> {
                                 : () => Navigator.pop(context),
                             style: FilledButton.styleFrom(
                               backgroundColor:
-                                  AppColors.sceneDialogCancelButton,
-                              foregroundColor: AppColors.textPrimary,
+                                  context.colors.sceneDialogCancelButton,
+                              foregroundColor: context.colors.textPrimary,
                               shape: const StadiumBorder(),
-                              textStyle: AppTextTokens.sceneDialogButton(
+                              textStyle: context.appText.sceneDialogButton(
                                 textTheme,
                               ),
                             ),
@@ -117,24 +118,29 @@ class _SceneNameDialogState extends ConsumerState<SceneNameDialog> {
                                 ? null
                                 : _submit,
                             style: FilledButton.styleFrom(
-                              backgroundColor: AppColors.brandPrimary,
+                              backgroundColor: context.colors.brandPrimary,
                               disabledBackgroundColor:
-                                  AppColors.brandPrimaryDisabled,
-                              foregroundColor: AppColors.backgroundPrimary,
-                              disabledForegroundColor:
-                                  AppColors.authPrimaryButtonDisabledForeground,
+                                  context.colors.brandPrimaryDisabled,
+                              foregroundColor: context
+                                  .colors
+                                  .authPrimaryButtonDisabledForeground,
+                              disabledForegroundColor: context
+                                  .colors
+                                  .authPrimaryButtonDisabledForeground,
                               shape: const StadiumBorder(),
-                              textStyle: AppTextTokens.sceneDialogButton(
+                              textStyle: context.appText.sceneDialogButton(
                                 textTheme,
                               ),
                             ),
                             child: _isSubmitting
-                                ? const SizedBox(
+                                ? SizedBox(
                                     width: 18,
                                     height: 18,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      color: AppColors.backgroundPrimary,
+                                      color: context
+                                          .colors
+                                          .authPrimaryButtonDisabledForeground,
                                     ),
                                   )
                                 : Text(l10n.sceneNameConfirmAction),
@@ -210,7 +216,7 @@ class _SceneNameTextField extends StatelessWidget {
       height: 48,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: AppColors.sceneDialogInputBorder),
+        border: Border.all(color: context.colors.sceneDialogInputBorder),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 14),
       child: Row(
@@ -220,10 +226,10 @@ class _SceneNameTextField extends StatelessWidget {
           Expanded(
             child: TextField(
               controller: controller,
-              style: AppTextTokens.sceneDialogInput(textTheme),
+              style: context.appText.sceneDialogInput(textTheme),
               decoration: InputDecoration.collapsed(
                 hintText: l10n.sceneNameInputPlaceholder,
-                hintStyle: AppTextTokens.sceneDialogInputHint(textTheme),
+                hintStyle: context.appText.sceneDialogInputHint(textTheme),
               ),
             ),
           ),
@@ -238,7 +244,8 @@ class _SceneNameInputIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
+    return SkinAssetImage.themed(
+      context,
       SceneNameDialogAssetPaths.nameInputPlaceholder,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),

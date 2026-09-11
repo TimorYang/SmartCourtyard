@@ -32,7 +32,7 @@ class NotificationDetailPage extends ConsumerWidget {
     });
 
     return Scaffold(
-      backgroundColor: AppColors.notificationBackground,
+      backgroundColor: context.colors.notificationBackground,
       appBar: FlinxNavigationBar(
         title: l10n.notificationTitle,
         showBottomDivider: false,
@@ -65,7 +65,7 @@ class _DetailCard extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: AppColors.notificationCard,
+        color: context.colors.notificationCard,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Padding(
@@ -75,17 +75,17 @@ class _DetailCard extends StatelessWidget {
           children: [
             Text(
               notification.title,
-              style: AppTextTokens.notificationDetailTitle(textTheme),
+              style: context.appText.notificationDetailTitle(textTheme),
             ),
             const SizedBox(height: 8),
             Text(
               notification.timestamp,
-              style: AppTextTokens.notificationTimestamp(textTheme),
+              style: context.appText.notificationTimestamp(textTheme),
             ),
             const SizedBox(height: 18),
             Text(
               notification.content,
-              style: AppTextTokens.notificationBody(textTheme),
+              style: context.appText.notificationBody(textTheme),
             ),
           ],
         ),

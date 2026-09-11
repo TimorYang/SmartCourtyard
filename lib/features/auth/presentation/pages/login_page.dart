@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -161,7 +162,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     return Scaffold(
       appBar: FlinxNavigationBar(title: '', showBottomDivider: false),
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       resizeToAvoidBottomInset: false,
       body: MediaQuery.removeViewInsets(
         removeBottom: true,
@@ -182,7 +183,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     children: [
                       Text(
                         l10n.loginTitle,
-                        style: AppTextTokens.loginTitle(theme.textTheme),
+                        style: context.appText.loginTitle(theme.textTheme),
                       ),
                       const SizedBox(height: 55),
                       AuthTextField(
@@ -248,15 +249,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           Expanded(
                             child: Text.rich(
                               TextSpan(
-                                style: AppTextTokens.loginAgreement(
+                                style: context.appText.loginAgreement(
                                   theme.textTheme,
                                 ),
                                 children: [
                                   TextSpan(text: l10n.loginAgreementPrefix),
                                   TextSpan(
                                     text: l10n.userAgreementLabel,
-                                    style: const TextStyle(
-                                      color: AppColors.textAgreementLink,
+                                    style: TextStyle(
+                                      color: context.colors.textAgreementLink,
                                       decoration: TextDecoration.underline,
                                     ),
                                     recognizer: TapGestureRecognizer()
@@ -271,8 +272,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                   TextSpan(text: l10n.loginAgreementMiddle),
                                   TextSpan(
                                     text: l10n.privacyPolicyLabel,
-                                    style: const TextStyle(
-                                      color: AppColors.textAgreementLink,
+                                    style: TextStyle(
+                                      color: context.colors.textAgreementLink,
                                       decoration: TextDecoration.underline,
                                     ),
                                     recognizer: TapGestureRecognizer()
@@ -352,25 +353,30 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                 }
                               : null,
                           style: FilledButton.styleFrom(
-                            backgroundColor: AppColors.brandPrimaryLight,
+                            backgroundColor: context.colors.brandPrimaryLight,
                             disabledBackgroundColor:
-                                AppColors.brandPrimaryDisabled,
-                            foregroundColor: Colors.white,
-                            disabledForegroundColor:
-                                AppColors.authPrimaryButtonDisabledForeground,
+                                context.colors.brandPrimaryDisabled,
+                            foregroundColor: context
+                                .colors
+                                .authPrimaryButtonDisabledForeground,
+                            disabledForegroundColor: context
+                                .colors
+                                .authPrimaryButtonDisabledForeground,
                             minimumSize: const Size.fromHeight(48),
                             shape: const StadiumBorder(),
-                            textStyle: AppTextTokens.loginPrimaryButton(
+                            textStyle: context.appText.loginPrimaryButton(
                               theme.textTheme,
                             ),
                           ),
                           child: _isSubmitting
-                              ? const SizedBox(
+                              ? SizedBox(
                                   width: 20,
                                   height: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    color: Colors.white,
+                                    color: context
+                                        .colors
+                                        .authPrimaryButtonDisabledForeground,
                                   ),
                                 )
                               : Text(l10n.signInAction),
@@ -383,9 +389,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             onPressed: () =>
                                 context.push(RegisterPage.routePath),
                             style: TextButton.styleFrom(
-                              foregroundColor: AppColors.textSecondary,
+                              foregroundColor: context.colors.textSecondary,
                               padding: EdgeInsets.zero,
-                              textStyle: AppTextTokens.loginTextButton(
+                              textStyle: context.appText.loginTextButton(
                                 theme.textTheme,
                               ),
                             ),
@@ -396,9 +402,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             onPressed: () =>
                                 context.push(ForgotPasswordPage.routePath),
                             style: TextButton.styleFrom(
-                              foregroundColor: AppColors.textSecondary,
+                              foregroundColor: context.colors.textSecondary,
                               padding: EdgeInsets.zero,
-                              textStyle: AppTextTokens.loginTextButton(
+                              textStyle: context.appText.loginTextButton(
                                 theme.textTheme,
                               ),
                             ),
@@ -491,11 +497,11 @@ class _ThirdPartyLoginSection extends StatelessWidget {
               key: const ValueKey('google_login_button'),
               label: l10n.continueWithGoogle,
               icon: isGoogleSubmitting
-                  ? const SizedBox.square(
+                  ? SizedBox.square(
                       dimension: 18,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: AppColors.brandPrimaryLight,
+                        color: context.colors.brandPrimaryLight,
                       ),
                     )
                   : const _ProviderAssetIcon(
@@ -516,11 +522,11 @@ class _ThirdPartyLoginSection extends StatelessWidget {
                 key: const ValueKey('apple_login_button'),
                 label: l10n.continueWithApple,
                 icon: isAppleSubmitting
-                    ? const SizedBox.square(
+                    ? SizedBox.square(
                         dimension: 18,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: AppColors.brandPrimaryLight,
+                          color: context.colors.brandPrimaryLight,
                         ),
                       )
                     : const _ProviderAssetIcon(
@@ -541,11 +547,11 @@ class _ThirdPartyLoginSection extends StatelessWidget {
               key: const ValueKey('facebook_login_button'),
               label: l10n.continueWithFacebook,
               icon: isFacebookSubmitting
-                  ? const SizedBox.square(
+                  ? SizedBox.square(
                       dimension: 18,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: AppColors.brandPrimaryLight,
+                        color: context.colors.brandPrimaryLight,
                       ),
                     )
                   : const _ProviderAssetIcon(
@@ -581,7 +587,7 @@ class _ProviderSectionHeader extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 10),
           child: Text(
             label,
-            style: AppTextTokens.loginProviderSectionLabel(
+            style: context.appText.loginProviderSectionLabel(
               Theme.of(context).textTheme,
             ),
           ),
@@ -619,20 +625,23 @@ class _AgreementToggle extends StatelessWidget {
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: selected
-                      ? AppColors.toggleSelected
-                      : AppColors.borderMuted,
+                      ? context.colors.toggleSelected
+                      : context.colors.borderMuted,
                 ),
-                color: selected ? AppColors.toggleSelected : Colors.white,
+                color: selected
+                    ? context.colors.toggleSelected
+                    : context.colors.authPrimaryButtonDisabledForeground,
               ),
               child: selected
-                  ? const AuthAssetIcon(
+                  ? AuthAssetIcon(
                       assetPath: _LoginPageAssetPaths.agreementCheckedIcon,
                       width: 14,
                       height: 14,
                       fallback: Icon(
                         Icons.check,
                         size: 14,
-                        color: Colors.white,
+                        color:
+                            context.colors.authPrimaryButtonDisabledForeground,
                       ),
                     )
                   : null,
@@ -649,10 +658,10 @@ class _ProviderDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Divider(
+    return Divider(
       height: 1,
       thickness: 1,
-      color: AppColors.loginProviderDivider,
+      color: context.colors.loginProviderDivider,
     );
   }
 }
@@ -684,8 +693,8 @@ class _CompactProviderButton extends StatelessWidget {
               width: 36,
               height: 36,
               alignment: Alignment.center,
-              decoration: const BoxDecoration(
-                color: AppColors.loginProviderSurface,
+              decoration: BoxDecoration(
+                color: context.colors.loginProviderSurface,
                 shape: BoxShape.circle,
               ),
               child: icon,
@@ -710,7 +719,8 @@ class _ProviderAssetIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
+    return SkinAssetImage.themed(
+      context,
       assetPath,
       width: size,
       height: size,

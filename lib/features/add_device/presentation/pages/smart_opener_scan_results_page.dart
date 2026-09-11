@@ -59,7 +59,7 @@ class _SmartOpenerScanResultsPageState
     final devices = ref.watch(addDeviceControllerProvider).sortedDevices();
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       appBar: const FlinxNavigationBar(title: '', showBottomDivider: false),
       body: SafeArea(
         top: false,
@@ -76,12 +76,12 @@ class _SmartOpenerScanResultsPageState
                 children: [
                   Text(
                     l10n.smartOpenerScanResultsTitle,
-                    style: AppTextTokens.smartOpenerFlowTitle(textTheme),
+                    style: context.appText.smartOpenerFlowTitle(textTheme),
                   ),
                   const SizedBox(height: 10),
                   Text(
                     l10n.smartOpenerScanResultsCount(devices.length),
-                    style: AppTextTokens.smartOpenerFlowSubtitle(textTheme),
+                    style: context.appText.smartOpenerFlowSubtitle(textTheme),
                   ),
                 ],
               );
@@ -128,15 +128,15 @@ class _ScanResultCard extends StatelessWidget {
           constraints: const BoxConstraints(minHeight: 95),
           padding: const EdgeInsets.fromLTRB(15, 23, 15, 23),
           decoration: BoxDecoration(
-            color: AppColors.smartOpenerCardSurface,
+            color: context.colors.smartOpenerCardSurface,
             borderRadius: BorderRadius.circular(14),
           ),
           child: Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.door_front_door_outlined,
                 size: 48,
-                color: AppColors.textPrimary,
+                color: context.colors.textPrimary,
               ),
               const SizedBox(width: 13),
               Expanded(
@@ -148,7 +148,7 @@ class _ScanResultCard extends StatelessWidget {
                       name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: AppTextTokens.smartOpenerResultCardTitle(
+                      style: context.appText.smartOpenerResultCardTitle(
                         textTheme,
                       ),
                     ),
@@ -157,7 +157,7 @@ class _ScanResultCard extends StatelessWidget {
                       l10n.smartOpenerDefaultDeviceSubtitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: AppTextTokens.smartOpenerResultCardSubtitle(
+                      style: context.appText.smartOpenerResultCardSubtitle(
                         textTheme,
                       ),
                     ),
@@ -171,25 +171,28 @@ class _ScanResultCard extends StatelessWidget {
                 child: FilledButton(
                   onPressed: onAddPressed,
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.smartOpenerAddButton,
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: AppColors.textHint,
+                    backgroundColor: context.colors.smartOpenerAddButton,
+                    foregroundColor:
+                        context.colors.authPrimaryButtonDisabledForeground,
+                    disabledBackgroundColor: context.colors.textHint,
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(7),
                     ),
                   ),
                   child: isPending
-                      ? const SizedBox.square(
+                      ? SizedBox.square(
                           dimension: 18,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.white,
+                            color: context
+                                .colors
+                                .authPrimaryButtonDisabledForeground,
                           ),
                         )
                       : Text(
                           l10n.smartOpenerAddAction,
-                          style: AppTextTokens.smartOpenerSmallButton(
+                          style: context.appText.smartOpenerSmallButton(
                             textTheme,
                           ),
                         ),

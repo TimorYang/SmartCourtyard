@@ -40,17 +40,18 @@ class FlinxDoorCommandButton extends StatelessWidget {
             fixedSize: Size.square(size),
             padding: EdgeInsets.zero,
             backgroundColor: enabled
-                ? AppColors.deviceControlPrimaryAction
-                : AppColors.deviceControlPrimaryAction.withValues(
+                ? context.colors.deviceControlPrimaryAction
+                : context.colors.deviceControlPrimaryAction.withValues(
                     alpha: AppOpacityTokens.deviceControlCommandButtonDisabled,
                   ),
-            disabledBackgroundColor: AppColors.deviceControlPrimaryAction
+            disabledBackgroundColor: context.colors.deviceControlPrimaryAction
                 .withValues(
                   alpha: AppOpacityTokens.deviceControlCommandButtonDisabled,
                 ),
-            foregroundColor: AppColors.deviceControlPrimaryActionForeground,
+            foregroundColor:
+                context.colors.deviceControlPrimaryActionForeground,
             disabledForegroundColor:
-                AppColors.deviceControlPrimaryActionForeground,
+                context.colors.deviceControlPrimaryActionForeground,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(radius),
             ),
@@ -62,7 +63,7 @@ class FlinxDoorCommandButton extends StatelessWidget {
                   child: CircularProgressIndicator(
                     strokeWidth: AppSpacingTokens
                         .deviceControlCommandButtonProgressStrokeWidth,
-                    color: AppColors.deviceControlPrimaryActionForeground,
+                    color: context.colors.deviceControlPrimaryActionForeground,
                   ),
                 )
               : Icon(icon, size: iconSize),

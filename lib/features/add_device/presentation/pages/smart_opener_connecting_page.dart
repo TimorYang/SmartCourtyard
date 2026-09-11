@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -88,7 +89,7 @@ class _SmartOpenerConnectingPageState
     final confirmed = await showModalBottomSheet<bool>(
       context: context,
       backgroundColor: Colors.transparent,
-      barrierColor: AppColors.overlayMedium,
+      barrierColor: context.colors.overlayMedium,
       builder: (context) => const _StopAdditionSheet(),
     );
     if (!mounted || confirmed != true) {
@@ -110,7 +111,7 @@ class _SmartOpenerConnectingPageState
         }
       },
       child: Scaffold(
-        backgroundColor: AppColors.backgroundPrimary,
+        backgroundColor: context.colors.backgroundPrimary,
         appBar: FlinxNavigationBar(
           title: '',
           showBottomDivider: false,
@@ -129,7 +130,8 @@ class _SmartOpenerConnectingPageState
                 padding: const EdgeInsets.fromLTRB(20, 80, 20, 0),
                 children: [
                   Center(
-                    child: Image.asset(
+                    child: SkinAssetImage.themed(
+                      context,
                       _SmartOpenerConnectingAssets.art,
                       width: artWidth,
                       height: artHeight,
@@ -145,7 +147,9 @@ class _SmartOpenerConnectingPageState
                   Text(
                     l10n.smartOpenerConnectingTitle,
                     textAlign: TextAlign.center,
-                    style: AppTextTokens.smartOpenerConnectingTitle(textTheme),
+                    style: context.appText.smartOpenerConnectingTitle(
+                      textTheme,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Padding(
@@ -160,7 +164,7 @@ class _SmartOpenerConnectingPageState
                     child: Text(
                       l10n.smartOpenerConnectingTip,
                       textAlign: TextAlign.center,
-                      style: AppTextTokens.smartOpenerBodyCenter(textTheme),
+                      style: context.appText.smartOpenerBodyCenter(textTheme),
                     ),
                   ),
                 ],
@@ -196,8 +200,8 @@ class _ConnectingProgressBar extends StatelessWidget {
             animation: animation,
             builder: (context, child) => LinearProgressIndicator(
               value: animation.value * 0.95,
-              backgroundColor: AppColors.smartOpenerProgressTrack,
-              color: AppColors.brandPrimary,
+              backgroundColor: context.colors.smartOpenerProgressTrack,
+              color: context.colors.brandPrimary,
             ),
           ),
         ),
@@ -223,15 +227,15 @@ class _ConnectingFallbackArt extends StatelessWidget {
           Container(
             width: height * 0.64,
             height: height * 0.64,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.scanRadarTint,
+              color: context.colors.scanRadarTint,
             ),
           ),
           Icon(
             Icons.settings_remote_outlined,
             size: height * 0.32,
-            color: AppColors.textPrimary,
+            color: context.colors.textPrimary,
           ),
           Positioned(
             right: width * 0.12,
@@ -239,7 +243,7 @@ class _ConnectingFallbackArt extends StatelessWidget {
             child: Icon(
               Icons.phone_iphone_outlined,
               size: height * 0.25,
-              color: AppColors.textPrimary,
+              color: context.colors.textPrimary,
             ),
           ),
         ],
@@ -257,8 +261,8 @@ class _StopAdditionSheet extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.backgroundPrimary,
+      decoration: BoxDecoration(
+        color: context.colors.backgroundPrimary,
         borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
       ),
       child: SafeArea(
@@ -271,14 +275,14 @@ class _StopAdditionSheet extends StatelessWidget {
             children: [
               Text(
                 l10n.smartOpenerStopAdditionTitle,
-                style: AppTextTokens.smartOpenerSheetTitle(textTheme),
+                style: context.appText.smartOpenerSheetTitle(textTheme),
               ),
               const SizedBox(height: 10),
               Text(
                 l10n.smartOpenerStopAdditionDescription,
-                style: AppTextTokens.smartOpenerBodyCenter(
-                  textTheme,
-                ).copyWith(fontSize: 17),
+                style: context.appText
+                    .smartOpenerBodyCenter(textTheme)
+                    .copyWith(fontSize: 17),
               ),
               const SizedBox(height: 35),
               Row(
@@ -328,9 +332,11 @@ class _SheetActionButton extends StatelessWidget {
         onPressed: onPressed,
         style: FilledButton.styleFrom(
           backgroundColor: isPrimary
-              ? AppColors.brandPrimary
-              : AppColors.smartOpenerSecondaryButton,
-          foregroundColor: isPrimary ? Colors.white : AppColors.textPrimary,
+              ? context.colors.brandPrimary
+              : context.colors.smartOpenerSecondaryButton,
+          foregroundColor: isPrimary
+              ? context.colors.authPrimaryButtonDisabledForeground
+              : context.colors.textPrimary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(29),
           ),
@@ -338,12 +344,12 @@ class _SheetActionButton extends StatelessWidget {
         child: Text(
           label,
           style: isPrimary
-              ? AppTextTokens.smartOpenerActionButton(
-                  textTheme,
-                ).copyWith(fontSize: 18)
-              : AppTextTokens.smartOpenerSecondaryActionButton(
-                  textTheme,
-                ).copyWith(fontSize: 18),
+              ? context.appText
+                    .smartOpenerActionButton(textTheme)
+                    .copyWith(fontSize: 18)
+              : context.appText
+                    .smartOpenerSecondaryActionButton(textTheme)
+                    .copyWith(fontSize: 18),
         ),
       ),
     );

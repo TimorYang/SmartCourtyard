@@ -50,7 +50,7 @@ class _AfterSalesAppointmentPageState extends State<AfterSalesAppointmentPage> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: AppColors.notificationBackground,
+      backgroundColor: context.colors.notificationBackground,
       appBar: FlinxNavigationBar(
         title: l10n.afterSalesAppointmentTitle,
         showBottomDivider: false,
@@ -63,7 +63,7 @@ class _AfterSalesAppointmentPageState extends State<AfterSalesAppointmentPage> {
             children: [
               DecoratedBox(
                 decoration: BoxDecoration(
-                  color: AppColors.notificationCard,
+                  color: context.colors.notificationCard,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Padding(
@@ -83,13 +83,13 @@ class _AfterSalesAppointmentPageState extends State<AfterSalesAppointmentPage> {
                         controller: _descriptionController,
                         minLines: 3,
                         maxLines: 5,
-                        style: AppTextTokens.afterSalesField(textTheme),
+                        style: context.appText.afterSalesField(textTheme),
                         decoration: _inputDecoration(),
                       ),
                       const SizedBox(height: 6),
                       Text(
                         l10n.afterSalesDescriptionHint,
-                        style: AppTextTokens.afterSalesHint(textTheme),
+                        style: context.appText.afterSalesHint(textTheme),
                       ),
                       const SizedBox(height: 20),
                       _AppointmentLabel(
@@ -121,7 +121,7 @@ class _AfterSalesAppointmentPageState extends State<AfterSalesAppointmentPage> {
                               initialValue: _timeSlot,
                               isExpanded: true,
                               decoration: _inputDecoration(),
-                              style: AppTextTokens.afterSalesField(textTheme),
+                              style: context.appText.afterSalesField(textTheme),
                               items: [
                                 for (final slot in _timeSlots)
                                   DropdownMenuItem(
@@ -160,13 +160,14 @@ class _AfterSalesAppointmentPageState extends State<AfterSalesAppointmentPage> {
                   key: const ValueKey('after-sales-submit-button'),
                   onPressed: _submit,
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.brandPrimary,
-                    foregroundColor: Colors.white,
+                    backgroundColor: context.colors.brandPrimary,
+                    foregroundColor:
+                        context.colors.authPrimaryButtonDisabledForeground,
                     shape: const StadiumBorder(),
                   ),
                   child: Text(
                     l10n.afterSalesSubmitToEngineer,
-                    style: AppTextTokens.notificationPrimaryButton(textTheme),
+                    style: context.appText.notificationPrimaryButton(textTheme),
                   ),
                 ),
               ),
@@ -178,15 +179,15 @@ class _AfterSalesAppointmentPageState extends State<AfterSalesAppointmentPage> {
   }
 
   InputDecoration _inputDecoration() {
-    return const InputDecoration(
+    return InputDecoration(
       isDense: true,
       contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       enabledBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: AppColors.afterSalesFieldBorder),
+        borderSide: BorderSide(color: context.colors.afterSalesFieldBorder),
         borderRadius: BorderRadius.all(Radius.circular(5)),
       ),
       focusedBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: AppColors.brandPrimary),
+        borderSide: BorderSide(color: context.colors.brandPrimary),
         borderRadius: BorderRadius.all(Radius.circular(5)),
       ),
     );
@@ -231,12 +232,12 @@ class _AppointmentLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: AppColors.notificationIcon),
+        Icon(icon, size: 18, color: context.colors.notificationIcon),
         const SizedBox(width: 6),
         Expanded(
           child: Text(
             label,
-            style: AppTextTokens.afterSalesSectionTitle(
+            style: context.appText.afterSalesSectionTitle(
               Theme.of(context).textTheme,
             ),
           ),
@@ -260,9 +261,9 @@ class _DateButton extends StatelessWidget {
         key: const ValueKey('after-sales-date-button'),
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.notificationIcon,
+          foregroundColor: context.colors.notificationIcon,
           padding: const EdgeInsets.symmetric(horizontal: 10),
-          side: const BorderSide(color: AppColors.afterSalesFieldBorder),
+          side: BorderSide(color: context.colors.afterSalesFieldBorder),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
         ),
         child: Row(
@@ -270,7 +271,7 @@ class _DateButton extends StatelessWidget {
             Expanded(
               child: Text(
                 label,
-                style: AppTextTokens.afterSalesField(
+                style: context.appText.afterSalesField(
                   Theme.of(context).textTheme,
                 ),
               ),
@@ -300,12 +301,12 @@ class _PhotoPicker extends StatelessWidget {
         height: 68,
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-          color: AppColors.notificationCard,
-          border: Border.all(color: AppColors.afterSalesFieldBorder),
+          color: context.colors.notificationCard,
+          border: Border.all(color: context.colors.afterSalesFieldBorder),
           borderRadius: BorderRadius.circular(5),
         ),
         child: bytes == null
-            ? const Icon(Icons.add, color: AppColors.afterSalesPhotoIcon)
+            ? Icon(Icons.add, color: context.colors.afterSalesPhotoIcon)
             : Image.memory(bytes!, fit: BoxFit.cover),
       ),
     );

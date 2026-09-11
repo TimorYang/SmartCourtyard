@@ -19,21 +19,33 @@ void main() {
   });
 
   test('uses one-step y-axis values when no operation data is available', () {
-    expect(
-      operationChartYAxisLabels(const <FullReportOperationCyclePoint>[]),
-      [0, 1, 2, 3, 4, 5],
-    );
+    expect(operationChartYAxisLabels(const <FullReportOperationCyclePoint>[]), [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+    ]);
   });
 
   test('shares the y-axis scale with sensor operation cycles', () {
-    expect(
-      operationChartYAxisLabelsForValues(const <int>[]),
-      [0, 1, 2, 3, 4, 5],
-    );
-    expect(
-      operationChartYAxisLabelsForValues(const <int>[17]),
-      [0, 5, 10, 15, 20, 25],
-    );
+    expect(operationChartYAxisLabelsForValues(const <int>[]), [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+    ]);
+    expect(operationChartYAxisLabelsForValues(const <int>[17]), [
+      0,
+      5,
+      10,
+      15,
+      20,
+      25,
+    ]);
   });
 
   test('uses equal y-axis intervals when operation data is non-zero', () {
@@ -130,7 +142,7 @@ void main() {
     );
     final chart = tester.getRect(chartFinder);
     final gesture = await tester.startGesture(
-      Offset(chart.left + 22, chart.top + 50),
+      Offset(chart.left + 22, chart.bottom - 24),
     );
     await tester.pump();
 

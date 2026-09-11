@@ -48,7 +48,7 @@ class _DeviceCapabilityOptionsSheetState
           Text(
             widget.title,
             textAlign: TextAlign.center,
-            style: AppTextTokens.deviceSettingsSheetTitle(textTheme),
+            style: context.appText.deviceSettingsSheetTitle(textTheme),
           ),
           const SizedBox(height: 16),
           Expanded(
@@ -90,8 +90,8 @@ class DeviceSettingsSheetFrame extends StatelessWidget {
       heightFactor: heightFactor,
       alignment: Alignment.bottomCenter,
       child: DecoratedBox(
-        decoration: const BoxDecoration(
-          color: AppColors.backgroundPrimary,
+        decoration: BoxDecoration(
+          color: context.colors.backgroundPrimary,
           borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
         ),
         child: SafeArea(
@@ -173,10 +173,12 @@ class _DeviceSettingsFixedSelectionListState<T>
                     child: Text(
                       widget.labelBuilder(widget.values[index]),
                       style: selected
-                          ? AppTextTokens.deviceSettingsSheetSelectedOption(
+                          ? context.appText.deviceSettingsSheetSelectedOption(
                               textTheme,
                             )
-                          : AppTextTokens.deviceSettingsSheetOption(textTheme),
+                          : context.appText.deviceSettingsSheetOption(
+                              textTheme,
+                            ),
                     ),
                   );
                 },
@@ -188,11 +190,11 @@ class _DeviceSettingsFixedSelectionListState<T>
               right: 0,
               height: DeviceSettingsFixedSelectionList.itemExtent,
               child: IgnorePointer(
-                child: const DecoratedBox(
+                child: DecoratedBox(
                   decoration: BoxDecoration(
                     border: Border.symmetric(
                       horizontal: BorderSide(
-                        color: AppColors.deviceSettingsDivider,
+                        color: context.colors.deviceSettingsDivider,
                       ),
                     ),
                   ),
@@ -224,15 +226,15 @@ class DeviceSettingsSheetActionRow extends StatelessWidget {
             child: TextButton(
               onPressed: () => Navigator.pop(context),
               style: TextButton.styleFrom(
-                backgroundColor: AppColors.deviceSettingsSheetCancel,
-                foregroundColor: AppColors.textMuted,
+                backgroundColor: context.colors.deviceSettingsSheetCancel,
+                foregroundColor: context.colors.textMuted,
                 shape: const StadiumBorder(),
               ),
               child: Text(
                 l10n.deviceSettingsCancelAction,
-                style: AppTextTokens.deviceSettingsSheetButton(
-                  textTheme,
-                ).copyWith(color: AppColors.textMuted),
+                style: context.appText
+                    .deviceSettingsSheetButton(textTheme)
+                    .copyWith(color: context.colors.textMuted),
               ),
             ),
           ),
@@ -244,15 +246,18 @@ class DeviceSettingsSheetActionRow extends StatelessWidget {
             child: FilledButton(
               onPressed: onConfirm,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.brandPrimary,
-                foregroundColor: AppColors.backgroundPrimary,
+                backgroundColor: context.colors.brandPrimary,
+                foregroundColor:
+                    context.colors.authPrimaryButtonDisabledForeground,
                 shape: const StadiumBorder(),
               ),
               child: Text(
                 l10n.deviceSettingsConfirmAction,
-                style: AppTextTokens.deviceSettingsSheetButton(
-                  textTheme,
-                ).copyWith(color: AppColors.backgroundPrimary),
+                style: context.appText
+                    .deviceSettingsSheetButton(textTheme)
+                    .copyWith(
+                      color: context.colors.authPrimaryButtonDisabledForeground,
+                    ),
               ),
             ),
           ),

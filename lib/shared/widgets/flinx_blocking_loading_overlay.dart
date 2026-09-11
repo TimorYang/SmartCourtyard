@@ -13,9 +13,9 @@ class FlinxBlockingLoadingOverlay extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          const ModalBarrier(
+          ModalBarrier(
             dismissible: false,
-            color: AppColors.warningDialogScrim,
+            color: context.colors.warningDialogScrim,
           ),
           Semantics(
             label: semanticsLabel,

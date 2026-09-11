@@ -52,7 +52,7 @@ class CheckUpgradedVersionPage extends ConsumerWidget {
     final current = asyncState.value;
 
     return Scaffold(
-      backgroundColor: AppColors.upgradeCheckBackground,
+      backgroundColor: context.colors.upgradeCheckBackground,
       appBar: FlinxNavigationBar(
         title: l10n.upgradeCheckTitle,
         showBottomDivider: false,
@@ -88,8 +88,9 @@ class CheckUpgradedVersionPage extends ConsumerWidget {
                   ? () => _startUpgrade(context, current, controller)
                   : null,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.upgradeCheckCheckboxSelected,
-                disabledBackgroundColor: AppColors.upgradeCheckDisabledAction,
+                backgroundColor: context.colors.upgradeCheckCheckboxSelected,
+                disabledBackgroundColor:
+                    context.colors.upgradeCheckDisabledAction,
                 shape: const StadiumBorder(),
               ),
               child: Text(
@@ -99,7 +100,7 @@ class CheckUpgradedVersionPage extends ConsumerWidget {
                       )
                     : l10n.upgradeCheckStartAction,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Colors.white,
+                  color: context.colors.authPrimaryButtonDisabledForeground,
                   fontSize: 18,
                 ),
               ),
@@ -155,7 +156,7 @@ class CheckUpgradedVersionPage extends ConsumerWidget {
     final result = await showDialog<UpgradeSubmitUiResult>(
       context: context,
       barrierDismissible: false,
-      barrierColor: AppColors.upgradeCheckDialogScrim,
+      barrierColor: context.colors.upgradeCheckDialogScrim,
       builder: (context) => _UpgradeScheduleDialog(
         targets: targets,
         onSubmit: controller.submitFirmwareUpgrades,
@@ -201,7 +202,7 @@ class _UpgradeContentList extends StatelessWidget {
         if (state.application case final application?) ...[
           Text(
             l10n.upgradeCheckAppSection,
-            style: AppTextTokens.upgradeCheckSectionTitle(
+            style: context.appText.upgradeCheckSectionTitle(
               Theme.of(context).textTheme,
             ),
           ),
@@ -215,7 +216,7 @@ class _UpgradeContentList extends StatelessWidget {
         if (state.doors.isNotEmpty) ...[
           Text(
             l10n.upgradeCheckFirmwareSection,
-            style: AppTextTokens.upgradeCheckSectionTitle(
+            style: context.appText.upgradeCheckSectionTitle(
               Theme.of(context).textTheme,
             ),
           ),
@@ -268,7 +269,7 @@ class _ApplicationCard extends StatelessWidget {
                   children: [
                     Text(
                       l10n.upgradeCheckAppUpdateName,
-                      style: AppTextTokens.upgradeCheckCardTitle(
+                      style: context.appText.upgradeCheckCardTitle(
                         Theme.of(context).textTheme,
                       ),
                     ),
@@ -280,7 +281,7 @@ class _ApplicationCard extends StatelessWidget {
                         if (update.targetVersion case final version?)
                           Text(
                             version,
-                            style: AppTextTokens.upgradeCheckMeta(
+                            style: context.appText.upgradeCheckMeta(
                               Theme.of(context).textTheme,
                             ),
                           ),
@@ -289,7 +290,7 @@ class _ApplicationCard extends StatelessWidget {
                             DateFormat.yMMMd(
                               Localizations.localeOf(context).toLanguageTag(),
                             ).format(publishedAt.toLocal()),
-                            style: AppTextTokens.upgradeCheckMeta(
+                            style: context.appText.upgradeCheckMeta(
                               Theme.of(context).textTheme,
                             ),
                           ),
@@ -302,8 +303,8 @@ class _ApplicationCard extends StatelessWidget {
               Icon(
                 Icons.chevron_right_rounded,
                 color: onTap == null
-                    ? AppColors.upgradeCheckDisabledAction
-                    : AppColors.textPrimary,
+                    ? context.colors.upgradeCheckDisabledAction
+                    : context.colors.textPrimary,
                 size: 28,
               ),
             ],
@@ -367,7 +368,7 @@ class _DoorUpgradeCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   door.doorName,
-                  style: AppTextTokens.upgradeCheckCardTitle(
+                  style: context.appText.upgradeCheckCardTitle(
                     Theme.of(context).textTheme,
                   ),
                 ),
@@ -391,9 +392,12 @@ class _DoorUpgradeCard extends StatelessWidget {
             ],
           ),
           if (expanded) ...[
-            const Padding(
+            Padding(
               padding: EdgeInsets.symmetric(vertical: 14),
-              child: Divider(height: 1, color: AppColors.upgradeCheckDivider),
+              child: Divider(
+                height: 1,
+                color: context.colors.upgradeCheckDivider,
+              ),
             ),
             for (var index = 0; index < door.upgrades.length; index++) ...[
               _FirmwareUpgradeRow(
@@ -405,11 +409,11 @@ class _DoorUpgradeCard extends StatelessWidget {
                 onChanged: () => onTargetChanged(door.upgrades[index].key),
               ),
               if (index != door.upgrades.length - 1)
-                const Padding(
+                Padding(
                   padding: EdgeInsets.symmetric(vertical: 12),
                   child: Divider(
                     height: 1,
-                    color: AppColors.upgradeCheckDivider,
+                    color: context.colors.upgradeCheckDivider,
                   ),
                 ),
             ],
@@ -462,7 +466,7 @@ class _FirmwareUpgradeRow extends StatelessWidget {
             Expanded(
               child: Text(
                 target.deviceTypeLabel,
-                style: AppTextTokens.upgradeCheckCardTitle(
+                style: context.appText.upgradeCheckCardTitle(
                   Theme.of(context).textTheme,
                 ),
               ),
@@ -477,7 +481,7 @@ class _FirmwareUpgradeRow extends StatelessWidget {
             children: [
               Text(
                 l10n.upgradeCheckSerialNumber(target.serialNumber),
-                style: AppTextTokens.upgradeCheckBody(
+                style: context.appText.upgradeCheckBody(
                   Theme.of(context).textTheme,
                 ),
               ),
@@ -490,19 +494,19 @@ class _FirmwareUpgradeRow extends StatelessWidget {
                     l10n.upgradeCheckCurrentVersion(
                       target.currentVersion ?? '--',
                     ),
-                    style: AppTextTokens.upgradeCheckMeta(
+                    style: context.appText.upgradeCheckMeta(
                       Theme.of(context).textTheme,
                     ),
                   ),
                   Text(
                     l10n.upgradeCheckAvailableVersion(target.availableVersion),
-                    style: AppTextTokens.upgradeCheckMeta(
+                    style: context.appText.upgradeCheckMeta(
                       Theme.of(context).textTheme,
                     ),
                   ),
                   Text(
                     _formatPackageSize(l10n, target.packageSizeBytes),
-                    style: AppTextTokens.upgradeCheckMeta(
+                    style: context.appText.upgradeCheckMeta(
                       Theme.of(context).textTheme,
                     ),
                   ),
@@ -522,7 +526,7 @@ class _FirmwareUpgradeRow extends StatelessWidget {
                   l10n.upgradeCheckScheduledFor(
                     _formatScheduledAt(context, target.scheduledAt!),
                   ),
-                  style: AppTextTokens.upgradeCheckBody(
+                  style: context.appText.upgradeCheckBody(
                     Theme.of(context).textTheme,
                   ),
                 ),
@@ -543,8 +547,8 @@ class _UpdateCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        color: AppColors.upgradeCheckCard,
+      decoration: BoxDecoration(
+        color: context.colors.upgradeCheckCard,
         borderRadius: BorderRadius.all(
           Radius.circular(AppShapeTokens.upgradeCheckCardRadius),
         ),
@@ -584,22 +588,26 @@ class _SelectionBox extends StatelessWidget {
             height: 22,
             decoration: BoxDecoration(
               color: selected || mixed
-                  ? AppColors.upgradeCheckCheckboxSelected
+                  ? context.colors.upgradeCheckCheckboxSelected
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(3),
               border: Border.all(
                 color: selected || mixed
-                    ? AppColors.upgradeCheckCheckboxSelected
-                    : AppColors.upgradeCheckCheckboxBorder,
+                    ? context.colors.upgradeCheckCheckboxSelected
+                    : context.colors.upgradeCheckCheckboxBorder,
               ),
             ),
             child: selected
-                ? const Icon(Icons.check_rounded, size: 20, color: Colors.white)
+                ? Icon(
+                    Icons.check_rounded,
+                    size: 20,
+                    color: context.colors.authPrimaryButtonDisabledForeground,
+                  )
                 : mixed
-                ? const Icon(
+                ? Icon(
                     Icons.remove_rounded,
                     size: 20,
-                    color: Colors.white,
+                    color: context.colors.authPrimaryButtonDisabledForeground,
                   )
                 : null,
           ),
@@ -647,7 +655,7 @@ class _UpgradeScheduleDialogState extends State<_UpgradeScheduleDialog> {
     return Dialog(
       key: CheckUpgradedVersionKeys.scheduleDialog,
       insetPadding: const EdgeInsets.symmetric(horizontal: 32),
-      backgroundColor: AppColors.upgradeCheckDialogSurface,
+      backgroundColor: context.colors.upgradeCheckDialogSurface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.all(
           Radius.circular(AppShapeTokens.upgradeCheckDialogRadius),
@@ -665,7 +673,7 @@ class _UpgradeScheduleDialogState extends State<_UpgradeScheduleDialog> {
                   Expanded(
                     child: Text(
                       l10n.upgradeCheckSelectTimeTitle,
-                      style: AppTextTokens.upgradeCheckDialogTitle(
+                      style: context.appText.upgradeCheckDialogTitle(
                         Theme.of(context).textTheme,
                       ),
                     ),
@@ -687,7 +695,7 @@ class _UpgradeScheduleDialogState extends State<_UpgradeScheduleDialog> {
                     children: [
                       Text(
                         '${entry.doorName} · ${entry.target.deviceTypeLabel}',
-                        style: AppTextTokens.upgradeCheckCardTitle(
+                        style: context.appText.upgradeCheckCardTitle(
                           Theme.of(context).textTheme,
                         ),
                       ),
@@ -696,7 +704,7 @@ class _UpgradeScheduleDialogState extends State<_UpgradeScheduleDialog> {
                         l10n.upgradeCheckSerialNumber(
                           entry.target.serialNumber,
                         ),
-                        style: AppTextTokens.upgradeCheckMeta(
+                        style: context.appText.upgradeCheckMeta(
                           Theme.of(context).textTheme,
                         ),
                       ),
@@ -726,7 +734,7 @@ class _UpgradeScheduleDialogState extends State<_UpgradeScheduleDialog> {
                   const SizedBox(height: 8),
                   Text(
                     l10n.upgradeCheckSchedulePastError,
-                    style: AppTextTokens.upgradeCheckStatus(
+                    style: context.appText.upgradeCheckStatus(
                       Theme.of(context).textTheme,
                       online: false,
                     ),
@@ -737,7 +745,7 @@ class _UpgradeScheduleDialogState extends State<_UpgradeScheduleDialog> {
                 const SizedBox(height: 8),
                 Text(
                   l10n.upgradeCheckSubmitFailed,
-                  style: AppTextTokens.upgradeCheckStatus(
+                  style: context.appText.upgradeCheckStatus(
                     Theme.of(context).textTheme,
                     online: false,
                   ),
@@ -830,7 +838,9 @@ class _ScheduleModeRow extends StatelessWidget {
         Expanded(
           child: Text(
             l10n.upgradeCheckUpgradeTime,
-            style: AppTextTokens.upgradeCheckBody(Theme.of(context).textTheme),
+            style: context.appText.upgradeCheckBody(
+              Theme.of(context).textTheme,
+            ),
           ),
         ),
         SizedBox(
@@ -884,7 +894,9 @@ class _DateTimeSelector extends StatelessWidget {
         Expanded(
           child: Text(
             l10n.upgradeCheckDateAndTime,
-            style: AppTextTokens.upgradeCheckBody(Theme.of(context).textTheme),
+            style: context.appText.upgradeCheckBody(
+              Theme.of(context).textTheme,
+            ),
           ),
         ),
         SizedBox(
@@ -941,18 +953,20 @@ class _DialogButton extends StatelessWidget {
         onPressed: onPressed,
         style: FilledButton.styleFrom(
           backgroundColor: primary
-              ? AppColors.upgradeCheckCheckboxSelected
-              : AppColors.accountLanguageDialogCancelSurface,
-          foregroundColor: primary ? Colors.white : AppColors.textPrimary,
+              ? context.colors.upgradeCheckCheckboxSelected
+              : context.colors.accountLanguageDialogCancelSurface,
+          foregroundColor: primary
+              ? context.colors.authPrimaryButtonDisabledForeground
+              : context.colors.textPrimary,
           shape: const StadiumBorder(),
         ),
         child: loading
-            ? const SizedBox(
+            ? SizedBox(
                 width: 22,
                 height: 22,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: Colors.white,
+                  color: context.colors.authPrimaryButtonDisabledForeground,
                 ),
               )
             : Text(
@@ -987,8 +1001,8 @@ class _FirmwareUpgradeProgress extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress / 100,
               minHeight: 14,
-              backgroundColor: AppColors.upgradeCheckProgressTrack,
-              color: AppColors.upgradeCheckProgress,
+              backgroundColor: context.colors.upgradeCheckProgressTrack,
+              color: context.colors.upgradeCheckProgress,
             ),
           ),
           const SizedBox(height: 8),
@@ -996,16 +1010,16 @@ class _FirmwareUpgradeProgress extends StatelessWidget {
             children: [
               Text(
                 l10n.upgradeCheckUpgrading,
-                style: AppTextTokens.upgradeCheckBody(
+                style: context.appText.upgradeCheckBody(
                   Theme.of(context).textTheme,
                 ),
               ),
               const Spacer(),
               Text(
                 l10n.upgradeCheckProgressPercent(progress),
-                style: AppTextTokens.upgradeCheckBody(
-                  Theme.of(context).textTheme,
-                ).copyWith(color: AppColors.upgradeCheckProgress),
+                style: context.appText
+                    .upgradeCheckBody(Theme.of(context).textTheme)
+                    .copyWith(color: context.colors.upgradeCheckProgress),
               ),
             ],
           ),

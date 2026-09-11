@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -119,7 +120,7 @@ class _SafetySensorsEvaluationPageState
   }
 
   Widget _stateScaffold(Widget body) => Scaffold(
-    backgroundColor: AppColors.securityCenterBackground,
+    backgroundColor: context.colors.securityCenterBackground,
     appBar: FlinxNavigationBar(
       title: AppLocalizations.of(context).securityCenterSafetySensorsEvaluation,
       showBottomDivider: false,
@@ -133,7 +134,7 @@ class _SafetySensorsEvaluationPageState
   ) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: AppColors.securityCenterBackground,
+      backgroundColor: context.colors.securityCenterBackground,
       appBar: FlinxNavigationBar(
         title: l10n.securityCenterSafetySensorsEvaluation,
         showBottomDivider: false,
@@ -295,7 +296,7 @@ class _MetricCard extends StatelessWidget {
     return Container(
       height: 120,
       decoration: BoxDecoration(
-        color: AppColors.securityCenterCard,
+        color: context.colors.securityCenterCard,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -303,7 +304,7 @@ class _MetricCard extends StatelessWidget {
         children: [
           DecoratedBox(
             decoration: BoxDecoration(
-              color: AppColors.safetySensorMetricIconSurface,
+              color: context.colors.safetySensorMetricIconSurface,
               borderRadius: BorderRadius.circular(
                 AppShapeTokens.safetySensorMetricIconRadius,
               ),
@@ -312,12 +313,13 @@ class _MetricCard extends StatelessWidget {
               dimension: 36,
               child: Padding(
                 padding: const EdgeInsets.all(7),
-                child: Image.asset(
+                child: SkinAssetImage.themed(
+                  context,
                   'assets/icons/security_center/$iconAsset.png',
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) => Icon(
                     fallbackIcon,
-                    color: AppColors.safetySensorMetricIcon,
+                    color: context.colors.safetySensorMetricIcon,
                     size: 28,
                   ),
                 ),
@@ -328,14 +330,14 @@ class _MetricCard extends StatelessWidget {
           Text(
             label,
             textAlign: TextAlign.center,
-            style: AppTextTokens.safetySensorMetricLabel(textTheme),
+            style: context.appText.safetySensorMetricLabel(textTheme),
           ),
           Text(
             '$value',
             key: ValueKey<String>('sensor-metric-$label-value'),
             style: error
-                ? AppTextTokens.safetySensorMetricValueError(textTheme)
-                : AppTextTokens.safetySensorMetricValue(textTheme),
+                ? context.appText.safetySensorMetricValueError(textTheme)
+                : context.appText.safetySensorMetricValue(textTheme),
           ),
         ],
       ),
@@ -370,7 +372,7 @@ class _SensorGroupCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: AppColors.securityCenterCard,
+        color: context.colors.securityCenterCard,
         borderRadius: BorderRadius.circular(14),
       ),
       child: Padding(
@@ -383,9 +385,9 @@ class _SensorGroupCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     title,
-                    style: AppTextTokens.securityCenterHeroTitle(
-                      Theme.of(context).textTheme,
-                    ).copyWith(fontSize: 15),
+                    style: context.appText
+                        .securityCenterHeroTitle(Theme.of(context).textTheme)
+                        .copyWith(fontSize: 15),
                   ),
                 ),
                 _GroupStatusIcon(status: group.status),
@@ -484,19 +486,20 @@ class _DoorLayout extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              Image.asset(
+              SkinAssetImage.themed(
+                context,
                 assetPath,
                 fit: BoxFit.fill,
                 errorBuilder: (context, error, stackTrace) => DecoratedBox(
                   decoration: BoxDecoration(
-                    color: AppColors.securityCenterBackground,
+                    color: context.colors.securityCenterBackground,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Icon(
                       Icons.image_outlined,
                       size: 54,
-                      color: AppColors.safetySensorPlaceholder,
+                      color: context.colors.safetySensorPlaceholder,
                     ),
                   ),
                 ),
@@ -512,6 +515,7 @@ class _DoorLayout extends StatelessWidget {
                       'sensor-position-marker-$keyPrefix-${markerPositions[index].sensorCode}-$index',
                     ),
                     color: _sensorPositionMarkerColor(
+                      context,
                       sensorStatusByCode[markerPositions[index].sensorCode],
                     ),
                   ),
@@ -544,12 +548,12 @@ class _SensorPositionMarker extends StatelessWidget {
       color: color,
       shape: BoxShape.circle,
       border: Border.all(
-        color: AppColors.securityCenterCard,
+        color: context.colors.securityCenterCard,
         width: AppShapeTokens.safetySensorPositionMarkerBorderWidth,
       ),
-      boxShadow: const [
+      boxShadow: [
         BoxShadow(
-          color: AppColors.safetySensorPositionMarkerShadow,
+          color: context.colors.safetySensorPositionMarkerShadow,
           blurRadius: 3,
           offset: Offset(0, 1),
         ),
@@ -558,13 +562,15 @@ class _SensorPositionMarker extends StatelessWidget {
   );
 }
 
-Color _sensorPositionMarkerColor(SafetySensorStatus? status) =>
-    switch (status) {
-      SafetySensorStatus.disconnected => AppColors.safetySensorDisconnected,
-      SafetySensorStatus.triggered ||
-      SafetySensorStatus.locked => AppColors.securityCenterError,
-      _ => AppColors.safetySensorAction,
-    };
+Color _sensorPositionMarkerColor(
+  BuildContext context,
+  SafetySensorStatus? status,
+) => switch (status) {
+  SafetySensorStatus.disconnected => context.colors.safetySensorDisconnected,
+  SafetySensorStatus.triggered ||
+  SafetySensorStatus.locked => context.colors.securityCenterError,
+  _ => context.colors.safetySensorAction,
+};
 
 class _GroupStatusIcon extends StatelessWidget {
   const _GroupStatusIcon({required this.status});
@@ -573,19 +579,19 @@ class _GroupStatusIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => switch (status) {
-    SafetySensorGroupStatus.normal => const Icon(
+    SafetySensorGroupStatus.normal => Icon(
       Icons.check_circle,
-      color: AppColors.securityCenterSuccess,
+      color: context.colors.securityCenterSuccess,
       size: 13,
     ),
-    SafetySensorGroupStatus.abnormal => const Icon(
+    SafetySensorGroupStatus.abnormal => Icon(
       Icons.error,
-      color: AppColors.securityCenterError,
+      color: context.colors.securityCenterError,
       size: 13,
     ),
-    SafetySensorGroupStatus.offline => const Icon(
+    SafetySensorGroupStatus.offline => Icon(
       Icons.error,
-      color: AppColors.securityCenterError,
+      color: context.colors.securityCenterError,
       size: 13,
     ),
   };
@@ -612,7 +618,7 @@ class _SensorActionButton extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: AppColors.safetySensorAction,
+            color: context.colors.safetySensorAction,
             borderRadius: BorderRadius.circular(28),
           ),
           child: Padding(
@@ -620,14 +626,18 @@ class _SensorActionButton extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(icon, size: 18, color: Colors.white),
+                Icon(
+                  icon,
+                  size: 18,
+                  color: context.colors.authPrimaryButtonDisabledForeground,
+                ),
                 const SizedBox(width: 6),
                 Flexible(
                   child: Text(
                     label,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTextTokens.safetySensorAction(
+                    style: context.appText.safetySensorAction(
                       Theme.of(context).textTheme,
                     ),
                   ),
@@ -682,7 +692,7 @@ class _SensorRowState extends State<_SensorRow> {
           'sensor-${_sensorName(l10n, widget.sensor.sensorCode)}',
         ),
         decoration: BoxDecoration(
-          color: AppColors.safetySensorItemSurface,
+          color: context.colors.safetySensorItemSurface,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Column(
@@ -764,7 +774,7 @@ class _SensorRowHeader extends StatelessWidget {
             children: [
               DecoratedBox(
                 decoration: BoxDecoration(
-                  color: AppColors.securityCenterCard,
+                  color: context.colors.securityCenterCard,
                   borderRadius: BorderRadius.circular(
                     AppShapeTokens.safetySensorMetricIconRadius,
                   ),
@@ -773,13 +783,14 @@ class _SensorRowHeader extends StatelessWidget {
                   dimension: 45,
                   child: Padding(
                     padding: const EdgeInsets.all(2),
-                    child: Image.asset(
+                    child: SkinAssetImage.themed(
+                      context,
                       _sensorAssetPath(sensor.sensorCode),
                       fit: BoxFit.contain,
                       errorBuilder: (context, error, stackTrace) => Icon(
                         _sensorFallbackIcon(sensor.sensorCode),
                         size: 34,
-                        color: AppColors.securityCenterSensorIcon,
+                        color: context.colors.securityCenterSensorIcon,
                       ),
                     ),
                   ),
@@ -799,14 +810,15 @@ class _SensorRowHeader extends StatelessWidget {
                             sensorName,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: AppTextTokens.safetySensorItemTitle(
+                            style: context.appText.safetySensorItemTitle(
                               textTheme,
                             ),
                           ),
                         ),
                         if (isLowBatteryAlert) ...[
                           const SizedBox(width: 4),
-                          Image.asset(
+                          SkinAssetImage.themed(
+                            context,
                             _batteryAssetPath(sensor),
                             key: const ValueKey<String>('sensor-low-battery'),
                             fit: BoxFit.contain,
@@ -818,7 +830,8 @@ class _SensorRowHeader extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     if (showBatteryOnStatusLine)
-                      Image.asset(
+                      SkinAssetImage.themed(
+                        context,
                         _batteryAssetPath(sensor),
                         key: ValueKey<String>('sensor-battery'),
                         fit: BoxFit.contain,
@@ -829,7 +842,7 @@ class _SensorRowHeader extends StatelessWidget {
                       Text(
                         _statusLabel(l10n, sensor.status),
                         key: ValueKey<String>('sensor-status-$sensorName'),
-                        style: _statusStyle(textTheme, sensor.status),
+                        style: _statusStyle(context, textTheme, sensor.status),
                       ),
                   ],
                 ),
@@ -845,7 +858,7 @@ class _SensorRowHeader extends StatelessWidget {
                     ),
                     Icons.chevron_right,
                     size: 25,
-                    color: AppColors.textPrimary,
+                    color: context.colors.textPrimary,
                   ),
                 ),
             ],
@@ -869,17 +882,17 @@ class _SensorRowHeader extends StatelessWidget {
               child: Container(
                 key: const ValueKey<String>('sensor-replace-battery-help'),
                 padding: const EdgeInsets.only(bottom: 1),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
-                      color: AppColors.securityCenterError,
+                      color: context.colors.securityCenterError,
                       width: 0.5,
                     ),
                   ),
                 ),
                 child: Text(
                   l10n.safetySensorReplaceBattery,
-                  style: AppTextTokens.safetySensorItemAlert(textTheme),
+                  style: context.appText.safetySensorItemAlert(textTheme),
                 ),
               ),
             ),
@@ -902,15 +915,18 @@ bool _isNormalSensorStatus(SafetySensorStatus status) =>
     status == SafetySensorStatus.notTriggered ||
     status == SafetySensorStatus.unlocked;
 
-TextStyle _statusStyle(TextTheme textTheme, SafetySensorStatus status) =>
-    switch (status) {
-      SafetySensorStatus.disconnected => AppTextTokens.safetySensorItemOffline(
-        textTheme,
-      ),
-      SafetySensorStatus.triggered || SafetySensorStatus.locked =>
-        AppTextTokens.safetySensorItemAlert(textTheme),
-      _ => AppTextTokens.safetySensorItemSuccess(textTheme),
-    };
+TextStyle _statusStyle(
+  BuildContext context,
+  TextTheme textTheme,
+  SafetySensorStatus status,
+) => switch (status) {
+  SafetySensorStatus.disconnected => context.appText.safetySensorItemOffline(
+    textTheme,
+  ),
+  SafetySensorStatus.triggered ||
+  SafetySensorStatus.locked => context.appText.safetySensorItemAlert(textTheme),
+  _ => context.appText.safetySensorItemSuccess(textTheme),
+};
 
 const _batteryFullAsset =
     'assets/icons/security_center/security_center_sensor_battery_full.png';
@@ -988,7 +1004,7 @@ class _SensorOperationChartState extends State<_SensorOperationChart> {
     final l10n = AppLocalizations.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: AppColors.securityCenterCard,
+        color: context.colors.securityCenterCard,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Padding(
@@ -998,7 +1014,7 @@ class _SensorOperationChartState extends State<_SensorOperationChart> {
           children: [
             Text(
               l10n.securityReportTimeCyclesAxis,
-              style: AppTextTokens.securityReportBody(
+              style: context.appText.securityReportBody(
                 Theme.of(context).textTheme,
               ),
             ),
@@ -1026,6 +1042,7 @@ class _SensorOperationChartState extends State<_SensorOperationChart> {
                           'sensor-operation-chart-selected-${_selectedIndex ?? 'none'}',
                         ),
                         painter: _SensorOperationChartPainter(
+                          colors: context.colors,
                           points: widget.points,
                           selectedIndex: _selectedIndex,
                         ),
@@ -1047,9 +1064,7 @@ abstract final class _SensorOperationChartLayout {
       Rect.fromLTWH(30, 8, size.width - 36, size.height - 32);
 
   static List<int> yAxisLabels(List<SafetySensorOperationPoint> points) =>
-      operationChartYAxisLabelsForValues(
-        points.map((point) => point.cycles),
-      );
+      operationChartYAxisLabelsForValues(points.map((point) => point.cycles));
 
   static double yAxisMaximum(List<SafetySensorOperationPoint> points) =>
       yAxisLabels(points).last.toDouble();
@@ -1092,6 +1107,7 @@ abstract final class _SensorOperationChartLayout {
 
 class _SensorOperationChartPainter extends CustomPainter {
   const _SensorOperationChartPainter({
+    required this.colors,
     required this.points,
     this.selectedIndex,
   });
@@ -1099,13 +1115,15 @@ class _SensorOperationChartPainter extends CustomPainter {
   final List<SafetySensorOperationPoint> points;
   final int? selectedIndex;
 
+  final AppResolvedColors colors;
+
   @override
   void paint(Canvas canvas, Size size) {
     final grid = Paint()
-      ..color = AppColors.securityReportChartGrid
+      ..color = colors.securityReportChartGrid
       ..strokeWidth = 1;
     final axis = Paint()
-      ..color = AppColors.textPrimary
+      ..color = colors.textPrimary
       ..strokeWidth = 1.2;
     final chart = _SensorOperationChartLayout.chart(size);
     final yAxisLabels = _SensorOperationChartLayout.yAxisLabels(points);
@@ -1121,8 +1139,8 @@ class _SensorOperationChartPainter extends CustomPainter {
       axis,
     );
 
-    final normalBar = Paint()..color = AppColors.securityReportSegmentSelected;
-    final warningBar = Paint()..color = AppColors.securityReportChartBar;
+    final normalBar = Paint()..color = colors.securityReportSegmentSelected;
+    final warningBar = Paint()..color = colors.securityReportChartBar;
     final bars = _SensorOperationChartLayout.bars(size, points);
     for (var index = 0; index < bars.length; index++) {
       final point = points[index];
@@ -1137,7 +1155,7 @@ class _SensorOperationChartPainter extends CustomPainter {
           chart.bottom - chart.height * index / yAxisDivisionCount - 8,
         ),
         fontSize: 11,
-        color: AppColors.textPrimary,
+        color: colors.textPrimary,
       );
     }
     for (var index = 0; index < points.length; index++) {
@@ -1145,7 +1163,7 @@ class _SensorOperationChartPainter extends CustomPainter {
       final painter = TextPainter(
         text: TextSpan(
           text: hour.toString(),
-          style: const TextStyle(color: AppColors.textMuted, fontSize: 8),
+          style: TextStyle(color: colors.textMuted, fontSize: 8),
         ),
         textDirection: TextDirection.ltr,
       )..layout();
@@ -1200,7 +1218,7 @@ class _SensorOperationChartPainter extends CustomPainter {
         Rect.fromLTWH(left, top, width, height),
         const Radius.circular(3),
       ),
-      Paint()..color = AppColors.securityReportChartTooltip,
+      Paint()..color = colors.securityReportChartTooltip,
     );
     textPainter.paint(
       canvas,
@@ -1227,6 +1245,7 @@ class _SensorOperationChartPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _SensorOperationChartPainter oldDelegate) =>
+      oldDelegate.colors.skin != colors.skin ||
       oldDelegate.points != points ||
       oldDelegate.selectedIndex != selectedIndex;
 }

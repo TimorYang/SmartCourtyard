@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -41,7 +42,7 @@ class _ChooseScenePageState extends ConsumerState<ChooseScenePage> {
     final scenesState = ref.watch(homeScenesProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       appBar: const FlinxNavigationBar(title: '', showBottomDivider: false),
       body: _isMoving
           ? const Center(child: CircularProgressIndicator())
@@ -52,7 +53,7 @@ class _ChooseScenePageState extends ConsumerState<ChooseScenePage> {
                 children: [
                   Text(
                     l10n.chooseSceneTitle,
-                    style: AppTextTokens.sceneTitle(textTheme),
+                    style: context.appText.sceneTitle(textTheme),
                   ),
                   const SizedBox(height: 38),
                   if (widget.door == null || widget.door!.sceneId == null)
@@ -141,9 +142,12 @@ class _ChooseSceneList extends StatelessWidget {
                 : () => onSceneSelected(scenes[index]),
           ),
           if (index != scenes.length - 1)
-            const Padding(
+            Padding(
               padding: EdgeInsets.symmetric(horizontal: 2),
-              child: Divider(height: 18, color: AppColors.borderHomeDivider),
+              child: Divider(
+                height: 18,
+                color: context.colors.borderHomeDivider,
+              ),
             ),
         ],
       ],
@@ -161,7 +165,7 @@ class _ChooseSceneMoveUnavailableState extends StatelessWidget {
       child: Center(
         child: Text(
           AppLocalizations.of(context).chooseSceneMoveUnavailable,
-          style: AppTextTokens.sceneCardMeta(Theme.of(context).textTheme),
+          style: context.appText.sceneCardMeta(Theme.of(context).textTheme),
           textAlign: TextAlign.center,
         ),
       ),
@@ -191,7 +195,7 @@ class _ChooseSceneEmptyState extends StatelessWidget {
       child: Center(
         child: Text(
           AppLocalizations.of(context).chooseSceneEmpty,
-          style: AppTextTokens.sceneCardMeta(Theme.of(context).textTheme),
+          style: context.appText.sceneCardMeta(Theme.of(context).textTheme),
         ),
       ),
     );
@@ -213,7 +217,7 @@ class _ChooseSceneErrorState extends StatelessWidget {
           icon: const Icon(Icons.refresh_rounded),
           label: Text(
             AppLocalizations.of(context).chooseSceneLoadFailed,
-            style: AppTextTokens.sceneCardMeta(Theme.of(context).textTheme),
+            style: context.appText.sceneCardMeta(Theme.of(context).textTheme),
           ),
         ),
       ),
@@ -241,7 +245,7 @@ class _SceneCard extends StatelessWidget {
       button: onPressed != null,
       selected: selected,
       child: Material(
-        color: AppColors.surfaceItemSceneCard,
+        color: context.colors.surfaceItemSceneCard,
         borderRadius: BorderRadius.circular(14),
         child: InkWell(
           borderRadius: BorderRadius.circular(14),
@@ -252,7 +256,7 @@ class _SceneCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(14),
               border: selected
                   ? Border.all(
-                      color: AppColors.borderSelectedSceneCard,
+                      color: context.colors.borderSelectedSceneCard,
                       width: 1,
                     )
                   : null,
@@ -271,14 +275,14 @@ class _SceneCard extends StatelessWidget {
                         scene.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: AppTextTokens.sceneCardTitle(textTheme),
+                        style: context.appText.sceneCardTitle(textTheme),
                       ),
                       const SizedBox(height: 12),
                       Text(
                         l10n.chooseSceneDeviceCount(scene.doorCount),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: AppTextTokens.sceneCardMeta(textTheme),
+                        style: context.appText.sceneCardMeta(textTheme),
                       ),
                     ],
                   ),
@@ -297,13 +301,14 @@ class _SceneIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
+    return SkinAssetImage.themed(
+      context,
       ChooseSceneAssetPaths.garagePlaceholder,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) {
-        return const Icon(
+        return Icon(
           Icons.home_outlined,
-          color: AppColors.iconHomeAction,
+          color: context.colors.iconHomeAction,
           size: 38,
         );
       },

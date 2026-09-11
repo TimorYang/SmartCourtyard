@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -37,7 +38,7 @@ class _ManageDevicesPageState extends ConsumerState<ManageDevicesPage> {
     final devices = ref.watch(managedDevicesControllerProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       appBar: FlinxNavigationBar(title: '', showBottomDivider: false),
       body: devices.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -51,7 +52,7 @@ class _ManageDevicesPageState extends ConsumerState<ManageDevicesPage> {
             ? Center(
                 child: Text(
                   l10n.manageDevicesEmpty,
-                  style: AppTextTokens.manageDevicesSubtitle(textTheme),
+                  style: context.appText.manageDevicesSubtitle(textTheme),
                 ),
               )
             : _ManageDevicesContent(
@@ -123,13 +124,16 @@ class _ManageDevicesContent extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: AppSpacingTokens.manageDevicesTitleTop),
-                Text(title, style: AppTextTokens.sharedDevicesTitle(textTheme)),
+                Text(
+                  title,
+                  style: context.appText.sharedDevicesTitle(textTheme),
+                ),
                 const SizedBox(
                   height: AppSpacingTokens.manageDevicesTitleToSubtitle,
                 ),
                 Text(
                   subtitle,
-                  style: AppTextTokens.manageDevicesSubtitle(textTheme),
+                  style: context.appText.manageDevicesSubtitle(textTheme),
                 ),
                 const SizedBox(
                   height: AppSpacingTokens.manageDevicesSubtitleToList,
@@ -188,22 +192,23 @@ class _ManagedDeviceCard extends StatelessWidget {
       key: ManageDevicesKeys.deviceCard(device.sessionId),
       height: AppSpacingTokens.manageDevicesCardHeight,
       padding: const EdgeInsets.symmetric(horizontal: 30),
-      decoration: const BoxDecoration(
-        color: AppColors.manageDevicesCard,
+      decoration: BoxDecoration(
+        color: context.colors.manageDevicesCard,
         borderRadius: BorderRadius.all(
           Radius.circular(AppShapeTokens.sharedDevicesCardRadius),
         ),
       ),
       child: Row(
         children: [
-          Image.asset(
+          SkinAssetImage.themed(
+            context,
             ManageDevicesAssetPaths.phone,
             width: AppSpacingTokens.manageDevicesIconSize,
             height: AppSpacingTokens.manageDevicesIconSize,
             errorBuilder: (context, error, stackTrace) {
-              return const Icon(
+              return Icon(
                 Icons.phone_android,
-                color: AppColors.textMuted,
+                color: context.colors.textMuted,
                 size: 46,
               );
             },
@@ -218,12 +223,12 @@ class _ManagedDeviceCard extends StatelessWidget {
                   _deviceName(l10n),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextTokens.sharedDevicesCardTitle(textTheme),
+                  style: context.appText.sharedDevicesCardTitle(textTheme),
                 ),
                 const SizedBox(height: 12),
                 Text(
                   _loginTimestamp(l10n),
-                  style: AppTextTokens.manageDevicesCardTimestamp(textTheme),
+                  style: context.appText.manageDevicesCardTimestamp(textTheme),
                 ),
               ],
             ),
@@ -237,14 +242,15 @@ class _ManagedDeviceCard extends StatelessWidget {
               onTap: onRemoveRequested,
               child: Padding(
                 padding: const EdgeInsets.all(11),
-                child: Image.asset(
+                child: SkinAssetImage.themed(
+                  context,
                   ManageDevicesAssetPaths.logout,
                   width: AppSpacingTokens.manageDevicesActionIconSize,
                   height: AppSpacingTokens.manageDevicesActionIconSize,
                   errorBuilder: (context, error, stackTrace) {
-                    return const Icon(
+                    return Icon(
                       Icons.logout,
-                      color: AppColors.textMuted,
+                      color: context.colors.textMuted,
                       size: 20,
                     );
                   },
@@ -313,7 +319,7 @@ Future<void> _showManagedDeviceRemovalDialog(
   return showDialog<void>(
     context: context,
     barrierDismissible: true,
-    barrierColor: AppColors.manageDevicesRemoveDialogScrim,
+    barrierColor: context.colors.manageDevicesRemoveDialogScrim,
     builder: (context) => _ManagedDeviceRemovalDialog(onConfirm: onConfirm),
   );
 }
@@ -337,7 +343,7 @@ class _ManagedDeviceRemovalDialog extends StatelessWidget {
             horizontal:
                 AppSpacingTokens.manageDevicesRemoveDialogHorizontalInset,
           ),
-          backgroundColor: AppColors.manageDevicesRemoveDialogSurface,
+          backgroundColor: context.colors.manageDevicesRemoveDialogSurface,
           shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.all(
               Radius.circular(AppShapeTokens.manageDevicesRemoveDialogRadius),
@@ -360,7 +366,7 @@ class _ManagedDeviceRemovalDialog extends StatelessWidget {
                   Text(
                     l10n.manageDevicesRemoveConfirmationMessage,
                     textAlign: TextAlign.center,
-                    style: AppTextTokens.manageDevicesRemoveDialogMessage(
+                    style: context.appText.manageDevicesRemoveDialogMessage(
                       textTheme,
                     ),
                   ),
@@ -441,8 +447,8 @@ class _ManagedDeviceRemovalDialogAction extends StatelessWidget {
         child: DecoratedBox(
           decoration: BoxDecoration(
             color: isPrimary
-                ? AppColors.manageDevicesRemoveDialogConfirmSurface
-                : AppColors.manageDevicesRemoveDialogCancelSurface,
+                ? context.colors.manageDevicesRemoveDialogConfirmSurface
+                : context.colors.manageDevicesRemoveDialogCancelSurface,
             borderRadius: const BorderRadius.all(Radius.circular(24)),
           ),
           child: SizedBox(
@@ -450,7 +456,7 @@ class _ManagedDeviceRemovalDialogAction extends StatelessWidget {
             child: Center(
               child: Text(
                 label,
-                style: AppTextTokens.manageDevicesRemoveDialogAction(
+                style: context.appText.manageDevicesRemoveDialogAction(
                   Theme.of(context).textTheme,
                   isPrimary: isPrimary,
                 ),

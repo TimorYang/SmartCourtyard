@@ -85,7 +85,7 @@ class _RegionPageState extends ConsumerState<RegionPage> {
     final regionState = ref.watch(regionSelectionControllerProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       appBar: const FlinxNavigationBar(title: '', showBottomDivider: false),
       body: SafeArea(
         top: false,
@@ -99,7 +99,7 @@ class _RegionPageState extends ConsumerState<RegionPage> {
                   padding: const EdgeInsets.fromLTRB(32, 26, 32, 0),
                   child: Text(
                     l10n.regionPageTitle,
-                    style: AppTextTokens.regionPageTitle(
+                    style: context.appText.regionPageTitle(
                       Theme.of(context).textTheme,
                     ),
                   ),
@@ -210,9 +210,9 @@ class _RegionRow extends StatelessWidget {
         onTap: isEnabled ? onTap : null,
         child: Container(
           height: 60,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             border: Border(
-              bottom: BorderSide(color: AppColors.borderRegionDivider),
+              bottom: BorderSide(color: context.colors.borderRegionDivider),
             ),
           ),
           child: Row(
@@ -220,15 +220,15 @@ class _RegionRow extends StatelessWidget {
               Expanded(
                 child: Text(
                   label,
-                  style: AppTextTokens.regionRowLabel(
+                  style: context.appText.regionRowLabel(
                     Theme.of(context).textTheme,
                   ),
                 ),
               ),
               if (selected)
-                const Icon(
+                Icon(
                   Icons.check_rounded,
-                  color: AppColors.regionSelection,
+                  color: context.colors.regionSelection,
                   size: 24,
                 ),
             ],

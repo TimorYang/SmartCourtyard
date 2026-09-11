@@ -113,7 +113,7 @@ class _ForgotPasswordResetPageState
         const SizedBox(height: 8),
         Text(
           l10n.authPasswordRule,
-          style: AppTextTokens.authPasswordRule(Theme.of(context).textTheme),
+          style: context.appText.authPasswordRule(Theme.of(context).textTheme),
         ),
         const SizedBox(height: 55),
         AuthPrimaryButton(

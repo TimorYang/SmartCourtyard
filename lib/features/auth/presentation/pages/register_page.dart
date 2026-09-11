@@ -43,7 +43,7 @@ class RegisterPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: FlinxNavigationBar(title: '', showBottomDivider: false),
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       resizeToAvoidBottomInset: false,
       body: SafeArea(
         top: false,
@@ -56,23 +56,23 @@ class RegisterPage extends ConsumerWidget {
             children: [
               Text(
                 l10n.registerTitle,
-                style: AppTextTokens.registerTitle(theme.textTheme),
+                style: context.appText.registerTitle(theme.textTheme),
               ),
               const SizedBox(height: 10),
               Text(
                 l10n.registerDescription,
-                style: AppTextTokens.registerDescription(theme.textTheme),
+                style: context.appText.registerDescription(theme.textTheme),
               ),
               const SizedBox(height: 48),
               AuthTextField(
                 hintText: l10n.registerEmailPlaceholder,
-                icon: const AuthAssetIcon(
+                icon: AuthAssetIcon(
                   assetPath: AuthAssetPaths.emailFieldIcon,
                   width: 22,
                   height: 22,
                   fallback: Icon(
                     Icons.mail_outline_rounded,
-                    color: AppColors.textIcon,
+                    color: context.colors.textIcon,
                     size: 22,
                   ),
                 ),
@@ -93,13 +93,15 @@ class RegisterPage extends ConsumerWidget {
                   Expanded(
                     child: Text.rich(
                       TextSpan(
-                        style: AppTextTokens.registerAgreement(theme.textTheme),
+                        style: context.appText.registerAgreement(
+                          theme.textTheme,
+                        ),
                         children: [
                           TextSpan(text: l10n.registerAgreementPrefix),
                           TextSpan(
                             text: l10n.privacyPolicyLabel,
-                            style: const TextStyle(
-                              color: AppColors.textAgreementLink,
+                            style: TextStyle(
+                              color: context.colors.textAgreementLink,
                               decoration: TextDecoration.underline,
                             ),
                             recognizer: TapGestureRecognizer()
@@ -136,14 +138,16 @@ class RegisterPage extends ConsumerWidget {
                         }
                       : null,
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.brandPrimaryLight,
-                    disabledBackgroundColor: AppColors.brandPrimaryDisabled,
-                    foregroundColor: Colors.white,
+                    backgroundColor: context.colors.brandPrimaryLight,
+                    disabledBackgroundColor:
+                        context.colors.brandPrimaryDisabled,
+                    foregroundColor:
+                        context.colors.authPrimaryButtonDisabledForeground,
                     disabledForegroundColor:
-                        AppColors.authPrimaryButtonDisabledForeground,
+                        context.colors.authPrimaryButtonDisabledForeground,
                     minimumSize: const Size.fromHeight(48),
                     shape: const StadiumBorder(),
-                    textStyle: AppTextTokens.loginPrimaryButton(
+                    textStyle: context.appText.loginPrimaryButton(
                       theme.textTheme,
                     ),
                   ),
@@ -198,20 +202,23 @@ class _PrivacyAgreementToggle extends StatelessWidget {
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: selected
-                      ? AppColors.toggleSelected
-                      : AppColors.borderMuted,
+                      ? context.colors.toggleSelected
+                      : context.colors.borderMuted,
                 ),
-                color: selected ? AppColors.toggleSelected : Colors.white,
+                color: selected
+                    ? context.colors.toggleSelected
+                    : context.colors.authPrimaryButtonDisabledForeground,
               ),
               child: selected
-                  ? const AuthAssetIcon(
+                  ? AuthAssetIcon(
                       assetPath: _RegisterPageAssetPaths.privacyCheckedIcon,
                       width: 14,
                       height: 14,
                       fallback: Icon(
                         Icons.check,
                         size: 14,
-                        color: Colors.white,
+                        color:
+                            context.colors.authPrimaryButtonDisabledForeground,
                       ),
                     )
                   : null,

@@ -119,7 +119,7 @@ class _SmartOpenerConnectionSuccessPageState
     final scene = await showModalBottomSheet<HomeScene>(
       context: context,
       backgroundColor: Colors.transparent,
-      barrierColor: AppColors.overlaySoft,
+      barrierColor: context.colors.overlaySoft,
       isScrollControlled: true,
       builder: (context) =>
           _SceneSelectionSheet(selectedSceneId: _selectedScene?.id),
@@ -186,7 +186,7 @@ class _SmartOpenerConnectionSuccessPageState
     final showScene = showName && addDeviceState.onboardingSceneId == null;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       appBar: const FlinxNavigationBar(title: '', showBottomDivider: false),
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -202,13 +202,13 @@ class _SmartOpenerConnectionSuccessPageState
                 Text(
                   l10n.smartOpenerConnectionSuccessTitle,
                   textAlign: TextAlign.center,
-                  style: AppTextTokens.smartOpenerConnectingTitle(textTheme),
+                  style: context.appText.smartOpenerConnectingTitle(textTheme),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   l10n.smartOpenerConnectionSuccessDescription,
                   textAlign: TextAlign.center,
-                  style: AppTextTokens.smartOpenerBodyCenter(textTheme),
+                  style: context.appText.smartOpenerBodyCenter(textTheme),
                 ),
                 SizedBox(height: 80),
                 if (showName) ...[
@@ -226,7 +226,7 @@ class _SmartOpenerConnectionSuccessPageState
                       padding: const EdgeInsets.fromLTRB(10, 8, 10, 0),
                       child: Text(
                         _renameError!,
-                        style: TextStyle(color: AppColors.toastError),
+                        style: TextStyle(color: context.colors.toastError),
                       ),
                     ),
                 ],
@@ -246,7 +246,7 @@ class _SmartOpenerConnectionSuccessPageState
                 Text(
                   l10n.smartOpenerInviteFamilyTip,
                   textAlign: TextAlign.center,
-                  style: AppTextTokens.smartOpenerBodyCenter(textTheme),
+                  style: context.appText.smartOpenerBodyCenter(textTheme),
                 ),
                 const SizedBox(height: 13),
                 Padding(
@@ -320,7 +320,7 @@ class _SmartOpenerConnectionSuccessPageState
   }) async {
     final address = await showDialog<String>(
       context: context,
-      barrierColor: AppColors.overlayStrong,
+      barrierColor: context.colors.overlayStrong,
       builder: (context) => const _ShareDeviceDialog(),
     );
     if (!context.mounted || address == null || doorId == null) {
@@ -344,11 +344,15 @@ class _SuccessCheck extends StatelessWidget {
     return Container(
       width: 80,
       height: 80,
-      decoration: const BoxDecoration(
-        color: AppColors.smartOpenerSuccess,
+      decoration: BoxDecoration(
+        color: context.colors.smartOpenerSuccess,
         shape: BoxShape.circle,
       ),
-      child: const Icon(Icons.check, color: Colors.white, size: 40),
+      child: Icon(
+        Icons.check,
+        color: context.colors.authPrimaryButtonDisabledForeground,
+        size: 40,
+      ),
     );
   }
 }
@@ -374,25 +378,25 @@ class _SuccessFormRow extends StatelessWidget {
       onTap: onTap,
       child: Container(
         height: 66,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           border: Border(
-            bottom: BorderSide(color: AppColors.smartOpenerDivider),
+            bottom: BorderSide(color: context.colors.smartOpenerDivider),
           ),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 24, color: AppColors.textIcon),
+            Icon(icon, size: 24, color: context.colors.textIcon),
             const SizedBox(width: 9),
             Expanded(
               child: Text(
                 label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AppTextTokens.smartOpenerFormText(textTheme),
+                style: context.appText.smartOpenerFormText(textTheme),
               ),
             ),
             if (trailing != null)
-              Icon(trailing, size: 24, color: AppColors.textPrimary),
+              Icon(trailing, size: 24, color: context.colors.textPrimary),
           ],
         ),
       ),
@@ -418,15 +422,17 @@ class _SuccessNameField extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     return Container(
       height: 66,
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.smartOpenerDivider)),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: context.colors.smartOpenerDivider),
+        ),
       ),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.door_front_door_outlined,
             size: 24,
-            color: AppColors.textIcon,
+            color: context.colors.textIcon,
           ),
           const SizedBox(width: 9),
           Expanded(
@@ -435,10 +441,10 @@ class _SuccessNameField extends StatelessWidget {
               focusNode: focusNode,
               enabled: enabled,
               textInputAction: TextInputAction.done,
-              style: AppTextTokens.smartOpenerFormText(textTheme),
+              style: context.appText.smartOpenerFormText(textTheme),
               decoration: InputDecoration.collapsed(
                 hintText: hintText,
-                hintStyle: AppTextTokens.smartOpenerFormText(textTheme),
+                hintStyle: context.appText.smartOpenerFormText(textTheme),
               ),
               onEditingComplete: focusNode.unfocus,
             ),
@@ -459,7 +465,7 @@ class _SceneSelectionSheet extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final scenesState = ref.watch(homeScenesProvider);
     return Material(
-      color: AppColors.backgroundPrimary,
+      color: context.colors.backgroundPrimary,
       borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
       clipBehavior: Clip.antiAlias,
       child: SafeArea(
@@ -533,9 +539,11 @@ class _SuccessActionButton extends StatelessWidget {
         onPressed: onPressed,
         style: FilledButton.styleFrom(
           backgroundColor: isPrimary
-              ? AppColors.brandPrimary
-              : AppColors.smartOpenerSecondaryButton,
-          foregroundColor: isPrimary ? Colors.white : AppColors.textPrimary,
+              ? context.colors.brandPrimary
+              : context.colors.smartOpenerSecondaryButton,
+          foregroundColor: isPrimary
+              ? context.colors.authPrimaryButtonDisabledForeground
+              : context.colors.textPrimary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(34),
           ),
@@ -543,8 +551,8 @@ class _SuccessActionButton extends StatelessWidget {
         child: Text(
           label,
           style: isPrimary
-              ? AppTextTokens.smartOpenerActionButton(textTheme)
-              : AppTextTokens.smartOpenerSecondaryActionButton(textTheme),
+              ? context.appText.smartOpenerActionButton(textTheme)
+              : context.appText.smartOpenerSecondaryActionButton(textTheme),
         ),
       ),
     );
@@ -573,7 +581,7 @@ class _ShareDeviceDialogState extends State<_ShareDeviceDialog> {
     final textTheme = Theme.of(context).textTheme;
 
     return Dialog(
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       insetPadding: const EdgeInsets.symmetric(horizontal: 0),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: ConstrainedBox(
@@ -586,12 +594,12 @@ class _ShareDeviceDialogState extends State<_ShareDeviceDialog> {
             children: [
               Text(
                 l10n.smartOpenerShareDialogTitle,
-                style: AppTextTokens.smartOpenerShareDialogTitle(textTheme),
+                style: context.appText.smartOpenerShareDialogTitle(textTheme),
               ),
               const SizedBox(height: 8),
               Text(
                 l10n.smartOpenerShareDialogDescription,
-                style: AppTextTokens.smartOpenerShareDialogDescription(
+                style: context.appText.smartOpenerShareDialogDescription(
                   textTheme,
                 ),
               ),
@@ -601,25 +609,24 @@ class _ShareDeviceDialogState extends State<_ShareDeviceDialog> {
                 child: TextField(
                   controller: _addressController,
                   keyboardType: TextInputType.emailAddress,
-                  style: AppTextTokens.smartOpenerShareDialogAccountHint(
+                  style: context.appText.smartOpenerShareDialogAccountHint(
                     textTheme,
                   ),
                   decoration: InputDecoration(
                     hintText: l10n.smartOpenerShareDialogAccountHint,
-                    hintStyle: AppTextTokens.smartOpenerShareDialogAccountHint(
-                      textTheme,
-                    ),
+                    hintStyle: context.appText
+                        .smartOpenerShareDialogAccountHint(textTheme),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(22),
-                      borderSide: const BorderSide(
-                        color: AppColors.deviceShareFieldBorder,
+                      borderSide: BorderSide(
+                        color: context.colors.deviceShareFieldBorder,
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(22),
-                      borderSide: const BorderSide(
-                        color: AppColors.brandPrimary,
+                      borderSide: BorderSide(
+                        color: context.colors.brandPrimary,
                       ),
                     ),
                   ),
@@ -631,8 +638,8 @@ class _ShareDeviceDialogState extends State<_ShareDeviceDialog> {
                   Expanded(
                     child: _ShareDialogActionButton(
                       label: l10n.smartOpenerCancelAction,
-                      backgroundColor: AppColors.deviceShareCancelButton,
-                      foregroundColor: AppColors.textPrimary,
+                      backgroundColor: context.colors.deviceShareCancelButton,
+                      foregroundColor: context.colors.textPrimary,
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                   ),
@@ -640,8 +647,9 @@ class _ShareDeviceDialogState extends State<_ShareDeviceDialog> {
                   Expanded(
                     child: _ShareDialogActionButton(
                       label: l10n.smartOpenerShareNowAction,
-                      backgroundColor: AppColors.brandPrimary,
-                      foregroundColor: Colors.white,
+                      backgroundColor: context.colors.brandPrimary,
+                      foregroundColor:
+                          context.colors.authPrimaryButtonDisabledForeground,
                       onPressed: () => Navigator.of(
                         context,
                       ).pop(_addressController.text.trim()),
@@ -680,9 +688,9 @@ class _ShareDialogActionButton extends StatelessWidget {
           backgroundColor: backgroundColor,
           foregroundColor: foregroundColor,
           shape: const StadiumBorder(),
-          textStyle: AppTextTokens.smartOpenerShareDialogAccountHint2(
-            Theme.of(context).textTheme,
-          ).copyWith(fontWeight: FontWeight.w500),
+          textStyle: context.appText
+              .smartOpenerShareDialogAccountHint2(Theme.of(context).textTheme)
+              .copyWith(fontWeight: FontWeight.w500),
         ),
         child: Text(label),
       ),

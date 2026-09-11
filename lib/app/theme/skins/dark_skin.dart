@@ -1,0 +1,35 @@
+import '../app_skin_catalog.dart';
+import 'package:flutter/material.dart';
+import '../../../features/appearance/domain/entities/app_skin_id.dart';
+
+const darkSkin = AppSkinTokens(
+  id: AppSkinId.dark,
+  pageBackground: Color(0xFF050F3A),
+  backgroundGradient: [Color(0xFF050F3A), Color(0xFF050F3A)],
+  surface: Color(0xFF101D44),
+  surfaceMuted: Color(0xFF162650),
+  textPrimary: Color(0xFFF2F7FF),
+  textSecondary: Color(0xFFBCD7FF),
+  textMuted: Color(0xFF9DB4DA),
+  border: Color(0xFF26386F),
+  brand: Color(0xFF1477F9),
+  onBrand: Color(0xFFFFFFFF),
+  accent: Color(0xFF26DAFB),
+  success: Color(0xFF20D667),
+  disabled: Color(0xFF61739C),
+  danger: Color(0xFFFF7A86),
+  warning: Color(0xFFFFC266),
+  scrim: Color(0x99000621),
+  shadow: Color(0x66000000),
+  systemBarBackground: Color(0xFF050F3A),
+  commandAction: Color(0xFF00CDEF),
+  commandActionForeground: Color(0xFF050F3A),
+  commandActionPressedOverlay: Color(0x26050F3A),
+  switchActive: Color(0xFF20D667),
+  switchInactive: Color(0xFF61739C),
+  switchThumb: Color(0xFFFFFFFF),
+  navigationBackground: Color(0xFF050F3A),
+  navigationForeground: Color(0xFFF2F7FF),
+  navigationSelected: Color(0xFF26DAFB),
+  navigationUnselected: Color(0xFF9DB4DA),
+);

@@ -31,6 +31,9 @@ import '../../features/account/presentation/pages/shared_devices_page.dart';
 import '../../features/account/presentation/pages/shared_device_member_management_page.dart';
 import '../../features/account/domain/entities/shared_door.dart';
 import '../../features/account/presentation/pages/system_permissions_page.dart';
+import '../../features/appearance/domain/entities/app_skin_id.dart';
+import '../../features/appearance/presentation/pages/skin_detail_page.dart';
+import '../../features/appearance/presentation/pages/skin_gallery_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_code_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_reset_page.dart';
@@ -183,6 +186,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AccountProfilePage.routePath,
         name: AccountProfilePage.routeName,
         builder: (context, state) => const AccountProfilePage(),
+      ),
+      GoRoute(
+        path: SkinGalleryPage.routePath,
+        name: SkinGalleryPage.routeName,
+        builder: (context, state) => const SkinGalleryPage(),
+      ),
+      GoRoute(
+        path: SkinDetailPage.routePath,
+        name: SkinDetailPage.routeName,
+        builder: (context, state) => SkinDetailPage(
+          skinId:
+              AppSkinId.fromStorageValue(state.pathParameters['skinId']) ??
+              AppSkinId.minimalist,
+        ),
       ),
       GoRoute(
         path: CheckUpgradedVersionPage.routePath,

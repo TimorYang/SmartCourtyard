@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -26,7 +27,7 @@ class FBoxConnectionGuidePage extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       appBar: FlinxNavigationBar(
         title: '',
         showBottomDivider: false,
@@ -42,26 +43,29 @@ class FBoxConnectionGuidePage extends StatelessWidget {
                 children: [
                   Text(
                     l10n.fBoxConnectionGuideTitle,
-                    style: AppTextTokens.smartOpenerScanTitle(textTheme),
+                    style: context.appText.smartOpenerScanTitle(textTheme),
                   ),
                   const SizedBox(height: 30),
                   Text(
                     l10n.fBoxConnectionGuideInstructions,
-                    style: AppTextTokens.fBoxConnectionInstructions(textTheme),
+                    style: context.appText.fBoxConnectionInstructions(
+                      textTheme,
+                    ),
                   ),
                   const SizedBox(height: 22),
                   Text(
                     l10n.fBoxConnectionGuideManualHint,
-                    style: AppTextTokens.fBoxConnectionManualHint(textTheme),
+                    style: context.appText.fBoxConnectionManualHint(textTheme),
                   ),
                   const SizedBox(height: 110),
-                  Image.asset(
+                  SkinAssetImage.themed(
+                    context,
                     FBoxConnectionGuideAssetPaths.connectionGuide,
                     width: double.infinity,
                     fit: BoxFit.contain,
                     errorBuilder: (context, error, stackTrace) => Icon(
                       Icons.image_not_supported_outlined,
-                      color: AppColors.iconHomeAction,
+                      color: context.colors.iconHomeAction,
                       size: 96,
                     ),
                   ),
@@ -81,10 +85,11 @@ class FBoxConnectionGuidePage extends StatelessWidget {
                     },
                   ),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.brandPrimary,
-                    foregroundColor: Colors.white,
+                    backgroundColor: context.colors.brandPrimary,
+                    foregroundColor:
+                        context.colors.authPrimaryButtonDisabledForeground,
                     shape: const StadiumBorder(),
-                    textStyle: AppTextTokens.smartOpenerPrimaryButton(
+                    textStyle: context.appText.smartOpenerPrimaryButton(
                       textTheme,
                     ),
                   ),

@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
@@ -67,7 +68,7 @@ class SecurityReportHero extends StatelessWidget {
                     motorName ?? l10n.securityReportMotorName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTextTokens.securityReportDeviceName(
+                    style: context.appText.securityReportDeviceName(
                       Theme.of(context).textTheme,
                     ),
                   ),
@@ -89,7 +90,8 @@ class SecurityReportBlueBackdrop extends StatelessWidget {
     return SizedBox(
       height: 350,
       width: double.infinity,
-      child: Image.asset(
+      child: SkinAssetImage.themed(
+        context,
         securityReportMotorBlueBg,
         fit: BoxFit.fill,
         excludeFromSemantics: true,
@@ -116,7 +118,7 @@ class SecurityReportCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => DecoratedBox(
     decoration: BoxDecoration(
-      color: AppColors.securityCenterCard,
+      color: context.colors.securityCenterCard,
       borderRadius: BorderRadius.circular(16),
     ),
     child: Padding(padding: padding, child: child),
@@ -140,10 +142,10 @@ class CycleSummaryCard extends StatelessWidget {
         ? 0.0
         : (summary?.remainingCycles ?? 0) / totalCycles;
     final remainingColor = remainingRatio >= .7
-        ? AppColors.securityCenterSuccess2B2D2C
+        ? context.colors.securityCenterSuccess2B2D2C
         : remainingRatio >= .4
-        ? AppColors.securityReportWarning
-        : AppColors.securityCenterError;
+        ? context.colors.securityReportWarning
+        : context.colors.securityCenterError;
     return SecurityReportCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -153,20 +155,20 @@ class CycleSummaryCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   summary?.doorName ?? l10n.securityReportDoorName,
-                  style: AppTextTokens.securityReportCardTitle(textTheme),
+                  style: context.appText.securityReportCardTitle(textTheme),
                 ),
               ),
               Icon(
                 displayWarning ? Icons.error : Icons.check_circle,
                 size: 13,
                 color: displayWarning
-                    ? AppColors.securityReportWarning
-                    : AppColors.securityCenterSuccess,
+                    ? context.colors.securityReportWarning
+                    : context.colors.securityCenterSuccess,
               ),
             ],
           ),
           const SizedBox(height: 8),
-          const Divider(height: 1, color: AppColors.securityReportDivider),
+          Divider(height: 1, color: context.colors.securityReportDivider),
           const SizedBox(height: 8),
           Row(
             children: [
@@ -176,9 +178,11 @@ class CycleSummaryCard extends StatelessWidget {
                   label: l10n.securityReportOperatedCycles,
                 ),
               ),
-              const SizedBox(
+              SizedBox(
                 height: 30,
-                child: VerticalDivider(color: AppColors.securityReportDivider),
+                child: VerticalDivider(
+                  color: context.colors.securityReportDivider,
+                ),
               ),
               Expanded(
                 child: _Metric(
@@ -193,7 +197,7 @@ class CycleSummaryCard extends StatelessWidget {
             const SizedBox(height: 14),
             Text(
               l10n.securityReportMaintenanceWarning,
-              style: AppTextTokens.securityReportWarning(textTheme),
+              style: context.appText.securityReportWarning(textTheme),
             ),
           ],
         ],
@@ -217,14 +221,16 @@ class _Metric extends StatelessWidget {
       children: [
         Text(
           value,
-          style: AppTextTokens.securityReportMetric(
-            Theme.of(context).textTheme,
-          ).copyWith(color: valueColor),
+          style: context.appText
+              .securityReportMetric(Theme.of(context).textTheme)
+              .copyWith(color: valueColor),
         ),
         const SizedBox(height: 5),
         Text(
           label,
-          style: AppTextTokens.securityReportLabel(Theme.of(context).textTheme),
+          style: context.appText.securityReportLabel(
+            Theme.of(context).textTheme,
+          ),
         ),
       ],
     ),
@@ -262,7 +268,7 @@ class BalanceEvaluationCard extends StatelessWidget {
           const SizedBox(height: 5),
           Text(
             l10n.securityReportBalanceNote,
-            style: AppTextTokens.securityReportValue(textTheme),
+            style: context.appText.securityReportValue(textTheme),
           ),
           const SizedBox(height: 10),
           ReportSegmentedControl<BalanceEvaluation>(
@@ -310,7 +316,7 @@ class _BalanceTable extends StatelessWidget {
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       border: Border.all(
-                        color: AppColors.securityReportTableBorder,
+                        color: context.colors.securityReportTableBorder,
                       ),
                     ),
                     child: Column(
@@ -331,7 +337,7 @@ class _BalanceTable extends StatelessWidget {
                               child: Center(
                                 child: Text(
                                   ranges[index],
-                                  style: AppTextTokens.securityReportBody(
+                                  style: context.appText.securityReportBody(
                                     Theme.of(context).textTheme,
                                   ),
                                 ),
@@ -349,7 +355,8 @@ class _BalanceTable extends StatelessWidget {
                     key: const ValueKey<String>('balance-table-arrow'),
                     width: 22,
                     height: 93,
-                    child: Image.asset(
+                    child: SkinAssetImage.themed(
+                      context,
                       selection == BalanceEvaluation.open
                           ? securityReportMotorBlueUpArrow
                           : securityReportMotorBlueDownArrow,
@@ -371,14 +378,16 @@ class _BalanceTable extends StatelessWidget {
                   Expanded(
                     child: CustomPaint(
                       key: ValueKey<String>('balance-status-row-$index'),
-                      foregroundPainter: const _DashedStatusRowPainter(),
+                      foregroundPainter: _DashedStatusRowPainter(
+                        context.colors,
+                      ),
                       child: Center(
                         child: evaluation == null
                             ? const SizedBox.shrink()
                             : _segment(index) == null
                             ? Text(
                                 l10n.securityReportBalanceStatusUnavailable,
-                                style: AppTextTokens.securityReportBody(
+                                style: context.appText.securityReportBody(
                                   Theme.of(context).textTheme,
                                 ),
                               )
@@ -386,17 +395,17 @@ class _BalanceTable extends StatelessWidget {
                             ? Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(
+                                  Icon(
                                     Icons.check_circle,
                                     size: 13,
-                                    color: AppColors.securityCenterSuccess,
+                                    color: context.colors.securityCenterSuccess,
                                   ),
                                   const SizedBox(width: 5),
                                   Flexible(
                                     child: Text(
                                       _statusLabel(context, index),
                                       overflow: TextOverflow.ellipsis,
-                                      style: AppTextTokens.securityReportBody(
+                                      style: context.appText.securityReportBody(
                                         Theme.of(context).textTheme,
                                       ),
                                     ),
@@ -406,18 +415,18 @@ class _BalanceTable extends StatelessWidget {
                             : Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(
+                                  Icon(
                                     Icons.error,
                                     size: 9,
-                                    color: AppColors.securityReportWarning,
+                                    color: context.colors.securityReportWarning,
                                   ),
                                   const SizedBox(width: 5),
                                   Flexible(
                                     child: Text(
                                       _statusLabel(context, index),
                                       overflow: TextOverflow.ellipsis,
-                                      style:
-                                          AppTextTokens.securityReportWarning(
+                                      style: context.appText
+                                          .securityReportWarning(
                                             Theme.of(context).textTheme,
                                           ),
                                     ),
@@ -452,12 +461,13 @@ class _BalanceTable extends StatelessWidget {
 }
 
 class _DashedStatusRowPainter extends CustomPainter {
-  const _DashedStatusRowPainter();
+  const _DashedStatusRowPainter(this.colors);
+  final AppResolvedColors colors;
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppColors.securityReportTableBorder
+      ..color = colors.securityReportTableBorder
       ..strokeWidth = 1;
     _drawDashedLine(canvas, size.width, 0, paint);
     _drawDashedLine(canvas, size.width, size.height, paint);
@@ -476,21 +486,19 @@ class _DashedStatusRowPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _DashedStatusRowPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _DashedStatusRowPainter oldDelegate) =>
+      oldDelegate.colors.skin != colors.skin;
 }
 
 enum RecordRange { last24Hours, last7Days }
 
 const _operationChartYAxisDivisionCount = 5;
-const _operationChartYAxisLabelCount =
-    _operationChartYAxisDivisionCount + 1;
+const _operationChartYAxisLabelCount = _operationChartYAxisDivisionCount + 1;
 
 @visibleForTesting
 List<int> operationChartYAxisLabels(
   List<FullReportOperationCyclePoint> points,
-) => operationChartYAxisLabelsForValues(
-  points.map((point) => point.cycles),
-);
+) => operationChartYAxisLabelsForValues(points.map((point) => point.cycles));
 
 List<int> operationChartYAxisLabelsForValues(Iterable<int> values) {
   final maximum = values.fold<int>(
@@ -506,8 +514,8 @@ List<int> operationChartYAxisLabelsForValues(Iterable<int> values) {
   }
 
   final minimumChartMaximum = (maximum * 1.2).ceil();
-  final interval =
-      (minimumChartMaximum / _operationChartYAxisDivisionCount).ceil();
+  final interval = (minimumChartMaximum / _operationChartYAxisDivisionCount)
+      .ceil();
   return List<int>.generate(
     _operationChartYAxisLabelCount,
     (index) => interval * index,
@@ -556,7 +564,7 @@ class OperationChartCard extends StatelessWidget {
             range == RecordRange.last24Hours
                 ? l10n.securityReportTimeCyclesAxis
                 : l10n.securityReportDateCyclesAxis,
-            style: AppTextTokens.securityReportBody(
+            style: context.appText.securityReportBody(
               Theme.of(context).textTheme,
             ),
           ),
@@ -574,7 +582,7 @@ class OperationChartCard extends StatelessWidget {
           if (showFrequentOperationAlert)
             Text(
               l10n.securityReportFrequentOperationWarning,
-              style: AppTextTokens.securityReportWarning(
+              style: context.appText.securityReportWarning(
                 Theme.of(context).textTheme,
               ),
             ),
@@ -627,6 +635,7 @@ class _InteractiveOperationChartState
             'operation-chart-selected-${_selectedIndex ?? 'none'}',
           ),
           painter: _OperationChartPainter(
+            colors: context.colors,
             range: widget.range,
             points: widget.points,
             selectedIndex: _selectedIndex,
@@ -685,6 +694,7 @@ abstract final class _OperationChartLayout {
 
 class _OperationChartPainter extends CustomPainter {
   const _OperationChartPainter({
+    required this.colors,
     required this.range,
     required this.points,
     this.selectedIndex,
@@ -694,18 +704,21 @@ class _OperationChartPainter extends CustomPainter {
   final List<FullReportOperationCyclePoint> points;
   final int? selectedIndex;
 
+  final AppResolvedColors colors;
+
   @override
   void paint(Canvas canvas, Size size) {
     final grid = Paint()
-      ..color = AppColors.securityReportChartGrid
+      ..color = colors.securityReportChartGrid
       ..strokeWidth = 1;
     final axis = Paint()
-      ..color = AppColors.textPrimary
+      ..color = colors.textPrimary
       ..strokeWidth = 1.2;
     final chart = _OperationChartLayout.chart(size);
     for (var index = 0; index <= _operationChartYAxisDivisionCount; index++) {
       final y =
-          chart.bottom - chart.height * index / _operationChartYAxisDivisionCount;
+          chart.bottom -
+          chart.height * index / _operationChartYAxisDivisionCount;
       canvas.drawLine(Offset(chart.left, y), Offset(chart.right, y), grid);
     }
     canvas.drawLine(
@@ -713,8 +726,8 @@ class _OperationChartPainter extends CustomPainter {
       Offset(chart.right, chart.bottom),
       axis,
     );
-    final normalBar = Paint()..color = AppColors.securityReportSegmentSelected;
-    final warningBar = Paint()..color = AppColors.securityReportChartBar;
+    final normalBar = Paint()..color = colors.securityReportSegmentSelected;
+    final warningBar = Paint()..color = colors.securityReportChartBar;
     if (points.isEmpty) {
       _paintLabels(
         canvas,
@@ -747,11 +760,13 @@ class _OperationChartPainter extends CustomPainter {
   }) {
     for (var index = 0; index <= _operationChartYAxisDivisionCount; index++) {
       final y =
-          chart.bottom - chart.height * index / _operationChartYAxisDivisionCount - 8;
+          chart.bottom -
+          chart.height * index / _operationChartYAxisDivisionCount -
+          8;
       final painter = TextPainter(
         text: TextSpan(
           text: yAxisLabels[index].toString(),
-          style: const TextStyle(color: AppColors.textPrimary, fontSize: 11),
+          style: TextStyle(color: colors.textPrimary, fontSize: 11),
         ),
         textDirection: TextDirection.ltr,
       )..layout();
@@ -763,7 +778,7 @@ class _OperationChartPainter extends CustomPainter {
       final painter = TextPainter(
         text: TextSpan(
           text: label,
-          style: const TextStyle(color: AppColors.textMuted, fontSize: 8),
+          style: TextStyle(color: colors.textMuted, fontSize: 8),
         ),
         textDirection: TextDirection.ltr,
       )..layout();
@@ -808,7 +823,7 @@ class _OperationChartPainter extends CustomPainter {
       Rect.fromLTWH(left, top, width, height),
       const Radius.circular(3),
     );
-    final background = Paint()..color = AppColors.securityReportChartTooltip;
+    final background = Paint()..color = colors.securityReportChartTooltip;
     canvas.drawRRect(tooltip, background);
     textPainter.paint(
       canvas,
@@ -822,6 +837,7 @@ class _OperationChartPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _OperationChartPainter oldDelegate) =>
+      oldDelegate.colors.skin != colors.skin ||
       oldDelegate.range != range ||
       oldDelegate.points != points ||
       oldDelegate.selectedIndex != selectedIndex;
@@ -862,20 +878,21 @@ class ReportSegmentedControl<T> extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 6.5),
                   decoration: BoxDecoration(
                     color: entries[index].key == selected
-                        ? AppColors.securityReportSegmentSelected
-                        : AppColors.securityReportSegmentTrack,
+                        ? context.colors.securityReportSegmentSelected
+                        : context.colors.securityReportSegmentTrack,
                     borderRadius: BorderRadius.circular(7),
                   ),
                   child: Text(
                     entries[index].value,
                     textAlign: TextAlign.center,
-                    style:
-                        AppTextTokens.securityReportBody(
-                          Theme.of(context).textTheme,
-                        ).copyWith(
+                    style: context.appText
+                        .securityReportBody(Theme.of(context).textTheme)
+                        .copyWith(
                           color: entries[index].key == selected
-                              ? Colors.white
-                              : AppColors.textPrimary,
+                              ? context
+                                    .colors
+                                    .authPrimaryButtonDisabledForeground
+                              : context.colors.textPrimary,
                         ),
                   ),
                 ),
@@ -978,7 +995,7 @@ class _MotorFunctionStatusCardState extends State<MotorFunctionStatusCard> {
                     Expanded(
                       child: Text(
                         l10n.securityReportMotorFunctionStatus,
-                        style: AppTextTokens.securityReportCardTitle(
+                        style: context.appText.securityReportCardTitle(
                           Theme.of(context).textTheme,
                         ),
                       ),
@@ -987,9 +1004,9 @@ class _MotorFunctionStatusCardState extends State<MotorFunctionStatusCard> {
                       turns: _isExpanded ? 0 : 0.5,
                       duration: const Duration(milliseconds: 180),
                       curve: Curves.easeInOut,
-                      child: const Icon(
+                      child: Icon(
                         Icons.keyboard_arrow_down_rounded,
-                        color: AppColors.textPrimary,
+                        color: context.colors.textPrimary,
                       ),
                     ),
                   ],
@@ -1013,14 +1030,14 @@ class _MotorFunctionStatusCardState extends State<MotorFunctionStatusCard> {
                                 Expanded(
                                   child: Text(
                                     entry.key,
-                                    style: AppTextTokens.securityReportBody(
+                                    style: context.appText.securityReportBody(
                                       Theme.of(context).textTheme,
                                     ),
                                   ),
                                 ),
                                 Text(
                                   entry.value,
-                                  style: AppTextTokens.securityReportValue(
+                                  style: context.appText.securityReportValue(
                                     Theme.of(context).textTheme,
                                   ),
                                 ),
@@ -1132,7 +1149,7 @@ class SensorDiagnosisSection extends StatelessWidget {
             _isWired
                 ? l10n.securityReportWiredSensorsDiagnosis
                 : l10n.securityReportWirelessSensorsDiagnosis,
-            style: AppTextTokens.securityReportSectionTitle(
+            style: context.appText.securityReportSectionTitle(
               Theme.of(context).textTheme,
             ),
           ),
@@ -1299,19 +1316,19 @@ class _SensorSummaryCard extends StatelessWidget {
             icon: Icons.link,
             label: l10n.securityReportNormal,
             count: counts[0],
-            color: AppColors.securityReportNormal,
+            color: context.colors.securityReportNormal,
           ),
           _SensorCount(
             icon: Icons.link_off,
             label: l10n.securityReportDisconnect,
             count: counts[1],
-            color: AppColors.securityReportDisconnected,
+            color: context.colors.securityReportDisconnected,
           ),
           _SensorCount(
             icon: Icons.error,
             label: l10n.securityReportAbnormal,
             count: counts[2],
-            color: AppColors.securityReportAbnormal,
+            color: context.colors.securityReportAbnormal,
           ),
         ],
       ),
@@ -1349,7 +1366,7 @@ class _SensorItem extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: AppTextTokens.securityReportSensorTitle(
+                style: context.appText.securityReportSensorTitle(
                   Theme.of(context).textTheme,
                 ),
               ),
@@ -1360,15 +1377,15 @@ class _SensorItem extends StatelessWidget {
                     detail.text,
                     style: switch (detail.tone) {
                       _SensorDetailTone.normal =>
-                        AppTextTokens.safetySensorItemSuccess(
+                        context.appText.safetySensorItemSuccess(
                           Theme.of(context).textTheme,
                         ),
                       _SensorDetailTone.alert =>
-                        AppTextTokens.safetySensorItemAlert(
+                        context.appText.safetySensorItemAlert(
                           Theme.of(context).textTheme,
                         ),
                       _SensorDetailTone.offline =>
-                        AppTextTokens.safetySensorItemOffline(
+                        context.appText.safetySensorItemOffline(
                           Theme.of(context).textTheme,
                         ),
                     },
@@ -1406,12 +1423,13 @@ class _ReportAssetPlaceholder extends StatelessWidget {
   Widget build(BuildContext context) => SizedBox(
     width: size.width,
     height: size.height,
-    child: Image.asset(
+    child: SkinAssetImage.themed(
+      context,
       asset,
       fit: BoxFit.contain,
       errorBuilder: (_, _, _) => Icon(
         fallback,
-        color: AppColors.securityCenterSensorIcon,
+        color: context.colors.securityCenterSensorIcon,
         size: size.shortestSide * .6,
       ),
     ),
@@ -1433,14 +1451,14 @@ class SafetySuggestionCard extends StatelessWidget {
         children: [
           Text(
             l10n.securityReportSafetySuggestion,
-            style: AppTextTokens.securityReportSuggestionTitle(
+            style: context.appText.securityReportSuggestionTitle(
               Theme.of(context).textTheme,
             ),
           ),
           const SizedBox(height: 6),
           Text(
             suggestions.join('\n'),
-            style: AppTextTokens.securityReportSuggestion(
+            style: context.appText.securityReportSuggestion(
               Theme.of(context).textTheme,
             ),
           ),
@@ -1469,7 +1487,7 @@ class SecurityReportActionButton extends StatelessWidget {
       onTap: onTap,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: AppColors.securityReportActionSurface,
+          color: context.colors.securityReportActionSurface,
           borderRadius: BorderRadius.circular(5),
         ),
         child: Padding(
@@ -1479,11 +1497,11 @@ class SecurityReportActionButton extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(icon, size: 22, color: AppColors.textPrimary),
+                Icon(icon, size: 22, color: context.colors.textPrimary),
                 const SizedBox(width: 10),
                 Text(
                   label,
-                  style: AppTextTokens.securityReportAction(
+                  style: context.appText.securityReportAction(
                     Theme.of(context).textTheme,
                   ),
                 ),
@@ -1516,12 +1534,12 @@ class _SensorCount extends StatelessWidget {
       const SizedBox(height: 10),
       Text(
         label,
-        style: AppTextTokens.securityReportLabel(Theme.of(context).textTheme),
+        style: context.appText.securityReportLabel(Theme.of(context).textTheme),
       ),
       const SizedBox(height: 8),
       Text(
         count,
-        style: AppTextTokens.securityReportSensorCount(
+        style: context.appText.securityReportSensorCount(
           Theme.of(context).textTheme,
         ),
       ),
@@ -1543,7 +1561,7 @@ class _CardHeading extends StatelessWidget {
       Expanded(
         child: Text(
           title,
-          style: AppTextTokens.securityReportCardTitle(
+          style: context.appText.securityReportCardTitle(
             Theme.of(context).textTheme,
           ),
         ),
@@ -1551,8 +1569,8 @@ class _CardHeading extends StatelessWidget {
       Icon(
         status == _ReportStatus.warning ? Icons.error : Icons.check_circle,
         color: status == _ReportStatus.warning
-            ? AppColors.securityReportWarning
-            : AppColors.securityCenterSuccess,
+            ? context.colors.securityReportWarning
+            : context.colors.securityCenterSuccess,
         size: 13,
       ),
     ],

@@ -53,7 +53,7 @@ class _SystemPermissionsPageState extends ConsumerState<SystemPermissionsPage>
     final controller = ref.read(systemPermissionsControllerProvider.notifier);
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       appBar: const FlinxNavigationBar(title: '', showBottomDivider: false),
       body: SafeArea(
         top: false,
@@ -68,7 +68,7 @@ class _SystemPermissionsPageState extends ConsumerState<SystemPermissionsPage>
                   const SizedBox(height: 27),
                   Text(
                     l10n.systemPermissionsPageTitle,
-                    style: AppTextTokens.systemPermissionsTitle(
+                    style: context.appText.systemPermissionsTitle(
                       Theme.of(context).textTheme,
                     ),
                   ),
@@ -151,7 +151,7 @@ class _PermissionCard extends StatelessWidget {
           height: 88,
           padding: const EdgeInsets.only(left: 23, right: 18),
           decoration: BoxDecoration(
-            color: AppColors.systemPermissionsCard,
+            color: context.colors.systemPermissionsCard,
             borderRadius: BorderRadius.circular(
               AppShapeTokens.systemPermissionsCardRadius,
             ),
@@ -165,7 +165,7 @@ class _PermissionCard extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: AppTextTokens.systemPermissionsCardTitle(
+                      style: context.appText.systemPermissionsCardTitle(
                         Theme.of(context).textTheme,
                       ),
                     ),
@@ -174,7 +174,7 @@ class _PermissionCard extends StatelessWidget {
                       granted
                           ? l10n.systemPermissionsGranted
                           : l10n.systemPermissionsDenied,
-                      style: AppTextTokens.systemPermissionsCardStatus(
+                      style: context.appText.systemPermissionsCardStatus(
                         Theme.of(context).textTheme,
                       ),
                     ),
@@ -191,8 +191,8 @@ class _PermissionCard extends StatelessWidget {
                 Icon(
                   granted ? Icons.check_rounded : Icons.close_rounded,
                   color: granted
-                      ? AppColors.systemPermissionsGranted
-                      : AppColors.systemPermissionsDenied,
+                      ? context.colors.systemPermissionsGranted
+                      : context.colors.systemPermissionsDenied,
                   size: 24,
                 ),
             ],

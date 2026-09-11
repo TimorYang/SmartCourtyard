@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -50,7 +51,7 @@ class _SafetySensorManagementPageState
     );
 
     return Scaffold(
-      backgroundColor: AppColors.safetySensorManagementBackground,
+      backgroundColor: context.colors.safetySensorManagementBackground,
       appBar: const FlinxNavigationBar(title: '', showBottomDivider: false),
       body: SafeArea(
         top: false,
@@ -61,7 +62,7 @@ class _SafetySensorManagementPageState
               padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
               child: Text(
                 l10n.safetySensorManagementTitle,
-                style: AppTextTokens.sharedDevicesTitle(textTheme),
+                style: context.appText.sharedDevicesTitle(textTheme),
               ),
             ),
             const SizedBox(height: 27),
@@ -116,7 +117,7 @@ class _SafetySensorManagementPageState
     final confirmed = await showDialog<bool>(
       context: context,
       barrierDismissible: true,
-      barrierColor: AppColors.safetySensorManagementDialogScrim,
+      barrierColor: context.colors.safetySensorManagementDialogScrim,
       builder: (context) => _SafetySensorDeleteDialog(sensor: sensor),
     );
     if (confirmed != true || !mounted) {
@@ -169,7 +170,7 @@ class _ManagementSensorCard extends StatelessWidget {
     return Container(
       height: 70,
       decoration: BoxDecoration(
-        color: AppColors.safetySensorManagementCard,
+        color: context.colors.safetySensorManagementCard,
         borderRadius: BorderRadius.circular(
           AppShapeTokens.safetySensorManagementCardRadius,
         ),
@@ -180,12 +181,13 @@ class _ManagementSensorCard extends StatelessWidget {
           SizedBox(
             width: 36,
             height: 36,
-            child: Image.asset(
+            child: SkinAssetImage.themed(
+              context,
               _sensorAssetPath(sensor.type),
               fit: BoxFit.contain,
               errorBuilder: (_, _, _) => Icon(
                 _sensorFallbackIcon(sensor.type),
-                color: AppColors.safetySensorManagementIcon,
+                color: context.colors.safetySensorManagementIcon,
                 size: 32,
               ),
             ),
@@ -194,7 +196,7 @@ class _ManagementSensorCard extends StatelessWidget {
           Expanded(
             child: Text(
               _sensorName(l10n, sensor.type),
-              style: AppTextTokens.safetySensorManagementItem(textTheme),
+              style: context.appText.safetySensorManagementItem(textTheme),
             ),
           ),
           Semantics(
@@ -214,9 +216,9 @@ class _ManagementSensorCard extends StatelessWidget {
                         padding: EdgeInsets.all(12),
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Icon(
+                    : Icon(
                         Icons.delete,
-                        color: AppColors.safetySensorManagementDelete,
+                        color: context.colors.safetySensorManagementDelete,
                         size: 28,
                       ),
               ),
@@ -240,7 +242,7 @@ class _SafetySensorDeleteDialog extends StatelessWidget {
     return Dialog(
       key: const ValueKey<String>('safety-sensor-management-delete-dialog'),
       insetPadding: const EdgeInsets.symmetric(horizontal: 28),
-      backgroundColor: AppColors.safetySensorManagementDialogSurface,
+      backgroundColor: context.colors.safetySensorManagementDialogSurface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(
           AppShapeTokens.safetySensorManagementDialogRadius,
@@ -257,13 +259,13 @@ class _SafetySensorDeleteDialog extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: AppColors.safetySensorManagementWarning,
+                  color: context.colors.safetySensorManagementWarning,
                   width: 5,
                 ),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.priority_high_rounded,
-                color: AppColors.safetySensorManagementWarning,
+                color: context.colors.safetySensorManagementWarning,
                 size: 58,
               ),
             ),
@@ -273,7 +275,7 @@ class _SafetySensorDeleteDialog extends StatelessWidget {
                 _sensorName(l10n, sensor.type),
               ),
               textAlign: TextAlign.center,
-              style: AppTextTokens.safetySensorManagementDeleteMessage(
+              style: context.appText.safetySensorManagementDeleteMessage(
                 textTheme,
               ),
             ),
@@ -330,23 +332,24 @@ class _DialogAction extends StatelessWidget {
         onPressed: onPressed,
         style: FilledButton.styleFrom(
           backgroundColor: primary
-              ? AppColors.safetySensorManagementConfirm
-              : AppColors.safetySensorManagementCancel,
+              ? context.colors.safetySensorManagementConfirm
+              : context.colors.safetySensorManagementCancel,
           foregroundColor: primary
-              ? Colors.white
-              : AppColors.safetySensorManagementCancelForeground,
+              ? context.colors.authPrimaryButtonDisabledForeground
+              : context.colors.safetySensorManagementCancelForeground,
           overlayColor: Colors.transparent,
           shape: const StadiumBorder(),
         ),
         child: Text(
           label,
           style: primary
-              ? AppTextTokens.safetySensorManagementDialogAction(textTheme)
-              : AppTextTokens.safetySensorManagementDialogAction(
-                  textTheme,
-                ).copyWith(
-                  color: AppColors.safetySensorManagementCancelForeground,
-                ),
+              ? context.appText.safetySensorManagementDialogAction(textTheme)
+              : context.appText
+                    .safetySensorManagementDialogAction(textTheme)
+                    .copyWith(
+                      color:
+                          context.colors.safetySensorManagementCancelForeground,
+                    ),
         ),
       ),
     );

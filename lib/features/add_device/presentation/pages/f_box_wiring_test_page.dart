@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -79,7 +80,7 @@ class _FBoxWiringTestPageState extends ConsumerState<FBoxWiringTestPage> {
     final commandState = ref.watch(fBoxWiringTestControllerProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       appBar: FlinxNavigationBar(
         title: '',
         showBottomDivider: false,
@@ -198,7 +199,7 @@ class _FBoxWiringTestPageState extends ConsumerState<FBoxWiringTestPage> {
       children: [
         Text(
           l10n.fBoxWiringTestTitle,
-          style: AppTextTokens.fBoxWiringTestTitle(textTheme),
+          style: context.appText.fBoxWiringTestTitle(textTheme),
         ),
         const SizedBox(
           height: AppSpacingTokens.fBoxWiringTestTitleToDescription,
@@ -207,7 +208,7 @@ class _FBoxWiringTestPageState extends ConsumerState<FBoxWiringTestPage> {
           width: descriptionWidth,
           child: Text(
             l10n.fBoxWiringTestDescription,
-            style: AppTextTokens.fBoxWiringTestDescription(textTheme),
+            style: context.appText.fBoxWiringTestDescription(textTheme),
           ),
         ),
         const SizedBox(
@@ -276,8 +277,8 @@ class _FBoxWiringTestPageState extends ConsumerState<FBoxWiringTestPage> {
                 height: AppSpacingTokens.fBoxWiringTestStatusIndicatorSize,
                 decoration: BoxDecoration(
                   color: commandState.hasTested
-                      ? AppColors.brandPrimary
-                      : AppColors.fBoxWiringTestStatusPending,
+                      ? context.colors.brandPrimary
+                      : context.colors.fBoxWiringTestStatusPending,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -290,7 +291,7 @@ class _FBoxWiringTestPageState extends ConsumerState<FBoxWiringTestPage> {
                   alignment: Alignment.centerLeft,
                   child: Text(
                     l10n.fBoxWiringTestDoorOperatesNormally,
-                    style: AppTextTokens.fBoxWiringTestStatus(textTheme),
+                    style: context.appText.fBoxWiringTestStatus(textTheme),
                   ),
                 ),
               ),
@@ -304,7 +305,7 @@ class _FBoxWiringTestPageState extends ConsumerState<FBoxWiringTestPage> {
           Text(
             errorMessage,
             textAlign: TextAlign.center,
-            style: AppTextTokens.fBoxWiringTestError(textTheme),
+            style: context.appText.fBoxWiringTestError(textTheme),
           ),
         ],
         const SizedBox(height: AppSpacingTokens.fBoxWiringTestStatusToAction),
@@ -315,20 +316,22 @@ class _FBoxWiringTestPageState extends ConsumerState<FBoxWiringTestPage> {
             key: const Key('fBoxWiringTestNextButton'),
             onPressed: commandState.isBusy ? null : _reportControlModeAndFinish,
             style: FilledButton.styleFrom(
-              backgroundColor: AppColors.fBoxWiringTestPrimaryAction,
-              foregroundColor: AppColors.fBoxWiringTestPrimaryActionForeground,
+              backgroundColor: context.colors.fBoxWiringTestPrimaryAction,
+              foregroundColor:
+                  context.colors.fBoxWiringTestPrimaryActionForeground,
               shape: const StadiumBorder(),
-              textStyle: AppTextTokens.fBoxWiringTestPrimaryButton(textTheme),
+              textStyle: context.appText.fBoxWiringTestPrimaryButton(textTheme),
             ),
             child: commandState.isReportingControlMode
-                ? const SizedBox(
+                ? SizedBox(
                     width: AppSpacingTokens.fBoxWiringTestProgressIndicatorSize,
                     height:
                         AppSpacingTokens.fBoxWiringTestProgressIndicatorSize,
                     child: CircularProgressIndicator(
                       strokeWidth: AppSpacingTokens
                           .fBoxWiringTestProgressIndicatorStrokeWidth,
-                      color: AppColors.fBoxWiringTestPrimaryActionForeground,
+                      color:
+                          context.colors.fBoxWiringTestPrimaryActionForeground,
                     ),
                   )
                 : Text(l10n.fBoxConnectionGuideNextAction),
@@ -361,7 +364,7 @@ class _WiringSegmentedControl extends StatelessWidget {
       height: AppSpacingTokens.fBoxWiringTestSegmentHeight,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: AppColors.fBoxWiringTestSegmentSurface,
+          color: context.colors.fBoxWiringTestSegmentSurface,
           borderRadius: BorderRadius.circular(
             AppShapeTokens.fBoxWiringTestControlRadius,
           ),
@@ -413,10 +416,12 @@ class _WiringSegment extends StatelessWidget {
           child: DecoratedBox(
             decoration: BoxDecoration(
               color: selected
-                  ? AppColors.fBoxWiringTestSegmentSelectedSurface
+                  ? context.colors.fBoxWiringTestSegmentSelectedSurface
                   : Colors.transparent,
               border: selected
-                  ? Border.all(color: AppColors.fBoxWiringTestSegmentBorder)
+                  ? Border.all(
+                      color: context.colors.fBoxWiringTestSegmentBorder,
+                    )
                   : null,
               borderRadius: BorderRadius.circular(
                 AppShapeTokens.fBoxWiringTestControlRadius,
@@ -425,7 +430,7 @@ class _WiringSegment extends StatelessWidget {
             child: Center(
               child: Text(
                 label,
-                style: AppTextTokens.fBoxWiringTestSegment(
+                style: context.appText.fBoxWiringTestSegment(
                   Theme.of(context).textTheme,
                 ),
               ),
@@ -461,19 +466,20 @@ class _PbWiringTestControl extends StatelessWidget {
           onPressed: onPressed,
           style: FilledButton.styleFrom(
             backgroundColor: Colors.transparent,
-            foregroundColor: AppColors.textHint,
+            foregroundColor: context.colors.textHint,
             elevation: 0,
             padding: EdgeInsets.zero,
             shape: const CircleBorder(),
           ),
           child: pending
-              ? const CircularProgressIndicator(color: AppColors.textHint)
-              : Image.asset(
+              ? CircularProgressIndicator(color: context.colors.textHint)
+              : SkinAssetImage.themed(
+                  context,
                   FBoxWiringTestAssetPaths.pbControl,
                   fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) => const Icon(
+                  errorBuilder: (context, error, stackTrace) => Icon(
                     Icons.image_not_supported_outlined,
-                    color: AppColors.textHint,
+                    color: context.colors.textHint,
                     size: 96,
                   ),
                 ),

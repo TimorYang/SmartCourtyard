@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -21,7 +22,7 @@ class SmartOpenerDeviceNotFoundPage extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       appBar: const FlinxNavigationBar(title: '', showBottomDivider: false),
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -31,7 +32,8 @@ class SmartOpenerDeviceNotFoundPage extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(43, 54, 43, 48),
               children: [
                 Center(
-                  child: Image.asset(
+                  child: SkinAssetImage.themed(
+                    context,
                     artAssetPath,
                     width: 300,
                     height: 300,
@@ -44,13 +46,13 @@ class SmartOpenerDeviceNotFoundPage extends StatelessWidget {
                 Text(
                   l10n.smartOpenerDeviceNotFoundTitle,
                   textAlign: TextAlign.center,
-                  style: AppTextTokens.smartOpenerConnectingTitle(textTheme),
+                  style: context.appText.smartOpenerConnectingTitle(textTheme),
                 ),
                 const SizedBox(height: 9),
                 Text(
                   l10n.smartOpenerDeviceNotFoundDescription,
                   textAlign: TextAlign.center,
-                  style: AppTextTokens.smartOpenerBodyCenter(textTheme),
+                  style: context.appText.smartOpenerBodyCenter(textTheme),
                 ),
                 SizedBox(height: constraints.maxHeight < 660 ? 48 : 78),
                 _SmartOpenerWideButton(
@@ -97,17 +99,21 @@ class _MissingDeviceFallbackArt extends StatelessWidget {
               height: (size * 0.26) + (i * size * 0.13),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.borderSubtle),
+                border: Border.all(color: context.colors.borderSubtle),
               ),
             ),
           Container(
             width: 92,
             height: 92,
-            decoration: const BoxDecoration(
-              color: AppColors.smartOpenerWarning,
+            decoration: BoxDecoration(
+              color: context.colors.smartOpenerWarning,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.close, color: Colors.white, size: 54),
+            child: Icon(
+              Icons.close,
+              color: context.colors.authPrimaryButtonDisabledForeground,
+              size: 54,
+            ),
           ),
         ],
       ),
@@ -136,9 +142,11 @@ class _SmartOpenerWideButton extends StatelessWidget {
         onPressed: onPressed,
         style: FilledButton.styleFrom(
           backgroundColor: isPrimary
-              ? AppColors.brandPrimary
-              : AppColors.smartOpenerSecondaryButton,
-          foregroundColor: isPrimary ? Colors.white : AppColors.textPrimary,
+              ? context.colors.brandPrimary
+              : context.colors.smartOpenerSecondaryButton,
+          foregroundColor: isPrimary
+              ? context.colors.authPrimaryButtonDisabledForeground
+              : context.colors.textPrimary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(34),
           ),
@@ -146,8 +154,8 @@ class _SmartOpenerWideButton extends StatelessWidget {
         child: Text(
           label,
           style: isPrimary
-              ? AppTextTokens.smartOpenerActionButton(textTheme)
-              : AppTextTokens.smartOpenerSecondaryActionButton(textTheme),
+              ? context.appText.smartOpenerActionButton(textTheme)
+              : context.appText.smartOpenerSecondaryActionButton(textTheme),
         ),
       ),
     );

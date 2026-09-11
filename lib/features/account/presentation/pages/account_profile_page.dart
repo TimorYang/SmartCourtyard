@@ -1,3 +1,5 @@
+import '../../../../app/theme/app_skin_catalog.dart';
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +9,7 @@ import '../../../../app/config/app_links.dart';
 import '../../../../core/errors/app_error.dart';
 import '../../../../core/errors/app_error_message.dart';
 import '../../../../app/theme/app_design_tokens.dart';
+import '../../../../app/theme/app_appearance_tokens.dart';
 import '../../../../core/config/app_api_configuration.dart';
 import '../../../../core/network/access_token_cache.dart';
 import '../../../../core/network/dio_factory.dart';
@@ -24,6 +27,7 @@ import '../../domain/entities/region_option.dart';
 import '../widgets/account_avatar_code_assets.dart';
 import '../../domain/entities/account_overview.dart';
 import '../../../auth/presentation/pages/welcome_page.dart';
+import '../../../appearance/presentation/pages/skin_gallery_page.dart';
 import 'account_details_page.dart';
 import 'check_upgraded_version_page.dart';
 import 'manage_devices_page.dart';
@@ -158,14 +162,14 @@ class _AccountProfilePageState extends ConsumerState<AccountProfilePage> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: const FlinxNavigationBar(
+      appBar: FlinxNavigationBar(
         title: '',
         showBottomDivider: false,
         isTransparent: true,
-        foregroundColor: Colors.white,
+        foregroundColor: context.colors.textAccountHeader,
         actions: [_AccountProfileThemeIcon()],
       ),
-      backgroundColor: AppColors.accountProfileBackground,
+      backgroundColor: context.colors.accountProfileBackground,
       body: LayoutBuilder(
         builder: (context, constraints) {
           return Center(
@@ -246,8 +250,16 @@ class _AccountProfileThemeIcon extends StatelessWidget {
       padding: const EdgeInsets.only(
         right: AppLayoutTokens.accountProfileThemeIconRightInset,
       ),
-      child: Center(
-        child: Image.asset(
+      child: IconButton(
+        onPressed: () => context.push(SkinGalleryPage.routePath),
+        tooltip: AppLocalizations.of(context).appearanceThemeEntryTooltip,
+        constraints: const BoxConstraints(
+          minWidth: AppAppearanceLayoutTokens.touchTarget,
+          minHeight: AppAppearanceLayoutTokens.touchTarget,
+        ),
+        padding: EdgeInsets.zero,
+        icon: SkinAssetImage.themed(
+          context,
           AccountProfileAssetPaths.themeIcon,
           key: AccountProfileKeys.themeIcon,
           width: AppLayoutTokens.accountProfileThemeIconSize,
@@ -341,7 +353,7 @@ class _AccountProfileContent extends StatelessWidget {
         onTap: () => showModalBottomSheet<void>(
           context: context,
           isScrollControlled: true,
-          barrierColor: AppColors.accountLanguageDialogScrim,
+          barrierColor: context.colors.accountLanguageDialogScrim,
           backgroundColor: Colors.transparent,
           builder: (context) => Consumer(
             builder: (context, ref, _) {
@@ -582,7 +594,7 @@ class _LanguageDialogState extends State<_LanguageDialog> {
         padding: const EdgeInsets.symmetric(horizontal: 0),
         child: Material(
           key: AccountProfileKeys.languageDialog,
-          color: AppColors.accountLanguageDialogSurface,
+          color: context.colors.accountLanguageDialogSurface,
           shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.all(
               Radius.circular(AppShapeTokens.accountLanguageDialogRadius),
@@ -598,7 +610,9 @@ class _LanguageDialogState extends State<_LanguageDialog> {
                 children: [
                   Text(
                     l10n.accountLanguageDialogTitle,
-                    style: AppTextTokens.accountLanguageDialogTitle(textTheme),
+                    style: context.appText.accountLanguageDialogTitle(
+                      textTheme,
+                    ),
                   ),
                   const SizedBox(height: 18),
                   _LanguagePicker(
@@ -725,7 +739,7 @@ class _LanguagePicker extends StatelessWidget {
                     child: Center(
                       child: Text(
                         language.label,
-                        style: AppTextTokens.accountLanguageDialogOption(
+                        style: context.appText.accountLanguageDialogOption(
                           Theme.of(context).textTheme,
                           isSelected:
                               language.serverLocale == selectedServerLocale,
@@ -741,15 +755,15 @@ class _LanguagePicker extends StatelessWidget {
             child: Center(
               child: Container(
                 height: AppSpacingTokens.accountLanguageDialogWheelItemExtent,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   border: Border(
                     top: BorderSide(
-                      color: AppColors.accountLanguageDialogDivider,
+                      color: context.colors.accountLanguageDialogDivider,
                       width: AppSpacingTokens
                           .accountLanguageDialogSelectionLineThickness,
                     ),
                     bottom: BorderSide(
-                      color: AppColors.accountLanguageDialogDivider,
+                      color: context.colors.accountLanguageDialogDivider,
                       width: AppSpacingTokens
                           .accountLanguageDialogSelectionLineThickness,
                     ),
@@ -784,14 +798,16 @@ class _LanguageDialogButton extends StatelessWidget {
         onPressed: onPressed,
         style: FilledButton.styleFrom(
           backgroundColor: isPrimary
-              ? AppColors.brandPrimaryLight
-              : AppColors.accountLanguageDialogCancelSurface,
-          foregroundColor: isPrimary ? Colors.white : AppColors.textPrimary,
+              ? context.colors.brandPrimaryLight
+              : context.colors.accountLanguageDialogCancelSurface,
+          foregroundColor: isPrimary
+              ? context.colors.authPrimaryButtonDisabledForeground
+              : context.colors.textPrimary,
           shape: const StadiumBorder(),
         ),
         child: Text(
           label,
-          style: AppTextTokens.accountLanguageDialogAction(
+          style: context.appText.accountLanguageDialogAction(
             Theme.of(context).textTheme,
             isPrimary: isPrimary,
           ),
@@ -831,7 +847,8 @@ class _AccountHeader extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              Image.asset(
+              SkinAssetImage.themed(
+                context,
                 AccountProfileAssetPaths.headerBackground,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
@@ -862,14 +879,16 @@ class _AccountHeader extends StatelessWidget {
                             nickname,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: AppTextTokens.accountProfileEmail(textTheme),
+                            style: context.appText.accountProfileEmail(
+                              textTheme,
+                            ),
                           ),
                           const SizedBox(height: 6),
                           Text(
                             refreshedAt,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: AppTextTokens.accountProfileRegisteredAt(
+                            style: context.appText.accountProfileRegisteredAt(
                               textTheme,
                             ),
                           ),
@@ -893,13 +912,14 @@ class _HeaderFallbackArt extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
+      decoration: BoxDecoration(
+        color: context.colors.surfaceAccountHeaderFallback,
+        gradient: context.skin.accountHeaderGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.surfaceAccountHeaderFallback,
-            AppColors.surfaceAccountHeaderFallbackLight,
+            context.colors.surfaceAccountHeaderFallback,
+            context.colors.surfaceAccountHeaderFallbackLight,
           ],
         ),
       ),
@@ -907,7 +927,9 @@ class _HeaderFallbackArt extends StatelessWidget {
         alignment: Alignment.bottomRight,
         child: Icon(
           Icons.garage_outlined,
-          color: AppColors.backgroundPrimary.withValues(alpha: 0.18),
+          color: context.colors.authPrimaryButtonDisabledForeground.withValues(
+            alpha: 0.18,
+          ),
           size: 160,
         ),
       ),
@@ -943,24 +965,29 @@ class _AccountAvatar extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             border: Border.all(
-              color: AppColors.backgroundPrimary.withValues(alpha: 0.46),
+              color: context.colors.backgroundPrimary.withValues(alpha: 0.46),
               width: 1,
             ),
           ),
           child: ClipOval(
             child: avatarCode != null
-                ? Image.asset(avatarCode!.assetPath, fit: BoxFit.cover)
+                ? SkinAssetImage.themed(
+                    context,
+                    avatarCode!.assetPath,
+                    fit: BoxFit.cover,
+                  )
                 : avatarFileId == null || avatarFileId! <= 0
-                ? Image.asset(
+                ? SkinAssetImage.themed(
+                    context,
                     AccountProfileAssetPaths.avatarPlaceholder,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
-                        color: AppColors.surfaceHomeAvatar,
+                        color: context.colors.surfaceHomeAvatar,
                         alignment: Alignment.center,
                         child: Icon(
                           Icons.person,
-                          color: AppColors.iconHomePlaceholder,
+                          color: context.colors.iconHomePlaceholder,
                           size: size * 0.62,
                         ),
                       );
@@ -975,11 +1002,11 @@ class _AccountAvatar extends StatelessWidget {
                         ? null
                         : {NetworkHeaders.bladeAuth: AccessTokenCache.value!},
                     errorBuilder: (context, error, stackTrace) => Container(
-                      color: AppColors.surfaceHomeAvatar,
+                      color: context.colors.surfaceHomeAvatar,
                       alignment: Alignment.center,
                       child: Icon(
                         Icons.person,
-                        color: AppColors.iconHomePlaceholder,
+                        color: context.colors.iconHomePlaceholder,
                         size: size * 0.62,
                       ),
                     ),
@@ -999,18 +1026,18 @@ class _AccountMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.surfaceAccountMenu,
+      color: context.colors.surfaceAccountMenu,
       child: Column(
         children: [
           for (var index = 0; index < items.length; index++) ...[
             _AccountMenuRow(item: items[index]),
             if (index < items.length - 1)
-              const Divider(
+              Divider(
                 height: 1,
                 thickness: 1,
                 indent: 28,
                 endIndent: 28,
-                color: AppColors.borderAccountDivider,
+                color: context.colors.borderAccountDivider,
               ),
           ],
         ],
@@ -1063,7 +1090,8 @@ class _AccountMenuRow extends StatelessWidget {
               SizedBox(
                 width: 20,
                 height: 20,
-                child: Image.asset(
+                child: SkinAssetImage.themed(
+                  context,
                   item.iconAssetPath,
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) =>
@@ -1076,7 +1104,7 @@ class _AccountMenuRow extends StatelessWidget {
                   item.label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextTokens.accountMenuLabel(textTheme),
+                  style: context.appText.accountMenuLabel(textTheme),
                 ),
               ),
               if (item.trailingText case final trailingText?) ...[
@@ -1084,13 +1112,13 @@ class _AccountMenuRow extends StatelessWidget {
                   trailingText,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextTokens.accountMenuValue(textTheme),
+                  style: context.appText.accountMenuValue(textTheme),
                 ),
                 const SizedBox(width: 8),
               ],
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
-                color: AppColors.iconAccountChevron,
+                color: context.colors.iconAccountChevron,
                 size: 24,
               ),
               const SizedBox(width: 28),
@@ -1118,8 +1146,8 @@ class _AccountProfileLogoutButton extends StatelessWidget {
           key: AccountProfileKeys.logoutButton,
           onPressed: onPressed,
           style: FilledButton.styleFrom(
-            backgroundColor: AppColors.accountProfileLogoutSurface,
-            foregroundColor: AppColors.textPrimary,
+            backgroundColor: context.colors.accountProfileLogoutSurface,
+            foregroundColor: context.colors.textPrimary,
             elevation: 0,
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.all(
@@ -1129,7 +1157,7 @@ class _AccountProfileLogoutButton extends StatelessWidget {
           ),
           child: Text(
             AppLocalizations.of(context).accountDetailsLogout,
-            style: AppTextTokens.accountProfileLogout(
+            style: context.appText.accountProfileLogout(
               Theme.of(context).textTheme,
             ),
           ),

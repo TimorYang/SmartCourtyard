@@ -2744,4 +2744,160 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deviceTopFailed => 'Unable to pin the device. Please try again.';
+
+  @override
+  String get appearanceThemeEntryTooltip => 'Change app appearance';
+
+  @override
+  String get appearanceGalleryTitle => 'skin change';
+
+  @override
+  String get appearanceGallerySubtitle => 'Three color schemes';
+
+  @override
+  String get appearanceDarkTitle => 'Dark style';
+
+  @override
+  String get appearanceDarkDescription => 'Deep Neon · Low Light Immersion';
+
+  @override
+  String get appearanceMinimalistTitle => 'Minimalist style';
+
+  @override
+  String get appearanceMinimalistDescription =>
+      'Pure white to simplicity, breathing with white space';
+
+  @override
+  String get appearanceTechnologyWindTitle => 'Technology Wind';
+
+  @override
+  String get appearanceTechnologyWindDescription =>
+      'Cyber Blue Youth · Future Sense';
+
+  @override
+  String get appearancePreviewAction => 'preview';
+
+  @override
+  String get appearanceApplyAction => 'Application Theme';
+
+  @override
+  String get appearanceAppliedAction => 'Current style';
+
+  @override
+  String get appearanceApplyFailed =>
+      'Unable to save this style. Please try again.';
+
+  @override
+  String get appearanceSelectedLabel => 'Selected';
+
+  @override
+  String get appearanceArtworkPending =>
+      'Preview artwork placeholder — final artwork pending';
+
+  @override
+  String get appearancePaletteLabel => 'Theme color palette';
+
+  @override
+  String get appearanceDarkTagMood => 'Neon Purple';
+
+  @override
+  String get appearanceDarkTagComfort => 'eye protection';
+
+  @override
+  String get appearanceMinimalistTagClean => 'clean';
+
+  @override
+  String get appearanceMinimalistTagFocus => 'focus';
+
+  @override
+  String get appearanceTechnologyTagShine => 'shine';
+
+  @override
+  String get appearanceTechnologyTagData => 'data';
+
+  @override
+  String get appearancePreviewOperatedCycles => 'Operated cycles';
+
+  @override
+  String get appearancePreviewRemaining => 'Remaining';
+
+  @override
+  String get appearancePreviewClosed => 'Closed';
+
+  @override
+  String get appearancePreviewLed => 'LED';
+
+  @override
+  String get appearancePreviewOneMinute => '1 min';
+
+  @override
+  String get appearancePreviewAutoClose => 'Auto close';
+
+  @override
+  String get appearancePreviewOpenReminder => 'Open reminder';
+
+  @override
+  String get appearancePreviewTenMinutes => '10 min';
+
+  @override
+  String get appearancePreviewPartialOpen => 'Partial open';
+
+  @override
+  String get appearancePreviewMoreSettings => 'More setting';
+
+  @override
+  String get deviceDetailOperationRecordsTab => 'Operation records';
+
+  @override
+  String get deviceDetailCommandTab => 'Device command';
+
+  @override
+  String get deviceDetailSecurityCenterTab => 'Security center';
+
+  @override
+  String get appearanceAssetPending => 'Artwork pending';
+
+  @override
+  String get wifiConfigurationTitle => 'Wi-Fi configuration';
+
+  @override
+  String get wifiConfigurationNoDevice =>
+      'No connected device. Return to Bluetooth scan and connect again.';
+
+  @override
+  String wifiConfigurationConnectedDevice(String name) {
+    return 'Connected device: $name';
+  }
+
+  @override
+  String wifiConfigurationDeviceId(String id) {
+    return 'Device ID: $id';
+  }
+
+  @override
+  String get wifiConfigurationScanning => 'Scanning for Wi-Fi…';
+
+  @override
+  String get wifiConfigurationScan => 'Scan nearby Wi-Fi';
+
+  @override
+  String get wifiConfigurationNetworks => 'Available Wi-Fi networks';
+
+  @override
+  String get wifiConfigurationSsid => 'SSID';
+
+  @override
+  String get wifiConfigurationSsidHint => 'Select or enter a Wi-Fi name';
+
+  @override
+  String get wifiConfigurationPassword => 'Wi-Fi password';
+
+  @override
+  String get wifiConfigurationPasswordHint => 'Enter the Wi-Fi password';
+
+  @override
+  String get wifiConfigurationConnecting => 'Connecting…';
+
+  @override
+  String get wifiConfigurationConnect => 'Connect';
 }

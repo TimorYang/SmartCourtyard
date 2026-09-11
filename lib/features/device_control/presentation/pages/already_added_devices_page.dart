@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -99,11 +100,11 @@ class _AlreadyAddedDevicesPageState
     );
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       appBar: FlinxNavigationBar(
         title: '',
         showBottomDivider: false,
-        foregroundColor: AppColors.textPrimary,
+        foregroundColor: context.colors.textPrimary,
         actions: [
           IconButton(
             key: const ValueKey<String>('already-added-add-action'),
@@ -141,12 +142,12 @@ class _AlreadyAddedDevicesPageState
                   children: [
                     Text(
                       l10n.smartOpenerAddedDevicesTitle,
-                      style: AppTextTokens.smartOpenerAddedTitle(textTheme),
+                      style: context.appText.smartOpenerAddedTitle(textTheme),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       l10n.smartOpenerAddedDevicesDescription,
-                      style: AppTextTokens.smartOpenerAddedDescription(
+                      style: context.appText.smartOpenerAddedDescription(
                         textTheme,
                       ),
                     ),
@@ -214,7 +215,7 @@ class _AlreadyAddedDevicesPageState
                     child: Center(
                       child: Text(
                         l10n.smartOpenerAddedNoMore,
-                        style: AppTextTokens.smartOpenerAddedDeviceIdentifier(
+                        style: context.appText.smartOpenerAddedDeviceIdentifier(
                           textTheme,
                         ),
                       ),
@@ -237,7 +238,7 @@ class _AlreadyAddedDevicesPageState
     final confirmed = await showModalBottomSheet<bool>(
       context: context,
       backgroundColor: Colors.transparent,
-      barrierColor: AppColors.overlaySoft,
+      barrierColor: context.colors.overlaySoft,
       builder: (context) => const _DisconnectDeviceConfirmationSheet(),
     );
     if (confirmed == true && mounted) {
@@ -306,15 +307,16 @@ class _AddedDeviceCard extends StatelessWidget {
         key: ValueKey<String>('already-added-device-card-$_identifier'),
         constraints: const BoxConstraints(minHeight: 100),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-        decoration: const BoxDecoration(
-          color: AppColors.smartOpenerAddedDeviceCardSurface,
+        decoration: BoxDecoration(
+          color: context.colors.smartOpenerAddedDeviceCardSurface,
           borderRadius: BorderRadius.all(
             Radius.circular(AppShapeTokens.smartOpenerAddedDeviceCardRadius),
           ),
         ),
         child: Row(
           children: [
-            Image.asset(
+            SkinAssetImage.themed(
+              context,
               _img,
               width: 64,
               height: 64,
@@ -332,13 +334,15 @@ class _AddedDeviceCard extends StatelessWidget {
                     _title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTextTokens.smartOpenerAddedDeviceTitle(textTheme),
+                    style: context.appText.smartOpenerAddedDeviceTitle(
+                      textTheme,
+                    ),
                   ),
                   Text(
                     _identifier,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTextTokens.smartOpenerAddedDeviceIdentifier(
+                    style: context.appText.smartOpenerAddedDeviceIdentifier(
                       textTheme,
                     ),
                   ),
@@ -349,7 +353,8 @@ class _AddedDeviceCard extends StatelessWidget {
               key: ValueKey<String>('already-added-delete-action-$_identifier'),
               tooltip: deleteTooltip,
               onPressed: onDelete,
-              icon: Image.asset(
+              icon: SkinAssetImage.themed(
+                context,
                 AlreadyAddedDevicesPage._alreadyAddedDeleted,
                 fit: BoxFit.contain,
               ),
@@ -370,7 +375,7 @@ class _DisconnectDeviceConfirmationSheet extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Material(
-      color: AppColors.backgroundPrimary,
+      color: context.colors.backgroundPrimary,
       borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
       clipBehavior: Clip.antiAlias,
       child: SafeArea(
@@ -383,7 +388,7 @@ class _DisconnectDeviceConfirmationSheet extends StatelessWidget {
               Text(
                 l10n.smartOpenerAddedDisconnectConfirmMessage,
                 textAlign: TextAlign.center,
-                style: AppTextTokens.deviceDeleteConfirmMessage(textTheme),
+                style: context.appText.deviceDeleteConfirmMessage(textTheme),
               ),
               const SizedBox(height: 28),
               Row(
@@ -397,10 +402,13 @@ class _DisconnectDeviceConfirmationSheet extends StatelessWidget {
                         ),
                         onPressed: () => Navigator.pop(context, false),
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.sceneDialogCancelButton,
-                          foregroundColor: AppColors.textPrimary,
+                          backgroundColor:
+                              context.colors.sceneDialogCancelButton,
+                          foregroundColor: context.colors.textPrimary,
                           shape: const StadiumBorder(),
-                          textStyle: AppTextTokens.sceneDialogButton(textTheme),
+                          textStyle: context.appText.sceneDialogButton(
+                            textTheme,
+                          ),
                         ),
                         child: Text(l10n.smartOpenerCancelAction),
                       ),
@@ -416,10 +424,14 @@ class _DisconnectDeviceConfirmationSheet extends StatelessWidget {
                         ),
                         onPressed: () => Navigator.pop(context, true),
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.brandPrimary,
-                          foregroundColor: AppColors.backgroundPrimary,
+                          backgroundColor: context.colors.brandPrimary,
+                          foregroundColor: context
+                              .colors
+                              .authPrimaryButtonDisabledForeground,
                           shape: const StadiumBorder(),
-                          textStyle: AppTextTokens.sceneDialogButton(textTheme),
+                          textStyle: context.appText.sceneDialogButton(
+                            textTheme,
+                          ),
                         ),
                         child: Text(l10n.smartOpenerConfirmAction),
                       ),
@@ -452,13 +464,13 @@ class _EmptyDevices extends StatelessWidget {
           children: [
             Text(
               title,
-              style: AppTextTokens.smartOpenerAddedDeviceTitle(textTheme),
+              style: context.appText.smartOpenerAddedDeviceTitle(textTheme),
             ),
             const SizedBox(height: 8),
             Text(
               description,
               textAlign: TextAlign.center,
-              style: AppTextTokens.smartOpenerAddedDescription(textTheme),
+              style: context.appText.smartOpenerAddedDescription(textTheme),
             ),
           ],
         ),

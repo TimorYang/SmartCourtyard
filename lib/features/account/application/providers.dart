@@ -1,3 +1,5 @@
+export '../../../core/storage/providers.dart' show appStorageLocationsProvider;
+import '../../../core/storage/providers.dart';
 import 'dart:io';
 import 'dart:ui';
 
@@ -75,10 +77,6 @@ import 'app_locale_controller.dart';
 import 'receiving_devices_controller.dart';
 import 'shared_devices_controller.dart';
 export 'managed_devices_controller.dart';
-
-final appStorageLocationsProvider = Provider<AppStorageLocations?>(
-  (ref) => null,
-);
 
 final accountLocalDataSourceProvider = Provider<AccountLocalDataSource>((ref) {
   if (!AppStoragePaths.isFlutterTest) {

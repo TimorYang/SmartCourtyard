@@ -1,3 +1,5 @@
+import '../../../../shared/widgets/flinx_system_ui.dart';
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -405,134 +407,139 @@ class _SmartOpenerQrScanPageState extends ConsumerState<SmartOpenerQrScanPage>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    return Scaffold(
-      backgroundColor: AppColors.scannerBackground,
-      extendBodyBehindAppBar: true,
-      appBar: FlinxNavigationBar(
-        title: '',
-        automaticallyImplyLeading: context.canPop(),
-        showBottomDivider: false,
-        isTransparent: true,
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            tooltip: l10n.smartOpenerScannerBluetoothTooltip,
-            onPressed: _isProcessing
-                ? null
-                : () => context.pushNamed(
-                    SmartOpenerBleScanPage.routeName,
-                    queryParameters: {
-                      AddDevicePage.deviceTypeQueryParameter:
-                          normalizeDoorDeviceType(widget.deviceType),
-                    },
-                  ),
-            icon: const Icon(Icons.bluetooth),
-          ),
-        ],
-      ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final scanWindowSize = constraints.maxWidth * 0.58;
-          final scanWindow = Rect.fromCenter(
-            center: Offset(
-              constraints.maxWidth / 2,
-              constraints.maxHeight * 0.36,
-            ),
-            width: scanWindowSize,
-            height: scanWindowSize,
-          );
-
-          return Stack(
-            fit: StackFit.expand,
-            children: [
-              if (widget.enableCamera)
-                MobileScanner(
-                  controller: _scannerController,
-                  fit: BoxFit.cover,
-                  scanWindow: scanWindow,
-                  onDetect: _handleDetection,
-                  errorBuilder: (context, error) {
-                    final hasPermissionError =
-                        error.errorCode ==
-                        MobileScannerErrorCode.permissionDenied;
-                    return _ScannerError(
-                      message: _scannerMessage(l10n, error),
-                      actionLabel: hasPermissionError
-                          ? l10n.smartOpenerScannerPermissionSettingsAction
-                          : null,
-                      onAction: hasPermissionError
-                          ? () => unawaited(_openCameraPermissionSettings())
-                          : null,
-                    );
-                  },
-                  placeholderBuilder: (context) {
-                    return const ColoredBox(color: AppColors.scannerBackground);
-                  },
-                )
-              else
-                const ColoredBox(color: AppColors.scannerBackground),
-              Positioned.fill(
-                child: CustomPaint(
-                  painter: ScannerOverlayPainter(
-                    scanWindow: scanWindow,
-                    paintWindowFill: !widget.enableCamera,
-                  ),
-                ),
-              ),
-              Positioned(
-                left: scanWindow.left,
-                right: scanWindow.left,
-                top: scanWindow.bottom + 26,
-                child: Center(
-                  child: _ScannerChip(
-                    label: l10n.smartOpenerScannerManualAction,
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 82,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _ScannerActionButton(
-                      label: l10n.smartOpenerScannerGalleryAction,
-                      assetPath: SmartOpenerQrScanAssetPaths.galleryIcon,
-                      fallbackIcon: Icons.image_outlined,
-                      onPressed: _isProcessing ? null : _pickFromGallery,
-                    ),
-                    const SizedBox(width: 76),
-                    ValueListenableBuilder<MobileScannerState>(
-                      valueListenable: _scannerController,
-                      builder: (context, scannerState, child) {
-                        final isTorchOn =
-                            scannerState.torchState == TorchState.on;
-                        return _ScannerActionButton(
-                          label: l10n.smartOpenerScannerFlashlightAction,
-                          assetPath: isTorchOn
-                              ? SmartOpenerQrScanAssetPaths.flashlightOnIcon
-                              : SmartOpenerQrScanAssetPaths.flashlightOffIcon,
-                          fallbackIcon: isTorchOn
-                              ? Icons.flashlight_on_outlined
-                              : Icons.flashlight_off_outlined,
-                          onPressed: _isProcessing ? null : _toggleTorch,
-                        );
+    return FlinxSystemUi(
+      foregroundColor: context.colors.authPrimaryButtonDisabledForeground,
+      child: Scaffold(
+        backgroundColor: context.colors.scannerBackground,
+        extendBodyBehindAppBar: true,
+        appBar: FlinxNavigationBar(
+          title: '',
+          automaticallyImplyLeading: context.canPop(),
+          showBottomDivider: false,
+          isTransparent: true,
+          foregroundColor: context.colors.authPrimaryButtonDisabledForeground,
+          actions: [
+            IconButton(
+              tooltip: l10n.smartOpenerScannerBluetoothTooltip,
+              onPressed: _isProcessing
+                  ? null
+                  : () => context.pushNamed(
+                      SmartOpenerBleScanPage.routeName,
+                      queryParameters: {
+                        AddDevicePage.deviceTypeQueryParameter:
+                            normalizeDoorDeviceType(widget.deviceType),
                       },
                     ),
-                  ],
-                ),
+              icon: const Icon(Icons.bluetooth),
+            ),
+          ],
+        ),
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            final scanWindowSize = constraints.maxWidth * 0.58;
+            final scanWindow = Rect.fromCenter(
+              center: Offset(
+                constraints.maxWidth / 2,
+                constraints.maxHeight * 0.36,
               ),
-              if (_isProcessing)
-                const Positioned.fill(
-                  child: ColoredBox(
-                    color: Color(0x99000000),
-                    child: Center(child: CircularProgressIndicator()),
+              width: scanWindowSize,
+              height: scanWindowSize,
+            );
+
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                if (widget.enableCamera)
+                  MobileScanner(
+                    controller: _scannerController,
+                    fit: BoxFit.cover,
+                    scanWindow: scanWindow,
+                    onDetect: _handleDetection,
+                    errorBuilder: (context, error) {
+                      final hasPermissionError =
+                          error.errorCode ==
+                          MobileScannerErrorCode.permissionDenied;
+                      return _ScannerError(
+                        message: _scannerMessage(l10n, error),
+                        actionLabel: hasPermissionError
+                            ? l10n.smartOpenerScannerPermissionSettingsAction
+                            : null,
+                        onAction: hasPermissionError
+                            ? () => unawaited(_openCameraPermissionSettings())
+                            : null,
+                      );
+                    },
+                    placeholderBuilder: (context) {
+                      return ColoredBox(
+                        color: context.colors.scannerBackground,
+                      );
+                    },
+                  )
+                else
+                  ColoredBox(color: context.colors.scannerBackground),
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: ScannerOverlayPainter(
+                      scanWindow: scanWindow,
+                      paintWindowFill: !widget.enableCamera,
+                    ),
                   ),
                 ),
-            ],
-          );
-        },
+                Positioned(
+                  left: scanWindow.left,
+                  right: scanWindow.left,
+                  top: scanWindow.bottom + 26,
+                  child: Center(
+                    child: _ScannerChip(
+                      label: l10n.smartOpenerScannerManualAction,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 82,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _ScannerActionButton(
+                        label: l10n.smartOpenerScannerGalleryAction,
+                        assetPath: SmartOpenerQrScanAssetPaths.galleryIcon,
+                        fallbackIcon: Icons.image_outlined,
+                        onPressed: _isProcessing ? null : _pickFromGallery,
+                      ),
+                      const SizedBox(width: 76),
+                      ValueListenableBuilder<MobileScannerState>(
+                        valueListenable: _scannerController,
+                        builder: (context, scannerState, child) {
+                          final isTorchOn =
+                              scannerState.torchState == TorchState.on;
+                          return _ScannerActionButton(
+                            label: l10n.smartOpenerScannerFlashlightAction,
+                            assetPath: isTorchOn
+                                ? SmartOpenerQrScanAssetPaths.flashlightOnIcon
+                                : SmartOpenerQrScanAssetPaths.flashlightOffIcon,
+                            fallbackIcon: isTorchOn
+                                ? Icons.flashlight_on_outlined
+                                : Icons.flashlight_off_outlined,
+                            onPressed: _isProcessing ? null : _toggleTorch,
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                if (_isProcessing)
+                  Positioned.fill(
+                    child: ColoredBox(
+                      color: context.colors.deviceShareDialogOverlay,
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -558,7 +565,7 @@ class _ScannerError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: AppColors.scannerBackground,
+      color: context.colors.scannerBackground,
       child: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -568,7 +575,7 @@ class _ScannerError extends StatelessWidget {
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: AppTextTokens.scannerControlLabel(
+                style: context.appText.scannerControlLabel(
                   Theme.of(context).textTheme,
                 ),
               ),
@@ -595,15 +602,15 @@ class _ScannerChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: const ShapeDecoration(
-        color: AppColors.scannerChipBackground,
+      decoration: ShapeDecoration(
+        color: context.colors.scannerChipBackground,
         shape: StadiumBorder(),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         child: Text(
           label,
-          style: AppTextTokens.scannerChip(Theme.of(context).textTheme),
+          style: context.appText.scannerChip(Theme.of(context).textTheme),
         ),
       ),
     );
@@ -636,7 +643,8 @@ class _ScannerActionButton extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Image.asset(
+              SkinAssetImage.themed(
+                context,
                 assetPath,
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) {
@@ -646,7 +654,7 @@ class _ScannerActionButton extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 label,
-                style: AppTextTokens.scannerControlLabel(
+                style: context.appText.scannerControlLabel(
                   Theme.of(context).textTheme,
                 ),
               ),

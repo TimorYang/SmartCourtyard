@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flinx/app/config/app_links.dart';
 import 'package:flinx/app/theme/app_theme.dart';
 import 'package:flinx/features/account/application/providers.dart';
 import 'package:flinx/features/account/application/region_selection_controller.dart';

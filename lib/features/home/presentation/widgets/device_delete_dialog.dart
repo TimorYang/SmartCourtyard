@@ -15,7 +15,7 @@ Future<void> showDeviceDeleteDialog(
   return showModalBottomSheet<void>(
     context: context,
     backgroundColor: Colors.transparent,
-    barrierColor: AppColors.overlaySoft,
+    barrierColor: context.colors.overlaySoft,
     builder: (context) =>
         DeviceDeleteDialog(device: device, parentContext: context),
   );
@@ -44,7 +44,7 @@ class _DeviceDeleteDialogState extends ConsumerState<DeviceDeleteDialog> {
     final textTheme = Theme.of(context).textTheme;
 
     return Material(
-      color: AppColors.backgroundPrimary,
+      color: context.colors.backgroundPrimary,
       borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
       clipBehavior: Clip.antiAlias,
       child: SafeArea(
@@ -57,7 +57,7 @@ class _DeviceDeleteDialogState extends ConsumerState<DeviceDeleteDialog> {
               Text(
                 l10n.deviceDeleteConfirmMessage,
                 textAlign: TextAlign.center,
-                style: AppTextTokens.deviceDeleteConfirmMessage(textTheme),
+                style: context.appText.deviceDeleteConfirmMessage(textTheme),
               ),
               const SizedBox(height: 28),
               Row(
@@ -70,10 +70,13 @@ class _DeviceDeleteDialogState extends ConsumerState<DeviceDeleteDialog> {
                             ? null
                             : () => Navigator.pop(context),
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.sceneDialogCancelButton,
-                          foregroundColor: AppColors.textPrimary,
+                          backgroundColor:
+                              context.colors.sceneDialogCancelButton,
+                          foregroundColor: context.colors.textPrimary,
                           shape: const StadiumBorder(),
-                          textStyle: AppTextTokens.sceneDialogButton(textTheme),
+                          textStyle: context.appText.sceneDialogButton(
+                            textTheme,
+                          ),
                         ),
                         child: Text(l10n.deviceDeleteCancelAction),
                       ),
@@ -86,18 +89,24 @@ class _DeviceDeleteDialogState extends ConsumerState<DeviceDeleteDialog> {
                       child: FilledButton(
                         onPressed: _isSubmitting ? null : _unbindDevice,
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.sceneDeleteAction,
-                          foregroundColor: AppColors.backgroundPrimary,
+                          backgroundColor: context.colors.sceneDeleteAction,
+                          foregroundColor: context
+                              .colors
+                              .authPrimaryButtonDisabledForeground,
                           shape: const StadiumBorder(),
-                          textStyle: AppTextTokens.sceneDialogButton(textTheme),
+                          textStyle: context.appText.sceneDialogButton(
+                            textTheme,
+                          ),
                         ),
                         child: _isSubmitting
-                            ? const SizedBox(
+                            ? SizedBox(
                                 width: 18,
                                 height: 18,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: AppColors.backgroundPrimary,
+                                  color: context
+                                      .colors
+                                      .authPrimaryButtonDisabledForeground,
                                 ),
                               )
                             : Text(l10n.deviceDeleteConfirmAction),

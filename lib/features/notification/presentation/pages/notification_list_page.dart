@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -76,7 +77,7 @@ class _NotificationListPageState extends ConsumerState<NotificationListPage> {
     );
 
     return Scaffold(
-      backgroundColor: AppColors.notificationBackground,
+      backgroundColor: context.colors.notificationBackground,
       appBar: FlinxNavigationBar(
         title: l10n.notificationTitle,
         showBottomDivider: false,
@@ -102,7 +103,7 @@ class _NotificationListPageState extends ConsumerState<NotificationListPage> {
                   },
             child: Text(
               l10n.notificationAllRead,
-              style: AppTextTokens.notificationHeaderAction(
+              style: context.appText.notificationHeaderAction(
                 Theme.of(context).textTheme,
               ),
             ),
@@ -181,6 +182,7 @@ class _NotificationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final categoryColors = _categoryColors(
+      context,
       notification.colorTag,
       notification.type,
     );
@@ -190,7 +192,7 @@ class _NotificationCard extends StatelessWidget {
       button: true,
       label: notification.title,
       child: Material(
-        color: AppColors.notificationCard,
+        color: context.colors.notificationCard,
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           key: ValueKey('notification-card-${notification.id}'),
@@ -207,11 +209,12 @@ class _NotificationCard extends StatelessWidget {
                     width: 38,
                     height: 38,
                     decoration: BoxDecoration(
-                      color: AppColors.notificationIconSurface,
+                      color: context.colors.notificationIconSurface,
                       borderRadius: BorderRadius.circular(6),
                     ),
                     alignment: Alignment.center,
-                    child: Image.asset(
+                    child: SkinAssetImage.themed(
+                      context,
                       iconAsset,
                       fit: BoxFit.contain,
                       errorBuilder: (context, error, stackTrace) =>
@@ -230,7 +233,7 @@ class _NotificationCard extends StatelessWidget {
                           Expanded(
                             child: Text(
                               notification.title,
-                              style: AppTextTokens.notificationCardTitle(
+                              style: context.appText.notificationCardTitle(
                                 textTheme,
                               ),
                             ),
@@ -240,8 +243,8 @@ class _NotificationCard extends StatelessWidget {
                             Padding(
                               padding: const EdgeInsets.only(top: 3),
                               child: DecoratedBox(
-                                decoration: const BoxDecoration(
-                                  color: AppColors.notificationUnread,
+                                decoration: BoxDecoration(
+                                  color: context.colors.notificationUnread,
                                   shape: BoxShape.circle,
                                 ),
                                 child: SizedBox(
@@ -271,21 +274,21 @@ class _NotificationCard extends StatelessWidget {
                           ),
                           child: Text(
                             notification.category,
-                            style: AppTextTokens.notificationCategory(
-                              textTheme,
-                            ).copyWith(color: categoryColors.$2),
+                            style: context.appText
+                                .notificationCategory(textTheme)
+                                .copyWith(color: categoryColors.$2),
                           ),
                         ),
                       ),
                       const SizedBox(height: 10),
                       Text(
                         notification.summary,
-                        style: AppTextTokens.notificationBody(textTheme),
+                        style: context.appText.notificationBody(textTheme),
                       ),
                       const SizedBox(height: 10),
                       Text(
                         notification.timestamp,
-                        style: AppTextTokens.notificationTimestamp(textTheme),
+                        style: context.appText.notificationTimestamp(textTheme),
                       ),
                     ],
                   ),
@@ -305,34 +308,39 @@ class _NotificationCard extends StatelessWidget {
     _ => null,
   };
 
-  (Color, Color) _categoryColors(NotificationColorTag colorTag, String type) =>
-      switch (colorTag) {
-        NotificationColorTag.red => (
-          AppColors.notificationEquipmentTag,
-          AppColors.notificationEquipmentText,
-        ),
-        NotificationColorTag.green => (
-          AppColors.notificationUpgradeTag,
-          AppColors.notificationUpgradeText,
-        ),
-        NotificationColorTag.blue => (
-          AppColors.notificationServiceTag,
-          AppColors.notificationServiceText,
-        ),
-        NotificationColorTag.unknown => _legacyCategoryColors(type),
-      };
-
-  (Color, Color) _legacyCategoryColors(String type) => switch (type
-      .trim()
-      .toUpperCase()) {
-    'FIRMWARE' => (
-      AppColors.notificationUpgradeTag,
-      AppColors.notificationUpgradeText,
+  (Color, Color) _categoryColors(
+    BuildContext context,
+    NotificationColorTag colorTag,
+    String type,
+  ) => switch (colorTag) {
+    NotificationColorTag.red => (
+      context.colors.notificationEquipmentTag,
+      context.colors.notificationEquipmentText,
     ),
-    'DEVICE' => (
-      AppColors.notificationEquipmentTag,
-      AppColors.notificationEquipmentText,
+    NotificationColorTag.green => (
+      context.colors.notificationUpgradeTag,
+      context.colors.notificationUpgradeText,
     ),
-    _ => (AppColors.notificationServiceTag, AppColors.notificationServiceText),
+    NotificationColorTag.blue => (
+      context.colors.notificationServiceTag,
+      context.colors.notificationServiceText,
+    ),
+    NotificationColorTag.unknown => _legacyCategoryColors(context, type),
   };
+
+  (Color, Color) _legacyCategoryColors(BuildContext context, String type) =>
+      switch (type.trim().toUpperCase()) {
+        'FIRMWARE' => (
+          context.colors.notificationUpgradeTag,
+          context.colors.notificationUpgradeText,
+        ),
+        'DEVICE' => (
+          context.colors.notificationEquipmentTag,
+          context.colors.notificationEquipmentText,
+        ),
+        _ => (
+          context.colors.notificationServiceTag,
+          context.colors.notificationServiceText,
+        ),
+      };
 }

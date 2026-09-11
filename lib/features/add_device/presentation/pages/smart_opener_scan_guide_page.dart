@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -35,7 +36,7 @@ class SmartOpenerScanGuidePage extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       appBar: FlinxNavigationBar(
         title: '',
         showBottomDivider: false,
@@ -50,16 +51,17 @@ class SmartOpenerScanGuidePage extends StatelessWidget {
             children: [
               Text(
                 l10n.smartOpenerScanTitle,
-                style: AppTextTokens.smartOpenerScanTitle(textTheme),
+                style: context.appText.smartOpenerScanTitle(textTheme),
               ),
               const SizedBox(height: 3),
               Text(
                 l10n.smartOpenerScanDescription,
-                style: AppTextTokens.smartOpenerScanDescription(textTheme),
+                style: context.appText.smartOpenerScanDescription(textTheme),
               ),
               const Spacer(flex: 2),
               Center(
-                child: Image.asset(
+                child: SkinAssetImage.themed(
+                  context,
                   SmartOpenerScanAssetPaths.qrLabel,
                   width: double.infinity,
                   fit: BoxFit.contain,
@@ -78,10 +80,11 @@ class SmartOpenerScanGuidePage extends StatelessWidget {
                     },
                   ),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.brandPrimary,
-                    foregroundColor: Colors.white,
+                    backgroundColor: context.colors.brandPrimary,
+                    foregroundColor:
+                        context.colors.authPrimaryButtonDisabledForeground,
                     shape: const StadiumBorder(),
-                    textStyle: AppTextTokens.smartOpenerPrimaryButton(
+                    textStyle: context.appText.smartOpenerPrimaryButton(
                       textTheme,
                     ),
                   ),

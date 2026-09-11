@@ -1,0 +1,35 @@
+import '../app_skin_catalog.dart';
+import 'package:flutter/material.dart';
+import '../../../features/appearance/domain/entities/app_skin_id.dart';
+
+const technologyWindSkin = AppSkinTokens(
+  id: AppSkinId.technologyWind,
+  pageBackground: Color(0xFFEDF3F9),
+  backgroundGradient: [Color(0xFFF1EEFF), Color(0xFFEDF3F9), Color(0xFFD7EEFF)],
+  surface: Color(0xFFFFFFFF),
+  surfaceMuted: Color(0xFFF4F8FC),
+  textPrimary: Color(0xFF262526),
+  textSecondary: Color(0xFF666869),
+  textMuted: Color(0xFF657682),
+  border: Color(0xFFD1DFEF),
+  brand: Color(0xFF1477F9),
+  onBrand: Color(0xFFFFFFFF),
+  accent: Color(0xFF0D90F8),
+  success: Color(0xFF20D667),
+  disabled: Color(0xFFB7C5D4),
+  danger: Color(0xFFD93645),
+  warning: Color(0xFFC96B00),
+  scrim: Color(0x52000000),
+  shadow: Color(0x241477F9),
+  systemBarBackground: Color(0xFFEDF3F9),
+  commandAction: Color(0xFF087EFF),
+  commandActionForeground: Color(0xFFFFFFFF),
+  commandActionPressedOverlay: Color(0x24FFFFFF),
+  switchActive: Color(0xFF1477F9),
+  switchInactive: Color(0xFFB7C5D4),
+  switchThumb: Color(0xFFFFFFFF),
+  navigationBackground: Color(0xFFEDF3F9),
+  navigationForeground: Color(0xFF262526),
+  navigationSelected: Color(0xFF1477F9),
+  navigationUnselected: Color(0xFF959DA2),
+);

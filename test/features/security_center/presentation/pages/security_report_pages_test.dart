@@ -1,3 +1,6 @@
+import '../../../../support/skin_qa.dart';
+import 'package:flinx/app/theme/app_theme.dart';
+import 'package:flinx/features/appearance/domain/entities/app_skin_id.dart';
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -37,6 +40,39 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 void main() {
+  setUpAll(loadSkinQaFont);
+  for (final skin in AppSkinId.values) {
+    testWidgets('skin QA security, offline sensors and report for $skin', (
+      tester,
+    ) async {
+      final key = GlobalKey();
+      for (final entry in <String, Widget>{
+        'security_center': const SecurityCenterPage(
+          doorId: '12',
+          deviceId: 'mock-device',
+          onTabSelected: _ignoreTab,
+        ),
+        'general_evaluation': const GeneralEvaluationPage(
+          doorId: '12',
+          deviceId: 'mock-device',
+        ),
+        'safety_sensors': const SafetySensorsEvaluationPage(
+          doorId: '12',
+          deviceId: 'mock-device',
+        ),
+      }.entries) {
+        await tester.pumpWidget(const SizedBox.shrink());
+        await _pumpPage(
+          tester,
+          RepaintBoundary(key: key, child: entry.value),
+          theme: AppTheme.forSkin(skin),
+        );
+        expect(tester.takeException(), isNull);
+        await captureSkinQa(tester, key, '${skin.storageValue}_${entry.key}');
+      }
+    });
+  }
+
   test('security sensor type resolves its backend key', () {
     for (final type in SecuritySensorType.values) {
       expect(SecuritySensorType.fromBackendKey(type.backendKey), type);
@@ -1846,6 +1882,7 @@ Future<void> _pumpRouter(
 Future<void> _pumpPage(
   WidgetTester tester,
   Widget page, {
+  ThemeData? theme,
   bool setViewport = true,
   Locale? locale,
   SafetySensorsEvaluation? evaluation,
@@ -1885,6 +1922,7 @@ Future<void> _pumpPage(
         ),
       ],
       child: MaterialApp(
+        theme: theme,
         locale: locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,

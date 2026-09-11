@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/skin_asset_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -45,7 +46,7 @@ class _TransmitterListPageState extends State<TransmitterListPage> {
 
     return Scaffold(
       appBar: const FlinxNavigationBar(title: '', showBottomDivider: false),
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       body: SafeArea(
         top: false,
         child: Center(
@@ -58,16 +59,18 @@ class _TransmitterListPageState extends State<TransmitterListPage> {
                 children: [
                   Text(
                     l10n.deviceSettingsManagement,
-                    style: AppTextTokens.transmitterManagementTitle(textTheme),
+                    style: context.appText.transmitterManagementTitle(
+                      textTheme,
+                    ),
                   ),
                   const SizedBox(height: 48),
                   Expanded(
                     child: ListView.separated(
                       padding: EdgeInsets.zero,
                       itemCount: _transmitters.length,
-                      separatorBuilder: (_, _) => const Divider(
+                      separatorBuilder: (_, _) => Divider(
                         height: 1,
-                        color: AppColors.deviceSettingsDivider,
+                        color: context.colors.deviceSettingsDivider,
                       ),
                       itemBuilder: (context, index) => _TransmitterListRow(
                         transmitter: _transmitters[index],
@@ -82,7 +85,7 @@ class _TransmitterListPageState extends State<TransmitterListPage> {
                   const SizedBox(height: 24),
                   Text(
                     l10n.transmitterManagementTipsTitle,
-                    style: AppTextTokens.transmitterManagementTipsTitle(
+                    style: context.appText.transmitterManagementTipsTitle(
                       textTheme,
                     ),
                   ),
@@ -90,7 +93,7 @@ class _TransmitterListPageState extends State<TransmitterListPage> {
                   Text(
                     '${l10n.transmitterManagementSafetyTip}\n'
                     '${l10n.transmitterManagementHowToTip}',
-                    style: AppTextTokens.transmitterManagementTipsBody(
+                    style: context.appText.transmitterManagementTipsBody(
                       textTheme,
                     ),
                   ),
@@ -121,7 +124,7 @@ class _TransmitterListPageState extends State<TransmitterListPage> {
     final textTheme = Theme.of(context).textTheme;
     await showDialog<void>(
       context: context,
-      barrierColor: AppColors.overlaySoft,
+      barrierColor: context.colors.overlaySoft,
       builder: (dialogContext) => _TransmitterNameDialog(
         initialName: index == null ? '' : _transmitters[index].name,
         title: l10n.transmitterManagementInfoTitle,
@@ -157,7 +160,7 @@ class _TransmitterListPageState extends State<TransmitterListPage> {
     await showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      barrierColor: AppColors.deviceSettingsSheetScrim,
+      barrierColor: context.colors.deviceSettingsSheetScrim,
       builder: (sheetContext) => _TransmitterDeleteSheet(
         title: l10n.transmitterManagementDeletePromptTitle,
         message: l10n.transmitterManagementDeletePromptMessage,
@@ -198,7 +201,7 @@ class _TransmitterListRow extends StatelessWidget {
             transmitter.name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: AppTextTokens.transmitterManagementRowTitle(
+            style: context.appText.transmitterManagementRowTitle(
               Theme.of(context).textTheme,
             ),
           ),
@@ -238,7 +241,7 @@ class _TransmitterActionButton extends StatelessWidget {
     child: SizedBox(
       child: Center(
         child: Material(
-          color: AppColors.transmitterManagementActionSurface,
+          color: context.colors.transmitterManagementActionSurface,
           shape: const CircleBorder(),
           child: InkWell(
             customBorder: const CircleBorder(),
@@ -246,7 +249,11 @@ class _TransmitterActionButton extends StatelessWidget {
             child: SizedBox(
               child: Padding(
                 padding: const EdgeInsets.all(6),
-                child: Image.asset(assetPath, fit: BoxFit.contain),
+                child: SkinAssetImage.themed(
+                  context,
+                  assetPath,
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
           ),
@@ -272,7 +279,7 @@ class _TransmitterAddButton extends StatelessWidget {
     child: SizedBox(
       child: Center(
         child: Material(
-          color: AppColors.transmitterManagementPrimaryAction,
+          color: context.colors.transmitterManagementPrimaryAction,
           shape: const CircleBorder(),
           child: InkWell(
             customBorder: const CircleBorder(),
@@ -282,7 +289,8 @@ class _TransmitterAddButton extends StatelessWidget {
               height: 53,
               child: Padding(
                 padding: const EdgeInsets.all(13),
-                child: Image.asset(
+                child: SkinAssetImage.themed(
+                  context,
                   TransmitterListAssetPaths.addActionPlaceholder,
                   fit: BoxFit.contain,
                 ),
@@ -302,7 +310,7 @@ class _TransmitterSheetSurface extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-    color: AppColors.backgroundPrimary,
+    color: context.colors.backgroundPrimary,
     borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
     clipBehavior: Clip.antiAlias,
     child: SafeArea(top: false, child: child),
@@ -370,7 +378,7 @@ class _TransmitterNameDialogState extends State<_TransmitterNameDialog> {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 390),
           child: Material(
-            color: AppColors.backgroundPrimary,
+            color: context.colors.backgroundPrimary,
             borderRadius: BorderRadius.circular(18),
             clipBehavior: Clip.antiAlias,
             child: Padding(
@@ -380,7 +388,7 @@ class _TransmitterNameDialogState extends State<_TransmitterNameDialog> {
                 children: [
                   Text(
                     widget.title,
-                    style: AppTextTokens.transmitterManagementSheetTitle(
+                    style: context.appText.transmitterManagementSheetTitle(
                       widget.textTheme,
                     ),
                   ),
@@ -391,13 +399,16 @@ class _TransmitterNameDialogState extends State<_TransmitterNameDialog> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(32),
                       border: Border.all(
-                        color: AppColors.transmitterManagementSheetInputBorder,
+                        color: context
+                            .colors
+                            .transmitterManagementSheetInputBorder,
                       ),
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 14),
                     child: Row(
                       children: [
-                        Image.asset(
+                        SkinAssetImage.themed(
+                          context,
                           TransmitterListAssetPaths.editActionPlaceholder,
                           fit: BoxFit.contain,
                           errorBuilder: (context, error, stackTrace) =>
@@ -407,16 +418,17 @@ class _TransmitterNameDialogState extends State<_TransmitterNameDialog> {
                         Expanded(
                           child: TextField(
                             controller: _controller,
-                            style:
-                                AppTextTokens.transmitterManagementSheetInput(
+                            style: context.appText
+                                .transmitterManagementSheetInput(
                                   widget.textTheme,
                                 ),
                             decoration: InputDecoration.collapsed(
                               hintText: widget.nameHint,
-                              hintStyle:
-                                  AppTextTokens.transmitterManagementSheetInput(
+                              hintStyle: context.appText
+                                  .transmitterManagementSheetInput(
                                     widget.textTheme,
-                                  ).copyWith(color: AppColors.textHint),
+                                  )
+                                  .copyWith(color: context.colors.textHint),
                             ),
                           ),
                         ),
@@ -433,16 +445,17 @@ class _TransmitterNameDialogState extends State<_TransmitterNameDialog> {
                             onPressed: () => Navigator.of(context).pop(),
                             style: FilledButton.styleFrom(
                               backgroundColor:
-                                  AppColors.deviceSettingsCancelAction,
-                              foregroundColor: AppColors.textPrimary,
+                                  context.colors.deviceSettingsCancelAction,
+                              foregroundColor: context.colors.textPrimary,
                               shape: const StadiumBorder(),
                             ),
                             child: Text(
                               widget.cancelLabel,
-                              style:
-                                  AppTextTokens.transmitterManagementSheetButton(
+                              style: context.appText
+                                  .transmitterManagementSheetButton(
                                     widget.textTheme,
-                                  ).copyWith(color: AppColors.textPrimary),
+                                  )
+                                  .copyWith(color: context.colors.textPrimary),
                             ),
                           ),
                         ),
@@ -457,18 +470,21 @@ class _TransmitterNameDialogState extends State<_TransmitterNameDialog> {
                                       widget.onConfirm(_controller.text.trim())
                                 : null,
                             style: FilledButton.styleFrom(
-                              backgroundColor: AppColors.brandPrimary,
+                              backgroundColor: context.colors.brandPrimary,
                               disabledBackgroundColor:
-                                  AppColors.brandPrimaryDisabled,
-                              foregroundColor: AppColors.backgroundPrimary,
-                              disabledForegroundColor:
-                                  AppColors.authPrimaryButtonDisabledForeground,
+                                  context.colors.brandPrimaryDisabled,
+                              foregroundColor: context
+                                  .colors
+                                  .authPrimaryButtonDisabledForeground,
+                              disabledForegroundColor: context
+                                  .colors
+                                  .authPrimaryButtonDisabledForeground,
                               shape: const StadiumBorder(),
                             ),
                             child: Text(
                               widget.confirmLabel,
-                              style:
-                                  AppTextTokens.transmitterManagementSheetButton(
+                              style: context.appText
+                                  .transmitterManagementSheetButton(
                                     widget.textTheme,
                                   ),
                             ),
@@ -513,13 +529,13 @@ class _TransmitterDeleteSheet extends StatelessWidget {
         children: [
           Text(
             title,
-            style: AppTextTokens.transmitterManagementSheetTitle(textTheme),
+            style: context.appText.transmitterManagementSheetTitle(textTheme),
           ),
           const SizedBox(height: 11),
           Text(
             message,
             textAlign: TextAlign.center,
-            style: AppTextTokens.transmitterManagementSheetBody(textTheme),
+            style: context.appText.transmitterManagementSheetBody(textTheme),
           ),
           const SizedBox(height: 33),
           _TransmitterSheetActionRow(
@@ -556,15 +572,15 @@ class _TransmitterSheetActionRow extends StatelessWidget {
           child: FilledButton(
             onPressed: () => Navigator.of(context).pop(),
             style: FilledButton.styleFrom(
-              backgroundColor: AppColors.deviceSettingsCancelAction,
-              foregroundColor: AppColors.textPrimary,
+              backgroundColor: context.colors.deviceSettingsCancelAction,
+              foregroundColor: context.colors.textPrimary,
               shape: const StadiumBorder(),
             ),
             child: Text(
               cancelLabel,
-              style: AppTextTokens.transmitterManagementSheetButton(
-                textTheme,
-              ).copyWith(color: AppColors.textPrimary),
+              style: context.appText
+                  .transmitterManagementSheetButton(textTheme)
+                  .copyWith(color: context.colors.textPrimary),
             ),
           ),
         ),
@@ -576,13 +592,16 @@ class _TransmitterSheetActionRow extends StatelessWidget {
           child: FilledButton(
             onPressed: onConfirm,
             style: FilledButton.styleFrom(
-              backgroundColor: AppColors.brandPrimary,
-              foregroundColor: AppColors.backgroundPrimary,
+              backgroundColor: context.colors.brandPrimary,
+              foregroundColor:
+                  context.colors.authPrimaryButtonDisabledForeground,
               shape: const StadiumBorder(),
             ),
             child: Text(
               confirmLabel,
-              style: AppTextTokens.transmitterManagementSheetButton(textTheme),
+              style: context.appText.transmitterManagementSheetButton(
+                textTheme,
+              ),
             ),
           ),
         ),

@@ -21,7 +21,7 @@ class HardwareDiagnosticsPage extends ConsumerWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       appBar: FlinxNavigationBar(title: l10n.hardwareDiagnosticsTitle),
       body: SafeArea(
         top: false,
@@ -52,7 +52,7 @@ class HardwareDiagnosticsPage extends ConsumerWidget {
               Text(
                 l10n.hardwareDiagnosticsUpdateFailed,
                 style: textTheme.bodyMedium?.copyWith(
-                  color: AppColors.deviceSettingsForceMarginWarningText,
+                  color: context.colors.deviceSettingsForceMarginWarningText,
                 ),
               ),
             ],

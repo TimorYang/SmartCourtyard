@@ -63,28 +63,32 @@ class _WifiConfigurationPageState extends ConsumerState<WifiConfigurationPage> {
     }
 
     return Scaffold(
-      appBar: const FlinxNavigationBar(title: 'Wi‑Fi 配置'),
+      appBar: FlinxNavigationBar(title: l10n.wifiConfigurationTitle),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           if (widget.qrPayload != null && widget.qrPayload!.trim().isNotEmpty)
             _WifiMessage(
               message: l10n.smartOpenerQrPayloadReceived,
-              backgroundColor: AppColors.surfaceSceneCard,
-              foregroundColor: AppColors.textMuted,
+              backgroundColor: context.colors.surfaceSceneCard,
+              foregroundColor: context.colors.textMuted,
             ),
           if (widget.qrPayload != null && widget.qrPayload!.trim().isNotEmpty)
             const SizedBox(height: 12),
           if (selectedDevice == null)
-            const Card(
+            Card(
               child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Text('当前没有已连接设备，请返回蓝牙扫描页重新连接。'),
+                padding: const EdgeInsets.all(16),
+                child: Text(l10n.wifiConfigurationNoDevice),
               ),
             )
           else ...[
-            Text('已连接设备：${selectedDevice.name ?? selectedDevice.id}'),
-            Text('设备 ID：${selectedDevice.id}'),
+            Text(
+              l10n.wifiConfigurationConnectedDevice(
+                selectedDevice.name ?? selectedDevice.id,
+              ),
+            ),
+            Text(l10n.wifiConfigurationDeviceId(selectedDevice.id)),
             const SizedBox(height: 16),
             FilledButton.tonalIcon(
               onPressed: state.isScanningWifi
@@ -92,12 +96,17 @@ class _WifiConfigurationPageState extends ConsumerState<WifiConfigurationPage> {
                   : () => controller.scanWifiNetworks(),
               icon: const Icon(Icons.wifi_find_outlined),
               label: Text(
-                state.isScanningWifi ? '正在扫描 Wi‑Fi...' : '扫描附近 Wi‑Fi',
+                state.isScanningWifi
+                    ? l10n.wifiConfigurationScanning
+                    : l10n.wifiConfigurationScan,
               ),
             ),
             if (state.wifiNetworks.isNotEmpty) ...[
               const SizedBox(height: 12),
-              Text('扫描到的 Wi‑Fi', style: Theme.of(context).textTheme.titleSmall),
+              Text(
+                l10n.wifiConfigurationNetworks,
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
               const SizedBox(height: 8),
               Card(
                 child: Column(
@@ -119,10 +128,10 @@ class _WifiConfigurationPageState extends ConsumerState<WifiConfigurationPage> {
             TextField(
               controller: _ssidController,
               onChanged: controller.updateWifiSsid,
-              decoration: const InputDecoration(
-                labelText: 'SSID',
-                hintText: '选择或输入 Wi‑Fi 名称',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.wifiConfigurationSsid,
+                hintText: l10n.wifiConfigurationSsidHint,
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
@@ -130,26 +139,26 @@ class _WifiConfigurationPageState extends ConsumerState<WifiConfigurationPage> {
               controller: _passwordController,
               onChanged: controller.updateWifiPassword,
               obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Wi‑Fi 密码',
-                hintText: '请输入 Wi‑Fi 密码',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.wifiConfigurationPassword,
+                hintText: l10n.wifiConfigurationPasswordHint,
+                border: const OutlineInputBorder(),
               ),
             ),
             if (state.infoMessage != null) ...[
               const SizedBox(height: 16),
               _WifiMessage(
                 message: state.infoMessage!,
-                backgroundColor: Colors.blue.shade50,
-                foregroundColor: Colors.blue.shade900,
+                backgroundColor: context.colors.wifiInfoSurface,
+                foregroundColor: context.colors.wifiInfoForeground,
               ),
             ],
             if (state.errorMessage != null) ...[
               const SizedBox(height: 12),
               _WifiMessage(
                 message: state.errorMessage!,
-                backgroundColor: Colors.red.shade50,
-                foregroundColor: Colors.red.shade900,
+                backgroundColor: context.colors.wifiErrorSurface,
+                foregroundColor: context.colors.wifiErrorForeground,
               ),
             ],
             const SizedBox(height: 20),
@@ -172,7 +181,11 @@ class _WifiConfigurationPageState extends ConsumerState<WifiConfigurationPage> {
                         '?doorId=$deviceId&deviceId=$deviceId',
                       );
                     },
-              child: Text(state.isProvisioningWifi ? '连接中...' : '开始连接'),
+              child: Text(
+                state.isProvisioningWifi
+                    ? l10n.wifiConfigurationConnecting
+                    : l10n.wifiConfigurationConnect,
+              ),
             ),
           ],
         ],
@@ -197,7 +210,7 @@ class _WifiMessage extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppSpacingTokens.wifiMessageRadius),
       ),
       child: Padding(
         padding: const EdgeInsets.all(12),
