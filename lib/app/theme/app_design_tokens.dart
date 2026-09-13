@@ -519,7 +519,7 @@ class AppResolvedTextTokens {
 
   TextStyle welcomeHeadline(TextTheme textTheme) {
     return (textTheme.displaySmall ?? const TextStyle()).copyWith(
-      color: colors.welcomeForeground,
+      color: Colors.white,
       fontWeight: FontWeight.w600,
       height: 1.06,
     );
@@ -527,7 +527,7 @@ class AppResolvedTextTokens {
 
   TextStyle welcomeSubtitle(TextTheme textTheme) {
     return (textTheme.titleMedium ?? const TextStyle()).copyWith(
-      color: colors.welcomeForeground.withValues(alpha: 0.88),
+      color: Colors.white,
       fontWeight: FontWeight.w500,
     );
   }
