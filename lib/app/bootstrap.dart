@@ -10,10 +10,9 @@ import '../core/network/startup_network_access_probe.dart';
 import '../core/network/providers.dart';
 import '../core/storage/app_storage_paths.dart';
 import '../features/account/application/providers.dart';
-import '../features/auth/application/providers.dart';
 import '../features/auth/data/services/platform_login_device_context_provider.dart';
 import 'flinx_app.dart';
-import 'session/session_cleanup_coordinator.dart';
+import 'session/network_session_handlers.dart';
 
 Future<void> bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,27 +35,8 @@ Future<void> bootstrap() async {
     ProviderScope(
       overrides: [
         appStorageLocationsProvider.overrideWithValue(storageLocations),
-        sessionExpiredHandlerProvider.overrideWith((ref) {
-          var isClearingSession = false;
-          return () async {
-            if (isClearingSession) {
-              return;
-            }
-            isClearingSession = true;
-            try {
-              await ref
-                  .read(sessionCleanupCoordinatorProvider)
-                  .clearExpiredSession();
-            } finally {
-              isClearingSession = false;
-            }
-          };
-        }),
-        tokenRefreshHandlerProvider.overrideWith((ref) {
-          return () => ref
-              .read(authTokenRefreshServiceProvider)
-              .refreshExpiredAccessToken();
-        }),
+        sessionExpiredHandlerProvider.overrideWith(createSessionExpiredHandler),
+        tokenRefreshHandlerProvider.overrideWith(createTokenRefreshHandler),
       ],
       child: const FlinxApp(),
     ),
