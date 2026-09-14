@@ -1503,21 +1503,21 @@ abstract final class _DeviceCommandAssetPaths {
   static const openerInactive =
       'assets/icons/device_control/device_command_opener_inactive.png';
   static const bluetoothActive =
-      'assets/icons/device_control/device_command_bluetooth_active_placeholder.png';
+      'assets/icons/device_control/device_command_bluetooth_active.png';
   static const bluetoothInactive =
-      'assets/icons/device_control/device_command_bluetooth_inactive_placeholder.png';
+      'assets/icons/device_control/device_command_bluetooth_inactive.png';
   static const wifiActive =
-      'assets/icons/device_control/device_command_wifi_active_placeholder.png';
+      'assets/icons/device_control/device_command_wifi_active.png';
   static const wifiInactive =
-      'assets/icons/device_control/device_command_wifi_inactive_placeholder.png';
+      'assets/icons/device_control/device_command_wifi_inactive.png';
   static const led =
-      'assets/icons/device_control/device_command_led_placeholder.png';
+      'assets/icons/device_control/device_command_led.png';
   static const autoClose =
-      'assets/icons/device_control/device_command_auto_close_placeholder.png';
+      'assets/icons/device_control/device_command_auto_close.png';
   static const partialOpen =
-      'assets/icons/device_control/device_command_partial_open_placeholder.png';
+      'assets/icons/device_control/device_command_partial_open.png';
   static const moreSetting =
-      'assets/icons/device_control/device_command_more_setting_placeholder.png';
+      'assets/icons/device_control/device_command_more_setting.png';
   static const openReminder =
       'assets/icons/device_settings/device_settings_door_open_reminder_icon.png';
 }

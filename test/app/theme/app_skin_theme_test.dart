@@ -140,6 +140,23 @@ void main() {
         const AppSkinAssets(AppSkinId.technologyWind).resolve(emptyDoors),
         'assets/icons/skins/technology_wind/home/home_empty_doors_placeholder.png',
       );
+      const deviceControlAssets = [
+        'device_command_bluetooth_active',
+        'device_command_bluetooth_inactive',
+        'device_command_wifi_active',
+        'device_command_wifi_inactive',
+        'device_command_led',
+        'device_command_auto_close',
+        'device_command_partial_open',
+        'device_command_more_setting',
+      ];
+      for (final assetName in deviceControlAssets) {
+        final original = 'assets/icons/device_control/$assetName.png';
+        expect(
+          const AppSkinAssets(AppSkinId.dark).resolve(original),
+          'assets/icons/skins/dark/device_control/${assetName}_placeholder.png',
+        );
+      }
       const door = 'assets/images/device_control_garage_door_closed.png';
       for (final id in AppSkinId.values) {
         expect(AppSkinAssets(id).resolve(door), door);
