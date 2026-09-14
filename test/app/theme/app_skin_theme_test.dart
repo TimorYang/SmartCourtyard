@@ -127,6 +127,19 @@ void main() {
         const AppSkinAssets(AppSkinId.technologyWind).resolve(asset),
         'assets/icons/skins/technology_wind/home/home_header_add_icon_placeholder.png',
       );
+      const emptyDoors = 'assets/icons/home/home_empty_doors.png';
+      expect(
+        const AppSkinAssets(AppSkinId.minimalist).resolve(emptyDoors),
+        emptyDoors,
+      );
+      expect(
+        const AppSkinAssets(AppSkinId.dark).resolve(emptyDoors),
+        'assets/icons/skins/dark/home/home_empty_doors_placeholder.png',
+      );
+      expect(
+        const AppSkinAssets(AppSkinId.technologyWind).resolve(emptyDoors),
+        'assets/icons/skins/technology_wind/home/home_empty_doors_placeholder.png',
+      );
       const door = 'assets/images/device_control_garage_door_closed.png';
       for (final id in AppSkinId.values) {
         expect(AppSkinAssets(id).resolve(door), door);

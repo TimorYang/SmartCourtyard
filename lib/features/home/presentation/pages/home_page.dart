@@ -47,7 +47,7 @@ class HomeAssetPaths {
   static const avatarPlaceholder =
       'assets/icons/home/home_avatar_placeholder.png';
   static const emptyDoorsPlaceholder =
-      'assets/icons/home/home_empty_doors_placeholder.png';
+      'assets/icons/home/home_empty_doors.png';
   static const headerMenuIcon = 'assets/icons/home/home_header_menu_icon.png';
   static const headerGridPlaceholder =
       'assets/icons/home/home_header_grid_placeholder.png';

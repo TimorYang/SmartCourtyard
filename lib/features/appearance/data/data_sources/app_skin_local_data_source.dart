@@ -12,17 +12,17 @@ class JsonFileAppSkinLocalDataSource implements AppSkinLocalDataSource {
 
   @override
   Future<String?> readSkinId() async {
-    try {
-      if (!await file.exists()) return null;
-      final data = jsonDecode(await file.readAsString());
-      return data is Map && data['skinId'] is String
-          ? data['skinId'] as String
-          : null;
-    } on Object {
-      return null;
-    }
+    // try {
+    //   if (!await file.exists()) return null;
+    //   final data = jsonDecode(await file.readAsString());
+    //   return data is Map && data['skinId'] is String
+    //       ? data['skinId'] as String
+    //       : null;
+    // } on Object {
+    //   return null;
+    // }
     // return 'minimalist';       // 极简风格
-    // // return 'dark';             // 暗夜风格
+    return 'dark';             // 暗夜风格
     // // return 'technology_wind';  // 科技风
   }
 
