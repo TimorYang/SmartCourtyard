@@ -103,6 +103,12 @@ final featureApiProvider = Provider<FeatureApi>((ref) {
 
 除独立探测或测试替身外，不要使用 `Dio()` 绕过统一配置，否则请求不会自动获得超时、关联 ID、日志和调试代理能力。
 
+登录会话回调在 `lib/app/session/network_session_handlers.dart` 组装，由
+`bootstrap` 注入共享 Dio。刷新和会话清理服务应在回调执行时通过所属
+`ProviderContainer` 读取，不要使用回调 Provider 的 `ref.read` 读取依赖 Dio 的
+服务，否则会形成循环依赖，导致 token 过期后的请求在发送前失败。回归测试
+应复用这些回调工厂，覆盖实际 Provider、刷新服务和共享 Dio 的完整调用链。
+
 ## 5. 服务端响应模型
 
 通用响应使用 `ApiEnvelopeDto<T>`：
