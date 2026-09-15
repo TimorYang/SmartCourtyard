@@ -22,8 +22,8 @@ class JsonFileAppSkinLocalDataSource implements AppSkinLocalDataSource {
     //   return null;
     // }
     // return 'minimalist';       // 极简风格
-    return 'dark';             // 暗夜风格
-    // // return 'technology_wind';  // 科技风
+    // return 'dark';             // 暗夜风格
+    return 'technology_wind';  // 科技风
   }
 
   @override
