@@ -6,6 +6,8 @@
 
 同一相对路径在 `dark`、`technology_wind` 两套目录下各放一份。正式切图直接替换占位路径；可配套提供 `2.0x` / `3.0x`，新增子目录时同步 `pubspec.yaml`。
 
+皮肤文件名按原图生成：完整保留原图文件主名（不含扩展名），再追加一次 `_placeholder`，扩展名保持不变。原名已有的 `_placeholder` 不去重，例如 `shared_device_member_edit_placeholder.png` 对应 `shared_device_member_edit_placeholder_placeholder.png`。`2.0x` / `3.0x` 版本使用相同文件名。
+
 ## 预览资源
 
 - `assets/images/skins/dark/appearance/skin_dark_theme_preview_placeholder.png`
