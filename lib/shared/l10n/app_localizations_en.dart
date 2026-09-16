@@ -2121,6 +2121,72 @@ class AppLocalizationsEn extends AppLocalizations {
       'Failed to update diagnostic logging. Please try again.';
 
   @override
+  String get hardwareDiagnosticsHttpProxy => 'HTTP Proxy';
+
+  @override
+  String get httpProxySettingsTitle => 'HTTP Proxy';
+
+  @override
+  String get httpProxySettingsDescription =>
+      'Configure the HTTP proxy used by app requests. Changes apply immediately and remain after restarting the app.';
+
+  @override
+  String get httpProxySettingsEnableLabel => 'Use HTTP proxy';
+
+  @override
+  String get httpProxySettingsHostLabel => 'Proxy host or IP';
+
+  @override
+  String get httpProxySettingsHostHint => 'e.g. 192.168.1.10';
+
+  @override
+  String get httpProxySettingsHostHelper =>
+      'Enter a host name or IP without a scheme, path, or port.';
+
+  @override
+  String get httpProxySettingsHostRequired => 'Enter a proxy host or IP.';
+
+  @override
+  String get httpProxySettingsHostInvalid =>
+      'Enter a valid host name, IPv4 address, or IPv6 address.';
+
+  @override
+  String get httpProxySettingsPortLabel => 'Proxy port';
+
+  @override
+  String get httpProxySettingsPortHint => 'e.g. 9090';
+
+  @override
+  String get httpProxySettingsPortRequired => 'Enter a proxy port.';
+
+  @override
+  String get httpProxySettingsPortInvalid => 'Enter a port from 1 to 65535.';
+
+  @override
+  String get httpProxySettingsWarning =>
+      'Testing only. A proxy can inspect app network traffic; do not enable it on an untrusted network.';
+
+  @override
+  String get httpProxySettingsCertificateHint =>
+      'Install and trust your proxy tool\'s root certificate first; the app does not bypass HTTPS certificate validation.';
+
+  @override
+  String get httpProxySettingsSaveAction => 'Save';
+
+  @override
+  String get httpProxySettingsSaved => 'HTTP proxy settings saved.';
+
+  @override
+  String get httpProxySettingsSaveFailed =>
+      'Failed to save HTTP proxy settings. Please try again.';
+
+  @override
+  String get httpProxySettingsStatusEnabled => 'Enabled';
+
+  @override
+  String get httpProxySettingsStatusDisabled => 'Disabled';
+
+  @override
   String get securityCenterTitle => 'Security Center';
 
   @override

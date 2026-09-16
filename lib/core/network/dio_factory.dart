@@ -5,9 +5,8 @@ import '../config/app_api_configuration.dart';
 import '../localization/current_app_locale_store.dart';
 import '../logging/app_logger.dart';
 import 'access_token_cache.dart';
-import 'debug_system_proxy.dart';
-import 'network_debug_settings.dart';
 import 'network_proxy_adapter.dart';
+import 'network_proxy_settings.dart';
 import 'session_expired_handler.dart';
 
 abstract final class NetworkRequestExtras {
@@ -33,6 +32,7 @@ class DioFactory {
   static Dio create({
     required AppApiConfiguration configuration,
     required AppLogger logger,
+    NetworkProxySettings proxySettings = const NetworkProxySettings.disabled(),
     SessionExpiredHandler onSessionExpired = ignoreSessionExpired,
     TokenRefreshHandler onTokenRefresh = noTokenRefreshAvailable,
     String Function()? acceptLanguageResolver,
@@ -47,22 +47,12 @@ class DioFactory {
         responseType: ResponseType.json,
       ),
     );
-    final debugProxy = DebugSystemProxy.proxyForCurrentPlatform(
-      iosProxy: NetworkDebugSettings.proxy,
-    );
-    if (kDebugMode &&
-        (debugProxy.isNotEmpty ||
-            NetworkDebugSettings.allowInvalidProxyCertificates)) {
-      configureDebugNetworkProxy(
-        dio,
-        proxy: debugProxy,
-        allowInvalidCertificates:
-            NetworkDebugSettings.allowInvalidProxyCertificates,
-      );
-      debugPrint(
-        '[FLINX][Network] Dio debug proxy configured: '
-        '${debugProxy.isEmpty ? 'direct connection' : debugProxy}',
-      );
+    final proxy = proxySettings.proxyExpression;
+    if (proxy != null) {
+      configureNetworkProxy(dio, proxy: proxy);
+      if (kDebugMode) {
+        debugPrint('[FLINX][Network] Manual HTTP proxy configured.');
+      }
     }
     dio.interceptors.addAll([
       _ClientAuthorizationInterceptor(configuration.clientAuthorization),

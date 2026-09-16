@@ -1980,6 +1980,69 @@ class AppLocalizationsZh extends AppLocalizations {
   String get hardwareDiagnosticsUpdateFailed => '诊断日志设置更新失败，请重试。';
 
   @override
+  String get hardwareDiagnosticsHttpProxy => 'HTTP 代理';
+
+  @override
+  String get httpProxySettingsTitle => 'HTTP 代理';
+
+  @override
+  String get httpProxySettingsDescription =>
+      '配置应用请求使用的 HTTP 代理。保存后立即应用，重启应用后仍会保留。';
+
+  @override
+  String get httpProxySettingsEnableLabel => '启用 HTTP 代理';
+
+  @override
+  String get httpProxySettingsHostLabel => '代理主机或 IP';
+
+  @override
+  String get httpProxySettingsHostHint => '例如 192.168.1.10';
+
+  @override
+  String get httpProxySettingsHostHelper => '仅填写主机名或 IP，不包含协议、路径或端口。';
+
+  @override
+  String get httpProxySettingsHostRequired => '请输入代理主机或 IP。';
+
+  @override
+  String get httpProxySettingsHostInvalid => '请输入有效的主机名、IPv4 地址或 IPv6 地址。';
+
+  @override
+  String get httpProxySettingsPortLabel => '代理端口';
+
+  @override
+  String get httpProxySettingsPortHint => '例如 9090';
+
+  @override
+  String get httpProxySettingsPortRequired => '请输入代理端口。';
+
+  @override
+  String get httpProxySettingsPortInvalid => '请输入 1 到 65535 之间的端口。';
+
+  @override
+  String get httpProxySettingsWarning =>
+      '仅用于测试。代理服务器可能查看应用的网络流量，请勿在不受信任的网络中启用。';
+
+  @override
+  String get httpProxySettingsCertificateHint =>
+      '请先在设备上安装并信任抓包工具的根证书；应用不会绕过 HTTPS 证书校验。';
+
+  @override
+  String get httpProxySettingsSaveAction => '保存';
+
+  @override
+  String get httpProxySettingsSaved => 'HTTP 代理设置已保存。';
+
+  @override
+  String get httpProxySettingsSaveFailed => 'HTTP 代理设置保存失败，请重试。';
+
+  @override
+  String get httpProxySettingsStatusEnabled => '已启用';
+
+  @override
+  String get httpProxySettingsStatusDisabled => '已关闭';
+
+  @override
   String get securityCenterTitle => '安全中心';
 
   @override

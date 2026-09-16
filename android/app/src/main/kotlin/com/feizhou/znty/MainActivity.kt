@@ -1,7 +1,6 @@
 package com.feizhou.znty
 
 import android.content.Intent
-import android.net.Proxy
 import com.feizhou.znty.flinxhardware.bluetooth.BleManager
 import com.feizhou.znty.flinxhardware.bridge.HardwareHostApi
 import com.feizhou.znty.flinxhardware.bridge.HardwareFlutterApi
@@ -13,7 +12,6 @@ import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
   companion object {
-    private const val debugSystemProxyChannel = "com.flinx/debug_system_proxy"
     private const val blePermissionChannel = "com.flinx/ble_permissions"
   }
 
@@ -32,14 +30,6 @@ class MainActivity : FlutterActivity() {
       hardwareFlutterApi = hardwareFlutterApi,
     )
     HardwareHostApi.setUp(messenger, hardwareHostApi)
-    MethodChannel(messenger, debugSystemProxyChannel).setMethodCallHandler {
-        call, result ->
-      if (call.method == "getSystemProxy") {
-        result.success(systemProxy())
-      } else {
-        result.notImplemented()
-      }
-    }
     MethodChannel(messenger, blePermissionChannel).setMethodCallHandler {
         call, result ->
       if (call.method == "requestBleScanReady") {
@@ -68,15 +58,5 @@ class MainActivity : FlutterActivity() {
     if (!handled) {
       super.onActivityResult(requestCode, resultCode, data)
     }
-  }
-
-  private fun systemProxy(): Map<String, Any?> {
-    val host = System.getProperty("http.proxyHost")
-      ?: System.getProperty("https.proxyHost")
-      ?: Proxy.getHost(this)
-    val portText = System.getProperty("http.proxyPort")
-      ?: System.getProperty("https.proxyPort")
-      ?: Proxy.getPort(this).takeIf { it > 0 }?.toString()
-    return mapOf("host" to host, "port" to portText?.toIntOrNull())
   }
 }

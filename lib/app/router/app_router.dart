@@ -46,6 +46,7 @@ import '../../features/device_control/presentation/pages/device_settings_page.da
 import '../../features/device_control/presentation/pages/transmitter_learning_page.dart';
 import '../../features/device_control/presentation/pages/transmitter_list_page.dart';
 import '../../features/hardware_debug/presentation/pages/ble_debug_page.dart';
+import '../../features/hardware_debug/presentation/pages/http_proxy_settings_page.dart';
 import '../../features/home/presentation/pages/choose_scene_page.dart';
 import '../../features/home/presentation/pages/device_share_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
@@ -225,6 +226,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: HardwareDiagnosticsPage.routePath,
         name: HardwareDiagnosticsPage.routeName,
         builder: (context, state) => const HardwareDiagnosticsPage(),
+      ),
+      GoRoute(
+        path: HttpProxySettingsPage.routePath,
+        name: HttpProxySettingsPage.routeName,
+        builder: (context, state) => const HttpProxySettingsPage(),
       ),
       GoRoute(
         path: NotificationListPage.routePath,

@@ -1,7 +1,3 @@
 import 'package:dio/dio.dart';
 
-void configureDebugNetworkProxy(
-  Dio dio, {
-  required String proxy,
-  required bool allowInvalidCertificates,
-}) {}
+void configureNetworkProxy(Dio dio, {required String proxy}) {}

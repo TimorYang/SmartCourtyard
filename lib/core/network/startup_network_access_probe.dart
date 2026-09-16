@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
 
 import '../logging/app_logger.dart';
+import 'network_proxy_adapter.dart';
 import 'dio_factory.dart';
+import 'network_proxy_settings.dart';
 
 /// Starts a lightweight outbound request so iOS can present its initial
 /// per-app network access prompt on devices that support it.
@@ -12,11 +14,12 @@ class StartupNetworkAccessProbe {
   factory StartupNetworkAccessProbe({
     required AppLogger logger,
     Dio? dio,
+    NetworkProxySettings proxySettings = const NetworkProxySettings.disabled(),
     String Function()? requestIdGenerator,
   }) {
     return StartupNetworkAccessProbe._(
       logger: logger,
-      dio: dio,
+      dio: dio ?? _createDio(proxySettings),
       requestIdGenerator: requestIdGenerator,
     );
   }
@@ -35,6 +38,15 @@ class StartupNetworkAccessProbe {
   final AppLogger _logger;
   final Uri _target;
   final String Function() _requestIdGenerator;
+
+  static Dio _createDio(NetworkProxySettings proxySettings) {
+    final dio = Dio();
+    final proxy = proxySettings.proxyExpression;
+    if (proxy != null) {
+      configureNetworkProxy(dio, proxy: proxy);
+    }
+    return dio;
+  }
 
   /// Never throws: app startup must remain available when network access is
   /// declined or unavailable.
