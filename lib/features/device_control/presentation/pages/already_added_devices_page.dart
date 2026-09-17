@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
+import '../../../../core/utils/device_type.dart';
 import '../../../add_device/presentation/pages/add_device_page.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
@@ -270,7 +271,7 @@ class _AddedDeviceCard extends StatelessWidget {
     if (label != null && label.isNotEmpty) {
       return label;
     }
-    return device.deviceType.trim().toLowerCase() == 'opener'
+    return canonicalDoorDeviceType(device.deviceType) == DeviceTypeValues.opener
         ? smartOpenerName
         : device.deviceType;
   }
@@ -281,16 +282,16 @@ class _AddedDeviceCard extends StatelessWidget {
   }
 
   String get _img {
-    switch (device.deviceType) {
-      case 'dongle':
+    switch (canonicalDoorDeviceType(device.deviceType)) {
+      case DeviceTypeValues.dongle:
         return 'assets/icons/add_device/add_device_usb_wifi_module.png';
-      case 'fbox':
+      case DeviceTypeValues.fBox:
         return 'assets/icons/add_device/add_device_f_box.png';
-      case 'opener':
+      case DeviceTypeValues.opener:
         return 'assets/icons/add_device/add_device_smart_opener.png';
-      case 'video':
+      case DeviceTypeValues.video:
         return 'assets/icons/add_device/add_device_camera.png';
-      case 'evolution':
+      case DeviceTypeValues.evolution:
         return 'assets/icons/add_device/add_device_solar_energy_system.png';
     }
     return "assets/icons/add_device/add_device_usb_wifi_module.png";
