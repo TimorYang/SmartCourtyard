@@ -1,16 +1,18 @@
-const String defaultDoorDeviceType = 'opener';
+import '../../../core/utils/device_type.dart';
+
+const String defaultDoorDeviceType = DeviceTypeValues.opener;
 
 const Map<String, String> doorDeviceTypeBleNamePrefixes = <String, String>{
-  'dongle': 'Noru_',
-  'opener': 'opener_',
-  'evolution': 'Evo_',
-  'fbox': 'Fbox_',
+  DeviceTypeValues.dongle: 'Noru_',
+  DeviceTypeValues.opener: 'opener_',
+  DeviceTypeValues.evolution: 'Evo_',
+  DeviceTypeValues.fBox: 'Fbox_',
 };
 
 String normalizeDoorDeviceType(String? deviceType) {
-  final normalized = deviceType?.trim().toLowerCase();
+  final normalized = canonicalDoorDeviceType(deviceType);
   return doorDeviceTypeBleNamePrefixes.containsKey(normalized)
-      ? normalized!
+      ? normalized
       : defaultDoorDeviceType;
 }
 

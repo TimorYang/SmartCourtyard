@@ -12,6 +12,7 @@ import '../../../core/errors/app_error.dart';
 import '../../../core/logging/app_logger.dart';
 import '../../../core/logging/providers.dart';
 import '../../../core/network/providers.dart';
+import '../../../core/utils/device_type.dart';
 import '../../../platform_bridge/hardware_gateway.dart';
 import '../../../platform_bridge/hardware_models.dart';
 import '../data/data_sources/door_detail_api.dart';
@@ -400,10 +401,10 @@ class DeviceCommandState {
 
 class DeviceCommandController extends Notifier<DeviceCommandState> {
   static const _defaultDeviceTypePriority = <String>[
-    'opener',
-    'evolution',
-    'dongle',
-    'fbox',
+    DeviceTypeValues.opener,
+    DeviceTypeValues.evolution,
+    DeviceTypeValues.dongle,
+    DeviceTypeValues.fBox,
   ];
 
   late final HardwareGateway _gateway;
@@ -757,7 +758,7 @@ class DeviceCommandController extends Notifier<DeviceCommandState> {
   DoorDevice? _defaultDevice(List<DoorDevice> devices) {
     for (final deviceType in _defaultDeviceTypePriority) {
       for (final device in devices) {
-        if (device.deviceType.trim().toLowerCase() == deviceType) {
+        if (canonicalDoorDeviceType(device.deviceType) == deviceType) {
           return device;
         }
       }

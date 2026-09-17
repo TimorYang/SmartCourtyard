@@ -520,7 +520,7 @@ void main() {
     const fBoxDevice = DoorDevice(
       deviceId: 'fbox-device',
       sn: 'fbox-sn',
-      deviceType: 'fbox',
+      deviceType: 'hub',
       bleName: 'Garage door',
       bleConnectionStatus: 1,
       wifiConnectionStatus: 1,
@@ -2025,7 +2025,7 @@ void main() {
         DoorDevice(
           deviceId: 'mock-device',
           sn: 'Fbox SN',
-          deviceType: 'fbox',
+          deviceType: 'hub',
           capabilities: ['DOOR_CONTROL'],
         ),
         DoorDevice(
@@ -2046,6 +2046,17 @@ void main() {
 
       await tester.tap(find.byTooltip('More'));
       await tester.pumpAndSettle();
+      final hubImage = tester.widget<Image>(
+        find.byKey(
+          const ValueKey<String>(
+            'already-added-device-image-placeholder-Fbox SN',
+          ),
+        ),
+      );
+      expect(
+        (hubImage.image as AssetImage).assetName,
+        'assets/icons/add_device/add_device_f_box.png',
+      );
       await tester.tap(
         find.byKey(const ValueKey<String>('already-added-device-card-Fbox SN')),
       );

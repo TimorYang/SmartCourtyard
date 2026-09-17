@@ -189,7 +189,7 @@ void main() {
       ),
       selectedDevice: selectedDevice,
       connectionStates: {selectedDevice.id: BleConnectionState.connected},
-      onboardingDeviceType: 'fbox',
+      onboardingDeviceType: 'hub',
       onboardingFlowId: 'flow/1',
     );
     final router = GoRouter(

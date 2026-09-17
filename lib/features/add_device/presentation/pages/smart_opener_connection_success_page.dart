@@ -6,9 +6,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../core/errors/app_error.dart';
+import '../../../../core/utils/device_type.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/flinx_navigation_bar.dart';
-import '../../application/device_type_ble_filter.dart';
 import '../../application/providers.dart';
 import '../../../home/application/providers.dart';
 import '../../../home/domain/entities/home_scene.dart';
@@ -292,7 +292,7 @@ class _SmartOpenerConnectionSuccessPageState
   }) {
     ref.read(addDeviceControllerProvider.notifier).logDeviceDetailNavigation();
 
-    if (normalizeDoorDeviceType(deviceType) == 'fbox') {
+    if (isFBoxDeviceType(deviceType)) {
       unawaited(
         context.push(
           FBoxWiringTestRoute.location(

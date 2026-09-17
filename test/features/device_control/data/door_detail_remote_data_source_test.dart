@@ -11,19 +11,19 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   test('parses the door-device response fields', () {
     final dto = DoorDeviceResponseDto.fromJson(const {
-      'deviceId': '3',
-      'sn': 'opener_B8F86211A9DC',
-      'deviceType': 'opener',
-      'deviceTypeLabel': 'Smart opener',
+      'deviceId': '23',
+      'sn': 'Fbox_64E8333A2E44',
+      'deviceType': 'hub',
+      'deviceTypeLabel': 'hub',
       'onlineStatus': 2,
-      'bleName': 'opener_B8F86211A9DC',
+      'bleName': 'Fbox_64E8333A2E44',
       'bleConnectionStatus': 1,
       'wifiConnectionStatus': 2,
       'capabilities': ['DOOR_CONTROL'],
     });
 
-    expect(dto.deviceId, '3');
-    expect(dto.deviceType, 'opener');
+    expect(dto.deviceId, '23');
+    expect(dto.deviceType, 'hub');
     expect(dto.bleConnectionStatus, 1);
     expect(dto.wifiConnectionStatus, 2);
     expect(dto.capabilities, ['DOOR_CONTROL']);
@@ -201,9 +201,10 @@ void main() {
         success: true,
         data: [
           DoorDeviceResponseDto(
-            deviceId: '3',
-            sn: 'opener_B8F86211A9DC',
-            deviceType: 'opener',
+            deviceId: '23',
+            sn: 'Fbox_64E8333A2E44',
+            deviceType: 'hub',
+            deviceTypeLabel: 'hub',
             bleConnectionStatus: 1,
             wifiConnectionStatus: 1,
           ),
@@ -217,7 +218,7 @@ void main() {
       requestId: 'door-devices-123',
     );
 
-    expect(devices.single.deviceType, 'opener');
+    expect(devices.single.deviceType, 'hub');
     expect(api.devicesDoorId, 12);
     expect(
       api.devicesOptions.extra?[NetworkRequestExtras.requestId],

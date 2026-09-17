@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_design_tokens.dart';
 import '../../../../core/logging/app_logger.dart';
 import '../../../../core/logging/providers.dart';
+import '../../../../core/utils/device_type.dart';
 import '../../../../platform_bridge/hardware_models.dart';
 import '../../../../shared/l10n/app_localizations.dart';
 import '../../../../shared/widgets/app_toast.dart';
@@ -298,7 +299,7 @@ class _DeviceCommandPageState extends ConsumerState<DeviceCommandPage> {
         ? selectedDevice!.bleName!.trim()
         : commandState.bleTargetName?.trim() ?? '';
     final hardwareDeviceId = _hardwareDeviceId(commandState);
-    final isFBox = selectedDevice?.deviceType.trim().toLowerCase() == 'fbox';
+    final isFBox = isFBoxDeviceType(selectedDevice?.deviceType);
     final controlMode = DoorControlMode.fromBackend(
       value: doorDetail?.controlMode,
     );
@@ -1514,7 +1515,7 @@ class _DeviceConnectionStrip extends StatelessWidget {
 
   DoorDevice? _deviceFor(String deviceType) {
     for (final device in devices) {
-      if (device.deviceType.trim().toLowerCase() == deviceType) {
+      if (canonicalDoorDeviceType(device.deviceType) == deviceType) {
         return device;
       }
     }

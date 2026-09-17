@@ -234,6 +234,29 @@ void main() {
     }
   });
 
+  test('treats the backend hub type as an F-Box for device priority', () async {
+    final container = _createContainer(
+      gateway: _BleSessionGateway(),
+      repository: _DoorDetailRepository(
+        _doorDetail(),
+        devices: const [
+          DoorDevice(deviceId: 'video', sn: 'video', deviceType: 'video'),
+          DoorDevice(deviceId: 'hub', sn: 'hub', deviceType: 'hub'),
+        ],
+      ),
+    );
+    addTearDown(container.dispose);
+
+    await container
+        .read(deviceCommandControllerProvider.notifier)
+        .loadDoorDetail(doorId: '12');
+
+    expect(
+      container.read(deviceCommandControllerProvider).selectedDeviceId,
+      'hub',
+    );
+  });
+
   test('preferred device overrides the default type priority', () async {
     final container = _createContainer(
       gateway: _BleSessionGateway(),

@@ -7,10 +7,12 @@ void main() {
     expect(bleNamePrefixForDoorDeviceType('opener'), 'opener_');
     expect(bleNamePrefixForDoorDeviceType('evolution'), 'Evo_');
     expect(bleNamePrefixForDoorDeviceType('fbox'), 'Fbox_');
+    expect(bleNamePrefixForDoorDeviceType('hub'), 'Fbox_');
   });
 
   test('normalizes device types and defaults invalid values to opener', () {
     expect(normalizeDoorDeviceType(' Evolution '), 'evolution');
+    expect(normalizeDoorDeviceType(' hub '), 'fbox');
     expect(normalizeDoorDeviceType(null), defaultDoorDeviceType);
     expect(normalizeDoorDeviceType('unknown'), defaultDoorDeviceType);
   });
