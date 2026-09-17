@@ -4,7 +4,6 @@ import '../config/providers.dart';
 import '../localization/providers.dart';
 import '../logging/providers.dart';
 import 'dio_factory.dart';
-import 'network_proxy_controller.dart';
 import 'session_expired_handler.dart';
 
 final sessionExpiredHandlerProvider = Provider<SessionExpiredHandler>(
@@ -16,16 +15,11 @@ final tokenRefreshHandlerProvider = Provider<TokenRefreshHandler>(
 );
 
 final dioProvider = Provider((ref) {
-  final dio = DioFactory.create(
+  return DioFactory.create(
     configuration: ref.watch(appApiConfigurationProvider),
     logger: ref.watch(appLoggerProvider),
-    proxySettings: ref.watch(networkProxySettingsProvider),
     onSessionExpired: ref.watch(sessionExpiredHandlerProvider),
     onTokenRefresh: ref.watch(tokenRefreshHandlerProvider),
     acceptLanguageResolver: () => ref.read(currentAppLocaleStoreProvider).value,
   );
-  // A settings change rebuilds this provider. Allow requests already using
-  // the old client to finish while preventing new requests from using it.
-  ref.onDispose(() => dio.close());
-  return dio;
 });

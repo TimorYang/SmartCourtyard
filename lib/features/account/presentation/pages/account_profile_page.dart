@@ -26,7 +26,6 @@ import '../../domain/entities/account_overview.dart';
 import '../../../auth/presentation/pages/welcome_page.dart';
 import 'account_details_page.dart';
 import 'check_upgraded_version_page.dart';
-import 'hardware_diagnostics_page.dart';
 import 'manage_devices_page.dart';
 import 'receiving_devices_page.dart';
 import 'region_page.dart';
@@ -408,7 +407,13 @@ class _AccountProfileContent extends StatelessWidget {
         label: l10n.accountAbout,
         iconAssetPath: AccountProfileAssetPaths.menuAbout,
         key: AccountProfileKeys.aboutMenuItem,
-        onTap: () => context.push(HardwareDiagnosticsPage.routePath),
+        onTap: () => context.push(
+          AppLinks.webViewLocation(
+            destination: AppLinkDestination.about,
+            title: l10n.accountAbout,
+            queryParameters: {'lang': localePreference.serverLocale},
+          ),
+        ),
       ),
     ];
 

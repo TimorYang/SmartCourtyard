@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flinx/app/config/app_links.dart';
 import 'package:flinx/app/theme/app_theme.dart';
 import 'package:flinx/features/account/application/providers.dart';
 import 'package:flinx/features/account/application/region_selection_controller.dart';
@@ -24,7 +25,6 @@ import 'package:flinx/features/account/domain/repositories/managed_devices_repos
 import 'package:flinx/features/account/domain/repositories/shared_devices_repository.dart';
 import 'package:flinx/features/account/presentation/pages/account_details_page.dart';
 import 'package:flinx/features/account/presentation/pages/account_profile_page.dart';
-import 'package:flinx/features/account/presentation/pages/hardware_diagnostics_page.dart';
 import 'package:flinx/features/account/presentation/pages/manage_devices_page.dart';
 import 'package:flinx/features/account/presentation/pages/receiving_devices_page.dart';
 import 'package:flinx/features/account/presentation/pages/region_page.dart';
@@ -87,9 +87,7 @@ void main() {
     expect(find.text('Log out'), findsOneWidget);
   });
 
-  testWidgets('opens localized H5 help center and hardware diagnostics', (
-    tester,
-  ) async {
+  testWidgets('opens localized H5 help center and about pages', (tester) async {
     final openedUrls = <Uri>[];
     final router = GoRouter(
       initialLocation: AccountProfilePage.routePath,
@@ -108,12 +106,6 @@ void main() {
             }
             return const Scaffold(body: Text('H5 destination'));
           },
-        ),
-        GoRoute(
-          path: HardwareDiagnosticsPage.routePath,
-          name: HardwareDiagnosticsPage.routeName,
-          builder: (context, state) =>
-              const Scaffold(body: Text('Hardware diagnostics destination')),
         ),
       ],
     );
@@ -170,8 +162,9 @@ void main() {
     await tester.tap(aboutMenuItem);
     await tester.pumpAndSettle();
 
-    expect(openedUrls, hasLength(1));
-    expect(find.text('Hardware diagnostics destination'), findsOneWidget);
+    expect(openedUrls, hasLength(2));
+    expect(openedUrls.last.path, '/h5/about');
+    expect(openedUrls.last.queryParameters['lang'], 'de-DE');
   });
 
   testWidgets('opens the region page from the account profile', (tester) async {
