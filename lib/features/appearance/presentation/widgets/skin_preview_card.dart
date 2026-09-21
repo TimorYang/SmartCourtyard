@@ -115,7 +115,6 @@ class SkinPreviewCard extends StatelessWidget {
       ),
     );
   }
-
   String _title(AppLocalizations l10n) => switch (skinId) {
     AppSkinId.dark => l10n.appearanceDarkTitle,
     AppSkinId.minimalist => l10n.appearanceMinimalistTitle,
