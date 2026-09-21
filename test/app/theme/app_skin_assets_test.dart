@@ -28,6 +28,7 @@ void main() {
         final paths = {
           for (final original in originals) original: assets.resolve(original),
           'theme_preview': assets.themePreview,
+          'theme_detail': assets.themeDetail,
         };
         for (final entry in paths.entries) {
           final file = File(entry.value);

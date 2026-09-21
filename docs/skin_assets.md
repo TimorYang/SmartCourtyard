@@ -14,6 +14,12 @@
 - `assets/images/skins/minimalist/appearance/skin_minimalist_theme_preview_placeholder.png`
 - `assets/images/skins/technology_wind/appearance/skin_technology_wind_theme_preview_placeholder.png`
 
+## 详情资源
+
+- `assets/images/skins/dark/appearance/skin_dark_theme_detail_placeholder.png`
+- `assets/images/skins/minimalist/appearance/skin_minimalist_theme_detail_placeholder.png`
+- `assets/images/skins/technology_wind/appearance/skin_technology_wind_theme_detail_placeholder.png`
+
 ## 专属图片与图标
 
 | 原资源 | 暗黑风目标路径（科技风将 `dark` 换为 `technology_wind`） |

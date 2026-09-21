@@ -10,15 +10,18 @@ class SkinArtworkPlaceholder extends StatelessWidget {
     required this.skinId,
     required this.height,
     this.compact = false,
+    this.detail = false,
     super.key,
   });
   final AppSkinId skinId;
   final double height;
   final bool compact;
+  final bool detail;
   @override
   Widget build(BuildContext context) {
     final skin = AppSkinCatalog.forId(skinId);
-    final path = AppSkinAssets(skinId).themePreview;
+    final assets = AppSkinAssets(skinId);
+    final path = detail ? assets.themeDetail : assets.themePreview;
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppAppearanceLayoutTokens.cardRadius),
       child: SkinAssetImage(

@@ -671,6 +671,10 @@ class AppSkinAssets {
   String get themePreview =>
       'assets/images/skins/${skinId.storageValue}/appearance/'
       'skin_${skinId.storageValue}_theme_preview_placeholder.png';
+
+  String get themeDetail =>
+      'assets/images/skins/${skinId.storageValue}/appearance/'
+      'skin_${skinId.storageValue}_theme_detail_placeholder.png';
 }
 
 extension AppSkinBuildContext on BuildContext {

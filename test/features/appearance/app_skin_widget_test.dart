@@ -14,6 +14,7 @@ import 'package:flinx/features/appearance/domain/entities/app_skin_id.dart';
 import 'package:flinx/features/appearance/domain/repositories/app_skin_repository.dart';
 import 'package:flinx/features/appearance/presentation/pages/skin_detail_page.dart';
 import 'package:flinx/features/appearance/presentation/pages/skin_gallery_page.dart';
+import 'package:flinx/features/appearance/presentation/widgets/skin_artwork_placeholder.dart';
 import 'package:flinx/shared/l10n/app_localizations.dart';
 import 'package:flinx/shared/widgets/flinx_switch.dart';
 import 'package:flinx/shared/widgets/flinx_door_command_button.dart';
@@ -212,6 +213,12 @@ void main() {
     );
     router.push(SkinDetailPage.routePathFor(AppSkinId.dark));
     await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<SkinArtworkPlaceholder>(find.byType(SkinArtworkPlaceholder))
+          .detail,
+      isTrue,
+    );
     expect(
       container.read(appSkinControllerProvider).value,
       AppSkinId.minimalist,

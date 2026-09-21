@@ -70,6 +70,7 @@ class _SkinDetailPageState extends ConsumerState<SkinDetailPage> {
                 child: SkinArtworkPlaceholder(
                   skinId: widget.skinId,
                   height: AppAppearanceLayoutTokens.detailPreviewHeight,
+                  detail: true,
                 ),
               ),
             ),
